@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Student Profile - Nexora</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+</head>
+
+
+<body class="work-page">
+
+
+    {% include 'components/supervisor_navbar.html' %}
+
+    {% include 'components/supervisor_sidebar.html' %}
+
+
+
+    <div class="page-content">
+
+        <div class="container mt-5">
+
+
+            <!-- PROFILE HEADER -->
+
+            <div class="card profile-header-card shadow-sm mb-4">
+
+                <div class="profile-banner">
+
+                </div>
+
+
+                <div class="profile-info">
+
+                    <div class="row mb-3 align-items-end">
+
+                        <div class="col-md-auto">
+                            
+                            <img src="{{ url_for('static', filename='images/default_profile.png') }}" alt="Profile Picture" class="student-profile-pic">
+
+                        </div>
+
+                        <div class="col-md">
+
+                            <h2 class="mb-1">
+                                {{ student[0] }}
+                            </h2>
+
+                            <p class="text-muted mb-0">
+                                BSIT · Arellano University
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="profile-details" style="padding: 10px;">
+
+                        <p class="text-muted mb-1">
+                            OJT Intern
+                        </p>
+
+                        <p class="text-muted mb-0">
+                            Nexora Technologies Inc.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+
+            <!-- PROFILE TABS -->
+
+            <div class="profile-tabs mb-4">
+
+                <button class="profile-tab-button active"
+                        onclick="openProfileTab('overview', this)">
+
+                    Overview
+
+                </button>
+
+
+                <button class="profile-tab-button"
+                        onclick="openProfileTab('tasks', this)">
+
+                    Tasks
+
+                </button>
+
+
+                <button class="profile-tab-button"
+                        onclick="openProfileTab('feedback', this)">
+
+                    Feedback
+
+                </button>
+
+
+                <button class="profile-tab-button"
+                        onclick="openProfileTab('reports', this)">
+
+                    Reports
+
+                </button>
+
+            </div>
+
+
+
+
+            <!-- OVERVIEW TAB -->
+
+            <div id="overview"
+                 class="profile-tab active">
+
+
+                <div class="row g-4 mb-4">
+
+
+                    <!-- SESSIONS -->
+
+                    <div class="col-md-6">
+
+                        <div class="card shadow-sm h-100">
+
+                            <div class="card-header bg-primary text-white">
+
+                                <h5 class="mb-0">
+                                    Sessions
+                                </h5>
+
+                            </div>
+
+
+                            <div class="card-body dashboard-scroll">
+
+
+                                {% if sessions %}
+
+                                    {% for session in sessions %}
+
+                                    <div class="border-bottom pb-3 mb-3">
+
+
+                                        <strong>
+                                            {{ session[1] }}
+                                        </strong>
+
+
+                                        <p class="mb-1">
+
+                                            {% if session[2] %}
+
+                                                Clock out:
+                                                {{ session[2] }}
+
+                                            {% else %}
+
+                                                Still active
+
+                                            {% endif %}
+
+                                        </p>
+
+
+                                        {% if session[3] %}
+
+                                            <span class="badge bg-info">
+
+                                                {{ session[3] }}
+                                                hours
+
+                                            </span>
+
+                                        {% endif %}
+
+
+                                        {% if session[4] == 'Open' %}
+
+                                            <span class="badge bg-success">
+                                                Open
+                                            </span>
+
+                                        {% else %}
+
+                                            <span class="badge bg-secondary">
+                                                Completed
+                                            </span>
+
+                                        {% endif %}
+                                        
+                                        <a class="btn btn-sm btn-primary flex-shrink-0">
+
+                                            View Logs
+
+                                        </a>
+
+                                    </div>
+
+                                    {% endfor %}
+
+
+                                {% else %}
+
+                                    <p class="text-muted mb-0">
+                                        No sessions recorded yet.
+                                    </p>
+
+                                {% endif %}
+
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- PROGRESS -->
+
+                    <div class="col-md-6">
+
+                        <div class="card shadow-sm h-100">
+
+                            <div class="card-header bg-success text-white">
+
+                                <h5 class="mb-0">
+                                    Progress
+                                </h5>
+
+                            </div>
+
+
+                            <div class="card-body d-flex align-items-center justify-content-center">
+
+                                <div class="text-center">
+
+                                    <h2>
+                                        —
+                                    </h2>
+
+                                    <p class="text-muted mb-0">
+
+                                        Progress analytics will appear here.
+
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+
+
+
+                <!-- DOCUMENTS -->
+
+                <div class="card shadow-sm mb-4">
+
+                    <div class="card-header bg-warning">
+
+                        <h5 class="mb-0">
+                            Documents
+                        </h5>
+
+                    </div>
+
+
+                    <div class="card-body">
+
+
+                        {% if docs %}
+
+                            {% for doc in docs[:5] %}
+
+                            <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
+
+
+                                <div>
+
+                                    <strong>
+                                        {{ doc[0] }}
+                                    </strong>
+
+                                    <br>
+
+                                    <small class="text-muted">
+                                        Uploaded:
+                                        {{ doc[1] }}
+                                    </small>
+
+                                </div>
+
+
+                                <a href="#"
+                                   class="btn btn-sm btn-primary">
+
+                                    View
+
+                                </a>
+
+
+                            </div>
+
+                            {% endfor %}
+
+
+                        {% else %}
+
+                            <p class="text-muted mb-0">
+                                No documents uploaded yet.
+                            </p>
+
+                        {% endif %}
+
+
+                    </div>
+
+                </div>
+
+
+            </div>
+
+
+
+
+            <!-- TASKS TAB -->
+
+            <div id="tasks"
+                 class="profile-tab">
+
+
+                <div class="card shadow-sm">
+
+
+                    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+
+                        <h5 class="mb-0">
+                            Tasks
+                        </h5>
+
+
+                        <a href="/supervisor/student/{{ student_id }}/assign-task"
+                           class="btn btn-light btn-sm">
+
+                            + Assign Task
+
+                        </a>
+
+                    </div>
+
+
+                    <div class="card-body">
+
+
+                        {% if tasks %}
+
+                            {% for task in tasks %}
+
+                            <div class="border-bottom pb-3 mb-3">
+
+
+                                <strong>
+                                    {{ task[1] }}
+                                </strong>
+
+
+                                <p class="mb-1">
+
+                                    Assigned:
+                                    {{ task[2] }}
+
+                                </p>
+
+
+                                {% if task[3] %}
+
+                                <p class="mb-1">
+
+                                    Deadline:
+                                    {{ task[3] }}
+
+                                </p>
+
+                                {% endif %}
+
+
+                                {% if task[4] == 'Submitted' %}
+
+                                    <span class="badge bg-success">
+                                        Submitted
+                                    </span>
+
+                                {% elif task[4] == 'Reopened' %}
+
+                                    <span class="badge bg-info">
+                                        Reopened
+                                    </span>
+
+                                {% elif task[4] == 'Reviewed' %}
+
+                                    <span class="badge bg-primary">
+                                        Reviewed
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="badge bg-warning">
+                                        Pending
+                                    </span>
+
+                                {% endif %}
+
+
+                                <div class="mt-2">
+
+                                    <a href="/supervisor/task/{{ task[0] }}" class="btn btn-info btn-sm">
+
+                                        View
+
+                                    </a>
+
+                                </div>
+
+
+                            </div>
+
+                            {% endfor %}
+
+
+                        {% else %}
+
+                            <p class="text-muted mb-0">
+                                No tasks yet.
+                            </p>
+
+                        {% endif %}
+
+
+                    </div>
+
+                </div>
+
+
+            </div>
+
+
+
+
+            <!-- FEEDBACK TAB -->
+
+            <div id="feedback"
+                 class="profile-tab">
+
+
+                <div class="card shadow-sm">
+
+
+                    <div class="card-header bg-info text-white">
+
+                        <h5 class="mb-0">
+                            Supervisor Feedback
+                        </h5>
+
+                    </div>
+
+
+                    <div class="card-body">
+
+
+                        <h6 class="mb-3">
+                            Submit New Feedback
+                        </h6>
+
+
+                        <form method="POST"
+                              action="/supervisor/student/{{ student_id }}/feedback">
+
+
+                            <div class="mb-3">
+
+                                <label for="comment"
+                                       class="form-label">
+
+                                    Feedback Comment
+
+                                </label>
+
+
+                                <textarea class="form-control"
+                                          id="comment"
+                                          name="comment"
+                                          rows="4"
+                                          placeholder="Write evaluation feedback..."
+                                          required></textarea>
+
+                            </div>
+
+
+                            <div class="mb-3">
+
+                                <label for="performance"
+                                       class="form-label">
+
+                                    Performance Rating
+
+                                </label>
+
+
+                                <select class="form-select"
+                                        id="performance"
+                                        name="label"
+                                        required>
+
+                                    <option value="">
+                                        Select a rating...
+                                    </option>
+
+                                    <option value="Excellent">
+                                        Excellent
+                                    </option>
+
+                                    <option value="Very Satisfactory">
+                                        Very Satisfactory
+                                    </option>
+
+                                    <option value="Satisfactory">
+                                        Satisfactory
+                                    </option>
+
+                                    <option value="Fair">
+                                        Fair
+                                    </option>
+
+                                    <option value="Needs Improvement">
+                                        Needs Improvement
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+                            <button class="btn btn-primary"
+                                    type="submit">
+
+                                Submit Feedback
+
+                            </button>
+
+
+                        </form>
+
+
+                        <hr class="my-4">
+
+
+                        <h6 class="mb-3">
+                            Feedback History
+                        </h6>
+
+
+                        {% if feedback %}
+
+                            {% for fb in feedback %}
+
+                            <div class="border-bottom pb-3 mb-3">
+
+                                <strong>
+                                    {{ fb[2] }}
+                                </strong>
+
+
+                                <p class="mb-1">
+                                    {{ fb[0] }}
+                                </p>
+
+
+                                <small class="text-muted">
+                                    {{ fb[1] }}
+                                </small>
+
+                            </div>
+
+                            {% endfor %}
+
+
+                        {% else %}
+
+                            <p class="text-muted">
+                                No feedback history yet.
+                            </p>
+
+                        {% endif %}
+
+
+                    </div>
+
+                </div>
+
+
+            </div>
+
+
+
+
+            <!-- REPORTS TAB -->
+
+            <div id="reports"
+                 class="profile-tab">
+
+
+                <div class="card shadow-sm">
+
+
+                    <div class="card-header">
+
+                        <h5 class="mb-0">
+                            Reports
+                        </h5>
+
+                    </div>
+
+
+                    <div class="card-body text-center">
+
+                        <h3>
+                            —
+                        </h3>
+
+
+                        <p class="text-muted mb-0">
+
+                            Calculated performance reports will appear here.
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+            </div>
+
+
+
+
+            <!-- BACK BUTTON -->
+
+            <div class="mt-4 mb-4">
+
+                <a href="/supervisor/interns"
+                   class="btn btn-secondary">
+
+                    ← Back to Assigned Interns
+
+                </a>
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- TAB SCRIPT -->
+
+    <script>
+
+        function openProfileTab(tabName, button) {
+
+
+            const tabs =
+                document.querySelectorAll(".profile-tab");
+
+
+            tabs.forEach(function(tab) {
+
+                tab.classList.remove("active");
+
+            });
+
+
+            document.getElementById(tabName)
+                .classList.add("active");
+
+
+
+            const buttons =
+                document.querySelectorAll(".profile-tab-button");
+
+
+            buttons.forEach(function(btn) {
+
+                btn.classList.remove("active");
+
+            });
+
+
+            button.classList.add("active");
+
+        }
+
+        /* for sidebar */
+
+        const sidebarToggle =
+            document.getElementById("sidebarToggle");
+
+        const sidebar =
+            document.querySelector(".supervisor-sidebar");
+
+        sidebarToggle.addEventListener("click", function () {
+
+
+            const pageContent =
+                document.querySelector(".page-content");
+
+
+            sidebar.classList.toggle("active");
+
+            pageContent.classList.toggle("sidebar-open");
+
+
+        });
+    </script>
+
+
+</body>
+
+</html>

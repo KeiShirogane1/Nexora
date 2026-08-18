@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Internship Session - Nexora</title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body style=" padding-top:80px;" class="content-page">
+
+{% include 'components/navbar.html' %}
+
+<div class="container mt-4">
+
+    <h2 class="mb-4">
+        Internship Session
+    </h2>
+
+    <!-- Session Information -->
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-header bg-primary text-white">
+            Session Information
+        </div>
+
+        <div class="card-body">
+
+            <div class="row mb-2">
+
+                <div class="col-md-3">
+                    <strong>Clock In</strong>
+                </div>
+
+                <div class="col-md-9">
+                    {{ attendance[1] }}
+                </div>
+
+            </div>
+
+            <div class="row mb-2">
+
+                <div class="col-md-3">
+                    <strong>Clock Out</strong>
+                </div>
+
+                <div class="col-md-9">
+                    {% if attendance[2] %}
+                        {{ attendance[2] }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </div>
+
+            </div>
+
+            <div class="row mb-2">
+
+                <div class="col-md-3">
+                    <strong>Hours Rendered</strong>
+                </div>
+
+                <div class="col-md-9">
+
+                    {% if attendance[3] %}
+                        {{ attendance[3] }} Hours
+                    {% else %}
+                        In Progress
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+            <div class="row">
+
+                <div class="col-md-3">
+                    <strong>Status</strong>
+                </div>
+
+                <div class="col-md-9">
+
+                    {% if attendance[4] == "Open" %}
+                        <span class="badge bg-success">
+                            Currently Active
+                        </span>
+                    {% else %}
+                        <span class="badge bg-secondary">
+                            Closed
+                        </span>
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Activity Timeline -->
+    <div class="card shadow-sm">
+
+    <div class="card-header bg-dark text-white">
+        Activity Timeline
+    </div>
+
+    <div class="card-body">
+
+        {% if logs %}
+
+            {% for log in logs %}
+
+                <div class="border-start border-4 border-primary ps-3 mb-4">
+
+                    <div class="text-muted small">
+
+                        🕒 {{ log[2] }}
+
+                    </div>
+
+                    <div class="mt-2">
+
+                        {{ log[1] }}
+
+                    </div>
+
+                </div>
+
+            {% endfor %}
+
+        {% else %}
+
+                <div class="alert alert-info">
+
+                    No log entries were recorded for this internship session.
+
+                </div>
+
+        {% endif %}
+
+        </div>
+
+    </div>
+
+    <div class="mt-4">
+
+        <a
+            href="/student/logbook"
+            class="btn btn-secondary">
+
+            ← Back to Logbook
+
+        </a>
+
+    </div>
+
+</div>
+
+</body>
+</html>

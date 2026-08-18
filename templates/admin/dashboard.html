@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Admin Dashboard - Nexora</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+</head>
+
+
+<body class="deeper-metrics">
+    
+    {% include 'components/admin_navbar.html' %}
+    {% include 'components/admin_sidebar.html' %}
+
+
+    <div class="page-content">
+
+    <div class="container mt-5">
+
+
+        <!-- PAGE HEADER -->
+
+        <div class="mb-4">
+
+            <h1 style="color:white;">
+                Admin Dashboard
+            </h1>
+
+            <p style="color:white;">
+                Overview of students, supervisors, and internship activity.
+            </p>
+
+        </div>
+
+
+
+
+        <!-- SUMMARY METRICS -->
+
+        <div class="row g-4 mb-5">
+
+
+            <!-- STUDENTS -->
+
+            <div class="col-md-4">
+
+                <div class="card shadow-sm p-4 h-100">
+
+                    <h2 class="mb-2">
+                        {{ students_count }}
+                    </h2>
+
+                    <p class="text-muted mb-0">
+                        Students
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+
+            <!-- SUPERVISORS -->
+
+            <div class="col-md-4">
+
+                <div class="card shadow-sm p-4 h-100">
+
+                    <h2 class="mb-2">
+                        {{ supervisors_count }}
+                    </h2>
+
+                    <p class="text-muted mb-0">
+                        Supervisors
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+
+            <!-- ASSIGNMENTS -->
+
+            <div class="col-md-4">
+
+                <div class="card shadow-sm p-4 h-100">
+
+                    <h2 class="mb-2">
+                        {{ assignments_count }}
+                    </h2>
+
+                    <p class="text-muted mb-0">
+                        Internship Assignments
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+
+            <!-- ONLINE INTERNS -->
+
+            <div class="col-md-4">
+
+                <div class="card shadow-sm p-4 h-100">
+
+                    <h2 class="mb-2">
+                        {{ online_interns }}
+                    </h2>
+
+                    <p class="text-muted mb-0">
+                        Online Interns
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+
+            <!-- FEEDBACK -->
+
+            <div class="col-md-4">
+
+                <div class="card shadow-sm p-4 h-100">
+
+                    <h2 class="mb-2">
+                        {{ feedback_count }}
+                    </h2>
+
+                    <p class="text-muted mb-0">
+                        Feedback Entries
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+
+            <!-- HOURS -->
+
+            <div class="col-md-4">
+
+                <div class="card shadow-sm p-4 h-100">
+
+                    <h2 class="mb-2">
+                        {{ total_hours }}
+                    </h2>
+
+                    <p class="text-muted mb-0">
+                        Total Hours Rendered
+                    </p>
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+
+
+
+        <!-- REPORT CENTER -->
+
+        <div class="mb-4">
+
+            <h3 style="color:white;">
+                Report Center
+            </h3>
+
+            <p style="color:white;">
+                Access calculated reports and institutional internship insights.
+            </p>
+
+        </div>
+
+
+
+
+        <div class="row g-4 mb-5">
+
+
+            <!-- ATTENDANCE REPORT -->
+
+            <div class="col-md-4">
+
+                <div class="card shadow-sm p-4 h-100">
+
+                    <h5>
+                        Attendance & Logbook
+                    </h5>
+
+                    <p class="text-muted">
+
+                        View attendance sessions, rendered hours, and internship activity.
+
+                    </p>
+
+                    <a href="/admin/reports/attendance"
+                       class="btn btn-primary mt-auto">
+
+                        Open Report
+
+                    </a>
+
+                </div>
+
+            </div>
+
+
+
+
+            <!-- EVALUATION REPORT -->
+
+            <div class="col-md-4">
+
+                <div class="card shadow-sm p-4 h-100">
+
+                    <h5>
+                        Supervisor Evaluation
+                    </h5>
+
+                    <p class="text-muted">
+
+                        Review supervisor feedback and performance evaluation data.
+
+                    </p>
+
+                    <a href="/admin/reports/evaluation"
+                       class="btn btn-outline-primary mt-auto">
+
+                        Coming Soon
+
+                    </a>
+
+                </div>
+
+            </div>
+
+
+
+
+            <!-- PROGRESS REPORT -->
+
+            <div class="col-md-4">
+
+                <div class="card shadow-sm p-4 h-100">
+
+                    <h5>
+                        Internship Progress
+                    </h5>
+
+                    <p class="text-muted">
+
+                        Monitor student progress throughout the internship period.
+
+                    </p>
+
+                    <a href="/admin/reports/progress"
+                       class="btn btn-outline-primary mt-auto">
+
+                        Coming Soon
+
+                    </a>
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+
+    </div>
+
+    </div>
+
+    <!-- sidebar script ^^ -->
+    <script>
+
+    const sidebarToggle =
+        document.getElementById("adminSidebarToggle");
+
+    const sidebar =
+        document.querySelector(".admin-sidebar");
+
+    const pageContent =
+        document.querySelector(".page-content");
+
+
+    sidebarToggle.addEventListener("click", function () {
+
+        sidebar.classList.toggle("active");
+
+        pageContent.classList.toggle("sidebar-open");
+
+    });
+
+    </script>
+
+</body>
+
+</html>
