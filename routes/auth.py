@@ -1,7 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session
 from database.db import get_db_connection
 
-
 auth = Blueprint("auth", __name__)
 
 
@@ -13,13 +12,20 @@ def logout():
 
 def get_user(username, password):
     conn = get_db_connection()
+    cursor = conn.cursor()
+
     try:
-        user = conn.execute("""
-            SELECT * FROM users
+        cursor.execute("""
+            SELECT id, username, password, role
+            FROM users
             WHERE username = ? AND password = ?
-        """, (username, password)).fetchone()
+        """, (username, password))
+
+        user = cursor.fetchone()
         return user
+
     finally:
+        cursor.close()
         conn.close()
 
 
@@ -31,25 +37,23 @@ def welcome():
 @auth.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        username = request.form["username"].strip()
+        username = request.form["username"]
         password = request.form["password"]
 
         user = get_user(username, password)
 
         if user:
-            role = user["role"]
+            role = user[3]
 
-            # Pending accounts must be approved by an admin first.
-            if role == "pending":
-                return "Your account is pending approval. Please contact an administrator.", 403
-
-            session["user_id"] = user["id"]
+            session["user_id"] = user[0]
             session["role"] = role
 
             if role == "student":
                 return redirect(url_for("student.student_dashboard"))
+
             elif role == "supervisor":
                 return redirect(url_for("supervisor.supervisor_dashboard"))
+
             elif role == "admin":
                 return redirect(url_for("admin.admin_dashboard"))
 
@@ -60,35 +64,43 @@ def login():
 
 @auth.route("/signup", methods=["GET", "POST"])
 def signup():
+
     if request.method == "POST":
-        username = request.form["username"].strip()
+        username = request.form["username"]
         password = request.form["password"]
         confirm_password = request.form["confirm_password"]
 
-        if not username:
-            return "Username is required ❌"
-
+        # Validate passwords match
         if password != confirm_password:
             return "Passwords do not match ❌"
 
+        # Validate password length
         if len(password) < 6:
             return "Password must be at least 6 characters ❌"
 
         conn = get_db_connection()
-        try:
-            existing_user = conn.execute(
-                "SELECT id FROM users WHERE username = ?", (username,)
-            ).fetchone()
+        cursor = conn.cursor()
 
-            if existing_user:
+        try:
+            # Check if username already exists
+            cursor.execute(
+                "SELECT id FROM users WHERE username = ?",
+                (username,)
+            )
+
+            if cursor.fetchone():
                 return "Username already exists ❌"
 
-            conn.execute("""
+            # New accounts remain pending exactly as before
+            cursor.execute("""
                 INSERT INTO users (username, password, role)
                 VALUES (?, ?, 'pending')
             """, (username, password))
+
             conn.commit()
+
         finally:
+            cursor.close()
             conn.close()
 
         return redirect("/login")

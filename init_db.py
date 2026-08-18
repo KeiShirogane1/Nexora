@@ -1,5 +1,3 @@
-import os
-import sqlite3
 from database.db import get_db_connection, using_postgres
 
 
@@ -17,6 +15,7 @@ def initialize_database():
                 role TEXT NOT NULL
             )
             """,
+
             """
             CREATE TABLE IF NOT EXISTS attendance (
                 id SERIAL PRIMARY KEY,
@@ -27,6 +26,7 @@ def initialize_database():
                 status TEXT DEFAULT 'Open'
             )
             """,
+
             """
             CREATE TABLE IF NOT EXISTS logs (
                 id SERIAL PRIMARY KEY,
@@ -36,6 +36,7 @@ def initialize_database():
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
             """,
+
             """
             CREATE TABLE IF NOT EXISTS tasks (
                 id SERIAL PRIMARY KEY,
@@ -50,6 +51,7 @@ def initialize_database():
                 status TEXT DEFAULT 'Pending'
             )
             """,
+
             """
             CREATE TABLE IF NOT EXISTS task_submissions (
                 id SERIAL PRIMARY KEY,
@@ -60,6 +62,7 @@ def initialize_database():
                 remarks TEXT
             )
             """,
+
             """
             CREATE TABLE IF NOT EXISTS documents (
                 id SERIAL PRIMARY KEY,
@@ -69,6 +72,7 @@ def initialize_database():
                 uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
             """,
+
             """
             CREATE TABLE IF NOT EXISTS feedback (
                 id SERIAL PRIMARY KEY,
@@ -79,6 +83,7 @@ def initialize_database():
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
             """,
+
             """
             CREATE TABLE IF NOT EXISTS student_assignments (
                 id SERIAL PRIMARY KEY,
@@ -87,8 +92,13 @@ def initialize_database():
                 UNIQUE(student_id, supervisor_id)
             )
             """,
-            "ALTER TABLE feedback ADD COLUMN IF NOT EXISTS performance_label TEXT",
+
+            """
+            ALTER TABLE feedback
+            ADD COLUMN IF NOT EXISTS performance_label TEXT
+            """
         ]
+
     else:
         statements = [
             """
@@ -99,6 +109,7 @@ def initialize_database():
                 role TEXT NOT NULL
             )
             """,
+
             """
             CREATE TABLE IF NOT EXISTS attendance (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -110,6 +121,7 @@ def initialize_database():
                 FOREIGN KEY (student_id) REFERENCES users(id)
             )
             """,
+
             """
             CREATE TABLE IF NOT EXISTS logs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -121,6 +133,7 @@ def initialize_database():
                 FOREIGN KEY (student_id) REFERENCES users(id)
             )
             """,
+
             """
             CREATE TABLE IF NOT EXISTS tasks (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -137,6 +150,7 @@ def initialize_database():
                 FOREIGN KEY (supervisor_id) REFERENCES users(id)
             )
             """,
+
             """
             CREATE TABLE IF NOT EXISTS task_submissions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -148,6 +162,7 @@ def initialize_database():
                 FOREIGN KEY (task_id) REFERENCES tasks(id)
             )
             """,
+
             """
             CREATE TABLE IF NOT EXISTS documents (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -158,6 +173,7 @@ def initialize_database():
                 FOREIGN KEY (student_id) REFERENCES users(id)
             )
             """,
+
             """
             CREATE TABLE IF NOT EXISTS feedback (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -170,6 +186,7 @@ def initialize_database():
                 FOREIGN KEY (supervisor_id) REFERENCES users(id)
             )
             """,
+
             """
             CREATE TABLE IF NOT EXISTS student_assignments (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -179,21 +196,52 @@ def initialize_database():
                 FOREIGN KEY (student_id) REFERENCES users(id),
                 FOREIGN KEY (supervisor_id) REFERENCES users(id)
             )
-            """,
+            """
         ]
 
+    # Create tables
     for statement in statements:
         cursor.execute(statement)
 
-    # Existing SQLite databases may have been created before the ML feedback
-    # field was added. Add it without disturbing existing data.
+    # SQLite compatibility for older databases
     if not using_postgres():
-        columns = {row[1] for row in cursor.execute("PRAGMA table_info(feedback)").fetchall()}
+        columns = {
+            row[1]
+            for row in cursor.execute(
+                "PRAGMA table_info(feedback)"
+            ).fetchall()
+        }
+
         if "performance_label" not in columns:
-            cursor.execute("ALTER TABLE feedback ADD COLUMN performance_label TEXT")
+            cursor.execute(
+                "ALTER TABLE feedback ADD COLUMN performance_label TEXT"
+            )
+
+    # ---------------------------------------------------------
+    # CREATE DEFAULT ADMIN ACCOUNT
+    # ---------------------------------------------------------
+    cursor.execute(
+        "SELECT id FROM users WHERE username = ?",
+        ("admin",)
+    )
+
+    admin_exists = cursor.fetchone()
+
+    if not admin_exists:
+        cursor.execute(
+            """
+            INSERT INTO users (username, password, role)
+            VALUES (?, ?, ?)
+            """,
+            ("admin", "nexora_123", "admin")
+        )
+
+        print("Default admin account created.")
 
     conn.commit()
+    cursor.close()
     conn.close()
+
     print("Database initialized successfully 🚀")
 
 

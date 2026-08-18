@@ -5,7 +5,7 @@ from pathlib import Path
 
 try:
     import psycopg2
-except ImportError:  # Local SQLite development does not require PostgreSQL.
+except ImportError:
     psycopg2 = None
 
 
@@ -18,7 +18,7 @@ def using_postgres():
 
 
 class HybridRow:
-    """Row that supports both row[0] and row['column_name']."""
+    """Row that supports both row[0] and row['column_name'].""" 
 
     def __init__(self, values, description):
         self._values = tuple(values)
@@ -55,27 +55,41 @@ class PostgresCursor:
 
     @staticmethod
     def _convert_placeholders(sql):
-        # The existing Nexora routes use SQLite's '?' placeholders.
-        # Convert them to psycopg2's '%s' placeholders for PostgreSQL.
+        # Convert SQLite ? placeholders to PostgreSQL %s placeholders.
         return re.sub(r"\?", "%s", sql)
 
     def execute(self, sql, params=None):
-        self._cursor.execute(self._convert_placeholders(sql), params or ())
+        self._cursor.execute(
+            self._convert_placeholders(sql),
+            params or ()
+        )
         return self
 
     def executemany(self, sql, seq_of_params):
-        self._cursor.executemany(self._convert_placeholders(sql), seq_of_params)
+        self._cursor.executemany(
+            self._convert_placeholders(sql),
+            seq_of_params
+        )
         return self
 
     def fetchone(self):
         row = self._cursor.fetchone()
+
         if row is None:
             return None
-        return HybridRow(row, self._cursor.description)
+
+        return HybridRow(
+            row,
+            self._cursor.description
+        )
 
     def fetchall(self):
         rows = self._cursor.fetchall()
-        return [HybridRow(row, self._cursor.description) for row in rows]
+
+        return [
+            HybridRow(row, self._cursor.description)
+            for row in rows
+        ]
 
     @property
     def rowcount(self):
@@ -94,7 +108,9 @@ class PostgresConnection:
         self._connection = connection
 
     def cursor(self):
-        return PostgresCursor(self._connection.cursor())
+        return PostgresCursor(
+            self._connection.cursor()
+        )
 
     def execute(self, sql, params=None):
         cursor = self.cursor()
@@ -112,13 +128,17 @@ class PostgresConnection:
 
 
 def get_db_connection():
-    """Return a database connection for local SQLite or Render PostgreSQL.
-
-    Local development keeps using nexora.db so the existing project behavior
-    is preserved. On Render, setting DATABASE_URL switches the same routes to
-    PostgreSQL without changing the UI or route logic.
     """
+    Return PostgreSQL on Render when DATABASE_URL exists.
+
+    Otherwise use the local SQLite database nexora.db.
+    """
+
+    # -----------------------------------------
+    # RENDER / POSTGRESQL
+    # -----------------------------------------
     if using_postgres():
+
         if psycopg2 is None:
             raise RuntimeError(
                 "DATABASE_URL is set, but psycopg2 is not installed. "
@@ -126,12 +146,25 @@ def get_db_connection():
             )
 
         database_url = os.environ["DATABASE_URL"]
+
+        # Support older postgres:// URLs.
         if database_url.startswith("postgres://"):
-            database_url = "postgresql://" + database_url[len("postgres://"):]
+            database_url = (
+                "postgresql://"
+                + database_url[len("postgres://"):]
+            )
 
         connection = psycopg2.connect(database_url)
+
         return PostgresConnection(connection)
 
-    conn = sqlite3.connect(str(SQLITE_PATH))
+    # -----------------------------------------
+    # LOCAL / SQLITE
+    # -----------------------------------------
+    conn = sqlite3.connect(
+        str(SQLITE_PATH)
+    )
+
     conn.row_factory = sqlite3.Row
+
     return conn
