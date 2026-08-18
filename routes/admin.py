@@ -1,5 +1,4 @@
 from flask import Blueprint, render_template, session, request, redirect
-import sqlite3
 from routes.security import role_required
 import os
 from database.db import get_db_connection
@@ -30,7 +29,7 @@ admin = Blueprint("admin", __name__)
 @admin.route("/admin/dashboard")
 @role_required("admin")
 def admin_dashboard():
-    conn = sqlite3.connect("nexora.db")
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     cursor.execute("SELECT COUNT(*) FROM users WHERE role='student'")
@@ -67,7 +66,7 @@ def admin_dashboard():
 @admin.route("/admin/users")
 @role_required("admin")
 def admin_users():
-    conn = sqlite3.connect("nexora.db")
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -85,7 +84,7 @@ def admin_users():
 @role_required("admin")
 def assign_students():
 
-    conn = sqlite3.connect("nexora.db")
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     # SUBMIT ASSIGNMENT
@@ -130,7 +129,7 @@ def assign_students():
 @role_required("admin")
 def admin_reports_list():
 
-    conn = sqlite3.connect("nexora.db")
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -165,7 +164,7 @@ def admin_reports_list():
 @role_required("admin")
 def admin_reports(student_id):
 
-    conn = sqlite3.connect("nexora.db")
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     # student info
@@ -224,7 +223,7 @@ def admin_reports(student_id):
 @role_required("admin")
 def admin_assignments():
 
-    conn = sqlite3.connect("nexora.db")
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     # students & supervisors
@@ -269,7 +268,7 @@ def assign_role():
     user_id = request.form["user_id"]
     new_role = request.form["role"]
 
-    conn = sqlite3.connect("nexora.db")
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     cursor.execute("""

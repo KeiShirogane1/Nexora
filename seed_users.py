@@ -1,18 +1,29 @@
-import sqlite3
+from database.db import get_db_connection
 
-conn = sqlite3.connect("nexora.db")
-cursor = conn.cursor()
 
 users = [
     ("student", "intern_123", "student"),
     ("supervisor", "superv_123", "supervisor"),
-    ("admin", "nexora_123", "admin")
+    ("admin", "nexora_123", "admin"),
 ]
 
-cursor.executemany("""
-INSERT OR IGNORE INTO users (username, password, role)
-VALUES (?, ?, ?)
-""", users)
+
+conn = get_db_connection()
+cursor = conn.cursor()
+
+if hasattr(cursor, "executemany"):
+    # PostgreSQL: ON CONFLICT keeps this idempotent.
+    if "DATABASE_URL" in __import__("os").environ:
+        cursor.executemany("""
+            INSERT INTO users (username, password, role)
+            VALUES (?, ?, ?)
+            ON CONFLICT (username) DO NOTHING
+        """, users)
+    else:
+        cursor.executemany("""
+            INSERT OR IGNORE INTO users (username, password, role)
+            VALUES (?, ?, ?)
+        """, users)
 
 conn.commit()
 conn.close()

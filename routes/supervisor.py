@@ -518,6 +518,7 @@ def edit_task(task_id):
             f"/supervisor/task/{task_id}"
         )
 
+    student_id = task["student_id"]
     conn.close()
 
     return render_template(

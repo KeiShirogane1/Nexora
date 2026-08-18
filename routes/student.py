@@ -1,5 +1,6 @@
 from flask import Blueprint, current_app, render_template, request, redirect, session, send_file
 from routes.security import role_required
+from database.db import get_db_connection
 import os
 from werkzeug.utils import secure_filename
 from datetime import datetime
@@ -18,13 +19,12 @@ def student_dashboard():
     return render_template("student/dashboard.html", active_page="dashboard")
 
 from flask import request, redirect, session
-import sqlite3
 
 @student.route("/student/clock-in", methods=["POST"])
 @role_required("student")
 def clock_in():
 
-    conn = sqlite3.connect("nexora.db")
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     # Check if the student already has an open attendance session
@@ -66,7 +66,7 @@ def clock_in():
 @role_required("student")
 def logbook():
 
-    conn = sqlite3.connect("nexora.db")
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     # Current attendance session
@@ -150,7 +150,7 @@ def logbook():
 @role_required("student")
 def clock_out():
 
-    conn = sqlite3.connect("nexora.db")
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     # Find the student's current open attendance
@@ -184,7 +184,7 @@ def clock_out():
 
     cursor.execute("""
         UPDATE attendance
-        SET clock_out = ?, hours_rendered = ?, status = 'Closed'
+        SET clock_out = ?, hours_rendered = ?, status = 'Completed'
         WHERE id = ?
     """, (
         current_time,
@@ -201,7 +201,7 @@ def clock_out():
 @role_required("student")
 def add_log():
 
-    conn = sqlite3.connect("nexora.db")
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     content = request.form["content"].strip()
@@ -253,7 +253,7 @@ def add_log():
 @role_required("student")
 def edit_log(log_id):
 
-    conn = sqlite3.connect("nexora.db")
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -312,7 +312,7 @@ def edit_log(log_id):
 @role_required("student")
 def delete_log(log_id):
 
-    conn = sqlite3.connect("nexora.db")
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     # Verify ownership and that the session is still open
@@ -351,7 +351,7 @@ def delete_log(log_id):
 @role_required("student")
 def view_session(attendance_id):
 
-    conn = sqlite3.connect("nexora.db")
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     # Retrieve the attendance session
@@ -415,7 +415,7 @@ def view_session(attendance_id):
 @role_required("student")
 def tasks():
 
-    conn = sqlite3.connect("nexora.db")
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -439,7 +439,7 @@ def tasks():
 @role_required("student")
 def task_details(task_id):
 
-    conn = sqlite3.connect("nexora.db")
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -498,7 +498,7 @@ def task_details(task_id):
 @role_required("student")
 def task_upload(task_id):
 
-    conn = sqlite3.connect("nexora.db")
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     file = request.files.get("file")
@@ -540,7 +540,7 @@ def task_upload(task_id):
 @role_required("student")
 def view_task_submission(submission_id):
 
-    conn = sqlite3.connect("nexora.db")
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -570,7 +570,7 @@ def view_task_submission(submission_id):
 @role_required("student")
 def delete_task_submission(submission_id):
 
-    conn = sqlite3.connect("nexora.db")
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -610,7 +610,7 @@ def delete_task_submission(submission_id):
 @role_required("student")
 def submit_task(task_id):
 
-    conn = sqlite3.connect("nexora.db")
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     # Verify the task belongs to the logged-in student
@@ -644,7 +644,7 @@ def submit_task(task_id):
 @student.route('/student/documents', methods=['GET', 'POST'])
 @role_required("student")
 def documents():
-    conn = sqlite3.connect('nexora.db')
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     if request.method == 'POST':
@@ -682,7 +682,7 @@ def documents():
 @role_required("student")
 def view_document(document_id):
 
-    conn = sqlite3.connect("nexora.db")
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
