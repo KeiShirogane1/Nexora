@@ -1,5 +1,160 @@
+import os
+
 from database.db import get_db_connection, using_postgres
 
+from security.password_security import (
+    hash_password,
+    is_password_hash,
+    verify_password,
+)
+
+def configure_admin_from_environment(cursor):
+    admin_username = os.environ.get(
+        "ADMIN_USERNAME",
+        ""
+    ).strip()
+
+    admin_password = os.environ.get(
+        "ADMIN_PASSWORD",
+        ""
+    )
+
+    if not admin_username and not admin_password:
+        print(
+            "Admin provisioning skipped: "
+            "ADMIN_USERNAME and ADMIN_PASSWORD "
+            "are not configured."
+        )
+        return
+
+    if not admin_username or not admin_password:
+        raise RuntimeError(
+            "ADMIN_USERNAME and ADMIN_PASSWORD "
+            "must both be configured."
+        )
+
+    if len(admin_password) < 12:
+        raise RuntimeError(
+            "ADMIN_PASSWORD must contain "
+            "at least 12 characters."
+        )
+
+    cursor.execute(
+        """
+        SELECT id, username, password, role
+        FROM users
+        WHERE username = ?
+        """,
+        (admin_username,)
+    )
+
+    configured_user = cursor.fetchone()
+
+    if configured_user:
+        if configured_user["role"] != "admin":
+            raise RuntimeError(
+                "ADMIN_USERNAME belongs to "
+                "a non-admin account."
+            )
+
+        stored_password = configured_user["password"]
+
+        password_is_secure = (
+            is_password_hash(stored_password)
+            and verify_password(
+                stored_password,
+                admin_password
+            )
+        )
+
+        if not password_is_secure:
+            cursor.execute(
+                """
+                UPDATE users
+                SET password = ?
+                WHERE id = ?
+                """,
+                (
+                    hash_password(admin_password),
+                    configured_user["id"]
+                )
+            )
+
+            print(
+                "Admin password secured "
+                "with password hashing."
+            )
+        else:
+            print(
+                "Admin credentials already "
+                "secure and synchronized."
+            )
+
+        return
+
+    cursor.execute(
+        """
+        SELECT id, username
+        FROM users
+        WHERE role = ?
+        """,
+        ("admin",)
+    )
+
+    existing_admins = cursor.fetchall()
+
+    if len(existing_admins) == 0:
+        cursor.execute(
+            """
+            INSERT INTO users (
+                username,
+                password,
+                role
+            )
+            VALUES (?, ?, ?)
+            """,
+            (
+                admin_username,
+                hash_password(admin_password),
+                "admin"
+            )
+        )
+
+        print(
+            "Admin account created securely "
+            "from environment."
+        )
+        return
+
+    if len(existing_admins) == 1:
+        admin_id = existing_admins[0]["id"]
+
+        cursor.execute(
+            """
+            UPDATE users
+            SET
+                username = ?,
+                password = ?
+            WHERE id = ?
+            """,
+            (
+                admin_username,
+                hash_password(admin_password),
+                admin_id
+            )
+        )
+
+        print(
+            "Existing admin credentials rotated "
+            "and securely hashed."
+        )
+        return
+
+    raise RuntimeError(
+        "Multiple admin accounts exist. "
+        "ADMIN_USERNAME must match an "
+        "existing admin account."
+    )
 
 def initialize_database():
     conn = get_db_connection()
@@ -218,25 +373,10 @@ def initialize_database():
             )
 
     # ---------------------------------------------------------
-    # CREATE DEFAULT ADMIN ACCOUNT
+    # CONFIGURE ADMIN SECURELY FROM ENVIRONMENT
     # ---------------------------------------------------------
-    cursor.execute(
-        "SELECT id FROM users WHERE username = ?",
-        ("admin",)
-    )
 
-    admin_exists = cursor.fetchone()
-
-    if not admin_exists:
-        cursor.execute(
-            """
-            INSERT INTO users (username, password, role)
-            VALUES (?, ?, ?)
-            """,
-            ("admin", "nexora_123", "admin")
-        )
-
-        print("Default admin account created.")
+    configure_admin_from_environment(cursor)
 
     conn.commit()
     cursor.close()

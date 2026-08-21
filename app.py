@@ -1,4 +1,5 @@
 import os
+import secrets
 from pathlib import Path
 from flask import Flask
 from routes.auth import auth
@@ -13,8 +14,10 @@ BASE_DIR = Path(__file__).resolve().parent
 app = Flask(__name__)
 
 # Use a Render environment variable in production and keep a local fallback.
-app.secret_key = os.environ.get("SECRET_KEY", "nexora_secret_key")
-
+app.secret_key = (
+    os.environ.get("SECRET_KEY")
+    or secrets.token_urlsafe(48)
+)
 UPLOAD_FOLDER = BASE_DIR / "uploads"
 UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = str(UPLOAD_FOLDER)

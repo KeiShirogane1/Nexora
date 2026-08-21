@@ -1,5 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session
+
 from database.db import get_db_connection
+from security.password_security import hash_password, verify_password
 
 auth = Blueprint("auth", __name__)
 
@@ -15,13 +17,28 @@ def get_user(username, password):
     cursor = conn.cursor()
 
     try:
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT id, username, password, role
             FROM users
-            WHERE username = ? AND password = ?
-        """, (username, password))
+            WHERE username = ?
+            """,
+            (username,)
+        )
 
         user = cursor.fetchone()
+
+        if not user:
+            return None
+
+        stored_password = user["password"]
+
+        if not verify_password(
+            stored_password,
+            password
+        ):
+            return None
+
         return user
 
     finally:
@@ -37,29 +54,61 @@ def welcome():
 @auth.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        username = request.form["username"]
+        username = request.form["username"].strip()
         password = request.form["password"]
 
         user = get_user(username, password)
 
         if user:
-            role = user[3]
+            role = user["role"]
 
-            session["user_id"] = user[0]
+            session["user_id"] = user["id"]
             session["role"] = role
 
             if role == "student":
-                return redirect(url_for("student.student_dashboard"))
+                return redirect(
+                    url_for("student.student_dashboard")
+                )
 
             elif role == "supervisor":
-                return redirect(url_for("supervisor.supervisor_dashboard"))
+                return redirect(
+                    url_for("supervisor.supervisor_dashboard")
+                )
 
             elif role == "admin":
-                return redirect(url_for("admin.admin_dashboard"))
+                return redirect(
+                    url_for("admin.admin_dashboard")
+                )
 
-        return "Invalid credentials ❌"
+        # Save the warning temporarily.
+        session["login_error"] = (
+            "Invalid username or password ❌"
+        )
 
-    return render_template("auth/login.html")
+        session["login_username"] = username
+
+        # Redirect back to login instead of directly
+        # returning the failed POST page.
+        return redirect(
+            url_for("auth.login")
+        )
+
+    # These values are shown only once.
+    error = session.pop(
+        "login_error",
+        None
+    )
+
+    entered_username = session.pop(
+        "login_username",
+        ""
+    )
+
+    return render_template(
+        "auth/login.html",
+        error=error,
+        entered_username=entered_username
+    )
 
 
 @auth.route("/signup", methods=["GET", "POST"])
@@ -92,10 +141,22 @@ def signup():
                 return "Username already exists ❌"
 
             # New accounts remain pending exactly as before
-            cursor.execute("""
-                INSERT INTO users (username, password, role)
+            password_hash = hash_password(password)
+
+            cursor.execute(
+                """
+                INSERT INTO users (
+                    username,
+                    password,
+                    role
+                )
                 VALUES (?, ?, 'pending')
-            """, (username, password))
+                """,
+                (
+                    username,
+                    password_hash
+                )
+            )
 
             conn.commit()
 
