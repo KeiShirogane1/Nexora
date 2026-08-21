@@ -7,6 +7,88 @@ from security.password_security import (
     is_password_hash,
 )
 
+def recover_admin_from_environment(cursor):
+    recovery_enabled = os.environ.get(
+        "ADMIN_RECOVERY_ENABLED",
+        ""
+    ).strip().lower()
+
+    if recovery_enabled != "true":
+        return
+
+    admin_username = os.environ.get(
+        "ADMIN_RECOVERY_USERNAME",
+        ""
+    ).strip()
+
+    admin_password = os.environ.get(
+        "ADMIN_RECOVERY_PASSWORD",
+        ""
+    )
+
+    admin_email = os.environ.get(
+        "ADMIN_RECOVERY_EMAIL",
+        ""
+    ).strip().lower()
+
+    if not admin_username:
+        raise RuntimeError(
+            "ADMIN_RECOVERY_USERNAME is required."
+        )
+
+    if not admin_password:
+        raise RuntimeError(
+            "ADMIN_RECOVERY_PASSWORD is required."
+        )
+
+    if len(admin_password) < 12:
+        raise RuntimeError(
+            "ADMIN_RECOVERY_PASSWORD must be "
+            "at least 12 characters."
+        )
+
+    cursor.execute(
+        """
+        SELECT id, role
+        FROM users
+        WHERE username = ?
+        LIMIT 1
+        """,
+        (admin_username,)
+    )
+
+    admin_user = cursor.fetchone()
+
+    if not admin_user:
+        raise RuntimeError(
+            "Admin recovery account was not found."
+        )
+
+    if admin_user["role"] != "admin":
+        raise RuntimeError(
+            "Recovery username is not an admin account."
+        )
+
+    cursor.execute(
+        """
+        UPDATE users
+        SET
+            password = ?,
+            email = ?,
+            password_changed_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+        """,
+        (
+            hash_password(admin_password),
+            admin_email or None,
+            admin_user["id"]
+        )
+    )
+
+    print(
+        "Admin recovery completed successfully."
+    )
+
 def configure_admin_from_environment(cursor):
     admin_username = os.environ.get(
         "ADMIN_USERNAME",
@@ -84,6 +166,41 @@ def configure_admin_from_environment(cursor):
                 "Admin account already uses "
                 "secure password hashing."
             )
+
+        return
+
+    cursor.execute(
+        """
+        SELECT id, username
+        FROM users
+        WHERE role = ?
+        """,
+        ("admin",)
+    )
+
+    existing_admins = cursor.fetchall()
+
+    if len(existing_admins) == 0:
+        cursor.execute(
+            """
+            INSERT INTO users (
+                username,
+                password,
+                role
+            )
+            VALUES (?, ?, ?)
+            """,
+            (
+                admin_username,
+                hash_password(admin_password),
+                "admin"
+            )
+        )
+
+        print(
+            "Admin account created securely "
+            "from environment."
+        )
 
         return
 
@@ -361,7 +478,6 @@ def initialize_database():
         cursor.execute(statement)
 
     # SQLite compatibility for older databases
-    # SQLite compatibility for older databases
     if not using_postgres():
         columns = {
             row[1]
@@ -398,6 +514,12 @@ def initialize_database():
             ON users(email)
             """
         )
+
+  # ---------------------------------------------------------
+    # TEMPORARY ADMIN RECOVERY
+    # ---------------------------------------------------------
+
+    recover_admin_from_environment(cursor)
 
     # ---------------------------------------------------------
     # CONFIGURE ADMIN SECURELY FROM ENVIRONMENT
