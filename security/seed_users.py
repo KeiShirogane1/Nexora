@@ -44,6 +44,22 @@ def create_user():
     cursor = conn.cursor()
 
     try:
+        # Check whether username already exists.
+        cursor.execute(
+            """
+            SELECT id
+            FROM users
+            WHERE username = ?
+            """,
+            (username,)
+        )
+
+        if cursor.fetchone():
+            raise ValueError(
+                "A user with that username already exists."
+            )
+
+        # Hash before storing.
         password_hash = hash_password(password)
 
         cursor.execute(
@@ -58,29 +74,6 @@ def create_user():
             (
                 username,
                 password_hash,
-                role
-            )
-        )
-
-        existing_user = cursor.fetchone()
-
-        if existing_user:
-            raise ValueError(
-                "A user with that username already exists."
-            )
-
-        cursor.execute(
-            """
-            INSERT INTO users (
-                username,
-                password,
-                role
-            )
-            VALUES (?, ?, ?)
-            """,
-            (
-                username,
-                password,
                 role
             )
         )
