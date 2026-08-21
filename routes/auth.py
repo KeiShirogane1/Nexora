@@ -12,21 +12,27 @@ def logout():
     return redirect("/")
 
 
-def get_user(username, password):
+def get_user(identifier, password):
     conn = get_db_connection()
     cursor = conn.cursor()
 
     try:
         cursor.execute(
             """
-            SELECT id
+            SELECT
+                id,
+                username,
+                email,
+                password,
+                role
             FROM users
             WHERE username = ?
-            OR email = ?
+               OR LOWER(email) = LOWER(?)
+            LIMIT 1
             """,
             (
-                username,
-                email
+                identifier,
+                identifier
             )
         )
 
@@ -35,10 +41,8 @@ def get_user(username, password):
         if not user:
             return None
 
-        stored_password = user["password"]
-
         if not verify_password(
-            stored_password,
+            user["password"],
             password
         ):
             return None

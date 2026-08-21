@@ -1,116 +1,162 @@
-import os
-import smtplib
+import hashlib
+import secrets
 
-from email.message import EmailMessage
+from datetime import datetime, timedelta
+
+from database.db import get_db_connection
 
 
-def send_email(recipient, subject, body):
-    smtp_host = os.environ.get(
-        "SMTP_HOST",
-        "smtp.gmail.com"
-    )
+RESET_TOKEN_MINUTES = 30
 
-    smtp_port = int(
-        os.environ.get(
-            "SMTP_PORT",
-            "587"
+
+def hash_reset_token(token):
+    return hashlib.sha256(
+        token.encode("utf-8")
+    ).hexdigest()
+
+
+def create_reset_token(user_id):
+    token = secrets.token_urlsafe(48)
+
+    token_hash = hash_reset_token(token)
+
+    expires_at = (
+        datetime.utcnow()
+        + timedelta(
+            minutes=RESET_TOKEN_MINUTES
         )
     )
 
-    smtp_username = os.environ.get(
-        "SMTP_USERNAME"
-    )
+    conn = get_db_connection()
+    cursor = conn.cursor()
 
-    smtp_password = os.environ.get(
-        "SMTP_PASSWORD"
-    )
-
-    email_from = os.environ.get(
-        "EMAIL_FROM",
-        smtp_username
-    )
-
-    if not smtp_username or not smtp_password:
-        raise RuntimeError(
-            "SMTP email credentials are not configured."
+    try:
+        # Invalidate previous unused reset links.
+        cursor.execute(
+            """
+            UPDATE password_reset_tokens
+            SET used_at = CURRENT_TIMESTAMP
+            WHERE user_id = ?
+              AND used_at IS NULL
+            """,
+            (user_id,)
         )
 
-    message = EmailMessage()
-
-    message["From"] = email_from
-    message["To"] = recipient
-    message["Subject"] = subject
-
-    message.set_content(body)
-
-    with smtplib.SMTP(
-        smtp_host,
-        smtp_port,
-        timeout=30
-    ) as server:
-
-        server.ehlo()
-
-        server.starttls()
-
-        server.ehlo()
-
-        server.login(
-            smtp_username,
-            smtp_password
+        cursor.execute(
+            """
+            INSERT INTO password_reset_tokens (
+                user_id,
+                token_hash,
+                expires_at
+            )
+            VALUES (?, ?, ?)
+            """,
+            (
+                user_id,
+                token_hash,
+                expires_at
+            )
         )
 
-        server.send_message(message)
+        conn.commit()
+
+        return token
+
+    except Exception:
+        conn.rollback()
+        raise
+
+    finally:
+        cursor.close()
+        conn.close()
 
 
-def send_password_reset_email(
-    recipient,
-    username,
-    reset_url
-):
-    subject = "Reset your Nexora password"
+def get_valid_reset_token(token):
+    token_hash = hash_reset_token(token)
 
-    body = f"""Hello {username},
+    conn = get_db_connection()
+    cursor = conn.cursor()
 
-We received a request to reset your Nexora password.
+    try:
+        cursor.execute(
+            """
+            SELECT
+                prt.id,
+                prt.user_id,
+                u.username,
+                u.email
+            FROM password_reset_tokens prt
+            JOIN users u
+                ON u.id = prt.user_id
+            WHERE prt.token_hash = ?
+              AND prt.used_at IS NULL
+              AND prt.expires_at > CURRENT_TIMESTAMP
+            LIMIT 1
+            """,
+            (token_hash,)
+        )
 
-Use the link below to create a new password:
+        return cursor.fetchone()
 
-{reset_url}
-
-This link will expire in 30 minutes.
-
-If you did not request a password reset, you can safely ignore this email.
-
-Nexora
-"""
-
-    send_email(
-        recipient,
-        subject,
-        body
-    )
+    finally:
+        cursor.close()
+        conn.close()
 
 
-def send_password_changed_email(
-    recipient,
-    username
-):
-    subject = "Your Nexora password was changed"
+def mark_reset_token_used(token):
+    token_hash = hash_reset_token(token)
 
-    body = f"""Hello {username},
+    conn = get_db_connection()
+    cursor = conn.cursor()
 
-Your Nexora account password was successfully changed.
+    try:
+        cursor.execute(
+            """
+            UPDATE password_reset_tokens
+            SET used_at = CURRENT_TIMESTAMP
+            WHERE token_hash = ?
+              AND used_at IS NULL
+              AND expires_at > CURRENT_TIMESTAMP
+            """,
+            (token_hash,)
+        )
 
-If you made this change, no action is required.
+        was_used = cursor.rowcount == 1
 
-If you did not change your password, contact your Nexora administrator immediately.
+        conn.commit()
 
-Nexora
-"""
+        return was_used
 
-    send_email(
-        recipient,
-        subject,
-        body
-    )
+    except Exception:
+        conn.rollback()
+        raise
+
+    finally:
+        cursor.close()
+        conn.close()
+
+
+def invalidate_user_reset_tokens(user_id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute(
+            """
+            UPDATE password_reset_tokens
+            SET used_at = CURRENT_TIMESTAMP
+            WHERE user_id = ?
+              AND used_at IS NULL
+            """,
+            (user_id,)
+        )
+
+        conn.commit()
+
+    except Exception:
+        conn.rollback()
+        raise
+
+    finally:
+        cursor.close()
+        conn.close()

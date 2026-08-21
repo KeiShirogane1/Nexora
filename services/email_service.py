@@ -18,21 +18,28 @@ def send_email(recipient, subject, body):
     )
 
     smtp_username = os.environ.get(
-        "SMTP_USERNAME"
-    )
+        "SMTP_USERNAME",
+        ""
+    ).strip()
 
     smtp_password = os.environ.get(
-        "SMTP_PASSWORD"
-    )
+        "SMTP_PASSWORD",
+        ""
+    ).replace(" ", "")
 
     email_from = os.environ.get(
         "EMAIL_FROM",
         smtp_username
-    )
+    ).strip()
 
     if not smtp_username or not smtp_password:
         raise RuntimeError(
             "SMTP email credentials are not configured."
+        )
+
+    if not recipient:
+        raise ValueError(
+            "Recipient email address is required."
         )
 
     message = EmailMessage()
@@ -74,13 +81,13 @@ def send_password_reset_email(
 
 We received a request to reset your Nexora password.
 
-Use the link below to create a new password:
+Use the secure link below to create a new password:
 
 {reset_url}
 
-This link will expire in 30 minutes.
+This password reset link expires in 30 minutes and can only be used once.
 
-If you did not request a password reset, you can safely ignore this email.
+If you did not request this password reset, you can safely ignore this email.
 
 Nexora
 """
@@ -102,7 +109,7 @@ def send_password_changed_email(
 
 Your Nexora account password was successfully changed.
 
-If you made this change, no action is required.
+If you made this change, no further action is required.
 
 If you did not change your password, contact your Nexora administrator immediately.
 

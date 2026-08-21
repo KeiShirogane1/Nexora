@@ -5,7 +5,6 @@ from database.db import get_db_connection, using_postgres
 from security.password_security import (
     hash_password,
     is_password_hash,
-    verify_password,
 )
 
 def configure_admin_from_environment(cursor):
@@ -59,15 +58,10 @@ def configure_admin_from_environment(cursor):
 
         stored_password = configured_user["password"]
 
-        password_is_secure = (
-            is_password_hash(stored_password)
-            and verify_password(
-                stored_password,
-                admin_password
-            )
-        )
-
-        if not password_is_secure:
+        # Only upgrade an old/plaintext password.
+        # Do NOT reset an already-hashed admin password
+        # back to ADMIN_PASSWORD on every app restart.
+        if not is_password_hash(stored_password):
             cursor.execute(
                 """
                 UPDATE users
@@ -81,49 +75,16 @@ def configure_admin_from_environment(cursor):
             )
 
             print(
-                "Admin password secured "
-                "with password hashing."
+                "Admin password upgraded "
+                "to secure password hashing."
             )
+
         else:
             print(
-                "Admin credentials already "
-                "secure and synchronized."
+                "Admin account already uses "
+                "secure password hashing."
             )
 
-        return
-
-    cursor.execute(
-        """
-        SELECT id, username
-        FROM users
-        WHERE role = ?
-        """,
-        ("admin",)
-    )
-
-    existing_admins = cursor.fetchall()
-
-    if len(existing_admins) == 0:
-        cursor.execute(
-            """
-            INSERT INTO users (
-                username,
-                password,
-                role
-            )
-            VALUES (?, ?, ?)
-            """,
-            (
-                admin_username,
-                hash_password(admin_password),
-                "admin"
-            )
-        )
-
-        print(
-            "Admin account created securely "
-            "from environment."
-        )
         return
 
     if len(existing_admins) == 1:
@@ -269,54 +230,18 @@ def initialize_database():
             CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email
             ON users(email)
             """,
-            
-            """
-            CREATE TABLE IF NOT EXISTS student_assignments (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                student_id INTEGER NOT NULL,
-                supervisor_id INTEGER NOT NULL,
-                UNIQUE(student_id, supervisor_id),
-                FOREIGN KEY (student_id) REFERENCES users(id),
-                FOREIGN KEY (supervisor_id) REFERENCES users(id)
-            )
-            """,
 
             """
             CREATE TABLE IF NOT EXISTS password_reset_tokens (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL,
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL REFERENCES users(id),
                 token_hash TEXT UNIQUE NOT NULL,
                 expires_at TIMESTAMP NOT NULL,
                 used_at TIMESTAMP,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (user_id) REFERENCES users(id)
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
             """
-            
-            user_columns = {
-                row[1]
-                for row in cursor.execute(
-                    "PRAGMA table_info(users)"
-                ).fetchall()
-            }
-
-            if "email" not in user_columns:
-                cursor.execute(
-                    "ALTER TABLE users ADD COLUMN email TEXT"
-                )
-
-            if "password_changed_at" not in user_columns:
-                cursor.execute(
-                    "ALTER TABLE users ADD COLUMN password_changed_at TIMESTAMP"
-                )
-
-            cursor.execute(
-                """
-                CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email
-                ON users(email)
-                """
-            )
-        ]
+            ]
 
     else:
         statements = [
@@ -417,9 +342,20 @@ def initialize_database():
                 FOREIGN KEY (student_id) REFERENCES users(id),
                 FOREIGN KEY (supervisor_id) REFERENCES users(id)
             )
-            """
-        ]
+            """,
 
+            """
+            CREATE TABLE IF NOT EXISTS password_reset_tokens (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                token_hash TEXT UNIQUE NOT NULL,
+                expires_at TIMESTAMP NOT NULL,
+                used_at TIMESTAMP,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+            """
+            ]
     # Create tables
     for statement in statements:
         cursor.execute(statement)

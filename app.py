@@ -1,4 +1,9 @@
 import os
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
 import secrets
 from pathlib import Path
 from flask import Flask
@@ -8,7 +13,6 @@ from routes.student import student
 from routes.supervisor import supervisor
 from routes.admin import admin
 from init_db import initialize_database
-
 
 BASE_DIR = Path(__file__).resolve().parent
 
