@@ -1,5 +1,121 @@
+import os
+
 from database.db import get_db_connection, using_postgres
 
+from security.password_security import (
+    hash_password,
+    is_password_hash,
+)
+
+def configure_admin_from_environment(cursor):
+    admin_username = os.environ.get(
+        "ADMIN_USERNAME",
+        ""
+    ).strip()
+
+    admin_password = os.environ.get(
+        "ADMIN_PASSWORD",
+        ""
+    )
+
+    if not admin_username and not admin_password:
+        print(
+            "Admin provisioning skipped: "
+            "ADMIN_USERNAME and ADMIN_PASSWORD "
+            "are not configured."
+        )
+        return
+
+    if not admin_username or not admin_password:
+        raise RuntimeError(
+            "ADMIN_USERNAME and ADMIN_PASSWORD "
+            "must both be configured."
+        )
+
+    if len(admin_password) < 12:
+        raise RuntimeError(
+            "ADMIN_PASSWORD must contain "
+            "at least 12 characters."
+        )
+
+    cursor.execute(
+        """
+        SELECT id, username, password, role
+        FROM users
+        WHERE username = ?
+        """,
+        (admin_username,)
+    )
+
+    configured_user = cursor.fetchone()
+
+    if configured_user:
+        if configured_user["role"] != "admin":
+            raise RuntimeError(
+                "ADMIN_USERNAME belongs to "
+                "a non-admin account."
+            )
+
+        stored_password = configured_user["password"]
+
+        # Only upgrade an old/plaintext password.
+        # Do NOT reset an already-hashed admin password
+        # back to ADMIN_PASSWORD on every app restart.
+        if not is_password_hash(stored_password):
+            cursor.execute(
+                """
+                UPDATE users
+                SET password = ?
+                WHERE id = ?
+                """,
+                (
+                    hash_password(admin_password),
+                    configured_user["id"]
+                )
+            )
+
+            print(
+                "Admin password upgraded "
+                "to secure password hashing."
+            )
+
+        else:
+            print(
+                "Admin account already uses "
+                "secure password hashing."
+            )
+
+        return
+
+    if len(existing_admins) == 1:
+        admin_id = existing_admins[0]["id"]
+
+        cursor.execute(
+            """
+            UPDATE users
+            SET
+                username = ?,
+                password = ?
+            WHERE id = ?
+            """,
+            (
+                admin_username,
+                hash_password(admin_password),
+                admin_id
+            )
+        )
+
+        print(
+            "Existing admin credentials rotated "
+            "and securely hashed."
+        )
+        return
+
+    raise RuntimeError(
+        "Multiple admin accounts exist. "
+        "ADMIN_USERNAME must match an "
+        "existing admin account."
+    )
 
 def initialize_database():
     conn = get_db_connection()
@@ -11,8 +127,10 @@ def initialize_database():
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
                 username TEXT UNIQUE NOT NULL,
+                email TEXT UNIQUE,
                 password TEXT NOT NULL,
-                role TEXT NOT NULL
+                role TEXT NOT NULL,
+                password_changed_at TIMESTAMP
             )
             """,
 
@@ -96,8 +214,34 @@ def initialize_database():
             """
             ALTER TABLE feedback
             ADD COLUMN IF NOT EXISTS performance_label TEXT
+            """,
+            
             """
-        ]
+            ALTER TABLE users
+            ADD COLUMN IF NOT EXISTS email TEXT
+            """,
+
+            """
+            ALTER TABLE users
+            ADD COLUMN IF NOT EXISTS password_changed_at TIMESTAMP
+            """,
+
+            """
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email
+            ON users(email)
+            """,
+
+            """
+            CREATE TABLE IF NOT EXISTS password_reset_tokens (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL REFERENCES users(id),
+                token_hash TEXT UNIQUE NOT NULL,
+                expires_at TIMESTAMP NOT NULL,
+                used_at TIMESTAMP,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+            ]
 
     else:
         statements = [
@@ -105,8 +249,10 @@ def initialize_database():
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT UNIQUE NOT NULL,
+                email TEXT UNIQUE,
                 password TEXT NOT NULL,
-                role TEXT NOT NULL
+                role TEXT NOT NULL,
+                password_changed_at TIMESTAMP
             )
             """,
 
@@ -196,13 +342,25 @@ def initialize_database():
                 FOREIGN KEY (student_id) REFERENCES users(id),
                 FOREIGN KEY (supervisor_id) REFERENCES users(id)
             )
-            """
-        ]
+            """,
 
+            """
+            CREATE TABLE IF NOT EXISTS password_reset_tokens (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                token_hash TEXT UNIQUE NOT NULL,
+                expires_at TIMESTAMP NOT NULL,
+                used_at TIMESTAMP,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+            """
+            ]
     # Create tables
     for statement in statements:
         cursor.execute(statement)
 
+    # SQLite compatibility for older databases
     # SQLite compatibility for older databases
     if not using_postgres():
         columns = {
@@ -217,26 +375,35 @@ def initialize_database():
                 "ALTER TABLE feedback ADD COLUMN performance_label TEXT"
             )
 
-    # ---------------------------------------------------------
-    # CREATE DEFAULT ADMIN ACCOUNT
-    # ---------------------------------------------------------
-    cursor.execute(
-        "SELECT id FROM users WHERE username = ?",
-        ("admin",)
-    )
+        user_columns = {
+            row[1]
+            for row in cursor.execute(
+                "PRAGMA table_info(users)"
+            ).fetchall()
+        }
 
-    admin_exists = cursor.fetchone()
+        if "email" not in user_columns:
+            cursor.execute(
+                "ALTER TABLE users ADD COLUMN email TEXT"
+            )
 
-    if not admin_exists:
+        if "password_changed_at" not in user_columns:
+            cursor.execute(
+                "ALTER TABLE users ADD COLUMN password_changed_at TIMESTAMP"
+            )
+
         cursor.execute(
             """
-            INSERT INTO users (username, password, role)
-            VALUES (?, ?, ?)
-            """,
-            ("admin", "nexora_123", "admin")
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email
+            ON users(email)
+            """
         )
 
-        print("Default admin account created.")
+    # ---------------------------------------------------------
+    # CONFIGURE ADMIN SECURELY FROM ENVIRONMENT
+    # ---------------------------------------------------------
+
+    configure_admin_from_environment(cursor)
 
     conn.commit()
     cursor.close()

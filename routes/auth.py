@@ -1,5 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session
+
 from database.db import get_db_connection
+from security.password_security import hash_password, verify_password
 
 auth = Blueprint("auth", __name__)
 
@@ -10,18 +12,41 @@ def logout():
     return redirect("/")
 
 
-def get_user(username, password):
+def get_user(identifier, password):
     conn = get_db_connection()
     cursor = conn.cursor()
 
     try:
-        cursor.execute("""
-            SELECT id, username, password, role
+        cursor.execute(
+            """
+            SELECT
+                id,
+                username,
+                email,
+                password,
+                role
             FROM users
-            WHERE username = ? AND password = ?
-        """, (username, password))
+            WHERE username = ?
+               OR LOWER(email) = LOWER(?)
+            LIMIT 1
+            """,
+            (
+                identifier,
+                identifier
+            )
+        )
 
         user = cursor.fetchone()
+
+        if not user:
+            return None
+
+        if not verify_password(
+            user["password"],
+            password
+        ):
+            return None
+
         return user
 
     finally:
@@ -37,36 +62,74 @@ def welcome():
 @auth.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        username = request.form["username"]
+        username = request.form["username"].strip()
         password = request.form["password"]
 
         user = get_user(username, password)
 
         if user:
-            role = user[3]
+            role = user["role"]
 
-            session["user_id"] = user[0]
+            session["user_id"] = user["id"]
             session["role"] = role
 
             if role == "student":
-                return redirect(url_for("student.student_dashboard"))
+                return redirect(
+                    url_for("student.student_dashboard")
+                )
 
             elif role == "supervisor":
-                return redirect(url_for("supervisor.supervisor_dashboard"))
+                return redirect(
+                    url_for("supervisor.supervisor_dashboard")
+                )
 
             elif role == "admin":
-                return redirect(url_for("admin.admin_dashboard"))
+                return redirect(
+                    url_for("admin.admin_dashboard")
+                )
 
-        return "Invalid credentials ❌"
+        # Save the warning temporarily.
+        session["login_error"] = (
+            "Invalid username or password ❌"
+        )
 
-    return render_template("auth/login.html")
+        session["login_username"] = username
 
+        # Redirect back to login instead of directly
+        # returning the failed POST page.
+        return redirect(
+            url_for("auth.login")
+        )
+
+    # These values are shown only once.
+    error = session.pop(
+        "login_error",
+        None
+    )
+
+    entered_username = session.pop(
+        "login_username",
+        ""
+    )
+
+    return render_template(
+        "auth/login.html",
+        error=error,
+        entered_username=entered_username
+    )
 
 @auth.route("/signup", methods=["GET", "POST"])
 def signup():
 
     if request.method == "POST":
-        username = request.form["username"]
+        username = request.form["username"].strip()
+
+        email = (
+            request.form["email"]
+            .strip()
+            .lower()
+        )
+
         password = request.form["password"]
         confirm_password = request.form["confirm_password"]
 
@@ -75,27 +138,50 @@ def signup():
             return "Passwords do not match ❌"
 
         # Validate password length
-        if len(password) < 6:
-            return "Password must be at least 6 characters ❌"
+        if len(password) < 8:
+            return "Password must be at least 8 characters ❌"
 
         conn = get_db_connection()
         cursor = conn.cursor()
 
         try:
-            # Check if username already exists
+            # Check if username OR email already exists
             cursor.execute(
-                "SELECT id FROM users WHERE username = ?",
-                (username,)
+                """
+                SELECT id
+                FROM users
+                WHERE username = ?
+                   OR email = ?
+                """,
+                (
+                    username,
+                    email
+                )
             )
 
             if cursor.fetchone():
-                return "Username already exists ❌"
+                return "Username or email already exists ❌"
 
-            # New accounts remain pending exactly as before
-            cursor.execute("""
-                INSERT INTO users (username, password, role)
-                VALUES (?, ?, 'pending')
-            """, (username, password))
+            # Securely hash password
+            password_hash = hash_password(password)
+
+            # New accounts remain pending
+            cursor.execute(
+                """
+                INSERT INTO users (
+                    username,
+                    email,
+                    password,
+                    role
+                )
+                VALUES (?, ?, ?, 'pending')
+                """,
+                (
+                    username,
+                    email,
+                    password_hash
+                )
+            )
 
             conn.commit()
 

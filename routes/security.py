@@ -18,3 +18,15 @@ def role_required(role):
         return inner
 
     return wrapper
+
+def login_required(func):
+    @wraps(func)
+    def inner(*args, **kwargs):
+
+        if "user_id" not in session:
+            return redirect("/login")
+
+        return func(*args, **kwargs)
+
+    return inner
+
