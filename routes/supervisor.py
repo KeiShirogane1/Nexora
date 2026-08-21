@@ -5,17 +5,32 @@ from database.db import get_db_connection
 from datetime import datetime
 from ml.predictor import analyze_feedback
 
-def format_time(timestamp):
-    if not timestamp:
+def parse_datetime(value):
+    if not value:
         return None
 
-    return datetime.fromisoformat(timestamp).strftime("%I:%M %p").lstrip("0")
+    if isinstance(value, datetime):
+        return value
+
+    return datetime.fromisoformat(value)
+
+
+def format_time(timestamp):
+    dt = parse_datetime(timestamp)
+
+    if not dt:
+        return None
+
+    return dt.strftime("%I:%M %p").lstrip("0")
+
 
 def format_datetime(timestamp):
-    if not timestamp:
+    dt = parse_datetime(timestamp)
+
+    if not dt:
         return None
 
-    return datetime.fromisoformat(timestamp).strftime("%b %d, %Y • %I:%M %p").lstrip("0")
+    return dt.strftime("%b %d, %Y • %I:%M %p").lstrip("0")
 
 supervisor = Blueprint("supervisor", __name__)
 

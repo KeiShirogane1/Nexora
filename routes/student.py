@@ -5,11 +5,25 @@ import os
 from werkzeug.utils import secure_filename
 from datetime import datetime
 
-def format_time(timestamp):
-    if not timestamp:
+
+def parse_datetime(value):
+    if not value:
         return None
 
-    return datetime.fromisoformat(timestamp).strftime("%I:%M %p").lstrip("0")
+    if isinstance(value, datetime):
+        return value
+
+    return datetime.fromisoformat(value)
+
+
+def format_time(timestamp):
+    dt = parse_datetime(timestamp)
+
+    if not dt:
+        return None
+
+    return dt.strftime("%I:%M %p").lstrip("0")
+
 
 student = Blueprint("student", __name__)
 
@@ -170,8 +184,8 @@ def clock_out():
         return redirect("/student/logbook")
 
     attendance_id = attendance[0]
-    clock_in = datetime.fromisoformat(attendance[1])
-
+    clock_in = parse_datetime(attendance[1])
+    
     current_time = datetime.now()
 
     hours_rendered = max(
@@ -388,16 +402,16 @@ def view_session(attendance_id):
 
     attendance = list(attendance)
 
-    attendance[1] = datetime.fromisoformat(attendance[1]).strftime("%I:%M %p")
-
+    attendance[1] = format_time(attendance[1])
+    
     if attendance[2]:
-        attendance[2] = datetime.fromisoformat(attendance[2]).strftime("%I:%M %p")
+        attendance[2] = format_time(attendance[2])
     
     logs = [
         (
             log[0],
             log[1],
-            datetime.fromisoformat(log[2]).strftime("%I:%M %p")
+                format_time(log[2])
         )
         for log in logs
     ]

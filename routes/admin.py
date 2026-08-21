@@ -6,23 +6,41 @@ from datetime import datetime
 from collections import Counter
 from ml.predictor import analyze_feedback
 
-def format_date(timestamp):
-    if not timestamp:
+def parse_datetime(value):
+    if not value:
         return None
 
-    return datetime.fromisoformat(timestamp).strftime("%b %d, %Y")
+    if isinstance(value, datetime):
+        return value
+
+    return datetime.fromisoformat(value)
+
+
+def format_date(timestamp):
+    dt = parse_datetime(timestamp)
+
+    if not dt:
+        return None
+
+    return dt.strftime("%b %d, %Y")
+
 
 def format_time(timestamp):
-    if not timestamp:
+    dt = parse_datetime(timestamp)
+
+    if not dt:
         return None
 
-    return datetime.fromisoformat(timestamp).strftime("%I:%M %p").lstrip("0")
+    return dt.strftime("%I:%M %p").lstrip("0")
+
 
 def format_datetime(timestamp):
-    if not timestamp:
+    dt = parse_datetime(timestamp)
+
+    if not dt:
         return None
 
-    return datetime.fromisoformat(timestamp).strftime("%b %d, %Y • %I:%M %p").lstrip("0")
+    return dt.strftime("%b %d, %Y • %I:%M %p").lstrip("0")
 
 admin = Blueprint("admin", __name__)
 
@@ -533,7 +551,7 @@ def student_report(student_id):
 
     for log in log_dates:
 
-        date_value = datetime.fromisoformat(log[0]).strftime("%Y-%m-%d")
+        date_value = parse_datetime(log[0]).strftime("%Y-%m-%d")
         display_date = format_date(log[0])
 
         if date_value not in logbook_days:
