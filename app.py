@@ -3,6 +3,7 @@ import secrets
 from pathlib import Path
 from flask import Flask
 from routes.auth import auth
+from routes.password import password
 from routes.student import student
 from routes.supervisor import supervisor
 from routes.admin import admin
@@ -26,6 +27,7 @@ app.config["UPLOAD_FOLDER"] = str(UPLOAD_FOLDER)
 initialize_database()
 
 app.register_blueprint(auth)
+app.register_blueprint(password)
 app.register_blueprint(student)
 app.register_blueprint(supervisor)
 app.register_blueprint(admin)

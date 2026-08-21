@@ -166,8 +166,10 @@ def initialize_database():
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
                 username TEXT UNIQUE NOT NULL,
+                email TEXT UNIQUE,
                 password TEXT NOT NULL,
-                role TEXT NOT NULL
+                role TEXT NOT NULL,
+                password_changed_at TIMESTAMP
             )
             """,
 
@@ -251,7 +253,69 @@ def initialize_database():
             """
             ALTER TABLE feedback
             ADD COLUMN IF NOT EXISTS performance_label TEXT
+            """,
+            
             """
+            ALTER TABLE users
+            ADD COLUMN IF NOT EXISTS email TEXT
+            """,
+
+            """
+            ALTER TABLE users
+            ADD COLUMN IF NOT EXISTS password_changed_at TIMESTAMP
+            """,
+
+            """
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email
+            ON users(email)
+            """,
+            
+            """
+            CREATE TABLE IF NOT EXISTS student_assignments (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                student_id INTEGER NOT NULL,
+                supervisor_id INTEGER NOT NULL,
+                UNIQUE(student_id, supervisor_id),
+                FOREIGN KEY (student_id) REFERENCES users(id),
+                FOREIGN KEY (supervisor_id) REFERENCES users(id)
+            )
+            """,
+
+            """
+            CREATE TABLE IF NOT EXISTS password_reset_tokens (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                token_hash TEXT UNIQUE NOT NULL,
+                expires_at TIMESTAMP NOT NULL,
+                used_at TIMESTAMP,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+            """
+            
+            user_columns = {
+                row[1]
+                for row in cursor.execute(
+                    "PRAGMA table_info(users)"
+                ).fetchall()
+            }
+
+            if "email" not in user_columns:
+                cursor.execute(
+                    "ALTER TABLE users ADD COLUMN email TEXT"
+                )
+
+            if "password_changed_at" not in user_columns:
+                cursor.execute(
+                    "ALTER TABLE users ADD COLUMN password_changed_at TIMESTAMP"
+                )
+
+            cursor.execute(
+                """
+                CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email
+                ON users(email)
+                """
+            )
         ]
 
     else:
@@ -260,8 +324,10 @@ def initialize_database():
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT UNIQUE NOT NULL,
+                email TEXT UNIQUE,
                 password TEXT NOT NULL,
-                role TEXT NOT NULL
+                role TEXT NOT NULL,
+                password_changed_at TIMESTAMP
             )
             """,
 
@@ -359,6 +425,7 @@ def initialize_database():
         cursor.execute(statement)
 
     # SQLite compatibility for older databases
+    # SQLite compatibility for older databases
     if not using_postgres():
         columns = {
             row[1]
@@ -371,6 +438,30 @@ def initialize_database():
             cursor.execute(
                 "ALTER TABLE feedback ADD COLUMN performance_label TEXT"
             )
+
+        user_columns = {
+            row[1]
+            for row in cursor.execute(
+                "PRAGMA table_info(users)"
+            ).fetchall()
+        }
+
+        if "email" not in user_columns:
+            cursor.execute(
+                "ALTER TABLE users ADD COLUMN email TEXT"
+            )
+
+        if "password_changed_at" not in user_columns:
+            cursor.execute(
+                "ALTER TABLE users ADD COLUMN password_changed_at TIMESTAMP"
+            )
+
+        cursor.execute(
+            """
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email
+            ON users(email)
+            """
+        )
 
     # ---------------------------------------------------------
     # CONFIGURE ADMIN SECURELY FROM ENVIRONMENT

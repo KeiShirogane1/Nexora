@@ -19,11 +19,15 @@ def get_user(username, password):
     try:
         cursor.execute(
             """
-            SELECT id, username, password, role
+            SELECT id
             FROM users
             WHERE username = ?
+            OR email = ?
             """,
-            (username,)
+            (
+                username,
+                email
+            )
         )
 
         user = cursor.fetchone()
@@ -110,12 +114,18 @@ def login():
         entered_username=entered_username
     )
 
-
 @auth.route("/signup", methods=["GET", "POST"])
 def signup():
 
     if request.method == "POST":
-        username = request.form["username"]
+        username = request.form["username"].strip()
+
+        email = (
+            request.form["email"]
+            .strip()
+            .lower()
+        )
+
         password = request.form["password"]
         confirm_password = request.form["confirm_password"]
 
@@ -124,36 +134,47 @@ def signup():
             return "Passwords do not match ❌"
 
         # Validate password length
-        if len(password) < 6:
-            return "Password must be at least 6 characters ❌"
+        if len(password) < 8:
+            return "Password must be at least 8 characters ❌"
 
         conn = get_db_connection()
         cursor = conn.cursor()
 
         try:
-            # Check if username already exists
+            # Check if username OR email already exists
             cursor.execute(
-                "SELECT id FROM users WHERE username = ?",
-                (username,)
+                """
+                SELECT id
+                FROM users
+                WHERE username = ?
+                   OR email = ?
+                """,
+                (
+                    username,
+                    email
+                )
             )
 
             if cursor.fetchone():
-                return "Username already exists ❌"
+                return "Username or email already exists ❌"
 
-            # New accounts remain pending exactly as before
+            # Securely hash password
             password_hash = hash_password(password)
 
+            # New accounts remain pending
             cursor.execute(
                 """
                 INSERT INTO users (
                     username,
+                    email,
                     password,
                     role
                 )
-                VALUES (?, ?, 'pending')
+                VALUES (?, ?, ?, 'pending')
                 """,
                 (
                     username,
+                    email,
                     password_hash
                 )
             )
