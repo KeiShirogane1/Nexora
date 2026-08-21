@@ -1,6 +1,7 @@
-import hmac
-
-from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.security import (
+    check_password_hash,
+    generate_password_hash,
+)
 
 
 HASH_PREFIXES = (
@@ -33,17 +34,15 @@ def verify_password(stored_password, submitted_password):
     if not stored_password or not submitted_password:
         return False
 
-    # New secure password storage.
-    if is_password_hash(stored_password):
+    # Plaintext passwords are no longer accepted.
+    if not is_password_hash(stored_password):
+        return False
+
+    try:
         return check_password_hash(
             stored_password,
             submitted_password
         )
 
-    # TEMPORARY:
-    # Allows old Nexora accounts to continue working
-    # until Step #3 migrates them.
-    return hmac.compare_digest(
-        str(stored_password),
-        str(submitted_password)
-    )
+    except (ValueError, TypeError):
+        return False
