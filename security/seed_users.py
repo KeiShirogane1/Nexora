@@ -44,7 +44,6 @@ def create_user():
     cursor = conn.cursor()
 
     try:
-        # Check whether username already exists.
         cursor.execute(
             """
             SELECT id
@@ -54,12 +53,13 @@ def create_user():
             (username,)
         )
 
-        if cursor.fetchone():
+        existing_user = cursor.fetchone()
+
+        if existing_user:
             raise ValueError(
                 "A user with that username already exists."
             )
 
-        # Hash before storing.
         password_hash = hash_password(password)
 
         cursor.execute(
