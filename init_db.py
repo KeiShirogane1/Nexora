@@ -47,9 +47,13 @@ def recover_admin_from_environment(cursor):
             "at least 12 characters."
         )
 
+    # -----------------------------------------------------
+    # First try to find the requested username directly.
+    # -----------------------------------------------------
+
     cursor.execute(
         """
-        SELECT id, role
+        SELECT id, username, role
         FROM users
         WHERE username = ?
         LIMIT 1
@@ -59,29 +63,99 @@ def recover_admin_from_environment(cursor):
 
     admin_user = cursor.fetchone()
 
-    if not admin_user:
-        raise RuntimeError(
-            "Admin recovery account was not found."
+    if admin_user:
+        if admin_user["role"] != "admin":
+            raise RuntimeError(
+                "ADMIN_RECOVERY_USERNAME belongs "
+                "to a non-admin account."
+            )
+
+        admin_id = admin_user["id"]
+
+    else:
+        # -------------------------------------------------
+        # Username did not exist.
+        # Look for existing Admin accounts instead.
+        # -------------------------------------------------
+
+        cursor.execute(
+            """
+            SELECT id, username, role
+            FROM users
+            WHERE role = ?
+            ORDER BY id
+            """,
+            ("admin",)
         )
 
-    if admin_user["role"] != "admin":
-        raise RuntimeError(
-            "Recovery username is not an admin account."
-        )
+        existing_admins = cursor.fetchall()
+
+        if len(existing_admins) == 1:
+            admin_id = existing_admins[0]["id"]
+
+            print(
+                "Admin recovery found one existing "
+                "admin account."
+            )
+
+        elif len(existing_admins) == 0:
+            # ---------------------------------------------
+            # No Admin exists at all.
+            # Create the recovery Admin.
+            # ---------------------------------------------
+
+            cursor.execute(
+                """
+                INSERT INTO users (
+                    username,
+                    email,
+                    password,
+                    role,
+                    password_changed_at
+                )
+                VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+                """,
+                (
+                    admin_username,
+                    admin_email or None,
+                    hash_password(admin_password),
+                    "admin"
+                )
+            )
+
+            print(
+                "Admin recovery created a new "
+                "admin account successfully."
+            )
+
+            return
+
+        else:
+            raise RuntimeError(
+                "Multiple admin accounts exist. "
+                "Automatic recovery cannot safely "
+                "choose one."
+            )
+
+    # -----------------------------------------------------
+    # Recover the selected Admin.
+    # -----------------------------------------------------
 
     cursor.execute(
         """
         UPDATE users
         SET
+            username = ?,
             password = ?,
             email = ?,
             password_changed_at = CURRENT_TIMESTAMP
         WHERE id = ?
         """,
         (
+            admin_username,
             hash_password(admin_password),
             admin_email or None,
-            admin_user["id"]
+            admin_id
         )
     )
 
