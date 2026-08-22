@@ -1,73 +1,109 @@
+import json
 import os
-import smtplib
+import urllib.error
+import urllib.request
 
-from email.message import EmailMessage
+
+BREVO_API_URL = "https://api.brevo.com/v3/smtp/email"
 
 
 def send_email(recipient, subject, body):
-    smtp_host = os.environ.get(
-        "SMTP_HOST",
-        "smtp.gmail.com"
-    )
-
-    smtp_port = int(
-        os.environ.get(
-            "SMTP_PORT",
-            "587"
-        )
-    )
-
-    smtp_username = os.environ.get(
-        "SMTP_USERNAME",
+    api_key = os.environ.get(
+        "BREVO_API_KEY",
         ""
     ).strip()
 
-    smtp_password = os.environ.get(
-        "SMTP_PASSWORD",
+    sender_email = os.environ.get(
+        "BREVO_SENDER_EMAIL",
         ""
-    ).replace(" ", "")
-
-    email_from = os.environ.get(
-        "EMAIL_FROM",
-        smtp_username
     ).strip()
 
-    if not smtp_username or not smtp_password:
+    sender_name = os.environ.get(
+        "BREVO_SENDER_NAME",
+        "Nexora"
+    ).strip()
+
+    if not api_key:
         raise RuntimeError(
-            "SMTP email credentials are not configured."
+            "BREVO_API_KEY is not configured."
+        )
+
+    if not sender_email:
+        raise RuntimeError(
+            "BREVO_SENDER_EMAIL is not configured."
         )
 
     if not recipient:
         raise ValueError(
-            "Recipient email address is required."
+            "Recipient email is required."
         )
 
-    message = EmailMessage()
+    payload = {
+        "sender": {
+            "name": sender_name,
+            "email": sender_email
+        },
+        "to": [
+            {
+                "email": recipient
+            }
+        ],
+        "subject": subject,
+        "textContent": body
+    }
 
-    message["From"] = email_from
-    message["To"] = recipient
-    message["Subject"] = subject
+    request_data = json.dumps(
+        payload
+    ).encode("utf-8")
 
-    message.set_content(body)
+    request = urllib.request.Request(
+        BREVO_API_URL,
+        data=request_data,
+        method="POST"
+    )
 
-    with smtplib.SMTP(
-        smtp_host,
-        smtp_port,
-        timeout=30
-    ) as server:
+    request.add_header(
+        "accept",
+        "application/json"
+    )
 
-        server.ehlo()
+    request.add_header(
+        "api-key",
+        api_key
+    )
 
-        server.starttls()
+    request.add_header(
+        "content-type",
+        "application/json"
+    )
 
-        server.ehlo()
+    try:
+        with urllib.request.urlopen(
+            request,
+            timeout=30
+        ) as response:
+            if response.status not in (200, 201, 202):
+                raise RuntimeError(
+                    "Brevo email request failed "
+                    f"with status {response.status}."
+                )
 
-        server.login(
-            smtp_username,
-            smtp_password
+    except urllib.error.HTTPError as error:
+        error_body = error.read().decode(
+            "utf-8",
+            errors="replace"
         )
 
-        server.send_message(message)
+        raise RuntimeError(
+            f"Brevo API error {error.code}: "
+            f"{error_body}"
+        ) from error
+
+    except urllib.error.URLError as error:
+        raise RuntimeError(
+            "Could not connect to Brevo API: "
+            f"{error.reason}"
+        ) from error
 
 
 def send_password_reset_email(
@@ -77,20 +113,21 @@ def send_password_reset_email(
 ):
     subject = "Reset your Nexora password"
 
-    body = f"""Hello {username},
+    body = f"""
+Hello {username},
 
 We received a request to reset your Nexora password.
 
-Use the secure link below to create a new password:
+Use the link below to create a new password:
 
 {reset_url}
 
-This password reset link expires in 30 minutes and can only be used once.
+This password reset link will expire soon.
 
-If you did not request this password reset, you can safely ignore this email.
+If you did not request a password reset, you can ignore this email.
 
-Nexora
-"""
+Nexora System
+""".strip()
 
     send_email(
         recipient,
@@ -105,16 +142,17 @@ def send_password_changed_email(
 ):
     subject = "Your Nexora password was changed"
 
-    body = f"""Hello {username},
+    body = f"""
+Hello {username},
 
-Your Nexora account password was successfully changed.
+Your Nexora account password was changed successfully.
 
 If you made this change, no further action is required.
 
-If you did not change your password, contact your Nexora administrator immediately.
+If you did not change your password, contact the Nexora administrator immediately.
 
-Nexora
-"""
+Nexora System
+""".strip()
 
     send_email(
         recipient,
