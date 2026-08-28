@@ -504,6 +504,9 @@ def initialize_database():
             )
             
             
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
     if not admin_exists:
@@ -516,8 +519,11 @@ def initialize_database():
         )
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
         print("Default admin account created.")
 =======
+=======
+>>>>>>> Stashed changes
         # Notifications compatibility (rename type -> notification_type)
         try:
             notif_cols = {

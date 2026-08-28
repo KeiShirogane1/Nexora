@@ -23,6 +23,11 @@ from collections import Counter
 from ml.predictor import analyze_feedback
 import secrets
 import string
+<<<<<<< Updated upstream
+=======
+
+from security.password_security import hash_password
+>>>>>>> Stashed changes
 
 from security.password_security import hash_password
 

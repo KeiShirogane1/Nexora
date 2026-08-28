@@ -12,7 +12,10 @@ from werkzeug.utils import secure_filename
 from datetime import datetime
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 =======
+=======
+>>>>>>> Stashed changes
 def get_student_profile():
 
     conn = get_db_connection()

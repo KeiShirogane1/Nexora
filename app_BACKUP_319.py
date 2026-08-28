@@ -1,8 +1,11 @@
 import os
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 from pathlib import Path
 from flask import Flask
 =======
+=======
+>>>>>>> Stashed changes
 import secrets
 from pathlib import Path
 
@@ -39,6 +42,9 @@ from flask import (
 )
 
 
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 from routes.auth import auth
 from routes.student import student
@@ -47,12 +53,10 @@ from routes.admin import admin
 from routes.notifications import notifications_bp
 
 
-from routes.notifications import notifications_bp
-
-
 from init_db import initialize_database
 
 
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -89,21 +93,9 @@ app = Flask(__name__)
 
 app.secret_key = (
 
-
     os.environ.get("SECRET_KEY")
 
-
     or secrets.token_urlsafe(48)
-
-)
-
-
-
-# ==========================
-# UPLOAD SETTINGS
-# ==========================
-
-
 
 )
 
@@ -181,6 +173,44 @@ def profile_picture(filename):
 # ==========================
 
 
+=======
+from services.notification_service import (
+    get_user_notifications,
+    get_unread_count
+)
+
+
+
+# ==========================
+# CREATE APP
+# ==========================
+
+
+app = Flask(__name__)
+
+
+
+# ==========================
+# SECURITY
+# ==========================
+
+
+app.secret_key = (
+
+    os.environ.get("SECRET_KEY")
+
+    or secrets.token_urlsafe(48)
+
+)
+
+
+
+# ==========================
+# UPLOAD SETTINGS
+# ==========================
+
+
+UPLOAD_FOLDER = BASE_DIR / "uploads"
 
 
 UPLOAD_FOLDER.mkdir(
@@ -247,14 +277,8 @@ def profile_picture(filename):
 # ==========================
 
 
+>>>>>>> Stashed changes
 initialize_database()
-
-
-
-# ==========================
-# REGISTER BLUEPRINTS
-# ==========================
-
 
 
 
@@ -265,6 +289,12 @@ initialize_database()
 
 app.register_blueprint(auth)
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+=======
+
+app.register_blueprint(password)
+
+>>>>>>> Stashed changes
 =======
 
 app.register_blueprint(password)
@@ -272,45 +302,9 @@ app.register_blueprint(password)
 >>>>>>> Stashed changes
 app.register_blueprint(student)
 
-
 app.register_blueprint(supervisor)
 
-
 app.register_blueprint(admin)
-
-app.register_blueprint(notifications_bp)
-
-
-
-# ==========================
-# NOTIFICATION SYSTEM
-# ==========================
-
-
-@app.context_processor
-def inject_notifications():
-
-    if "user_id" in session:
-        try:
-            return {
-                "notifications": get_user_notifications(
-                    session["user_id"], limit=20
-                ),
-                "unread_count": get_unread_count(
-                    session["user_id"]
-                )
-            }
-        except Exception as e:
-            print("inject_notifications failed:", e)
-            return {"notifications": [], "unread_count": 0}
-
-    return {"notifications": [], "unread_count": 0}
-
-
-
-# ==========================
-# RUN APP
-# ==========================
 
 app.register_blueprint(notifications_bp)
 
@@ -349,9 +343,6 @@ def inject_notifications():
 
 if __name__ == "__main__":
 
-    app.run(
-        debug=True
-    )
     app.run(
         debug=True
     )

@@ -5,6 +5,19 @@ from database.db import get_db_connection
 from datetime import datetime
 from ml.predictor import analyze_feedback
 from services.notification_service import create_notification
+<<<<<<< Updated upstream
+=======
+
+def parse_datetime(value):
+    if not value:
+        return None
+
+    if isinstance(value, datetime):
+        return value
+
+    return datetime.fromisoformat(value)
+
+>>>>>>> Stashed changes
 
 def format_time(timestamp):
     if not timestamp:

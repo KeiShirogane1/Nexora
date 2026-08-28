@@ -1,6 +1,9 @@
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 from flask import Blueprint, render_template, request, redirect, url_for, session
 =======
+=======
+>>>>>>> Stashed changes
 from flask import (
     Blueprint,
     render_template,
@@ -41,6 +44,9 @@ def get_user(username, password):
                 password,
                 role,
                 status
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
             FROM users
             WHERE username = ? AND password = ?
@@ -64,6 +70,9 @@ def get_user(username, password):
 
             return "inactive"
 
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
         return user
 
@@ -127,8 +136,11 @@ def signup():
 
     if request.method == "POST":
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
         username = request.form["username"]
 =======
+=======
+>>>>>>> Stashed changes
 
         username = request.form["username"].strip()
 
@@ -161,10 +173,13 @@ def signup():
         if password != confirm_password:
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
         # Validate password length
         if len(password) < 6:
             return "Password must be at least 6 characters ❌"
 =======
+=======
+>>>>>>> Stashed changes
             flash(
                 "Passwords do not match ❌",
                 "danger"
@@ -187,6 +202,9 @@ def signup():
                 "auth/signup.html"
             )
 
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
         conn = get_db_connection()
@@ -194,6 +212,7 @@ def signup():
 
 
         try:
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
             # Check if username already exists
             cursor.execute(
@@ -210,6 +229,8 @@ def signup():
                 VALUES (?, ?, 'pending')
             """, (username, password))
 =======
+=======
+>>>>>>> Stashed changes
 
             # Duplicate username/email check
             cursor.execute(
@@ -270,6 +291,29 @@ def signup():
                 )
             )
 >>>>>>> Stashed changes
+
+
+            user_id = cursor.lastrowid
+
+
+            if account_type == "student":
+
+                cursor.execute(
+                    """
+                    INSERT INTO student_profiles
+                    (
+                        user_id,
+                        profile_completed
+                    )
+
+                    VALUES
+                    (?,0)
+                    """,
+                    (
+                        user_id,
+                    )
+                )
+
 
 
             user_id = cursor.lastrowid
