@@ -1,10 +1,30 @@
-from flask import Blueprint, render_template, session, request, redirect
+from flask import Blueprint, render_template, session, request, redirect, url_for, flash
 from routes.security import role_required
+from services.email_service import (
+    send_email,
+    send_profile_updated_email
+)
+from services.profile_service import (
+    update_student_profile,
+    get_student_profile_data
+)
+from services.profile_history_service import (
+    log_profile_change,
+    get_profile_history
+)
+
+from services.notification_service import (
+    create_notification
+)
 import os
 from database.db import get_db_connection
 from datetime import datetime
 from collections import Counter
 from ml.predictor import analyze_feedback
+import secrets
+import string
+
+from security.password_security import hash_password
 
 def format_date(timestamp):
     if not timestamp:
@@ -25,6 +45,132 @@ def format_datetime(timestamp):
     return datetime.fromisoformat(timestamp).strftime("%b %d, %Y • %I:%M %p").lstrip("0")
 
 admin = Blueprint("admin", __name__)
+
+def generate_temp_password():
+
+    chars = string.ascii_letters + string.digits
+
+    password = "".join(
+        secrets.choice(chars)
+        for _ in range(10)
+    )
+
+    return password
+
+
+@admin.route(
+    "/student/<int:student_id>/reset-password"
+)
+def reset_student_password(student_id):
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+
+    cursor.execute(
+        """
+        SELECT
+            id,
+            username,
+            email
+        FROM users
+        WHERE id = ?
+        """,
+        (student_id,)
+    )
+
+
+    student = cursor.fetchone()
+
+
+    if not student:
+
+        flash(
+            "Student not found.",
+            "danger"
+        )
+
+        return redirect(
+            url_for("admin.admin_students")
+        )
+
+
+    temporary_password = generate_temp_password()
+
+
+    hashed_password = hash_password(
+        temporary_password
+    )
+
+
+    cursor.execute(
+        """
+        UPDATE users
+        SET password = ?
+        WHERE id = ?
+        """,
+        (
+            hashed_password,
+            student_id
+        )
+    )
+
+
+    conn.commit()
+
+
+    cursor.close()
+    conn.close()
+
+
+
+    try:
+
+        send_email(
+            student["email"],
+            "Nexora Temporary Password",
+            f"""
+    Hello {student["username"]},
+
+    Your Nexora account password has been reset by the administrator.
+
+    Your temporary password is:
+
+    {temporary_password}
+
+    Please login and change your password after signing in.
+
+    Nexora System
+    """
+        )
+
+    except Exception as e:
+
+        flash(
+            f"Password reset but email failed: {e}",
+            "warning"
+        )
+
+        return redirect(
+            url_for(
+                "admin.student_profile",
+                student_id=student_id
+            )
+        )
+
+
+    flash(
+        "Temporary password sent to student email.",
+        "success"
+    )
+
+
+    return redirect(
+        url_for(
+            "admin.student_profile",
+            student_id=student_id
+        )
+    )
 
 @admin.route("/admin/dashboard")
 @role_required("admin")
@@ -49,6 +195,31 @@ def admin_dashboard():
 
     cursor.execute("SELECT COALESCE(SUM(hours_rendered), 0) FROM attendance WHERE status = 'Completed'")
     total_hours = cursor.fetchone()[0]
+    
+        # INTERNSHIP STATUS SUMMARY
+
+    cursor.execute("""
+        SELECT COUNT(*)
+        FROM users
+        WHERE role='pending_student'
+    """)
+    pending_students = cursor.fetchone()[0]
+
+
+    cursor.execute("""
+        SELECT COUNT(*)
+        FROM internships
+        WHERE status='Active'
+    """)
+    active_internships = cursor.fetchone()[0]
+
+
+    cursor.execute("""
+        SELECT COUNT(*)
+        FROM internships
+        WHERE status='Completed'
+    """)
+    completed_internships = cursor.fetchone()[0]
 
     conn.close()
 
@@ -60,25 +231,430 @@ def admin_dashboard():
         feedback_count=feedback_count,
         online_interns=online_interns,
         total_hours=total_hours,
-        active_page="dashboard"
+        active_page="dashboard",
+        pending_students=pending_students,
+        active_internships=active_internships,
+        completed_internships=completed_internships
     )
 
 @admin.route("/admin/users")
 @role_required("admin")
 def admin_users():
+
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    cursor.execute("""
-        SELECT id, username, role
-        FROM users
-        ORDER BY role, username
-    """)
+    try:
 
-    users = cursor.fetchall()
-    conn.close()
+        # ALL USERS
+        cursor.execute(
+            """
+            SELECT
+                id,
+                username,
+                email,
+                role
+            FROM users
+            ORDER BY username
+            """
+        )
 
-    return render_template("admin/users.html", users=users, active_page="users")
+        users = cursor.fetchall()
+
+
+
+        # STUDENTS
+        students = [
+            user for user in users
+            if user["role"] == "student"
+        ]
+
+
+
+        # SUPERVISORS
+        supervisors = [
+            user for user in users
+            if user["role"] == "supervisor"
+        ]
+
+
+
+        # PENDING ACCOUNTS
+        pending_users = [
+            user for user in users
+            if user["role"] in (
+                "pending_student",
+                "pending_supervisor"
+            )
+        ]
+
+
+
+        # TOTAL USERS
+        total_users = len(users)
+
+
+
+        # COUNTS
+        students_count = len(students)
+
+        supervisors_count = len(supervisors)
+
+        pending_count = len(pending_users)
+
+
+
+        return render_template(
+            "admin/users.html",
+
+            active_page="users",
+
+            students=students,
+
+            supervisors=supervisors,
+
+            pending_users=pending_users,
+
+            total_users=total_users,
+
+            students_count=students_count,
+
+            supervisors_count=supervisors_count,
+
+            pending_count=pending_count
+        )
+
+
+    finally:
+
+        cursor.close()
+        conn.close()
+
+
+@admin.route("/admin/users/students")
+@role_required("admin")
+def admin_students():
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+
+        cursor.execute(
+            """
+            SELECT
+                id,
+                username,
+                email,
+                role
+            FROM users
+            WHERE role IN 
+            (
+                'student',
+                'pending_student'
+            )
+            ORDER BY username
+            """
+        )
+
+        students = cursor.fetchall()
+
+
+        return render_template(
+            "admin/students.html",
+            students=students,
+            active_page="users"
+        )
+
+
+    finally:
+        cursor.close()
+        conn.close()
+
+
+@admin.route("/admin/student/<int:student_id>")
+@role_required("admin")
+def student_profile(student_id):
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+
+        cursor.execute("""
+            SELECT
+                users.id,
+                users.username,
+                users.email,
+                users.role,
+                users.status,
+
+                student_profiles.*
+
+            FROM users
+
+            LEFT JOIN student_profiles
+            ON users.id = student_profiles.user_id
+
+            WHERE users.id = ?
+
+        """, (student_id,))
+
+
+        student = cursor.fetchone()
+
+
+        if not student:
+            return "Student not found"
+
+
+        profile_fields = [
+            "first_name",
+            "last_name",
+            "student_id",
+            "profile_picture",
+            "phone_number",
+            "home_address",
+            "grade_year",
+            "major_program",
+            "emergency_name",
+            "emergency_phone"
+        ]
+
+
+        completed_fields = 0
+        missing_fields = []
+
+
+        for field in profile_fields:
+
+            if student[field]:
+
+                completed_fields += 1
+
+            else:
+
+                missing_fields.append(
+                    field.replace("_", " ").title()
+                )
+
+
+        completion_percentage = int(
+            (completed_fields / len(profile_fields)) * 100
+        )
+        
+                # INTERNSHIP INFORMATION
+
+        cursor.execute("""
+            SELECT
+                company_name,
+                company_address,
+                supervisor_name,
+                supervisor_email,
+                position,
+                start_date,
+                end_date,
+                required_hours,
+                completed_hours,
+                status
+
+            FROM internships
+
+            WHERE student_id = ?
+
+            ORDER BY id DESC
+
+            LIMIT 1
+
+        """, (student_id,))
+
+
+        internship = cursor.fetchone()
+        
+                # STUDENT DOCUMENTS
+
+        cursor.execute("""
+            SELECT
+                filename,
+                uploaded_at
+            FROM documents
+
+            WHERE student_id = ?
+
+            ORDER BY uploaded_at DESC
+
+        """, (student_id,))
+
+
+        documents = cursor.fetchall()
+
+
+        return render_template(
+            "admin/student_profile.html",
+            student=student,
+            completion_percentage=completion_percentage,
+            missing_fields=missing_fields,
+            internship=internship,
+            documents=documents,
+            active_page="users"
+        )
+
+
+    finally:
+
+        cursor.close()
+        conn.close()
+        
+
+@admin.route("/admin/users/supervisors")
+@role_required("admin")
+def admin_supervisors():
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+
+        cursor.execute(
+            """
+            SELECT
+                id,
+                username,
+                email,
+                role
+            FROM users
+            WHERE role IN
+            (
+                'supervisor',
+                'pending_supervisor'
+            )
+            ORDER BY username
+            """
+        )
+
+        supervisors = cursor.fetchall()
+
+
+        return render_template(
+            "admin/supervisors.html",
+            supervisors=supervisors,
+            active_page="users"
+        )
+
+
+    finally:
+        cursor.close()
+        conn.close()
+        
+        
+@admin.route("/admin/student/edit/<int:student_id>", methods=["GET", "POST"])
+@role_required("admin")
+def edit_student(student_id):
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+
+        cursor.execute("""
+            SELECT
+                users.id,
+                users.username,
+                users.email,
+                student_profiles.*
+
+            FROM users
+
+            LEFT JOIN student_profiles
+            ON users.id = student_profiles.user_id
+
+            WHERE users.id = ?
+
+        """,(student_id,))
+
+
+        student = cursor.fetchone()
+
+
+        if not student:
+            return "Student not found"
+
+
+        student_email = student["email"]
+
+        student_username = student["username"]
+
+
+        if request.method == "POST":
+
+
+            profile_data = get_student_profile_data(
+                request.form
+            )
+
+
+            update_student_profile(
+                student_id,
+                profile_data
+            )
+
+
+            log_profile_change(
+                student_id,
+                session["user_id"],
+                "Admin updated student profile"
+            )
+
+
+            create_notification(
+                student_id,
+                "Profile Updated",
+                "An administrator updated your profile information.",
+                "info"
+            )
+
+
+            conn.commit()
+
+
+            if student_email:
+
+                try:
+
+                    send_profile_updated_email(
+                        student_email,
+                        student_username,
+                        session.get("username", "Administrator")
+                    )
+
+                except Exception as e:
+
+                    print(
+                        "Profile update email failed:",
+                        e
+                    )
+
+
+            return redirect(
+                url_for(
+                    "admin.student_profile",
+                    student_id=student_id
+                )
+            )
+
+
+        return render_template(
+            "admin/edit_student.html",
+            student=student
+        )
+
+
+    finally:
+
+        cursor.close()
+        conn.close()        
+        
+        
 
 @admin.route("/admin/assign", methods=["GET", "POST"])
 @role_required("admin")
@@ -171,6 +747,8 @@ def admin_reports(student_id):
     cursor.execute("SELECT username FROM users WHERE id = ?", (student_id,))
     student = cursor.fetchone()
 
+    
+
     if not student:
         conn.close()
         return "Student not found"
@@ -244,9 +822,13 @@ def admin_assignments():
 
     # pending users (THIS is Step 2)
     cursor.execute("""
-        SELECT id, username
+        SELECT id, username, role
         FROM users
-        WHERE role='pending'
+        WHERE role IN
+        (
+            'pending_student',
+            'pending_supervisor'
+        )
     """)
     pending_users = cursor.fetchall()
 
@@ -260,6 +842,247 @@ def admin_assignments():
         pending_users=pending_users,
         active_page="assign"
     )
+    
+@admin.route("/admin/reject-student/<int:user_id>")
+@role_required("admin")
+def reject_student(user_id):
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+
+        cursor.execute(
+            """
+            SELECT username, email
+            FROM users
+            WHERE id = ?
+            AND role = 'pending_student'
+            """,
+            (user_id,)
+        )
+
+        user = cursor.fetchone()
+
+
+        if not user:
+            return redirect(
+                "/admin/users/students"
+            )
+
+
+        cursor.execute(
+            """
+            UPDATE users
+            SET role = 'rejected'
+            WHERE id = ?
+            AND role = 'pending_student'
+            """,
+            (user_id,)
+        )
+
+
+        conn.commit()
+
+
+        if user["email"]:
+
+            try:
+
+                send_email(
+                    user["email"],
+                    "Nexora Account Request Cancelled",
+                    f"""
+Hello {user["username"]},
+
+Your Nexora student account request was not approved.
+
+Please contact the Nexora administrator for more information.
+
+Nexora System
+                    """.strip()
+                )
+
+            except Exception as e:
+
+                print(
+                    "Rejection email failed:",
+                    e
+                )
+
+
+    finally:
+
+        cursor.close()
+        conn.close()
+
+
+    return redirect(
+        "/admin/users/students"
+    )
+    
+@admin.route("/admin/approve-student/<int:user_id>")
+@role_required("admin")
+def approve_student(user_id):
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+
+        cursor.execute(
+            """
+            SELECT username, email
+            FROM users
+            WHERE id = ?
+            AND role = 'pending_student'
+            """,
+            (user_id,)
+        )
+
+        user = cursor.fetchone()
+
+
+        if not user:
+            return redirect(
+                "/admin/users/students"
+            )
+
+
+        cursor.execute(
+            """
+            UPDATE users
+            SET role = 'student'
+            WHERE id = ?
+            AND role = 'pending_student'
+            """,
+            (user_id,)
+        )
+
+        conn.commit()
+
+
+        # Send approval email
+        if user["email"]:
+
+            try:
+
+                send_email(
+                    user["email"],
+                    "Nexora Account Approved",
+                    f"""
+                    Hello {user["username"]},
+
+                    Your Nexora student account has been approved.
+
+                    You may now login and complete your student profile.
+
+                    Welcome to Nexora.
+
+                    Nexora System
+                    """.strip()
+                )
+
+            except Exception as e:
+
+                print(
+                    "Approval email failed:",
+                    e
+                )
+
+
+    finally:
+
+        cursor.close()
+        conn.close()
+
+
+    return redirect(
+        "/admin/users/students"
+    )
+    
+    
+@admin.route("/admin/internship-assign", methods=["GET", "POST"])
+@role_required("admin")
+def internship_assign():
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+
+    if request.method == "POST":
+
+        student_id = request.form["student_id"]
+
+        company_name = request.form["company_name"]
+        company_address = request.form["company_address"]
+        supervisor_name = request.form["supervisor_name"]
+        supervisor_email = request.form["supervisor_email"]
+        position = request.form["position"]
+
+        start_date = request.form["start_date"]
+        end_date = request.form["end_date"]
+
+        required_hours = request.form["required_hours"]
+
+
+        cursor.execute("""
+            INSERT INTO internships
+            (
+                student_id,
+                company_name,
+                company_address,
+                supervisor_name,
+                supervisor_email,
+                position,
+                start_date,
+                end_date,
+                required_hours,
+                completed_hours,
+                status
+            )
+
+            VALUES
+            (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+
+        """,
+        (
+            student_id,
+            company_name,
+            company_address,
+            supervisor_name,
+            supervisor_email,
+            position,
+            start_date,
+            end_date,
+            required_hours,
+            0,
+            "Active"
+        ))
+
+
+        conn.commit()
+
+
+    cursor.execute("""
+        SELECT id, username
+        FROM users
+        WHERE role='student'
+        ORDER BY username
+    """)
+
+    students = cursor.fetchall()
+
+
+    conn.close()
+
+
+    return render_template(
+        "admin/internship_assign.html",
+        students=students,
+        active_page="internship"
+    )    
+
 
 @admin.route('/admin/assign-role', methods=['GET', 'POST'])
 @role_required("admin")
@@ -1000,4 +1823,265 @@ def student_logbook(student_id, date):
         logs=logs,
         total_logs=total_logs,
         total_hours=total_hours
+    )
+    
+@admin.route(
+    "/student/<int:student_id>/deactivate",
+    methods=["GET"]
+)
+@role_required("admin")
+def deactivate_student(student_id):
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+
+        cursor.execute(
+            """
+            SELECT
+                username,
+                email
+            FROM users
+            WHERE id = ?
+            """,
+            (student_id,)
+        )
+
+        student = cursor.fetchone()
+
+
+        if not student:
+
+            flash(
+                "Student not found.",
+                "danger"
+            )
+
+            return redirect(
+                url_for(
+                    "admin.admin_students"
+                )
+            )
+
+
+        cursor.execute(
+            """
+            UPDATE users
+            SET status = ?
+            WHERE id = ?
+            """,
+            (
+                "inactive",
+                student_id
+            )
+        )
+
+
+        conn.commit()
+
+
+
+        if student["email"]:
+
+            try:
+
+                send_email(
+                    student["email"],
+                    "Nexora Account Deactivated",
+                    f"""
+Hello {student["username"]},
+
+Your Nexora student account has been deactivated by the administrator.
+
+You will no longer be able to access the system until your account is activated again.
+
+If you believe this was a mistake, please contact the Nexora administrator.
+
+Nexora System
+                    """.strip()
+                )
+
+            except Exception as e:
+
+                print(
+                    "Deactivation email failed:",
+                    e
+                )
+
+
+        flash(
+            "Student account has been deactivated.",
+            "success"
+        )
+
+
+    finally:
+
+        cursor.close()
+        conn.close()
+
+
+    return redirect(
+        url_for(
+            "admin.student_profile",
+            student_id=student_id
+        )
+    )
+    
+    
+@admin.route(
+    "/student/<int:student_id>/activate",
+    methods=["GET"]
+)
+@role_required("admin")
+def activate_student(student_id):
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+
+        cursor.execute(
+            """
+            SELECT
+                username,
+                email
+            FROM users
+            WHERE id = ?
+            """,
+            (student_id,)
+        )
+
+        student = cursor.fetchone()
+
+
+        if not student:
+
+            flash(
+                "Student not found.",
+                "danger"
+            )
+
+            return redirect(
+                url_for(
+                    "admin.admin_students"
+                )
+            )
+
+
+        cursor.execute(
+            """
+            UPDATE users
+            SET status = ?
+            WHERE id = ?
+            """,
+            (
+                "active",
+                student_id
+            )
+        )
+
+
+        conn.commit()
+
+
+
+        if student["email"]:
+
+            try:
+
+                send_email(
+                    student["email"],
+                    "Nexora Account Activated",
+                    f"""
+Hello {student["username"]},
+
+Your Nexora student account has been activated.
+
+You may now login and continue using the Nexora system.
+
+Welcome back.
+
+Nexora System
+                    """.strip()
+                )
+
+            except Exception as e:
+
+                print(
+                    "Activation email failed:",
+                    e
+                )
+
+
+        flash(
+            "Student account has been activated.",
+            "success"
+        )
+
+
+    finally:
+
+        cursor.close()
+        conn.close()
+
+
+    return redirect(
+        url_for(
+            "admin.student_profile",
+            student_id=student_id
+        )
+    )
+    
+    
+    # ============================
+# PROFILE HISTORY
+# ============================
+
+@admin.route(
+    "/admin/student/history/<int:student_id>"
+)
+@role_required("admin")
+def profile_history(student_id):
+
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+
+    cursor.execute(
+        """
+        SELECT
+            profile_history.action,
+            profile_history.created_at,
+            users.username
+
+        FROM profile_history
+
+        LEFT JOIN users
+        ON profile_history.changed_by = users.id
+
+        WHERE profile_history.student_id = ?
+
+        ORDER BY profile_history.created_at DESC
+
+        """,
+        (
+            student_id,
+        )
+    )
+
+
+    history = cursor.fetchall()
+
+
+    cursor.close()
+    conn.close()
+
+
+    return render_template(
+        "admin/profile_history.html",
+        history=history,
+        student_id=student_id
     )

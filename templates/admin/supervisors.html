@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Supervisor Management - Nexora</title>
+
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+rel="stylesheet">
+
+<link rel="stylesheet"
+href="{{ url_for('static', filename='css/style.css') }}">
+
+
+<style>
+
+.management-card {
+
+    background: rgba(255,255,255,0.95);
+    border-radius:20px;
+    padding:25px;
+    box-shadow:0 100px rgba(0,0,0,0.15);
+
+}
+
+
+.management-title {
+
+    color:white;
+    font-size:42px;
+    font-weight:700;
+
+}
+
+
+.table {
+
+    margin-bottom:0;
+
+}
+
+
+.table thead th {
+
+    background:#111827;
+    color:white;
+    padding:18px;
+
+}
+
+
+.table tbody td {
+
+    padding:16px;
+    vertical-align:middle;
+
+}
+
+
+.table tbody tr:hover {
+
+    background:#f1f5f9;
+
+}
+
+
+.role-badge {
+
+    background:#2563eb;
+    color:white;
+    padding:6px 14px;
+    border-radius:20px;
+    font-size:13px;
+
+}
+
+
+.action-btn {
+
+    border-radius:10px;
+    padding:7px 15px;
+    font-weight:600;
+
+}
+
+
+.view-btn {
+
+    background:#2563eb;
+    color:white;
+
+}
+
+
+.delete-btn {
+
+    background:#dc2626;
+    color:white;
+
+}
+
+
+</style>
+
+
+</head>
+
+
+
+<body class="executive_aesthetic">
+
+
+{% include 'components/admin_navbar.html' %}
+
+{% include 'components/admin_sidebar.html' %}
+
+
+
+
+<div class="page-content">
+
+
+<div class="container mt-5">
+
+
+
+<h1 class="management-title">
+Supervisor Management
+</h1>
+
+
+
+
+<div class="management-card mt-4">
+
+
+
+<table class="table table-hover">
+
+
+<thead>
+
+
+<tr>
+
+<th>ID</th>
+
+<th>Username</th>
+
+<th>Email</th>
+
+<th>Role</th>
+
+<th width="250">
+Actions
+</th>
+
+
+</tr>
+
+
+</thead>
+
+
+
+<tbody>
+
+
+
+{% for supervisor in supervisors %}
+
+
+<tr>
+
+
+<td>
+{{ supervisor.id }}
+</td>
+
+
+
+<td>
+{{ supervisor.username }}
+</td>
+
+
+
+<td>
+
+{% if supervisor.email %}
+
+{{ supervisor.email }}
+
+{% else %}
+
+<span class="text-muted">
+No email
+</span>
+
+{% endif %}
+
+</td>
+
+
+
+<td>
+
+<span class="role-badge">
+
+{{ supervisor.role }}
+
+</span>
+
+
+</td>
+
+
+
+
+<td>
+
+
+<a href="#"
+class="btn action-btn view-btn">
+
+View
+
+</a>
+
+
+
+{% if supervisor.role == "pending_supervisor" %}
+
+
+<a href="{{ url_for('admin.approve_supervisor', user_id=supervisor.id) }}"
+class="btn btn-success action-btn">
+
+Approve
+
+</a>
+
+
+<a href="{{ url_for('admin.reject_supervisor', user_id=supervisor.id) }}"
+class="btn btn-danger action-btn">
+
+Reject
+
+</a>
+
+
+{% else %}
+
+
+<button
+class="btn action-btn delete-btn"
+onclick="confirmDelete('{{ supervisor.id }}')">
+
+Delete
+
+</button>
+
+
+{% endif %}
+
+
+
+</td>
+
+
+</tr>
+
+
+
+{% endfor %}
+
+
+
+</tbody>
+
+
+
+</table>
+
+
+</div>
+
+
+
+
+<a href="{{ url_for('admin.admin_users') }}"
+class="btn btn-light mt-4">
+
+← Back
+
+</a>
+
+
+
+
+</div>
+
+
+</div>
+
+
+
+
+<script>
+
+
+function confirmDelete(id){
+
+
+let confirmAction =
+confirm(
+"Are you sure you want to delete this supervisor?"
+);
+
+
+if(confirmAction){
+
+alert(
+"Delete function will be connected next."
+);
+
+}
+
+
+}
+
+
+
+</script>
+
+
+<script src="{{ url_for('static', filename='js/admin_sidebar.js') }}"></script>
+
+
+</body>
+
+</html>

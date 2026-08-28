@@ -1,27 +1,556 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-    <title>Student Dashboard - Nexora</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+<title>
+Student Dashboard - Nexora
+</title>
+
+
+<link 
+rel="stylesheet"
+href="{{ url_for('static', filename='css/style.css') }}">
+
+
 </head>
-<body class="content-page">
 
-    {% include 'components/navbar.html' %}
 
-    <div class="container mt-5">
-        <h1>Welcome, Student 🎓</h1>
+<body class="student-page">
 
-        <hr>
 
-        <h2>Internship Overview</h2>
+{% include 'components/student_sidebar.html' %}
 
-        <div class="card p-4">
-            <p><strong>Status:</strong> Active</p>
-            <p><strong>Progress:</strong> 67%</p>
-            <p><strong>Supervisor Feedback:</strong> Available</p>
-        </div>
-    </div>
+
+{% include 'components/notification_bell.html' %}
+
+
+
+<div class="student-main-content">
+
+
+<div class="student-dashboard-container">
+
+
+
+<!-- ======================
+WELCOME
+======================= -->
+
+
+<div class="dashboard-welcome">
+
+<h1>
+Welcome, {{ profile[0] }} 🎓
+</h1>
+
+
+<p>
+Here is your internship progress overview.
+</p>
+
+
+</div>
+
+
+
+
+
+<!-- ======================
+STATISTICS
+======================= -->
+
+
+<div class="dashboard-stats">
+
+
+<div class="stat-card">
+
+<div class="stat-icon">
+📘
+</div>
+
+
+<h3>
+Logs
+</h3>
+
+
+<p>
+{{ log_count }}
+</p>
+
+
+</div>
+
+
+
+
+
+<div class="stat-card">
+
+<div class="stat-icon">
+✅
+</div>
+
+
+<h3>
+Tasks
+</h3>
+
+
+<p>
+{{ task_completed }}/{{ task_total }}
+</p>
+
+
+</div>
+
+
+
+
+
+<div class="stat-card">
+
+<div class="stat-icon">
+📂
+</div>
+
+
+<h3>
+Documents
+</h3>
+
+
+<p>
+{{ document_count }}
+</p>
+
+
+</div>
+
+
+
+
+
+<div class="stat-card">
+
+<div class="stat-icon">
+🕒
+</div>
+
+
+<h3>
+Attendance
+</h3>
+
+
+<p>
+{{ attendance_count }}
+</p>
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+
+<!-- ======================
+PROFILE SUMMARY
+======================= -->
+
+
+<div class="dashboard-profile-card">
+
+
+
+<div>
+
+
+{% if profile[5] %}
+
+
+<img
+src="/uploads/profile_pictures/{{ profile[5] }}"
+class="dashboard-avatar">
+
+
+{% else %}
+
+
+<div class="dashboard-avatar placeholder">
+
+?
+
+</div>
+
+
+{% endif %}
+
+
+
+</div>
+
+
+
+
+
+
+<div class="dashboard-profile-info">
+
+
+<h2>
+
+{{ profile[0] }}
+{{ profile[1] }}
+{{ profile[2] }}
+
+</h2>
+
+
+
+<p>
+🎓 {{ profile[9] }}
+</p>
+
+
+
+<p>
+🆔 {{ profile[4] }}
+</p>
+
+
+
+<p>
+📚 {{ profile[8] }}
+</p>
+
+
+
+
+<a href="/student/profile"
+class="dashboard-profile-btn">
+
+View Profile
+
+</a>
+
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+
+
+<!-- ======================
+INTERNSHIP
+======================= -->
+
+
+<div class="dashboard-section">
+
+
+<h2>
+Internship Overview
+</h2>
+
+
+
+<div class="internship-card">
+
+
+{% if internship %}
+
+
+
+<h3>
+🏢 {{ internship[0] }}
+</h3>
+
+
+
+<p>
+<strong>
+Position:
+</strong>
+
+{{ internship[1] }}
+
+</p>
+
+
+
+
+<p>
+<strong>
+Supervisor:
+</strong>
+
+{{ internship[2] }}
+
+</p>
+
+
+
+
+<p>
+
+<strong>
+Duration:
+</strong>
+
+{{ internship[3] }}
+
+to
+
+{{ internship[4] }}
+
+</p>
+
+
+
+
+<p>
+
+<strong>
+Required Hours:
+</strong>
+
+{{ internship[5] }} hrs
+
+</p>
+
+
+
+
+<p>
+
+<strong>
+Completed Hours:
+</strong>
+
+{{ internship[6] }} hrs
+
+</p>
+
+
+
+
+<p>
+
+<strong>
+Status:
+</strong>
+
+{{ internship[7] }}
+
+</p>
+
+
+
+
+{% else %}
+
+
+<p>
+No internship assigned yet.
+</p>
+
+
+
+{% endif %}
+
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+
+
+
+<!-- ======================
+RECENT ACTIVITY
+======================= -->
+
+
+
+<div class="activity-card">
+
+
+<h3>
+✅ Latest Tasks
+</h3>
+
+
+
+{% if recent_tasks %}
+
+
+{% for task in recent_tasks %}
+
+
+<p>
+{{ task }}
+</p>
+
+
+{% endfor %}
+
+
+
+{% else %}
+
+
+<p>
+No tasks yet
+</p>
+
+
+{% endif %}
+
+
+
+</div>
+
+
+
+
+
+
+
+
+<div class="activity-card">
+
+
+<h3>
+📂 Documents
+</h3>
+
+
+
+{% if recent_documents %}
+
+
+
+{% for doc in recent_documents %}
+
+
+
+<p>
+{{ doc }}
+</p>
+
+
+
+{% endfor %}
+
+
+
+{% else %}
+
+
+
+<p>
+No documents uploaded
+</p>
+
+
+
+{% endif %}
+
+
+
+</div>
+
+
+
+
+
+
+
+
+<div class="activity-card">
+
+
+<h3>
+🕒 Attendance
+</h3>
+
+
+
+{% if recent_attendance %}
+
+
+
+{% for attendance in recent_attendance %}
+
+
+
+<p>
+{{ attendance }}
+</p>
+
+
+
+{% endfor %}
+
+
+
+
+{% else %}
+
+
+
+<p>
+No attendance record
+</p>
+
+
+
+{% endif %}
+
+
+
+</div>
+
+
+
+
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+<script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
+
 
 </body>
+
 </html>

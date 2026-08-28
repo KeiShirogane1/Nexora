@@ -3,317 +3,568 @@
 
 <head>
 
-    <title>Admin Dashboard - Nexora</title>
+<title>Admin Dashboard - Nexora</title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-          rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+rel="stylesheet">
 
-    <link rel="stylesheet"
-          href="{{ url_for('static', filename='css/style.css') }}">
+<link rel="stylesheet"
+href="{{ url_for('static', filename='css/style.css') }}">
 
 </head>
 
 
-<body class="deeper-metrics">
-    
-    {% include 'components/admin_navbar.html' %}
-    {% include 'components/admin_sidebar.html' %}
+<body class="nexora-admin-body">
 
 
-    <div class="page-content">
-
-    <div class="container mt-5">
+{% include 'components/admin_sidebar.html' %}
 
 
-        <!-- PAGE HEADER -->
 
-        <div class="mb-4">
+<main class="admin-main">
 
-            <h1 style="color:white;">
-                Admin Dashboard
-            </h1>
 
-            <p style="color:white;">
-                Overview of students, supervisors, and internship activity.
-            </p>
+<div class="compact-dashboard">
+
+
+
+<!-- HEADER -->
+
+<div class="dashboard-header">
+
+    <div>
+
+        <h1>
+            Admin Dashboard
+        </h1>
+
+        <p>
+            Welcome back, Administrator.<br>
+            Monitor internship operations, student progress, and system activity.
+        </p>
+
+    </div>
+
+
+    <div class="system-badge">
+
+        🟢 System Online
+
+    </div>
+
+
+</div>
+
+
+
+
+
+<!-- METRIC GRID -->
+
+<div class="metric-grid">
+
+
+    <!-- STUDENTS -->
+
+    <div class="metric-box">
+
+        <div class="metric-icon">
+            👥
+        </div>
+
+        <div>
+
+            <span>
+                Students
+            </span>
+
+            <strong>
+                {{ students_count }}
+            </strong>
+
+        </div>
+
+    </div>
+
+
+
+
+
+    <!-- SUPERVISORS -->
+
+    <div class="metric-box">
+
+        <div class="metric-icon">
+            🧑‍💼
+        </div>
+
+        <div>
+
+            <span>
+                Supervisors
+            </span>
+
+            <strong>
+                {{ supervisors_count }}
+            </strong>
+
+        </div>
+
+    </div>
+
+
+
+
+
+    <!-- ASSIGNMENTS -->
+
+    <div class="metric-box">
+
+        <div class="metric-icon">
+            📋
+        </div>
+
+        <div>
+
+            <span>
+                Internship Assignments
+            </span>
+
+            <strong>
+                {{ assignments_count }}
+            </strong>
+
+        </div>
+
+    </div>
+
+
+
+
+
+    <!-- ONLINE INTERNS -->
+
+    <div class="metric-box">
+
+        <div class="metric-icon">
+            🌐
+        </div>
+
+        <div>
+
+            <span>
+                Online Interns
+            </span>
+
+            <strong>
+                {{ online_interns }}
+            </strong>
+
+        </div>
+
+    </div>
+
+
+
+
+
+    <!-- FEEDBACK -->
+
+    <div class="metric-box">
+
+        <div class="metric-icon">
+            💬
+        </div>
+
+        <div>
+
+            <span>
+                Feedback Entries
+            </span>
+
+            <strong>
+                {{ feedback_count }}
+            </strong>
+
+        </div>
+
+    </div>
+
+
+
+
+
+    <!-- HOURS -->
+
+    <div class="metric-box">
+
+        <div class="metric-icon">
+            ⏱️
+        </div>
+
+        <div>
+
+            <span>
+                Total Hours
+            </span>
+
+            <strong>
+                {{ total_hours }}
+            </strong>
+
+        </div>
+
+    </div>
+
+
+</div>
+
+
+
+<!-- INTERNSHIP SUMMARY -->
+
+<div class="dashboard-box">
+
+<h3>
+Internship Overview
+</h3>
+
+
+<div class="status-row">
+
+
+<div>
+
+<span>
+Pending Approval
+</span>
+
+<strong>
+{{ pending_students }}
+</strong>
+
+</div>
+
+
+
+<div>
+
+<span>
+Active Internship
+</span>
+
+<strong>
+{{ active_internships }}
+</strong>
+
+</div>
+
+
+
+<div>
+
+<span>
+Completed
+</span>
+
+<strong>
+{{ completed_internships }}
+</strong>
+
+</div>
+
+
+
+</div>
+
+
+</div>
+
+
+
+
+<!-- QUICK ACTIONS -->
+
+
+<div class="dashboard-box">
+
+
+<h3>
+Quick Actions
+</h3>
+
+
+<div class="action-list">
+
+
+<a href="/admin/users">
+✓ Approve Student Accounts
+</a>
+
+
+<a href="/admin/users">
+👥 Manage Users
+</a>
+
+
+<a href="/admin/internship-assign">
+📋 Assign Internships
+</a>
+
+
+<a href="/admin/reports">
+📊 View Reports
+</a>
+
+
+
+</div>
+
+
+</div>
+
+
+
+<!-- ACTIVITY + SYSTEM MONITORING -->
+
+<div class="dashboard-info-grid">
+
+
+    <!-- RECENT ACTIVITIES -->
+
+    <div class="dashboard-panel">
+
+        <h3>
+            Recent Activities
+        </h3>
+
+
+        <ul class="activity-list">
+
+            <li>
+                Student Juan approved
+            </li>
+
+
+            <li>
+                Supervisor Maria assigned
+            </li>
+
+
+            <li>
+                New logbook submitted
+            </li>
+
+
+            <li>
+                2 new feedback entries
+            </li>
+
+        </ul>
+
+
+    </div>
+
+
+
+
+
+    <!-- SYSTEM MONITORING -->
+
+    <div class="dashboard-panel">
+
+
+        <h3>
+            System Monitoring
+        </h3>
+
+
+        <div class="system-row">
+
+            <span>
+                Database Status
+            </span>
+
+            <strong class="online">
+                Online
+            </strong>
 
         </div>
 
 
 
+        <div class="system-row">
 
-        <!-- SUMMARY METRICS -->
+            <span>
+                Email Service
+            </span>
 
-        <div class="row g-4 mb-5">
-
-
-            <!-- STUDENTS -->
-
-            <div class="col-md-4">
-
-                <div class="card shadow-sm p-4 h-100">
-
-                    <h2 class="mb-2">
-                        {{ students_count }}
-                    </h2>
-
-                    <p class="text-muted mb-0">
-                        Students
-                    </p>
-
-                </div>
-
-            </div>
-
-
-
-
-            <!-- SUPERVISORS -->
-
-            <div class="col-md-4">
-
-                <div class="card shadow-sm p-4 h-100">
-
-                    <h2 class="mb-2">
-                        {{ supervisors_count }}
-                    </h2>
-
-                    <p class="text-muted mb-0">
-                        Supervisors
-                    </p>
-
-                </div>
-
-            </div>
-
-
-
-
-            <!-- ASSIGNMENTS -->
-
-            <div class="col-md-4">
-
-                <div class="card shadow-sm p-4 h-100">
-
-                    <h2 class="mb-2">
-                        {{ assignments_count }}
-                    </h2>
-
-                    <p class="text-muted mb-0">
-                        Internship Assignments
-                    </p>
-
-                </div>
-
-            </div>
-
-
-
-
-            <!-- ONLINE INTERNS -->
-
-            <div class="col-md-4">
-
-                <div class="card shadow-sm p-4 h-100">
-
-                    <h2 class="mb-2">
-                        {{ online_interns }}
-                    </h2>
-
-                    <p class="text-muted mb-0">
-                        Online Interns
-                    </p>
-
-                </div>
-
-            </div>
-
-
-
-
-            <!-- FEEDBACK -->
-
-            <div class="col-md-4">
-
-                <div class="card shadow-sm p-4 h-100">
-
-                    <h2 class="mb-2">
-                        {{ feedback_count }}
-                    </h2>
-
-                    <p class="text-muted mb-0">
-                        Feedback Entries
-                    </p>
-
-                </div>
-
-            </div>
-
-
-
-
-            <!-- HOURS -->
-
-            <div class="col-md-4">
-
-                <div class="card shadow-sm p-4 h-100">
-
-                    <h2 class="mb-2">
-                        {{ total_hours }}
-                    </h2>
-
-                    <p class="text-muted mb-0">
-                        Total Hours Rendered
-                    </p>
-
-                </div>
-
-            </div>
-
+            <strong class="online">
+                Connected
+            </strong>
 
         </div>
 
 
 
+        <div class="system-row">
 
-        <!-- REPORT CENTER -->
+            <span>
+                Last Backup
+            </span>
 
-        <div class="mb-4">
-
-            <h3 style="color:white;">
-                Report Center
-            </h3>
-
-            <p style="color:white;">
-                Access calculated reports and institutional internship insights.
-            </p>
-
-        </div>
-
-
-
-
-        <div class="row g-4 mb-5">
-
-
-            <!-- ATTENDANCE REPORT -->
-
-            <div class="col-md-4">
-
-                <div class="card shadow-sm p-4 h-100">
-
-                    <h5>
-                        Attendance & Logbook
-                    </h5>
-
-                    <p class="text-muted">
-
-                        View attendance sessions, rendered hours, and internship activity.
-
-                    </p>
-
-                    <a href="/admin/reports/attendance"
-                       class="btn btn-primary mt-auto">
-
-                        Open Report
-
-                    </a>
-
-                </div>
-
-            </div>
-
-
-
-
-            <!-- EVALUATION REPORT -->
-
-            <div class="col-md-4">
-
-                <div class="card shadow-sm p-4 h-100">
-
-                    <h5>
-                        Supervisor Evaluation
-                    </h5>
-
-                    <p class="text-muted">
-
-                        Review supervisor feedback and performance evaluation data.
-
-                    </p>
-
-                    <a href="/admin/reports/evaluation"
-                       class="btn btn-outline-primary mt-auto">
-
-                        Coming Soon
-
-                    </a>
-
-                </div>
-
-            </div>
-
-
-
-
-            <!-- PROGRESS REPORT -->
-
-            <div class="col-md-4">
-
-                <div class="card shadow-sm p-4 h-100">
-
-                    <h5>
-                        Internship Progress
-                    </h5>
-
-                    <p class="text-muted">
-
-                        Monitor student progress throughout the internship period.
-
-                    </p>
-
-                    <a href="/admin/reports/progress"
-                       class="btn btn-outline-primary mt-auto">
-
-                        Coming Soon
-
-                    </a>
-
-                </div>
-
-            </div>
-
+            <strong>
+                Today
+            </strong>
 
         </div>
 
 
     </div>
 
-    </div>
 
-    <!-- sidebar script ^^ -->
-    <script>
-
-    const sidebarToggle =
-        document.getElementById("adminSidebarToggle");
-
-    const sidebar =
-        document.querySelector(".admin-sidebar");
-
-    const pageContent =
-        document.querySelector(".page-content");
+</div>
 
 
-    sidebarToggle.addEventListener("click", function () {
 
-        sidebar.classList.toggle("active");
 
-        pageContent.classList.toggle("sidebar-open");
+<!-- STATUS -->
 
-    });
 
-    </script>
+<div class="dashboard-box">
+
+
+<h3>
+Internship Status Overview
+</h3>
+
+
+<div class="status-row">
+
+
+<div>
+
+<span>
+Pending Approval
+</span>
+
+<strong>
+5
+</strong>
+
+</div>
+
+
+
+<div>
+
+<span>
+Active Internship
+</span>
+
+<strong>
+20
+</strong>
+
+</div>
+
+
+
+<div>
+
+<span>
+Completed
+</span>
+
+<strong>
+10
+</strong>
+
+</div>
+
+
+
+</div>
+
+
+</div>
+
+
+
+<!-- REPORTS -->
+
+
+<div class="dashboard-box">
+
+
+<h3>
+Reports Center
+</h3>
+
+
+<div class="report-grid">
+
+
+<a href="/admin/reports/attendance">
+
+Attendance &
+Logbook
+
+<br>
+
+[ Open Report ]
+
+</a>
+
+
+
+<a href="/admin/reports/evaluation">
+
+Supervisor
+Evaluation
+
+<br>
+
+[ Coming Soon ]
+
+</a>
+
+
+
+<a href="/admin/reports/progress">
+
+Internship
+Progress
+
+<br>
+
+[ Coming Soon ]
+
+</a>
+
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+</div>
+
+
+</main>
+
+
+
+<script src="{{ url_for('static', filename='js/admin_sidebar.js') }}"></script>
+
 
 </body>
+
 
 </html>

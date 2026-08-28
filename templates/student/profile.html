@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>
+My Profile - Nexora
+</title>
+
+<link rel="stylesheet"
+href="{{ url_for('static', filename='css/style.css') }}">
+
+<link
+rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
+
+</head>
+
+
+<body>
+
+
+{% include 'components/student_sidebar.html' %}
+
+
+
+<div class="student-main-content">
+
+
+<div class="profile-page-container">
+
+
+
+<h1>My Profile</h1>
+
+
+<!-- FLASH POPUP -->
+
+<div class="flash-container">
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+
+{% for category, message in messages %}
+
+<div class="flash-popup {{ category }}">
+
+    <span>
+        {{ message }}
+    </span>
+
+
+    <button onclick="this.parentElement.remove()">
+        ×
+    </button>
+
+</div>
+
+{% endfor %}
+
+{% endwith %}
+
+</div>
+
+
+<!-- =========================
+     PROFILE HEADER
+========================= -->
+
+<div class="profile-header-card">
+
+
+    <div class="profile-cover"></div>
+
+
+
+    <div class="profile-info">
+
+
+        <label for="profileUpload">
+
+        {% if profile[5] %}
+
+        <img
+        src="/uploads/profile_pictures/{{ profile[5] }}"
+        class="student-profile-pic clickable-profile">
+
+        {% else %}
+
+        <div class="profile-placeholder clickable-profile">
+        ?
+        </div>
+
+        {% endif %}
+
+        </label>
+
+
+        <input
+        type="file"
+        id="profileUpload"
+        accept="image/*"
+        style="display:none;">
+
+
+
+
+        <h2>
+            {{ profile[0] }}
+            {{ profile[1] }}
+            {{ profile[2] }}
+        </h2>
+
+
+
+
+        <p class="student-role">
+            Student
+        </p>
+
+
+
+
+        <div class="student-basic-info">
+
+
+            <div>
+                🎓 {{ profile[9] }}
+            </div>
+
+
+            <div>
+                🆔 {{ profile[4] }}
+            </div>
+
+
+            <div>
+                📚 {{ profile[8] }}
+            </div>
+
+
+            <div>
+                ✉ {{ profile[13] if profile|length > 13 else "Student Email" }}
+            </div>
+
+
+        </div>
+
+
+
+
+        <div class="profile-status-badge">
+
+        Profile {{ profile_percentage|default(0) }}% Complete
+
+        </div>
+
+
+
+        <div class="profile-buttons">
+
+        <a href="{{ url_for('student.edit_profile') }}"
+        class="edit-profile-btn">
+
+            ✏ Edit Profile
+
+        </a>
+
+
+        <a href="{{ url_for('password.change_password') }}"
+        class="change-password-btn">
+
+            🔑 Change Password
+
+        </a>
+
+        </div>
+
+
+
+    </div>
+
+
+</div>
+
+
+
+
+
+
+
+<!-- =========================
+     PROFILE COMPLETION
+========================= -->
+
+
+<div class="profile-section">
+
+
+<h2>
+Profile Completion
+</h2>
+
+
+
+<div 
+class="progress-bar"
+style="--progress-width: {{ profile_percentage }}%;">
+</div>
+
+
+
+
+{% if profile_percentage == 100 %}
+
+<p class="profile-complete-message">
+🎉 Your profile is complete! All information has been updated successfully.
+</p>
+
+{% else %}
+
+<p>
+Your profile is {{ profile_percentage }}% complete
+</p>
+
+{% endif %}
+
+
+
+
+<div class="profile-checklist">
+
+
+<div class="check-item completed">
+    ✓ Personal Information
+</div>
+
+
+<div class="check-item completed">
+    ✓ Student Information
+</div>
+
+
+<div class="check-item completed">
+    ✓ Contact Information
+</div>
+
+
+
+{% if profile[5] %}
+
+<div class="check-item completed">
+    ✓ Profile Picture
+</div>
+
+{% else %}
+
+<div class="check-item incomplete">
+
+<a href="/student/profile/edit">
+⚠ Upload Profile Picture
+</a>
+
+</div>
+
+{% endif %}
+
+
+
+{% if profile[10] and profile[11] and profile[12] %}
+
+<div class="check-item completed">
+    ✓ Emergency Contact
+</div>
+
+{% else %}
+
+<div class="check-item incomplete">
+
+<a href="/student/profile/edit">
+⚠ Add Emergency Contact
+</a>
+
+</div>
+
+{% endif %}
+
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+
+
+
+<!-- =========================
+     PERSONAL INFORMATION
+========================= -->
+
+
+<div class="profile-section">
+
+
+<h2>
+Personal Information
+</h2>
+
+
+
+<div class="info-row">
+
+    <strong>First Name:</strong>
+
+    <span>
+        {{ profile[0] }}
+    </span>
+
+</div>
+
+
+<div class="info-row">
+
+    <strong>Middle Name:</strong>
+
+    <span>
+        {{ profile[1] }}
+    </span>
+
+</div>
+
+
+<div class="info-row">
+
+    <strong>Last Name:</strong>
+
+    <span>
+        {{ profile[2] }}
+    </span>
+
+</div>
+
+
+<div class="info-row">
+
+    <strong>Age:</strong>
+
+    <span>
+        {{ profile[3] }}
+    </span>
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+
+
+
+<!-- =========================
+     STUDENT INFORMATION
+========================= -->
+
+
+<div class="profile-section">
+
+
+<h2>
+Student Information
+</h2>
+
+
+
+
+<p>
+<strong>Student ID:</strong>
+{{ profile[4] }}
+</p>
+
+
+
+
+<p>
+<strong>Program:</strong>
+{{ profile[9] }}
+</p>
+
+
+
+
+<p>
+<strong>Department:</strong>
+Information Technology
+</p>
+
+
+
+
+<p>
+<strong>Year Level:</strong>
+{{ profile[8] }}
+</p>
+
+
+
+
+<p>
+<strong>School Email:</strong>
+
+{{ profile[13] if profile|length > 13 else "Not Provided" }}
+
+</p>
+
+
+
+
+<p>
+<strong>Academic Status:</strong>
+Regular Student
+</p>
+
+
+
+
+<p>
+<strong>Adviser:</strong>
+Not Assigned
+</p>
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
+<!-- =========================
+     CONTACT INFORMATION
+========================= -->
+
+
+<div class="profile-section">
+
+
+<h2>
+Contact Information
+</h2>
+
+
+
+
+<div class="info-row">
+
+<strong>Phone:</strong>
+
+<span>
+{{ profile[6] }}
+</span>
+
+</div>
+
+
+
+<div class="info-row">
+
+<strong>Address:</strong>
+
+<span>
+{{ profile[7] }}
+</span>
+
+</div>
+
+
+
+</div>
+
+
+
+<!-- =========================
+     EMERGENCY CONTACT
+========================= -->
+
+
+<div class="profile-section">
+
+
+<h2>
+Emergency Contact
+</h2>
+
+
+<div class="info-row">
+
+<strong>Name:</strong>
+
+<span>
+{{ profile[10] if profile[10] else "Not Added" }}
+</span>
+
+</div>
+
+
+
+<div class="info-row">
+
+<strong>Relationship:</strong>
+
+<span>
+{{ profile[11] if profile[11] else "Not Added" }}
+</span>
+
+</div>
+
+
+
+<div class="info-row">
+
+<strong>Phone:</strong>
+
+<span>
+{{ profile[12] if profile[12] else "Not Added" }}
+</span>
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+</div> <!-- END profile-page-container -->
+
+
+</div> <!-- END student-main-content -->
+
+
+<div id="cropModal" class="crop-modal">
+
+
+<div class="crop-box">
+
+
+<div class="crop-area">
+
+<img id="cropImage">
+
+</div>
+
+
+<button 
+onclick="saveProfilePicture()"
+class="save-picture-btn">
+
+    Save Picture
+
+</button>
+
+<button 
+onclick="closeCropModal()"
+class="cancel-picture-btn">
+
+    Cancel
+
+</button>
+
+</div>
+
+
+</div>
+
+
+<script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
+
+<script>
+
+let cropper;
+
+
+document
+.getElementById("profileUpload")
+.addEventListener(
+"change",
+function(event){
+
+
+let file = event.target.files[0];
+
+
+if(!file){
+    return;
+}
+
+
+let image =
+document.getElementById(
+"cropImage"
+);
+
+
+image.src =
+URL.createObjectURL(file);
+
+
+document
+.getElementById("cropModal")
+.style.display="flex";
+
+
+
+if(cropper){
+
+cropper.destroy();
+
+}
+
+
+
+image.onload = function(){
+
+
+    cropper =
+    new Cropper(
+        image,
+        {
+            aspectRatio:1,
+            viewMode:1,
+            dragMode:"move",
+            background:false
+        }
+    );
+
+
+};
+
+
+});
+
+
+
+
+function saveProfilePicture(){
+
+
+cropper
+.getCroppedCanvas({
+width:500,
+height:500
+})
+.toBlob(
+function(blob){
+
+
+let formData =
+new FormData();
+
+
+formData.append(
+"profile_picture",
+blob,
+"profile.jpg"
+);
+
+
+
+fetch(
+"/student/profile/photo",
+{
+method:"POST",
+body:formData
+}
+
+)
+.then(
+()=>{
+
+location.reload();
+
+}
+
+);
+
+
+
+});
+
+
+}
+
+function closeCropModal(){
+
+
+    document
+    .getElementById("cropModal")
+    .style.display="none";
+
+
+    if(cropper){
+
+        cropper.destroy();
+
+        cropper=null;
+
+    }
+
+
+}
+
+
+document
+.querySelectorAll(".flash-popup")
+.forEach(function(message){
+
+
+    setTimeout(function(){
+
+
+        message.style.transition =
+        "all 0.4s ease";
+
+
+        message.style.opacity =
+        "0";
+
+
+        message.style.transform =
+        "translateX(40px)";
+
+
+        setTimeout(function(){
+
+            message.remove();
+
+        },400);
+
+
+    },5000);
+
+
+});
+
+
+</script>
+
+</body>
+
+</html>

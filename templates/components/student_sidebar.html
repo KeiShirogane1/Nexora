@@ -3,7 +3,6 @@
 
     <!-- HEADER -->
 
-
     <div class="sidebar-header">
 
 
@@ -43,26 +42,44 @@
     <div class="sidebar-profile">
 
 
+        {% if profile and profile[5] %}
+
+
+        <img
+        src="/uploads/profile_pictures/{{ profile[5] }}"
+        class="sidebar-avatar">
+
+
+        {% else %}
+
+
         <img
         src="{{ url_for('static', filename='images/default_profile.png') }}"
         class="sidebar-avatar">
 
 
+        {% endif %}
+
+
+
 
         <h4>
 
-            Shean Patrick Venus
+            {{ profile[0] if profile else "Student" }}
+
+            {{ profile[2] if profile else "" }}
 
         </h4>
 
 
 
         <p>
-            Administrator
+            Student
         </p>
 
 
     </div>
+
 
 
 
@@ -78,17 +95,14 @@
 
         <li>
 
-            <a href="/admin/dashboard">
-
+            <a href="/student/dashboard">
 
                 🏠
-
 
                 <span>
                 Dashboard
                 </span>
 
-
             </a>
 
         </li>
@@ -96,70 +110,87 @@
 
 
 
-
         <li>
 
-            <a href="/admin/users">
+            <a href="/student/logbook">
 
-
-                👥
-
+                📘
 
                 <span>
-                Users
+                Logbook
                 </span>
 
-
             </a>
-
 
         </li>
 
 
 
 
-
         <li>
 
-            <a href="/admin/internship-assign">
+            <a href="/student/tasks">
 
-
-                📋
-
+                ✅
 
                 <span>
-                Internship Assignment
+                Tasks
                 </span>
 
-
             </a>
-
 
         </li>
 
 
 
 
+        <li>
+
+            <a href="/student/documents">
+
+                📂
+
+                <span>
+                Documents
+                </span>
+
+            </a>
+
+        </li>
+
+
+
 
         <li>
 
-            <a href="/admin/reports">
-
+            <a href="#">
 
                 📊
 
-
                 <span>
-                Reports
+                Progress
                 </span>
 
-
             </a>
-
 
         </li>
 
 
+
+
+        <li>
+
+            <a href="#">
+
+                🕒
+
+                <span>
+                Attendance
+                </span>
+
+            </a>
+
+        </li>
 
 
 
@@ -168,7 +199,7 @@
 
             <a 
             class="logout-link"
-            href="{{ url_for('auth.logout') }}">
+            href="/logout">
 
 
                 🚪

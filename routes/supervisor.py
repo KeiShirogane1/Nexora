@@ -4,6 +4,7 @@ import os
 from database.db import get_db_connection
 from datetime import datetime
 from ml.predictor import analyze_feedback
+from services.notification_service import create_notification
 
 def format_time(timestamp):
     if not timestamp:
@@ -284,6 +285,17 @@ def add_feedback(student_id):
     conn.commit()
     conn.close()
 
+    try:
+        create_notification(
+            student_id,
+            "New Feedback Received",
+            f"Your supervisor left feedback: {comment[:120]}",
+            "feedback",
+            link_url=f"/student/dashboard",
+        )
+    except Exception as e:
+        print("feedback notification failed:", e)
+
     return redirect(f"/supervisor/student/{student_id}")
 
 # ---------------- ASSIGN TASK 
@@ -362,6 +374,16 @@ def assign_task(student_id):
 
         conn.close()
 
+        try:
+            create_notification(
+                student_id,
+                "New Task Assigned",
+                f"You have a new task: {task_title}",
+                "task",
+                link_url="/student/tasks",
+            )
+        except Exception as e:
+            print("task notification failed:", e)
 
         return redirect(
             f"/supervisor/student/{student_id}"

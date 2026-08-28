@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>
+Profile History - Nexora
+</title>
+
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+rel="stylesheet">
+
+
+<link rel="stylesheet"
+href="{{ url_for('static', filename='css/style.css') }}">
+
+</head>
+
+
+<body class="nexora-admin-body">
+
+
+{% include 'components/admin_sidebar.html' %}
+
+
+<main class="admin-main">
+
+
+<div class="compact-dashboard">
+
+
+
+<div class="dashboard-header">
+
+<div>
+
+<h1>
+Profile History
+</h1>
+
+
+<p>
+View changes made to this student profile.
+</p>
+
+
+</div>
+
+
+</div>
+
+
+
+
+<div class="dashboard-box">
+
+
+<table class="table">
+
+
+<thead>
+
+<tr>
+
+<th>
+Action
+</th>
+
+
+<th>
+Changed By
+</th>
+
+
+<th>
+Date
+</th>
+
+
+</tr>
+
+</thead>
+
+
+
+<tbody>
+
+
+{% if history %}
+
+
+{% for item in history %}
+
+
+<tr>
+
+
+<td>
+{{ item.action }}
+</td>
+
+
+<td>
+{{ item.username or "Unknown" }}
+</td>
+
+
+<td>
+{{ item.created_at }}
+</td>
+
+
+</tr>
+
+
+{% endfor %}
+
+
+
+{% else %}
+
+
+<tr>
+
+<td colspan="3">
+
+No profile changes recorded.
+
+</td>
+
+</tr>
+
+
+{% endif %}
+
+
+
+</tbody>
+
+
+</table>
+
+
+
+</div>
+
+
+
+<a href="{{ url_for('admin.student_profile', student_id=student_id) }}"
+class="btn btn-light">
+
+← Back to Student Profile
+
+</a>
+
+
+</div>
+
+
+</main>
+
+
+
+<script src="{{ url_for('static', filename='js/admin_sidebar.js') }}"></script>
+
+
+</body>
+
+</html>

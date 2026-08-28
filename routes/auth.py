@@ -1,4 +1,17 @@
+<<<<<<< Updated upstream
 from flask import Blueprint, render_template, request, redirect, url_for, session
+=======
+from flask import (
+    Blueprint,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    session,
+    flash
+)
+
+>>>>>>> Stashed changes
 from database.db import get_db_connection
 
 auth = Blueprint("auth", __name__)
@@ -15,13 +28,43 @@ def get_user(username, password):
     cursor = conn.cursor()
 
     try:
+<<<<<<< Updated upstream
         cursor.execute("""
             SELECT id, username, password, role
+=======
+        cursor.execute(
+            """
+            SELECT
+                id,
+                username,
+                email,
+                password,
+                role,
+                status
+>>>>>>> Stashed changes
             FROM users
             WHERE username = ? AND password = ?
         """, (username, password))
 
         user = cursor.fetchone()
+<<<<<<< Updated upstream
+=======
+
+        if not user:
+            return None
+
+        if not verify_password(
+            user["password"],
+            password
+        ):
+            return None
+
+
+        if user["status"] == "inactive":
+
+            return "inactive"
+
+>>>>>>> Stashed changes
         return user
 
     finally:
@@ -40,7 +83,24 @@ def login():
         username = request.form["username"]
         password = request.form["password"]
 
-        user = get_user(username, password)
+        user = get_user(
+        username,
+        password
+    )
+
+
+        if user == "inactive":
+
+            session["login_error"] = (
+                "Your account has been deactivated. Please contact the administrator."
+            )
+
+            session["login_username"] = username
+
+            return redirect(
+                url_for("auth.login")
+            )
+
 
         if user:
             role = user[3]
@@ -66,22 +126,75 @@ def login():
 def signup():
 
     if request.method == "POST":
+<<<<<<< Updated upstream
         username = request.form["username"]
+=======
+
+        username = request.form["username"].strip()
+
+        email = (
+            request.form["email"]
+            .strip()
+            .lower()
+        )
+
+>>>>>>> Stashed changes
         password = request.form["password"]
+
         confirm_password = request.form["confirm_password"]
+        
+        account_type = request.form["account_type"]
 
-        # Validate passwords match
+        if account_type not in ("student", "supervisor"):
+
+            flash(
+                "Invalid account type.",
+                "danger"
+            )
+
+            return render_template(
+                "auth/signup.html"
+            )
+        
+        
+        # Password confirmation
         if password != confirm_password:
-            return "Passwords do not match ❌"
 
+<<<<<<< Updated upstream
         # Validate password length
         if len(password) < 6:
             return "Password must be at least 6 characters ❌"
+=======
+            flash(
+                "Passwords do not match ❌",
+                "danger"
+            )
+
+            return render_template(
+                "auth/signup.html"
+            )
+
+
+        # Password length
+        if len(password) < 8:
+
+            flash(
+                "Password must be at least 8 characters ❌",
+                "danger"
+            )
+
+            return render_template(
+                "auth/signup.html"
+            )
+
+>>>>>>> Stashed changes
 
         conn = get_db_connection()
         cursor = conn.cursor()
 
+
         try:
+<<<<<<< Updated upstream
             # Check if username already exists
             cursor.execute(
                 "SELECT id FROM users WHERE username = ?",
@@ -96,13 +209,111 @@ def signup():
                 INSERT INTO users (username, password, role)
                 VALUES (?, ?, 'pending')
             """, (username, password))
+=======
+
+            # Duplicate username/email check
+            cursor.execute(
+                """
+                SELECT id
+                FROM users
+                WHERE username = ?
+                OR LOWER(email) = LOWER(?)
+                """,
+                (
+                    username,
+                    email
+                )
+            )
+
+
+            existing_user = cursor.fetchone()
+
+
+            if existing_user:
+
+                flash(
+                    "Username or email already exists ❌",
+                    "danger"
+                )
+
+                return render_template(
+                    "auth/signup.html"
+                )
+
+
+            password_hash = hash_password(password)
+            
+            pending_role = (
+                "pending_student"
+                if account_type == "student"
+                else "pending_supervisor"
+            )
+
+            cursor.execute(
+                """
+                INSERT INTO users
+                (
+                    username,
+                    email,
+                    password,
+                    role
+                )
+
+                VALUES
+                (?, ?, ?, ?)
+                """,
+                (
+                    username,
+                    email,
+                    password_hash,
+                    pending_role
+                )
+            )
+>>>>>>> Stashed changes
+
+
+            user_id = cursor.lastrowid
+
+
+            if account_type == "student":
+
+                cursor.execute(
+                    """
+                    INSERT INTO student_profiles
+                    (
+                        user_id,
+                        profile_completed
+                    )
+
+                    VALUES
+                    (?,0)
+                    """,
+                    (
+                        user_id,
+                    )
+                )
+
 
             conn.commit()
 
+
         finally:
+
             cursor.close()
             conn.close()
 
-        return redirect("/login")
 
-    return render_template("auth/signup.html")
+
+        flash(
+            "Account created successfully. Wait for approval.",
+            "success"
+        )
+
+        return redirect(
+            url_for("auth.login")
+        )
+
+
+    return render_template(
+        "auth/signup.html"
+    )

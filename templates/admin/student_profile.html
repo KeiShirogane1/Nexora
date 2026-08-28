@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Student Profile - Nexora</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+rel="stylesheet">
+
+<link rel="stylesheet"
+href="{{ url_for('static', filename='css/style.css') }}">
+
+</head>
+
+
+<body class="nexora-admin-body">
+
+
+{% include 'components/admin_sidebar.html' %}
+
+
+
+<main class="admin-main">
+
+
+<div class="compact-dashboard">
+
+
+
+<!-- HEADER -->
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+
+{% if messages %}
+
+<div class="flash-container">
+
+{% for category, message in messages %}
+
+<div class="flash-popup {{ category }}">
+
+<span>
+{{ message }}
+</span>
+
+<button onclick="this.parentElement.remove()">
+×
+</button>
+
+</div>
+
+{% endfor %}
+
+</div>
+
+{% endif %}
+
+{% endwith %}
+
+<div class="dashboard-header">
+
+<div>
+
+<h1>
+Student Profile
+</h1>
+
+
+<p>
+View student information and internship details.
+</p>
+
+</div>
+
+
+<div class="system-badge">
+👤 Student Account
+</div>
+
+
+</div>
+
+
+
+<!-- PROFILE HEADER -->
+
+<div class="dashboard-box profile-card">
+
+
+<div class="profile-top">
+
+
+{% if student.profile_picture %}
+
+<img 
+src="{{ url_for('uploaded_file', filename='profile_pictures/' + student.profile_picture) }}"
+class="admin-profile-image">
+
+{% else %}
+
+<div class="default-profile">
+👤
+</div>
+
+{% endif %}
+
+
+
+
+<div class="profile-main">
+
+
+<div class="profile-title">
+
+
+<h2>
+{{ student.first_name }}
+{{ student.middle_name }}
+{{ student.last_name }}
+</h2>
+
+
+<p>
+@{{ student.username }}
+</p>
+
+
+
+{% if student.status == "inactive" %}
+
+<span class="badge bg-danger">
+Inactive Student
+</span>
+
+
+{% elif student.role == "student" %}
+
+<span class="badge bg-success">
+Active Student
+</span>
+
+
+{% else %}
+
+<span class="badge bg-warning text-dark">
+Pending Student
+</span>
+
+
+{% endif %}
+
+
+
+</div>
+
+
+
+
+
+<div class="profile-summary">
+
+
+
+<div class="summary-item">
+
+<strong>
+Account ID
+</strong>
+
+<p>
+#{{ student.id }}
+</p>
+
+</div>
+
+
+
+<div class="summary-item">
+
+<strong>
+Username
+</strong>
+
+<p>
+{{ student.username }}
+</p>
+
+</div>
+
+
+
+
+<div class="summary-item">
+
+<strong>
+Program
+</strong>
+
+<p>
+{{ student.major_program or "Not Provided" }}
+</p>
+
+</div>
+
+
+
+
+<div class="summary-item">
+
+<strong>
+Internship Status
+</strong>
+
+
+<p>
+
+{% if internship %}
+
+{{ internship.status }}
+
+{% else %}
+
+Not Assigned
+
+{% endif %}
+
+
+</p>
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+<div class="profile-actions">
+
+
+<a href="{{ url_for('admin.edit_student', student_id=student.id) }}"
+class="btn btn-primary">
+
+✏️ Edit Profile
+
+</a>
+
+<a href="{{ url_for('admin.profile_history', student_id=student.id) }}"
+class="btn btn-info">
+
+📜 Profile History
+
+</a>
+
+<a href="{{ url_for('admin.reset_student_password', student_id=student.id) }}"
+class="btn btn-warning">
+
+🔑 Reset Password
+
+</a>
+
+
+
+{% if student.status == "inactive" %}
+
+<a href="{{ url_for('admin.activate_student', student_id=student.id) }}"
+class="btn btn-success">
+
+✅ Activate Account
+
+</a>
+
+{% else %}
+
+<button 
+class="btn btn-danger"
+onclick="openDeactivateModal()">
+
+🚫 Deactivate Account
+
+</button>
+
+{% endif %}
+
+
+
+</div>
+
+
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+
+<!-- PROFILE COMPLETION -->
+
+<div class="dashboard-box">
+
+
+<h3>
+Profile Completion
+</h3>
+
+
+<div class="progress-container">
+
+
+<div class="progress-bar"
+data-progress="{{ completion_percentage }}">
+</div>
+
+
+</div>
+
+
+
+<h4>
+
+{{ completion_percentage }}%
+
+</h4>
+
+
+
+
+{% if missing_fields %}
+
+
+<div class="alert alert-warning">
+
+
+<strong>
+Missing Information:
+</strong>
+
+
+<ul>
+
+{% for field in missing_fields %}
+
+<li>
+{{ field }}
+</li>
+
+{% endfor %}
+
+</ul>
+
+
+</div>
+
+
+
+{% else %}
+
+
+<div class="alert alert-success">
+
+✓ Profile Complete
+
+</div>
+
+
+{% endif %}
+
+
+
+</div>
+
+
+<!-- BASIC INFORMATION -->
+
+
+<div class="dashboard-box">
+
+
+<h3>
+Basic Information
+</h3>
+
+
+
+<div class="info-grid">
+
+
+<div>
+
+<strong>
+Student ID
+</strong>
+
+<p>
+{{ student.student_id or "Not Provided" }}
+</p>
+
+</div>
+
+
+
+
+<div>
+
+<strong>
+Age
+</strong>
+
+<p>
+{{ student.age or "Not Provided" }}
+</p>
+
+</div>
+
+
+
+
+
+<div>
+
+<strong>
+Grade / Year
+</strong>
+
+<p>
+{{ student.grade_year or "Not Provided" }}
+</p>
+
+</div>
+
+
+
+
+<div>
+
+<strong>
+Major / Program
+</strong>
+
+<p>
+{{ student.major_program or "Not Provided" }}
+</p>
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+
+
+
+<!-- CONTACT -->
+
+
+<div class="dashboard-box">
+
+
+<h3>
+Contact Information
+</h3>
+
+
+<div class="info-grid">
+
+
+<div>
+
+<strong>
+Account Email
+</strong>
+
+
+<p>
+{{ student.email or "Not Provided" }}
+</p>
+
+
+</div>
+
+
+
+
+<div>
+
+<strong>
+Phone Number
+</strong>
+
+
+<p>
+{{ student.phone_number or "Not Provided" }}
+</p>
+
+
+</div>
+
+
+
+
+<div class="full">
+
+
+<strong>
+Home Address
+</strong>
+
+
+<p>
+{{ student.home_address or "Not Provided" }}
+</p>
+
+
+</div>
+
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
+<!-- EMERGENCY -->
+
+
+<div class="dashboard-box">
+
+
+<h3>
+Emergency Contact
+</h3>
+
+
+<div class="info-grid">
+
+
+<div>
+
+<strong>
+Name
+</strong>
+
+<p>
+{{ student.emergency_name or "Not Provided" }}
+</p>
+
+</div>
+
+
+
+<div>
+
+<strong>
+Relationship
+</strong>
+
+<p>
+{{ student.emergency_relationship or "Not Provided" }}
+</p>
+
+</div>
+
+
+
+<div>
+
+<strong>
+Phone
+</strong>
+
+<p>
+{{ student.emergency_phone or "Not Provided" }}
+</p>
+
+</div>
+
+
+
+<div>
+
+<strong>
+Email
+</strong>
+
+<p>
+{{ student.emergency_email or "Not Provided" }}
+</p>
+
+</div>
+
+
+
+</div>
+
+
+</div>
+
+
+
+<!-- INTERNSHIP INFORMATION -->
+
+
+<div class="dashboard-box">
+
+
+<h3>
+Internship Information
+</h3>
+
+
+<div class="info-grid">
+
+
+<div>
+
+<strong>
+Company
+</strong>
+
+<p>
+
+{% if internship %}
+
+{{ internship.company_name }}
+
+{% else %}
+
+Not Assigned
+
+{% endif %}
+
+</p>
+
+</div>
+
+
+
+<div>
+
+<strong>
+Position
+</strong>
+
+<p>
+
+{% if internship %}
+
+{{ internship.position }}
+
+{% else %}
+
+Not Assigned
+
+{% endif %}
+
+</p>
+
+</div>
+
+
+
+<div>
+
+<strong>
+Supervisor
+</strong>
+
+<p>
+
+{% if internship %}
+
+{{ internship.supervisor_name }}
+
+{% else %}
+
+Not Assigned
+
+{% endif %}
+
+</p>
+
+</div>
+
+
+
+<div>
+
+<strong>
+Status
+</strong>
+
+<p>
+
+{% if internship %}
+
+{{ internship.status }}
+
+{% else %}
+
+No Internship
+
+{% endif %}
+
+</p>
+
+</div>
+
+
+
+<div>
+
+<strong>
+Start Date
+</strong>
+
+<p>
+
+{% if internship %}
+
+{{ internship.start_date }}
+
+{% else %}
+
+-
+
+{% endif %}
+
+</p>
+
+</div>
+
+
+
+<div>
+
+<strong>
+End Date
+</strong>
+
+<p>
+
+{% if internship %}
+
+{{ internship.end_date }}
+
+{% else %}
+
+-
+
+{% endif %}
+
+</p>
+
+</div>
+
+
+
+<div>
+
+<strong>
+Required Hours
+</strong>
+
+<p>
+
+{% if internship %}
+
+{{ internship.required_hours }} hours
+
+{% else %}
+
+-
+
+{% endif %}
+
+</p>
+
+</div>
+
+
+
+<div>
+
+<strong>
+Completed Hours
+</strong>
+
+<p>
+
+{% if internship %}
+
+{{ internship.completed_hours }} hours
+
+{% else %}
+
+0 hours
+
+{% endif %}
+
+</p>
+
+</div>
+
+
+
+</div>
+
+
+</div>
+
+
+<!-- DOCUMENTS -->
+
+<div class="dashboard-box">
+
+
+<h3>
+Documents
+</h3>
+
+
+
+{% if documents %}
+
+
+<div class="document-list">
+
+
+{% for doc in documents %}
+
+
+<div class="document-item">
+
+
+<div>
+
+
+<strong>
+📄 {{ doc.filename }}
+</strong>
+
+
+<p>
+Uploaded:
+{{ doc.uploaded_at }}
+</p>
+
+
+</div>
+
+
+
+<a href="{{ url_for('uploaded_file', filename='documents/' + doc.filename) }}"
+target="_blank"
+class="btn btn-primary">
+
+View
+
+</a>
+
+
+</div>
+
+
+
+{% endfor %}
+
+
+</div>
+
+
+
+{% else %}
+
+
+<div class="alert alert-info">
+
+No documents uploaded yet.
+
+</div>
+
+
+{% endif %}
+
+
+
+</div>
+
+
+<a href="{{ url_for('admin.admin_students') }}"
+class="btn btn-light">
+
+
+← Back to Students
+
+
+</a>
+
+
+</div>
+
+
+
+</main>
+
+<!-- DEACTIVATE MODAL -->
+
+<div id="deactivateModal" class="modal-overlay">
+
+
+<div class="deactivate-modal">
+
+
+<button 
+class="modal-close"
+onclick="closeDeactivateModal()">
+
+×
+
+</button>
+
+
+<div class="modal-icon">
+
+❌
+
+</div>
+
+
+<h2>
+Are you sure?
+</h2>
+
+
+<p>
+Are you sure you want to deactivate this account?
+</p>
+
+
+
+<div class="modal-actions">
+
+
+<button 
+class="btn btn-light"
+onclick="closeDeactivateModal()">
+
+Cancel
+
+</button>
+
+
+
+<a href="{{ url_for('admin.deactivate_student', student_id=student.id) }}"
+class="btn btn-danger">
+
+Deactivate
+
+</a>
+
+
+</div>
+
+
+</div>
+
+
+</div>
+
+<script src="{{ url_for('static', filename='js/admin_sidebar.js') }}"></script>
+
+<script>
+
+const progress = document.querySelector(".progress-bar");
+
+if (progress) {
+    progress.style.width = progress.dataset.progress + "%";
+}
+
+
+/* AUTO CLOSE FLASH MESSAGE */
+
+setTimeout(function () {
+
+    document.querySelectorAll(".flash-popup").forEach(function (alert) {
+
+        alert.style.transition = "all 0.3s ease";
+        alert.style.opacity = "0";
+        alert.style.transform = "translateY(-15px)";
+
+        setTimeout(function () {
+            alert.remove();
+        }, 300);
+
+    });
+
+}, 5000);
+
+function openDeactivateModal(){
+
+    document.getElementById(
+        "deactivateModal"
+    ).style.display = "flex";
+
+
+    document.body.classList.add(
+        "modal-open"
+    );
+
+}
+
+
+
+function closeDeactivateModal(){
+
+    document.getElementById(
+        "deactivateModal"
+    ).style.display = "none";
+
+
+    document.body.classList.remove(
+        "modal-open"
+    );
+
+}
+
+</script>
+
+</body>
+
+</html>
