@@ -12,8 +12,7 @@ def _class_code(conn):
     alphabet = string.ascii_uppercase + string.digits
     for _ in range(20):
         code = "NXR-" + "".join(secrets.choice(alphabet) for _ in range(6))
-        if not conn.execute("SELECT 1 FROM classrooms WHERE code = ?", (code,)).fetchone():
-            return code
+        if not conn.execute("SELECT 1 FROM classrooms WHERE code = ?", (code,)).fetchone(): return code
     raise RuntimeError("Unable to generate a unique classroom code")
 
 def _owns(conn, classroom_id):
@@ -67,8 +66,9 @@ def create_post(classroom_id):
     conn=get_db_connection()
     if not _owns(conn,classroom_id): conn.close(); return "Classroom not found or access denied",404
     title=(request.form.get("title") or "").strip(); body=(request.form.get("body") or "").strip()
-    if not body or len(body)>5000 or len(title)>160: conn.close(); flash("Post content is invalid.","danger"); return redirect(f"/supervisor/classes/{classroom_id}")
-    conn.execute("INSERT INTO classroom_posts(classroom_id,author_id,title,body) VALUES(?,?,?,?,?)".replace("VALUES(?,?,?,?,?)","VALUES(?,?,?,?)"),(classroom_id,session["user_id"],title or None,body)); conn.commit(); conn.close()
+    if not body or len(body)>5000 or len(title)>160:
+        conn.close(); flash("Post content is invalid.","danger"); return redirect(f"/supervisor/classes/{classroom_id}")
+    conn.execute("INSERT INTO classroom_posts(classroom_id,author_id,title,body) VALUES(?,?,?,?)",(classroom_id,session["user_id"],title or None,body)); conn.commit(); conn.close()
     flash("Announcement posted.","success"); return redirect(f"/supervisor/classes/{classroom_id}")
 
 @classroom.route("/supervisor/classes/<int:classroom_id>/assignment",methods=["POST"])
@@ -77,7 +77,8 @@ def create_assignment(classroom_id):
     conn=get_db_connection()
     if not _owns(conn,classroom_id): conn.close(); return "Classroom not found or access denied",404
     title=(request.form.get("title") or "").strip(); description=(request.form.get("description") or "").strip(); due_raw=(request.form.get("due_at") or "").strip(); points_raw=(request.form.get("points") or "100").strip()
-    if not 2<=len(title)<=160 or len(description)>5000: conn.close(); flash("Assignment details are invalid.","danger"); return redirect(f"/supervisor/classes/{classroom_id}")
+    if not 2<=len(title)<=160 or len(description)>5000:
+        conn.close(); flash("Assignment details are invalid.","danger"); return redirect(f"/supervisor/classes/{classroom_id}")
     due_at=None
     if due_raw:
         try: due_at=datetime.fromisoformat(due_raw.replace("T"," "))
@@ -110,8 +111,10 @@ def join_class():
     if request.method=="GET": return render_template("classroom/join_class.html",active_page="classes")
     code=(request.form.get("code") or "").strip().upper(); conn=get_db_connection(); course=conn.execute("SELECT id,archived FROM classrooms WHERE code=?",(code,)).fetchone()
     if not course or course[1]: conn.close(); flash("Class code is invalid or the class is archived.","danger"); return redirect("/student/classes/join")
-    try: conn.execute("INSERT INTO classroom_students(classroom_id,student_id) VALUES(?,?)",(course[0],session["user_id"])); conn.commit(); flash("You joined the class successfully.","success")
-    except Exception: conn.rollback(); flash("You are already a member of this class.","info")
+    try:
+        conn.execute("INSERT INTO classroom_students(classroom_id,student_id) VALUES(?,?)",(course[0],session["user_id"])); conn.commit(); flash("You joined the class successfully.","success")
+    except Exception:
+        conn.rollback(); flash("You are already a member of this class.","info")
     conn.close(); return redirect(f"/student/classes/{course[0]}")
 
 @classroom.route("/student/classes/<int:classroom_id>")
