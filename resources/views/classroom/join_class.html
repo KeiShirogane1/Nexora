@@ -1,0 +1,14 @@
+{% extends 'base.html' if false else 'student/dashboard.html' %}
+{% block content %}
+<div class="container py-4" style="max-width:720px">
+  <div class="mb-4"><h1>Join a Class</h1><p class="text-muted">Enter the class code provided by your supervisor.</p></div>
+  <div class="card border-0 shadow-sm"><div class="card-body p-4 p-md-5">
+    <form method="post" action="/student/classes/join">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label class="form-label fw-semibold">Class code</label>
+      <input class="form-control form-control-lg text-uppercase" name="code" maxlength="10" required placeholder="NXR-ABC123" autocomplete="off">
+      <button class="btn btn-primary btn-lg w-100 mt-4" type="submit">Join Class</button>
+    </form>
+  </div></div>
+</div>
+{% endblock %}
