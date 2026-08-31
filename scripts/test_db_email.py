@@ -29,73 +29,73 @@ except ImportError:
     pass
 
 
-from database.db import get_db_connection
-from services.email_service import send_email
+from app.Models.db import get_db_connection
+from app.Services.email_service import send_email
+
+if __name__ == "__main__":
+    username = input(
+        "Enter Nexora username: "
+    ).strip()
 
 
-username = input(
-    "Enter Nexora username: "
-).strip()
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute(
+            """
+            SELECT
+                id,
+                username,
+                email,
+                role
+            FROM users
+            WHERE username = ?
+            LIMIT 1
+            """,
+            (username,)
+        )
+
+        user = cursor.fetchone()
+
+    finally:
+        cursor.close()
+        conn.close()
 
 
-conn = get_db_connection()
-cursor = conn.cursor()
+    if not user:
+        raise SystemExit(
+            "User not found."
+        )
 
-try:
-    cursor.execute(
-        """
-        SELECT
-            id,
-            username,
-            email,
-            role
-        FROM users
-        WHERE username = ?
-        LIMIT 1
-        """,
-        (username,)
+
+    if not user["email"]:
+        raise SystemExit(
+            "This user has no email "
+            "stored in the database."
+        )
+
+
+    recipient = user["email"]
+
+    print(
+        f"Sending test email to: "
+        f"{recipient}"
     )
 
-    user = cursor.fetchone()
 
-finally:
-    cursor.close()
-    conn.close()
-
-
-if not user:
-    raise SystemExit(
-        "User not found."
+    send_email(
+        recipient,
+        "Nexora Email Test",
+        (
+            f"Hello {user['username']},\n\n"
+            "Your Nexora email configuration "
+            "is working correctly.\n\n"
+            "Nexora"
+        )
     )
 
 
-if not user["email"]:
-    raise SystemExit(
-        "This user has no email "
-        "stored in the database."
+    print(
+        "Email sent successfully."
     )
-
-
-recipient = user["email"]
-
-print(
-    f"Sending test email to: "
-    f"{recipient}"
-)
-
-
-send_email(
-    recipient,
-    "Nexora Email Test",
-    (
-        f"Hello {user['username']},\n\n"
-        "Your Nexora email configuration "
-        "is working correctly.\n\n"
-        "Nexora"
-    )
-)
-
-
-print(
-    "Email sent successfully."
-)

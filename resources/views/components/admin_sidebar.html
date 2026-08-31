@@ -1,0 +1,79 @@
+<aside class="admin-sidebar compact-sidebar" id="mainSidebar">
+<!-- HEADER -->
+    <div class="sidebar-header">
+        <button class="hamburger-btn sidebar-toggle" aria-label="Toggle sidebar">☰</button>
+        <div class="sidebar-brand">
+            <img src="{{ url_for('static', filename='images/Nexora Light.png') }}" alt="Nexora">
+            <span>Nexora</span>
+        </div>
+    </div>
+
+    <!-- PROFILE -->
+    <div class="sidebar-profile">
+        <img src="{{ url_for('static', filename='images/default_profile.png') }}" class="sidebar-avatar" alt="Admin">
+        <h4>Shean Patrick Venus</h4>
+        <p>Administrator</p>
+    </div>
+
+    <!-- MENU -->
+    <ul class="sidebar-menu">
+        <li>
+            <a href="{{ url_for('admin.admin_dashboard') }}" class="{% if request.path == '/admin/dashboard' %}active{% endif %}">
+                <span class="nav-icon">🏠</span><span>Dashboard</span>
+            </a>
+        </li>
+
+        <li class="nav-group {% if request.path.startswith('/admin/users') %}open{% endif %}">
+            <button class="nav-parent {% if request.path.startswith('/admin/users') %}active-parent{% endif %}" onclick="this.parentElement.classList.toggle('open')">
+                <span class="nav-icon">👥</span><span>Users</span><span class="nav-arrow">▾</span>
+            </button>
+            <ul class="submenu">
+                <li><a href="{{ url_for('admin.admin_students') }}" class="{% if request.path == '/admin/users/students' %}active{% endif %}"><span class="nav-icon">🎓</span><span>Students</span></a></li>
+                <li><a href="{{ url_for('admin.admin_supervisors') }}" class="{% if request.path == '/admin/users/supervisors' %}active{% endif %}"><span class="nav-icon">👔</span><span>Supervisors</span></a></li>
+            </ul>
+        </li>
+
+        <li>
+            <a href="{{ url_for('admin.internship_assign') }}" class="{% if request.path == '/admin/internship-assign' %}active{% endif %}">
+                <span class="nav-icon">🏢</span><span>Internship</span>
+            </a>
+        </li>
+
+        <li class="nav-group {% if request.path.startswith('/admin/reports') %}open{% endif %}">
+            <button class="nav-parent {% if request.path.startswith('/admin/reports') %}active-parent{% endif %}" onclick="this.parentElement.classList.toggle('open')">
+                <span class="nav-icon">📊</span><span>Reports</span><span class="nav-arrow">▾</span>
+            </button>
+            <ul class="submenu">
+                <li><a href="{{ url_for('admin.admin_reports_list') }}" class="{% if request.path == '/admin/reports' %}active{% endif %}"><span class="nav-icon">📄</span><span>Overview</span></a></li>
+                <li><a href="{{ url_for('admin.attendance_report') }}" class="{% if request.path == '/admin/reports/attendance' %}active{% endif %}"><span class="nav-icon">🕒</span><span>Attendance</span></a></li>
+            </ul>
+        </li>
+
+        <li>
+            <a href="{{ url_for('auth.logout') }}" class="logout-link">
+                <span class="nav-icon">🚪</span><span>Logout</span>
+            </a>
+        </li>
+    </ul>
+</aside>
+<script>
+// Mobile handling: toggle mobile-open class on small screens
+(function(){
+    const sidebar = document.getElementById('mainSidebar');
+    const toggles = document.querySelectorAll('.sidebar-toggle');
+    toggles.forEach(btn => {
+        btn.addEventListener('click', function(){
+            if (window.innerWidth <= 768) {
+                sidebar.classList.toggle('mobile-open');
+            }
+        });
+    });
+    // Close on outside click for mobile
+    document.addEventListener('click', function(e){
+        if (window.innerWidth <= 768 && sidebar.classList.contains('mobile-open') && !sidebar.contains(e.target) && !e.target.closest('.sidebar-toggle')) {
+            sidebar.classList.remove('mobile-open');
+        }
+    });
+})();
+</script>
+

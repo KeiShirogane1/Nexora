@@ -3,11 +3,30 @@ services:
     name: nexora
     runtime: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app
+    startCommand: gunicorn bootstrap.app:app
+    healthCheckPath: /health
     envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
       - key: SECRET_KEY
         generateValue: true
+      - key: DATABASE_URL
+        sync: false
+      - key: BREVO_API_KEY
+        sync: false
+      - key: BREVO_SENDER_EMAIL
+        sync: false
+      - key: BREVO_SENDER_NAME
+        value: Nexora
+      - key: APP_BASE_URL
+        sync: false
+      - key: FLASK_ENV
+        value: production
       - key: ADMIN_USERNAME
         sync: false
       - key: ADMIN_PASSWORD
         sync: false
+    disk:
+      name: nexora-uploads
+      mountPath: /opt/render/project/src/storage/uploads
+      sizeGB: 1

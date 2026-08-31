@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Supervisor Profile - Nexora</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
+</head>
+<body class="nexora-admin-body">
+{% include 'components/admin_sidebar.html' %}
+<main class="admin-main">
+<div class="compact-dashboard">
+<div class="dashboard-header">
+    <div>
+        <h1>Supervisor Profile</h1>
+        <p>View supervisor information and assigned students.</p>
+    </div>
+    <div class="system-badge">👔 Supervisor Account</div>
+</div>
+
+<div class="dashboard-box profile-card">
+<div class="profile-top">
+    <div class="default-profile">👔</div>
+    <div class="profile-main">
+        <div class="profile-title">
+            <h2>{{ supervisor.username }}</h2>
+            <p>@{{ supervisor.username }}</p>
+            {% if supervisor.status == "inactive" %}
+                <span class="badge bg-danger">Inactive</span>
+            {% elif supervisor.role == "pending_supervisor" %}
+                <span class="badge bg-warning text-dark">Pending</span>
+            {% else %}
+                <span class="badge bg-success">Active</span>
+            {% endif %}
+        </div>
+        <div class="profile-summary">
+            <div class="summary-item"><strong>Account ID</strong><p>#{{ supervisor.id }}</p></div>
+            <div class="summary-item"><strong>Username</strong><p>{{ supervisor.username }}</p></div>
+            <div class="summary-item"><strong>Email</strong><p>{{ supervisor.email or "Not Provided" }}</p></div>
+            <div class="summary-item"><strong>Assigned Students</strong><p>{{ assigned_count }} student{{ 's' if assigned_count != 1 else '' }}</p></div>
+        </div>
+        <div class="profile-actions">
+            <a href="{{ url_for('admin.edit_supervisor', supervisor_id=supervisor.id) }}" class="btn btn-primary">✏️ Edit</a>
+            {% if supervisor.status == "inactive" %}
+                <form method="POST" action="{{ url_for('admin.activate_supervisor', supervisor_id=supervisor.id) }}" style="display:inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-success">✅ Activate</button>
+                </form>
+            {% else %}
+                <form method="POST" action="{{ url_for('admin.deactivate_supervisor', supervisor_id=supervisor.id) }}" style="display:inline;" onsubmit="return confirm('Deactivate this supervisor?')">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger">🚫 Deactivate</button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+</div>
+
+<div class="dashboard-box">
+<h3>Assigned Students ({{ assigned_count }})</h3>
+{% if assigned_students %}
+<div class="table-responsive">
+<table class="table">
+<thead><tr><th>#</th><th>Student</th><th>Email</th><th>Action</th></tr></thead>
+<tbody>
+{% for s in assigned_students %}
+<tr>
+<td>{{ loop.index }}</td>
+<td>{{ s.username }}</td>
+<td>{{ s.email or "—" }}</td>
+<td><a href="{{ url_for('admin.student_profile', student_id=s.id) }}" class="btn btn-sm btn-primary">View</a></td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% else %}
+<div class="alert alert-info">No students assigned to this supervisor.</div>
+{% endif %}
+</div>
+
+<a href="{{ url_for('admin.admin_supervisors') }}" class="btn btn-light">← Back to Supervisors</a>
+</div>
+</main>
+<script src="{{ url_for('static', filename='js/admin_sidebar.js') }}"></script>
+</body>
+</html>
