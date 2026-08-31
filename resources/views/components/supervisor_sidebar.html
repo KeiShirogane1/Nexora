@@ -1,0 +1,60 @@
+<aside class="supervisor-sidebar compact-sidebar" id="mainSidebar">
+<!-- HEADER -->
+    <div class="sidebar-header">
+        <button class="hamburger-btn sidebar-toggle" aria-label="Toggle sidebar">☰</button>
+        <div class="sidebar-brand">
+            <img src="{{ url_for('static', filename='images/Nexora Light.png') }}" alt="Nexora">
+            <span>Nexora</span>
+        </div>
+    </div>
+
+    <!-- PROFILE SECTION -->
+    <div class="sidebar-profile text-center">
+        <img src="{{ url_for('static', filename='images/default_profile.png') }}" alt="Profile Picture" class="sidebar-profile-image">
+        <h5 class="mt-2 mb-1">Shean Patrick Venus</h5>
+        <small class="text-muted">Supervisor</small>
+    </div>
+
+    <!-- NAVIGATION -->
+    <ul class="sidebar-menu">
+        <li class="{% if active_page == 'dashboard' %}active{% endif %}">
+            <a href="/supervisor/dashboard" class="{% if active_page == 'dashboard' %}active{% endif %}">
+                <span class="nav-icon">🏠</span><span>Dashboard</span>
+            </a>
+        </li>
+        <li class="{% if active_page == 'interns' %}active{% endif %}">
+            <a href="/supervisor/interns" class="{% if active_page == 'interns' %}active{% endif %}">
+                <span class="nav-icon">👥</span><span>Assigned Interns</span>
+            </a>
+        </li>
+        <li class="mt-2">
+            <a href="/logout">
+                <span class="nav-icon">🚪</span><span>Logout</span>
+            </a>
+        </li>
+    </ul>
+</aside>
+<script>
+// Mobile handling for supervisor sidebar
+(function(){
+    const sidebar = document.getElementById('mainSidebar') || document.querySelector('.supervisor-sidebar');
+    if(!sidebar) return;
+    const toggles = document.querySelectorAll('.sidebar-toggle');
+    toggles.forEach(btn => {
+        btn.addEventListener('click', function(){
+            if (window.innerWidth <= 768) {
+                sidebar.classList.toggle('mobile-open');
+            } else {
+                sidebar.classList.toggle('closed');
+                document.body.classList.toggle('sidebar-collapsed');
+            }
+        });
+    });
+    document.addEventListener('click', function(e){
+        if (window.innerWidth <= 768 && sidebar.classList.contains('mobile-open') && !sidebar.contains(e.target) && !e.target.closest('.sidebar-toggle')) {
+            sidebar.classList.remove('mobile-open');
+        }
+    });
+})();
+</script>
+

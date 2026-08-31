@@ -1,0 +1,70 @@
+<aside class="student-sidebar compact-sidebar" id="mainSidebar">
+<!-- HEADER -->
+    <div class="sidebar-header">
+        <button class="hamburger-btn sidebar-toggle" aria-label="Toggle sidebar">☰</button>
+        <div class="sidebar-brand">
+            <img src="{{ url_for('static', filename='images/Nexora Light.png') }}" alt="Nexora">
+            <h3>Nexora</h3>
+        </div>
+    </div>
+
+    <!-- PROFILE -->
+    <div class="sidebar-profile">
+        {% if profile and profile[5] %}
+            <img src="/uploads/profile_pictures/{{ profile[5] }}" class="sidebar-avatar" alt="Student">
+        {% else %}
+            <img src="{{ url_for('static', filename='images/default_profile.png') }}" class="sidebar-avatar" alt="Student">
+        {% endif %}
+        <h4>{{ profile[0] if profile else "Student" }} {{ profile[2] if profile else "" }}</h4>
+        <p>Student</p>
+    </div>
+
+    <!-- MENU -->
+    <ul class="sidebar-menu">
+        <li>
+            <a href="/student/dashboard" class="{% if request.path == '/student/dashboard' %}active{% endif %}">
+                <span class="nav-icon">🏠</span><span>Dashboard</span>
+            </a>
+        </li>
+        <li>
+            <a href="/student/logbook" class="{% if request.path == '/student/logbook' %}active{% endif %}">
+                <span class="nav-icon">📘</span><span>Logbook</span>
+            </a>
+        </li>
+        <li>
+            <a href="/student/tasks" class="{% if request.path == '/student/tasks' %}active{% endif %}">
+                <span class="nav-icon">✅</span><span>Tasks</span>
+            </a>
+        </li>
+        <li>
+            <a href="/student/documents" class="{% if request.path == '/student/documents' %}active{% endif %}">
+                <span class="nav-icon">📂</span><span>Documents</span>
+            </a>
+        </li>
+        <li>
+            <a href="/logout" class="logout-link">
+                <span class="nav-icon">🚪</span><span>Logout</span>
+            </a>
+        </li>
+    </ul>
+</aside>
+<script>
+// Mobile handling for student sidebar
+(function(){
+    const sidebar = document.getElementById('mainSidebar');
+    const toggles = document.querySelectorAll('.sidebar-toggle');
+    toggles.forEach(btn => {
+        btn.addEventListener('click', function(){
+            if (window.innerWidth <= 768) {
+                sidebar.classList.toggle('mobile-open');
+            }
+        });
+    });
+    document.addEventListener('click', function(e){
+        if (window.innerWidth <= 768 && sidebar.classList.contains('mobile-open') && !sidebar.contains(e.target) && !e.target.closest('.sidebar-toggle')) {
+            sidebar.classList.remove('mobile-open');
+        }
+    });
+})();
+</script>
+

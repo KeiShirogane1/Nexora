@@ -1,4 +1,4 @@
-from ml.predictor import analyze_feedback
+from app.ML.predictor import analyze_feedback
 
 feedback = (
     "The intern consistently demonstrates initiative and "

@@ -1,0 +1,539 @@
+/* Nexora Shared Modals - Create Student / Supervisor - Reusable */
+.nexora-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15,23,42,0.55);
+    backdrop-filter: blur(2px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 4000;
+    padding: 16px;
+    overflow-y: auto;
+}
+.nexora-modal-overlay.open {
+    display: flex;
+}
+.nexora-modal {
+    background: #fff;
+    width: 100%;
+    max-width: 520px;
+    border-radius: 20px;
+    box-shadow: 0 24px 64px rgba(15,23,42,0.22);
+    overflow: hidden;
+    animation: modalIn .18s ease;
+}
+@keyframes modalIn {
+    from { opacity: 0; transform: translateY(8px) scale(.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.nexora-modal-header {
+    padding: 22px 24px 16px;
+    border-bottom: 1px solid #f1f5f9;
+    position: relative;
+}
+.nexora-modal-header h2 {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 4px;
+    letter-spacing: -0.02em;
+}
+.nexora-modal-header p {
+    font-size: 0.88rem;
+    color: #64748b;
+    margin: 0;
+}
+.nexora-modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    color: #475569;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.1rem;
+}
+.nexora-modal-close:hover {
+    background: #f8fafc;
+    color: #0f172a;
+}
+.nexora-modal-body {
+    padding: 18px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+.nexora-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.nexora-form-group label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #0f172a;
+}
+.nexora-form-group label span.req { color: #dc2626; }
+.nexora-form-control {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 0.92rem;
+    background: #fff;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color .15s, box-shadow .15s;
+}
+.nexora-form-control:focus {
+    outline: none;
+    border-color: #93c5fd;
+    box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+}
+.nexora-form-control.error {
+    border-color: #fca5a5;
+    background: #fff7f7;
+}
+.field-error {
+    font-size: 0.78rem;
+    color: #dc2626;
+    display: none;
+}
+.field-error.show { display: block; }
+.password-wrap {
+    position: relative;
+}
+.password-toggle {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #64748b;
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 4px;
+}
+.password-toggle:hover { color: #0f172a; }
+.nexora-info-notice {
+    background: #eff6ff;
+    border: 1px solid #dbeafe;
+    color: #1e40af;
+    padding: 12px 14px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    line-height: 1.45;
+}
+.nexora-modal-footer {
+    padding: 16px 24px 22px;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    border-top: 1px solid #f1f5f9;
+    background: #fff;
+}
+.nexora-modal-footer .btn-nexora-secondary,
+.nexora-modal-footer .btn-nexora-primary {
+    height: 40px;
+    padding: 0 18px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+.nexora-modal-footer .btn-nexora-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+/* Responsive modal */
+@media (max-width: 640px) {
+    .nexora-modal { max-width: calc(100% - 32px); }
+    .nexora-modal-body { padding: 16px; }
+}
+/* Ensure supervisor modal uses same max-width (500-520 range is fine) */
+#supervisorModal .nexora-modal {
+    max-width: 500px;
+}
+
+/* ===============================
+   PROFILE PICTURE CROPPER MODAL - moved from style.css
+================================ */
+/* ===============================
+   PROFILE PICTURE CROPPER MODAL
+================================ */
+
+
+.clickable-profile{
+
+    cursor:pointer;
+
+}
+
+
+
+/* DARK BACKGROUND */
+
+.crop-modal{
+
+    display:none;
+
+    position:fixed;
+
+    inset:0;
+
+    background:rgba(0,0,0,0.75);
+
+    justify-content:center;
+
+    align-items:center;
+
+    z-index:5000;
+
+}
+
+
+
+/* WHITE POPUP */
+
+.crop-box{
+
+    background:white;
+
+    width:450px;
+
+    max-width:90%;
+
+    padding:25px;
+
+    border-radius:20px;
+
+    text-align:center;
+
+    box-shadow:
+    0 20px 50px rgba(0,0,0,.4);
+
+}
+
+
+
+.crop-box h3{
+
+    margin-bottom:20px;
+
+    color:#111827;
+
+}
+
+
+
+/* IMAGE AREA */
+
+.crop-area{
+
+
+    width:350px;
+
+    height:350px;
+
+    max-width:100%;
+
+    margin:auto;
+
+    overflow:hidden;
+
+
+}
+
+
+
+.crop-area img{
+
+    display:block;
+
+    max-width:100%;
+
+}
+
+
+
+/* BUTTON AREA */
+
+.crop-actions{
+
+
+    display:flex;
+
+    gap:15px;
+
+    margin-top:20px;
+
+
+}
+
+
+
+.crop-actions button{
+
+
+    flex:1;
+
+    padding:12px;
+
+
+    border:none;
+
+    border-radius:10px;
+
+
+    background:#2563eb;
+
+
+    color:white;
+
+
+    font-weight:700;
+
+
+    cursor:pointer;
+
+
+}
+
+
+
+.crop-actions .cancel-crop{
+
+
+    background:#64748b;
+
+
+}
+
+
+
+/* ===============================
+   PROFILE PHOTO BUTTONS
+================================ */
+
+
+.crop-actions{
+
+    display:flex;
+
+    gap:15px;
+
+    justify-content:center;
+
+    margin-top:20px;
+
+}
+
+
+
+.save-picture-btn,
+.cancel-picture-btn{
+
+
+    border:none;
+
+    padding:12px 28px;
+
+    border-radius:12px;
+
+    font-size:15px;
+
+    font-weight:700;
+
+    cursor:pointer;
+
+    transition:.25s ease;
+
+
+}
+
+
+
+/* SAVE */
+
+.save-picture-btn{
+
+
+    background:#2563eb;
+
+    color:white;
+
+
+}
+
+
+
+.save-picture-btn:hover{
+
+
+    background:#1d4ed8;
+
+    transform:translateY(-2px);
+
+    box-shadow:
+    0 8px 20px rgba(37,99,235,.35);
+
+
+}
+
+
+
+/* CANCEL */
+
+.cancel-picture-btn{
+
+
+    background:#e5e7eb;
+
+    color:#334155;
+
+
+}
+
+
+
+.cancel-picture-btn:hover{
+
+
+    background:#cbd5e1;
+
+    transform:translateY(-2px);
+
+
+}
+
+/* =====================================
+   DEACTIVATE MODAL - moved from style.css
+===================================== */
+/* =====================================
+   DEACTIVATE MODAL FIX
+===================================== */
+
+body.modal-open {
+    overflow: hidden;
+}
+
+
+/* Dark overlay */
+
+.modal-overlay {
+
+    position: fixed;
+
+    top: 0;
+    left: 0;
+
+    width: 100%;
+    height: 100vh;
+
+    background: rgba(0,0,0,0.55);
+
+    display: none;
+
+    justify-content: center;
+
+    align-items: center;
+
+    z-index: 999999;
+
+}
+
+
+/* Modal box */
+
+.deactivate-modal {
+
+    background: white;
+
+    width: 420px;
+
+    padding: 35px;
+
+    border-radius: 18px;
+
+    text-align: center;
+
+    position: relative;
+
+    box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+
+}
+
+
+
+.modal-close {
+
+    position: absolute;
+
+    top: 15px;
+
+    right: 18px;
+
+    border: none;
+
+    background: transparent;
+
+    font-size: 28px;
+
+    cursor: pointer;
+
+}
+
+
+
+.modal-icon {
+
+    font-size: 45px;
+
+    margin-bottom: 15px;
+
+}
+
+
+
+.deactivate-modal h2 {
+
+    margin-bottom: 10px;
+
+}
+
+
+
+.deactivate-modal p {
+
+    color: #555;
+
+    margin-bottom: 25px;
+
+}
+
+
+
+.modal-actions {
+
+    display:flex;
+
+    justify-content:center;
+
+    gap:15px;
+
+}
+
+
+
+
+
+

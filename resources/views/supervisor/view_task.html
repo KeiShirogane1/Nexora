@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+
+    <title>View Task - Nexora</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+</head>
+
+
+<body class="analytics-aesthetic">
+
+
+    {% include 'components/supervisor_navbar.html' %}
+
+    {% include 'components/supervisor_sidebar.html' %}
+
+
+
+    <div class="page-content">
+
+
+        <div class="container mt-5">
+
+
+            <!-- PAGE HEADER -->
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+
+
+                <div>
+
+                    <h1>
+                        Task Details
+                    </h1>
+
+                    <p class="text-muted mb-0">
+
+                        Review task information and manage its current status.
+
+                    </p>
+
+                </div>
+
+
+                <a href="/supervisor/student/{{ task[1] }}"
+                   class="btn btn-secondary">
+
+                    ← Back to Student Profile
+
+                </a>
+
+
+            </div>
+
+
+
+
+            <!-- TASK INFORMATION CARD -->
+
+            <div class="card shadow-sm mb-4">
+
+
+                <div class="card-header d-flex justify-content-between align-items-center">
+
+
+                    <h4 class="mb-0">
+
+                        {{ task[2] }}
+
+                    </h4>
+
+
+                    <!-- STATUS -->
+
+                    {% if task[8] == 'Submitted' %}
+
+                        <span class="badge bg-success">
+
+                            Submitted
+
+                        </span>
+
+
+                    {% elif task[8] == 'Reviewed' %}
+
+                        <span class="badge bg-primary">
+
+                            Reviewed
+
+                        </span>
+
+
+                    {% elif task[8] == 'Reopened' %}
+
+                        <span class="badge bg-info">
+
+                            Reopened
+
+                        </span>
+
+
+                    {% else %}
+
+                        <span class="badge bg-warning text-dark">
+
+                            Pending
+
+                        </span>
+
+                    {% endif %}
+
+
+                </div>
+
+
+
+                <div class="card-body">
+
+
+                    <!-- ASSIGNED TO -->
+
+                    <div class="mb-4">
+
+
+                        <h6 class="text-muted">
+
+                            Assigned To
+
+                        </h6>
+
+
+                        <p class="mb-0">
+
+                            {{ task[9] }}
+
+                        </p>
+
+
+                    </div>
+
+
+
+
+                    <!-- DESCRIPTION -->
+
+                    <div class="mb-4">
+
+
+                        <h6 class="text-muted">
+
+                            Task Description
+
+                        </h6>
+
+
+                        <p class="mb-0">
+
+                            {{ task[3] }}
+
+                        </p>
+
+
+                    </div>
+
+
+
+
+                    <!-- TASK METADATA -->
+
+                    <div class="row">
+
+
+                        <div class="col-md-4">
+
+
+                            <h6 class="text-muted">
+
+                                Assigned At
+
+                            </h6>
+
+
+                            <p>
+
+                                {{ task[4] }}
+
+                            </p>
+
+
+                        </div>
+
+
+                        <div class="col-md-4">
+
+
+                            <h6 class="text-muted">
+
+                                Deadline
+
+                            </h6>
+
+
+                            <p>
+
+
+                                {% if task[5] %}
+
+                                    {{ task[5] }}
+
+                                {% else %}
+
+                                    No deadline
+
+                                {% endif %}
+
+
+                            </p>
+
+
+                        </div>
+
+
+                        <div class="col-md-4">
+
+
+                            <h6 class="text-muted">
+
+                                Submission Requirements
+
+                            </h6>
+
+
+                            <p>
+
+
+                                {% if task[6] %}
+
+                                    File submission required
+
+                                {% else %}
+
+                                    No file submission required
+
+                                {% endif %}
+
+
+                            </p>
+
+
+                        </div>
+
+
+                    </div>
+
+
+                    {% if task[6] %}
+
+                        <div class="alert alert-info mt-3 mb-0">
+
+                            Late submissions are allowed for this task.
+
+                        </div>
+
+                    {% endif %}
+
+
+                </div>
+
+
+            </div>
+
+
+
+
+            <!-- SUBMISSIONS -->
+
+            <div class="card shadow-sm mb-4">
+
+
+                <div class="card-header">
+
+
+                    <h5 class="mb-0">
+
+                        Task Submissions
+
+                    </h5>
+
+
+                </div>
+
+
+                <div class="card-body">
+
+
+                    {% if submissions %}
+
+
+                        {% for submission in submissions %}
+
+
+                            <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
+
+
+                                <div>
+
+
+                                    <strong>
+
+                                        {{ submission[1] }}
+
+                                    </strong>
+
+
+                                    <br>
+
+
+                                    <small class="text-muted">
+
+                                        Submitted:
+                                        {{ submission[3] }}
+
+                                    </small>
+
+
+                                </div>
+
+
+                                <a href="/supervisor/task/{{ task[0] }}/submission/{{ submission[0] }}"
+                                   class="btn btn-sm btn-primary"
+                                   target="_blank">
+
+                                    View File
+
+                                </a>
+
+
+                            </div>
+
+
+                        {% endfor %}
+
+
+                    {% else %}
+
+
+                        <p class="text-muted mb-0">
+
+                            No submissions yet.
+
+                        </p>
+
+
+                    {% endif %}
+
+
+                </div>
+
+
+            </div>
+
+
+
+
+            <!-- ACTIONS -->
+
+            <div class="card shadow-sm mb-4">
+
+
+                <div class="card-header">
+
+
+                    <h5 class="mb-0">
+
+                        Task Actions
+
+                    </h5>
+
+
+                </div>
+
+
+                <div class="card-body d-flex flex-wrap gap-2">
+
+
+                    <!-- EDIT -->
+
+                    <a href="/supervisor/task/{{ task[0] }}/edit"
+                       class="btn btn-primary">
+
+                        Edit Task
+
+                    </a>
+
+
+
+
+                    <!-- MARK AS REVIEWED -->
+
+                    {% if task[8] == 'Submitted' %}
+
+
+                        <form method="POST"
+                              action="/supervisor/task/{{ task[0] }}/review">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+
+                            <button type="submit"
+                                    class="btn btn-success">
+
+                                Mark as Reviewed
+
+                            </button>
+
+
+                        </form>
+
+
+                    {% endif %}
+
+
+
+
+                    <!-- REOPEN -->
+
+                    {% if task[8] == 'Submitted'
+                       or task[8] == 'Reviewed' %}
+
+                        <form method="POST" action="/supervisor/task/{{ task[0] }}/reopen" style="display:inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-warning">
+                                Reopen Task
+                            </button>
+                        </form>
+
+                    {% endif %}
+
+
+
+
+                    <!-- DELETE -->
+
+                    <form method="POST" action="/supervisor/task/{{ task[0] }}/delete" onsubmit="return confirm('Are you sure you want to delete this task? This action cannot be undone.')">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                        <button type="submit" class="btn btn-danger">
+
+                            Delete Task
+
+                        </button>
+
+                    </form>
+
+
+                </div>
+
+            </div>
+
+
+
+
+            <!-- BACK BUTTON -->
+
+            <div class="mb-5">
+
+
+                <a href="/supervisor/student/{{ task[1] }}"
+                   class="btn btn-outline-secondary">
+
+                    ← Return to Student Profile
+
+                </a>
+
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- SIDEBAR SCRIPT -->
+
+    <script>
+
+
+        const sidebarToggle =
+            document.getElementById("sidebarToggle");
+
+
+        const sidebar =
+            document.querySelector(".supervisor-sidebar");
+
+
+        const pageContent =
+            document.querySelector(".page-content");
+
+
+        if (sidebarToggle && sidebar && pageContent) {
+
+
+            sidebarToggle.addEventListener("click", function () {
+
+
+                sidebar.classList.toggle("active");
+
+
+                pageContent.classList.toggle("sidebar-open");
+
+
+            });
+
+
+        }
+
+
+    </script>
+
+
+</body>
+
+</html>

@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+
+<title>Edit Student - Nexora</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+rel="stylesheet">
+
+<link rel="stylesheet"
+href="{{ url_for('static', filename='css/style.css') }}">
+
+</head>
+
+
+<body class="nexora-admin-body">
+
+
+<main class="admin-main no-admin-sidebar">
+
+
+<div class="compact-dashboard">
+
+
+<div class="dashboard-header">
+
+<div>
+
+<h1>
+Edit Student Profile
+</h1>
+
+<a href="{{ url_for('admin.student_profile', student_id=student.id) }}"
+class="btn btn-secondary mb-3">
+
+← Back to Student Profile
+
+</a>
+
+<p>
+Update student information.
+</p>
+
+</div>
+
+</div>
+
+
+
+
+
+<div class="dashboard-box admin-edit-box">
+
+
+<form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+
+
+<div class="admin-form-grid">
+
+
+
+<!-- PERSONAL INFORMATION -->
+
+
+<div class="form-section-title">
+
+<h5>
+Personal Information
+</h5>
+
+</div>
+
+
+
+
+<div class="form-group">
+
+<label>
+First Name
+</label>
+
+<input
+type="text"
+name="first_name"
+class="form-control"
+value="{{ student.first_name or '' }}">
+
+</div>
+
+
+
+
+<div class="form-group">
+
+<label>
+Middle Name
+</label>
+
+<input
+type="text"
+name="middle_name"
+class="form-control"
+value="{{ student.middle_name or '' }}">
+
+</div>
+
+
+
+
+<div class="form-group">
+
+<label>
+Last Name
+</label>
+
+<input
+type="text"
+name="last_name"
+class="form-control"
+value="{{ student.last_name or '' }}">
+
+</div>
+
+
+
+
+
+
+<div class="form-group">
+
+<label>
+Age
+</label>
+
+<input
+type="number"
+name="age"
+class="form-control"
+value="{{ student.age or '' }}">
+
+</div>
+
+
+
+
+
+<div class="form-group">
+
+<label>
+Student ID
+</label>
+
+<input
+type="text"
+name="student_id"
+class="form-control"
+value="{{ student.student_id or '' }}">
+
+</div>
+
+
+
+
+
+<div class="form-group">
+
+<label>
+Grade / Year
+</label>
+
+<input
+type="text"
+name="grade_year"
+class="form-control"
+value="{{ student.grade_year or '' }}">
+
+</div>
+
+
+
+
+
+
+<!-- ACADEMIC AND CONTACT -->
+
+
+<div class="form-section-title">
+
+<h5>
+Academic & Contact Information
+</h5>
+
+</div>
+
+
+
+
+
+<div class="form-group">
+
+<label>
+Major / Program
+</label>
+
+<input
+type="text"
+name="major_program"
+class="form-control"
+value="{{ student.major_program or '' }}">
+
+</div>
+
+
+
+
+
+<div class="form-group">
+
+<label>
+Account Email
+</label>
+
+<input
+type="email"
+name="email"
+class="form-control"
+value="{{ student.email or '' }}">
+
+</div>
+
+
+
+
+
+<div class="form-group">
+
+<label>
+Phone Number
+</label>
+
+<input
+type="text"
+name="phone_number"
+class="form-control"
+value="{{ student.phone_number or '' }}">
+
+</div>
+
+
+
+
+
+<div class="form-group home-address">
+
+<label>
+Home Address
+</label>
+
+<input
+type="text"
+name="home_address"
+class="form-control"
+value="{{ student.home_address or '' }}">
+
+</div>
+
+
+
+
+
+
+
+<!-- EMERGENCY -->
+
+
+<div class="form-section-title">
+
+<h5>
+Emergency Contact
+</h5>
+
+</div>
+
+
+
+
+
+<div class="form-group">
+
+<label>
+Name
+</label>
+
+<input
+type="text"
+name="emergency_name"
+class="form-control"
+value="{{ student.emergency_name or '' }}">
+
+</div>
+
+
+
+
+
+<div class="form-group">
+
+<label>
+Relationship
+</label>
+
+<input
+type="text"
+name="emergency_relationship"
+class="form-control"
+value="{{ student.emergency_relationship or '' }}">
+
+</div>
+
+
+
+
+
+<div class="form-group">
+
+<label>
+Phone
+</label>
+
+<input
+type="text"
+name="emergency_phone"
+class="form-control"
+value="{{ student.emergency_phone or '' }}">
+
+</div>
+
+
+
+
+
+<div class="form-group">
+
+<label>
+Emergency Email
+</label>
+
+<input
+type="email"
+name="emergency_email"
+class="form-control"
+value="{{ student.emergency_email or '' }}">
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+<div class="admin-edit-buttons">
+
+
+<button 
+type="submit"
+class="btn btn-primary">
+
+Save Changes
+
+</button>
+
+
+
+
+<a href="{{ url_for('admin.student_profile', student_id=student.id) }}"
+class="btn btn-secondary">
+
+Cancel
+
+</a>
+
+
+</div>
+
+
+
+
+
+</form>
+
+
+</div>
+
+
+</div>
+
+
+</main>
+
+
+
+<script src="{{ url_for('static', filename='js/admin_sidebar.js') }}"></script>
+
+
+</body>
+
+</html>
