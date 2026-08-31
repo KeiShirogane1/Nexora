@@ -10,23 +10,33 @@
 {% include 'components/student_sidebar.html' %}
 
     <div class="student-main-content">
-            <h2>Document Upload</h2>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">📂 Document Upload</h2>
+                <span class="badge bg-primary">{{ docs|length }} files</span>
+            </div>
 
-        <div class="card p-4 mb-4">
+        <div class="card shadow-sm p-4 mb-4" style="border:1px solid #f1f5f9; border-radius:12px;">
+            <h5 class="mb-3">Upload New Document</h5>
             <form method="POST" enctype="multipart/form-data">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="mb-3">
                     <label for="file" class="form-label">Select File</label>
                     <input type="file" name="file" class="form-control" required>
+                    <small class="text-muted">Allowed: pdf, docx, xlsx, pptx, txt, zip, png, jpg • Max 5MB</small>
                 </div>
                 <button type="submit" class="btn btn-primary">Upload</button>
             </form>
         </div>
 
-        <h3>Your Documents</h3>
+        <div class="card shadow-sm" style="border:1px solid #f1f5f9; border-radius:12px;">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Your Documents</h5>
+                <span class="text-muted" style="font-size:0.85rem;">{{ docs|length }} total</span>
+            </div>
+            <div class="card-body p-0">
         {% if docs %}
             <div class="table-responsive">
-                <table class="table table-hover">
+                <table class="table table-hover nexora-table mb-0">
                     <thead class="table-light">
                         <tr>
                             <th>Filename</th>
@@ -37,7 +47,7 @@
                     <tbody>
                         {% for doc in docs %}
                             <tr>
-                                <td>{{ doc[1] }}</td>
+                                <td><span class="badge bg-secondary me-2">📄</span>{{ doc[1] }}</td>
                                 <td><small class="text-muted">{{ doc[2] }}</small></td>
                                 <td>
                                     <a href="/student/document/{{ doc[0] }}" class="btn btn-info btn-sm" target="_blank">View</a>
@@ -48,8 +58,14 @@
                 </table>
             </div>
         {% else %}
-            <p class="text-muted">No documents uploaded yet.</p>
+            <div class="empty-state py-4">
+                <div class="icon">📂</div>
+                <p class="text-muted mb-0">No documents uploaded yet.</p>
+                <small class="text-muted">Upload your internship requirements above.</small>
+            </div>
         {% endif %}
+            </div>
+        </div>
     </div>
 <script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
 

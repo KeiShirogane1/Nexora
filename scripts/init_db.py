@@ -447,6 +447,18 @@ def initialize_database():
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
             """,
+
+            """
+            CREATE TABLE IF NOT EXISTS change_verification_codes (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL REFERENCES users(id),
+                code_hash TEXT NOT NULL,
+                expires_at TIMESTAMP NOT NULL,
+                used_at TIMESTAMP,
+                attempts INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+            """,
             
             """
             CREATE TABLE IF NOT EXISTS student_profiles (
@@ -610,7 +622,111 @@ def initialize_database():
              CREATE INDEX IF NOT EXISTS idx_feedback_supervisor_id
              ON feedback(supervisor_id)
              """,
-             ]
+
+            # Classroom feature — 5 tables (Postgres)
+            """
+            CREATE TABLE IF NOT EXISTS classrooms (
+                id SERIAL PRIMARY KEY,
+                supervisor_id INTEGER NOT NULL REFERENCES users(id),
+                name TEXT NOT NULL,
+                section TEXT NOT NULL,
+                description TEXT,
+                code TEXT UNIQUE NOT NULL,
+                archived INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+            """,
+
+            """
+            CREATE TABLE IF NOT EXISTS classroom_students (
+                id SERIAL PRIMARY KEY,
+                classroom_id INTEGER NOT NULL REFERENCES classrooms(id) ON DELETE CASCADE,
+                student_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(classroom_id, student_id)
+            )
+            """,
+
+            """
+            CREATE TABLE IF NOT EXISTS classroom_posts (
+                id SERIAL PRIMARY KEY,
+                classroom_id INTEGER NOT NULL REFERENCES classrooms(id) ON DELETE CASCADE,
+                author_id INTEGER NOT NULL REFERENCES users(id),
+                title TEXT,
+                body TEXT NOT NULL,
+                post_type TEXT DEFAULT 'announcement',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+            """,
+
+            """
+            CREATE TABLE IF NOT EXISTS classroom_assignments (
+                id SERIAL PRIMARY KEY,
+                classroom_id INTEGER NOT NULL REFERENCES classrooms(id) ON DELETE CASCADE,
+                author_id INTEGER NOT NULL REFERENCES users(id),
+                title TEXT NOT NULL,
+                description TEXT,
+                due_at TIMESTAMP,
+                points INTEGER DEFAULT 100,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+            """,
+
+            """
+            CREATE TABLE IF NOT EXISTS classroom_submissions (
+                id SERIAL PRIMARY KEY,
+                assignment_id INTEGER NOT NULL REFERENCES classroom_assignments(id) ON DELETE CASCADE,
+                student_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                content TEXT,
+                filename TEXT,
+                filepath TEXT,
+                submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                status TEXT DEFAULT 'submitted',
+                grade TEXT,
+                feedback TEXT
+            )
+            """,
+
+            """
+            CREATE INDEX IF NOT EXISTS idx_classrooms_supervisor_id
+            ON classrooms(supervisor_id)
+            """,
+
+            """
+            CREATE INDEX IF NOT EXISTS idx_classrooms_code
+            ON classrooms(code)
+            """,
+
+            """
+            CREATE INDEX IF NOT EXISTS idx_classroom_students_classroom_id
+            ON classroom_students(classroom_id)
+            """,
+
+            """
+            CREATE INDEX IF NOT EXISTS idx_classroom_students_student_id
+            ON classroom_students(student_id)
+            """,
+
+            """
+            CREATE INDEX IF NOT EXISTS idx_classroom_posts_classroom_id
+            ON classroom_posts(classroom_id)
+            """,
+
+            """
+            CREATE INDEX IF NOT EXISTS idx_classroom_assignments_classroom_id
+            ON classroom_assignments(classroom_id)
+            """,
+
+            """
+            CREATE INDEX IF NOT EXISTS idx_classroom_submissions_assignment_id
+            ON classroom_submissions(assignment_id)
+            """,
+
+            """
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_classroom_students_unique
+            ON classroom_students(classroom_id, student_id)
+            """,
+              ]
 
     else:
         statements = [
@@ -728,6 +844,19 @@ def initialize_database():
                 used_at TIMESTAMP,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+            """,
+
+            """
+            CREATE TABLE IF NOT EXISTS change_verification_codes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL REFERENCES users(id),
+                code_hash TEXT NOT NULL,
+                expires_at TIMESTAMP NOT NULL,
+                used_at TIMESTAMP,
+                attempts INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY(user_id) REFERENCES users(id)
             )
             """,
 
@@ -884,7 +1013,120 @@ def initialize_database():
              CREATE INDEX IF NOT EXISTS idx_feedback_supervisor_id
              ON feedback(supervisor_id)
              """,
-             ]
+
+            # Classroom feature — 5 tables (SQLite)
+            """
+            CREATE TABLE IF NOT EXISTS classrooms (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                supervisor_id INTEGER NOT NULL REFERENCES users(id),
+                name TEXT NOT NULL,
+                section TEXT NOT NULL,
+                description TEXT,
+                code TEXT UNIQUE NOT NULL,
+                archived INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY(supervisor_id) REFERENCES users(id)
+            )
+            """,
+
+            """
+            CREATE TABLE IF NOT EXISTS classroom_students (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                classroom_id INTEGER NOT NULL REFERENCES classrooms(id) ON DELETE CASCADE,
+                student_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(classroom_id, student_id),
+                FOREIGN KEY(classroom_id) REFERENCES classrooms(id),
+                FOREIGN KEY(student_id) REFERENCES users(id)
+            )
+            """,
+
+            """
+            CREATE TABLE IF NOT EXISTS classroom_posts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                classroom_id INTEGER NOT NULL REFERENCES classrooms(id) ON DELETE CASCADE,
+                author_id INTEGER NOT NULL REFERENCES users(id),
+                title TEXT,
+                body TEXT NOT NULL,
+                post_type TEXT DEFAULT 'announcement',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY(classroom_id) REFERENCES classrooms(id),
+                FOREIGN KEY(author_id) REFERENCES users(id)
+            )
+            """,
+
+            """
+            CREATE TABLE IF NOT EXISTS classroom_assignments (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                classroom_id INTEGER NOT NULL REFERENCES classrooms(id) ON DELETE CASCADE,
+                author_id INTEGER NOT NULL REFERENCES users(id),
+                title TEXT NOT NULL,
+                description TEXT,
+                due_at TIMESTAMP,
+                points INTEGER DEFAULT 100,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY(classroom_id) REFERENCES classrooms(id),
+                FOREIGN KEY(author_id) REFERENCES users(id)
+            )
+            """,
+
+            """
+            CREATE TABLE IF NOT EXISTS classroom_submissions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                assignment_id INTEGER NOT NULL REFERENCES classroom_assignments(id) ON DELETE CASCADE,
+                student_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                content TEXT,
+                filename TEXT,
+                filepath TEXT,
+                submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                status TEXT DEFAULT 'submitted',
+                grade TEXT,
+                feedback TEXT,
+                FOREIGN KEY(assignment_id) REFERENCES classroom_assignments(id),
+                FOREIGN KEY(student_id) REFERENCES users(id)
+            )
+            """,
+
+            """
+            CREATE INDEX IF NOT EXISTS idx_classrooms_supervisor_id
+            ON classrooms(supervisor_id)
+            """,
+
+            """
+            CREATE INDEX IF NOT EXISTS idx_classrooms_code
+            ON classrooms(code)
+            """,
+
+            """
+            CREATE INDEX IF NOT EXISTS idx_classroom_students_classroom_id
+            ON classroom_students(classroom_id)
+            """,
+
+            """
+            CREATE INDEX IF NOT EXISTS idx_classroom_students_student_id
+            ON classroom_students(student_id)
+            """,
+
+            """
+            CREATE INDEX IF NOT EXISTS idx_classroom_posts_classroom_id
+            ON classroom_posts(classroom_id)
+            """,
+
+            """
+            CREATE INDEX IF NOT EXISTS idx_classroom_assignments_classroom_id
+            ON classroom_assignments(classroom_id)
+            """,
+
+            """
+            CREATE INDEX IF NOT EXISTS idx_classroom_submissions_assignment_id
+            ON classroom_submissions(assignment_id)
+            """,
+
+            """
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_classroom_students_unique
+            ON classroom_students(classroom_id, student_id)
+            """,
+              ]
     # Create tables
     for statement in statements:
         cursor.execute(statement)

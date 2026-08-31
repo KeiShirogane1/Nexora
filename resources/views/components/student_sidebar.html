@@ -8,22 +8,27 @@
         </div>
     </div>
 
-    <!-- PROFILE -->
-    <div class="sidebar-profile">
+    <!-- PROFILE — clickable to profile -->
+    <a href="{{ url_for('student.student_profile') }}" class="sidebar-profile" style="text-decoration:none; color:inherit;">
         {% if profile and profile[5] %}
             <img src="/uploads/profile_pictures/{{ profile[5] }}" class="sidebar-avatar" alt="Student">
         {% else %}
             <img src="{{ url_for('static', filename='images/default_profile.png') }}" class="sidebar-avatar" alt="Student">
         {% endif %}
         <h4>{{ profile[0] if profile else "Student" }} {{ profile[2] if profile else "" }}</h4>
-        <p>Student</p>
-    </div>
+        <p>Student • View profile</p>
+    </a>
 
     <!-- MENU -->
     <ul class="sidebar-menu">
         <li>
             <a href="/student/dashboard" class="{% if request.path == '/student/dashboard' %}active{% endif %}">
                 <span class="nav-icon">🏠</span><span>Dashboard</span>
+            </a>
+        </li>
+        <li>
+            <a href="{{ url_for('classroom.student_classes') }}" class="{% if request.path.startswith('/student/classes') %}active{% endif %}">
+                <span class="nav-icon">🏫</span><span>My Classes</span>
             </a>
         </li>
         <li>
@@ -42,12 +47,20 @@
             </a>
         </li>
         <li>
-            <a href="/logout" class="logout-link">
+            <a href="javascript:void(0)" onclick="document.getElementById('notifDropdown')?.classList.toggle('show');">
+                <span class="nav-icon">🔔</span><span>Notifications</span>
+                {% if unread_count %}<span class="badge bg-danger ms-2">{{ unread_count }}</span>{% endif %}
+            </a>
+        </li>
+        <li style="margin-top:12px; border-top:1px solid rgba(255,255,255,0.12); padding-top:12px;">
+            <a href="javascript:void(0)" class="logout-link" style="color:#fecaca; font-weight:700;" onclick="openLogoutModal(); return false;">
                 <span class="nav-icon">🚪</span><span>Logout</span>
             </a>
         </li>
     </ul>
 </aside>
+{% include 'components/logout_modal.html' %}
+{% include 'components/toast.html' %}
 <script>
 // Mobile handling for student sidebar
 (function(){

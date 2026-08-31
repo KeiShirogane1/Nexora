@@ -14,118 +14,78 @@ href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 
 
-<body>
-
-
+<body class="nexora-admin-body">
 {% include 'components/admin_sidebar.html' %}
-
-
-<div class="admin-content">
-
-
-<h1>
-Assign Internship
-</h1>
-
-
-<form method="POST">
+<main class="admin-main">
+<div class="compact-dashboard">
+<div class="dashboard-header">
+<div>
+<h1>Assign Internship</h1>
+<p>Link students with supervisors and create internship records.</p>
+</div>
+<a href="{{ url_for('admin.admin_dashboard') }}" class="btn btn-light btn-sm">← Dashboard</a>
+</div>
+<div class="nexora-card filter-card">
+<form method="POST" class="row g-3">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-
-<label>
-Student
-</label>
-
-
-<select name="student_id">
-
+<div class="col-12">
+<label class="form-label">Student <span class="text-danger">*</span></label>
+<select name="student_id" class="form-select" required>
 {% for student in students %}
-
-<option value="{{student.id}}">
-{{student.username}}
-</option>
-
+<option value="{{student.id}}">{{student.username}}</option>
 {% endfor %}
-
 </select>
-
-<label>Supervisor (authoritative assignment)</label>
-<select name="supervisor_id">
+</div>
+<div class="col-12">
+<label class="form-label">Supervisor (authoritative assignment)</label>
+<select name="supervisor_id" class="form-select">
 <option value="">-- Select Supervisor --</option>
 {% for sup in supervisors %}
 <option value="{{sup.id}}">{{sup.username}}</option>
 {% endfor %}
 </select>
-<p style="font-size:0.85em;color:#666;">Selecting a supervisor will create/update the authoritative student_assignments relationship and set internships.supervisor_id. Legacy name/email below remain for compatibility.</p>
-
-<input 
-name="company_name"
-placeholder="Company Name"
-required>
-
-
-<input 
-name="company_address"
-placeholder="Company Address"
-required>
-
-
-<input 
-name="supervisor_name"
-placeholder="Supervisor Name"
-required>
-
-
-<input 
-name="supervisor_email"
-placeholder="Supervisor Email"
-required>
-
-
-<input 
-name="position"
-placeholder="Position"
-required>
-
-
-<label>
-Start Date
-</label>
-
-<input 
-type="date"
-name="start_date"
-required>
-
-
-<label>
-End Date
-</label>
-
-<input 
-type="date"
-name="end_date"
-required>
-
-
-
-<input 
-name="required_hours"
-placeholder="Required Hours"
-value="400"
-required>
-
-
-
-<button type="submit">
-Assign Internship
-</button>
-
-
-</form>
-
-
+<p class="form-text">Selecting a supervisor creates the authoritative <code>student_assignments</code> relationship and sets <code>internships.supervisor_id</code>.</p>
 </div>
+<div class="col-md-6">
+<label class="form-label">Company Name <span class="text-danger">*</span></label>
+<input name="company_name" class="form-control" placeholder="Company Name" required>
+</div>
+<div class="col-md-6">
+<label class="form-label">Company Address <span class="text-danger">*</span></label>
+<input name="company_address" class="form-control" placeholder="Company Address" required>
+</div>
+<div class="col-md-6">
+<label class="form-label">Supervisor Name <span class="text-danger">*</span></label>
+<input name="supervisor_name" class="form-control" placeholder="Supervisor Name" required>
+</div>
+<div class="col-md-6">
+<label class="form-label">Supervisor Email <span class="text-danger">*</span></label>
+<input name="supervisor_email" type="email" class="form-control" placeholder="Supervisor Email" required>
+</div>
+<div class="col-md-6">
+<label class="form-label">Position <span class="text-danger">*</span></label>
+<input name="position" class="form-control" placeholder="Position" required>
+</div>
+<div class="col-md-6">
+<label class="form-label">Required Hours</label>
+<input name="required_hours" type="number" class="form-control" placeholder="400" value="400" required>
+</div>
+<div class="col-md-6">
+<label class="form-label">Start Date <span class="text-danger">*</span></label>
+<input type="date" name="start_date" class="form-control" required>
+</div>
+<div class="col-md-6">
+<label class="form-label">End Date <span class="text-danger">*</span></label>
+<input type="date" name="end_date" class="form-control" required>
+</div>
+<div class="col-12">
+<button type="submit" class="btn btn-primary">Assign Internship</button>
+<a href="{{ url_for('admin.admin_dashboard') }}" class="btn btn-secondary ms-2">Cancel</a>
+</div>
+</form>
+</div>
+</div>
+</main>
 
 
 </body>

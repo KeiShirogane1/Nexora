@@ -21,6 +21,7 @@ from app.Services.password_security import (
 )
 
 from app.Services.email_service import (
+    send_email,
     send_password_changed_email,
     send_password_reset_email,
 )
@@ -30,6 +31,12 @@ from app.Services.password_reset_service import (
     get_valid_reset_token,
     invalidate_user_reset_tokens,
     mark_reset_token_used,
+)
+
+from app.Services.change_verification_service import (
+    create_change_code,
+    verify_change_code,
+    has_pending_code,
 )
 
 
@@ -263,6 +270,73 @@ def reset_password(token):
 
 
 @password.route(
+    "/change-password/request-code",
+    methods=["POST"]
+)
+@login_required
+def request_change_code():
+    user_id = session["user_id"]
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT username, email FROM users WHERE id = ? LIMIT 1", (user_id,))
+        user = cursor.fetchone()
+    finally:
+        cursor.close()
+        conn.close()
+    if not user or not user["email"]:
+        flash("No email associated with your account. Please contact administrator.", "danger")
+        return redirect(url_for("password.change_password"))
+    try:
+        code = create_change_code(user_id)
+        # Send via Brevo
+        send_email(
+            recipient=user["email"],
+            subject="Nexora — Change Password Verification Code",
+            body=f"""Hello {user['username']},
+
+You requested to change your Nexora password.
+
+Your verification code is:
+
+{code}
+
+This code expires in 10 minutes and can only be used once.
+If you did not request this, please ignore this email.
+
+Nexora System
+""".strip()
+        )
+        session["change_code_sent"] = True
+        flash("Verification code sent to your email.", "success")
+    except Exception as e:
+        current_app.logger.exception("Failed to send change code")
+        flash("Failed to send verification code. Please try again.", "danger")
+    return redirect(url_for("password.change_password"))
+
+
+@password.route(
+    "/change-password/verify-code",
+    methods=["POST"]
+)
+@login_required
+def verify_change_code_route():
+    user_id = session["user_id"]
+    code = (request.form.get("code") or "").strip()
+    if not code:
+        flash("Verification code is required.", "danger")
+        return redirect(url_for("password.change_password"))
+    ok, msg = verify_change_code(user_id, code)
+    if ok:
+        session["change_verified"] = True
+        session["change_verified_at"] = int(__import__("time").time())
+        flash("Code verified. You may now change your password.", "success")
+    else:
+        flash(msg or "Invalid code.", "danger")
+    return redirect(url_for("password.change_password"))
+
+
+@password.route(
     "/change-password",
     methods=["GET", "POST"]
 )
@@ -303,6 +377,14 @@ def change_password():
         )
 
     if request.method == "POST":
+
+        # Email verification required for password change
+        verified = session.get("change_verified")
+        verified_at = session.get("change_verified_at", 0)
+        import time as _time
+        if not verified or not verified_at or (_time.time() - int(verified_at) > 600):
+            flash("Please verify your email with the code sent to your inbox first.", "danger")
+            return render_template("auth/change_password.html", verified=False)
 
         current_password = request.form.get(
             "current_password",
@@ -431,6 +513,17 @@ def change_password():
             url_for("auth.login")
         )
 
+    # GET — pass verification state to template
+    verified = bool(session.get("change_verified"))
+    if verified:
+        import time as _time
+        if _time.time() - int(session.get("change_verified_at", 0)) > 600:
+            session.pop("change_verified", None)
+            session.pop("change_verified_at", None)
+            session.pop("change_code_sent", None)
+            verified = False
     return render_template(
-        "auth/change_password.html"
+        "auth/change_password.html",
+        verified=verified,
+        code_sent=bool(session.get("change_code_sent"))
     )

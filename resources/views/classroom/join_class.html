@@ -1,14 +1,33 @@
-{% extends 'base.html' if false else 'student/dashboard.html' %}
-{% block content %}
-<div class="container py-4" style="max-width:720px">
-  <div class="mb-4"><h1>Join a Class</h1><p class="text-muted">Enter the class code provided by your supervisor.</p></div>
-  <div class="card border-0 shadow-sm"><div class="card-body p-4 p-md-5">
-    <form method="post" action="/student/classes/join">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <label class="form-label fw-semibold">Class code</label>
-      <input class="form-control form-control-lg text-uppercase" name="code" maxlength="10" required placeholder="NXR-ABC123" autocomplete="off">
-      <button class="btn btn-primary btn-lg w-100 mt-4" type="submit">Join Class</button>
-    </form>
-  </div></div>
-</div>
-{% endblock %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Join Class - Nexora</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="student-page">
+    {% include 'components/student_sidebar.html' %}
+    <div class="student-main-content">
+        <div class="container mt-5" style="max-width:640px;">
+            <a href="{{ url_for('classroom.student_classes') }}" class="btn btn-light btn-sm mb-3">← Back to My Classes</a>
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <div style="font-size:2rem; margin-bottom:8px;">🔑</div>
+                    <h4>Join class</h4>
+                    <p class="text-muted">Enter the class code shared by your supervisor.</p>
+                    <form method="POST" class="text-start mt-4" novalidate>
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <label for="class_code" class="form-label">Class code</label>
+                        <input type="text" id="class_code" name="class_code" class="form-control form-control-lg" placeholder="e.g., NEX-ABC123" value="{{ form.class_code if form.class_code else '' }}" required style="letter-spacing:.08em; text-transform:uppercase;">
+                        {% if errors and errors.class_code %}<div class="text-danger small mt-1">{{ errors.class_code }}</div>{% endif %}
+                        <div class="text-muted small mt-2">Ask your supervisor if you don't have a code. Class codes are 6-10 characters.</div>
+                        <button type="submit" class="btn btn-primary w-100 mt-4">Join</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
+</body>
+</html>

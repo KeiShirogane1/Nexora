@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{{ classroom.name }} - Nexora</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="student-page">
+    {% include 'components/student_sidebar.html' %}
+    <div class="student-main-content">
+        <div class="container mt-5">
+            <div class="card shadow-sm mb-4" style="overflow:hidden;">
+                <div style="height:120px; background: linear-gradient(135deg, #0f172a, #3b82f6);"></div>
+                <div class="card-body">
+                    <div class="d-flex flex-column flex-md-row justify-content-between gap-3">
+                        <div>
+                            <h2 class="mb-1">{{ classroom.name }}</h2>
+                            <p class="text-muted mb-2">{{ classroom.section }} • Teacher: {{ classroom.supervisor }}</p>
+                            <span class="badge {% if classroom.status == 'Active' %}bg-success{% else %}bg-secondary{% endif %}">{{ classroom.status }}</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-light text-dark border" id="studentCodeBadge">{{ classroom.code }}</span>
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="copyStudentCode()">Copy</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('studentInfoModal').classList.add('open')">Class Info</button>
+                        </div>
+                    </div>
+                    {% if classroom.description %}
+                    <p class="text-muted mt-3 mb-0">{{ classroom.description }}</p>
+                    {% endif %}
+                    {% if classroom.archived %}
+                    <div class="alert alert-warning mt-3 mb-0">This class is archived.</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <div class="profile-tabs mb-4">
+                <button class="profile-tab-button active" onclick="openClassTab('stream', this)">Stream</button>
+                <button class="profile-tab-button" onclick="openClassTab('classwork', this)">Classwork</button>
+                <button class="profile-tab-button" onclick="openClassTab('people', this)">People</button>
+            </div>
+
+            <div id="stream" class="profile-tab active">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-white"><h6 class="mb-0">Announcements</h6></div>
+                    <div class="card-body">
+                        {% if announcements and announcements|length > 0 %}
+                            {% for a in announcements %}
+                            <div class="border-bottom pb-3 mb-3">
+                                {% if a.title %}<strong>{{ a.title }}</strong><br>{% endif %}
+                                <p class="mb-1">{{ a.body }}</p>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted mb-0">No announcements yet.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div id="classwork" class="profile-tab">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">Assignments</h6>
+                        <span class="badge bg-primary">Classwork</span>
+                    </div>
+                    <div class="card-body">
+                        {% if assignments and assignments|length > 0 %}
+                            {% for ass in assignments %}
+                            <a href="{{ url_for('classroom.student_assignment_detail', class_id=classroom.id, assignment_id=ass.id) }}" class="text-decoration-none">
+                            <div class="border-bottom pb-3 mb-3 d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ ass.title if ass.title else ass }}</strong>
+                                    <div class="small text-muted">Due: {{ ass.due if ass.due else 'No due date' }}</div>
+                                </div>
+                                <span class="badge {% if ass.status == 'submitted' or ass.status == 'graded' %}bg-success{% else %}bg-secondary{% endif %}">{{ ass.status if ass.status else 'Pending' }}</span>
+                            </div>
+                            </a>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted mb-0">No assignments yet.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div id="people" class="profile-tab">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-white"><h6 class="mb-0">People</h6></div>
+                    <div class="card-body">
+                        <h6>Teacher</h6>
+                        <div class="d-flex align-items-center gap-2 border-bottom pb-3 mb-3">
+                            <span class="avatar-sm bg-primary text-white">T</span>
+                            <div>
+                                <strong>{{ classroom.supervisor }}</strong>
+                                <div class="small text-muted">Supervisor</div>
+                            </div>
+                        </div>
+                        <h6>Classmates</h6>
+                        {% if classmates and classmates|length > 0 %}
+                            {% for c in classmates %}
+                            <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                                <span>{{ c.username }}</span>
+                                <small class="text-muted">{{ c.email or '' }}</small>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted mb-0">No classmates yet. You're the first!</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <!-- Class Info Modal (read-only) -->
+    <div id="studentInfoModal" class="nexora-modal-overlay" onclick="if(event.target===this) this.classList.remove('open')">
+        <div class="nexora-modal" style="max-width:520px;">
+            <div class="nexora-modal-header">
+                <h2>Class Information</h2>
+                <p>Details for this classroom</p>
+                <button type="button" class="nexora-modal-close" onclick="document.getElementById('studentInfoModal').classList.remove('open')">×</button>
+            </div>
+            <div class="nexora-modal-body" style="gap:10px;">
+                <div class="d-flex justify-content-between"><strong>Class name</strong><span>{{ classroom.name }}</span></div>
+                <div class="d-flex justify-content-between"><strong>Section</strong><span>{{ classroom.section }}</span></div>
+                <div class="d-flex justify-content-between"><strong>Teacher</strong><span>{{ classroom.supervisor }}</span></div>
+                <div class="d-flex justify-content-between align-items-center"><strong>Code</strong><span><span id="studentModalCode">{{ classroom.code }}</span> <button class="btn btn-sm btn-outline-primary ms-2" onclick="copyStudentCode()">Copy</button></span></div>
+                <div class="d-flex justify-content-between"><strong>Status</strong><span class="badge {% if classroom.status == 'Active' %}bg-success{% else %}bg-secondary{% endif %}">{{ classroom.status }}</span></div>
+                {% if classroom.created_at %}<div class="d-flex justify-content-between"><strong>Created</strong><span>{{ classroom.created_at }}</span></div>{% endif %}
+                {% if classroom.description %}<div><strong>Description</strong><p class="text-muted small mt-1">{{ classroom.description }}</p></div>{% endif %}
+            </div>
+            <div class="nexora-modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('studentInfoModal').classList.remove('open')">Close</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        function copyStudentCode(){
+            const code = (document.getElementById('studentCodeBadge')?.innerText || '{{ classroom.code }}').trim();
+            const done = () => { if(window.showToast) showToast('✓ Class code copied: ' + code); else alert('Copied: '+code); };
+            if(navigator.clipboard && navigator.clipboard.writeText){
+                navigator.clipboard.writeText(code).then(done).catch(()=> { if(window.showToast) showToast('✓ Class code copied: ' + code); else prompt('Copy code:', code); });
+            } else {
+                const ta=document.createElement('textarea'); ta.value=code; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy'); done();}catch(e){ prompt('Copy code:', code); } ta.remove();
+            }
+        }
+        function openClassTab(tabName, btn){
+            document.querySelectorAll('.profile-tab').forEach(t=> t.classList.remove('active'));
+            const el=document.getElementById(tabName);
+            if(el) el.classList.add('active');
+            document.querySelectorAll('.profile-tab-button').forEach(b=> b.classList.remove('active'));
+            if(btn) btn.classList.add('active');
+        }
+    </script>
+    <script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
+</body>
+</html>

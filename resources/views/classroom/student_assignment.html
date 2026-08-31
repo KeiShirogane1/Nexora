@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{{ assignment.title }} - Nexora</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="student-page">
+    {% include 'components/student_sidebar.html' %}
+    <div class="student-main-content">
+        <div class="container mt-5" style="max-width:800px;">
+            <a href="{{ url_for('classroom.student_class', class_id=classroom.id) }}" class="btn btn-light btn-sm mb-3">← Back to Class</a>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ 'danger' if category=='danger' else 'success' if category=='success' else 'warning' if category=='warning' else 'info' }}">{{ message }}</div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h3>{{ assignment.title }}</h3>
+                    <p class="text-muted">{{ assignment.description or 'No description.' }}</p>
+                    <div class="d-flex gap-2 small">
+                        <span class="badge bg-primary">{{ assignment.points }} pts</span>
+                        {% if assignment.due_at %}
+                        <span class="badge {% if past_due %}bg-danger{% else %}bg-secondary{% endif %}">Due: {{ assignment.due_at }}</span>
+                        {% else %}
+                        <span class="badge bg-secondary">No due date</span>
+                        {% endif %}
+                    </div>
+                    {% if past_due %}<div class="alert alert-danger mt-3">Deadline has passed.</div>{% endif %}
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white"><h6 class="mb-0">Your Submission</h6></div>
+                <div class="card-body">
+                    {% if submission %}
+                        <p><strong>Status:</strong> <span class="badge {% if submission.status=='graded' %}bg-success{% elif submission.status=='submitted' %}bg-primary{% else %}bg-secondary{% endif %}">{{ submission.status }}</span></p>
+                        {% if submission.grade %}<p><strong>Grade:</strong> {{ submission.grade }}</p>{% endif %}
+                        {% if submission.feedback %}<p><strong>Feedback:</strong> {{ submission.feedback }}</p>{% endif %}
+                        {% if submission.content %}<p><strong>Text:</strong> {{ submission.content }}</p>{% endif %}
+                        {% if submission.filename %}
+                        <p><strong>File:</strong> <a href="{{ url_for('classroom.download_own_submission', class_id=classroom.id, assignment_id=assignment.id) }}">{{ submission.filename }}</a></p>
+                        {% endif %}
+                        <p class="small text-muted">Submitted: {{ submission.submitted_at }}</p>
+                        <hr>
+                        <h6>Resubmit</h6>
+                    {% else %}
+                        <p class="text-muted">No submission yet.</p>
+                    {% endif %}
+
+                    <form method="POST" action="{{ url_for('classroom.student_submit_assignment', class_id=classroom.id, assignment_id=assignment.id) }}" enctype="multipart/form-data">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="mb-3">
+                            <label class="form-label">Text response</label>
+                            <textarea name="content" class="form-control" rows="4" placeholder="Type your answer...">{{ submission.content if submission else '' }}</textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">File attachment (optional)</label>
+                            <input type="file" name="file" class="form-control">
+                            <small class="text-muted">Allowed: pdf, docx, doc, xlsx, xls, pptx, txt, zip, png, jpg, jpeg, gif. Max 5MB.</small>
+                        </div>
+                        <button type="submit" class="btn btn-primary">{% if submission %}Resubmit{% else %}Submit{% endif %}</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
+</body>
+</html>

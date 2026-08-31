@@ -1,7 +1,7 @@
 import hashlib
 import secrets
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from app.Models.db import get_db_connection
 
@@ -21,7 +21,7 @@ def create_reset_token(user_id):
     token_hash = hash_reset_token(token)
 
     expires_at = (
-        datetime.utcnow()
+        datetime.now(timezone.utc).replace(tzinfo=None)
         + timedelta(
             minutes=RESET_TOKEN_MINUTES
         )

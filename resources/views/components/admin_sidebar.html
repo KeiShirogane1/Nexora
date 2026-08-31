@@ -8,12 +8,12 @@
         </div>
     </div>
 
-    <!-- PROFILE -->
-    <div class="sidebar-profile">
+    <!-- PROFILE — clickable -->
+    <a href="{{ url_for('admin.admin_dashboard') }}" class="sidebar-profile" style="text-decoration:none; color:inherit; display:block;">
         <img src="{{ url_for('static', filename='images/default_profile.png') }}" class="sidebar-avatar" alt="Admin">
-        <h4>Shean Patrick Venus</h4>
-        <p>Administrator</p>
-    </div>
+        <h4>Administrator</h4>
+        <p>View dashboard</p>
+    </a>
 
     <!-- MENU -->
     <ul class="sidebar-menu">
@@ -49,13 +49,15 @@
             </ul>
         </li>
 
-        <li>
-            <a href="{{ url_for('auth.logout') }}" class="logout-link">
+        <li style="margin-top:12px; border-top:1px solid rgba(255,255,255,0.12); padding-top:12px;">
+            <a href="javascript:void(0)" style="color:#fecaca; font-weight:700;" onclick="openLogoutModal(); return false;">
                 <span class="nav-icon">🚪</span><span>Logout</span>
             </a>
         </li>
     </ul>
 </aside>
+{% include 'components/logout_modal.html' %}
+{% include 'components/toast.html' %}
 <script>
 // Mobile handling: toggle mobile-open class on small screens
 (function(){
