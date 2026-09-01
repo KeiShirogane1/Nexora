@@ -2,6 +2,7 @@ from flask import Blueprint, abort, render_template, session
 
 from app.Http.Middleware.security import role_required
 from app.Models.db import get_db_connection
+from app.Services.classwork_grade_calculator import calculate_overall
 
 student_gradebook = Blueprint("student_gradebook", __name__)
 
@@ -68,14 +69,10 @@ def gradebook(class_id):
                  )""",
             (student_id, class_id),
         ).fetchall()
-        score_map = {
-            int(_value(row, "assignment_id", 0)): row for row in scores
-        }
+        score_map = {int(_value(row, "assignment_id", 0)): row for row in scores}
 
         activities = []
-        earned = 0.0
-        possible = 0.0
-        graded_count = 0
+        grade_records = []
         for assignment in assignments:
             assignment_id = int(_value(assignment, "id", 0))
             points = float(_value(assignment, "points", 2, 0) or 0)
@@ -86,9 +83,7 @@ def gradebook(class_id):
                 percentage = _value(score_row, "percentage", 3)
                 if percentage is None:
                     percentage = (score / max_score * 100) if max_score else 0
-                earned += score
-                possible += max_score
-                graded_count += 1
+                grade_records.append({"score": score, "max_score": max_score})
                 graded = True
                 score_display = f"{score:g} / {max_score:g}"
                 percentage_display = f"{float(percentage):.1f}%"
@@ -111,7 +106,7 @@ def gradebook(class_id):
                 "grading_method": grading_method,
             })
 
-        overall = (earned / possible * 100) if possible else None
+        summary = calculate_overall(grade_records)
         classroom_data = {
             "id": _value(classroom, "id", 0),
             "name": _value(classroom, "name", 1),
@@ -126,11 +121,11 @@ def gradebook(class_id):
         "classroom/student_gradebook.html",
         classroom=classroom_data,
         activities=activities,
-        graded_count=graded_count,
+        graded_count=summary["graded_count"],
         total_count=len(activities),
-        earned=earned,
-        possible=possible,
-        overall=overall,
-        overall_display=f"{overall:.1f}%" if overall is not None else "—",
+        earned=summary["earned"],
+        possible=summary["possible"],
+        overall=summary["overall"],
+        overall_display=f"{summary['overall']:.1f}%" if summary["overall"] is not None else "—",
         active_page="classes",
     )

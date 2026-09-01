@@ -2,6 +2,7 @@ from flask import Blueprint, abort, render_template, session
 
 from app.Http.Middleware.security import role_required
 from app.Models.db import get_db_connection
+from app.Services.classwork_grade_calculator import calculate_overall
 
 
 classwork_gradebook = Blueprint("classwork_gradebook", __name__)
@@ -82,18 +83,14 @@ def supervisor_gradebook(class_id):
         for student in students:
             student_id = int(_value(student, "id", 0))
             cells = []
-            earned = 0.0
-            possible = 0.0
-            graded_count = 0
+            grade_records = []
             for assignment in assignments:
                 assignment_id = int(_value(assignment, "id", 0))
                 cell = score_map.get((student_id, assignment_id))
                 if cell is not None and cell["score"] is not None:
                     score_value = float(cell["score"])
                     max_score = float(cell["max_score"] or _value(assignment, "points", 2, 0) or 0)
-                    earned += score_value
-                    possible += max_score
-                    graded_count += 1
+                    grade_records.append({"score": score_value, "max_score": max_score})
                     cells.append({
                         **cell,
                         "score_display": f"{score_value:g} / {max_score:g}",
@@ -111,28 +108,26 @@ def supervisor_gradebook(class_id):
                         "graded": False,
                     })
 
-            overall = (earned / possible * 100) if possible else None
+            summary = calculate_overall(grade_records)
             rows.append({
                 "id": student_id,
                 "name": _value(student, "username", 1, "Student"),
                 "email": _value(student, "email", 2, ""),
                 "student_number": _value(student, "student_number", 3, ""),
                 "cells": cells,
-                "earned": earned,
-                "possible": possible,
-                "graded_count": graded_count,
-                "overall": overall,
-                "overall_display": f"{overall:.1f}%" if overall is not None else "—",
+                **summary,
+                "overall_display": f"{summary['overall']:.1f}%" if summary["overall"] is not None else "—",
             })
 
-        assignment_headers = []
-        for assignment in assignments:
-            assignment_headers.append({
+        assignment_headers = [
+            {
                 "id": _value(assignment, "id", 0),
                 "title": _value(assignment, "title", 1),
                 "points": _value(assignment, "points", 2, 0),
                 "activity_type": _value(assignment, "activity_type", 4),
-            })
+            }
+            for assignment in assignments
+        ]
 
         classroom_data = {
             "id": _value(classroom, "id", 0),
