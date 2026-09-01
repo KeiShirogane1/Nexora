@@ -41,6 +41,8 @@
         .supervisor-insights-feedback small { display:block; color:#94a3b8; font-size:.68rem; margin-top:2px; }
         .supervisor-insights-feedback strong { color:#0f172a; }
         .supervisor-insights-confidence { font-weight:700; color:#2563eb; }
+        .supervisor-insights-reco { min-width:340px; max-width:460px; }
+        .supervisor-insights-reco small { display:block; color:#64748b; font-size:.68rem; margin-top:3px; }
         @media (max-width: 800px) {
             .supervisor-insights-heading { align-items:flex-start; flex-direction:column; }
             .supervisor-insights-heading h1 { font-size:1.65rem; }
@@ -98,6 +100,7 @@
                                 <th class="supervisor-insights-center">Imported grades count</th>
                                 <th class="supervisor-insights-center">Numeric performance label</th>
                                 <th>Feedback ML analysis</th>
+                                <th>Recommendation</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -140,6 +143,19 @@
                                         <span class="text-muted">No feedback data yet</span>
                                         <small>sentiment: {{ student.sentiment }} · competency: {{ student.competency }}</small>
                                         <small>confidence: {{ "%.2f"|format(student.confidence) }} · Naive Bayes prediction: {{ student.feedback_analysis.nb_prediction }} · SVM prediction: {{ student.feedback_analysis.svm_prediction }}</small>
+                                    {% endif %}
+                                </td>
+                                <td class="supervisor-insights-reco">
+                                    {% if student.ml_recommendation %}
+                                        <div><strong>performance_label:</strong> {{ student.ml_recommendation.performance_label }}</div>
+                                        <div style="margin-top:3px;"><strong>overall_percentage:</strong> {% if student.ml_recommendation.overall_percentage is not none %}{{ "%.1f"|format(student.ml_recommendation.overall_percentage) }}%{% else %}—{% endif %} <small>completion_rate: {{ "%.1f"|format(student.ml_recommendation.completion_rate) }}%</small></div>
+                                        <div style="margin-top:4px;"><strong>recommendation:</strong> <span style="color:#334155;">{{ student.ml_recommendation.recommendation }}</span></div>
+                                        <div style="margin-top:3px;"><strong>priority:</strong> <span class="supervisor-insights-label {% if student.ml_recommendation.priority == 'low' %}is-satisfactory{% elif student.ml_recommendation.priority == 'medium' %}is-very-satisfactory{% elif student.ml_recommendation.priority == 'high' %}is-fair{% else %}is-needs-improvement{% endif %}">{{ student.ml_recommendation.priority }}</span></div>
+                                        {% if student.ml_recommendation.basis %}
+                                            <small><strong>basis:</strong> {{ student.ml_recommendation.basis|join(" · ") }}</small>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="text-muted">No recommendation</span>
                                     {% endif %}
                                 </td>
                             </tr>

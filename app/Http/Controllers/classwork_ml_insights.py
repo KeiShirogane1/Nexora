@@ -9,6 +9,7 @@ from app.Services.classwork_ml_service import (
     build_student_performance_features,
     classify_numeric_performance,
 )
+from app.Services.ml_recommendation_service import build_recommendation_from_features
 
 classwork_ml_insights = Blueprint("classwork_ml_insights", __name__)
 
@@ -135,6 +136,20 @@ def supervisor_insights(class_id):
 
         features = analysis["features"]
         fb_analysis = analysis["feedback_analysis"]
+        # Integrated ML recommendation (numeric + feedback)
+        try:
+            ml_recommendation = build_recommendation_from_features(
+                features, fb_analysis, performance_label=analysis.get("numeric_performance_label")
+            )
+        except Exception:
+            ml_recommendation = {
+                "performance_label": analysis.get("numeric_performance_label", "Satisfactory"),
+                "overall_percentage": features.get("average_percentage"),
+                "completion_rate": features.get("completion_rate", 0.0),
+                "recommendation": analysis.get("recommendation", ""),
+                "priority": "medium",
+                "basis": [],
+            }
         insights.append(
             {
                 "id": student_id,
@@ -158,6 +173,7 @@ def supervisor_insights(class_id):
                 "recommendation": analysis.get("recommendation"),
                 "confidence": analysis.get("confidence", 0.0),
                 "has_feedback": not fb_analysis.get("is_empty", True),
+                "ml_recommendation": ml_recommendation,
             }
         )
 
@@ -231,6 +247,19 @@ def student_insights(class_id):
 
     features = analysis["features"]
     fb_analysis = analysis["feedback_analysis"]
+    try:
+        ml_recommendation = build_recommendation_from_features(
+            features, fb_analysis, performance_label=analysis.get("numeric_performance_label")
+        )
+    except Exception:
+        ml_recommendation = {
+            "performance_label": analysis.get("numeric_performance_label", "Satisfactory"),
+            "overall_percentage": features.get("average_percentage"),
+            "completion_rate": features.get("completion_rate", 0.0),
+            "recommendation": analysis.get("recommendation", ""),
+            "priority": "medium",
+            "basis": [],
+        }
 
     return render_template(
         "classroom/student_insights.html",
@@ -252,5 +281,6 @@ def student_insights(class_id):
         completion_rate=features.get("completion_rate", 0.0),
         manual_count=features.get("manual_count", 0),
         imported_count=features.get("imported_count", 0),
+        ml_recommendation=ml_recommendation,
         active_page="classes",
     )
