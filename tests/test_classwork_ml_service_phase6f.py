@@ -24,8 +24,9 @@ def test_ml_features_aggregate_normalized_scores(client, db):
 
 
 def test_ml_features_are_empty_when_no_scores(client, db):
-    supervisor = db.execute("INSERT INTO users (username,email,password,role) VALUES (?,?,?,?) RETURNING id", ("mlsup2", "mlsup2@example.com", "x", "supervisor")).fetchone()[0]
-    classroom = db.execute("INSERT INTO classrooms (name,section,supervisor_id,code,archived) VALUES (?,?,?,?,?) RETURNING id", ("ML Empty", "A", supervisor, "NXR-ML002", 0)).fetchone()[0]
+    suffix = id(db)
+    supervisor = db.execute("INSERT INTO users (username,email,password,role) VALUES (?,?,?,?) RETURNING id", (f"mlsup2_{suffix}", f"mlsup2_{suffix}@example.com", "x", "supervisor")).fetchone()[0]
+    classroom = db.execute("INSERT INTO classrooms (name,section,supervisor_id,code,archived) VALUES (?,?,?,?,?) RETURNING id", (f"ML Empty {suffix}", "A", supervisor, f"NXR-ML002-{suffix}", 0)).fetchone()[0]
     db.commit()
 
     features = build_student_performance_features(999999, classroom)
