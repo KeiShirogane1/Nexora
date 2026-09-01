@@ -10,8 +10,35 @@
         .auth-brand img { height:38px; width:auto; }
         .auth-field { position:relative; text-align:left; margin:10px 0; }
         .auth-field input { width:100% !important; box-sizing:border-box; }
-        .auth-field input[type="password"] { padding-right:42px !important; }
-        .toggle-pass { position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:1rem; color:#64748b; line-height:1; padding:2px; }
+        .auth-field input[type="password"], .auth-field input[type="text"] { padding-right:46px !important; }
+        .auth-field .toggle-pass,
+        .login-container .toggle-pass {
+            position:absolute !important;
+            right:12px !important;
+            top:50% !important;
+            transform:translateY(-50%) !important;
+            width:32px !important;
+            min-width:32px !important;
+            max-width:32px !important;
+            height:32px !important;
+            min-height:32px !important;
+            padding:0 !important;
+            margin:0 !important;
+            border:0 !important;
+            border-radius:50% !important;
+            background:transparent !important;
+            color:#64748b !important;
+            box-shadow:none !important;
+            cursor:pointer !important;
+            display:flex !important;
+            align-items:center !important;
+            justify-content:center !important;
+            font-size:1rem !important;
+            line-height:1 !important;
+            z-index:2;
+        }
+        .auth-field .toggle-pass:hover,
+        .login-container .toggle-pass:hover { background:#f1f5f9 !important; color:#2563eb !important; }
         .auth-error { margin:12px 0; padding:10px; background:#ffe5e5; color:#b00020; border-radius:6px; text-align:center; font-size:0.9rem; }
         .auth-success { margin:12px 0; padding:10px; background:#e6f9ed; color:#0a6b2a; border-radius:6px; text-align:center; font-size:0.9rem; }
     </style>
@@ -43,7 +70,7 @@
             </div>
             <div class="auth-field">
                 <input type="password" id="loginPassword" name="password" placeholder="Password" required autocomplete="current-password">
-                <button type="button" class="toggle-pass" onclick="togglePass('loginPassword', this)" aria-label="Show password">👁️</button>
+                <button type="button" class="toggle-pass" onclick="togglePass('loginPassword', this)" aria-label="Show password" title="Show password"><span aria-hidden="true">👁</span></button>
             </div>
             <p class="forgot-password-link" style="text-align:right; margin:8px 0 0; font-size:0.85rem;">
                 <a href="{{ url_for('password.forgot_password') }}" style="color:#2563eb; text-decoration:none; font-weight:600;">Forgot Password?</a>
@@ -56,8 +83,11 @@
         function togglePass(id, btn){
             const el=document.getElementById(id);
             if(!el) return;
-            el.type = el.type==='password' ? 'text' : 'password';
-            btn.textContent = el.type==='password' ? '👁️' : '🙈';
+            const visible = el.type === 'password';
+            el.type = visible ? 'text' : 'password';
+            btn.setAttribute('aria-label', visible ? 'Hide password' : 'Show password');
+            btn.setAttribute('title', visible ? 'Hide password' : 'Show password');
+            btn.innerHTML = visible ? '<span aria-hidden="true">🙈</span>' : '<span aria-hidden="true">👁</span>';
         }
     </script>
 </body>
