@@ -9,15 +9,11 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body class="deeper-metrics">
-{% include 'components/admin_navbar.html' %}
+
 {% include 'components/admin_sidebar.html' %}
 
-
-<div class="page-content">
-
-
-    <div class="container mt-5">
-
+<div class="admin-main nexora-app-main">
+        <div class="nexora-page">
 
         <!-- PAGE HEADER -->
 
@@ -27,7 +23,6 @@
                     gap-3
                     mb-4">
 
-
             <div>
 
                 <h1 class="page-heading-on-dark">
@@ -35,7 +30,6 @@
                     Attendance & Logbook Report
 
                 </h1>
-
 
                 <p class="page-copy-on-dark">
 
@@ -46,7 +40,6 @@
 
             </div>
 
-
             <a href="{{ url_for('admin.admin_dashboard') }}"
                class="btn btn-secondary">
 
@@ -54,16 +47,11 @@
 
             </a>
 
-
         </div>
-
-
-
 
         <!-- SUMMARY METRICS -->
 
         <div class="row g-4 mb-5">
-
 
             <!-- TOTAL SESSIONS -->
 
@@ -77,7 +65,6 @@
 
                     </h2>
 
-
                     <p class="text-muted mb-0">
 
                         Total Sessions
@@ -87,9 +74,6 @@
                 </div>
 
             </div>
-
-
-
 
             <!-- TOTAL HOURS -->
 
@@ -103,7 +87,6 @@
 
                     </h2>
 
-
                     <p class="text-muted mb-0">
 
                         Total Hours Rendered
@@ -113,9 +96,6 @@
                 </div>
 
             </div>
-
-
-
 
             <!-- COMPLETED SESSIONS -->
 
@@ -129,7 +109,6 @@
 
                     </h2>
 
-
                     <p class="text-muted mb-0">
 
                         Completed Sessions
@@ -139,9 +118,6 @@
                 </div>
 
             </div>
-
-
-
 
             <!-- TOTAL LOGS -->
 
@@ -155,7 +131,6 @@
 
                     </h2>
 
-
                     <p class="text-muted mb-0">
 
                         Logbook Entries
@@ -166,19 +141,13 @@
 
             </div>
 
-
         </div>
-
-
-
 
         <!-- INTERN REPORT DIRECTORY -->
 
         <div class="card shadow-sm mb-5">
 
-
             <div class="card-header">
-
 
                 <h5 class="mb-0">
 
@@ -186,12 +155,9 @@
 
                 </h5>
 
-
             </div>
 
-
             <div class="card-body">
-
 
                 <!-- SEARCH -->
 
@@ -199,16 +165,13 @@
                       action="/admin/reports/attendance"
                       class="mb-4">
 
-
                     <div class="input-group">
-
 
                         <input type="text"
                                name="search"
                                class="form-control"
                                placeholder="Search intern by username..."
                                value="{{ search }}">
-
 
                         <button type="submit"
                                 class="btn btn-primary">
@@ -217,31 +180,21 @@
 
                         </button>
 
-
                     </div>
 
-
                 </form>
-
-
-
 
                 <!-- INTERN TABLE -->
 
                 {% if interns %}
 
-
                 <div class="table-responsive">
-
 
                     <table class="table table-hover align-middle">
 
-
                         <thead class="table-light">
 
-
                             <tr>
-
 
                                 <th>
 
@@ -249,13 +202,11 @@
 
                                 </th>
 
-
                                 <th>
 
                                     Sessions
 
                                 </th>
-
 
                                 <th>
 
@@ -263,13 +214,11 @@
 
                                 </th>
 
-
                                 <th>
 
                                     Log Entries
 
                                 </th>
-
 
                                 <th class="text-end">
 
@@ -277,26 +226,19 @@
 
                                 </th>
 
-
                             </tr>
-
 
                         </thead>
 
-
                         <tbody>
-
 
                             {% for intern in interns %}
 
-
                             <tr>
-
 
                                 <!-- INTERN -->
 
                                 <td>
-
 
                                     <strong>
 
@@ -304,11 +246,7 @@
 
                                     </strong>
 
-
                                 </td>
-
-
-
 
                                 <!-- SESSIONS -->
 
@@ -318,9 +256,6 @@
 
                                 </td>
 
-
-
-
                                 <!-- HOURS -->
 
                                 <td>
@@ -328,9 +263,6 @@
                                     {{ "%.2f"|format(intern[3]) }}
 
                                 </td>
-
-
-
 
                                 <!-- LOGS -->
 
@@ -340,13 +272,9 @@
 
                                 </td>
 
-
-
-
                                 <!-- ACTION -->
 
                                 <td class="text-end">
-
 
                                     <a href="{{ url_for('admin.student_report', student_id=intern[0]) }}"
                                        class="btn btn-sm btn-primary">
@@ -355,27 +283,19 @@
 
                                     </a>
 
-
                                 </td>
-
 
                             </tr>
 
-
                             {% endfor %}
-
 
                         </tbody>
 
-
                     </table>
-
 
                 </div>
 
-
                 {% else %}
-
 
                     <p class="text-muted mb-0">
 
@@ -383,156 +303,85 @@
 
                     </p>
 
-
                 {% endif %}
-
 
             </div>
 
-
         </div>
-
-
-
 
         <!-- PAGINATION -->
 
-
         {% if total_pages > 1 %}
-
 
         <nav aria-label="Attendance report pagination">
 
-
             <ul class="pagination justify-content-center">
-
 
                 <!-- PREVIOUS -->
 
                 {% if page > 1 %}
 
-
                 <li class="page-item">
-
 
                     <a class="page-link"
                        href="?search={{ search }}&page={{ page - 1 }}">
 
-
                         Previous
-
 
                     </a>
 
-
                 </li>
 
-
                 {% endif %}
-
-
-
 
                 <!-- PAGE NUMBERS -->
 
                 {% for page_number in range(1, total_pages + 1) %}
-
 
                 <li class="page-item
                            {% if page_number == page %}
                            active
                            {% endif %}">
 
-
                     <a class="page-link"
                        href="?search={{ search }}&page={{ page_number }}">
 
-
                         {{ page_number }}
-
 
                     </a>
 
-
                 </li>
 
-
                 {% endfor %}
-
-
-
 
                 <!-- NEXT -->
 
                 {% if page < total_pages %}
 
-
                 <li class="page-item">
-
 
                     <a class="page-link"
                        href="?search={{ search }}&page={{ page + 1 }}">
 
-
                         Next
-
 
                     </a>
 
-
                 </li>
-
 
                 {% endif %}
 
-
             </ul>
-
 
         </nav>
 
-
         {% endif %}
-
 
     </div>
 
-
 </div>
-
-
-
 
 <!-- ADMIN SIDEBAR SCRIPT -->
 
-
-<script>
-
-
-    const sidebarToggle =
-        document.getElementById("adminSidebarToggle");
-
-
-    const sidebar =
-        document.querySelector(".admin-sidebar");
-
-
-    const pageContent =
-        document.querySelector(".page-content");
-
-
-    sidebarToggle.addEventListener("click", function () {
-
-
-        sidebar.classList.toggle("active");
-
-
-        pageContent.classList.toggle("sidebar-open");
-
-
-    });
-
-
-</script>
 </body>
 </html>

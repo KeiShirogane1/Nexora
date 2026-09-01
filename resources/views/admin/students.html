@@ -11,7 +11,8 @@
 
 {% include 'components/admin_sidebar.html' %}
 
-<main class="admin-main">
+<main class="admin-main nexora-app-main">
+<div class="nexora-page">
 
 <div class="compact-dashboard compact-dashboard-flush">
 
@@ -191,6 +192,7 @@
 
 </div>
 
+</div>
 </main>
 
 <!-- Create Student Modal -->
@@ -267,7 +269,6 @@
     </div>
 </div>
 
-<script src="{{ url_for('static', filename='js/admin_sidebar.js') }}"></script>
 <script>
 async function confirmDelete(id){
     if(!confirm("Soft-delete this student? This will set status to inactive/rejected (preserves history).")) return;
@@ -279,13 +280,13 @@ async function confirmDelete(id){
         });
         const data = await resp.json();
         if(data.success){
-            alert(data.updated_count + " student(s) deleted (soft).");
+            if(window.showToast) showToast(data.updated_count + " student(s) deleted (soft).");
             location.reload();
         } else {
-            alert("Error: " + (data.error || "failed"));
+            if(window.showToast) showToast("Error: " + (data.error || "failed"));
         }
     } catch(e){
-        alert("Network error");
+        if(window.showToast) showToast("Network error", "error");
     }
 }
 function toggleMenu(id){
@@ -405,15 +406,15 @@ document.addEventListener('click', function(e){
             });
             const data = await resp.json();
             if(data.success){
-                alert(data.updated_count + " student(s) activated.");
+                if(window.showToast) showToast(data.updated_count + " student(s) activated.");
                 location.reload();
             } else {
-                alert("Error: " + (data.error || "failed"));
+                if(window.showToast) showToast("Error: " + (data.error || "failed"));
                 bulkActivate.disabled = false;
                 bulkActivate.textContent = 'Activate';
             }
         } catch(e){
-            alert("Network error");
+            if(window.showToast) showToast("Network error", "error");
             bulkActivate.disabled = false;
             bulkActivate.textContent = 'Activate';
         }
@@ -434,15 +435,15 @@ document.addEventListener('click', function(e){
             });
             const data = await resp.json();
             if(data.success){
-                alert(data.updated_count + " student(s) deactivated.");
+                if(window.showToast) showToast(data.updated_count + " student(s) deactivated.");
                 location.reload();
             } else {
-                alert("Error: " + (data.error || "failed"));
+                if(window.showToast) showToast("Error: " + (data.error || "failed"));
                 bulkDeactivate.disabled = false;
                 bulkDeactivate.textContent = 'Deactivate';
             }
         } catch(e){
-            alert("Network error");
+            if(window.showToast) showToast("Network error", "error");
             bulkDeactivate.disabled = false;
             bulkDeactivate.textContent = 'Deactivate';
         }
@@ -463,20 +464,19 @@ document.addEventListener('click', function(e){
             });
             const data = await resp.json();
             if(data.success){
-                alert(data.updated_count + " student(s) deleted (soft).");
+                if(window.showToast) showToast(data.updated_count + " student(s) deleted (soft).");
                 location.reload();
             } else {
-                alert("Error: " + (data.error || "failed"));
+                if(window.showToast) showToast("Error: " + (data.error || "failed"));
                 bulkDelete.disabled = false;
                 bulkDelete.textContent = 'Delete';
             }
         } catch(e){
-            alert("Network error");
+            if(window.showToast) showToast("Network error", "error");
             bulkDelete.disabled = false;
             bulkDelete.textContent = 'Delete';
         }
     });
-
 
     const exportBtn = document.getElementById('exportBtn');
     if (exportBtn) exportBtn.addEventListener('click', function() {
@@ -620,7 +620,7 @@ document.addEventListener('click', function(e){
             if(resp.ok && data.success){
                 closeModal();
                 // Show success and reload to show new student
-                alert(data.message || 'Student created successfully.');
+                if(window.showToast) showToast(data.message || 'Student created successfully.');
                 location.reload();
             } else {
                 const errors = data.errors || {};
@@ -664,5 +664,4 @@ document.addEventListener('click', function(e){
 
 </body>
 </html>
-
 

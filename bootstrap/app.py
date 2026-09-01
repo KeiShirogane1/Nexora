@@ -54,7 +54,12 @@ app.config["WTF_CSRF_TIME_LIMIT"] = None
 try:
     from flask_wtf.csrf import CSRFProtect
     csrf = CSRFProtect(app)
-except ImportError:
+except ImportError as _csrf_err:
+    if app.config.get("WTF_CSRF_ENABLED"):
+        raise RuntimeError(
+            "Flask-WTF is required for CSRF protection but is not installed. "
+            "Install with: pip install flask-wtf"
+        ) from _csrf_err
     csrf = None
 
 @app.after_request

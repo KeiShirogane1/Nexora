@@ -1,0 +1,28 @@
+{# Nexora Shared App Shell — Phase 3/4
+   Authoritative layout: sidebar 235px desktop, 220px <=1024, drawer <=768, collapsed 64px.
+   This file is DOCUMENTATION + gradual migration helper. Not forced onto all templates yet.
+
+    Usage pattern (copy from supervisor/dashboard.html reference):
+      <body class="...">
+        {% if role == 'admin' %}{% include 'components/admin_sidebar.html' %}{% elif role == 'student' %}{% include 'components/student_sidebar.html' %}{% else %}{% include 'components/supervisor_sidebar.html' %}{% endif %}   {# sidebar includes toast + logout_modal + sidebar.js + notification_bell #}
+       <div class="page-content nexora-app-main">          {# or admin-main / student-main-content + nexora-app-main #}
+         <div class="nexora-page">
+           ... page content: header, cards, tables ...
+         </div>
+       </div>
+     </body>
+
+   Roles:
+     admin      -> <div class="admin-main nexora-app-main"><div class="nexora-page">
+     student    -> <div class="student-main-content nexora-app-main"><div class="nexora-page">
+     supervisor -> <div class="page-content nexora-app-main"><div class="nexora-page">
+     classroom  -> same as role's main wrapper
+
+   Sidebar behavior: ONE model in resources/assets/js/sidebar.js
+     - desktop: toggle .closed + body.sidebar-collapsed (persist localStorage)
+     - mobile <=768: toggle .mobile-open + body overflow hidden
+     - outside click + ESC closes drawer
+     - duplicate loads guarded via window.__nexoraSidebarInit
+
+   Legacy: components/supervisor_navbar.html has 0 active includes — sidebar-only nav now.
+#}

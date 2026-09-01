@@ -97,6 +97,20 @@ def login():
                 url_for("auth.login")
             )
 
+        if user and user["role"] in ("pending_student", "pending_supervisor"):
+            session["login_error"] = (
+                "Your account is awaiting administrator approval. You will be notified once approved."
+            )
+            session["login_username"] = username
+            return redirect(url_for("auth.login"))
+
+        if user and user["role"] == "rejected":
+            session["login_error"] = (
+                "Your account request was not approved. Please contact the administrator."
+            )
+            session["login_username"] = username
+            return redirect(url_for("auth.login"))
+
 
         if user:
             role = user["role"]

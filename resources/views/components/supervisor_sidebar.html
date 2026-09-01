@@ -9,10 +9,10 @@
     </div>
 
     <!-- PROFILE SECTION — clickable -->
-    <a href="/supervisor/dashboard" class="sidebar-profile text-center" style="text-decoration:none; color:inherit; display:block;">
+    <a href="{{ url_for('supervisor.supervisor_profile') }}" class="sidebar-profile text-center" style="text-decoration:none; color:inherit; display:block;">
         <img src="{{ url_for('static', filename='images/default_profile.png') }}" alt="Profile Picture" class="sidebar-profile-image">
         <h5 class="mt-2 mb-1">Supervisor</h5>
-        <small class="text-muted">View dashboard</small>
+        <small class="text-muted">View profile</small>
     </a>
 
     <!-- NAVIGATION -->
@@ -33,7 +33,7 @@
             </a>
         </li>
         <li>
-            <a href="javascript:void(0)" onclick="document.getElementById('notifDropdown')?.classList.toggle('show');">
+            <a href="javascript:void(0)" onclick="if(window.toggleNotifications) toggleNotifications(); else { const d=document.getElementById('notificationDropdown'); if(d) d.style.display=d.style.display==='block'?'none':'block'; }">
                 <span class="nav-icon">🔔</span><span>Notifications</span>
                 {% if unread_count %}<span class="badge bg-danger ms-2">{{ unread_count }}</span>{% endif %}
             </a>
@@ -47,27 +47,6 @@
 </aside>
 {% include 'components/logout_modal.html' %}
 {% include 'components/toast.html' %}
-<script>
-// Mobile handling for supervisor sidebar
-(function(){
-    const sidebar = document.getElementById('mainSidebar') || document.querySelector('.supervisor-sidebar');
-    if(!sidebar) return;
-    const toggles = document.querySelectorAll('.sidebar-toggle');
-    toggles.forEach(btn => {
-        btn.addEventListener('click', function(){
-            if (window.innerWidth <= 768) {
-                sidebar.classList.toggle('mobile-open');
-            } else {
-                sidebar.classList.toggle('closed');
-                document.body.classList.toggle('sidebar-collapsed');
-            }
-        });
-    });
-    document.addEventListener('click', function(e){
-        if (window.innerWidth <= 768 && sidebar.classList.contains('mobile-open') && !sidebar.contains(e.target) && !e.target.closest('.sidebar-toggle')) {
-            sidebar.classList.remove('mobile-open');
-        }
-    });
-})();
-</script>
+{% include 'components/notification_bell.html' %}
+<script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
 

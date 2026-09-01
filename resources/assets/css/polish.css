@@ -119,7 +119,7 @@ h1,h2,h3{letter-spacing:-0.02em}
 }
 
 /* Student Experience Polish — Phase 12.2 */
-.student-main-content{padding:90px 32px 32px; max-width:1200px; margin:0 auto}
+.student-main-content{padding:28px 32px 40px; max-width:none; margin:0; box-sizing:border-box}
 .student-dashboard-container{max-width:1100px; margin:0 auto}
 .dashboard-welcome{border:1px solid #f1f5f9; border-radius:var(--nexora-radius); box-shadow:var(--nexora-card-shadow); padding:28px}
 .dashboard-stats{gap:16px}
@@ -136,15 +136,15 @@ h1,h2,h3{letter-spacing:-0.02em}
 .student-page .table{border-radius:var(--nexora-radius); overflow:hidden}
 .student-page .card{border:1px solid #f1f5f9}
 @media(max-width:768px){
-  .student-main-content{padding:90px 16px 20px}
+  .student-main-content{padding:20px 16px 32px}
   .dashboard-stats{grid-template-columns:1fr 1fr}
   .dashboard-profile-card{flex-direction:column; text-align:center}
   .activity-card{padding:16px}
 }
 
 /* Supervisor Experience Polish — Phase 12.3 */
-.supervisor-page, .analytics-aesthetic, .work-page .page-content{max-width:1200px; margin:0 auto}
-.page-content{padding:90px 32px 32px; max-width:1200px; margin:0 auto}
+/* Phase 3 — max-width neutralized */
+.page-content{padding:28px 32px 40px; max-width:none; margin:0; box-sizing:border-box}
 .supervisor-dashboard .card{border:1px solid #f1f5f9; border-radius:var(--nexora-radius); box-shadow:var(--nexora-card-shadow); transition:box-shadow .15s, transform .15s}
 .supervisor-dashboard .card:hover{box-shadow:0 8px 24px rgba(15,23,42,.07)}
 .supervisor-dashboard .card-header{border-radius:var(--nexora-radius) var(--nexora-radius) 0 0; font-weight:700}
@@ -158,12 +158,12 @@ h1,h2,h3{letter-spacing:-0.02em}
 .supervisor-sidebar .sidebar-menu a.active, .supervisor-sidebar .sidebar-menu li.active a{background:#2563eb; color:#fff; box-shadow:0 4px 12px rgba(37,99,235,.25)}
 .supervisor-sidebar .sidebar-menu a.active .nav-icon, .supervisor-sidebar .sidebar-menu li.active .nav-icon{filter:brightness(1.2)}
 @media(max-width:768px){
-  .page-content{padding:90px 16px 20px}
+  .page-content{padding:20px 16px 32px}
   .supervisor-dashboard .row{--bs-gutter-x:12px}
 }
 
 /* Admin Experience Polish — Phase 12.4 */
-.admin-main{padding:90px 32px 32px; max-width:1300px; margin:0 auto}
+.admin-main{padding:28px 32px 40px; max-width:none; margin:0; box-sizing:border-box}
 .compact-dashboard{max-width:1200px; margin:0 auto}
 .dashboard-header{border:1px solid #f1f5f9; border-radius:var(--nexora-radius); background:#fff; box-shadow:var(--nexora-card-shadow); padding:22px; display:flex; justify-content:space-between; align-items:center}
 .dashboard-header h1{font-size:1.6rem; font-weight:800; color:#0f172a; margin:0}
@@ -186,7 +186,7 @@ h1,h2,h3{letter-spacing:-0.02em}
 .nexora-navbar .nav-link.active{background:rgba(255,255,255,.18); color:#fff}
 .admin-content .card, .nexora-card{border:1px solid #f1f5f9; border-radius:var(--nexora-radius); box-shadow:var(--nexora-card-shadow)}
 @media(max-width:768px){
-  .admin-main{padding:90px 16px 20px}
+  .admin-main{padding:20px 16px 32px}
   .metric-grid{grid-template-columns:1fr 1fr}
   .status-row{grid-template-columns:1fr}
   .report-grid{grid-template-columns:1fr}
@@ -214,22 +214,45 @@ body.report-page{background:linear-gradient(135deg, #89cff1, #f1f4fa, #75b8f7) !
 .table-email{word-break:break-all}
 .avatar-sm{width:32px; height:32px; border-radius:999px; display:inline-flex; align-items:center; justify-content:center; background:#e0e7ff; color:var(--nexora-primary); font-weight:700; font-size:.85rem}
 
-/* Phase 15 — Sidebar 235px + Toast + Logout Modal */
-.compact-sidebar{width:235px}
-.admin-sidebar.compact-sidebar ~ .admin-main{margin-left:235px; width:calc(100% - 235px)}
+
+
+/* Phase 15 FINAL — App Shell 235px, no stacked padding, fluid workspace */
+:root{ --nexora-sidebar-width:235px; --nexora-sidebar-collapsed:64px; }
+.compact-sidebar{width:var(--nexora-sidebar-width) !important}
+.admin-sidebar.compact-sidebar ~ .admin-main,
 .student-sidebar.compact-sidebar ~ .student-main-content,
-.student-sidebar.compact-sidebar ~ * .student-main-content{margin-left:235px; width:calc(100% - 235px)}
-.supervisor-sidebar.compact-sidebar ~ .page-content{margin-left:235px; width:calc(100% - 235px)}
+.student-sidebar.compact-sidebar ~ * .student-main-content,
+.supervisor-sidebar.compact-sidebar ~ .page-content{margin-left:var(--nexora-sidebar-width) !important; width:calc(100% - var(--nexora-sidebar-width)) !important}
+.compact-sidebar.closed{width:var(--nexora-sidebar-collapsed) !important}
+.admin-sidebar.compact-sidebar.closed ~ .admin-main,
+.student-sidebar.compact-sidebar.closed ~ .student-main-content,
+.student-sidebar.compact-sidebar.closed ~ * .student-main-content,
+.supervisor-sidebar.compact-sidebar.closed ~ .page-content,
+.sidebar-collapsed .admin-sidebar.compact-sidebar ~ .admin-main,
+.sidebar-collapsed .student-main-content,
+.sidebar-collapsed .supervisor-sidebar.compact-sidebar ~ .page-content{margin-left:var(--nexora-sidebar-collapsed) !important; width:calc(100% - var(--nexora-sidebar-collapsed)) !important}
+.nexora-app-main{margin-left:var(--nexora-sidebar-width); width:calc(100% - var(--nexora-sidebar-width)); min-height:100vh; padding:28px 32px 40px; box-sizing:border-box}
+.nexora-page{width:100%; max-width:none; margin:0}
+.nexora-page-inner{width:100%; max-width:none; margin:0}
+body.work-page, body.analytics-aesthetic, body.deeper-metrics, body.executive_aesthetic, body.report-page, body.student-page, body.nexora-admin-body{padding-top:0 !important}
 @media(max-width:1024px){
-  .compact-sidebar{width:220px}
-  .admin-sidebar.compact-sidebar ~ .admin-main{margin-left:220px; width:calc(100% - 220px)}
+  :root{ --nexora-sidebar-width:220px; }
+  .compact-sidebar{width:220px !important}
+  .admin-sidebar.compact-sidebar ~ .admin-main,
   .student-sidebar.compact-sidebar ~ .student-main-content,
-  .student-sidebar.compact-sidebar ~ * .student-main-content{margin-left:220px; width:calc(100% - 220px)}
-  .supervisor-sidebar.compact-sidebar ~ .page-content{margin-left:220px; width:calc(100% - 220px)}
+  .student-sidebar.compact-sidebar ~ * .student-main-content,
+  .supervisor-sidebar.compact-sidebar ~ .page-content,
+  .nexora-app-main{margin-left:220px !important; width:calc(100% - 220px) !important}
 }
-.compact-sidebar .sidebar-profile a{color:inherit; text-decoration:none; display:block; border-radius:12px; padding:8px; margin:-8px; transition:background .15s}
-.compact-sidebar .sidebar-profile a:hover{background:rgba(255,255,255,0.06)}
-.compact-sidebar .sidebar-profile a:focus-visible{outline:2px solid #93c5fd; outline-offset:2px; border-radius:12px}
+@media(max-width:768px){
+  .compact-sidebar{transform:translateX(-100%); position:fixed; z-index:3000}
+  .compact-sidebar.mobile-open{transform:translateX(0); box-shadow:4px 0 24px rgba(0,0,0,.25)}
+  .admin-sidebar.compact-sidebar ~ .admin-main,
+  .student-sidebar.compact-sidebar ~ .student-main-content,
+  .student-sidebar.compact-sidebar ~ * .student-main-content,
+  .supervisor-sidebar.compact-sidebar ~ .page-content,
+  .nexora-app-main{margin-left:0 !important; width:100% !important; padding:20px 16px 32px !important}
+}
 
 /* Toast */
 #nexora-toast-container{position:fixed; bottom:24px; right:24px; z-index:9999; display:flex; flex-direction:column; gap:8px; pointer-events:none}
@@ -238,7 +261,7 @@ body.report-page{background:linear-gradient(135deg, #89cff1, #f1f4fa, #75b8f7) !
 .nexora-toast.success{background:#0f172a}
 @media(max-width:480px){ #nexora-toast-container{left:12px; right:12px; bottom:12px} .nexora-toast{width:100%; justify-content:center} }
 
-/* Logout modal */
+/* Logout modal — hidden by default, centered when open */
 .nexora-logout-overlay{position:fixed; inset:0; background:rgba(15,23,42,0.45); backdrop-filter:blur(2px); display:none; align-items:center; justify-content:center; z-index:5000; padding:16px}
 .nexora-logout-overlay.open{display:flex}
 .nexora-logout-modal{background:#fff; width:100%; max-width:420px; border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,.25); overflow:hidden}
@@ -251,12 +274,6 @@ body.report-page{background:linear-gradient(135deg, #89cff1, #f1f4fa, #75b8f7) !
 .btn-danger-nexora:hover{background:#b91c1c; border-color:#b91c1c; color:#fff}
 .btn-secondary-nexora{background:#fff; border:1px solid #e2e8f0; color:#0f172a; border-radius:10px; padding:8px 16px; font-weight:600}
 .btn-secondary-nexora:hover{background:#f8fafc}
-
-/* Button system — Primary blue, Secondary neutral, Danger red, Small compact */
-.btn-primary{--bs-btn-bg:var(--nexora-primary); --bs-btn-border-color:var(--nexora-primary); --bs-btn-hover-bg:var(--nexora-primary-hover)}
-.btn-secondary{--bs-btn-bg:#fff; --bs-btn-color:#0f172a; --bs-btn-border-color:#e2e8f0}
-.btn-danger{--bs-btn-bg:#dc2626; --bs-btn-border-color:#dc2626}
-.btn-sm{padding:6px 12px; font-size:0.82rem; border-radius:8px}
 
 /* Accessibility */
 .sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); border:0}

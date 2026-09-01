@@ -17,20 +17,14 @@ href="{{ url_for('static', filename='css/modals.css') }}">
 
 </head>
 
-
 <body class="nexora-admin-body">
-
 
 {% include 'components/admin_sidebar.html' %}
 
-
-
-<main class="admin-main">
-
+<main class="admin-main nexora-app-main">
+<div class="nexora-page">
 
 <div class="compact-dashboard">
-
-
 
 <!-- HEADER -->
 
@@ -70,30 +64,23 @@ href="{{ url_for('static', filename='css/modals.css') }}">
 Student Profile
 </h1>
 
-
 <p>
 View student information and internship details.
 </p>
 
 </div>
 
-
 <div class="system-badge">
 👤 Student Account
 </div>
 
-
 </div>
-
-
 
 <!-- PROFILE HEADER -->
 
 <div class="dashboard-box profile-card">
 
-
 <div class="profile-top">
-
 
 {% if student.profile_picture %}
 
@@ -109,14 +96,9 @@ class="admin-profile-image">
 
 {% endif %}
 
-
-
-
 <div class="profile-main">
 
-
 <div class="profile-title">
-
 
 <h2>
 {{ student.first_name }}
@@ -124,12 +106,9 @@ class="admin-profile-image">
 {{ student.last_name }}
 </h2>
 
-
 <p>
 @{{ student.username }}
 </p>
-
-
 
 {% if student.status == "inactive" %}
 
@@ -137,13 +116,11 @@ class="admin-profile-image">
 Inactive Student
 </span>
 
-
 {% elif student.role == "student" %}
 
 <span class="badge bg-success">
 Active Student
 </span>
-
 
 {% else %}
 
@@ -151,20 +128,11 @@ Active Student
 Pending Student
 </span>
 
-
 {% endif %}
-
-
 
 </div>
 
-
-
-
-
 <div class="profile-summary">
-
-
 
 <div class="summary-item">
 
@@ -178,8 +146,6 @@ Account ID
 
 </div>
 
-
-
 <div class="summary-item">
 
 <strong>
@@ -191,9 +157,6 @@ Username
 </p>
 
 </div>
-
-
-
 
 <div class="summary-item">
 
@@ -207,15 +170,11 @@ Program
 
 </div>
 
-
-
-
 <div class="summary-item">
 
 <strong>
 Internship Status
 </strong>
-
 
 <p>
 
@@ -229,21 +188,13 @@ Not Assigned
 
 {% endif %}
 
-
 </p>
 
-
 </div>
 
-
 </div>
-
-
-
-
 
 <div class="profile-actions">
-
 
 <a href="{{ url_for('admin.edit_student', student_id=student.id) }}"
 class="btn btn-primary">
@@ -264,8 +215,6 @@ class="btn btn-info">
     <button type="submit" class="btn btn-warning">🔑 Reset Password</button>
 </form>
 
-
-
 {% if student.status == "inactive" %}
 
 <form method="POST" action="{{ url_for('admin.activate_student', student_id=student.id) }}" style="display:inline;">
@@ -285,43 +234,29 @@ onclick="openDeactivateModal()">
 
 {% endif %}
 
-
+</div>
 
 </div>
 
-
-
 </div>
 
-
 </div>
-
-
-</div>
-
-
 
 <!-- PROFILE COMPLETION -->
 
 <div class="dashboard-box">
 
-
 <h3>
 Profile Completion
 </h3>
 
-
 <div class="progress-container">
-
 
 <div class="progress-bar"
 data-progress="{{ completion_percentage }}">
 </div>
 
-
 </div>
-
-
 
 <h4>
 
@@ -329,19 +264,13 @@ data-progress="{{ completion_percentage }}">
 
 </h4>
 
-
-
-
 {% if missing_fields %}
 
-
 <div class="alert alert-warning">
-
 
 <strong>
 Missing Information:
 </strong>
-
 
 <ul>
 
@@ -355,13 +284,9 @@ Missing Information:
 
 </ul>
 
-
 </div>
 
-
-
 {% else %}
-
 
 <div class="alert alert-success">
 
@@ -369,28 +294,19 @@ Missing Information:
 
 </div>
 
-
 {% endif %}
-
-
 
 </div>
 
-
 <!-- BASIC INFORMATION -->
 
-
 <div class="dashboard-box">
-
 
 <h3>
 Basic Information
 </h3>
 
-
-
 <div class="info-grid">
-
 
 <div>
 
@@ -404,9 +320,6 @@ Student ID
 
 </div>
 
-
-
-
 <div>
 
 <strong>
@@ -418,10 +331,6 @@ Age
 </p>
 
 </div>
-
-
-
-
 
 <div>
 
@@ -435,9 +344,6 @@ Grade / Year
 
 </div>
 
-
-
-
 <div>
 
 <strong>
@@ -450,33 +356,19 @@ Major / Program
 
 </div>
 
-
 </div>
 
-
 </div>
-
-
-
-
-
-
-
-
 
 <!-- CONTACT -->
 
-
 <div class="dashboard-box">
-
 
 <h3>
 Contact Information
 </h3>
 
-
 <div class="info-grid">
-
 
 <div>
 
@@ -484,16 +376,11 @@ Contact Information
 Account Email
 </strong>
 
-
 <p>
 {{ student.email or "Not Provided" }}
 </p>
 
-
 </div>
-
-
-
 
 <div>
 
@@ -501,61 +388,37 @@ Account Email
 Phone Number
 </strong>
 
-
 <p>
 {{ student.phone_number or "Not Provided" }}
 </p>
 
-
 </div>
 
-
-
-
 <div class="full">
-
 
 <strong>
 Home Address
 </strong>
 
-
 <p>
 {{ student.home_address or "Not Provided" }}
 </p>
 
+</div>
 
 </div>
 
-
-
 </div>
-
-
-
-</div>
-
-
-
-
-
-
-
-
 
 <!-- EMERGENCY -->
 
-
 <div class="dashboard-box">
-
 
 <h3>
 Emergency Contact
 </h3>
 
-
 <div class="info-grid">
-
 
 <div>
 
@@ -569,8 +432,6 @@ Name
 
 </div>
 
-
-
 <div>
 
 <strong>
@@ -582,8 +443,6 @@ Relationship
 </p>
 
 </div>
-
-
 
 <div>
 
@@ -597,8 +456,6 @@ Phone
 
 </div>
 
-
-
 <div>
 
 <strong>
@@ -611,28 +468,19 @@ Email
 
 </div>
 
-
-
 </div>
 
-
 </div>
-
-
 
 <!-- INTERNSHIP INFORMATION -->
 
-
 <div class="dashboard-box">
-
 
 <h3>
 Internship Information
 </h3>
 
-
 <div class="info-grid">
-
 
 <div>
 
@@ -656,8 +504,6 @@ Not Assigned
 
 </div>
 
-
-
 <div>
 
 <strong>
@@ -679,8 +525,6 @@ Not Assigned
 </p>
 
 </div>
-
-
 
 <div>
 
@@ -704,8 +548,6 @@ Not Assigned
 
 </div>
 
-
-
 <div>
 
 <strong>
@@ -727,8 +569,6 @@ No Internship
 </p>
 
 </div>
-
-
 
 <div>
 
@@ -752,8 +592,6 @@ Start Date
 
 </div>
 
-
-
 <div>
 
 <strong>
@@ -775,8 +613,6 @@ End Date
 </p>
 
 </div>
-
-
 
 <div>
 
@@ -800,8 +636,6 @@ Required Hours
 
 </div>
 
-
-
 <div>
 
 <strong>
@@ -824,54 +658,38 @@ Completed Hours
 
 </div>
 
-
-
 </div>
 
-
 </div>
-
 
 <!-- DOCUMENTS -->
 
 <div class="dashboard-box">
 
-
 <h3>
 Documents
 </h3>
 
-
-
 {% if documents %}
-
 
 <div class="document-list">
 
-
 {% for doc in documents %}
-
 
 <div class="document-item">
 
-
 <div>
-
 
 <strong>
 📄 {{ doc.filename }}
 </strong>
-
 
 <p>
 Uploaded:
 {{ doc.uploaded_at }}
 </p>
 
-
 </div>
-
-
 
 <a href="{{ url_for('uploaded_file', filename='documents/' + doc.filename) }}"
 target="_blank"
@@ -881,20 +699,13 @@ View
 
 </a>
 
-
 </div>
-
-
 
 {% endfor %}
 
-
 </div>
 
-
-
 {% else %}
-
 
 <div class="alert alert-info">
 
@@ -902,37 +713,27 @@ No documents uploaded yet.
 
 </div>
 
-
 {% endif %}
 
-
-
 </div>
-
 
 <a href="{{ url_for('admin.admin_students') }}"
 class="btn btn-light">
 
-
 ← Back to Students
-
 
 </a>
 
-
 </div>
 
-
-
+</div>
 </main>
 
 <!-- DEACTIVATE MODAL -->
 
 <div id="deactivateModal" class="modal-overlay">
 
-
 <div class="deactivate-modal">
-
 
 <button 
 class="modal-close"
@@ -942,27 +743,21 @@ onclick="closeDeactivateModal()">
 
 </button>
 
-
 <div class="modal-icon">
 
 ❌
 
 </div>
 
-
 <h2>
 Are you sure?
 </h2>
-
 
 <p>
 Are you sure you want to deactivate this account?
 </p>
 
-
-
 <div class="modal-actions">
-
 
 <button 
 class="btn btn-light"
@@ -972,23 +767,16 @@ Cancel
 
 </button>
 
-
-
 <form method="POST" action="{{ url_for('admin.deactivate_student', student_id=student.id) }}" style="display:inline;">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <button type="submit" class="btn btn-danger">Deactivate</button>
 </form>
 
+</div>
 
 </div>
 
-
 </div>
-
-
-</div>
-
-<script src="{{ url_for('static', filename='js/admin_sidebar.js') }}"></script>
 
 <script>
 
@@ -997,7 +785,6 @@ const progress = document.querySelector(".progress-bar");
 if (progress) {
     progress.style.width = progress.dataset.progress + "%";
 }
-
 
 /* AUTO CLOSE FLASH MESSAGE */
 
@@ -1023,21 +810,17 @@ function openDeactivateModal(){
         "deactivateModal"
     ).style.display = "flex";
 
-
     document.body.classList.add(
         "modal-open"
     );
 
 }
 
-
-
 function closeDeactivateModal(){
 
     document.getElementById(
         "deactivateModal"
     ).style.display = "none";
-
 
     document.body.classList.remove(
         "modal-open"

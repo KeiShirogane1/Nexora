@@ -14,15 +14,11 @@ href="{{ url_for('static', filename='css/style.css') }}">
 
 </head>
 
-
 <body class="nexora-admin-body">
-
-
-<main class="admin-main no-admin-sidebar">
-
-
+{% include 'components/admin_sidebar.html' %}
+<main class="admin-main nexora-app-main">
+<div class="nexora-page">
 <div class="compact-dashboard">
-
 
 <div class="dashboard-header">
 
@@ -47,24 +43,14 @@ Update student information.
 
 </div>
 
-
-
-
-
 <div class="dashboard-box admin-edit-box">
-
 
 <form method="POST">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-
-
 <div class="admin-form-grid">
 
-
-
 <!-- PERSONAL INFORMATION -->
-
 
 <div class="form-section-title">
 
@@ -73,9 +59,6 @@ Personal Information
 </h5>
 
 </div>
-
-
-
 
 <div class="form-group">
 
@@ -91,9 +74,6 @@ value="{{ student.first_name or '' }}">
 
 </div>
 
-
-
-
 <div class="form-group">
 
 <label>
@@ -107,9 +87,6 @@ class="form-control"
 value="{{ student.middle_name or '' }}">
 
 </div>
-
-
-
 
 <div class="form-group">
 
@@ -125,11 +102,6 @@ value="{{ student.last_name or '' }}">
 
 </div>
 
-
-
-
-
-
 <div class="form-group">
 
 <label>
@@ -143,10 +115,6 @@ class="form-control"
 value="{{ student.age or '' }}">
 
 </div>
-
-
-
-
 
 <div class="form-group">
 
@@ -162,10 +130,6 @@ value="{{ student.student_id or '' }}">
 
 </div>
 
-
-
-
-
 <div class="form-group">
 
 <label>
@@ -180,13 +144,7 @@ value="{{ student.grade_year or '' }}">
 
 </div>
 
-
-
-
-
-
 <!-- ACADEMIC AND CONTACT -->
-
 
 <div class="form-section-title">
 
@@ -195,10 +153,6 @@ Academic & Contact Information
 </h5>
 
 </div>
-
-
-
-
 
 <div class="form-group">
 
@@ -214,10 +168,6 @@ value="{{ student.major_program or '' }}">
 
 </div>
 
-
-
-
-
 <div class="form-group">
 
 <label>
@@ -231,10 +181,6 @@ class="form-control"
 value="{{ student.email or '' }}">
 
 </div>
-
-
-
-
 
 <div class="form-group">
 
@@ -250,10 +196,6 @@ value="{{ student.phone_number or '' }}">
 
 </div>
 
-
-
-
-
 <div class="form-group home-address">
 
 <label>
@@ -268,14 +210,7 @@ value="{{ student.home_address or '' }}">
 
 </div>
 
-
-
-
-
-
-
 <!-- EMERGENCY -->
-
 
 <div class="form-section-title">
 
@@ -284,10 +219,6 @@ Emergency Contact
 </h5>
 
 </div>
-
-
-
-
 
 <div class="form-group">
 
@@ -303,10 +234,6 @@ value="{{ student.emergency_name or '' }}">
 
 </div>
 
-
-
-
-
 <div class="form-group">
 
 <label>
@@ -320,10 +247,6 @@ class="form-control"
 value="{{ student.emergency_relationship or '' }}">
 
 </div>
-
-
-
-
 
 <div class="form-group">
 
@@ -339,10 +262,6 @@ value="{{ student.emergency_phone or '' }}">
 
 </div>
 
-
-
-
-
 <div class="form-group">
 
 <label>
@@ -357,16 +276,9 @@ value="{{ student.emergency_email or '' }}">
 
 </div>
 
-
-
 </div>
 
-
-
-
-
 <div class="admin-edit-buttons">
-
 
 <button 
 type="submit"
@@ -376,9 +288,6 @@ Save Changes
 
 </button>
 
-
-
-
 <a href="{{ url_for('admin.student_profile', student_id=student.id) }}"
 class="btn btn-secondary">
 
@@ -386,28 +295,15 @@ Cancel
 
 </a>
 
-
 </div>
-
-
-
-
 
 </form>
 
-
 </div>
 
-
 </div>
-
 
 </main>
-
-
-
-<script src="{{ url_for('static', filename='js/admin_sidebar.js') }}"></script>
-
 
 </body>
 

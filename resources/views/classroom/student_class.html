@@ -8,8 +8,8 @@
 </head>
 <body class="student-page">
     {% include 'components/student_sidebar.html' %}
-    <div class="student-main-content">
-        <div class="container mt-5">
+    <div class="student-main-content nexora-app-main">
+        <div class="nexora-page">
             <div class="card shadow-sm mb-4" style="overflow:hidden;">
                 <div style="height:120px; background: linear-gradient(135deg, #0f172a, #3b82f6);"></div>
                 <div class="card-body">
@@ -146,11 +146,11 @@
     <script>
         function copyStudentCode(){
             const code = (document.getElementById('studentCodeBadge')?.innerText || '{{ classroom.code }}').trim();
-            const done = () => { if(window.showToast) showToast('✓ Class code copied: ' + code); else alert('Copied: '+code); };
+            const done = () => { if(window.showToast) showToast('✓ Class code copied: ' + code); };
             if(navigator.clipboard && navigator.clipboard.writeText){
-                navigator.clipboard.writeText(code).then(done).catch(()=> { if(window.showToast) showToast('✓ Class code copied: ' + code); else prompt('Copy code:', code); });
+                navigator.clipboard.writeText(code).then(done).catch(()=> { if(window.showToast) showToast('✓ Class code copied: ' + code); });
             } else {
-                const ta=document.createElement('textarea'); ta.value=code; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy'); done();}catch(e){ prompt('Copy code:', code); } ta.remove();
+                const ta=document.createElement('textarea'); ta.value=code; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy'); done();}catch(e){ if(window.showToast) showToast('✓ Class code copied: ' + code); } ta.remove();
             }
         }
         function openClassTab(tabName, btn){
@@ -161,6 +161,5 @@
             if(btn) btn.classList.add('active');
         }
     </script>
-    <script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
 </body>
 </html>

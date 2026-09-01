@@ -6,34 +6,25 @@
 
 <title>User Management - Nexora</title>
 
-
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
 rel="stylesheet">
-
 
 <link rel="stylesheet"
 href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 
-
 <body class="nexora-admin-body">
-
 
 {% include 'components/admin_sidebar.html' %}
 
-
-
-<main class="admin-main">
-
+<main class="admin-main nexora-app-main">
+<div class="nexora-page">
 
 <div class="compact-dashboard">
-
-
 
 <!-- HEADER -->
 
 <div class="dashboard-header">
-
 
 <div>
 
@@ -41,14 +32,11 @@ href="{{ url_for('static', filename='css/style.css') }}">
 User Management
 </h1>
 
-
 <p>
 Manage Nexora accounts, approvals, and user access.
 </p>
 
 </div>
-
-
 
 <div class="system-badge">
 
@@ -56,27 +44,17 @@ Manage Nexora accounts, approvals, and user access.
 
 </div>
 
-
 </div>
-
-
-
-
 
 <!-- USER METRICS -->
 
-
 <div class="metric-grid">
 
-
-
 <div class="metric-box">
-
 
 <div class="metric-icon">
 ⏳
 </div>
-
 
 <div>
 
@@ -84,29 +62,19 @@ Manage Nexora accounts, approvals, and user access.
 Pending Accounts
 </span>
 
-
 <strong>
 {{ pending_count }}
 </strong>
 
-
 </div>
 
-
 </div>
-
-
-
-
-
 
 <div class="metric-box">
-
 
 <div class="metric-icon">
 👥
 </div>
-
 
 <div>
 
@@ -114,29 +82,19 @@ Pending Accounts
 Total Users
 </span>
 
-
 <strong>
 {{ total_users }}
 </strong>
 
-
 </div>
 
-
 </div>
-
-
-
-
-
 
 <div class="metric-box">
-
 
 <div class="metric-icon">
 🎓
 </div>
-
 
 <div>
 
@@ -144,29 +102,19 @@ Total Users
 Students
 </span>
 
-
 <strong>
 {{ students_count }}
 </strong>
 
-
 </div>
 
-
 </div>
-
-
-
-
-
 
 <div class="metric-box">
-
 
 <div class="metric-icon">
 🧑‍🏫
 </div>
-
 
 <div>
 
@@ -174,33 +122,19 @@ Students
 Supervisors
 </span>
 
-
 <strong>
 {{ supervisors_count }}
 </strong>
 
+</div>
 
 </div>
 
-
 </div>
-
-
-
-</div>
-
-
-
-
-
-
-
 
 <!-- PENDING REQUESTS -->
 
-
 <div class="dashboard-box">
-
 
 <div class="box-header">
 
@@ -208,25 +142,17 @@ Supervisors
 Pending Account Requests
 </h3>
 
-
 <span>
 Approval Required
 </span>
 
 </div>
 
-
-
-
 {% if pending_users %}
-
-
 
 <div class="table-responsive">
 
-
 <table class="table align-middle">
-
 
 <thead>
 
@@ -248,22 +174,15 @@ Role
 Action
 </th>
 
-
 </tr>
-
 
 </thead>
 
-
-
 <tbody>
-
 
 {% for user in pending_users %}
 
-
 <tr>
-
 
 <td>
 <strong>
@@ -271,11 +190,9 @@ Action
 </strong>
 </td>
 
-
 <td>
 {{ user["email"] }}
 </td>
-
 
 <td>
 
@@ -287,9 +204,7 @@ Action
 
 </td>
 
-
 <td>
-
 
 {% if user["role"] == "pending_student" %}
 
@@ -317,40 +232,27 @@ Action
 
 {% else %}
 
-
 <span class="text-muted">
 
 Waiting approval
 
 </span>
 
-
 {% endif %}
-
 
 </td>
 
-
 </tr>
-
 
 {% endfor %}
 
-
-
 </tbody>
-
 
 </table>
 
-
 </div>
 
-
-
-
 {% else %}
-
 
 <div class="empty-state">
 
@@ -358,45 +260,23 @@ Waiting approval
 
 </div>
 
-
 {% endif %}
-
-
 
 </div>
 
-
-
-
-
-
-
-
-
-
 <!-- USER DIRECTORY -->
 
-
 <div class="dashboard-box">
-
 
 <h3>
 User Directory
 </h3>
 
-
-
 <div class="user-directory-grid">
-
-
-
-
 
 <!-- STUDENTS -->
 
-
 <div class="user-category-card">
-
 
 <div class="category-icon student">
 
@@ -404,13 +284,9 @@ User Directory
 
 </div>
 
-
-
 <h4>
 Students
 </h4>
-
-
 
 <p>
 
@@ -418,32 +294,18 @@ Students
 
 </p>
 
-
-
 <a href="{{ url_for('admin.admin_students') }}"
 class="directory-btn">
 
-
 Manage Students
-
 
 </a>
 
-
-
 </div>
-
-
-
-
-
-
 
 <!-- SUPERVISORS -->
 
-
 <div class="user-category-card">
-
 
 <div class="category-icon supervisor">
 
@@ -451,13 +313,9 @@ Manage Students
 
 </div>
 
-
-
 <h4>
 Supervisors
 </h4>
-
-
 
 <p>
 
@@ -465,56 +323,28 @@ Supervisors
 
 </p>
 
-
-
 <a href="{{ url_for('admin.admin_supervisors') }}"
 class="directory-btn">
 
-
 Manage Supervisors
-
 
 </a>
 
-
+</div>
 
 </div>
 
-
-
-
-
 </div>
-
-
-</div>
-
-
-
-
-
-
-
-
-
-
 
 <!-- ACCOUNT SUMMARY -->
 
-
 <div class="dashboard-box">
-
 
 <h3>
 Account Summary
 </h3>
 
-
-
-
 <div class="status-row">
-
-
 
 <div>
 
@@ -522,17 +352,11 @@ Account Summary
 Students
 </span>
 
-
 <strong>
 {{ students_count }}
 </strong>
 
-
 </div>
-
-
-
-
 
 <div>
 
@@ -540,17 +364,11 @@ Students
 Supervisors
 </span>
 
-
 <strong>
 {{ supervisors_count }}
 </strong>
 
-
 </div>
-
-
-
-
 
 <div>
 
@@ -558,37 +376,20 @@ Supervisors
 Pending
 </span>
 
-
 <strong>
 {{ pending_count }}
 </strong>
 
+</div>
 
 </div>
 
-
+</div>
 
 </div>
 
-
 </div>
-
-
-
-
-
-</div>
-
-
-
 </main>
-
-
-
-
-
-<script src="{{ url_for('static', filename='js/admin_sidebar.js') }}"></script>
-
 
 </body>
 

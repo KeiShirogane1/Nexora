@@ -1,6 +1,7 @@
-from flask import Blueprint, render_template, request, redirect, session, send_file, current_app, flash
+from flask import Blueprint, render_template, request, redirect, session, send_file, current_app, flash, url_for
 from app.Http.Middleware.security import role_required
 import os
+import re
 import mimetypes
 from app.Models.db import get_db_connection
 from datetime import datetime
@@ -936,4 +937,46 @@ def reopen_task(task_id):
         flash("Task reopened.", "success")
         return redirect(f"/supervisor/task/{task_id}")
     finally:
+        conn.close()
+
+@supervisor.route("/supervisor/profile", methods=["GET", "POST"])
+@role_required("supervisor")
+def supervisor_profile():
+    sid = session.get("user_id")
+    conn = get_db_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT id, username, email, role, status FROM users WHERE id = ?", (sid,))
+        user = cur.fetchone()
+        if not user:
+            flash("Supervisor not found.", "danger")
+            return redirect(url_for("supervisor.supervisor_dashboard"))
+        if request.method == "POST":
+            username = (request.form.get("username") or "").strip()
+            email = (request.form.get("email") or "").strip().lower()
+            errors = {}
+            if not username or len(username) < 3 or not re.match(r"^[A-Za-z0-9_.-]+$", username):
+                errors["username"] = "Username must be at least 3 chars, letters/numbers/_.-"
+            if not email or not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email):
+                errors["email"] = "Invalid email"
+            cur.execute("SELECT id FROM users WHERE username = ? AND id != ?", (username, sid))
+            if cur.fetchone():
+                errors["username"] = "Username already exists"
+            cur.execute("SELECT id FROM users WHERE LOWER(email)=LOWER(?) AND id != ?", (email, sid))
+            if cur.fetchone():
+                errors["email"] = "Email already exists"
+            if errors:
+                for f, m in errors.items():
+                    flash(f"{f}: {m}", "danger")
+                return render_template("supervisor/profile.html", supervisor=user, active_page="profile")
+            cur.execute("UPDATE users SET username = ?, email = ? WHERE id = ?", (username, email, sid))
+            conn.commit()
+            flash("Profile updated successfully.", "success")
+            return redirect(url_for("supervisor.supervisor_profile"))
+        return render_template("supervisor/profile.html", supervisor=user, active_page="profile")
+    finally:
+        try:
+            cur.close()
+        except:
+            pass
         conn.close()

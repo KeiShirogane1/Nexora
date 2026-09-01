@@ -8,8 +8,8 @@
 </head>
 <body class="analytics-aesthetic">
     {% include 'components/supervisor_sidebar.html' %}
-    <div class="page-content">
-        <div class="container mt-5">
+    <div class="page-content nexora-app-main">
+        <div class="nexora-page">
             <!-- Header -->
             <div class="card shadow-sm mb-4" style="overflow:hidden;">
                 <div style="height:120px; background: linear-gradient(135deg, #2563eb, #60a5fa);"></div>
@@ -169,40 +169,40 @@
                 </div>
             </div>
         </div>
-        <!-- Class Info Modal -->
-        <div id="classInfoModal" class="nexora-modal-overlay" onclick="if(event.target===this) this.classList.remove('open')">
-            <div class="nexora-modal" style="max-width:520px;">
-                <div class="nexora-modal-header">
-                    <h2>Class Information</h2>
-                    <p>Details for this classroom</p>
-                    <button type="button" class="nexora-modal-close" onclick="document.getElementById('classInfoModal').classList.remove('open')">×</button>
-                </div>
-                <div class="nexora-modal-body" style="gap:10px;">
-                    <div class="d-flex justify-content-between"><strong>Class name</strong><span>{{ classroom.name }}</span></div>
-                    <div class="d-flex justify-content-between"><strong>Section</strong><span>{{ classroom.section }}</span></div>
-                    <div class="d-flex justify-content-between"><strong>Supervisor</strong><span>Supervisor (you)</span></div>
-                    <div class="d-flex justify-content-between align-items-center"><strong>Code</strong><span><span id="modalCode">{{ classroom.code }}</span> <button class="btn btn-sm btn-outline-primary ms-2" onclick="copyClassCode()">Copy</button></span></div>
-                    <div class="d-flex justify-content-between"><strong>Students</strong><span>{{ classroom.student_count }}</span></div>
-                    <div class="d-flex justify-content-between"><strong>Assignments</strong><span>{{ assignments|length }}</span></div>
-                    <div class="d-flex justify-content-between"><strong>Announcements</strong><span>{{ announcements|length }}</span></div>
-                    <div class="d-flex justify-content-between"><strong>Status</strong><span class="badge {% if classroom.status == 'Active' %}bg-success{% else %}bg-secondary{% endif %}">{{ classroom.status }}</span></div>
-                    {% if classroom.created_at %}<div class="d-flex justify-content-between"><strong>Created</strong><span>{{ classroom.created_at }}</span></div>{% endif %}
-                    {% if classroom.description %}<div><strong>Description</strong><p class="text-muted small mt-1">{{ classroom.description }}</p></div>{% endif %}
-                </div>
-                <div class="nexora-modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('classInfoModal').classList.remove('open')">Close</button>
-                </div>
+    </div>
+    <!-- Class Info Modal (page-level overlay, outside sidebar shell) -->
+    <div id="classInfoModal" class="nexora-modal-overlay" onclick="if(event.target===this) this.classList.remove('open')">
+        <div class="nexora-modal" style="max-width:520px;">
+            <div class="nexora-modal-header">
+                <h2>Class Information</h2>
+                <p>Details for this classroom</p>
+                <button type="button" class="nexora-modal-close" onclick="document.getElementById('classInfoModal').classList.remove('open')">×</button>
+            </div>
+            <div class="nexora-modal-body" style="gap:10px;">
+                <div class="d-flex justify-content-between"><strong>Class name</strong><span>{{ classroom.name }}</span></div>
+                <div class="d-flex justify-content-between"><strong>Section</strong><span>{{ classroom.section }}</span></div>
+                <div class="d-flex justify-content-between"><strong>Supervisor</strong><span>Supervisor (you)</span></div>
+                <div class="d-flex justify-content-between align-items-center"><strong>Code</strong><span><span id="modalCode">{{ classroom.code }}</span> <button class="btn btn-sm btn-outline-primary ms-2" onclick="copyClassCode()">Copy</button></span></div>
+                <div class="d-flex justify-content-between"><strong>Students</strong><span>{{ classroom.student_count }}</span></div>
+                <div class="d-flex justify-content-between"><strong>Assignments</strong><span>{{ assignments|length }}</span></div>
+                <div class="d-flex justify-content-between"><strong>Announcements</strong><span>{{ announcements|length }}</span></div>
+                <div class="d-flex justify-content-between"><strong>Status</strong><span class="badge {% if classroom.status == 'Active' %}bg-success{% else %}bg-secondary{% endif %}">{{ classroom.status }}</span></div>
+                {% if classroom.created_at %}<div class="d-flex justify-content-between"><strong>Created</strong><span>{{ classroom.created_at }}</span></div>{% endif %}
+                {% if classroom.description %}<div><strong>Description</strong><p class="text-muted small mt-1">{{ classroom.description }}</p></div>{% endif %}
+            </div>
+            <div class="nexora-modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('classInfoModal').classList.remove('open')">Close</button>
             </div>
         </div>
     </div>
     <script>
         function copyClassCode(){
             const code = (document.getElementById('classCodeBadge')?.innerText || document.getElementById('peopleCode')?.innerText || '{{ classroom.code }}').trim();
-            const done = () => { if(window.showToast) showToast('✓ Class code copied: ' + code); else alert('Copied: '+code); };
+            const done = () => { if(window.showToast) showToast('✓ Class code copied: ' + code); };
             if(navigator.clipboard && navigator.clipboard.writeText){
-                navigator.clipboard.writeText(code).then(done).catch(()=> { if(window.showToast) showToast('✓ Class code copied: ' + code); else prompt('Copy code:', code); });
+                navigator.clipboard.writeText(code).then(done).catch(()=> { if(window.showToast) showToast('✓ Class code copied: ' + code); });
             } else {
-                const ta=document.createElement('textarea'); ta.value=code; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy'); done();}catch(e){ prompt('Copy code:', code); } ta.remove();
+                const ta=document.createElement('textarea'); ta.value=code; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy'); done();}catch(e){ if(window.showToast) showToast('✓ Class code copied: ' + code); } ta.remove();
             }
         }
         function openClassTab(tabName, btn){
@@ -213,6 +213,5 @@
             if(btn) btn.classList.add('active');
         }
     </script>
-    <script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
 </body>
 </html>

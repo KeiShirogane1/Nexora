@@ -6,13 +6,21 @@ BASE_DIR = os.path.dirname(__file__)
 MODEL_DIR = os.path.join(BASE_DIR, "model")
 
 # -------------------------------------------------------------------
-# Load artifacts (TF-IDF + NB + SVM)
+# Load artifacts (TF-IDF + NB + SVM) — safe/lazy, never crash import
 # -------------------------------------------------------------------
-vectorizer = joblib.load(os.path.join(MODEL_DIR, "vectorizer.pkl"))
-
-# Primary model: Naive Bayes (backward-compatible name performance_model.pkl)
-model = joblib.load(os.path.join(MODEL_DIR, "performance_model.pkl"))
-nb_model = model  # alias
+vectorizer = None
+model = None
+nb_model = None
+try:
+    vectorizer = joblib.load(os.path.join(MODEL_DIR, "vectorizer.pkl"))
+    model = joblib.load(os.path.join(MODEL_DIR, "performance_model.pkl"))
+    nb_model = model  # alias
+except Exception as e:
+    # Safe fallback: log and keep None; _predict_label will return fallback label
+    print(f"[ML] Primary model load failed: {e}")
+    vectorizer = None
+    model = None
+    nb_model = None
 
 # SVM model (thesis requirement) — optional if artifact missing
 svm_model = None
@@ -20,7 +28,8 @@ svm_path = os.path.join(MODEL_DIR, "svm_model.pkl")
 if os.path.exists(svm_path):
     try:
         svm_model = joblib.load(svm_path)
-    except Exception:
+    except Exception as e:
+        print(f"[ML] SVM model load failed: {e}")
         svm_model = None
 
 # -------------------------------------------------------------------
@@ -93,6 +102,8 @@ def _predict_label(cleaned_text):
     Returns tuple (nb_pred, svm_pred, chosen_pred, confidence)
     cleaned_text is already lowercased/cleaned. Vectorizer will tokenize it.
     """
+    if vectorizer is None or nb_model is None:
+        return "Satisfactory", "Satisfactory", "Satisfactory", 0.0
     # Vectorizer expects raw string; passing cleaned is fine
     transformed = vectorizer.transform([cleaned_text])
     # Handle all-zero vector (empty/unknown vocab): fallback to neutral

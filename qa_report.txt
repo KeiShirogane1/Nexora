@@ -1,0 +1,101 @@
+﻿Initializing Nexora database...
+Admin provisioning skipped: ADMIN_USERNAME and ADMIN_PASSWORD are not configured.
+Database initialized successfully
+=== QA FINAL REPORT ===
+PASS count 82
+PASS: PASSWORD EYE login page button type=button not submit
+PASS: PASSWORD EYE CSS centered
+PASS: PASSWORD EYE input padding-right 42px
+PASS: PASSWORD EYE JS toggles type
+PASS: PASSWORD EYE signup exists
+PASS: PASSWORD EYE modal resources/views/admin/students.html padding fixed
+PASS: PASSWORD EYE modal resources/views/admin/students.html type=button
+PASS: PASSWORD EYE modal resources/views/admin/supervisors.html padding fixed
+PASS: PASSWORD EYE modal resources/views/admin/supervisors.html type=button
+PASS: LOGOUT admin calls openLogoutModal
+PASS: LOGOUT admin modal DOM present
+PASS: LOGOUT admin CSS centered
+PASS: LOGOUT admin z-index 5000 > sidebar
+PASS: LOGOUT admin ESC handler present (check file)
+PASS: LOGOUT admin no permanent visible text (hidden by default)
+PASS: LOGOUT supervisor calls openLogoutModal
+PASS: LOGOUT supervisor modal DOM present
+PASS: LOGOUT supervisor CSS centered
+PASS: LOGOUT supervisor z-index 5000 > sidebar
+PASS: LOGOUT supervisor ESC handler present (check file)
+PASS: LOGOUT supervisor no permanent visible text (hidden by default)
+PASS: CLASS INFO supervisor modal overlay present
+PASS: CLASS INFO supervisor CSS fixed viewport
+PASS: CLASS INFO supervisor modal placement outside wrappers
+PASS: CLASS INFO supervisor close buttons present
+PASS: CLASS INFO supervisor backdrop closes
+PASS: CLASS INFO supervisor sidebar outside modal
+PASS: CLASS INFO student modal overlay present
+PASS: CLASS INFO student CSS fixed viewport
+PASS: CLASS INFO student modal placement outside wrappers
+PASS: CLASS INFO student close buttons present
+PASS: CLASS INFO student backdrop closes
+PASS: CLASS INFO student sidebar outside modal
+PASS: STUDENT SPACING /student/classes shell present
+PASS: STUDENT SPACING /student/classes heading exists
+PASS: STUDENT SPACING /student/classes bell placement ok
+PASS: STUDENT SPACING /student/logbook shell present
+PASS: STUDENT SPACING /student/logbook heading exists
+PASS: STUDENT SPACING /student/logbook bell placement ok
+PASS: STUDENT SPACING /student/tasks shell present
+PASS: STUDENT SPACING /student/tasks heading exists
+PASS: STUDENT SPACING /student/tasks bell placement ok
+PASS: STUDENT SPACING /student/documents shell present
+PASS: STUDENT SPACING /student/documents heading exists
+PASS: STUDENT SPACING /student/documents bell placement ok
+PASS: SUPERVISOR SPACING /supervisor/dashboard shell
+PASS: SUPERVISOR SPACING /supervisor/interns shell
+PASS: SUPERVISOR SPACING /supervisor/classes shell
+PASS: ADMIN SPACING /admin/dashboard shell or redirect
+PASS: ADMIN SPACING /admin/users shell or redirect
+PASS: ADMIN SPACING /admin/users/students shell or redirect
+PASS: ADMIN SPACING /admin/users/supervisors shell or redirect
+PASS: ADMIN SPACING /admin/internship-assign shell or redirect
+PASS: ADMIN SPACING /admin/assignments shell or redirect
+PASS: ADMIN SPACING /admin/reports shell or redirect
+PASS: SIDEBAR admin compact-sidebar + hamburger present
+PASS: SIDEBAR admin duplicate guard
+PASS: SIDEBAR admin profile link
+PASS: SIDEBAR student duplicate guard
+PASS: SIDEBAR supervisor compact-sidebar + hamburger present
+PASS: SIDEBAR supervisor duplicate guard
+PASS: SIDEBAR supervisor profile link
+PASS: NOTIF supervisor dropdown present
+PASS: NOTIF supervisor toggleNotifications function
+PASS: NOTIF admin none (intentional if no bell)
+PASS: COPY resources/views/classroom/student_class.html uses clipboard + toast
+PASS: COPY resources/views/classroom/student_class.html no alert
+PASS: COPY resources/views/classroom/supervisor_class.html uses clipboard + toast
+PASS: COPY resources/views/classroom/supervisor_class.html no alert
+PASS: RESPONSIVE 1920 media query present
+PASS: RESPONSIVE 1024 media query present
+PASS: RESPONSIVE 768 media query present
+PASS: RESPONSIVE 390 media query present
+PASS: RESPONSIVE table clipping handled
+PASS: CONSOLE admin_sidebar.js null guard
+PASS: CONSOLE admin_sidebar.js listeners
+PASS: CONSOLE sidebar.js null guard
+PASS: CONSOLE sidebar.js listeners
+PASS: NETWORK static css/style.css exists
+PASS: NETWORK static css/polish.css exists
+PASS: NETWORK static css/modals.css exists
+PASS: NETWORK static js/sidebar.js exists
+FAIL/P0 0 P1 6 P2 3 P3 0
+P1 | PAGE:/student/dashboard | EL:logout | EXP:page loads 200 | ACT:status 302 | FILE:resources/views/student/dashboard.html | CAUSE:auth redirect or missing route
+P1 | PAGE:/student/dashboard | EL:student page | EXP:200 OK | ACT:302 | FILE:routes/student.py | CAUSE:auth or missing
+P1 | PAGE:/student/profile | EL:student page | EXP:200 OK | ACT:500 | FILE:routes/student.py | CAUSE:auth or missing
+P1 | PAGE:/student/dashboard | EL:sidebar | EXP:compact-sidebar + hamburger | ACT:missing | FILE:resources/views/components/student_sidebar.html | CAUSE:no toggle
+P1 | PAGE:/student/dashboard | EL:sidebar profile | EXP:clickable profile link | ACT:missing | FILE:resources/views/components/student_sidebar.html | CAUSE:profile not clickable
+P1 | PAGE:/student/dashboard | EL:notifications | EXP:dropdown | ACT:missing | FILE:resources/views/components/student_sidebar.html | CAUSE:bell not opening / null element
+P2 | PAGE:/admin/dashboard | EL:sidebar active | EXP:active class based on path | ACT:missing | FILE:resources/views/components/admin_sidebar.html | CAUSE:no active highlight
+P2 | PAGE:/student/dashboard | EL:sidebar active | EXP:active class based on path | ACT:missing | FILE:resources/views/components/student_sidebar.html | CAUSE:no active highlight
+P2 | PAGE:/supervisor/dashboard | EL:sidebar active | EXP:active class based on path | ACT:missing | FILE:resources/views/components/supervisor_sidebar.html | CAUSE:no active highlight
+=== NEEDS MANUAL DECISION ===
+- Legacy files safe to delete vs keep for reference (see final report H)
+- Admin notification bell intentionally absent vs should add (currently only student/supervisor have bell via sidebar include)
+- Profile edit page uses no-admin-sidebar intentionally as overlay (not a bug)
