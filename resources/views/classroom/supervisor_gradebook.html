@@ -15,6 +15,7 @@
         .supervisor-gradebook-heading p { margin:0; color:#64748b; }
         .supervisor-gradebook-back { color:#2563eb; text-decoration:none; font-size:.86rem; font-weight:700; }
         .supervisor-gradebook-back:hover { text-decoration:underline; }
+        .supervisor-gradebook-actions { display:flex; gap:10px; flex-wrap:wrap; }
         .supervisor-gradebook-card { background:#fff; border:1px solid #e8eef7; border-radius:18px; box-shadow:0 8px 28px rgba(15,23,42,.07); overflow:hidden; }
         .supervisor-gradebook-toolbar { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:18px 20px; border-bottom:1px solid #eef2f7; }
         .supervisor-gradebook-summary { color:#64748b; font-size:.82rem; }
@@ -56,6 +57,9 @@
                     <a href="{{ url_for('classroom.supervisor_class', class_id=classroom.id) }}" class="supervisor-gradebook-back">← Back to {{ classroom.name }}</a>
                     <h1>Gradebook</h1>
                     <p>{{ classroom.section }} · Normalized scores from manual grading and score imports.</p>
+                </div>
+                <div class="supervisor-gradebook-actions">
+                    <a class="btn btn-primary" href="{{ url_for('classwork_gradebook_export.export_supervisor_gradebook', class_id=classroom.id) }}">Export CSV</a>
                 </div>
             </div>
 
