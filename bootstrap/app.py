@@ -17,6 +17,7 @@ from app.Http.Controllers.supervisor import supervisor
 from app.Http.Controllers.admin import admin
 from app.Http.Controllers.classroom import classroom
 from app.Http.Controllers.classwork import classwork
+from app.Http.Controllers.student_classwork import student_classwork
 from app.Http.Controllers.notifications import notifications_bp
 
 from scripts.init_db import initialize_database
@@ -115,6 +116,7 @@ ensure_classroom_schema()
 app.register_blueprint(auth)
 app.register_blueprint(password)
 app.register_blueprint(student)
+app.register_blueprint(student_classwork)
 app.register_blueprint(supervisor)
 app.register_blueprint(admin)
 app.register_blueprint(classroom)

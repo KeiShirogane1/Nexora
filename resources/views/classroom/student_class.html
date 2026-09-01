@@ -45,7 +45,7 @@
 
             <div class="profile-tabs mb-4">
                 <button class="profile-tab-button active" onclick="openClassTab('stream', this)">Stream</button>
-                <button class="profile-tab-button" onclick="openClassTab('classwork', this)">Classwork</button>
+                <button class="profile-tab-button" onclick="window.location.href='{{ url_for('student_classwork.index', class_id=classroom.id) }}'">Classwork</button>
                 <button class="profile-tab-button" onclick="openClassTab('people', this)">People</button>
             </div>
 
@@ -62,32 +62,6 @@
                             {% endfor %}
                         {% else %}
                             <p class="text-muted mb-0">No announcements yet.</p>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-
-            <div id="classwork" class="profile-tab">
-                <div class="card shadow-sm mb-4">
-                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                        <h6 class="mb-0">Assignments</h6>
-                        <span class="badge bg-primary">Classwork</span>
-                    </div>
-                    <div class="card-body">
-                        {% if assignments and assignments|length > 0 %}
-                            {% for ass in assignments %}
-                            <a href="{{ url_for('classroom.student_assignment_detail', class_id=classroom.id, assignment_id=ass.id) }}" class="text-decoration-none">
-                            <div class="border-bottom pb-3 mb-3 d-flex justify-content-between align-items-center">
-                                <div>
-                                    <strong>{{ ass.title if ass.title else ass }}</strong>
-                                    <div class="small text-muted">Due: {{ ass.due if ass.due else 'No due date' }}</div>
-                                </div>
-                                <span class="badge {% if ass.status == 'submitted' or ass.status == 'graded' %}bg-success{% else %}bg-secondary{% endif %}">{{ ass.status if ass.status else 'Pending' }}</span>
-                            </div>
-                            </a>
-                            {% endfor %}
-                        {% else %}
-                            <p class="text-muted mb-0">No assignments yet.</p>
                         {% endif %}
                     </div>
                 </div>
@@ -122,7 +96,7 @@
 
         </div>
     </div>
-    <!-- Class Info Modal (read-only) -->
+
     <div id="studentInfoModal" class="nexora-modal-overlay" onclick="if(event.target===this) this.classList.remove('open')">
         <div class="nexora-modal" style="max-width:520px;">
             <div class="nexora-modal-header">
