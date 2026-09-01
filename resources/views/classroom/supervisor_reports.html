@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Performance Reports - {{ classroom.name }} - Nexora</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">
+    <style>
+        .supervisor-reports-page { background:#f1f5f9; color:#0f172a; min-height:100vh; }
+        .supervisor-reports-shell { max-width:1500px; margin:0 auto; }
+        .supervisor-reports-heading { display:flex; align-items:flex-end; justify-content:space-between; gap:24px; margin-bottom:22px; }
+        .supervisor-reports-heading h1 { margin:8px 0 5px; font-size:2rem; font-weight:800; letter-spacing:-.025em; }
+        .supervisor-reports-heading p { margin:0; color:#64748b; }
+        .supervisor-reports-back { color:#2563eb; text-decoration:none; font-size:.86rem; font-weight:700; }
+        .supervisor-reports-actions { display:flex; gap:10px; flex-wrap:wrap; }
+        .supervisor-reports-card { background:#fff; border:1px solid #e8eef7; border-radius:18px; box-shadow:0 8px 28px rgba(15,23,42,.07); overflow:hidden; }
+        .supervisor-reports-toolbar { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:18px 20px; border-bottom:1px solid #eef2f7; }
+        .supervisor-reports-wrap { overflow:auto; max-width:100%; }
+        .supervisor-reports-table { margin:0; min-width:max-content; width:100%; border-collapse:separate; border-spacing:0; }
+        .supervisor-reports-table th, .supervisor-reports-table td { border-color:#eef2f7; vertical-align:middle; }
+        .supervisor-reports-table thead th { background:#f8fafc; color:#475569; font-size:.7rem; font-weight:800; white-space:nowrap; padding:12px 10px; text-transform:uppercase; letter-spacing:.04em; }
+        .supervisor-reports-table tbody td { padding:12px 10px; font-size:.8rem; border-top:1px solid #eef2f7; }
+        .supervisor-reports-student { position:sticky; left:0; z-index:3; min-width:190px; background:#fff; box-shadow:1px 0 0 #eef2f7; }
+        .supervisor-reports-table thead .supervisor-reports-student { z-index:5; background:#f8fafc; }
+        .supervisor-reports-label { display:inline-block; padding:4px 8px; border-radius:999px; font-size:.68rem; font-weight:800; }
+        .supervisor-reports-label.is-excellent { background:#dcfce7; color:#166534; }
+        .supervisor-reports-label.is-very-satisfactory { background:#dbeafe; color:#1e40af; }
+        .supervisor-reports-label.is-satisfactory { background:#fef3c7; color:#92400e; }
+        .supervisor-reports-label.is-fair { background:#ffedd5; color:#9a3412; }
+        .supervisor-reports-label.is-needs-improvement { background:#fee2e2; color:#991b1b; }
+        .supervisor-reports-empty { padding:55px 24px; text-align:center; color:#64748b; }
+    </style>
+</head>
+<body class="supervisor-reports-page">
+    {% include 'components/supervisor_sidebar.html' %}
+    <main class="page-content nexora-app-main">
+        <div class="nexora-page supervisor-reports-shell">
+            <div class="supervisor-reports-heading">
+                <div>
+                    <a href="{{ url_for('classroom.supervisor_class', class_id=classroom.id) }}" class="supervisor-reports-back">← Back to {{ classroom.name }}</a>
+                    <h1>Performance Reports</h1>
+                    <p>{{ classroom.section }} · Thesis-ready reports from gradebook, ML evaluation and recommendations.</p>
+                </div>
+                <div class="supervisor-reports-actions">
+                    <a class="btn btn-outline-primary" href="{{ url_for('classwork_gradebook.supervisor_gradebook', class_id=classroom.id) }}">Gradebook</a>
+                    <a class="btn btn-outline-primary" href="{{ url_for('classwork_ml_insights.supervisor_insights', class_id=classroom.id) }}">Insights</a>
+                    <a class="btn btn-primary" href="{{ url_for('performance_reports.export_supervisor_reports', class_id=classroom.id) }}">Export CSV</a>
+                </div>
+            </div>
+
+            <section class="supervisor-reports-card">
+                <div class="supervisor-reports-toolbar">
+                    <div class="text-muted small"><strong>{{ reports|length }}</strong> student{{ '' if reports|length==1 else 's' }} · Reports</div>
+                    <span class="text-muted small">Student · Overall % · Completion · Performance · Competency · Recommendation · Priority</span>
+                </div>
+                {% if not reports %}
+                <div class="supervisor-reports-empty">
+                    <h2>No students enrolled</h2>
+                    <p>No data available — students will appear after they join this class.</p>
+                </div>
+                {% else %}
+                <div class="supervisor-reports-wrap">
+                    <table class="table supervisor-reports-table">
+                        <thead>
+                            <tr>
+                                <th class="supervisor-reports-student">Student</th>
+                                <th>Overall %</th>
+                                <th>Completion</th>
+                                <th>Performance</th>
+                                <th>Competency</th>
+                                <th>Recommendation</th>
+                                <th>Priority</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for r in reports %}
+                            <tr>
+                                <td class="supervisor-reports-student">
+                                    <strong>{{ r.student.username }}</strong>
+                                    {% if r.student.student_number %}<small class="text-muted d-block">{{ r.student.student_number }}</small>{% elif r.student.email %}<small class="text-muted d-block">{{ r.student.email }}</small>{% endif %}
+                                </td>
+                                <td>{% if r.overall_percentage is not none %}{{ "%.1f"|format(r.overall_percentage) }}%{% else %}—{% endif %}</td>
+                                <td>{{ "%.1f"|format(r.completion_rate) }}%</td>
+                                <td>
+                                    {% set lbl = r.performance_label %}
+                                    <span class="supervisor-reports-label {% if lbl == 'Excellent' %}is-excellent{% elif lbl == 'Very Satisfactory' %}is-very-satisfactory{% elif lbl == 'Satisfactory' %}is-satisfactory{% elif lbl == 'Fair' %}is-fair{% else %}is-needs-improvement{% endif %}">{{ lbl }}</span>
+                                </td>
+                                <td>{{ r.competency or '—' }}</td>
+                                <td style="max-width:380px; min-width:260px;"><span style="color:#334155;">{{ r.recommendation[:160] }}{% if r.recommendation|length > 160 %}…{% endif %}</span></td>
+                                <td><span class="supervisor-reports-label {% if r.priority == 'low' %}is-satisfactory{% elif r.priority == 'medium' %}is-very-satisfactory{% elif r.priority == 'high' %}is-fair{% else %}is-needs-improvement{% endif %}">{{ r.priority }}</span></td>
+                                <td><a class="btn btn-sm btn-outline-primary" href="{{ url_for('performance_reports.supervisor_student_report', class_id=classroom.id, student_id=r.student.id) }}">View</a></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+            </section>
+        </div>
+    </main>
+</body>
+</html>

@@ -25,6 +25,7 @@ from app.Http.Controllers.classwork_scores import classwork_scores
 from app.Http.Controllers.classwork_gradebook import classwork_gradebook
 from app.Http.Controllers.classwork_gradebook_export import classwork_gradebook_export
 from app.Http.Controllers.classwork_ml_insights import classwork_ml_insights
+from app.Http.Controllers.performance_reports import performance_reports
 from app.Http.Controllers.notifications import notifications_bp
 
 from scripts.init_db import initialize_database
@@ -116,6 +117,7 @@ app.register_blueprint(classwork_scores)
 app.register_blueprint(classwork_gradebook)
 app.register_blueprint(classwork_gradebook_export)
 app.register_blueprint(classwork_ml_insights)
+app.register_blueprint(performance_reports)
 app.register_blueprint(notifications_bp)
 
 @app.context_processor
