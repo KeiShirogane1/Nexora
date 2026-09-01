@@ -143,6 +143,22 @@ def grade(class_id, assignment_id, submission_id):
             "UPDATE classwork_submissions SET grade = ?, feedback = ?, status = 'graded' WHERE id = ? AND assignment_id = ?",
             (stored_grade, feedback or None, submission_id, assignment_id),
         )
+        # --- Phase 6A: normalize into classwork_scores ---
+        student_id = int(_value(submission, "student_id", 2))
+        max_score = float(points)
+        percentage = (float(grade_value) / max_score * 100) if max_score else 0
+        conn.execute(
+            """INSERT INTO classwork_scores
+               (assignment_id, student_id, score, max_score, percentage, grading_method)
+               VALUES (?, ?, ?, ?, ?, 'manual')
+               ON CONFLICT(assignment_id, student_id) DO UPDATE SET
+                   score = excluded.score,
+                   max_score = excluded.max_score,
+                   percentage = excluded.percentage,
+                   grading_method = 'manual',
+                   imported_at = CURRENT_TIMESTAMP""",
+            (assignment_id, student_id, float(grade_value), max_score, percentage),
+        )
         conn.commit()
         flash("Grade saved successfully.", "success")
 
