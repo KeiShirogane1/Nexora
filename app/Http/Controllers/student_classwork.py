@@ -88,8 +88,8 @@ def _assignment_data(row):
 def _submission_for_student(conn, assignment_id, student_id):
     try:
         return conn.execute(
-            """SELECT id, status, grade, feedback, content, filename, submitted_at
-               FROM classroom_assignment_submissions
+            """SELECT id, status, grade, feedback, content, filename, filepath, submitted_at
+               FROM classroom_submissions
                WHERE assignment_id = ? AND student_id = ?
                ORDER BY id DESC LIMIT 1""",
             (assignment_id, student_id),
@@ -108,7 +108,8 @@ def _submission_data(row):
         "feedback": _value(row, "feedback", 3),
         "content": _value(row, "content", 4),
         "filename": _value(row, "filename", 5),
-        "submitted_at": _value(row, "submitted_at", 6),
+        "filepath": _value(row, "filepath", 6),
+        "submitted_at": _value(row, "submitted_at", 7),
     }
 
 
@@ -185,7 +186,9 @@ def detail(class_id, assignment_id):
         past_due = False
         if assignment["due_at"]:
             try:
-                past_due = datetime.fromisoformat(str(assignment["due_at"]).replace("Z", "+00:00")) < datetime.now().astimezone()
+                due = datetime.fromisoformat(str(assignment["due_at"]).replace("Z", "+00:00"))
+                now = datetime.now(due.tzinfo) if due.tzinfo else datetime.now()
+                past_due = due < now
             except (ValueError, TypeError):
                 past_due = False
 
