@@ -1,4 +1,3 @@
-from app.Models.db import get_db_connection
 from app.Services.classwork_ml_service import build_student_performance_features
 
 
@@ -7,8 +6,8 @@ def test_ml_features_aggregate_normalized_scores(client, db):
     student = db.execute("INSERT INTO users (username,email,password,role) VALUES (?,?,?,?) RETURNING id", ("mlstu", "mlstu@example.com", "x", "student")).fetchone()[0]
     classroom = db.execute("INSERT INTO classrooms (name,section,supervisor_id,code,archived) VALUES (?,?,?,?,?) RETURNING id", ("ML Class", "A", supervisor, "NXR-ML001", 0)).fetchone()[0]
     db.execute("INSERT INTO classroom_students (classroom_id,student_id) VALUES (?,?)", (classroom, student))
-    a1 = db.execute("INSERT INTO classroom_assignments (classroom_id,title,points) VALUES (?,?,?) RETURNING id", (classroom, "Quiz", 10)).fetchone()[0]
-    a2 = db.execute("INSERT INTO classroom_assignments (classroom_id,title,points) VALUES (?,?,?) RETURNING id", (classroom, "Project", 20)).fetchone()[0]
+    a1 = db.execute("INSERT INTO classroom_assignments (classroom_id,author_id,title,points) VALUES (?,?,?,?) RETURNING id", (classroom, supervisor, "Quiz", 10)).fetchone()[0]
+    a2 = db.execute("INSERT INTO classroom_assignments (classroom_id,author_id,title,points) VALUES (?,?,?,?) RETURNING id", (classroom, supervisor, "Project", 20)).fetchone()[0]
     db.execute("INSERT INTO classwork_scores (assignment_id,student_id,score,max_score,percentage,grading_method) VALUES (?,?,?,?,?,?)", (a1,student,8,10,80,"manual"))
     db.execute("INSERT INTO classwork_scores (assignment_id,student_id,score,max_score,percentage,grading_method) VALUES (?,?,?,?,?,?)", (a2,student,15,20,75,"imported"))
     db.commit()
