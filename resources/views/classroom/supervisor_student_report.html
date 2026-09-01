@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Report - {{ report.student.username }} - {{ classroom.name }} - Nexora</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">
+    <style>
+        .supervisor-report-page { background:#f1f5f9; color:#0f172a; min-height:100vh; }
+        .supervisor-report-shell { max-width:1100px; margin:0 auto; }
+        .supervisor-report-back { color:#2563eb; text-decoration:none; font-size:.86rem; font-weight:700; }
+        .supervisor-report-card { background:#fff; border:1px solid #e8eef7; border-radius:18px; box-shadow:0 8px 28px rgba(15,23,42,.07); padding:22px; margin-bottom:18px; }
+        .supervisor-report-card h2 { margin:0 0 14px; color:#0f172a; font-size:1.05rem; font-weight:800; }
+        .supervisor-report-label { display:inline-block; padding:6px 10px; border-radius:999px; font-size:.78rem; font-weight:800; }
+        .supervisor-report-label.is-excellent { background:#dcfce7; color:#166534; }
+        .supervisor-report-label.is-very-satisfactory { background:#dbeafe; color:#1e40af; }
+        .supervisor-report-label.is-satisfactory { background:#fef3c7; color:#92400e; }
+        .supervisor-report-label.is-fair { background:#ffedd5; color:#9a3412; }
+        .supervisor-report-label.is-needs-improvement { background:#fee2e2; color:#991b1b; }
+        .supervisor-report-table { width:100%; border-collapse:collapse; }
+        .supervisor-report-table th, .supervisor-report-table td { padding:12px 14px; border-bottom:1px solid #f1f5f9; text-align:left; font-size:.84rem; }
+        .supervisor-report-table th { color:#64748b; font-size:.7rem; font-weight:800; text-transform:uppercase; letter-spacing:.05em; width:260px; }
+    </style>
+</head>
+<body class="supervisor-report-page">
+    {% include 'components/supervisor_sidebar.html' %}
+    <main class="page-content nexora-app-main">
+        <div class="nexora-page supervisor-report-shell">
+            <a href="{{ url_for('performance_reports.supervisor_reports', class_id=classroom.id) }}" class="supervisor-report-back">← Back to Reports</a>
+            <div class="d-flex align-items-end justify-content-between gap-3 mt-2 mb-3">
+                <div>
+                    <h1 style="margin:0; font-size:1.7rem; font-weight:800;">{{ report.student.username }}</h1>
+                    <p class="text-muted mb-1">{{ report.student.email }}{% if report.student.student_number %} · {{ report.student.student_number }}{% endif %} · Class: {{ classroom.name }} ({{ classroom.section }})</p>
+                    {% if report.supervisor.username %}<small class="text-muted">Supervisor: {{ report.supervisor.username }}</small>{% endif %}
+                </div>
+                <div><span class="supervisor-report-label {% if report.performance_label == 'Excellent' %}is-excellent{% elif report.performance_label == 'Very Satisfactory' %}is-very-satisfactory{% elif report.performance_label == 'Satisfactory' %}is-satisfactory{% elif report.performance_label == 'Fair' %}is-fair{% else %}is-needs-improvement{% endif %}">{{ report.performance_label }}</span></div>
+            </div>
+
+            <!-- PERFORMANCE SUMMARY -->
+            <section class="supervisor-report-card">
+                <h2>PERFORMANCE SUMMARY</h2>
+                {% if report.total_count == 0 %}
+                    <div class="text-muted">No data available — no assignments in this class yet.</div>
+                {% elif report.graded_count == 0 %}
+                    <div class="text-muted">No data available — no grades recorded yet.</div>
+                {% endif %}
+                <table class="supervisor-report-table">
+                    <tbody>
+                        <tr><th>Overall percentage</th><td>{% if report.overall_percentage is not none %}{{ "%.1f"|format(report.overall_percentage) }}%{% else %}—{% endif %}</td></tr>
+                        <tr><th>Completion rate</th><td>{{ "%.1f"|format(report.completion_rate) }}%</td></tr>
+                        <tr><th>Graded assignments</th><td>{{ report.graded_count }}</td></tr>
+                        <tr><th>Total assignments</th><td>{{ report.total_count }}</td></tr>
+                        <tr><th>Performance classification</th><td>{{ report.performance_label }}</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- ML ANALYSIS -->
+            <section class="supervisor-report-card">
+                <h2>ML ANALYSIS</h2>
+                {% if not report.has_feedback %}
+                    <div class="text-muted small mb-2">No feedback text available — ML analysis shows default competency.</div>
+                {% endif %}
+                <table class="supervisor-report-table">
+                    <tbody>
+                        <tr><th>Sentiment</th><td>{{ report.sentiment or '—' }}</td></tr>
+                        <tr><th>Competency</th><td>{{ report.competency or '—' }}</td></tr>
+                        <tr><th>Model-derived performance classification</th><td>{{ report.performance_label }}</td></tr>
+                        {% if report.feedback_analysis %}
+                            <tr><th>Naive Bayes prediction</th><td>{{ report.feedback_analysis.nb_prediction if report.feedback_analysis else '—' }}</td></tr>
+                            <tr><th>SVM prediction</th><td>{{ report.feedback_analysis.svm_prediction if report.feedback_analysis else '—' }}</td></tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- RECOMMENDATION -->
+            <section class="supervisor-report-card">
+                <h2>RECOMMENDATION</h2>
+                <table class="supervisor-report-table">
+                    <tbody>
+                        <tr><th>Recommendation text</th><td style="color:#334155;">{{ report.recommendation }}</td></tr>
+                        <tr><th>Priority</th><td><span class="supervisor-report-label {% if report.priority == 'low' %}is-satisfactory{% elif report.priority == 'medium' %}is-very-satisfactory{% elif report.priority == 'high' %}is-fair{% else %}is-needs-improvement{% endif %}">{{ report.priority }}</span></td></tr>
+                        <tr><th>Explainable basis</th><td style="color:#64748b; font-size:.82rem;">{% if report.basis %}{{ report.basis|join(" · ") }}{% else %}—{% endif %}</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- ACADEMIC PERFORMANCE -->
+            <section class="supervisor-report-card">
+                <h2>ACADEMIC PERFORMANCE</h2>
+                {% if not report.assignments %}
+                    <div class="text-muted">No data available — no assignments.</div>
+                {% else %}
+                    <div class="table-responsive">
+                        <table class="supervisor-report-table">
+                            <thead><tr><th>Assignment</th><th>Score</th><th>Percentage</th></tr></thead>
+                            <tbody>
+                                {% for a in report.assignments %}
+                                <tr>
+                                    <td>{{ a.title }}</td>
+                                    <td>{% if a.graded %}{{ "%.0f"|format(a.score) }} / {{ "%.0f"|format(a.max_score) }}{% else %}—{% endif %}</td>
+                                    <td>{% if a.percentage is not none %}{{ "%.1f"|format(a.percentage) }}%{% else %}—{% endif %}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if report.strongest and report.weakest %}
+                        <div class="mt-3" style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                            <div style="padding:12px; border:1px solid #e8eef7; border-radius:12px; background:#f8fafc;">
+                                <small class="text-muted" style="font-weight:700;">strongest performance / highest score</small>
+                                <div style="margin-top:4px;"><strong>{{ report.strongest.title }}</strong> — {{ "%.1f"|format(report.strongest.percentage) }}%</div>
+                            </div>
+                            <div style="padding:12px; border:1px solid #e8eef7; border-radius:12px; background:#f8fafc;">
+                                <small class="text-muted" style="font-weight:700;">weakest performance / lowest score</small>
+                                <div style="margin-top:4px;"><strong>{{ report.weakest.title }}</strong> — {{ "%.1f"|format(report.weakest.percentage) }}%</div>
+                            </div>
+                        </div>
+                    {% elif report.strongest %}
+                        <div class="mt-3" style="padding:12px; border:1px solid #e8eef7; border-radius:12px; background:#f8fafc;">
+                            <small class="text-muted">strongest performance</small>
+                            <div><strong>{{ report.strongest.title }}</strong> — {{ "%.1f"|format(report.strongest.percentage) }}%</div>
+                        </div>
+                    {% else %}
+                        <div class="text-muted small mt-3">No graded assignments to determine strongest/weakest.</div>
+                    {% endif %}
+                {% endif %}
+            </section>
+
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('performance_reports.supervisor_reports', class_id=classroom.id) }}" class="btn btn-outline-primary">Back to Reports</a>
+                <a href="{{ url_for('classroom.supervisor_class', class_id=classroom.id) }}" class="btn btn-light">Back to Class</a>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
