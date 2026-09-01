@@ -18,7 +18,10 @@
                     <h1>Classwork</h1>
                     <p>{{ classroom.section }} · Create assignments, online activities, resources, and projects for your students.</p>
                 </div>
-                {% if classroom.archived %}<span class="supervisor-classwork-archived">Archived class</span>{% endif %}
+                <div class="d-flex align-items-center gap-2">
+                    <a href="{{ url_for('classwork_gradebook.supervisor_gradebook', class_id=classroom.id) }}" class="btn btn-outline-primary">Gradebook</a>
+                    {% if classroom.archived %}<span class="supervisor-classwork-archived">Archived class</span>{% endif %}
+                </div>
             </div>
 
             {% with messages = get_flashed_messages(with_categories=true) %}
