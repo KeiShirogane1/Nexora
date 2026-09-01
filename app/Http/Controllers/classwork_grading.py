@@ -72,6 +72,20 @@ def _students_with_submissions(conn, class_id, assignment_id):
     ).fetchall()
 
 
+def _next_submission_id(conn, class_id, assignment_id, current_submission_id):
+    rows = _students_with_submissions(conn, class_id, assignment_id)
+    submission_ids = [
+        int(_value(row, "submission_id", 3))
+        for row in rows
+        if _value(row, "submission_id", 3) is not None
+    ]
+    try:
+        position = submission_ids.index(int(current_submission_id))
+    except (ValueError, TypeError):
+        return None
+    return submission_ids[position + 1] if position + 1 < len(submission_ids) else None
+
+
 @classwork_grading.route("/supervisor/classes/<int:class_id>/classwork/<int:assignment_id>/submissions/<int:submission_id>/review")
 @role_required("supervisor")
 def review(class_id, assignment_id, submission_id):
@@ -91,11 +105,27 @@ def review(class_id, assignment_id, submission_id):
         if not member:
             abort(404)
         files = _files(conn, submission_id)
+        previous_submission_id = None
+        next_submission_id = _next_submission_id(conn, class_id, assignment_id, submission_id)
+        rows = _students_with_submissions(conn, class_id, assignment_id)
+        all_submission_ids = [
+            int(_value(row, "submission_id", 3))
+            for row in rows
+            if _value(row, "submission_id", 3) is not None
+        ]
+        try:
+            position = all_submission_ids.index(int(submission_id))
+            if position > 0:
+                previous_submission_id = all_submission_ids[position - 1]
+        except ValueError:
+            pass
         return render_template(
             "classroom/supervisor_classwork_review.html",
             assignment=assignment,
             submission=submission,
             files=files,
+            previous_submission_id=previous_submission_id,
+            next_submission_id=next_submission_id,
             active_page="classes",
         )
     finally:
@@ -147,13 +177,7 @@ def grade(class_id, assignment_id, submission_id):
         flash("Grade saved successfully.", "success")
 
         if action == "next":
-            rows = _students_with_submissions(conn, class_id, assignment_id)
-            ids = [int(_value(r, "submission_id", 3)) for r in rows if _value(r, "submission_id", 3) is not None]
-            try:
-                position = ids.index(submission_id)
-                next_id = ids[position + 1] if position + 1 < len(ids) else None
-            except ValueError:
-                next_id = None
+            next_id = _next_submission_id(conn, class_id, assignment_id, submission_id)
             if next_id:
                 return redirect(url_for("classwork_grading.review", class_id=class_id, assignment_id=assignment_id, submission_id=next_id))
         return redirect(url_for("classwork_submissions.supervisor_submissions", class_id=class_id, assignment_id=assignment_id))
@@ -172,6 +196,12 @@ def return_for_revision(class_id, assignment_id, submission_id):
             abort(404)
         submission = _submission(conn, assignment_id, submission_id)
         if not submission:
+            abort(404)
+        member = conn.execute(
+            "SELECT 1 FROM classroom_students WHERE classroom_id = ? AND student_id = ? LIMIT 1",
+            (class_id, _value(submission, "student_id", 2)),
+        ).fetchone()
+        if not member:
             abort(404)
         reason = (request.form.get("feedback") or "").strip()
         conn.execute(
