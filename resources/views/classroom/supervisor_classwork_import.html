@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Import Scores - {{ assignment.title }} - Nexora</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">
+</head>
+<body class="supervisor-page supervisor-classwork-import-page">
+    {% include 'components/supervisor_sidebar.html' %}
+
+    <main class="page-content nexora-app-main">
+        <div class="nexora-page supervisor-classwork-import-shell">
+            <a href="{{ url_for('classwork.manage_classwork', class_id=assignment.classroom_id) }}" class="supervisor-classwork-back">← Back to Classwork</a>
+
+            <div class="supervisor-import-heading">
+                <div>
+                    <span class="supervisor-classwork-eyebrow">SCORE IMPORT</span>
+                    <h1>{{ assignment.title }}</h1>
+                    <p>Import grades from Google Forms or another CSV/XLSX results file.</p>
+                </div>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ 'danger' if category == 'danger' else 'success' if category == 'success' else 'warning' if category == 'warning' else 'info' }}">{{ message }}</div>
+                {% endfor %}
+            {% endwith %}
+
+            <section class="supervisor-import-card">
+                {% if not preview %}
+                <form method="POST" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="supervisor-import-dropzone">
+                        <div class="supervisor-import-icon">📄</div>
+                        <h2>Upload score file</h2>
+                        <p>Use the CSV/XLSX file exported from Google Forms or another grading source.</p>
+                        <input id="score_file" name="score_file" type="file" accept=".csv,.xlsx" class="form-control" required>
+                        <small>Maximum 5 MB · Up to 2,000 rows</small>
+                    </div>
+                    <div class="supervisor-import-footer">
+                        <a href="{{ url_for('classwork.manage_classwork', class_id=assignment.classroom_id) }}" class="btn btn-light">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Preview Import</button>
+                    </div>
+                </form>
+                {% else %}
+                <div class="supervisor-import-summary">
+                    <div><strong>{{ total_rows }}</strong><span>Rows detected</span></div>
+                    <div class="is-good"><strong>{{ total_rows - unmatched - invalid_scores }}</strong><span>Valid rows</span></div>
+                    <div class="{% if unmatched %}is-bad{% endif %}"><strong>{{ unmatched }}</strong><span>Unmatched</span></div>
+                    <div class="{% if invalid_scores %}is-bad{% endif %}"><strong>{{ invalid_scores }}</strong><span>Invalid scores</span></div>
+                </div>
+
+                <div class="table-responsive mt-4">
+                    <table class="table align-middle">
+                        <thead>
+                        <tr><th>Imported Student</th><th>Matched Student</th><th>Match</th><th>Score</th><th>Validation</th></tr>
+                        </thead>
+                        <tbody>
+                        {% for row in preview %}
+                        <tr>
+                            <td><strong>{{ row.name or '—' }}</strong><div class="small text-muted">{{ row.email or row.student_id or '' }}</div></td>
+                            <td>{{ row.matched_name or 'Not matched' }}</td>
+                            <td>{{ row.matched_by or '—' }}</td>
+                            <td>{{ row.score if row.score is not none else '—' }} / {{ assignment.points }}</td>
+                            <td>
+                                {% if row.matched_student_id and row.score_ok and not row.duplicate %}
+                                <span class="badge text-bg-success">Ready</span>
+                                {% elif row.duplicate %}
+                                <span class="badge text-bg-danger">Duplicate</span>
+                                {% elif not row.matched_student_id %}
+                                <span class="badge text-bg-warning">Unmatched</span>
+                                {% else %}
+                                <span class="badge text-bg-danger">Invalid score</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="supervisor-import-footer mt-4">
+                    <a href="{{ url_for('classwork_scores.import_scores', class_id=assignment.classroom_id, assignment_id=assignment.id) }}" class="btn btn-light">Choose Another File</a>
+                    {% if valid %}
+                    <form method="POST" action="{{ url_for('classwork_scores.commit_import', class_id=assignment.classroom_id, assignment_id=assignment.id) }}" enctype="multipart/form-data" class="d-inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="file" name="score_file" accept=".csv,.xlsx" required class="d-none" id="commit_file">
+                        <label for="commit_file" class="btn btn-outline-primary mb-0">Select File to Import</label>
+                        <button type="submit" class="btn btn-primary">Import Scores</button>
+                    </form>
+                    {% else %}
+                    <span class="text-danger small fw-semibold">Fix unmatched or invalid rows before importing.</span>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </section>
+        </div>
+    </main>
+</body>
+</html>
