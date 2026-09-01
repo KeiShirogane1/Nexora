@@ -15,7 +15,7 @@
             <a href="{{ url_for('classroom.supervisor_class', class_id=assignment.classroom_id) }}" class="text-decoration-none">← Back to Class</a>
             <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mt-3 mb-4">
                 <div><p class="text-muted mb-1">SUBMISSIONS</p><h1 class="mb-1">{{ assignment.title }}</h1><p class="text-muted mb-0">{{ assignment.points }} points</p></div>
-                <div class="d-flex gap-2"><span class="badge text-bg-secondary">{{ students|selectattr('submission_id')|list|length }} submitted</span><span class="badge text-bg-warning">{{ students|selectattr('status','equalto','submitted')|list|length }} needs grading</span></div>
+                <div class="d-flex gap-2"><span class="badge text-bg-secondary">{{ students|selectattr('submission_id')|list|length }} submitted</span><span class="badge text-bg-warning">{{ students|selectattr('status','in',['submitted','late','resubmission_required'])|list|length }} needs attention</span></div>
             </div>
             <div class="card shadow-sm border-0">
                 <div class="card-body p-0">
@@ -26,11 +26,11 @@
                             {% for student in students %}
                             <tr>
                                 <td class="ps-4"><strong>{{ student.username }}</strong><div class="small text-muted">{{ student.email }}</div></td>
-                                <td>{% if student.submission_id %}<span class="badge {% if student.status == 'graded' %}text-bg-success{% elif student.status == 'late' %}text-bg-warning{% else %}text-bg-primary{% endif %}">{{ student.status|replace('_',' ')|capitalize }}</span>{% else %}<span class="badge text-bg-light">Not submitted</span>{% endif %}</td>
+                                <td>{% if student.submission_id %}<span class="badge {% if student.status == 'graded' %}text-bg-success{% elif student.status == 'late' %}text-bg-warning{% elif student.status == 'resubmission_required' %}text-bg-danger{% else %}text-bg-primary{% endif %}">{{ student.status|replace('_',' ')|capitalize }}</span>{% else %}<span class="badge text-bg-light">Not submitted</span>{% endif %}</td>
                                 <td>{{ student.attempt_no or '—' }}</td>
                                 <td>{{ student.submitted_at or '—' }}</td>
                                 <td>{{ student.grade if student.grade is not none else '—' }}</td>
-                                <td class="text-end pe-4">{% if student.submission_id %}<a class="btn btn-sm btn-outline-primary" href="#">Review</a>{% else %}<span class="text-muted small">Waiting</span>{% endif %}</td>
+                                <td class="text-end pe-4">{% if student.submission_id %}<a class="btn btn-sm btn-outline-primary" href="{{ url_for('classwork_grading.review', class_id=assignment.classroom_id, assignment_id=assignment.id, submission_id=student.submission_id) }}">Review</a>{% else %}<span class="text-muted small">Waiting</span>{% endif %}</td>
                             </tr>
                             {% else %}<tr><td colspan="6" class="text-center py-5 text-muted">No students are enrolled in this class.</td></tr>{% endfor %}
                             </tbody>
@@ -38,7 +38,6 @@
                     </div>
                 </div>
             </div>
-            <div class="alert alert-info mt-3">Manual grading and submission review are the next grading phase. This page establishes the supervisor submission queue and alphabetical student list.</div>
         </div>
     </main>
 </body>
