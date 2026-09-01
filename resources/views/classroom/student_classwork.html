@@ -21,9 +21,12 @@
                     <h1>Classwork</h1>
                     <p>Assignments, quizzes, documents, projects, and other activities from your supervisor.</p>
                 </div>
-                <div class="student-classwork-summary">
-                    <strong>{{ assignments|length }}</strong>
-                    <span>activities</span>
+                <div class="student-classwork-header-actions">
+                    <a href="{{ url_for('student_gradebook.gradebook', class_id=classroom.id) }}" class="btn btn-outline-primary">View Gradebook</a>
+                    <div class="student-classwork-summary">
+                        <strong>{{ assignments|length }}</strong>
+                        <span>activities</span>
+                    </div>
                 </div>
             </header>
 
@@ -37,7 +40,6 @@
                                 <h2>{{ item.title }}</h2>
                             </div>
                             {% if item.submission %}
-                                {% set status = item.submission.status|lower %}
                                 <span class="student-classwork-status is-complete">{{ item.submission.status|capitalize }}</span>
                             {% else %}
                                 <span class="student-classwork-status">Not submitted</span>
