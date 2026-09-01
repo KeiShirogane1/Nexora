@@ -20,11 +20,13 @@ from app.Http.Controllers.classwork import classwork
 from app.Http.Controllers.student_classwork import student_classwork
 from app.Http.Controllers.classwork_submissions import classwork_submissions
 from app.Http.Controllers.classwork_grading import classwork_grading
+from app.Http.Controllers.classwork_scores import classwork_scores
 from app.Http.Controllers.notifications import notifications_bp
 
 from scripts.init_db import initialize_database
 from app.Services.classroom_service import ensure_classroom_schema
 from app.Services.classwork_submission_service import ensure_classwork_submission_schema
+from app.Services.classwork_score_schema import ensure_classwork_score_schema
 from app.Services.notification_service import get_user_notifications, get_unread_count
 
 app = Flask(
@@ -93,6 +95,7 @@ def health():
 initialize_database()
 ensure_classroom_schema()
 ensure_classwork_submission_schema()
+ensure_classwork_score_schema()
 
 app.register_blueprint(auth)
 app.register_blueprint(password)
@@ -104,6 +107,7 @@ app.register_blueprint(classroom)
 app.register_blueprint(classwork)
 app.register_blueprint(classwork_submissions)
 app.register_blueprint(classwork_grading)
+app.register_blueprint(classwork_scores)
 app.register_blueprint(notifications_bp)
 
 @app.context_processor
