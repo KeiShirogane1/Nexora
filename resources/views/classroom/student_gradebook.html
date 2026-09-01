@@ -15,7 +15,11 @@
             <a href="{{ url_for('classroom.student_class', class_id=classroom.id) }}" class="student-classwork-back">← Back to {{ classroom.name }}</a>
             <header class="student-classwork-header">
                 <div><span class="student-classwork-eyebrow">{{ classroom.section }}</span><h1>Gradebook</h1><p>Your current scores for activities in this class.</p></div>
-                <div class="student-gradebook-summary"><strong>{{ overall_display }}</strong><span>current grade</span></div>
+                <div class="d-flex align-items-center gap-2">
+                    <a href="{{ url_for('classwork_ml_insights.student_insights', class_id=classroom.id) }}" class="btn btn-outline-primary btn-sm">Performance Insights</a>
+                    <a href="{{ url_for('classwork_ml_insights.student_insights', class_id=classroom.id) }}" class="btn btn-primary btn-sm">ML Insights</a>
+                    <div class="student-gradebook-summary"><strong>{{ overall_display }}</strong><span>current grade</span></div>
+                </div>
             </header>
             <section class="student-gradebook-stats" aria-label="Grade summary">
                 <div><strong>{{ graded_count }}</strong><span>graded</span></div>
