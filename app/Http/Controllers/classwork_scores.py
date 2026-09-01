@@ -132,7 +132,10 @@ def import_scores(class_id, assignment_id):
                 "duplicate": duplicate,
             })
 
-        valid = all(item["matched_student_id"] is not None and item["score_ok"] and not item["duplicate"] for item in preview)
+        valid = bool(preview) and all(
+            item["matched_student_id"] is not None and item["score_ok"] and not item["duplicate"]
+            for item in preview
+        )
         return render_template(
             "classroom/supervisor_classwork_import.html",
             assignment=assignment,
@@ -160,7 +163,7 @@ def commit_import(class_id, assignment_id):
         students = _students(conn, class_id)
         upload = request.files.get("score_file")
         if not upload or not upload.filename or not allowed_import(upload.filename):
-            flash("Please upload the same CSV/XLSX file again to complete the import.", "danger")
+            flash("Please select the CSV/XLSX file again to complete the import.", "danger")
             return redirect(url_for("classwork_scores.import_scores", class_id=class_id, assignment_id=assignment_id))
 
         headers, raw_rows = parse_file(upload.filename, upload.read())
@@ -175,22 +178,20 @@ def commit_import(class_id, assignment_id):
                 flash("Import failed validation. No scores were saved.", "danger")
                 return redirect(url_for("classwork_scores.import_scores", class_id=class_id, assignment_id=assignment_id))
             seen.add(matched_id)
-            records.append((int(matched_id), row.score))
+            records.append((int(matched_id), float(row.score)))
 
         for student_id, score in records:
+            percentage = (score / max_points * 100) if max_points else 0
             existing = conn.execute(
-                """SELECT id FROM classroom_submissions
-                   WHERE assignment_id = ? AND student_id = ?
-                   ORDER BY id DESC LIMIT 1""",
+                "SELECT id FROM classroom_submissions WHERE assignment_id = ? AND student_id = ? ORDER BY id DESC LIMIT 1",
                 (assignment_id, student_id),
             ).fetchone()
             now = datetime.utcnow().isoformat(timespec="seconds")
             if existing:
+                submission_id = _value(existing, "id", 0)
                 conn.execute(
-                    """UPDATE classroom_submissions
-                       SET grade = ?, status = 'graded', submitted_at = COALESCE(submitted_at, ?)
-                       WHERE id = ?""",
-                    (score, now, _value(existing, "id", 0)),
+                    "UPDATE classroom_submissions SET grade = ?, status = 'graded', submitted_at = COALESCE(submitted_at, ?) WHERE id = ?",
+                    (score, now, submission_id),
                 )
             else:
                 conn.execute(
@@ -199,6 +200,18 @@ def commit_import(class_id, assignment_id):
                        VALUES (?, ?, ?, 'graded', ?, ?)""",
                     (assignment_id, student_id, "Imported score", score, now),
                 )
+            conn.execute(
+                """INSERT INTO classwork_scores
+                   (assignment_id, student_id, score, max_score, percentage, grading_method)
+                   VALUES (?, ?, ?, ?, ?, 'imported')
+                   ON CONFLICT(assignment_id, student_id) DO UPDATE SET
+                       score = excluded.score,
+                       max_score = excluded.max_score,
+                       percentage = excluded.percentage,
+                       grading_method = 'imported',
+                       imported_at = CURRENT_TIMESTAMP""",
+                (assignment_id, student_id, score, max_points, percentage),
+            )
         conn.commit()
         flash(f"Imported {len(records)} student scores successfully.", "success")
         return redirect(url_for("classwork_submissions.supervisor_submissions", class_id=class_id, assignment_id=assignment_id))
@@ -208,6 +221,13 @@ def commit_import(class_id, assignment_id):
         except Exception:
             pass
         flash(str(exc), "danger")
+        return redirect(url_for("classwork_scores.import_scores", class_id=class_id, assignment_id=assignment_id))
+    except Exception as exc:
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+        flash(f"Unable to import scores: {exc}", "danger")
         return redirect(url_for("classwork_scores.import_scores", class_id=class_id, assignment_id=assignment_id))
     finally:
         conn.close()
