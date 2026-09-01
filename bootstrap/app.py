@@ -18,10 +18,12 @@ from app.Http.Controllers.admin import admin
 from app.Http.Controllers.classroom import classroom
 from app.Http.Controllers.classwork import classwork
 from app.Http.Controllers.student_classwork import student_classwork
+from app.Http.Controllers.classwork_submissions import classwork_submissions
 from app.Http.Controllers.notifications import notifications_bp
 
 from scripts.init_db import initialize_database
 from app.Services.classroom_service import ensure_classroom_schema
+from app.Services.classwork_submission_service import ensure_classwork_submission_schema
 from app.Services.notification_service import get_user_notifications, get_unread_count
 
 app = Flask(
@@ -30,10 +32,6 @@ app = Flask(
     static_folder=str(BASE_DIR / "resources" / "assets"),
     static_url_path="/static"
 )
-
-# ==========================
-# SECURITY — SECRET & SESSION
-# ==========================
 
 _dev_fallback = "dev-secret-key-change-me-not-for-production"
 _secret = os.environ.get("SECRET_KEY")
@@ -58,10 +56,7 @@ try:
     csrf = CSRFProtect(app)
 except ImportError as _csrf_err:
     if app.config.get("WTF_CSRF_ENABLED"):
-        raise RuntimeError(
-            "Flask-WTF is required for CSRF protection but is not installed. "
-            "Install with: pip install flask-wtf"
-        ) from _csrf_err
+        raise RuntimeError("Flask-WTF is required for CSRF protection but is not installed. Install with: pip install flask-wtf") from _csrf_err
     csrf = None
 
 @app.after_request
@@ -73,10 +68,6 @@ def _set_security_headers(response):
     if app.config.get("SESSION_COOKIE_SECURE"):
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     return response
-
-# ==========================
-# UPLOAD SETTINGS
-# ==========================
 
 UPLOAD_FOLDER = BASE_DIR / "storage" / "uploads"
 UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)
@@ -94,24 +85,13 @@ def uploaded_file(filename):
 def profile_picture(filename):
     return send_from_directory(app.config["PROFILE_UPLOAD_FOLDER"], filename)
 
-# ==========================
-# HEALTH CHECK — for Render, no auth
-# ==========================
-
 @app.route("/health")
 def health():
     return {"status": "ok"}, 200
 
-# ==========================
-# DATABASE INITIALIZATION
-# ==========================
-
 initialize_database()
 ensure_classroom_schema()
-
-# ==========================
-# REGISTER BLUEPRINTS
-# ==========================
+ensure_classwork_submission_schema()
 
 app.register_blueprint(auth)
 app.register_blueprint(password)
@@ -121,28 +101,18 @@ app.register_blueprint(supervisor)
 app.register_blueprint(admin)
 app.register_blueprint(classroom)
 app.register_blueprint(classwork)
+app.register_blueprint(classwork_submissions)
 app.register_blueprint(notifications_bp)
-
-# ==========================
-# NOTIFICATION SYSTEM
-# ==========================
 
 @app.context_processor
 def inject_notifications():
     if "user_id" in session:
         try:
-            return {
-                "notifications": get_user_notifications(session["user_id"], limit=20),
-                "unread_count": get_unread_count(session["user_id"])
-            }
+            return {"notifications": get_user_notifications(session["user_id"], limit=20), "unread_count": get_unread_count(session["user_id"])}
         except Exception as e:
             print("inject_notifications failed:", e)
             return {"notifications": [], "unread_count": 0}
     return {"notifications": [], "unread_count": 0}
-
-# ==========================
-# RUN APP
-# ==========================
 
 if __name__ == "__main__":
     app.run(debug=app.debug)

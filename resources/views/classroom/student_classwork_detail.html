@@ -10,11 +10,9 @@
 </head>
 <body class="student-page student-classwork-page">
     {% include 'components/student_sidebar.html' %}
-
     <main class="student-main-content nexora-app-main">
         <div class="nexora-page student-classwork-shell">
             <a href="{{ url_for('student_classwork.index', class_id=classroom.id) }}" class="student-classwork-back">← Back to Classwork</a>
-
             <article class="student-classwork-detail-card">
                 <header class="student-classwork-detail-header">
                     <div>
@@ -22,96 +20,55 @@
                         <h1>{{ assignment.title }}</h1>
                         <p class="student-classwork-detail-subtitle">{{ classroom.name }} · {{ classroom.section }}</p>
                     </div>
-                    <div class="student-classwork-detail-points">
-                        <strong>{{ assignment.points }}</strong>
-                        <span>points</span>
-                    </div>
+                    <div class="student-classwork-detail-points"><strong>{{ assignment.points }}</strong><span>points</span></div>
                 </header>
-
                 <div class="student-classwork-detail-meta">
                     {% if assignment.due_at %}<span>Due {{ assignment.due_at }}</span>{% else %}<span>No due date</span>{% endif %}
                     {% if assignment.group_mode %}<span>Group activity · max {{ assignment.max_group_size }}</span>{% endif %}
                     {% if assignment.allow_file_upload %}<span>File submission enabled</span>{% endif %}
                 </div>
-
-                {% if past_due %}
-                    <div class="alert alert-warning mt-4 mb-0">The deadline has passed. Your supervisor may still allow a submission.</div>
-                {% endif %}
-
+                {% if past_due %}<div class="alert alert-warning mt-4 mb-0">The deadline has passed. Your supervisor may still allow a submission.</div>{% endif %}
                 <section class="student-classwork-detail-section">
                     <h2>Instructions</h2>
                     <div class="student-classwork-instructions">{{ assignment.description or 'No additional instructions were provided.' }}</div>
                 </section>
-
                 {% if assignment.external_url or assignment.resource_filepath %}
                 <section class="student-classwork-detail-section">
                     <h2>Resources</h2>
                     <div class="student-classwork-resource-list">
-                        {% if assignment.external_url %}
-                        <a href="{{ assignment.external_url }}" target="_blank" rel="noopener noreferrer" class="student-classwork-resource-card">
-                            <span class="student-classwork-resource-icon" aria-hidden="true">🔗</span>
-                            <span><strong>{{ assignment.resource_label or 'Open external activity' }}</strong><small>Opens in a new tab</small></span>
-                            <span aria-hidden="true">↗</span>
-                        </a>
-                        {% endif %}
-                        {% if assignment.resource_filepath %}
-                        <a href="{{ url_for('uploaded_file', filename=assignment.resource_filepath) }}" target="_blank" rel="noopener noreferrer" class="student-classwork-resource-card">
-                            <span class="student-classwork-resource-icon" aria-hidden="true">📎</span>
-                            <span><strong>{{ assignment.resource_filename or 'Open attached file' }}</strong><small>Reference material</small></span>
-                            <span aria-hidden="true">↗</span>
-                        </a>
-                        {% endif %}
+                        {% if assignment.external_url %}<a href="{{ assignment.external_url }}" target="_blank" rel="noopener noreferrer" class="student-classwork-resource-card"><span class="student-classwork-resource-icon">🔗</span><span><strong>{{ assignment.resource_label or 'Open external activity' }}</strong><small>Opens in a new tab</small></span><span>↗</span></a>{% endif %}
+                        {% if assignment.resource_filepath %}<a href="{{ url_for('uploaded_file', filename=assignment.resource_filepath) }}" target="_blank" rel="noopener noreferrer" class="student-classwork-resource-card"><span class="student-classwork-resource-icon">📎</span><span><strong>{{ assignment.resource_filename or 'Open attached file' }}</strong><small>Reference material</small></span><span>↗</span></a>{% endif %}
                     </div>
                 </section>
                 {% endif %}
             </article>
-
             <section class="student-classwork-submission-card">
                 <div class="student-classwork-section-heading">
-                    <div>
-                        <span class="student-classwork-eyebrow">YOUR WORK</span>
-                        <h2>Submission</h2>
-                    </div>
-                    {% if submission %}
-                        <span class="student-classwork-status is-complete">{{ submission.status|capitalize }}</span>
-                    {% else %}
-                        <span class="student-classwork-status">Not submitted</span>
-                    {% endif %}
+                    <div><span class="student-classwork-eyebrow">YOUR WORK</span><h2>Submission</h2></div>
+                    {% if submission %}<span class="student-classwork-status is-complete">{{ submission.status|replace('_', ' ')|capitalize }}</span>{% else %}<span class="student-classwork-status">Not submitted</span>{% endif %}
                 </div>
-
                 {% if submission %}
                     <div class="student-classwork-submission-summary">
-                        {% if submission.grade %}<div><span>Grade</span><strong>{{ submission.grade }}</strong></div>{% endif %}
+                        <div><span>Attempt</span><strong>{{ submission.attempt_no }}</strong></div>
+                        {% if submission.grade is not none %}<div><span>Grade</span><strong>{{ submission.grade }} / {{ assignment.points }}</strong></div>{% endif %}
                         {% if submission.submitted_at %}<div><span>Submitted</span><strong>{{ submission.submitted_at }}</strong></div>{% endif %}
                         {% if submission.feedback %}<div class="student-classwork-feedback"><span>Supervisor feedback</span><p>{{ submission.feedback }}</p></div>{% endif %}
-                        {% if submission.content %}<div class="student-classwork-feedback"><span>Your text response</span><p>{{ submission.content }}</p></div>{% endif %}
-                        {% if submission.filename %}<div><span>File</span><strong>{{ submission.filename }}</strong></div>{% endif %}
+                        {% if submission.content %}<div class="student-classwork-feedback"><span>Your written response</span><p>{{ submission.content }}</p></div>{% endif %}
+                        {% if submission.files %}<div class="student-classwork-feedback"><span>Submitted files</span>{% for file in submission.files %}<p class="mb-1"><a href="{{ url_for('classwork_submissions.student_file', class_id=classroom.id, assignment_id=assignment.id, file_id=file.id) }}">📎 {{ file.filename }}</a></p>{% endfor %}</div>{% endif %}
                     </div>
                     <hr>
-                    <h3>Update your submission</h3>
-                {% else %}
-                    <p class="text-muted">Submit your work below. You can return later to update it when resubmission is allowed.</p>
-                {% endif %}
-
+                    <h3>Submit a new attempt</h3>
+                {% else %}<p class="text-muted">Upload your completed work below. Handwritten papers, drawings, photos, PDFs, and supported documents can be submitted as one attempt.</p>{% endif %}
                 {% if classroom.archived %}
                     <div class="alert alert-secondary mb-0">This class is archived, so new submissions are unavailable.</div>
-                {% else %}
+                {% elif assignment.allow_file_upload %}
                 <form method="POST" action="{{ submit_url }}" enctype="multipart/form-data" class="student-classwork-submit-form">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <div>
-                        <label for="content" class="form-label">Text response</label>
-                        <textarea id="content" name="content" class="form-control" rows="6" maxlength="10000" placeholder="Type your answer or explanation here...">{{ submission.content if submission else '' }}</textarea>
-                    </div>
-                    {% if assignment.allow_file_upload %}
-                    <div>
-                        <label for="file" class="form-label">Upload your work</label>
-                        <input id="file" type="file" name="file" class="form-control">
-                        <small class="text-muted">PDF, DOC/DOCX, XLS/XLSX, PPT/PPTX, TXT, ZIP, PNG, JPG, or GIF. Maximum 5 MB.</small>
-                    </div>
-                    {% endif %}
-                    <button type="submit" class="btn btn-primary">{% if submission %}Resubmit Work{% else %}Submit Work{% endif %}</button>
+                    <div><label for="content" class="form-label">Written response (optional)</label><textarea id="content" name="content" class="form-control" rows="5" maxlength="10000" placeholder="Add an explanation or response if required..."></textarea></div>
+                    <div><label for="files" class="form-label">Upload your work</label><input id="files" type="file" name="files" class="form-control" multiple accept=".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip"><small class="text-muted">Up to 10 files. Maximum 5 MB per request. Use multiple photos for handwritten papers with several pages.</small></div>
+                    <button type="submit" class="btn btn-primary">{% if submission %}Submit New Attempt{% else %}Submit Work{% endif %}</button>
                 </form>
-                {% endif %}
+                {% else %}<div class="alert alert-info mb-0">This activity does not currently accept file uploads.</div>{% endif %}
             </section>
         </div>
     </main>
