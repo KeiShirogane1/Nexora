@@ -1,7 +1,7 @@
 /* =========================================================
    Nexora Supervisor — My Classes
-   Page-specific layout. This page is intentionally viewport-locked:
-   no document scroll, with Create Class permanently at the bottom.
+   Page-specific layout. Keep this page styling isolated from
+   the legacy rules in style.css.
    ========================================================= */
 
 html:has(body.supervisor-classes-page),
@@ -14,6 +14,8 @@ body.supervisor-classes-page {
 
 body.supervisor-classes-page {
     min-height: 100vh;
+    background: #f1f5f9 !important;
+    color: #0f172a;
 }
 
 body.supervisor-classes-page .supervisor-classes-main {
@@ -23,6 +25,7 @@ body.supervisor-classes-page .supervisor-classes-main {
     padding: 32px 32px 118px !important;
     overflow: hidden !important;
     box-sizing: border-box;
+    background: #f1f5f9;
 }
 
 body.supervisor-classes-page .supervisor-classes-page-inner {
@@ -55,6 +58,39 @@ body.supervisor-classes-page .supervisor-classes-page-inner {
     margin: 0;
     color: #64748b;
     font-size: 0.95rem;
+}
+
+.supervisor-classes-header-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    flex: 0 0 auto;
+}
+
+.supervisor-create-top-btn {
+    min-height: 46px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 17px;
+    border: 0;
+    border-radius: 11px;
+    background: #2563eb;
+    color: #fff !important;
+    text-decoration: none !important;
+    font-size: .86rem;
+    font-weight: 700;
+    white-space: nowrap;
+    box-shadow: 0 5px 16px rgba(37, 99, 235, .18);
+    transition: background .15s ease, transform .15s ease, box-shadow .15s ease;
+}
+
+.supervisor-create-top-btn:hover {
+    background: #1d4ed8;
+    color: #fff !important;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgba(37, 99, 235, .22);
 }
 
 .supervisor-notification-btn {
@@ -318,6 +354,22 @@ body.supervisor-classes-page .supervisor-classes-page-inner {
         font-size: 1.65rem;
     }
 
+    .supervisor-classes-header-actions {
+        gap: 8px;
+    }
+
+    .supervisor-create-top-btn {
+        min-height: 42px;
+        padding: 0 13px;
+        font-size: .8rem;
+    }
+
+    .supervisor-notification-btn {
+        width: 42px;
+        height: 42px;
+        flex-basis: 42px;
+    }
+
     .supervisor-classes-list {
         grid-template-columns: 1fr;
         max-height: calc(100vh - 190px);
@@ -335,6 +387,19 @@ body.supervisor-classes-page .supervisor-classes-page-inner {
 }
 
 @media (max-width: 480px) {
+    .supervisor-classes-header {
+        flex-direction: column;
+    }
+
+    .supervisor-classes-header-actions {
+        width: 100%;
+        justify-content: stretch;
+    }
+
+    .supervisor-create-top-btn {
+        flex: 1;
+    }
+
     .supervisor-class-card {
         padding: 18px;
         min-height: 250px;
