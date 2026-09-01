@@ -92,6 +92,24 @@
             </section>
 
             <section class="student-insights-card" style="margin-top:18px;">
+                <h2>ML Recommendation</h2>
+                {% if ml_recommendation %}
+                    <div style="display:grid; gap:8px; font-size:.84rem;">
+                        <div><strong>performance_label:</strong> {{ ml_recommendation.performance_label }}</div>
+                        <div><strong>overall_percentage:</strong> {% if ml_recommendation.overall_percentage is not none %}{{ "%.1f"|format(ml_recommendation.overall_percentage) }}%{% else %}—{% endif %} <span class="text-muted" style="margin-left:8px;">completion_rate: {{ "%.1f"|format(ml_recommendation.completion_rate) }}%</span></div>
+                        <div><strong>recommendation:</strong> <span style="color:#334155;">{{ ml_recommendation.recommendation }}</span></div>
+                        <div><strong>priority:</strong> {{ ml_recommendation.priority }}</div>
+                        {% if ml_recommendation.basis %}
+                            <div style="color:#64748b; font-size:.78rem;"><strong>basis:</strong> {{ ml_recommendation.basis|join(" · ") }}</div>
+                        {% endif %}
+                        <div style="color:#64748b; font-size:.78rem;"><strong>graded:</strong> {{ ml_recommendation.graded_count }}/{{ ml_recommendation.total_count }} · <strong>priority detail:</strong> {{ ml_recommendation.priority }}</div>
+                    </div>
+                {% else %}
+                    <div class="text-muted">No recommendation available.</div>
+                {% endif %}
+            </section>
+
+            <section class="student-insights-card" style="margin-top:18px;">
                 <h2>Feedback ML Analysis</h2>
                 {% if has_feedback %}
                     <div class="student-insights-feedback">
