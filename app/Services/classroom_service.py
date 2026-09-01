@@ -60,6 +60,17 @@ def ensure_classroom_schema():
                     feedback TEXT,
                     UNIQUE(assignment_id, student_id)
                 )""",
+                """CREATE TABLE IF NOT EXISTS classroom_assignment_meta (
+                    assignment_id INTEGER PRIMARY KEY REFERENCES classroom_assignments(id) ON DELETE CASCADE,
+                    activity_type TEXT NOT NULL DEFAULT 'assignment',
+                    external_url TEXT,
+                    resource_label TEXT,
+                    resource_filename TEXT,
+                    resource_filepath TEXT,
+                    allow_file_upload INTEGER DEFAULT 0,
+                    group_mode INTEGER DEFAULT 0,
+                    max_group_size INTEGER DEFAULT 1
+                )""",
             ]
         else:
             statements = [
@@ -120,6 +131,18 @@ def ensure_classroom_schema():
                     UNIQUE(assignment_id, student_id),
                     FOREIGN KEY(assignment_id) REFERENCES classroom_assignments(id) ON DELETE CASCADE,
                     FOREIGN KEY(student_id) REFERENCES users(id) ON DELETE CASCADE
+                )""",
+                """CREATE TABLE IF NOT EXISTS classroom_assignment_meta (
+                    assignment_id INTEGER PRIMARY KEY,
+                    activity_type TEXT NOT NULL DEFAULT 'assignment',
+                    external_url TEXT,
+                    resource_label TEXT,
+                    resource_filename TEXT,
+                    resource_filepath TEXT,
+                    allow_file_upload INTEGER DEFAULT 0,
+                    group_mode INTEGER DEFAULT 0,
+                    max_group_size INTEGER DEFAULT 1,
+                    FOREIGN KEY(assignment_id) REFERENCES classroom_assignments(id) ON DELETE CASCADE
                 )""",
             ]
         for statement in statements:
