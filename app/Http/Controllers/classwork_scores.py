@@ -66,6 +66,49 @@ def _match_student(row, students):
     return None, None
 
 
+def _preview_rows(normalized, students, max_points):
+    preview = []
+    unmatched = 0
+    invalid_scores = 0
+    duplicate_count = 0
+    seen = set()
+
+    for row in normalized:
+        matched, matched_by = _match_student(row, students)
+        matched_id = _value(matched, "id", 0) if matched else None
+        score_ok = row.score is not None and 0 <= row.score <= max_points
+        duplicate = matched_id is not None and matched_id in seen
+
+        if matched_id is None:
+            unmatched += 1
+        elif duplicate:
+            duplicate_count += 1
+        else:
+            seen.add(matched_id)
+        if not score_ok:
+            invalid_scores += 1
+
+        preview.append({
+            "name": row.name or "",
+            "email": row.email or "",
+            "student_id": row.student_id or "",
+            "score": row.score,
+            "matched_student_id": matched_id,
+            "matched_name": _value(matched, "username", 1) if matched else None,
+            "matched_by": matched_by,
+            "score_ok": score_ok,
+            "duplicate": duplicate,
+        })
+
+    valid = bool(preview) and all(
+        item["matched_student_id"] is not None
+        and item["score_ok"]
+        and not item["duplicate"]
+        for item in preview
+    )
+    return preview, unmatched, invalid_scores, duplicate_count, valid
+
+
 @classwork_scores.route("/supervisor/classes/<int:class_id>/classwork/<int:assignment_id>/import", methods=["GET", "POST"])
 @role_required("supervisor")
 def import_scores(class_id, assignment_id):
@@ -95,47 +138,14 @@ def import_scores(class_id, assignment_id):
             return redirect(url_for("classwork_scores.import_scores", class_id=class_id, assignment_id=assignment_id))
 
         try:
-            data = upload.read()
-            headers, raw_rows = parse_file(upload.filename, data)
+            headers, raw_rows = parse_file(upload.filename, upload.read())
             columns, normalized = normalize_rows(headers, raw_rows)
         except ValueError as exc:
             flash(str(exc), "danger")
             return redirect(url_for("classwork_scores.import_scores", class_id=class_id, assignment_id=assignment_id))
 
-        preview = []
-        unmatched = 0
-        invalid_scores = 0
-        seen = set()
         max_points = float(_value(assignment, "points", 3, 0) or 0)
-
-        for row in normalized:
-            matched, matched_by = _match_student(row, students)
-            score_ok = row.score is not None and 0 <= row.score <= max_points
-            duplicate = False
-            matched_id = _value(matched, "id", 0) if matched else None
-            if matched_id is not None:
-                duplicate = matched_id in seen
-                seen.add(matched_id)
-            if not matched:
-                unmatched += 1
-            if not score_ok:
-                invalid_scores += 1
-            preview.append({
-                "name": row.name or "",
-                "email": row.email or "",
-                "student_id": row.student_id or "",
-                "score": row.score,
-                "matched_student_id": matched_id,
-                "matched_name": _value(matched, "username", 1) if matched else None,
-                "matched_by": matched_by,
-                "score_ok": score_ok,
-                "duplicate": duplicate,
-            })
-
-        valid = bool(preview) and all(
-            item["matched_student_id"] is not None and item["score_ok"] and not item["duplicate"]
-            for item in preview
-        )
+        preview, unmatched, invalid_scores, duplicate_count, valid = _preview_rows(normalized, students, max_points)
         return render_template(
             "classroom/supervisor_classwork_import.html",
             assignment=assignment,
@@ -144,6 +154,7 @@ def import_scores(class_id, assignment_id):
             total_rows=len(preview),
             unmatched=unmatched,
             invalid_scores=invalid_scores,
+            duplicate_count=duplicate_count,
             valid=valid,
             active_page="classes",
         )
@@ -160,33 +171,36 @@ def commit_import(class_id, assignment_id):
         assignment = _assignment(conn, class_id, assignment_id, supervisor_id)
         if not assignment:
             abort(404)
-        students = _students(conn, class_id)
         upload = request.files.get("score_file")
         if not upload or not upload.filename or not allowed_import(upload.filename):
             flash("Please select the CSV/XLSX file again to complete the import.", "danger")
             return redirect(url_for("classwork_scores.import_scores", class_id=class_id, assignment_id=assignment_id))
 
+        students = _students(conn, class_id)
         headers, raw_rows = parse_file(upload.filename, upload.read())
         _, normalized = normalize_rows(headers, raw_rows)
         max_points = float(_value(assignment, "points", 3, 0) or 0)
-        seen = set()
+
+        _, unmatched, invalid_scores, duplicate_count, valid = _preview_rows(normalized, students, max_points)
+        if not valid:
+            flash(
+                f"Import failed validation: {unmatched} unmatched, {duplicate_count} duplicate, {invalid_scores} invalid score rows. No scores were saved.",
+                "danger",
+            )
+            return redirect(url_for("classwork_scores.import_scores", class_id=class_id, assignment_id=assignment_id))
+
         records = []
         for row in normalized:
             matched, _ = _match_student(row, students)
-            matched_id = _value(matched, "id", 0) if matched else None
-            if matched_id is None or row.score is None or row.score < 0 or row.score > max_points or matched_id in seen:
-                flash("Import failed validation. No scores were saved.", "danger")
-                return redirect(url_for("classwork_scores.import_scores", class_id=class_id, assignment_id=assignment_id))
-            seen.add(matched_id)
+            matched_id = _value(matched, "id", 0)
             records.append((int(matched_id), float(row.score)))
 
+        now = datetime.utcnow().isoformat(timespec="seconds")
         for student_id, score in records:
-            percentage = (score / max_points * 100) if max_points else 0
             existing = conn.execute(
                 "SELECT id FROM classroom_submissions WHERE assignment_id = ? AND student_id = ? ORDER BY id DESC LIMIT 1",
                 (assignment_id, student_id),
             ).fetchone()
-            now = datetime.utcnow().isoformat(timespec="seconds")
             if existing:
                 submission_id = _value(existing, "id", 0)
                 conn.execute(
@@ -200,6 +214,8 @@ def commit_import(class_id, assignment_id):
                        VALUES (?, ?, ?, 'graded', ?, ?)""",
                     (assignment_id, student_id, "Imported score", score, now),
                 )
+
+            percentage = (score / max_points * 100) if max_points else 0
             conn.execute(
                 """INSERT INTO classwork_scores
                    (assignment_id, student_id, score, max_score, percentage, grading_method)
@@ -212,21 +228,16 @@ def commit_import(class_id, assignment_id):
                        imported_at = CURRENT_TIMESTAMP""",
                 (assignment_id, student_id, score, max_points, percentage),
             )
+
         conn.commit()
         flash(f"Imported {len(records)} student scores successfully.", "success")
         return redirect(url_for("classwork_submissions.supervisor_submissions", class_id=class_id, assignment_id=assignment_id))
-    except ValueError as exc:
-        try:
-            conn.rollback()
-        except Exception:
-            pass
-        flash(str(exc), "danger")
+    except (ValueError, TypeError) as exc:
+        conn.rollback()
+        flash(f"Import failed: {exc}", "danger")
         return redirect(url_for("classwork_scores.import_scores", class_id=class_id, assignment_id=assignment_id))
     except Exception as exc:
-        try:
-            conn.rollback()
-        except Exception:
-            pass
+        conn.rollback()
         flash(f"Unable to import scores: {exc}", "danger")
         return redirect(url_for("classwork_scores.import_scores", class_id=class_id, assignment_id=assignment_id))
     finally:
