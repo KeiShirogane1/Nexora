@@ -11,7 +11,6 @@
     {% include 'components/supervisor_sidebar.html' %}
     <div class="page-content nexora-app-main">
         <div class="nexora-page">
-            <!-- Header -->
             <div class="card shadow-sm mb-4" style="overflow:hidden;">
                 <div style="height:120px; background: linear-gradient(135deg, #2563eb, #60a5fa);"></div>
                 <div class="card-body">
@@ -56,16 +55,13 @@
             {% endif %}
             {% endwith %}
 
-            <!-- Tabs -->
             <div class="profile-tabs mb-4">
                 <button class="profile-tab-button active" onclick="openClassTab('stream', this)">Stream</button>
                 <button class="profile-tab-button" onclick="openClassTab('classwork', this)">Classwork</button>
                 <button class="profile-tab-button" onclick="openClassTab('people', this)">People</button>
             </div>
 
-            <!-- Stream -->
             <div id="stream" class="profile-tab active">
-                <!-- Composer -->
                 <div class="card shadow-sm mb-4">
                     <div class="card-body">
                         <h5>Announcement</h5>
@@ -96,12 +92,17 @@
                 </div>
             </div>
 
-            <!-- Classwork -->
             <div id="classwork" class="profile-tab">
                 <div class="card shadow-sm mb-4">
-                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                        <h6 class="mb-0">Assignments</h6>
-                        <span class="badge bg-primary">{{ classroom.student_count }} students</span>
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center gap-3">
+                        <div>
+                            <h6 class="mb-1">Classwork</h6>
+                            <div class="small text-muted">Assignments, quizzes, Google activities, files, and projects.</div>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-primary">{{ assignments|length }} activities</span>
+                            <a href="{{ url_for('classwork.manage_classwork', class_id=classroom.id) }}" class="btn btn-primary btn-sm">+ Create Classwork</a>
+                        </div>
                     </div>
                     <div class="card-body">
                         {% if assignments and assignments|length > 0 %}
@@ -117,25 +118,17 @@
                             </a>
                             {% endfor %}
                         {% else %}
-                            <p class="text-muted mb-0">No assignments yet.</p>
-                        {% endif %}
-                        <form method="POST" action="{{ url_for('classroom.create_assignment', class_id=classroom.id) }}" class="mt-4 border-top pt-3">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <h6>Create Assignment</h6>
-                            <input type="text" name="title" class="form-control mb-2" placeholder="Assignment title" required maxlength="200" {% if classroom.archived %}disabled{% endif %}>
-                            <textarea name="description" class="form-control mb-2" rows="2" placeholder="Description" maxlength="5000" {% if classroom.archived %}disabled{% endif %}></textarea>
-                            <div class="row g-2">
-                                <div class="col-md-6"><input type="datetime-local" name="due_at" class="form-control mb-2" {% if classroom.archived %}disabled{% endif %}></div>
-                                <div class="col-md-3"><input type="number" name="points" class="form-control mb-2" placeholder="Points" value="100" {% if classroom.archived %}disabled{% endif %}></div>
-                                <div class="col-md-3"><button type="submit" class="btn btn-primary btn-sm w-100" {% if classroom.archived %}disabled{% endif %}>Create</button></div>
+                            <div class="text-center py-5">
+                                <div style="font-size:2rem;">📝</div>
+                                <h6 class="mt-2">No classwork yet</h6>
+                                <p class="text-muted mb-3">Create your first student activity using the Classwork Studio.</p>
+                                <a href="{{ url_for('classwork.manage_classwork', class_id=classroom.id) }}" class="btn btn-primary">Create Classwork</a>
                             </div>
-                            {% if classroom.archived %}<small class="text-muted">Archived classes cannot receive new assignments.</small>{% endif %}
-                        </form>
+                        {% endif %}
                     </div>
                 </div>
             </div>
 
-            <!-- People -->
             <div id="people" class="profile-tab">
                 <div class="card shadow-sm mb-4">
                     <div class="card-header bg-white d-flex justify-content-between align-items-center">
@@ -171,7 +164,7 @@
             </div>
         </div>
     </div>
-    <!-- Class Info Modal (page-level overlay, outside sidebar shell) -->
+
     <div id="classInfoModal" class="nexora-modal-overlay" onclick="if(event.target===this) this.classList.remove('open')">
         <div class="nexora-modal" style="max-width:520px;">
             <div class="nexora-modal-header">
