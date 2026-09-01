@@ -34,3 +34,9 @@ def calculate_overall(scores):
         "graded_count": graded_count,
         "overall": calculate_grade(earned, possible),
     }
+
+
+# Backward-compatible alias used by export and existing gradebook callers.
+def calculate_overall_grade(scores):
+    """Return only the overall percentage for a collection of score records."""
+    return calculate_overall(scores)["overall"]
