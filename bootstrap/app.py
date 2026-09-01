@@ -18,6 +18,7 @@ from app.Http.Controllers.admin import admin
 from app.Http.Controllers.classroom import classroom
 from app.Http.Controllers.classwork import classwork
 from app.Http.Controllers.student_classwork import student_classwork
+from app.Http.Controllers.student_gradebook import student_gradebook
 from app.Http.Controllers.classwork_submissions import classwork_submissions
 from app.Http.Controllers.classwork_grading import classwork_grading
 from app.Http.Controllers.classwork_scores import classwork_scores
@@ -102,6 +103,7 @@ app.register_blueprint(auth)
 app.register_blueprint(password)
 app.register_blueprint(student)
 app.register_blueprint(student_classwork)
+app.register_blueprint(student_gradebook)
 app.register_blueprint(supervisor)
 app.register_blueprint(admin)
 app.register_blueprint(classroom)
