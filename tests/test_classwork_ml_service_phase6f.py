@@ -1,10 +1,22 @@
+import uuid
+
 from app.Services.classwork_ml_service import build_student_performance_features
 
 
 def test_ml_features_aggregate_normalized_scores(client, db):
-    supervisor = db.execute("INSERT INTO users (username,email,password,role) VALUES (?,?,?,?) RETURNING id", ("mlsup", "mlsup@example.com", "x", "supervisor")).fetchone()[0]
-    student = db.execute("INSERT INTO users (username,email,password,role) VALUES (?,?,?,?) RETURNING id", ("mlstu", "mlstu@example.com", "x", "student")).fetchone()[0]
-    classroom = db.execute("INSERT INTO classrooms (name,section,supervisor_id,code,archived) VALUES (?,?,?,?,?) RETURNING id", ("ML Class", "A", supervisor, "NXR-ML001", 0)).fetchone()[0]
+    uid = uuid.uuid4().hex[:8]
+    supervisor = db.execute(
+        "INSERT INTO users (username,email,password,role) VALUES (?,?,?,?) RETURNING id",
+        (f"mlsup_{uid}", f"mlsup_{uid}@example.com", "x", "supervisor"),
+    ).fetchone()[0]
+    student = db.execute(
+        "INSERT INTO users (username,email,password,role) VALUES (?,?,?,?) RETURNING id",
+        (f"mlstu_{uid}", f"mlstu_{uid}@example.com", "x", "student"),
+    ).fetchone()[0]
+    classroom = db.execute(
+        "INSERT INTO classrooms (name,section,supervisor_id,code,archived) VALUES (?,?,?,?,?) RETURNING id",
+        ("ML Class", "A", supervisor, f"NXR-ML{uid[:6].upper()}", 0),
+    ).fetchone()[0]
     db.execute("INSERT INTO classroom_students (classroom_id,student_id) VALUES (?,?)", (classroom, student))
     a1 = db.execute("INSERT INTO classroom_assignments (classroom_id,author_id,title,points) VALUES (?,?,?,?) RETURNING id", (classroom, supervisor, "Quiz", 10)).fetchone()[0]
     a2 = db.execute("INSERT INTO classroom_assignments (classroom_id,author_id,title,points) VALUES (?,?,?,?) RETURNING id", (classroom, supervisor, "Project", 20)).fetchone()[0]
@@ -24,9 +36,15 @@ def test_ml_features_aggregate_normalized_scores(client, db):
 
 
 def test_ml_features_are_empty_when_no_scores(client, db):
-    suffix = id(db)
-    supervisor = db.execute("INSERT INTO users (username,email,password,role) VALUES (?,?,?,?) RETURNING id", (f"mlsup2_{suffix}", f"mlsup2_{suffix}@example.com", "x", "supervisor")).fetchone()[0]
-    classroom = db.execute("INSERT INTO classrooms (name,section,supervisor_id,code,archived) VALUES (?,?,?,?,?) RETURNING id", (f"ML Empty {suffix}", "A", supervisor, f"NXR-ML002-{suffix}", 0)).fetchone()[0]
+    uid = uuid.uuid4().hex[:8]
+    supervisor = db.execute(
+        "INSERT INTO users (username,email,password,role) VALUES (?,?,?,?) RETURNING id",
+        (f"mlsup2_{uid}", f"mlsup2_{uid}@example.com", "x", "supervisor"),
+    ).fetchone()[0]
+    classroom = db.execute(
+        "INSERT INTO classrooms (name,section,supervisor_id,code,archived) VALUES (?,?,?,?,?) RETURNING id",
+        ("ML Empty", "A", supervisor, f"NXR-ME{uid[:6].upper()}", 0),
+    ).fetchone()[0]
     db.commit()
 
     features = build_student_performance_features(999999, classroom)

@@ -21,5 +21,14 @@ def db():
     conn = get_db_connection()
     try:
         yield conn
+        # Ensure any uncommitted transaction is rolled back for isolation.
+        # Committed test data persists, so tests must use unique data (uuid).
+        try:
+            conn.rollback()
+        except Exception:
+            pass
     finally:
-        conn.close()
+        try:
+            conn.close()
+        except Exception:
+            pass
