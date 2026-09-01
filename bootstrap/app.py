@@ -16,6 +16,7 @@ from app.Http.Controllers.student import student
 from app.Http.Controllers.supervisor import supervisor
 from app.Http.Controllers.admin import admin
 from app.Http.Controllers.classroom import classroom
+from app.Http.Controllers.classwork import classwork
 from app.Http.Controllers.notifications import notifications_bp
 
 from scripts.init_db import initialize_database
@@ -117,6 +118,7 @@ app.register_blueprint(student)
 app.register_blueprint(supervisor)
 app.register_blueprint(admin)
 app.register_blueprint(classroom)
+app.register_blueprint(classwork)
 app.register_blueprint(notifications_bp)
 
 # ==========================
