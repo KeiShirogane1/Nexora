@@ -1,0 +1,350 @@
+/* =========================================================
+   Nexora Supervisor — My Classes
+   Page-specific layout. This page is intentionally viewport-locked:
+   no document scroll, with Create Class permanently at the bottom.
+   ========================================================= */
+
+html:has(body.supervisor-classes-page),
+body.supervisor-classes-page {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden !important;
+}
+
+body.supervisor-classes-page {
+    min-height: 100vh;
+}
+
+body.supervisor-classes-page .supervisor-classes-main {
+    position: relative;
+    height: 100vh;
+    min-height: 0;
+    padding: 32px 32px 118px !important;
+    overflow: hidden !important;
+    box-sizing: border-box;
+}
+
+body.supervisor-classes-page .supervisor-classes-page-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    margin: 0;
+    overflow: hidden;
+}
+
+.supervisor-classes-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    margin: 0 0 28px;
+}
+
+.supervisor-classes-header h1 {
+    margin: 0 0 7px;
+    color: #0f172a;
+    font-size: 2rem;
+    line-height: 1.15;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+}
+
+.supervisor-classes-header p {
+    margin: 0;
+    color: #64748b;
+    font-size: 0.95rem;
+}
+
+.supervisor-notification-btn {
+    flex: 0 0 46px;
+    width: 46px;
+    height: 46px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 5px 18px rgba(15, 23, 42, 0.08);
+    cursor: pointer;
+    font-size: 1.15rem;
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+
+.supervisor-notification-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.11);
+}
+
+.supervisor-classes-list {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: start;
+    gap: 20px;
+    min-width: 0;
+    max-height: calc(100vh - 225px);
+    overflow: hidden;
+}
+
+.supervisor-class-card,
+.supervisor-empty-card {
+    min-width: 0;
+    box-sizing: border-box;
+    border: 1px solid #e8eef7;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 8px 28px rgba(15, 23, 42, 0.07);
+}
+
+.supervisor-class-card {
+    min-height: 270px;
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+}
+
+.supervisor-class-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.supervisor-class-card h2,
+.supervisor-empty-card h2 {
+    margin: 0;
+    color: #0f172a;
+    font-size: 1.15rem;
+    font-weight: 800;
+    line-height: 1.3;
+}
+
+.supervisor-class-section {
+    margin: 8px 0 3px;
+    color: #475569;
+    font-size: .9rem;
+    font-weight: 600;
+}
+
+.supervisor-class-supervisor {
+    margin: 0;
+    color: #94a3b8;
+    font-size: .82rem;
+}
+
+.supervisor-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex: 0 0 auto;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: #f1f5f9;
+    color: #64748b;
+    font-size: .75rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.supervisor-status.is-active {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.supervisor-status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.supervisor-class-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 26px;
+    padding-top: 17px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.supervisor-meta-item,
+.supervisor-code-row {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    gap: 8px;
+    color: #475569;
+    font-size: .84rem;
+}
+
+.supervisor-meta-icon {
+    width: 22px;
+    flex: 0 0 22px;
+    text-align: center;
+}
+
+.supervisor-key-icon {
+    font-size: .9rem;
+}
+
+.supervisor-code-row strong {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #334155;
+    font-size: .85rem;
+    letter-spacing: .02em;
+}
+
+.supervisor-copy-btn {
+    margin-left: auto;
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 34px;
+    padding: 6px 11px;
+    border: 1px solid #2563eb;
+    border-radius: 9px;
+    background: #fff;
+    color: #2563eb;
+    font-size: .8rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .15s ease, color .15s ease;
+}
+
+.supervisor-copy-btn:hover,
+.supervisor-copy-btn.is-copied {
+    background: #eff6ff;
+}
+
+.supervisor-open-class-btn,
+.supervisor-create-class-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    border-radius: 11px;
+    background: #2563eb;
+    color: #fff !important;
+    text-decoration: none !important;
+    font-weight: 700;
+    transition: background .15s ease, transform .15s ease, box-shadow .15s ease;
+}
+
+.supervisor-open-class-btn {
+    width: 100%;
+    min-height: 46px;
+    margin-top: auto;
+    padding: 10px 16px;
+}
+
+.supervisor-open-class-btn:hover,
+.supervisor-create-class-btn:hover {
+    background: #1d4ed8;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgba(37, 99, 235, .22);
+}
+
+.supervisor-empty-card {
+    grid-column: 1 / -1;
+    padding: 48px 24px;
+    text-align: center;
+}
+
+.supervisor-empty-icon {
+    margin-bottom: 10px;
+    font-size: 2rem;
+}
+
+.supervisor-empty-card p {
+    margin: 7px 0 0;
+    color: #64748b;
+}
+
+/* Bottom CTA: fixed to the visible app area, never pushed below the fold. */
+.supervisor-create-bar {
+    position: fixed;
+    z-index: 2000;
+    left: calc(var(--nexora-sidebar-width, 235px) + 32px);
+    right: 32px;
+    bottom: 28px;
+    display: flex;
+    justify-content: center;
+    box-sizing: border-box;
+    padding: 0;
+    pointer-events: none;
+}
+
+.supervisor-create-class-btn {
+    width: min(320px, 100%);
+    min-height: 56px;
+    padding: 12px 24px;
+    box-shadow: 0 8px 22px rgba(37, 99, 235, .20);
+    pointer-events: auto;
+}
+
+@media (max-width: 1200px) {
+    .supervisor-classes-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 1024px) {
+    body.supervisor-classes-page .supervisor-classes-main {
+        padding: 28px 24px 118px !important;
+    }
+
+    .supervisor-create-bar {
+        left: calc(var(--nexora-sidebar-width, 220px) + 24px);
+        right: 24px;
+    }
+}
+
+@media (max-width: 768px) {
+    body.supervisor-classes-page .supervisor-classes-main {
+        padding: 22px 16px 104px !important;
+    }
+
+    .supervisor-classes-header {
+        margin-bottom: 20px;
+    }
+
+    .supervisor-classes-header h1 {
+        font-size: 1.65rem;
+    }
+
+    .supervisor-classes-list {
+        grid-template-columns: 1fr;
+        max-height: calc(100vh - 190px);
+    }
+
+    .supervisor-create-bar {
+        left: 16px;
+        right: 16px;
+        bottom: 16px;
+    }
+
+    .supervisor-create-class-btn {
+        width: min(360px, 100%);
+    }
+}
+
+@media (max-width: 480px) {
+    .supervisor-class-card {
+        padding: 18px;
+        min-height: 250px;
+    }
+
+    .supervisor-class-card-top {
+        gap: 10px;
+    }
+
+    .supervisor-status {
+        padding: 5px 8px;
+    }
+}
