@@ -1,42 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Gradebook - {{ classroom.name }} - Nexora</title>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
-    </head>
-    <body class="student-page student-classwork-page">
-        {% include 'components/student_sidebar.html' %}
-        <main class="student-main-content nexora-app-main">
-            <div class="nexora-page student-gradebook-shell">
-                <a href="{{ url_for('classroom.student_class', class_id=classroom.id) }}" class="student-classwork-back">← Back to {{ classroom.name }}</a>
-                <header class="student-classwork-header">
-                    <div><span class="student-classwork-eyebrow">{{ classroom.section }}</span><h1>Gradebook</h1><p>Your current scores for activities in this class.</p></div>
-                    <div class="d-flex align-items-center gap-2">
-                        <a href="{{ url_for('classwork_ml_insights.student_insights', class_id=classroom.id) }}" class="btn btn-outline-primary btn-sm">Performance Insights</a>
-                        <a href="{{ url_for('classwork_ml_insights.student_insights', class_id=classroom.id) }}" class="btn btn-primary btn-sm">ML Insights</a>
-                        <a href="{{ url_for('performance_reports.student_reports', class_id=classroom.id) }}" class="btn btn-outline-primary btn-sm">Report</a>
-                        <div class="student-gradebook-summary"><strong>{{ overall_display }}</strong><span>current grade</span></div>
-                    </div>
-                </header>
-                <section class="student-gradebook-stats" aria-label="Grade summary">
-                    <div><strong>{{ graded_count }}</strong><span>graded</span></div>
-                    <div><strong>{{ total_count }}</strong><span>activities</span></div>
-                    <div><strong>{{ earned|round(1) }}</strong><span>points earned</span></div>
-                    <div><strong>{{ possible|round(1) }}</strong><span>graded points possible</span></div>
-                </section>
-                {% if activities %}
-                    <section class="student-gradebook-table-wrap">
-                        <div class="student-gradebook-note">Only graded activities are included in the current grade. Ungraded activities are not counted as zero.</div>
-                        <div class="table-responsive"><table class="student-gradebook-table"><thead><tr><th>Activity</th><th>Type</th><th>Due</th><th>Score</th><th>Percentage</th><th>Method</th></tr></thead><tbody>
-                            {% for item in activities %}<tr><td><strong>{{ item.title }}</strong></td><td>{{ item.activity_label }}</td><td>{{ item.due_at or 'No due date' }}</td><td class="gradebook-score {% if not item.graded %}is-missing{% endif %}">{{ item.score_display }}</td><td class="gradebook-percentage {% if not item.graded %}is-missing{% endif %}">{{ item.percentage_display }}</td><td>{% if item.grading_method %}<span class="gradebook-method">{{ item.grading_method|capitalize }}</span>{% else %}<span class="text-muted">Not graded</span>{% endif %}</td></tr>{% endfor %}
-                        </tbody></table></div>
-                    </section>
-                {% else %}<section class="student-classwork-empty"><div class="student-classwork-empty-icon" aria-hidden="true">📊</div><h2>No activities yet</h2><p>Your supervisor has not added any classwork for this class.</p></section>{% endif %}
-            </div>
-        </main>
-    </body>
-</html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Gradebook - {{ classroom.name }} - Nexora</title><link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}"><link rel="stylesheet" href="{{ url_for('static', filename='css/nexora-ui.css') }}"></head>
+<body class="student-page student-classwork-page">
+{% include 'components/student_sidebar.html' %}
+<main class="student-main-content nexora-app-main"><div class="nexora-page student-gradebook-modern">
+<a href="{{ url_for('classroom.student_class', class_id=classroom.id) }}" class="student-classwork-back">← Back to {{ classroom.name }}</a>
+<header class="gradebook-hero"><div><span class="ui-eyebrow">{{ classroom.section }} · {{ classroom.supervisor }}</span><h1>Gradebook</h1><p>Track every graded activity and your current performance.</p></div><div class="gradebook-current"><strong>{{ overall_display }}</strong><span>Current grade</span></div></header>
+<div class="gradebook-actions"><a href="{{ url_for('classwork_ml_insights.student_insights', class_id=classroom.id) }}" class="ui-secondary-btn">📈 Performance Insights</a><a href="{{ url_for('classwork_ml_insights.student_insights', class_id=classroom.id) }}" class="ui-primary-btn">✦ ML Insights</a><a href="{{ url_for('performance_reports.student_reports', class_id=classroom.id) }}" class="ui-secondary-btn">📄 Report</a></div>
+<section class="gradebook-stats"><div><span>Graded</span><strong>{{ graded_count }}</strong><small>of {{ total_count }} activities</small></div><div><span>Points earned</span><strong>{{ earned|round(1) }}</strong><small>graded work</small></div><div><span>Points possible</span><strong>{{ possible|round(1) }}</strong><small>graded work</small></div><div><span>Completion</span><strong>{% if total_count %}{{ ((graded_count / total_count) * 100)|round(0)|int }}%{% else %}0%{% endif %}</strong><small>graded activities</small></div></section>
+<section class="gradebook-card"><div class="gradebook-card-header"><div><h2>Activity Scores</h2><p>Ungraded activities are shown as pending and are not counted as zero.</p></div></div>{% if activities %}<div class="table-responsive"><table class="gradebook-table"><thead><tr><th>Activity</th><th>Type</th><th>Due</th><th>Score</th><th>Percentage</th><th>Status</th></tr></thead><tbody>{% for item in activities %}<tr><td><strong>{{ item.title }}</strong></td><td>{{ item.activity_label }}</td><td>{{ item.due_at or 'No due date' }}</td><td><strong class="{{ 'score-good' if item.graded else 'score-missing' }}">{{ item.score_display }}</strong></td><td><strong class="{{ 'score-good' if item.graded else 'score-missing' }}">{{ item.percentage_display }}</strong></td><td>{% if item.graded %}<span class="grade-status done">{{ item.grading_method|capitalize }}</span>{% elif item.submission_status %}<span class="grade-status">{{ item.submission_status|replace('_',' ')|title }}</span>{% else %}<span class="grade-status">Not graded</span>{% endif %}</td></tr>{% endfor %}</tbody></table></div>{% else %}<div class="student-classwork-empty"><div class="student-classwork-empty-icon">📊</div><h2>No activities yet</h2><p>Your supervisor has not added classwork for this class.</p></div>{% endif %}</section>
+</div></main></body></html>

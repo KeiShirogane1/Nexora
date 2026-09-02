@@ -1,8 +1,15 @@
-from flask import Blueprint, session, jsonify, request
+from flask import Blueprint, session, jsonify, request, render_template
 from app.Http.Middleware.security import login_required
-from app.Services.notification_service import mark_notification_read, mark_all_read
+from app.Services.notification_service import get_user_notifications, mark_notification_read, mark_all_read
 
 notifications_bp = Blueprint("notifications", __name__)
+
+
+@notifications_bp.route("/notifications")
+@login_required
+def notification_list():
+    notifications = get_user_notifications(session.get("user_id"), limit=100)
+    return render_template("notifications/index.html", notifications=notifications, active_page="notifications")
 
 
 @notifications_bp.route("/notification/read/<int:notification_id>", methods=["POST"])

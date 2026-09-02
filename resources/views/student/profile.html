@@ -1,680 +1,92 @@
 <!DOCTYPE html>
-<html>
-
-    <head>
-        <meta charset="UTF-8">
-
-        <title>
-            My Profile - Nexora
-        </title>
-
-        <link rel="stylesheet"
-              href="{{ url_for('static', filename='css/style.css') }}">
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
-
-        <link rel="stylesheet"
-              href="{{ url_for('static', filename='css/modals.css') }}">
-
-        <link
-            rel="stylesheet"
-            href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
-
-    </head>
-
-
-    <body>
-
-
-        {% include 'components/student_sidebar.html' %}
-
-
-
-        <div class="student-main-content nexora-app-main">
-            <div class="nexora-page">
-
-
-                <div class="profile-page-container">
-
-
-
-                    <h1>My Profile</h1>
-
-
-<!-- FLASH POPUP -->
-
-                    <div class="flash-container">
-
-                        {% with messages = get_flashed_messages(with_categories=true) %}
-
-                            {% for category, message in messages %}
-
-                                <div class="flash-popup {{ category }}">
-
-                                    <span>
-                                        {{ message }}
-                                    </span>
-
-
-                                    <button onclick="this.parentElement.remove()">
-                                        ×
-                                    </button>
-
-                                </div>
-
-                            {% endfor %}
-
-                        {% endwith %}
-
-                    </div>
-
-
-<!-- =========================
-     PROFILE HEADER
-========================= -->
-
-                    <div class="profile-header-card">
-
-
-                        <div class="profile-cover"></div>
-
-
-
-                        <div class="profile-info">
-
-
-                            <label for="profileUpload">
-
-                                {% if profile[5] %}
-
-                                    <img
-                                        src="/uploads/profile_pictures/{{ profile[5] }}"
-                                        class="student-profile-pic clickable-profile">
-
-                                {% else %}
-
-                                    <div class="profile-placeholder clickable-profile">
-                                        ?
-                                    </div>
-
-                                {% endif %}
-
-                            </label>
-
-
-                            <input
-                                type="file"
-                                id="profileUpload"
-                                accept="image/*"
-                                class="profile-upload-input">
-
-
-
-
-                            <h2>
-                                {{ profile[0] }}
-                                {{ profile[1] }}
-                                {{ profile[2] }}
-                            </h2>
-
-
-
-
-                            <p class="student-role">
-                                Student
-                            </p>
-
-
-
-
-                            <div class="student-basic-info">
-
-
-                                <div>
-                                    🎓 {{ profile[9] }}
-                                </div>
-
-
-                                <div>
-                                    🆔 {{ profile[4] }}
-                                </div>
-
-
-                                <div>
-                                    📚 {{ profile[8] }}
-                                </div>
-
-
-                                <div>
-                                    ✉ {{ profile[13] if profile|length > 13 else "Student Email" }}
-                                </div>
-
-
-                            </div>
-
-
-
-
-                            <div class="profile-status-badge">
-
-                                Profile {{ profile_percentage|default(0) }}% Complete
-
-                            </div>
-
-
-
-                            <div class="profile-buttons">
-
-                                <a href="{{ url_for('student.edit_profile') }}"
-                                   class="edit-profile-btn">
-
-                                    ✏ Edit Profile
-
-                                </a>
-
-
-                                <a href="{{ url_for('password.change_password') }}"
-                                   class="change-password-btn">
-
-                                    🔑 Change Password
-
-                                </a>
-
-                            </div>
-
-
-
-                        </div>
-
-
-                    </div>
-
-
-
-
-
-
-
-<!-- =========================
-     PROFILE COMPLETION
-========================= -->
-
-
-                    <div class="profile-section">
-
-
-                        <h2>
-                            Profile Completion
-                        </h2>
-
-
-
-                        <div
-                            class="progress-bar"
-                            style="--progress-width: {{ profile_percentage }}%;">
-                        </div>
-
-
-
-
-                        {% if profile_percentage == 100 %}
-
-                            <p class="profile-complete-message">
-                                🎉 Your profile is complete! All information has been updated successfully.
-                            </p>
-
-                        {% else %}
-
-                            <p>
-                                Your profile is {{ profile_percentage }}% complete
-                            </p>
-
-                        {% endif %}
-
-
-
-
-                        <div class="profile-checklist">
-
-
-                            <div class="check-item completed">
-                                ✓ Personal Information
-                            </div>
-
-
-                            <div class="check-item completed">
-                                ✓ Student Information
-                            </div>
-
-
-                            <div class="check-item completed">
-                                ✓ Contact Information
-                            </div>
-
-
-
-                            {% if profile[5] %}
-
-                                <div class="check-item completed">
-                                    ✓ Profile Picture
-                                </div>
-
-                            {% else %}
-
-                                <div class="check-item incomplete">
-
-                                    <a href="/student/profile/edit">
-                                        ⚠ Upload Profile Picture
-                                    </a>
-
-                                </div>
-
-                            {% endif %}
-
-
-
-                            {% if profile[10] and profile[11] and profile[12] %}
-
-                                <div class="check-item completed">
-                                    ✓ Emergency Contact
-                                </div>
-
-                            {% else %}
-
-                                <div class="check-item incomplete">
-
-                                    <a href="/student/profile/edit">
-                                        ⚠ Add Emergency Contact
-                                    </a>
-
-                                </div>
-
-                            {% endif %}
-
-
-
-                        </div>
-
-
-                    </div>
-
-
-
-
-
-
-
-
-
-<!-- =========================
-     PERSONAL INFORMATION
-========================= -->
-
-
-                    <div class="profile-section">
-
-
-                        <h2>
-                            Personal Information
-                        </h2>
-
-
-
-                        <div class="info-row">
-
-                            <strong>First Name:</strong>
-
-                            <span>
-                                {{ profile[0] }}
-                            </span>
-
-                        </div>
-
-
-                        <div class="info-row">
-
-                            <strong>Middle Name:</strong>
-
-                            <span>
-                                {{ profile[1] }}
-                            </span>
-
-                        </div>
-
-
-                        <div class="info-row">
-
-                            <strong>Last Name:</strong>
-
-                            <span>
-                                {{ profile[2] }}
-                            </span>
-
-                        </div>
-
-
-                        <div class="info-row">
-
-                            <strong>Age:</strong>
-
-                            <span>
-                                {{ profile[3] }}
-                            </span>
-
-                        </div>
-
-
-                    </div>
-
-
-
-
-
-
-
-
-
-<!-- =========================
-     STUDENT INFORMATION
-========================= -->
-
-
-                    <div class="profile-section">
-
-
-                        <h2>
-                            Student Information
-                        </h2>
-
-
-
-
-                        <p>
-                            <strong>Student ID:</strong>
-                            {{ profile[4] }}
-                        </p>
-
-
-
-
-                        <p>
-                            <strong>Program:</strong>
-                            {{ profile[9] }}
-                        </p>
-
-
-
-
-                        <p>
-                            <strong>Department:</strong>
-                            Information Technology
-                        </p>
-
-
-
-
-                        <p>
-                            <strong>Year Level:</strong>
-                            {{ profile[8] }}
-                        </p>
-
-
-
-
-                        <p>
-                            <strong>School Email:</strong>
-
-                            {{ profile[13] if profile|length > 13 else "Not Provided" }}
-
-                        </p>
-
-
-
-
-                        <p>
-                            <strong>Academic Status:</strong>
-                            Regular Student
-                        </p>
-
-
-
-
-                        <p>
-                            <strong>Adviser:</strong>
-                            Not Assigned
-                        </p>
-
-
-
-                    </div>
-
-
-
-
-
-
-
-
-
-<!-- =========================
-     CONTACT INFORMATION
-========================= -->
-
-
-                    <div class="profile-section">
-
-
-                        <h2>
-                            Contact Information
-                        </h2>
-
-
-
-
-                        <div class="info-row">
-
-                            <strong>Phone:</strong>
-
-                            <span>
-                                {{ profile[6] }}
-                            </span>
-
-                        </div>
-
-
-
-                        <div class="info-row">
-
-                            <strong>Address:</strong>
-
-                            <span>
-                                {{ profile[7] }}
-                            </span>
-
-                        </div>
-
-
-
-                    </div>
-
-
-
-<!-- =========================
-     EMERGENCY CONTACT
-========================= -->
-
-
-                    <div class="profile-section">
-
-
-                        <h2>
-                            Emergency Contact
-                        </h2>
-
-
-                        <div class="info-row">
-
-                            <strong>Name:</strong>
-
-                            <span>
-                                {{ profile[10] if profile[10] else "Not Added" }}
-                            </span>
-
-                        </div>
-
-
-
-                        <div class="info-row">
-
-                            <strong>Relationship:</strong>
-
-                            <span>
-                                {{ profile[11] if profile[11] else "Not Added" }}
-                            </span>
-
-                        </div>
-
-
-
-                        <div class="info-row">
-
-                            <strong>Phone:</strong>
-
-                            <span>
-                                {{ profile[12] if profile[12] else "Not Added" }}
-                            </span>
-
-                        </div>
-
-
-                    </div>
-
-
-
-
-
-
-                </div> <!-- END profile-page-container -->
-
-
-            </div> <!-- END student-main-content -->
-
-
-            <div id="cropModal" class="crop-modal">
-
-
-                <div class="crop-box">
-
-
-                    <div class="crop-area">
-
-                        <img id="cropImage">
-
-                    </div>
-
-
-                    <button
-                        onclick="saveProfilePicture()"
-                        class="save-picture-btn">
-
-                        Save Picture
-
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - Nexora</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/nexora-ui.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
+</head>
+<body class="student-page">
+{% include 'components/student_sidebar.html' %}
+<main class="student-main-content nexora-app-main">
+    <div class="nexora-page profile-modern-shell">
+        <header class="profile-page-heading">
+            <div><span class="ui-eyebrow">Account</span><h1>My Profile</h1><p>Manage your personal, academic, and contact information.</p></div>
+            <span class="profile-completion-pill">{{ profile_percentage|default(0) }}% complete</span>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}<div class="ui-alert ui-alert-{{ category }}">{{ message }}</div>{% endfor %}
+        {% endwith %}
+
+        <section class="profile-hero-card">
+            <div class="profile-hero-cover"></div>
+            <div class="profile-hero-content">
+                <div class="profile-avatar-wrap">
+                    <button type="button" class="profile-avatar-button" onclick="document.getElementById('profileUpload').click()" title="Change profile picture">
+                        {% if profile[5] %}<img id="profileCurrentImage" src="{{ url_for('profile_picture', filename=profile[5]) }}" alt="Profile picture" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_profile.png') }}';">
+                        {% else %}<img id="profileCurrentImage" src="{{ url_for('static', filename='images/default_profile.png') }}" alt="Default profile picture">{% endif %}
+                        <span>📷</span>
                     </button>
-
-                    <button
-                        onclick="closeCropModal()"
-                        class="cancel-picture-btn">
-
-                        Cancel
-
-                    </button>
-
+                    <input id="profileUpload" type="file" accept="image/png,image/jpeg,image/jpg,image/gif" hidden>
                 </div>
-
-
+                <div class="profile-hero-details">
+                    <span class="profile-role-tag">Student</span>
+                    <h2>{{ profile[0] }}{% if profile[1] %} {{ profile[1] }}{% endif %} {{ profile[2] }}</h2>
+                    <div class="profile-meta-grid">
+                        <span>🎓 {{ profile[9] or 'Program not set' }}</span><span>🆔 {{ profile[4] or 'Student ID not set' }}</span><span>📚 {{ profile[8] or 'Year level not set' }}</span><span>✉ {{ profile[14] or 'Email not set' }}</span>
+                    </div>
+                    <div class="profile-actions"><a href="{{ url_for('student.edit_profile') }}" class="ui-primary-btn">✏ Edit Profile</a><a href="{{ url_for('password.change_password') }}" class="ui-secondary-btn">🔑 Change Password</a></div>
+                </div>
             </div>
+        </section>
+
+        <section class="profile-modern-card">
+            <div class="section-heading"><div><h2>Profile Completion</h2><p>Keep your information complete and up to date.</p></div><strong>{{ profile_percentage|default(0) }}%</strong></div>
+            <div class="ui-progress"><span style="width:{{ profile_percentage|default(0) }}%"></span></div>
+            <div class="profile-check-grid">
+                <div class="profile-check {{ 'done' if profile[0] and profile[2] else '' }}">✓ <span>Personal information</span></div>
+                <div class="profile-check {{ 'done' if profile[4] and profile[8] and profile[9] else '' }}">✓ <span>Student information</span></div>
+                <div class="profile-check {{ 'done' if profile[6] and profile[7] else '' }}">✓ <span>Contact information</span></div>
+                <div class="profile-check {{ 'done' if profile[5] else '' }}">✓ <span>Profile picture</span></div>
+                <div class="profile-check {{ 'done' if profile[10] and profile[11] and profile[12] else '' }}">✓ <span>Emergency contact</span></div>
+            </div>
+        </section>
+
+        <div class="profile-info-grid">
+            <section class="profile-modern-card"><h2>Personal Information</h2><div class="info-list"><div><b>First Name</b><span>{{ profile[0] or 'Not provided' }}</span></div><div><b>Middle Name</b><span>{{ profile[1] or 'Not provided' }}</span></div><div><b>Last Name</b><span>{{ profile[2] or 'Not provided' }}</span></div><div><b>Age</b><span>{{ profile[3] or 'Not provided' }}</span></div></div></section>
+            <section class="profile-modern-card"><h2>Student Information</h2><div class="info-list"><div><b>Student ID</b><span>{{ profile[4] or 'Not provided' }}</span></div><div><b>Program</b><span>{{ profile[9] or 'Not provided' }}</span></div><div><b>Department</b><span>Information Technology</span></div><div><b>Year Level</b><span>{{ profile[8] or 'Not provided' }}</span></div><div><b>School Email</b><span>{{ profile[14] or 'Not provided' }}</span></div></div></section>
+            <section class="profile-modern-card"><h2>Contact Information</h2><div class="info-list"><div><b>Phone</b><span>{{ profile[6] or 'Not provided' }}</span></div><div><b>Address</b><span>{{ profile[7] or 'Not provided' }}</span></div></div></section>
+            <section class="profile-modern-card"><h2>Emergency Contact</h2><div class="info-list"><div><b>Name</b><span>{{ profile[10] or 'Not added' }}</span></div><div><b>Relationship</b><span>{{ profile[11] or 'Not added' }}</span></div><div><b>Phone</b><span>{{ profile[12] or 'Not added' }}</span></div><div><b>Email</b><span>{{ profile[13] or 'Not added' }}</span></div></div></section>
         </div>
-        <script>
+    </div>
+</main>
 
-        </script>
-
-        <script>
-            let cropper;
-
-            document
-                .getElementById("profileUpload")
-                .addEventListener("change", function (event) {
-                    let file = event.target.files[0];
-
-                    if (!file) {
-                        return;
-                    }
-
-                    let image = document.getElementById("cropImage");
-
-                    image.src = URL.createObjectURL(file);
-
-                    document.getElementById("cropModal").style.display = "flex";
-
-                    if (cropper) {
-                        cropper.destroy();
-                    }
-
-                    image.onload = function () {
-                        cropper = new Cropper(image, {
-                            aspectRatio: 1,
-                            viewMode: 1,
-                            dragMode: "move",
-                            background: false,
-                        });
-                    };
-                });
-
-            function saveProfilePicture() {
-                cropper
-                    .getCroppedCanvas({
-                        width: 500,
-                        height: 500,
-                    })
-                    .toBlob(function (blob) {
-                        let formData = new FormData();
-
-                        formData.append("profile_picture", blob, "profile.jpg");
-
-                        fetch("/student/profile/photo", {
-                            method: "POST",
-                            headers: {
-                                "X-CSRFToken": "{{ csrf_token() }}",
-                            },
-                            body: formData,
-                        }).then(() => {
-                            location.reload();
-                        });
-                    });
-            }
-
-            function closeCropModal() {
-                document.getElementById("cropModal").style.display = "none";
-
-                if (cropper) {
-                    cropper.destroy();
-
-                    cropper = null;
-                }
-            }
-
-            document.querySelectorAll(".flash-popup").forEach(function (message) {
-                setTimeout(function () {
-                    message.style.transition = "all 0.4s ease";
-
-                    message.style.opacity = "0";
-
-                    message.style.transform = "translateX(40px)";
-
-                    setTimeout(function () {
-                        message.remove();
-                    }, 400);
-                }, 5000);
-            });
-        </script>
-    </body>
+<div id="cropModal" class="crop-editor-overlay" aria-hidden="true">
+    <div class="crop-editor" role="dialog" aria-modal="true" aria-labelledby="cropTitle">
+        <div class="crop-editor-header"><div><span class="ui-eyebrow">Profile picture</span><h2 id="cropTitle">Adjust your photo</h2><p>Drag to position, scroll to zoom, or use the controls below.</p></div><button type="button" onclick="closeCropModal()" class="crop-close">×</button></div>
+        <div class="crop-editor-stage"><img id="cropImage" alt="Crop preview"></div>
+        <div class="crop-controls"><button type="button" onclick="cropper && cropper.zoom(-0.1)">−</button><input id="cropZoom" type="range" min="0.1" max="3" step="0.05" value="1" oninput="setCropZoom(this.value)"><button type="button" onclick="cropper && cropper.zoom(0.1)">+</button><button type="button" onclick="cropper && cropper.rotate(-90)">↶ Rotate</button><button type="button" onclick="cropper && cropper.rotate(90)">↷ Rotate</button><button type="button" onclick="resetCrop()">Reset</button></div>
+        <div class="crop-editor-footer"><button type="button" class="ui-secondary-btn" onclick="closeCropModal()">Cancel</button><button type="button" id="savePictureButton" class="ui-primary-btn" onclick="saveProfilePicture()">Save Picture</button></div>
+        <div id="cropError" class="crop-error" hidden></div>
+    </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
+<script>
+let cropper=null, selectedObjectUrl=null, cropReady=false;
+const upload=document.getElementById('profileUpload'), modal=document.getElementById('cropModal'), image=document.getElementById('cropImage'), errorBox=document.getElementById('cropError');
+function showCropError(message){ errorBox.textContent=message; errorBox.hidden=false; }
+function clearCropError(){ errorBox.hidden=true; errorBox.textContent=''; }
+function openCropModal(){ modal.style.display='flex'; modal.setAttribute('aria-hidden','false'); }
+function closeCropModal(){ if(cropper){cropper.destroy();cropper=null;} cropReady=false; if(selectedObjectUrl){URL.revokeObjectURL(selectedObjectUrl);selectedObjectUrl=null;} image.removeAttribute('src'); upload.value=''; modal.style.display='none'; modal.setAttribute('aria-hidden','true'); clearCropError(); }
+function resetCrop(){ if(cropper){cropper.reset(); document.getElementById('cropZoom').value=1;} }
+function setCropZoom(value){ if(cropper) cropper.zoomTo(parseFloat(value)); }
+upload.addEventListener('change',function(e){ const file=e.target.files && e.target.files[0]; if(!file)return; clearCropError(); if(!file.type.startsWith('image/')){showCropError('Please select a valid image.');return;} if(file.size>2*1024*1024){showCropError('Profile pictures must be 2MB or smaller.');return;} if(selectedObjectUrl)URL.revokeObjectURL(selectedObjectUrl); selectedObjectUrl=URL.createObjectURL(file); cropReady=false; openCropModal(); image.onload=function(){ if(cropper)cropper.destroy(); cropper=new Cropper(image,{aspectRatio:1,viewMode:1,dragMode:'move',autoCropArea:.9,background:false,responsive:true,zoomOnWheel:true,zoomOnTouch:true}); cropReady=true; document.getElementById('cropZoom').value=1; }; image.onerror=function(){cropReady=false;showCropError('This image could not be loaded. Please choose another photo.');}; image.src=selectedObjectUrl; });
+async function saveProfilePicture(){ clearCropError(); const button=document.getElementById('savePictureButton'); if(!cropper||!cropReady){showCropError('Please wait for the photo editor to finish loading.');return;} button.disabled=true; button.textContent='Saving…'; try{ const blob=await new Promise((resolve,reject)=>cropper.getCroppedCanvas({width:500,height:500,imageSmoothingEnabled:true,imageSmoothingQuality:'high'}).toBlob(b=>b?resolve(b):reject(new Error('Could not prepare image.')),'image/jpeg',.92)); const fd=new FormData(); fd.append('profile_picture',blob,'profile.jpg'); const response=await fetch('/student/profile/photo',{method:'POST',headers:{'X-CSRFToken':'{{ csrf_token() }}'},body:fd}); if(!response.ok)throw new Error(await response.text()||'The server rejected the image.'); closeCropModal(); location.reload(); }catch(err){showCropError(err.message||'Unable to save the picture.');button.disabled=false;button.textContent='Save Picture';} }
+modal.addEventListener('click',e=>{if(e.target===modal)closeCropModal();}); document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.style.display==='flex')closeCropModal();});
+</script>
+</body>
 </html>

@@ -1,6 +1,8 @@
+from datetime import datetime, timedelta
+
 from app.Models.db import get_db_connection
 
-ALLOWED_TYPES = {"info", "success", "warning", "error", "task", "feedback", "system"}
+ALLOWED_TYPES = {"info", "success", "warning", "error", "task", "feedback", "system", "classroom"}
 
 MAX_TITLE_LEN = 255
 MAX_MESSAGE_LEN = 2000
@@ -15,13 +17,7 @@ def _sanitize_type(notification_type):
     return t if t in ALLOWED_TYPES else "info"
 
 
-def create_notification(
-    user_id,
-    title,
-    message,
-    notification_type="info",
-    link_url=None,
-):
+def create_notification(user_id, title, message, notification_type="info", link_url=None):
     if not user_id:
         raise ValueError("user_id is required")
     if not title or not str(title).strip():
@@ -38,11 +34,9 @@ def create_notification(
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
-        # verify user exists to avoid orphan FK (sqlite FK may be off, so check manually)
         cursor.execute("SELECT id FROM users WHERE id = ?", (user_id,))
         if not cursor.fetchone():
             raise ValueError(f"user_id {user_id} does not exist")
-
         cursor.execute(
             """
             INSERT INTO notifications
@@ -52,11 +46,9 @@ def create_notification(
             (user_id, title, message, notification_type, link_url),
         )
         conn.commit()
-        # postgres HybridRow etc: lastrowid available via cursor
         try:
             return cursor.lastrowid
         except Exception:
-            # fallback for psycopg2 returning id via RETURNING would need separate path; keep None
             return None
     except Exception:
         try:
@@ -105,13 +97,47 @@ def get_user_notifications(user_id, limit=DEFAULT_LIMIT, offset=0, unread_only=F
                 SELECT id, title, message, notification_type, is_read, link_url, created_at
                 FROM notifications
                 WHERE user_id = ?
-                ORDER BY is_read ASC, created_at DESC
+                ORDER BY created_at DESC
                 LIMIT ? OFFSET ?
                 """,
                 (user_id, limit, offset),
             )
-        rows = cursor.fetchall()
-        return rows
+        return cursor.fetchall()
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
+
+
+def get_recent_notifications(user_id, days=7, limit=10):
+    """Return newest notifications from the requested recent-day window."""
+    if not user_id:
+        return []
+    try:
+        days = max(1, int(days))
+    except Exception:
+        days = 7
+    try:
+        limit = max(1, min(int(limit), MAX_LIMIT))
+    except Exception:
+        limit = 10
+
+    since = datetime.now() - timedelta(days=days)
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            SELECT id, title, message, notification_type, is_read, link_url, created_at
+            FROM notifications
+            WHERE user_id = ? AND created_at >= ?
+            ORDER BY created_at DESC
+            LIMIT ?
+            """,
+            (user_id, since, limit),
+        )
+        return cursor.fetchall()
     finally:
         try:
             conn.close()
@@ -126,20 +152,13 @@ def get_unread_count(user_id):
     try:
         cursor = conn.cursor()
         cursor.execute(
-            """
-            SELECT COUNT(*)
-            FROM notifications
-            WHERE user_id = ? AND is_read = 0
-            """,
+            "SELECT COUNT(*) FROM notifications WHERE user_id = ? AND is_read = 0",
             (user_id,),
         )
         row = cursor.fetchone()
         return int(row[0]) if row else 0
     finally:
-        try:
-            conn.close()
-        except Exception:
-            pass
+        conn.close()
 
 
 def mark_notification_read(notification_id, user_id=None):
@@ -149,40 +168,19 @@ def mark_notification_read(notification_id, user_id=None):
     try:
         cursor = conn.cursor()
         if user_id is not None:
-            cursor.execute(
-                """
-                UPDATE notifications
-                SET is_read = 1
-                WHERE id = ? AND user_id = ?
-                """,
-                (notification_id, user_id),
-            )
+            cursor.execute("UPDATE notifications SET is_read = 1 WHERE id = ? AND user_id = ?", (notification_id, user_id))
         else:
-            cursor.execute(
-                """
-                UPDATE notifications
-                SET is_read = 1
-                WHERE id = ?
-                """,
-                (notification_id,),
-            )
+            cursor.execute("UPDATE notifications SET is_read = 1 WHERE id = ?", (notification_id,))
         conn.commit()
-        # rowcount available on both sqlite3 and PostgresCursor wrapper
         try:
             return cursor.rowcount > 0
         except Exception:
             return True
     except Exception:
-        try:
-            conn.rollback()
-        except Exception:
-            pass
+        conn.rollback()
         raise
     finally:
-        try:
-            conn.close()
-        except Exception:
-            pass
+        conn.close()
 
 
 def mark_all_read(user_id):
@@ -191,30 +189,17 @@ def mark_all_read(user_id):
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
-        cursor.execute(
-            """
-            UPDATE notifications
-            SET is_read = 1
-            WHERE user_id = ? AND is_read = 0
-            """,
-            (user_id,),
-        )
+        cursor.execute("UPDATE notifications SET is_read = 1 WHERE user_id = ? AND is_read = 0", (user_id,))
         conn.commit()
         try:
             return cursor.rowcount
         except Exception:
             return 0
     except Exception:
-        try:
-            conn.rollback()
-        except Exception:
-            pass
+        conn.rollback()
         raise
     finally:
-        try:
-            conn.close()
-        except Exception:
-            pass
+        conn.close()
 
 
 def delete_notification(notification_id, user_id=None):
@@ -224,21 +209,13 @@ def delete_notification(notification_id, user_id=None):
     try:
         cursor = conn.cursor()
         if user_id is not None:
-            cursor.execute(
-                "DELETE FROM notifications WHERE id = ? AND user_id = ?",
-                (notification_id, user_id),
-            )
+            cursor.execute("DELETE FROM notifications WHERE id = ? AND user_id = ?", (notification_id, user_id))
         else:
-            cursor.execute(
-                "DELETE FROM notifications WHERE id = ?", (notification_id,)
-            )
+            cursor.execute("DELETE FROM notifications WHERE id = ?", (notification_id,))
         conn.commit()
         try:
             return cursor.rowcount > 0
         except Exception:
             return True
     finally:
-        try:
-            conn.close()
-        except Exception:
-            pass
+        conn.close()

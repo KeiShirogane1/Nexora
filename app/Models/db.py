@@ -8,7 +8,6 @@ try:
 except ImportError:
     psycopg2 = None
 
-
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 SQLITE_PATH = BASE_DIR / "nexora.db"
 
@@ -58,17 +57,11 @@ class PostgresCursor:
         return re.sub(r"\?", "%s", sql)
 
     def execute(self, sql, params=None):
-        self._cursor.execute(
-            self._convert_placeholders(sql),
-            params or ()
-        )
+        self._cursor.execute(self._convert_placeholders(sql), params or ())
         return self
 
     def executemany(self, sql, seq_of_params):
-        self._cursor.executemany(
-            self._convert_placeholders(sql),
-            seq_of_params
-        )
+        self._cursor.executemany(self._convert_placeholders(sql), seq_of_params)
         return self
 
     def fetchone(self):
@@ -123,23 +116,18 @@ class PostgresConnection:
 
 
 def get_db_connection():
-    """
-    Return PostgreSQL on Render when DATABASE_URL exists.
-    Otherwise use the local SQLite database nexora.db.
-    """
+    """Return PostgreSQL on Render when DATABASE_URL exists; otherwise SQLite."""
     if using_postgres():
         if psycopg2 is None:
             raise RuntimeError(
-                "DATABASE_URL is set, but psycopg2 is not installed. "
-                "Run: pip install psycopg2-binary"
+                "DATABASE_URL is set, but psycopg2 is not installed. Run: pip install psycopg2-binary"
             )
-
         database_url = os.environ["DATABASE_URL"]
         if database_url.startswith("postgres://"):
             database_url = "postgresql://" + database_url[len("postgres://"):]
-
         return PostgresConnection(psycopg2.connect(database_url))
 
     conn = sqlite3.connect(str(SQLITE_PATH))
     conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA foreign_keys = ON")
     return conn
