@@ -18,7 +18,7 @@ def using_postgres():
 
 
 class HybridRow:
-    """Row that supports both row[0] and row['column_name'].""" 
+    """Row that supports both row[0] and row['column_name']."""
 
     def __init__(self, values, description):
         self._values = tuple(values)
@@ -55,7 +55,6 @@ class PostgresCursor:
 
     @staticmethod
     def _convert_placeholders(sql):
-        # Convert SQLite ? placeholders to PostgreSQL %s placeholders.
         return re.sub(r"\?", "%s", sql)
 
     def execute(self, sql, params=None):
@@ -74,22 +73,13 @@ class PostgresCursor:
 
     def fetchone(self):
         row = self._cursor.fetchone()
-
         if row is None:
             return None
-
-        return HybridRow(
-            row,
-            self._cursor.description
-        )
+        return HybridRow(row, self._cursor.description)
 
     def fetchall(self):
         rows = self._cursor.fetchall()
-
-        return [
-            HybridRow(row, self._cursor.description)
-            for row in rows
-        ]
+        return [HybridRow(row, self._cursor.description) for row in rows]
 
     @property
     def rowcount(self):
@@ -98,6 +88,13 @@ class PostgresCursor:
     @property
     def description(self):
         return self._cursor.description
+
+    @property
+    def lastrowid(self):
+        """Provide SQLite-compatible generated-id access on PostgreSQL."""
+        self._cursor.execute("SELECT LASTVAL()")
+        row = self._cursor.fetchone()
+        return row[0] if row else None
 
     def close(self):
         self._cursor.close()
@@ -108,9 +105,7 @@ class PostgresConnection:
         self._connection = connection
 
     def cursor(self):
-        return PostgresCursor(
-            self._connection.cursor()
-        )
+        return PostgresCursor(self._connection.cursor())
 
     def execute(self, sql, params=None):
         cursor = self.cursor()
@@ -130,15 +125,9 @@ class PostgresConnection:
 def get_db_connection():
     """
     Return PostgreSQL on Render when DATABASE_URL exists.
-
     Otherwise use the local SQLite database nexora.db.
     """
-
-    # -----------------------------------------
-    # RENDER / POSTGRESQL
-    # -----------------------------------------
     if using_postgres():
-
         if psycopg2 is None:
             raise RuntimeError(
                 "DATABASE_URL is set, but psycopg2 is not installed. "
@@ -146,25 +135,11 @@ def get_db_connection():
             )
 
         database_url = os.environ["DATABASE_URL"]
-
-        # Support older postgres:// URLs.
         if database_url.startswith("postgres://"):
-            database_url = (
-                "postgresql://"
-                + database_url[len("postgres://"):]
-            )
+            database_url = "postgresql://" + database_url[len("postgres://"):]
 
-        connection = psycopg2.connect(database_url)
+        return PostgresConnection(psycopg2.connect(database_url))
 
-        return PostgresConnection(connection)
-
-    # -----------------------------------------
-    # LOCAL / SQLITE
-    # -----------------------------------------
-    conn = sqlite3.connect(
-        str(SQLITE_PATH)
-    )
-
+    conn = sqlite3.connect(str(SQLITE_PATH))
     conn.row_factory = sqlite3.Row
-
-    return conn 
+    return conn
