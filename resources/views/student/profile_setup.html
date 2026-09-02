@@ -7,163 +7,32 @@
         <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
         <style>
-            body {
-                min-height: 100vh;
-                margin: 0;
-                padding: 40px 20px;
-                display: flex;
-                align-items: flex-start;
-                justify-content: center;
-                background: linear-gradient(135deg, #eff6ff, #f8fafc 55%, #dbeafe);
-                color: #0f172a;
-                font-family: Arial, Helvetica, sans-serif;
-            }
-            .profile-modal {
-                width: min(680px, 100%);
-                margin: 0 auto;
-                padding: 36px;
-                background: #ffffff;
-                border: 1px solid #e2e8f0;
-                border-radius: 20px;
-                box-shadow: 0 20px 55px rgba(15, 23, 42, 0.12);
-            }
-            .profile-modal h2 {
-                margin: 0;
-                font-size: 2rem;
-                font-weight: 800;
-                color: #0f172a;
-            }
-            .progress {
-                margin: 8px 0 28px;
-                color: #64748b;
-                font-size: 0.9rem;
-                font-weight: 600;
-            }
-            .step {
-                display: none;
-            }
-            .step.active {
-                display: block;
-            }
-            .step h3 {
-                margin: 0 0 18px;
-                color: #0f172a;
-                font-size: 1.15rem;
-                font-weight: 800;
-            }
-            .step > input,
-            .step > textarea {
-                display: block;
-                width: 100%;
-                min-height: 44px;
-                margin: 0 0 12px;
-                padding: 11px 13px;
-                box-sizing: border-box;
-                border: 1px solid #cbd5e1;
-                border-radius: 10px;
-                background: #fff;
-                color: #0f172a;
-                font: inherit;
-            }
-            .step > textarea {
-                min-height: 120px;
-                resize: vertical;
-            }
-            .step > input:focus,
-            .step > textarea:focus {
-                outline: none;
-                border-color: #2563eb;
-                box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
-            }
-            .upload {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                margin: 14px 0;
-                padding: 13px 15px;
-                border: 1px dashed #94a3b8;
-                border-radius: 10px;
-                background: #f8fafc;
-                color: #334155;
-                font-weight: 700;
-                cursor: pointer;
-            }
-            .upload input[type="file"] {
-                flex: 1;
-                min-width: 0;
-            }
-            .crop-wrapper {
-                display: none;
-                margin: 14px 0;
-                padding: 12px;
-                border: 1px solid #e2e8f0;
-                border-radius: 14px;
-                background: #f8fafc;
-                overflow: hidden;
-            }
-            .crop-wrapper.active {
-                display: block;
-            }
-            .crop-wrapper img {
-                display: block;
-                width: 100%;
-                max-height: 360px;
-            }
-            .crop-buttons {
-                display: none;
-                gap: 10px;
-                margin: 10px 0 14px;
-            }
-            .crop-buttons button,
-            .step > button {
-                min-height: 42px;
-                padding: 10px 16px;
-                border: 0;
-                border-radius: 10px;
-                background: #2563eb;
-                color: #fff;
-                font: inherit;
-                font-weight: 700;
-                cursor: pointer;
-            }
-            .crop-buttons button {
-                background: #eff6ff;
-                color: #1d4ed8;
-                border: 1px solid #bfdbfe;
-            }
-            .crop-buttons button:hover,
-            .step > button:hover {
-                filter: brightness(0.96);
-            }
-            .step > button:not(.back) {
-                width: 100%;
-                margin-top: 6px;
-            }
-            .step > button.back {
-                margin-right: 8px;
-                background: #fff;
-                color: #334155;
-                border: 1px solid #cbd5e1;
-            }
-            .input-error {
-                border-color: #ef4444 !important;
-                background: #fff7f7 !important;
-            }
-            .input-success {
-                border-color: #22c55e !important;
-            }
-            @media (max-width: 700px) {
-                body {
-                    padding: 20px 12px;
-                }
-                .profile-modal {
-                    padding: 24px 18px;
-                    border-radius: 16px;
-                }
-                .profile-modal h2 {
-                    font-size: 1.55rem;
-                }
-            }
+            body { min-height: 100vh; margin: 0; padding: 40px 20px; display: flex; align-items: flex-start; justify-content: center; background: linear-gradient(135deg, #eff6ff, #f8fafc 55%, #dbeafe); color: #0f172a; font-family: Arial, Helvetica, sans-serif; }
+            .profile-modal { width: min(680px, 100%); margin: 0 auto; padding: 36px; background: #fff; border: 1px solid #e2e8f0; border-radius: 20px; box-shadow: 0 20px 55px rgba(15,23,42,.12); }
+            .profile-modal h2 { margin: 0; font-size: 2rem; font-weight: 800; color: #0f172a; }
+            .progress { margin: 8px 0 28px; color: #64748b; font-size: .9rem; font-weight: 600; }
+            .step { display: none; }
+            .step.active { display: block; }
+            .step h3 { margin: 0 0 18px; color: #0f172a; font-size: 1.15rem; font-weight: 800; }
+            .step > input, .step > textarea { display: block; width: 100%; min-height: 44px; margin: 0 0 12px; padding: 11px 13px; box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 10px; background: #fff; color: #0f172a; font: inherit; }
+            .step > textarea { min-height: 120px; resize: vertical; }
+            .step > input:focus, .step > textarea:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
+            .upload { display: flex; align-items: center; gap: 10px; margin: 14px 0; padding: 13px 15px; border: 1px dashed #94a3b8; border-radius: 10px; background: #f8fafc; color: #334155; font-weight: 700; cursor: pointer; }
+            .upload input[type="file"] { flex: 1; min-width: 0; }
+            .crop-wrapper { display: none; margin: 14px 0; padding: 12px; border: 1px solid #e2e8f0; border-radius: 14px; background: #f8fafc; overflow: hidden; min-height: 0; }
+            .crop-wrapper.active { display: block; }
+            .crop-wrapper img { display: block; width: 100%; max-height: 360px; }
+            .crop-buttons { display: none; gap: 10px; margin: 10px 0 14px; }
+            .crop-buttons button, .step > button { min-height: 42px; padding: 10px 16px; border: 0; border-radius: 10px; background: #2563eb; color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+            .crop-buttons button { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+            .crop-buttons button:hover, .step > button:hover { filter: brightness(.96); }
+            .step > button:not(.back) { width: 100%; margin-top: 6px; }
+            .step > button.back { margin-right: 8px; background: #fff; color: #334155; border: 1px solid #cbd5e1; }
+            .input-error { border-color: #ef4444 !important; background: #fff7f7 !important; }
+            .input-success { border-color: #22c55e !important; }
+            .image-error { display: none; margin: 8px 0 12px; padding: 10px 12px; border: 1px solid #fecaca; border-radius: 8px; background: #fef2f2; color: #dc2626; font-size: .85rem; font-weight: 600; line-height: 1.4; }
+            .image-error.show { display: block; }
+            @media (max-width: 700px) { body { padding: 20px 12px; } .profile-modal { padding: 24px 18px; border-radius: 16px; } .profile-modal h2 { font-size: 1.55rem; } }
         </style>
     </head>
     <body>
@@ -173,7 +42,6 @@
             <form method="POST" enctype="multipart/form-data">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="cropped_image" id="croppedImage">
-
                 <div class="step active">
                     <h3>Basic Information</h3>
                     <input name="first_name" placeholder="First Name">
@@ -183,7 +51,7 @@
                     <input id="student_id" name="student_id" placeholder="Student ID">
                     <label class="upload">
                         📷 Upload Profile Picture
-                        <input type="file" name="profile_picture" accept="image/*" onchange="loadImage(event)">
+                        <input id="profilePicture" type="file" name="profile_picture" accept="image/*" onchange="loadImage(event)">
                     </label>
                     <div class="crop-wrapper">
                         <img id="preview" alt="Profile preview">
@@ -192,9 +60,9 @@
                         <button type="button" onclick="zoomIn()">Zoom +</button>
                         <button type="button" onclick="zoomOut()">Zoom -</button>
                     </div>
+                    <div id="imageError" class="image-error" role="alert" aria-live="polite"></div>
                     <button type="button" onclick="validateStep1()">Next →</button>
                 </div>
-
                 <div class="step">
                     <h3>Contact Information</h3>
                     <input name="phone_number" placeholder="09XXXXXXXXX" maxlength="11">
@@ -202,23 +70,59 @@
                     <button type="button" class="back" onclick="previousStep()">← Back</button>
                     <button type="button" onclick="validateStep2()">Next →</button>
                 </div>
-
                 <div class="step">
                     <h3>Class Information</h3>
                     <input name="grade_year" placeholder="Example: 4th Year / Grade 12">
                     <input name="major_program" placeholder="Example: Bachelor of Science in Information Technology">
                     <button type="button" class="back" onclick="previousStep()">← Back</button>
-                    <button type="button" onclick="validateStep3()">Complete Profile</button>
+                    <button id="completeProfileButton" type="button" onclick="validateStep3()">Complete Profile</button>
                 </div>
             </form>
         </div>
-
         <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
         <script>
             let currentStep = 0;
-            let cropper;
+            let cropper = null;
+            let currentObjectUrl = null;
+            let cropperReady = false;
+            let imageSelected = false;
+            let imageLoadPending = false;
             const steps = document.querySelectorAll(".step");
             const number = document.getElementById("number");
+            const form = document.querySelector("form");
+            const fileInput = document.getElementById("profilePicture");
+            const completeProfileButton = document.getElementById("completeProfileButton");
+
+            function showImageError(message) {
+                const box = document.getElementById("imageError");
+                if (!box) return;
+                box.textContent = message;
+                box.classList.add("show");
+            }
+
+            function clearImageError() {
+                const box = document.getElementById("imageError");
+                if (!box) return;
+                box.textContent = "";
+                box.classList.remove("show");
+            }
+
+            function revokeCurrentObjectUrl() {
+                if (currentObjectUrl) {
+                    URL.revokeObjectURL(currentObjectUrl);
+                    currentObjectUrl = null;
+                }
+            }
+
+            function resetCropperState() {
+                if (cropper) {
+                    try { cropper.destroy(); } catch (error) { console.warn("Cropper cleanup failed", error); }
+                }
+                cropper = null;
+                cropperReady = false;
+                imageLoadPending = false;
+                if (completeProfileButton) completeProfileButton.disabled = imageSelected;
+            }
 
             function checkField(input) {
                 if (!input || input.value.trim() === "") {
@@ -233,7 +137,7 @@
                 return true;
             }
 
-            document.querySelectorAll("input, textarea").forEach((input) => {
+            document.querySelectorAll("input:not([type='file']), textarea").forEach((input) => {
                 input.addEventListener("input", function () {
                     if (this.value.trim() !== "") {
                         this.classList.remove("input-error");
@@ -265,10 +169,21 @@
                 const program = document.querySelector('input[name="major_program"]');
                 const valid = checkField(year) && checkField(program);
                 if (!valid) return;
-                if (cropper) {
-                    document.getElementById("croppedImage").value = cropper.getCroppedCanvas({ width: 400, height: 400 }).toDataURL("image/jpeg");
+                if (imageSelected && !cropperReady) {
+                    showImageError(imageLoadPending ? "Image is still loading. Please wait for the crop box to appear." : "The selected image could not be prepared. Please choose the image again.");
+                    return;
                 }
-                document.querySelector("form").submit();
+                if (cropper && cropperReady) {
+                    try {
+                        document.getElementById("croppedImage").value = cropper.getCroppedCanvas({ width: 400, height: 400 }).toDataURL("image/jpeg");
+                    } catch (error) {
+                        console.error("Crop processing failed", error);
+                        showImageError("Failed to process the cropped image. Please choose the image again.");
+                        return;
+                    }
+                }
+                revokeCurrentObjectUrl();
+                form.submit();
             }
 
             function nextStep() {
@@ -288,35 +203,95 @@
             }
 
             function loadImage(event) {
+                clearImageError();
                 const file = event.target.files && event.target.files[0];
-                if (!file) return;
                 const image = document.getElementById("preview");
                 const wrapper = document.querySelector(".crop-wrapper");
                 const buttons = document.getElementById("cropButtons");
-                if (cropper) cropper.destroy();
+                imageSelected = Boolean(file);
+                resetCropperState();
+                revokeCurrentObjectUrl();
+                if (fileInput) fileInput.setCustomValidity("");
+                wrapper.classList.remove("active");
+                buttons.style.display = "none";
+                image.removeAttribute("src");
+                if (completeProfileButton) completeProfileButton.disabled = Boolean(file);
+
+                if (!file) return;
+
+                const isImage = file.type ? file.type.startsWith("image/") : /\.(png|jpe?g|gif|webp|bmp)$/i.test(file.name);
+                if (!isImage) {
+                    imageSelected = false;
+                    if (fileInput) fileInput.value = "";
+                    showImageError("Invalid image file. Please choose a JPG, PNG, GIF, WEBP, or BMP image.");
+                    return;
+                }
+
+                if (typeof window.Cropper === "undefined") {
+                    imageSelected = false;
+                    if (fileInput) fileInput.value = "";
+                    showImageError("Image cropping could not be initialized. Please refresh the page and try again.");
+                    return;
+                }
+
+                imageLoadPending = true;
+                currentObjectUrl = URL.createObjectURL(file);
+
                 image.onload = function () {
-                    cropper = new Cropper(image, {
-                        aspectRatio: 1,
-                        viewMode: 1,
-                        dragMode: "move",
-                        autoCropArea: 0.8,
-                        movable: true,
-                        zoomable: true,
-                        background: false,
-                    });
+                    imageLoadPending = false;
+                    if (!imageSelected) return;
+                    resetCropperState();
+                    try {
+                        cropper = new window.Cropper(image, {
+                            aspectRatio: 1,
+                            viewMode: 1,
+                            dragMode: "move",
+                            autoCropArea: 0.8,
+                            movable: true,
+                            zoomable: true,
+                            background: false,
+                        });
+                        cropperReady = true;
+                        wrapper.classList.add("active");
+                        buttons.style.display = "flex";
+                        if (completeProfileButton) completeProfileButton.disabled = false;
+                        clearImageError();
+                    } catch (error) {
+                        console.error("Cropper initialization failed", error);
+                        cropper = null;
+                        cropperReady = false;
+                        wrapper.classList.remove("active");
+                        buttons.style.display = "none";
+                        showImageError("The image could not be opened for cropping. Please choose another image.");
+                    }
                 };
-                image.src = URL.createObjectURL(file);
-                wrapper.classList.add("active");
-                buttons.style.display = "flex";
+
+                image.onerror = function () {
+                    imageLoadPending = false;
+                    imageSelected = false;
+                    resetCropperState();
+                    revokeCurrentObjectUrl();
+                    image.removeAttribute("src");
+                    wrapper.classList.remove("active");
+                    buttons.style.display = "none";
+                    if (fileInput) fileInput.value = "";
+                    showImageError("Failed to load that image. Please choose a valid image file.");
+                };
+
+                image.src = currentObjectUrl;
             }
 
             function zoomIn() {
-                if (cropper) cropper.zoom(0.1);
+                if (cropper && cropperReady) cropper.zoom(0.1);
             }
 
             function zoomOut() {
-                if (cropper) cropper.zoom(-0.1);
+                if (cropper && cropperReady) cropper.zoom(-0.1);
             }
+
+            form.addEventListener("submit", function () {
+                revokeCurrentObjectUrl();
+            });
         </script>
     </body>
 </html>
