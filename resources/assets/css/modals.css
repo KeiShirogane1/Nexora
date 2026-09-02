@@ -2,7 +2,7 @@
 .nexora-modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(15,23,42,0.55);
+    background: rgba(15, 23, 42, 0.55);
     backdrop-filter: blur(2px);
     display: none;
     align-items: center;
@@ -19,13 +19,19 @@
     width: 100%;
     max-width: 520px;
     border-radius: 20px;
-    box-shadow: 0 24px 64px rgba(15,23,42,0.22);
+    box-shadow: 0 24px 64px rgba(15, 23, 42, 0.22);
     overflow: hidden;
-    animation: modalIn .18s ease;
+    animation: modalIn 0.18s ease;
 }
 @keyframes modalIn {
-    from { opacity: 0; transform: translateY(8px) scale(.98); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
+    from {
+        opacity: 0;
+        transform: translateY(8px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 .nexora-modal-header {
     padding: 22px 24px 16px;
@@ -82,7 +88,9 @@
     font-weight: 600;
     color: #0f172a;
 }
-.nexora-form-group label span.req { color: #dc2626; }
+.nexora-form-group label span.req {
+    color: #dc2626;
+}
 .nexora-form-control {
     border: 1px solid #e2e8f0;
     border-radius: 10px;
@@ -91,12 +99,14 @@
     background: #fff;
     width: 100%;
     box-sizing: border-box;
-    transition: border-color .15s, box-shadow .15s;
+    transition:
+        border-color 0.15s,
+        box-shadow 0.15s;
 }
 .nexora-form-control:focus {
     outline: none;
     border-color: #93c5fd;
-    box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 .nexora-form-control.error {
     border-color: #fca5a5;
@@ -107,7 +117,9 @@
     color: #dc2626;
     display: none;
 }
-.field-error.show { display: block; }
+.field-error.show {
+    display: block;
+}
 .password-wrap {
     position: relative;
 }
@@ -130,7 +142,9 @@
     align-items: center;
     justify-content: center;
 }
-.password-toggle:hover { color: #0f172a; }
+.password-toggle:hover {
+    color: #0f172a;
+}
 .nexora-info-notice {
     background: #eff6ff;
     border: 1px solid #dbeafe;
@@ -163,8 +177,12 @@
 }
 /* Responsive modal */
 @media (max-width: 640px) {
-    .nexora-modal { max-width: calc(100% - 32px); }
-    .nexora-modal-body { padding: 16px; }
+    .nexora-modal {
+        max-width: calc(100% - 32px);
+    }
+    .nexora-modal-body {
+        padding: 16px;
+    }
 }
 /* Ensure supervisor modal uses same max-width (500-520 range is fine) */
 #supervisorModal .nexora-modal {
@@ -178,248 +196,163 @@
    PROFILE PICTURE CROPPER MODAL
 ================================ */
 
-
-.clickable-profile{
-
-    cursor:pointer;
-
+.clickable-profile {
+    cursor: pointer;
 }
-
-
 
 /* DARK BACKGROUND */
 
-.crop-modal{
+.crop-modal {
+    display: none;
 
-    display:none;
+    position: fixed;
 
-    position:fixed;
+    inset: 0;
 
-    inset:0;
+    background: rgba(0, 0, 0, 0.75);
 
-    background:rgba(0,0,0,0.75);
+    justify-content: center;
 
-    justify-content:center;
+    align-items: center;
 
-    align-items:center;
-
-    z-index:5000;
-
+    z-index: 5000;
 }
-
-
 
 /* WHITE POPUP */
 
-.crop-box{
+.crop-box {
+    background: white;
 
-    background:white;
+    width: 450px;
 
-    width:450px;
+    max-width: 90%;
 
-    max-width:90%;
+    padding: 25px;
 
-    padding:25px;
+    border-radius: 20px;
 
-    border-radius:20px;
+    text-align: center;
 
-    text-align:center;
-
-    box-shadow:
-    0 20px 50px rgba(0,0,0,.4);
-
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
 }
 
+.crop-box h3 {
+    margin-bottom: 20px;
 
-
-.crop-box h3{
-
-    margin-bottom:20px;
-
-    color:#111827;
-
+    color: #111827;
 }
-
-
 
 /* IMAGE AREA */
 
-.crop-area{
+.crop-area {
+    width: 350px;
 
+    height: 350px;
 
-    width:350px;
+    max-width: 100%;
 
-    height:350px;
+    margin: auto;
 
-    max-width:100%;
-
-    margin:auto;
-
-    overflow:hidden;
-
-
+    overflow: hidden;
 }
 
+.crop-area img {
+    display: block;
 
-
-.crop-area img{
-
-    display:block;
-
-    max-width:100%;
-
+    max-width: 100%;
 }
-
-
 
 /* BUTTON AREA */
 
-.crop-actions{
+.crop-actions {
+    display: flex;
 
+    gap: 15px;
 
-    display:flex;
-
-    gap:15px;
-
-    margin-top:20px;
-
-
+    margin-top: 20px;
 }
 
+.crop-actions button {
+    flex: 1;
 
+    padding: 12px;
 
-.crop-actions button{
+    border: none;
 
+    border-radius: 10px;
 
-    flex:1;
+    background: #2563eb;
 
-    padding:12px;
+    color: white;
 
+    font-weight: 700;
 
-    border:none;
-
-    border-radius:10px;
-
-
-    background:#2563eb;
-
-
-    color:white;
-
-
-    font-weight:700;
-
-
-    cursor:pointer;
-
-
+    cursor: pointer;
 }
 
-
-
-.crop-actions .cancel-crop{
-
-
-    background:#64748b;
-
-
+.crop-actions .cancel-crop {
+    background: #64748b;
 }
-
-
 
 /* ===============================
    PROFILE PHOTO BUTTONS
 ================================ */
 
+.crop-actions {
+    display: flex;
 
-.crop-actions{
+    gap: 15px;
 
-    display:flex;
+    justify-content: center;
 
-    gap:15px;
-
-    justify-content:center;
-
-    margin-top:20px;
-
+    margin-top: 20px;
 }
-
-
 
 .save-picture-btn,
-.cancel-picture-btn{
+.cancel-picture-btn {
+    border: none;
 
+    padding: 12px 28px;
 
-    border:none;
+    border-radius: 12px;
 
-    padding:12px 28px;
+    font-size: 15px;
 
-    border-radius:12px;
+    font-weight: 700;
 
-    font-size:15px;
+    cursor: pointer;
 
-    font-weight:700;
-
-    cursor:pointer;
-
-    transition:.25s ease;
-
-
+    transition: 0.25s ease;
 }
-
-
 
 /* SAVE */
 
-.save-picture-btn{
+.save-picture-btn {
+    background: #2563eb;
 
-
-    background:#2563eb;
-
-    color:white;
-
-
+    color: white;
 }
 
+.save-picture-btn:hover {
+    background: #1d4ed8;
 
+    transform: translateY(-2px);
 
-.save-picture-btn:hover{
-
-
-    background:#1d4ed8;
-
-    transform:translateY(-2px);
-
-    box-shadow:
-    0 8px 20px rgba(37,99,235,.35);
-
-
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35);
 }
-
-
 
 /* CANCEL */
 
-.cancel-picture-btn{
+.cancel-picture-btn {
+    background: #e5e7eb;
 
-
-    background:#e5e7eb;
-
-    color:#334155;
-
-
+    color: #334155;
 }
 
+.cancel-picture-btn:hover {
+    background: #cbd5e1;
 
-
-.cancel-picture-btn:hover{
-
-
-    background:#cbd5e1;
-
-    transform:translateY(-2px);
-
-
+    transform: translateY(-2px);
 }
 
 /* =====================================
@@ -433,11 +366,9 @@ body.modal-open {
     overflow: hidden;
 }
 
-
 /* Dark overlay */
 
 .modal-overlay {
-
     position: fixed;
 
     top: 0;
@@ -446,7 +377,7 @@ body.modal-open {
     width: 100%;
     height: 100vh;
 
-    background: rgba(0,0,0,0.55);
+    background: rgba(0, 0, 0, 0.55);
 
     display: none;
 
@@ -455,14 +386,11 @@ body.modal-open {
     align-items: center;
 
     z-index: 999999;
-
 }
-
 
 /* Modal box */
 
 .deactivate-modal {
-
     background: white;
 
     width: 420px;
@@ -475,14 +403,10 @@ body.modal-open {
 
     position: relative;
 
-    box-shadow: 0 20px 50px rgba(0,0,0,0.25);
-
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
 }
 
-
-
 .modal-close {
-
     position: absolute;
 
     top: 15px;
@@ -496,51 +420,28 @@ body.modal-open {
     font-size: 28px;
 
     cursor: pointer;
-
 }
 
-
-
 .modal-icon {
-
     font-size: 45px;
 
     margin-bottom: 15px;
-
 }
-
-
 
 .deactivate-modal h2 {
-
     margin-bottom: 10px;
-
 }
 
-
-
 .deactivate-modal p {
-
     color: #555;
 
     margin-bottom: 25px;
-
 }
-
-
 
 .modal-actions {
+    display: flex;
 
-    display:flex;
+    justify-content: center;
 
-    justify-content:center;
-
-    gap:15px;
-
+    gap: 15px;
 }
-
-
-
-
-
-

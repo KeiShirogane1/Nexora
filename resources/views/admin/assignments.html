@@ -1,140 +1,140 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <meta charset="UTF-8">
-    <title>Assignments - Admin</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
-</head>
+    <head>
+        <meta charset="UTF-8">
+        <title>Assignments - Admin</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    </head>
 
-<body class="executive_aesthetic admin-assignments-page">
+    <body class="executive_aesthetic admin-assignments-page">
 
 
-    {% include 'components/admin_sidebar.html' %}
+        {% include 'components/admin_sidebar.html' %}
 
-    <div class="admin-main nexora-app-main">
-        <div class="nexora-page">
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 mb-4">
-            <div>
-                <h1 class="page-heading-on-dark">Admin Assignments</h1>
-                <p class="page-copy-on-dark">Manage student-supervisor assignments and role approvals from one place.</p>
-            </div>
-        </div>
-
-        <div class="tab-buttons d-flex flex-wrap gap-2">
-            <button class="btn btn-outline-primary active" type="button" onclick="openTab('students', this)">Assign Students</button>
-            <button class="btn btn-outline-primary" type="button" onclick="openTab('roles', this)">Role Assignments</button>
-        </div>
-
-        <div id="students" class="tab-pane active">
-            <div class="card shadow-sm mb-4">
-                <div class="card-body">
-                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 mb-3">
-                        <div>
-                            <h2 class="h5 mb-1">Assign Students</h2>
-                            <p class="text-muted mb-0">Link students with supervisors quickly and safely.</p>
-                        </div>
-                    </div>
-
-                    <form method="POST" action="{{ url_for('admin.assign_students') }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Student</label>
-                                <select class="form-select" name="student_id" required>
-                                    {% for s in students %}
-                                        <option value="{{ s[0] }}">{{ s[1] }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Supervisor</label>
-                                <select class="form-select" name="supervisor_id" required>
-                                    {% for sup in supervisors %}
-                                        <option value="{{ sup[0] }}">{{ sup[1] }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
-                        <div class="mt-4">
-                            <button class="btn btn-primary" type="submit">Assign</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <div class="card shadow-sm">
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Student</th>
-                                    <th>Supervisor</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for a in assignments %}
-                                <tr>
-                                    <td>{{ a[1] }}</td>
-                                    <td>{{ a[3] }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+        <div class="admin-main nexora-app-main">
+            <div class="nexora-page">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 mb-4">
+                    <div>
+                        <h1 class="page-heading-on-dark">Admin Assignments</h1>
+                        <p class="page-copy-on-dark">Manage student-supervisor assignments and role approvals from one place.</p>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <div id="roles" class="tab-pane">
-            <div class="card shadow-sm p-4 mb-4">
-                <h2 class="h5 mb-3">Role Assignments</h2>
-                <p class="text-muted">Approve pending registrations and assign user roles.</p>
+                <div class="tab-buttons d-flex flex-wrap gap-2">
+                    <button class="btn btn-outline-primary active" type="button" onclick="openTab('students', this)">Assign Students</button>
+                    <button class="btn btn-outline-primary" type="button" onclick="openTab('roles', this)">Role Assignments</button>
+                </div>
 
-                {% if pending_users %}
-                    <div class="row g-3">
-                        {% for u in pending_users %}
-                        <div class="col-12">
-                            <div class="card border rounded-3 p-3">
-                                <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3">
-                                    <div>
-                                        <strong>{{ u[1] }}</strong>
-                                    </div>
-                                    <form class="d-flex flex-column flex-md-row gap-3 align-items-start" method="POST" action="{{ url_for('admin.assign_role') }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <input type="hidden" name="user_id" value="{{ u[0] }}">
-                                        <select class="form-select" name="role" required>
-                                            <option value="student">Student</option>
-                                            <option value="supervisor">Supervisor</option>
-                                        </select>
-                                        <button class="btn btn-primary" type="submit">Assign Role</button>
-                                    </form>
+                <div id="students" class="tab-pane active">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-body">
+                            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 mb-3">
+                                <div>
+                                    <h2 class="h5 mb-1">Assign Students</h2>
+                                    <p class="text-muted mb-0">Link students with supervisors quickly and safely.</p>
                                 </div>
                             </div>
+
+                            <form method="POST" action="{{ url_for('admin.assign_students') }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Student</label>
+                                        <select class="form-select" name="student_id" required>
+                                            {% for s in students %}
+                                                <option value="{{ s[0] }}">{{ s[1] }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Supervisor</label>
+                                        <select class="form-select" name="supervisor_id" required>
+                                            {% for sup in supervisors %}
+                                                <option value="{{ sup[0] }}">{{ sup[1] }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="mt-4">
+                                    <button class="btn btn-primary" type="submit">Assign</button>
+                                </div>
+                            </form>
                         </div>
-                        {% endfor %}
                     </div>
-                {% else %}
-                    <p class="text-muted mb-0">No pending users at the moment.</p>
-                {% endif %}
+
+                    <div class="card shadow-sm">
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Student</th>
+                                            <th>Supervisor</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for a in assignments %}
+                                            <tr>
+                                                <td>{{ a[1] }}</td>
+                                                <td>{{ a[3] }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="roles" class="tab-pane">
+                    <div class="card shadow-sm p-4 mb-4">
+                        <h2 class="h5 mb-3">Role Assignments</h2>
+                        <p class="text-muted">Approve pending registrations and assign user roles.</p>
+
+                        {% if pending_users %}
+                            <div class="row g-3">
+                                {% for u in pending_users %}
+                                    <div class="col-12">
+                                        <div class="card border rounded-3 p-3">
+                                            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3">
+                                                <div>
+                                                    <strong>{{ u[1] }}</strong>
+                                                </div>
+                                                <form class="d-flex flex-column flex-md-row gap-3 align-items-start" method="POST" action="{{ url_for('admin.assign_role') }}">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                    <input type="hidden" name="user_id" value="{{ u[0] }}">
+                                                    <select class="form-select" name="role" required>
+                                                        <option value="student">Student</option>
+                                                        <option value="supervisor">Supervisor</option>
+                                                    </select>
+                                                    <button class="btn btn-primary" type="submit">Assign Role</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted mb-0">No pending users at the moment.</p>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
         </div>
-        </div>
-    </div>
 
-    <script>
-    function openTab(tabName, button) {
-        const panes = document.querySelectorAll('.tab-pane');
-        panes.forEach(pane => pane.classList.remove('active'));
-        document.getElementById(tabName).classList.add('active');
+        <script>
+            function openTab(tabName, button) {
+                const panes = document.querySelectorAll('.tab-pane');
+                panes.forEach(pane => pane.classList.remove('active'));
+                document.getElementById(tabName).classList.add('active');
 
-        const buttons = document.querySelectorAll('.tab-buttons .btn');
-        buttons.forEach(btn => btn.classList.remove('active'));
-        button.classList.add('active');
-    }
-    </script>
+                const buttons = document.querySelectorAll('.tab-buttons .btn');
+                buttons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+            }
+        </script>
 
-</body>
+    </body>
 </html>

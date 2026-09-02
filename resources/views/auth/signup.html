@@ -1,72 +1,72 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nexora — Sign Up</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <style>
-        .auth-brand { display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:14px; }
-        .auth-brand img { height:36px; }
-        .auth-field { position:relative; text-align:left; margin:10px 0; }
-        .auth-field input, .auth-field select { width:100% !important; box-sizing:border-box; }
-        .auth-field input[type="password"] { padding-right:42px !important; }
-        .toggle-pass { position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:1rem; color:#64748b; line-height:1; padding:2px; }
-        .auth-error { margin:10px 0; padding:10px; background:#ffe5e5; color:#b00020; border-radius:6px; text-align:center; font-size:0.9rem; }
-        .hint { font-size:0.78rem; color:#64748b; text-align:left; margin:4px 0 0 2px; }
-    </style>
-</head>
-<body class="general-page">
-    <div class="login-container" style="width:440px;">
-        <div class="auth-brand">
-            <img src="{{ url_for('static', filename='images/Nexora Light.png') }}" alt="Nexora">
-            <strong style="font-size:1.1rem; color:#0f172a;">Nexora</strong>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Nexora — Sign Up</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+        <style>
+            .auth-brand { display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:14px; }
+            .auth-brand img { height:36px; }
+            .auth-field { position:relative; text-align:left; margin:10px 0; }
+            .auth-field input, .auth-field select { width:100% !important; box-sizing:border-box; }
+            .auth-field input[type="password"] { padding-right:42px !important; }
+            .toggle-pass { position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:1rem; color:#64748b; line-height:1; padding:2px; }
+            .auth-error { margin:10px 0; padding:10px; background:#ffe5e5; color:#b00020; border-radius:6px; text-align:center; font-size:0.9rem; }
+            .hint { font-size:0.78rem; color:#64748b; text-align:left; margin:4px 0 0 2px; }
+        </style>
+    </head>
+    <body class="general-page">
+        <div class="login-container" style="width:440px;">
+            <div class="auth-brand">
+                <img src="{{ url_for('static', filename='images/Nexora Light.png') }}" alt="Nexora">
+                <strong style="font-size:1.1rem; color:#0f172a;">Nexora</strong>
+            </div>
+            <h2 style="margin-bottom:4px;">Create account</h2>
+            <p class="text-muted" style="font-size:0.9rem; margin-bottom:14px;">Join Nexora and manage internships with ease.</p>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="auth-error">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST" novalidate>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="auth-field">
+                    <input type="text" name="username" placeholder="Username" required>
+                </div>
+                <div class="auth-field">
+                    <input type="email" name="email" placeholder="Email Address" required autocomplete="email">
+                </div>
+                <div class="auth-field">
+                    <select name="account_type" class="form-control" required>
+                        <option value="" selected disabled>Select Account Type</option>
+                        <option value="student">Student</option>
+                        <option value="supervisor">Advisor / Supervisor</option>
+                    </select>
+                </div>
+                <div class="auth-field">
+                    <input type="password" id="signupPass" name="password" placeholder="Password (min 8 chars)" minlength="8" required autocomplete="new-password">
+                    <button type="button" class="toggle-pass" onclick="togglePass('signupPass', this)" aria-label="Show password">👁️</button>
+                </div>
+                <div class="hint">At least 8 characters.</div>
+                <div class="auth-field">
+                    <input type="password" id="signupPass2" name="confirm_password" placeholder="Confirm Password" minlength="8" required autocomplete="new-password">
+                    <button type="button" class="toggle-pass" onclick="togglePass('signupPass2', this)" aria-label="Show password">👁️</button>
+                </div>
+                <button type="submit" style="width:100%; margin-top:16px;">Sign Up</button>
+                <p class="signup-link">Already have an account? <a href="{{ url_for('auth.login') }}">Login</a></p>
+            </form>
         </div>
-        <h2 style="margin-bottom:4px;">Create account</h2>
-        <p class="text-muted" style="font-size:0.9rem; margin-bottom:14px;">Join Nexora and manage internships with ease.</p>
-
-        {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-        {% for category, message in messages %}
-        <div class="auth-error">{{ message }}</div>
-        {% endfor %}
-        {% endif %}
-        {% endwith %}
-
-        <form method="POST" novalidate>
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <div class="auth-field">
-                <input type="text" name="username" placeholder="Username" required>
-            </div>
-            <div class="auth-field">
-                <input type="email" name="email" placeholder="Email Address" required autocomplete="email">
-            </div>
-            <div class="auth-field">
-                <select name="account_type" class="form-control" required>
-                    <option value="" selected disabled>Select Account Type</option>
-                    <option value="student">Student</option>
-                    <option value="supervisor">Advisor / Supervisor</option>
-                </select>
-            </div>
-            <div class="auth-field">
-                <input type="password" id="signupPass" name="password" placeholder="Password (min 8 chars)" minlength="8" required autocomplete="new-password">
-                <button type="button" class="toggle-pass" onclick="togglePass('signupPass', this)" aria-label="Show password">👁️</button>
-            </div>
-            <div class="hint">At least 8 characters.</div>
-            <div class="auth-field">
-                <input type="password" id="signupPass2" name="confirm_password" placeholder="Confirm Password" minlength="8" required autocomplete="new-password">
-                <button type="button" class="toggle-pass" onclick="togglePass('signupPass2', this)" aria-label="Show password">👁️</button>
-            </div>
-            <button type="submit" style="width:100%; margin-top:16px;">Sign Up</button>
-            <p class="signup-link">Already have an account? <a href="{{ url_for('auth.login') }}">Login</a></p>
-        </form>
-    </div>
-    <script>
-        function togglePass(id, btn){
-            const el=document.getElementById(id);
-            el.type = el.type==='password' ? 'text' : 'password';
-            btn.textContent = el.type==='password' ? '👁️' : '🙈';
-        }
-    </script>
-</body>
+        <script>
+            function togglePass(id, btn){
+                const el=document.getElementById(id);
+                el.type = el.type==='password' ? 'text' : 'password';
+                btn.textContent = el.type==='password' ? '👁️' : '🙈';
+            }
+        </script>
+    </body>
 </html>

@@ -1,74 +1,74 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <meta charset="UTF-8">
-    <title>Document Upload - Nexora</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
-</head>
-<body class="student-page">
-{% include 'components/student_sidebar.html' %}
+    <head>
+        <meta charset="UTF-8">
+        <title>Document Upload - Nexora</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
+    </head>
+    <body class="student-page">
+        {% include 'components/student_sidebar.html' %}
 
-    <div class="student-main-content nexora-app-main">
-<div class="nexora-page">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2 class="mb-0">📂 Document Upload</h2>
-                <span class="badge bg-primary">{{ docs|length }} files</span>
-            </div>
-
-        <div class="card shadow-sm p-4 mb-4" style="border:1px solid #f1f5f9; border-radius:12px;">
-            <h5 class="mb-3">Upload New Document</h5>
-            <form method="POST" enctype="multipart/form-data">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <div class="mb-3">
-                    <label for="file" class="form-label">Select File</label>
-                    <input type="file" name="file" class="form-control" required>
-                    <small class="text-muted">Allowed: pdf, docx, xlsx, pptx, txt, zip, png, jpg • Max 5MB</small>
+        <div class="student-main-content nexora-app-main">
+            <div class="nexora-page">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="mb-0">📂 Document Upload</h2>
+                    <span class="badge bg-primary">{{ docs|length }} files</span>
                 </div>
-                <button type="submit" class="btn btn-primary">Upload</button>
-            </form>
-        </div>
 
-        <div class="card shadow-sm" style="border:1px solid #f1f5f9; border-radius:12px;">
-            <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Your Documents</h5>
-                <span class="text-muted" style="font-size:0.85rem;">{{ docs|length }} total</span>
-            </div>
-            <div class="card-body p-0">
-        {% if docs %}
-            <div class="table-responsive">
-                <table class="table table-hover nexora-table mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Filename</th>
-                            <th>Uploaded At</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for doc in docs %}
-                            <tr>
-                                <td><span class="badge bg-secondary me-2">📄</span>{{ doc[1] }}</td>
-                                <td><small class="text-muted">{{ doc[2] }}</small></td>
-                                <td>
-                                    <a href="/student/document/{{ doc[0] }}" class="btn btn-info btn-sm" target="_blank">View</a>
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% else %}
-            <div class="empty-state py-4">
-                <div class="icon">📂</div>
-                <p class="text-muted mb-0">No documents uploaded yet.</p>
-                <small class="text-muted">Upload your internship requirements above.</small>
-            </div>
-        {% endif %}
+                <div class="card shadow-sm p-4 mb-4" style="border:1px solid #f1f5f9; border-radius:12px;">
+                    <h5 class="mb-3">Upload New Document</h5>
+                    <form method="POST" enctype="multipart/form-data">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="mb-3">
+                            <label for="file" class="form-label">Select File</label>
+                            <input type="file" name="file" class="form-control" required>
+                            <small class="text-muted">Allowed: pdf, docx, xlsx, pptx, txt, zip, png, jpg • Max 5MB</small>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Upload</button>
+                    </form>
+                </div>
+
+                <div class="card shadow-sm" style="border:1px solid #f1f5f9; border-radius:12px;">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Your Documents</h5>
+                        <span class="text-muted" style="font-size:0.85rem;">{{ docs|length }} total</span>
+                    </div>
+                    <div class="card-body p-0">
+                        {% if docs %}
+                            <div class="table-responsive">
+                                <table class="table table-hover nexora-table mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Filename</th>
+                                            <th>Uploaded At</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for doc in docs %}
+                                            <tr>
+                                                <td><span class="badge bg-secondary me-2">📄</span>{{ doc[1] }}</td>
+                                                <td><small class="text-muted">{{ doc[2] }}</small></td>
+                                                <td>
+                                                    <a href="/student/document/{{ doc[0] }}" class="btn btn-info btn-sm" target="_blank">View</a>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="empty-state py-4">
+                                <div class="icon">📂</div>
+                                <p class="text-muted mb-0">No documents uploaded yet.</p>
+                                <small class="text-muted">Upload your internship requirements above.</small>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-</div>
-</body>
+    </body>
 </html>

@@ -1,197 +1,97 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <meta charset="UTF-8">
-    <title>E-Logbook - Nexora</title>
+    <head>
+        <meta charset="UTF-8">
+        <title>E-Logbook - Nexora</title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <link rel="stylesheet"
-          href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
-</head>
+        <link rel="stylesheet"
+              href="{{ url_for('static', filename='css/style.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
+    </head>
 
-<body class="student-page">
-    
-{% include 'components/student_sidebar.html' %}
+    <body class="student-page">
 
-<div class="student-main-content nexora-app-main">
-<div class="nexora-page">
+        {% include 'components/student_sidebar.html' %}
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="mb-0">📘 E-Logbook</h2>
-        <span class="badge bg-primary">Daily Session</span>
-    </div>
+        <div class="student-main-content nexora-app-main">
+            <div class="nexora-page">
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="mb-0">📘 E-Logbook</h2>
+                    <span class="badge bg-primary">Daily Session</span>
+                </div>
 
     <!-- ========================= -->
     <!-- TODAY'S SESSION           -->
     <!-- ========================= -->
 
-    <div class="card shadow-sm mb-4" style="border:1px solid #f1f5f9; border-radius:12px; overflow:hidden;">
+                <div class="card shadow-sm mb-4" style="border:1px solid #f1f5f9; border-radius:12px; overflow:hidden;">
 
-        <div class="card-header bg-info text-white">
-            <h5 class="mb-0">Today's Session</h5>
-        </div>
-
-        <div class="card-body">
-
-            {% if attendance %}
-
-                <p>
-                    <strong>Status:</strong>
-
-                    <span class="badge bg-success">
-                        {{ attendance[4] }}
-                    </span>
-                </p>
-
-                <p>
-                    <strong>Clock In:</strong>
-
-                    {{ attendance[1] }}
-                </p>
-
-                <p>
-                    <strong>Clock Out:</strong>
-
-                    {{ attendance[2] if attendance[2] else "—" }}
-                </p>
-
-                <p>
-                    <strong>Hours Rendered:</strong>
-
-                    {{ attendance[3] if attendance[3] else "Currently Active" }}
-                </p>
-
-                <form method="POST" action="/student/clock-out"
-                onsubmit="return confirm('Clock out and finalize today\'s session? You will no longer be able to edit today\'s log entries.')">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-                    <button class="btn btn-danger" type="submit">
-
-                        Clock Out
-
-                    </button>
-
-                </form>
-
-            {% else %}
-
-                <p class="text-muted">
-
-                    You haven't started today's internship session. Clock in to begin a new work session
-
-                </p>
-
-                <form method="POST"
-                      action="/student/clock-in">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-                    <button
-                        class="btn btn-success"
-                        type="submit">
-
-                        Clock In
-
-                    </button>
-
-                </form>
-
-            {% endif %}
-
-        </div>
-
-    </div>
-
-    <!-- ========================= -->
-    <!-- TODAY'S LOGS              -->
-    <!-- ========================= -->
-
-    <div class="card shadow-sm mb-4" style="border:1px solid #f1f5f9; border-radius:12px; overflow:hidden;">
-
-        <div class="card-header bg-secondary text-white">
-
-            <h5 class="mb-0">
-
-                Today's Logs
-
-            </h5>
-
-        </div>
-
-        <div class="card-body">
-
-            {% if attendance %}
-
-                <form method="POST"
-                      action="/student/log/add">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-                    <div class="mb-3">
-
-                        <label class="form-label">
-
-                            New Log Entry
-
-                        </label>
-
-                        <textarea
-                            class="form-control"
-                            name="content"
-                            rows="4"
-                            placeholder="What did you accomplish?"
-                            required></textarea>
-
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">Today's Session</h5>
                     </div>
 
-                    <button
-                        class="btn btn-primary">
-
-                        Add Log
-
-                    </button>
-
-                </form>
-
-                <hr>
-
-            {% endif %}
-
-            {% if logs %}
-
-                {% for log in logs %}
-
-                    <div class="border rounded p-3 mb-3">
-
-                        <small class="text-muted">
-
-                            {{ log[2] }}
-
-                        </small>
-
-                        <p class="mt-2 mb-3">
-
-                            {{ log[1] }}
-
-                        </p>
+                    <div class="card-body">
 
                         {% if attendance %}
 
-                            <a
-                                href="/student/log/{{ log[0] }}/edit"
-                                class="btn btn-warning btn-sm">
+                            <p>
+                                <strong>Status:</strong>
 
-                                Edit
+                                <span class="badge bg-success">
+                                    {{ attendance[4] }}
+                                </span>
+                            </p>
 
-                            </a>
+                            <p>
+                                <strong>Clock In:</strong>
 
-                            <form method="POST" action="/student/log/{{ log[0] }}/delete" class="d-inline" 
-                                onsubmit="return confirm('Delete this log entry? This action cannot be undone.')">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                {{ attendance[1] }}
+                            </p>
 
-                                <button class="btn btn-danger btn-sm" type="submit">
+                            <p>
+                                <strong>Clock Out:</strong>
 
-                                    Delete
+                                {{ attendance[2] if attendance[2] else "—" }}
+                            </p>
+
+                            <p>
+                                <strong>Hours Rendered:</strong>
+
+                                {{ attendance[3] if attendance[3] else "Currently Active" }}
+                            </p>
+
+                            <form method="POST" action="/student/clock-out"
+                                  onsubmit="return confirm('Clock out and finalize today\'s session? You will no longer be able to edit today\'s log entries.')">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                                <button class="btn btn-danger" type="submit">
+
+                                    Clock Out
+
+                                </button>
+
+                            </form>
+
+                        {% else %}
+
+                            <p class="text-muted">
+
+                                You haven't started today's internship session. Clock in to begin a new work session
+
+                            </p>
+
+                            <form method="POST"
+                                  action="/student/clock-in">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                                <button
+                                    class="btn btn-success"
+                                    type="submit">
+
+                                    Clock In
 
                                 </button>
 
@@ -201,120 +101,220 @@
 
                     </div>
 
-                {% endfor %}
+                </div>
 
-            {% else %}
+    <!-- ========================= -->
+    <!-- TODAY'S LOGS              -->
+    <!-- ========================= -->
 
-                <p class="text-muted">
+                <div class="card shadow-sm mb-4" style="border:1px solid #f1f5f9; border-radius:12px; overflow:hidden;">
 
-                    No log entries yet.
+                    <div class="card-header bg-secondary text-white">
 
-                </p>
+                        <h5 class="mb-0">
 
-            {% endif %}
+                            Today's Logs
 
-        </div>
+                        </h5>
 
-    </div>
+                    </div>
+
+                    <div class="card-body">
+
+                        {% if attendance %}
+
+                            <form method="POST"
+                                  action="/student/log/add">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                                <div class="mb-3">
+
+                                    <label class="form-label">
+
+                                        New Log Entry
+
+                                    </label>
+
+                                    <textarea
+                                        class="form-control"
+                                        name="content"
+                                        rows="4"
+                                        placeholder="What did you accomplish?"
+                                        required></textarea>
+
+                                </div>
+
+                                <button
+                                    class="btn btn-primary">
+
+                                    Add Log
+
+                                </button>
+
+                            </form>
+
+                            <hr>
+
+                        {% endif %}
+
+                        {% if logs %}
+
+                            {% for log in logs %}
+
+                                <div class="border rounded p-3 mb-3">
+
+                                    <small class="text-muted">
+
+                                        {{ log[2] }}
+
+                                    </small>
+
+                                    <p class="mt-2 mb-3">
+
+                                        {{ log[1] }}
+
+                                    </p>
+
+                                    {% if attendance %}
+
+                                        <a
+                                            href="/student/log/{{ log[0] }}/edit"
+                                            class="btn btn-warning btn-sm">
+
+                                            Edit
+
+                                        </a>
+
+                                        <form method="POST" action="/student/log/{{ log[0] }}/delete" class="d-inline"
+                                              onsubmit="return confirm('Delete this log entry? This action cannot be undone.')">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                                            <button class="btn btn-danger btn-sm" type="submit">
+
+                                                Delete
+
+                                            </button>
+
+                                        </form>
+
+                                    {% endif %}
+
+                                </div>
+
+                            {% endfor %}
+
+                        {% else %}
+
+                            <p class="text-muted">
+
+                                No log entries yet.
+
+                            </p>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
 
     <!-- ========================= -->
     <!-- ATTENDANCE HISTORY        -->
     <!-- ========================= -->
 
-    <div class="card shadow-sm" style="border:1px solid #f1f5f9; border-radius:12px; overflow:hidden;">
+                <div class="card shadow-sm" style="border:1px solid #f1f5f9; border-radius:12px; overflow:hidden;">
 
-        <div class="card-header bg-light">
-            <h5 class="mb-0" style="color:#0f172a;">Attendance History</h5>
-        </div>
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0" style="color:#0f172a;">Attendance History</h5>
+                    </div>
 
-        <div class="card-body p-0">
+                    <div class="card-body p-0">
 
-            {% if history %}
+                        {% if history %}
 
-                <div class="table-responsive">
-                <table class="table table-hover nexora-table mb-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover nexora-table mb-0">
 
-                    <thead>
+                                    <thead>
 
-                        <tr>
+                                        <tr>
 
-                            <th>Clock In</th>
+                                            <th>Clock In</th>
 
-                            <th>Clock Out</th>
+                                            <th>Clock Out</th>
 
-                            <th>Hours</th>
+                                            <th>Hours</th>
 
-                            <th>Status</th>
+                                            <th>Status</th>
 
-                            <th>Action</th>
+                                            <th>Action</th>
 
-                        </tr>
+                                        </tr>
 
-                    </thead>
+                                    </thead>
 
-                    <tbody>
+                                    <tbody>
 
-                    {% for session in history %}
+                                        {% for session in history %}
 
-                        <tr>
+                                            <tr>
 
-                            <td>
+                                                <td>
 
-                                {{ session[1] }}
+                                                    {{ session[1] }}
 
-                            </td>
+                                                </td>
 
-                            <td>
+                                                <td>
 
-                                {{ session[2] if session[2] else "—" }}
+                                                    {{ session[2] if session[2] else "—" }}
 
-                            </td>
+                                                </td>
 
-                            <td>
+                                                <td>
 
-                                {{ session[3] if session[3] else "—" }}
+                                                    {{ session[3] if session[3] else "—" }}
 
-                            </td>
+                                                </td>
 
-                            <td>
+                                                <td>
 
-                                {{ session[4] }}
+                                                    {{ session[4] }}
 
-                            </td>
-                            
-                            <td>
+                                                </td>
 
-                                <a
-                                    href="/student/session/{{ session[0] }}"
-                                    class="btn btn-info btn-sm">
+                                                <td>
 
-                                    View Logs
+                                                    <a
+                                                        href="/student/session/{{ session[0] }}"
+                                                        class="btn btn-info btn-sm">
 
-                                </a>
-                        </tr>
+                                                        View Logs
 
-                    {% endfor %}
+                                                    </a>
+                                                </tr>
 
-                    </tbody>
+                                        {% endfor %}
 
-                </table>
+                                    </tbody>
+
+                                </table>
+                            </div>
+
+                        {% else %}
+
+                            <div class="empty-state py-4">
+                                <div class="icon">📅</div>
+                                <p class="text-muted mb-0">No attendance history yet.</p>
+                                <small class="text-muted">Your clock-in history will appear here.</small>
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
                 </div>
 
-            {% else %}
-
-                <div class="empty-state py-4">
-                    <div class="icon">📅</div>
-                    <p class="text-muted mb-0">No attendance history yet.</p>
-                    <small class="text-muted">Your clock-in history will appear here.</small>
-                </div>
-
-            {% endif %}
-
+            </div>
         </div>
-
-    </div>
-
-</div>
-</div>
-</body>
+    </body>
 </html>

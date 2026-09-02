@@ -1,144 +1,144 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Performance Insights - {{ classroom.name }} - Nexora</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
-    <style>
-        .student-insights-page { background:#f8fafc; }
-        .student-insights-shell { max-width:1180px; margin:0 auto; padding-bottom:48px; }
-        .student-insights-back { display:inline-flex; align-items:center; gap:6px; margin-bottom:18px; color:#2563eb; text-decoration:none; font-weight:700; font-size:.9rem; }
-        .student-insights-back:hover { color:#1d4ed8; text-decoration:underline; }
-        .student-insights-header { display:flex; align-items:flex-end; justify-content:space-between; gap:24px; margin-bottom:24px; }
-        .student-insights-eyebrow { display:block; margin-bottom:7px; color:#64748b; font-size:.72rem; font-weight:800; letter-spacing:.09em; text-transform:uppercase; }
-        .student-insights-header h1 { margin:0; color:#0f172a; font-size:2rem; font-weight:800; letter-spacing:-.025em; }
-        .student-insights-header p { margin:7px 0 0; color:#64748b; max-width:720px; }
-        .student-insights-summary-card { min-width:132px; padding:12px 16px; border:1px solid #e8eef7; border-radius:14px; background:#fff; text-align:center; box-shadow:0 6px 20px rgba(15,23,42,.05); }
-        .student-insights-summary-card strong { display:block; color:#2563eb; font-size:1.35rem; line-height:1.1; }
-        .student-insights-summary-card span { display:block; margin-top:3px; color:#64748b; font-size:.72rem; }
-        .student-insights-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; margin-bottom:18px; }
-        .student-insights-grid > div { padding:16px; border:1px solid #e8eef7; border-radius:14px; background:#fff; box-shadow:0 6px 20px rgba(15,23,42,.04); text-align:center; }
-        .student-insights-grid strong { display:block; color:#0f172a; font-size:1.15rem; }
-        .student-insights-grid span { display:block; margin-top:3px; color:#64748b; font-size:.72rem; }
-        .student-insights-card { padding:22px; border:1px solid #e8eef7; border-radius:18px; background:#fff; box-shadow:0 8px 28px rgba(15,23,42,.06); }
-        .student-insights-card h2 { margin:0 0 14px; color:#0f172a; font-size:1.05rem; font-weight:800; }
-        .student-insights-label { display:inline-block; padding:6px 10px; border-radius:999px; font-size:.78rem; font-weight:800; }
-        .student-insights-label.is-excellent { background:#dcfce7; color:#166534; }
-        .student-insights-label.is-very-satisfactory { background:#dbeafe; color:#1e40af; }
-        .student-insights-label.is-satisfactory { background:#fef3c7; color:#92400e; }
-        .student-insights-label.is-fair { background:#ffedd5; color:#9a3412; }
-        .student-insights-label.is-needs-improvement { background:#fee2e2; color:#991b1b; }
-        .student-insights-table { width:100%; border-collapse:collapse; }
-        .student-insights-table th, .student-insights-table td { padding:12px 14px; border-bottom:1px solid #f1f5f9; text-align:left; font-size:.84rem; }
-        .student-insights-table th { color:#64748b; font-size:.7rem; font-weight:800; text-transform:uppercase; letter-spacing:.05em; }
-        .student-insights-feedback { padding:16px; border:1px solid #e8eef7; border-radius:14px; background:#f8fafc; }
-        @media(max-width:768px){ .student-insights-header{ align-items:flex-start; flex-direction:column; } .student-insights-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
-    </style>
-</head>
-<body class="student-page student-insights-page">
-    {% include 'components/student_sidebar.html' %}
-    <main class="student-main-content nexora-app-main">
-        <div class="nexora-page student-insights-shell">
-            <a href="{{ url_for('classroom.student_class', class_id=classroom.id) }}" class="student-insights-back">← Back to {{ classroom.name }}</a>
-            <header class="student-insights-header">
-                <div>
-                    <span class="student-insights-eyebrow">{{ classroom.section }} · Teacher: {{ classroom.supervisor }}</span>
-                    <h1>Performance Insights</h1>
-                    <p>Your gradebook-to-ML performance summary — normalized scores, completion, and feedback ML analysis when available.</p>
-                    <div style="margin-top:10px;">
-                        <span class="student-insights-label {% if numeric_performance_label == 'Excellent' %}is-excellent{% elif numeric_performance_label == 'Very Satisfactory' %}is-very-satisfactory{% elif numeric_performance_label == 'Satisfactory' %}is-satisfactory{% elif numeric_performance_label == 'Fair' %}is-fair{% else %}is-needs-improvement{% endif %}">{{ numeric_performance_label }}</span>
-                        <small class="text-muted" style="margin-left:8px;">Numeric performance label</small>
-                    </div>
-                </div>
-                <div class="student-insights-summary-card">
-                    <strong>{% if average_percentage is not none %}{{ "%.1f"|format(average_percentage) }}%{% else %}—{% endif %}</strong>
-                    <span>average percentage</span>
-                </div>
-            </header>
-
-            <section class="student-insights-grid" aria-label="Grade summary">
-                <div><strong>{% if average_percentage is not none %}{{ "%.1f"|format(average_percentage) }}%{% else %}—{% endif %}</strong><span>Average percentage</span></div>
-                <div><strong>{% if min_percentage is not none %}{{ "%.1f"|format(min_percentage) }}%{% else %}—{% endif %}</strong><span>Minimum percentage</span></div>
-                <div><strong>{% if max_percentage is not none %}{{ "%.1f"|format(max_percentage) }}%{% else %}—{% endif %}</strong><span>Maximum percentage</span></div>
-                <div><strong>{{ "%.1f"|format(completion_rate) }}%</strong><span>Completion rate</span></div>
-            </section>
-
-            <section class="student-insights-grid" style="grid-template-columns:repeat(3,minmax(0,1fr));">
-                <div><strong>{{ graded_count }} / {{ total_count }}</strong><span>Graded assignments / total assignments</span></div>
-                <div><strong>{{ manual_count }}</strong><span>Manual grades count</span></div>
-                <div><strong>{{ imported_count }}</strong><span>Imported grades count</span></div>
-            </section>
-
-            <section class="student-insights-card">
-                <h2>Performance Summary</h2>
-                <table class="student-insights-table">
-                    <tbody>
-                        <tr><th>Average percentage</th><td>{% if average_percentage is not none %}{{ "%.1f"|format(average_percentage) }}%{% else %}—{% endif %}</td></tr>
-                        <tr><th>Minimum percentage</th><td>{% if min_percentage is not none %}{{ "%.1f"|format(min_percentage) }}%{% else %}—{% endif %}</td></tr>
-                        <tr><th>Maximum percentage</th><td>{% if max_percentage is not none %}{{ "%.1f"|format(max_percentage) }}%{% else %}—{% endif %}</td></tr>
-                        <tr><th>Graded assignments / total assignments</th><td>{{ graded_count }} / {{ total_count }}</td></tr>
-                        <tr><th>Completion rate</th><td>{{ "%.1f"|format(completion_rate) }}%</td></tr>
-                        <tr><th>Manual grades count</th><td>{{ manual_count }}</td></tr>
-                        <tr><th>Imported grades count</th><td>{{ imported_count }}</td></tr>
-                        <tr><th>Numeric performance label</th><td><span class="student-insights-label {% if numeric_performance_label == 'Excellent' %}is-excellent{% elif numeric_performance_label == 'Very Satisfactory' %}is-very-satisfactory{% elif numeric_performance_label == 'Satisfactory' %}is-satisfactory{% elif numeric_performance_label == 'Fair' %}is-fair{% else %}is-needs-improvement{% endif %}">{{ numeric_performance_label }}</span></td></tr>
-                    </tbody>
-                </table>
-                {% if graded_count == 0 %}
-                <div class="text-muted small mt-3">No graded assignments yet. Your performance insights will appear after your supervisor grades or imports scores.</div>
-                {% endif %}
-            </section>
-
-            <section class="student-insights-card" style="margin-top:18px;">
-                <h2>ML Recommendation</h2>
-                {% if ml_recommendation %}
-                    <div style="display:grid; gap:8px; font-size:.84rem;">
-                        <div><strong>performance_label:</strong> {{ ml_recommendation.performance_label }}</div>
-                        <div><strong>overall_percentage:</strong> {% if ml_recommendation.overall_percentage is not none %}{{ "%.1f"|format(ml_recommendation.overall_percentage) }}%{% else %}—{% endif %} <span class="text-muted" style="margin-left:8px;">completion_rate: {{ "%.1f"|format(ml_recommendation.completion_rate) }}%</span></div>
-                        <div><strong>recommendation:</strong> <span style="color:#334155;">{{ ml_recommendation.recommendation }}</span></div>
-                        <div><strong>priority:</strong> {{ ml_recommendation.priority }}</div>
-                        {% if ml_recommendation.basis %}
-                            <div style="color:#64748b; font-size:.78rem;"><strong>basis:</strong> {{ ml_recommendation.basis|join(" · ") }}</div>
-                        {% endif %}
-                        <div style="color:#64748b; font-size:.78rem;"><strong>graded:</strong> {{ ml_recommendation.graded_count }}/{{ ml_recommendation.total_count }} · <strong>priority detail:</strong> {{ ml_recommendation.priority }}</div>
-                    </div>
-                {% else %}
-                    <div class="text-muted">No recommendation available.</div>
-                {% endif %}
-            </section>
-
-            <section class="student-insights-card" style="margin-top:18px;">
-                <h2>Feedback ML Analysis</h2>
-                {% if has_feedback %}
-                    <div class="student-insights-feedback">
-                        <div><strong>sentiment:</strong> {{ sentiment }} <span class="text-muted" style="margin-left:8px;">competency: {{ competency }}</span></div>
-                        <div style="margin-top:8px;"><strong>recommendation:</strong> <span style="color:#475569;">{{ recommendation }}</span></div>
-                        <div style="margin-top:10px; display:grid; gap:6px; font-size:.84rem;">
-                            <div><strong>confidence:</strong> {{ "%.2f"|format(confidence) }}</div>
-                            <div><strong>Naive Bayes prediction:</strong> {{ feedback_analysis.nb_prediction }}</div>
-                            <div><strong>SVM prediction:</strong> {{ feedback_analysis.svm_prediction }}</div>
-                            <div><strong>performance label:</strong> {{ feedback_analysis.performance_label }}</div>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Performance Insights - {{ classroom.name }} - Nexora</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
+        <style>
+            .student-insights-page { background:#f8fafc; }
+            .student-insights-shell { max-width:1180px; margin:0 auto; padding-bottom:48px; }
+            .student-insights-back { display:inline-flex; align-items:center; gap:6px; margin-bottom:18px; color:#2563eb; text-decoration:none; font-weight:700; font-size:.9rem; }
+            .student-insights-back:hover { color:#1d4ed8; text-decoration:underline; }
+            .student-insights-header { display:flex; align-items:flex-end; justify-content:space-between; gap:24px; margin-bottom:24px; }
+            .student-insights-eyebrow { display:block; margin-bottom:7px; color:#64748b; font-size:.72rem; font-weight:800; letter-spacing:.09em; text-transform:uppercase; }
+            .student-insights-header h1 { margin:0; color:#0f172a; font-size:2rem; font-weight:800; letter-spacing:-.025em; }
+            .student-insights-header p { margin:7px 0 0; color:#64748b; max-width:720px; }
+            .student-insights-summary-card { min-width:132px; padding:12px 16px; border:1px solid #e8eef7; border-radius:14px; background:#fff; text-align:center; box-shadow:0 6px 20px rgba(15,23,42,.05); }
+            .student-insights-summary-card strong { display:block; color:#2563eb; font-size:1.35rem; line-height:1.1; }
+            .student-insights-summary-card span { display:block; margin-top:3px; color:#64748b; font-size:.72rem; }
+            .student-insights-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; margin-bottom:18px; }
+            .student-insights-grid > div { padding:16px; border:1px solid #e8eef7; border-radius:14px; background:#fff; box-shadow:0 6px 20px rgba(15,23,42,.04); text-align:center; }
+            .student-insights-grid strong { display:block; color:#0f172a; font-size:1.15rem; }
+            .student-insights-grid span { display:block; margin-top:3px; color:#64748b; font-size:.72rem; }
+            .student-insights-card { padding:22px; border:1px solid #e8eef7; border-radius:18px; background:#fff; box-shadow:0 8px 28px rgba(15,23,42,.06); }
+            .student-insights-card h2 { margin:0 0 14px; color:#0f172a; font-size:1.05rem; font-weight:800; }
+            .student-insights-label { display:inline-block; padding:6px 10px; border-radius:999px; font-size:.78rem; font-weight:800; }
+            .student-insights-label.is-excellent { background:#dcfce7; color:#166534; }
+            .student-insights-label.is-very-satisfactory { background:#dbeafe; color:#1e40af; }
+            .student-insights-label.is-satisfactory { background:#fef3c7; color:#92400e; }
+            .student-insights-label.is-fair { background:#ffedd5; color:#9a3412; }
+            .student-insights-label.is-needs-improvement { background:#fee2e2; color:#991b1b; }
+            .student-insights-table { width:100%; border-collapse:collapse; }
+            .student-insights-table th, .student-insights-table td { padding:12px 14px; border-bottom:1px solid #f1f5f9; text-align:left; font-size:.84rem; }
+            .student-insights-table th { color:#64748b; font-size:.7rem; font-weight:800; text-transform:uppercase; letter-spacing:.05em; }
+            .student-insights-feedback { padding:16px; border:1px solid #e8eef7; border-radius:14px; background:#f8fafc; }
+            @media(max-width:768px){ .student-insights-header{ align-items:flex-start; flex-direction:column; } .student-insights-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+        </style>
+    </head>
+    <body class="student-page student-insights-page">
+        {% include 'components/student_sidebar.html' %}
+        <main class="student-main-content nexora-app-main">
+            <div class="nexora-page student-insights-shell">
+                <a href="{{ url_for('classroom.student_class', class_id=classroom.id) }}" class="student-insights-back">← Back to {{ classroom.name }}</a>
+                <header class="student-insights-header">
+                    <div>
+                        <span class="student-insights-eyebrow">{{ classroom.section }} · Teacher: {{ classroom.supervisor }}</span>
+                        <h1>Performance Insights</h1>
+                        <p>Your gradebook-to-ML performance summary — normalized scores, completion, and feedback ML analysis when available.</p>
+                        <div style="margin-top:10px;">
+                            <span class="student-insights-label {% if numeric_performance_label == 'Excellent' %}is-excellent{% elif numeric_performance_label == 'Very Satisfactory' %}is-very-satisfactory{% elif numeric_performance_label == 'Satisfactory' %}is-satisfactory{% elif numeric_performance_label == 'Fair' %}is-fair{% else %}is-needs-improvement{% endif %}">{{ numeric_performance_label }}</span>
+                            <small class="text-muted" style="margin-left:8px;">Numeric performance label</small>
                         </div>
                     </div>
-                {% else %}
-                    <div class="student-insights-feedback text-muted">
-                        <div>No feedback data yet — showing default analysis.</div>
-                        <div style="margin-top:6px;"><strong>sentiment:</strong> {{ sentiment }} · <strong>competency:</strong> {{ competency }}</div>
-                        <div style="margin-top:4px;"><strong>recommendation:</strong> {{ recommendation }}</div>
-                        <div style="margin-top:6px;"><strong>confidence:</strong> {{ "%.2f"|format(confidence) }} · <strong>Naive Bayes prediction:</strong> {{ feedback_analysis.nb_prediction }} · <strong>SVM prediction:</strong> {{ feedback_analysis.svm_prediction }}</div>
+                    <div class="student-insights-summary-card">
+                        <strong>{% if average_percentage is not none %}{{ "%.1f"|format(average_percentage) }}%{% else %}—{% endif %}</strong>
+                        <span>average percentage</span>
                     </div>
-                    <div class="text-muted small mt-2">Feedback ML analysis appears when supervisor feedback data is available. Numeric performance label is always derived from your gradebook.</div>
-                {% endif %}
-            </section>
+                </header>
 
-            <div class="d-flex gap-2 mt-3">
-                <a href="{{ url_for('student_gradebook.gradebook', class_id=classroom.id) }}" class="btn btn-outline-primary">Back to Gradebook</a>
-                <a href="{{ url_for('performance_reports.student_reports', class_id=classroom.id) }}" class="btn btn-outline-primary">View Report</a>
-                <a href="{{ url_for('classroom.student_class', class_id=classroom.id) }}" class="btn btn-light">Back to Class</a>
+                <section class="student-insights-grid" aria-label="Grade summary">
+                    <div><strong>{% if average_percentage is not none %}{{ "%.1f"|format(average_percentage) }}%{% else %}—{% endif %}</strong><span>Average percentage</span></div>
+                    <div><strong>{% if min_percentage is not none %}{{ "%.1f"|format(min_percentage) }}%{% else %}—{% endif %}</strong><span>Minimum percentage</span></div>
+                    <div><strong>{% if max_percentage is not none %}{{ "%.1f"|format(max_percentage) }}%{% else %}—{% endif %}</strong><span>Maximum percentage</span></div>
+                    <div><strong>{{ "%.1f"|format(completion_rate) }}%</strong><span>Completion rate</span></div>
+                </section>
+
+                <section class="student-insights-grid" style="grid-template-columns:repeat(3,minmax(0,1fr));">
+                    <div><strong>{{ graded_count }} / {{ total_count }}</strong><span>Graded assignments / total assignments</span></div>
+                    <div><strong>{{ manual_count }}</strong><span>Manual grades count</span></div>
+                    <div><strong>{{ imported_count }}</strong><span>Imported grades count</span></div>
+                </section>
+
+                <section class="student-insights-card">
+                    <h2>Performance Summary</h2>
+                    <table class="student-insights-table">
+                        <tbody>
+                            <tr><th>Average percentage</th><td>{% if average_percentage is not none %}{{ "%.1f"|format(average_percentage) }}%{% else %}—{% endif %}</td></tr>
+                            <tr><th>Minimum percentage</th><td>{% if min_percentage is not none %}{{ "%.1f"|format(min_percentage) }}%{% else %}—{% endif %}</td></tr>
+                            <tr><th>Maximum percentage</th><td>{% if max_percentage is not none %}{{ "%.1f"|format(max_percentage) }}%{% else %}—{% endif %}</td></tr>
+                            <tr><th>Graded assignments / total assignments</th><td>{{ graded_count }} / {{ total_count }}</td></tr>
+                            <tr><th>Completion rate</th><td>{{ "%.1f"|format(completion_rate) }}%</td></tr>
+                            <tr><th>Manual grades count</th><td>{{ manual_count }}</td></tr>
+                            <tr><th>Imported grades count</th><td>{{ imported_count }}</td></tr>
+                            <tr><th>Numeric performance label</th><td><span class="student-insights-label {% if numeric_performance_label == 'Excellent' %}is-excellent{% elif numeric_performance_label == 'Very Satisfactory' %}is-very-satisfactory{% elif numeric_performance_label == 'Satisfactory' %}is-satisfactory{% elif numeric_performance_label == 'Fair' %}is-fair{% else %}is-needs-improvement{% endif %}">{{ numeric_performance_label }}</span></td></tr>
+                        </tbody>
+                    </table>
+                    {% if graded_count == 0 %}
+                        <div class="text-muted small mt-3">No graded assignments yet. Your performance insights will appear after your supervisor grades or imports scores.</div>
+                    {% endif %}
+                </section>
+
+                <section class="student-insights-card" style="margin-top:18px;">
+                    <h2>ML Recommendation</h2>
+                    {% if ml_recommendation %}
+                        <div style="display:grid; gap:8px; font-size:.84rem;">
+                            <div><strong>performance_label:</strong> {{ ml_recommendation.performance_label }}</div>
+                            <div><strong>overall_percentage:</strong> {% if ml_recommendation.overall_percentage is not none %}{{ "%.1f"|format(ml_recommendation.overall_percentage) }}%{% else %}—{% endif %} <span class="text-muted" style="margin-left:8px;">completion_rate: {{ "%.1f"|format(ml_recommendation.completion_rate) }}%</span></div>
+                            <div><strong>recommendation:</strong> <span style="color:#334155;">{{ ml_recommendation.recommendation }}</span></div>
+                            <div><strong>priority:</strong> {{ ml_recommendation.priority }}</div>
+                            {% if ml_recommendation.basis %}
+                                <div style="color:#64748b; font-size:.78rem;"><strong>basis:</strong> {{ ml_recommendation.basis|join(" · ") }}</div>
+                            {% endif %}
+                            <div style="color:#64748b; font-size:.78rem;"><strong>graded:</strong> {{ ml_recommendation.graded_count }}/{{ ml_recommendation.total_count }} · <strong>priority detail:</strong> {{ ml_recommendation.priority }}</div>
+                        </div>
+                    {% else %}
+                        <div class="text-muted">No recommendation available.</div>
+                    {% endif %}
+                </section>
+
+                <section class="student-insights-card" style="margin-top:18px;">
+                    <h2>Feedback ML Analysis</h2>
+                    {% if has_feedback %}
+                        <div class="student-insights-feedback">
+                            <div><strong>sentiment:</strong> {{ sentiment }} <span class="text-muted" style="margin-left:8px;">competency: {{ competency }}</span></div>
+                            <div style="margin-top:8px;"><strong>recommendation:</strong> <span style="color:#475569;">{{ recommendation }}</span></div>
+                            <div style="margin-top:10px; display:grid; gap:6px; font-size:.84rem;">
+                                <div><strong>confidence:</strong> {{ "%.2f"|format(confidence) }}</div>
+                                <div><strong>Naive Bayes prediction:</strong> {{ feedback_analysis.nb_prediction }}</div>
+                                <div><strong>SVM prediction:</strong> {{ feedback_analysis.svm_prediction }}</div>
+                                <div><strong>performance label:</strong> {{ feedback_analysis.performance_label }}</div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="student-insights-feedback text-muted">
+                            <div>No feedback data yet — showing default analysis.</div>
+                            <div style="margin-top:6px;"><strong>sentiment:</strong> {{ sentiment }} · <strong>competency:</strong> {{ competency }}</div>
+                            <div style="margin-top:4px;"><strong>recommendation:</strong> {{ recommendation }}</div>
+                            <div style="margin-top:6px;"><strong>confidence:</strong> {{ "%.2f"|format(confidence) }} · <strong>Naive Bayes prediction:</strong> {{ feedback_analysis.nb_prediction }} · <strong>SVM prediction:</strong> {{ feedback_analysis.svm_prediction }}</div>
+                        </div>
+                        <div class="text-muted small mt-2">Feedback ML analysis appears when supervisor feedback data is available. Numeric performance label is always derived from your gradebook.</div>
+                    {% endif %}
+                </section>
+
+                <div class="d-flex gap-2 mt-3">
+                    <a href="{{ url_for('student_gradebook.gradebook', class_id=classroom.id) }}" class="btn btn-outline-primary">Back to Gradebook</a>
+                    <a href="{{ url_for('performance_reports.student_reports', class_id=classroom.id) }}" class="btn btn-outline-primary">View Report</a>
+                    <a href="{{ url_for('classroom.student_class', class_id=classroom.id) }}" class="btn btn-light">Back to Class</a>
+                </div>
             </div>
-        </div>
-    </main>
-</body>
+        </main>
+    </body>
 </html>

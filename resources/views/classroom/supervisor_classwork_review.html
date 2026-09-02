@@ -1,107 +1,107 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Review {{ submission.username }} - Nexora</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">
-    <style>
-        .grading-shell { max-width: 1180px; margin: 0 auto; }
-        .grading-work { background:#fff; border:1px solid #e5e7eb; border-radius:18px; overflow:hidden; box-shadow:0 8px 28px rgba(15,23,42,.06); }
-        .grading-toolbar { padding:18px 22px; border-bottom:1px solid #eef2f7; display:flex; justify-content:space-between; gap:16px; align-items:center; }
-        .grading-viewer { min-height:520px; padding:24px; background:#f8fafc; display:flex; flex-direction:column; gap:18px; }
-        .submission-text { background:#fff; border:1px solid #e5e7eb; border-radius:14px; padding:18px; white-space:pre-wrap; }
-        .file-card { background:#fff; border:1px solid #e5e7eb; border-radius:14px; padding:12px; }
-        .file-preview { width:100%; max-height:620px; object-fit:contain; background:#f1f5f9; border-radius:10px; }
-        .file-preview.pdf { height:620px; border:0; }
-        .file-name { font-weight:700; color:#334155; overflow-wrap:anywhere; }
-        .grading-panel { padding:22px; border-top:1px solid #eef2f7; background:#fff; }
-        .grade-input { font-size:1.3rem; font-weight:800; max-width:160px; }
-        .student-nav { display:flex; justify-content:space-between; gap:10px; margin-top:18px; }
-    </style>
-</head>
-<body class="supervisor-page">
-{% include 'components/supervisor_sidebar.html' %}
-<main class="page-content nexora-app-main">
-    <div class="nexora-page grading-shell">
-        <a href="{{ url_for('classwork_submissions.supervisor_submissions', class_id=assignment.classroom_id, assignment_id=assignment.id) }}" class="text-decoration-none">← Back to Submissions</a>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Review {{ submission.username }} - Nexora</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">
+        <style>
+            .grading-shell { max-width: 1180px; margin: 0 auto; }
+            .grading-work { background:#fff; border:1px solid #e5e7eb; border-radius:18px; overflow:hidden; box-shadow:0 8px 28px rgba(15,23,42,.06); }
+            .grading-toolbar { padding:18px 22px; border-bottom:1px solid #eef2f7; display:flex; justify-content:space-between; gap:16px; align-items:center; }
+            .grading-viewer { min-height:520px; padding:24px; background:#f8fafc; display:flex; flex-direction:column; gap:18px; }
+            .submission-text { background:#fff; border:1px solid #e5e7eb; border-radius:14px; padding:18px; white-space:pre-wrap; }
+            .file-card { background:#fff; border:1px solid #e5e7eb; border-radius:14px; padding:12px; }
+            .file-preview { width:100%; max-height:620px; object-fit:contain; background:#f1f5f9; border-radius:10px; }
+            .file-preview.pdf { height:620px; border:0; }
+            .file-name { font-weight:700; color:#334155; overflow-wrap:anywhere; }
+            .grading-panel { padding:22px; border-top:1px solid #eef2f7; background:#fff; }
+            .grade-input { font-size:1.3rem; font-weight:800; max-width:160px; }
+            .student-nav { display:flex; justify-content:space-between; gap:10px; margin-top:18px; }
+        </style>
+    </head>
+    <body class="supervisor-page">
+        {% include 'components/supervisor_sidebar.html' %}
+        <main class="page-content nexora-app-main">
+            <div class="nexora-page grading-shell">
+                <a href="{{ url_for('classwork_submissions.supervisor_submissions', class_id=assignment.classroom_id, assignment_id=assignment.id) }}" class="text-decoration-none">← Back to Submissions</a>
 
-        <div class="mt-3 mb-4">
-            <div class="text-muted small text-uppercase fw-bold">Manual Review</div>
-            <h1 class="mb-1">{{ assignment.title }}</h1>
-            <div class="text-muted">{{ submission.username }} · Attempt {{ submission.attempt_no }} · {{ assignment.points }} points</div>
-        </div>
-
-        <section class="grading-work">
-            <div class="grading-toolbar">
-                <div>
-                    <strong>{{ submission.username }}</strong>
-                    <div class="small text-muted">{{ submission.email }} · Submitted {{ submission.submitted_at or '—' }}</div>
+                <div class="mt-3 mb-4">
+                    <div class="text-muted small text-uppercase fw-bold">Manual Review</div>
+                    <h1 class="mb-1">{{ assignment.title }}</h1>
+                    <div class="text-muted">{{ submission.username }} · Attempt {{ submission.attempt_no }} · {{ assignment.points }} points</div>
                 </div>
-                <span class="badge {% if submission.status == 'graded' %}text-bg-success{% elif submission.status == 'late' %}text-bg-warning{% elif submission.status == 'resubmission_required' %}text-bg-danger{% else %}text-bg-primary{% endif %}">{{ submission.status|replace('_',' ')|capitalize }}</span>
-            </div>
 
-            <div class="grading-viewer">
-                {% if submission.content %}
-                <div class="submission-text">{{ submission.content }}</div>
-                {% endif %}
-
-                {% for file in files %}
-                <div class="file-card">
-                    <div class="d-flex justify-content-between align-items-center gap-3 mb-2">
-                        <div class="file-name">{{ file.original_filename }}</div>
-                        <a class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener" href="{{ url_for('classwork_grading.supervisor_file', class_id=assignment.classroom_id, assignment_id=assignment.id, submission_id=submission.id, file_id=file.id) }}">Open</a>
+                <section class="grading-work">
+                    <div class="grading-toolbar">
+                        <div>
+                            <strong>{{ submission.username }}</strong>
+                            <div class="small text-muted">{{ submission.email }} · Submitted {{ submission.submitted_at or '—' }}</div>
+                        </div>
+                        <span class="badge {% if submission.status == 'graded' %}text-bg-success{% elif submission.status == 'late' %}text-bg-warning{% elif submission.status == 'resubmission_required' %}text-bg-danger{% else %}text-bg-primary{% endif %}">{{ submission.status|replace('_',' ')|capitalize }}</span>
                     </div>
-                    {% if file.mime_type and file.mime_type.startswith('image/') %}
-                        <img class="file-preview" src="{{ url_for('classwork_grading.supervisor_file', class_id=assignment.classroom_id, assignment_id=assignment.id, submission_id=submission.id, file_id=file.id) }}" alt="{{ file.original_filename }}">
-                    {% elif file.mime_type == 'application/pdf' %}
-                        <iframe class="file-preview pdf" src="{{ url_for('classwork_grading.supervisor_file', class_id=assignment.classroom_id, assignment_id=assignment.id, submission_id=submission.id, file_id=file.id) }}" title="{{ file.original_filename }}"></iframe>
-                    {% else %}
-                        <div class="text-muted small">This file type cannot be previewed here. Use Open to view it.</div>
-                    {% endif %}
-                </div>
-                {% else %}
-                    {% if not submission.content %}<div class="text-center text-muted py-5">No files or written response were submitted.</div>{% endif %}
-                {% endfor %}
-            </div>
 
-            <div class="grading-panel">
-                <form method="post" action="{{ url_for('classwork_grading.grade', class_id=assignment.classroom_id, assignment_id=assignment.id, submission_id=submission.id) }}">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <div class="row g-3 align-items-end">
-                        <div class="col-sm-4 col-md-3">
-                            <label for="grade" class="form-label fw-bold">Score</label>
-                            <div class="input-group">
-                                <input id="grade" name="grade" type="number" min="0" max="{{ assignment.points }}" step="0.01" class="form-control grade-input" value="{{ submission.grade if submission.grade is not none else '' }}" required>
-                                <span class="input-group-text">/ {{ assignment.points }}</span>
+                    <div class="grading-viewer">
+                        {% if submission.content %}
+                            <div class="submission-text">{{ submission.content }}</div>
+                        {% endif %}
+
+                        {% for file in files %}
+                            <div class="file-card">
+                                <div class="d-flex justify-content-between align-items-center gap-3 mb-2">
+                                    <div class="file-name">{{ file.original_filename }}</div>
+                                    <a class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener" href="{{ url_for('classwork_grading.supervisor_file', class_id=assignment.classroom_id, assignment_id=assignment.id, submission_id=submission.id, file_id=file.id) }}">Open</a>
+                                </div>
+                                {% if file.mime_type and file.mime_type.startswith('image/') %}
+                                    <img class="file-preview" src="{{ url_for('classwork_grading.supervisor_file', class_id=assignment.classroom_id, assignment_id=assignment.id, submission_id=submission.id, file_id=file.id) }}" alt="{{ file.original_filename }}">
+                                {% elif file.mime_type == 'application/pdf' %}
+                                    <iframe class="file-preview pdf" src="{{ url_for('classwork_grading.supervisor_file', class_id=assignment.classroom_id, assignment_id=assignment.id, submission_id=submission.id, file_id=file.id) }}" title="{{ file.original_filename }}"></iframe>
+                                {% else %}
+                                    <div class="text-muted small">This file type cannot be previewed here. Use Open to view it.</div>
+                                {% endif %}
                             </div>
-                        </div>
-                        <div class="col-md-9">
-                            <label for="feedback" class="form-label fw-bold">Feedback</label>
-                            <textarea id="feedback" name="feedback" rows="3" class="form-control" placeholder="Add feedback for the student...">{{ submission.feedback or '' }}</textarea>
+                        {% else %}
+                            {% if not submission.content %}<div class="text-center text-muted py-5">No files or written response were submitted.</div>{% endif %}
+                        {% endfor %}
+                    </div>
+
+                    <div class="grading-panel">
+                        <form method="post" action="{{ url_for('classwork_grading.grade', class_id=assignment.classroom_id, assignment_id=assignment.id, submission_id=submission.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <div class="row g-3 align-items-end">
+                                <div class="col-sm-4 col-md-3">
+                                    <label for="grade" class="form-label fw-bold">Score</label>
+                                    <div class="input-group">
+                                        <input id="grade" name="grade" type="number" min="0" max="{{ assignment.points }}" step="0.01" class="form-control grade-input" value="{{ submission.grade if submission.grade is not none else '' }}" required>
+                                        <span class="input-group-text">/ {{ assignment.points }}</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-9">
+                                    <label for="feedback" class="form-label fw-bold">Feedback</label>
+                                    <textarea id="feedback" name="feedback" rows="3" class="form-control" placeholder="Add feedback for the student...">{{ submission.feedback or '' }}</textarea>
+                                </div>
+                            </div>
+                            <div class="d-flex flex-wrap justify-content-between gap-2 mt-4">
+                                <button type="button" class="btn btn-outline-danger" onclick="document.getElementById('returnForm').submit()">Return for Revision</button>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-primary" name="action" value="save" type="submit">Save Grade</button>
+                                    <button class="btn btn-primary" name="action" value="next" type="submit">Save Grade &amp; Next Student</button>
+                                </div>
+                            </div>
+                        </form>
+                        <form id="returnForm" method="post" action="{{ url_for('classwork_grading.return_for_revision', class_id=assignment.classroom_id, assignment_id=assignment.id, submission_id=submission.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="feedback" value="{{ submission.feedback or '' }}">
+                        </form>
+                        <div class="student-nav">
+                            <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('classwork_submissions.supervisor_submissions', class_id=assignment.classroom_id, assignment_id=assignment.id) }}">Submission List</a>
+                            <span class="small text-muted align-self-center">Review the uploaded work before saving the score.</span>
                         </div>
                     </div>
-                    <div class="d-flex flex-wrap justify-content-between gap-2 mt-4">
-                        <button type="button" class="btn btn-outline-danger" onclick="document.getElementById('returnForm').submit()">Return for Revision</button>
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-primary" name="action" value="save" type="submit">Save Grade</button>
-                            <button class="btn btn-primary" name="action" value="next" type="submit">Save Grade &amp; Next Student</button>
-                        </div>
-                    </div>
-                </form>
-                <form id="returnForm" method="post" action="{{ url_for('classwork_grading.return_for_revision', class_id=assignment.classroom_id, assignment_id=assignment.id, submission_id=submission.id) }}">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <input type="hidden" name="feedback" value="{{ submission.feedback or '' }}">
-                </form>
-                <div class="student-nav">
-                    <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('classwork_submissions.supervisor_submissions', class_id=assignment.classroom_id, assignment_id=assignment.id) }}">Submission List</a>
-                    <span class="small text-muted align-self-center">Review the uploaded work before saving the score.</span>
-                </div>
+                </section>
             </div>
-        </section>
-    </div>
-</main>
-</body>
+        </main>
+    </body>
 </html>

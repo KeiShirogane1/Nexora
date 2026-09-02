@@ -1,215 +1,215 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <meta charset="UTF-8">
-    <title>{{ classroom.name }} - Nexora</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">
-</head>
-<body class="analytics-aesthetic">
-    {% include 'components/supervisor_sidebar.html' %}
-    <div class="page-content nexora-app-main">
-        <div class="nexora-page">
-            <div class="card shadow-sm mb-4" style="overflow:hidden;">
-                <div style="height:120px; background: linear-gradient(135deg, #2563eb, #60a5fa);"></div>
-                <div class="card-body">
-                    <div class="d-flex flex-column flex-md-row justify-content-between gap-3">
-                        <div>
-                            <h2 class="mb-1">{{ classroom.name }}</h2>
-                            <p class="text-muted mb-2">{{ classroom.section }} • {{ classroom.description or '' }}</p>
-                            <div class="d-flex flex-wrap align-items-center gap-2">
-                                <span class="badge {% if classroom.status == 'Active' %}bg-success{% else %}bg-secondary{% endif %}">{{ classroom.status }}</span>
-                                <span class="badge bg-light text-dark border" id="classCodeBadge">{{ classroom.code }}</span>
-                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="copyClassCode()">Copy code</button>
-                                <form method="POST" action="{{ url_for('classroom.regenerate_code', class_id=classroom.id) }}" style="display:inline;" onsubmit="return confirm('Regenerate class code? Old code will stop working.')">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button type="submit" class="btn btn-sm btn-outline-warning">Regenerate</button>
-                                </form>
+    <head>
+        <meta charset="UTF-8">
+        <title>{{ classroom.name }} - Nexora</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">
+    </head>
+    <body class="analytics-aesthetic">
+        {% include 'components/supervisor_sidebar.html' %}
+        <div class="page-content nexora-app-main">
+            <div class="nexora-page">
+                <div class="card shadow-sm mb-4" style="overflow:hidden;">
+                    <div style="height:120px; background: linear-gradient(135deg, #2563eb, #60a5fa);"></div>
+                    <div class="card-body">
+                        <div class="d-flex flex-column flex-md-row justify-content-between gap-3">
+                            <div>
+                                <h2 class="mb-1">{{ classroom.name }}</h2>
+                                <p class="text-muted mb-2">{{ classroom.section }} • {{ classroom.description or '' }}</p>
+                                <div class="d-flex flex-wrap align-items-center gap-2">
+                                    <span class="badge {% if classroom.status == 'Active' %}bg-success{% else %}bg-secondary{% endif %}">{{ classroom.status }}</span>
+                                    <span class="badge bg-light text-dark border" id="classCodeBadge">{{ classroom.code }}</span>
+                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="copyClassCode()">Copy code</button>
+                                    <form method="POST" action="{{ url_for('classroom.regenerate_code', class_id=classroom.id) }}" style="display:inline;" onsubmit="return confirm('Regenerate class code? Old code will stop working.')">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-warning">Regenerate</button>
+                                    </form>
+                                </div>
+                            </div>
+                            <div class="d-flex flex-column gap-2 align-items-end">
+                                <a href="{{ url_for('classroom.supervisor_classes') }}" class="btn btn-light btn-sm">← Back to classes</a>
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="document.getElementById('classInfoModal').classList.add('open')">Class Info</button>
+                                    <form method="POST" action="{{ url_for('classroom.archive_class', class_id=classroom.id) }}" style="display:inline;">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm {% if classroom.archived %}btn-success{% else %}btn-outline-secondary{% endif %}">
+                                            {% if classroom.archived %}Unarchive{% else %}Archive{% endif %}
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
                         </div>
-                        <div class="d-flex flex-column gap-2 align-items-end">
-                            <a href="{{ url_for('classroom.supervisor_classes') }}" class="btn btn-light btn-sm">← Back to classes</a>
-                            <div class="d-flex gap-2">
-                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="document.getElementById('classInfoModal').classList.add('open')">Class Info</button>
-                                <form method="POST" action="{{ url_for('classroom.archive_class', class_id=classroom.id) }}" style="display:inline;">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button type="submit" class="btn btn-sm {% if classroom.archived %}btn-success{% else %}btn-outline-secondary{% endif %}">
-                                        {% if classroom.archived %}Unarchive{% else %}Archive{% endif %}
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
+                        {% if classroom.archived %}
+                            <div class="alert alert-warning mt-3 mb-0">This class is archived. New announcements and assignments are disabled.</div>
+                        {% endif %}
                     </div>
-                    {% if classroom.archived %}
-                    <div class="alert alert-warning mt-3 mb-0">This class is archived. New announcements and assignments are disabled.</div>
+                </div>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'danger' if category=='danger' else 'success' if category=='success' else 'warning' if category=='warning' else 'info' }}">{{ message }}</div>
+                        {% endfor %}
                     {% endif %}
+                {% endwith %}
+
+                <div class="profile-tabs mb-4">
+                    <button class="profile-tab-button active" onclick="openClassTab('stream', this)">Stream</button>
+                    <button class="profile-tab-button" onclick="openClassTab('classwork', this)">Classwork</button>
+                    <button class="profile-tab-button" onclick="openClassTab('people', this)">People</button>
+                    <a href="{{ url_for('classwork_gradebook.supervisor_gradebook', class_id=classroom.id) }}" class="profile-tab-button" style="text-decoration:none;">Gradebook</a>
+                    <a href="{{ url_for('classwork_ml_insights.supervisor_insights', class_id=classroom.id) }}" class="profile-tab-button" style="text-decoration:none;">Performance Insights</a>
+                    <a href="{{ url_for('classwork_ml_insights.supervisor_insights', class_id=classroom.id) }}" class="profile-tab-button" style="text-decoration:none;">ML Insights</a>
+                    <a href="{{ url_for('performance_reports.supervisor_reports', class_id=classroom.id) }}" class="profile-tab-button" style="text-decoration:none;">Reports</a>
                 </div>
-            </div>
 
-            {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-            {% for category, message in messages %}
-            <div class="alert alert-{{ 'danger' if category=='danger' else 'success' if category=='success' else 'warning' if category=='warning' else 'info' }}">{{ message }}</div>
-            {% endfor %}
-            {% endif %}
-            {% endwith %}
-
-            <div class="profile-tabs mb-4">
-                <button class="profile-tab-button active" onclick="openClassTab('stream', this)">Stream</button>
-                <button class="profile-tab-button" onclick="openClassTab('classwork', this)">Classwork</button>
-                <button class="profile-tab-button" onclick="openClassTab('people', this)">People</button>
-                <a href="{{ url_for('classwork_gradebook.supervisor_gradebook', class_id=classroom.id) }}" class="profile-tab-button" style="text-decoration:none;">Gradebook</a>
-                <a href="{{ url_for('classwork_ml_insights.supervisor_insights', class_id=classroom.id) }}" class="profile-tab-button" style="text-decoration:none;">Performance Insights</a>
-                <a href="{{ url_for('classwork_ml_insights.supervisor_insights', class_id=classroom.id) }}" class="profile-tab-button" style="text-decoration:none;">ML Insights</a>
-                <a href="{{ url_for('performance_reports.supervisor_reports', class_id=classroom.id) }}" class="profile-tab-button" style="text-decoration:none;">Reports</a>
-            </div>
-
-            <div id="stream" class="profile-tab active">
-                <div class="card shadow-sm mb-4">
-                    <div class="card-body">
-                        <h5>Announcement</h5>
-                        <form method="POST" action="{{ url_for('classroom.create_post', class_id=classroom.id) }}">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <input type="text" name="title" class="form-control mb-2" placeholder="Title (optional)" maxlength="200" {% if classroom.archived %}disabled{% endif %}>
-                            <textarea name="body" class="form-control mb-3" rows="3" placeholder="Announce something to your class..." required maxlength="5000" {% if classroom.archived %}disabled{% endif %}></textarea>
-                            <div class="text-end">
-                                <button type="submit" class="btn btn-primary btn-sm" {% if classroom.archived %}disabled{% endif %}>Post</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-                <div class="card shadow-sm mb-4">
-                    <div class="card-header bg-white"><h6 class="mb-0">Recent announcements</h6></div>
-                    <div class="card-body">
-                        {% if announcements and announcements|length > 0 %}
-                            {% for a in announcements %}
-                            <div class="border-bottom pb-3 mb-3">
-                                {% if a.title %}<strong>{{ a.title }}</strong><br>{% endif %}
-                                <p class="mb-1">{{ a.body }}</p>
-                            </div>
-                            {% endfor %}
-                        {% else %}
-                            <p class="text-muted mb-0">No announcements yet. Use the composer above.</p>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-
-            <div id="classwork" class="profile-tab">
-                <div class="card shadow-sm mb-4">
-                    <div class="card-header bg-white d-flex justify-content-between align-items-center gap-3">
-                        <div>
-                            <h6 class="mb-1">Classwork</h6>
-                            <div class="small text-muted">Assignments, quizzes, Google activities, files, and projects.</div>
-                        </div>
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="badge bg-primary">{{ assignments|length }} activities</span>
-                            <a href="{{ url_for('classwork.manage_classwork', class_id=classroom.id) }}" class="btn btn-primary btn-sm">+ Create Classwork</a>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        {% if assignments and assignments|length > 0 %}
-                            {% for ass in assignments %}
-                            <a href="{{ url_for('classroom.supervisor_assignment_detail', class_id=classroom.id, assignment_id=ass.id) }}" class="text-decoration-none">
-                            <div class="border-bottom pb-3 mb-3 d-flex justify-content-between align-items-center">
-                                <div>
-                                    <strong>{{ ass.title }}</strong>
-                                    <div class="small text-muted">{{ ass.description[:80] if ass.description else '' }}</div>
+                <div id="stream" class="profile-tab active">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-body">
+                            <h5>Announcement</h5>
+                            <form method="POST" action="{{ url_for('classroom.create_post', class_id=classroom.id) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="text" name="title" class="form-control mb-2" placeholder="Title (optional)" maxlength="200" {% if classroom.archived %}disabled{% endif %}>
+                                <textarea name="body" class="form-control mb-3" rows="3" placeholder="Announce something to your class..." required maxlength="5000" {% if classroom.archived %}disabled{% endif %}></textarea>
+                                <div class="text-end">
+                                    <button type="submit" class="btn btn-primary btn-sm" {% if classroom.archived %}disabled{% endif %}>Post</button>
                                 </div>
-                                <span class="badge bg-primary">View submissions</span>
-                            </div>
-                            </a>
-                            {% endfor %}
-                        {% else %}
-                            <div class="text-center py-5">
-                                <div style="font-size:2rem;">📝</div>
-                                <h6 class="mt-2">No classwork yet</h6>
-                                <p class="text-muted mb-3">Create your first student activity using the Classwork Studio.</p>
-                                <a href="{{ url_for('classwork.manage_classwork', class_id=classroom.id) }}" class="btn btn-primary">Create Classwork</a>
-                            </div>
-                        {% endif %}
+                            </form>
+                        </div>
+                    </div>
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-white"><h6 class="mb-0">Recent announcements</h6></div>
+                        <div class="card-body">
+                            {% if announcements and announcements|length > 0 %}
+                                {% for a in announcements %}
+                                    <div class="border-bottom pb-3 mb-3">
+                                        {% if a.title %}<strong>{{ a.title }}</strong><br>{% endif %}
+                                        <p class="mb-1">{{ a.body }}</p>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-muted mb-0">No announcements yet. Use the composer above.</p>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div id="people" class="profile-tab">
-                <div class="card shadow-sm mb-4">
-                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                        <h6 class="mb-0">People</h6>
-                        <span class="badge bg-primary">{{ classroom.student_count }} students</span>
-                    </div>
-                    <div class="card-body">
-                        <h6>Teacher</h6>
-                        <div class="d-flex align-items-center gap-2 border-bottom pb-3 mb-3">
-                            <span class="avatar-sm bg-primary text-white">S</span>
-                            <span>Supervisor (you)</span>
-                        </div>
-                        <h6>Classmates / Students</h6>
-                        {% if students and students|length > 0 %}
-                            {% for s in students %}
-                            <div class="d-flex justify-content-between align-items-center border-bottom py-3">
-                                <div>
-                                    <strong>{{ s.username if s.username is defined else s }}</strong>
-                                    {% if s.email is defined %}<div class="small text-muted">{{ s.email }}</div>{% endif %}
-                                </div>
-                                <form method="POST" action="{{ url_for('classroom.remove_student', class_id=classroom.id, student_id=s.id if s.id is defined else loop.index) }}" style="display:inline;" onsubmit="return confirm('Remove {{ s.username if s.username is defined else s }} from class?')">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
-                                </form>
+                <div id="classwork" class="profile-tab">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center gap-3">
+                            <div>
+                                <h6 class="mb-1">Classwork</h6>
+                                <div class="small text-muted">Assignments, quizzes, Google activities, files, and projects.</div>
                             </div>
-                            {% endfor %}
-                        {% else %}
-                            <p class="text-muted mb-0">No students enrolled yet.</p>
-                            <p class="small text-muted mt-2">Share class code <strong id="peopleCode">{{ classroom.code }}</strong> <button class="btn btn-sm btn-outline-primary ms-2" onclick="copyClassCode()">Copy</button></p>
-                        {% endif %}
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge bg-primary">{{ assignments|length }} activities</span>
+                                <a href="{{ url_for('classwork.manage_classwork', class_id=classroom.id) }}" class="btn btn-primary btn-sm">+ Create Classwork</a>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            {% if assignments and assignments|length > 0 %}
+                                {% for ass in assignments %}
+                                    <a href="{{ url_for('classroom.supervisor_assignment_detail', class_id=classroom.id, assignment_id=ass.id) }}" class="text-decoration-none">
+                                        <div class="border-bottom pb-3 mb-3 d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <strong>{{ ass.title }}</strong>
+                                                <div class="small text-muted">{{ ass.description[:80] if ass.description else '' }}</div>
+                                            </div>
+                                            <span class="badge bg-primary">View submissions</span>
+                                        </div>
+                                    </a>
+                                {% endfor %}
+                            {% else %}
+                                <div class="text-center py-5">
+                                    <div style="font-size:2rem;">📝</div>
+                                    <h6 class="mt-2">No classwork yet</h6>
+                                    <p class="text-muted mb-3">Create your first student activity using the Classwork Studio.</p>
+                                    <a href="{{ url_for('classwork.manage_classwork', class_id=classroom.id) }}" class="btn btn-primary">Create Classwork</a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div id="people" class="profile-tab">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">People</h6>
+                            <span class="badge bg-primary">{{ classroom.student_count }} students</span>
+                        </div>
+                        <div class="card-body">
+                            <h6>Teacher</h6>
+                            <div class="d-flex align-items-center gap-2 border-bottom pb-3 mb-3">
+                                <span class="avatar-sm bg-primary text-white">S</span>
+                                <span>Supervisor (you)</span>
+                            </div>
+                            <h6>Classmates / Students</h6>
+                            {% if students and students|length > 0 %}
+                                {% for s in students %}
+                                    <div class="d-flex justify-content-between align-items-center border-bottom py-3">
+                                        <div>
+                                            <strong>{{ s.username if s.username is defined else s }}</strong>
+                                            {% if s.email is defined %}<div class="small text-muted">{{ s.email }}</div>{% endif %}
+                                        </div>
+                                        <form method="POST" action="{{ url_for('classroom.remove_student', class_id=classroom.id, student_id=s.id if s.id is defined else loop.index) }}" style="display:inline;" onsubmit="return confirm('Remove {{ s.username if s.username is defined else s }} from class?')">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+                                        </form>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-muted mb-0">No students enrolled yet.</p>
+                                <p class="small text-muted mt-2">Share class code <strong id="peopleCode">{{ classroom.code }}</strong> <button class="btn btn-sm btn-outline-primary ms-2" onclick="copyClassCode()">Copy</button></p>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div id="classInfoModal" class="nexora-modal-overlay" onclick="if(event.target===this) this.classList.remove('open')">
-        <div class="nexora-modal" style="max-width:520px;">
-            <div class="nexora-modal-header">
-                <h2>Class Information</h2>
-                <p>Details for this classroom</p>
-                <button type="button" class="nexora-modal-close" onclick="document.getElementById('classInfoModal').classList.remove('open')">×</button>
-            </div>
-            <div class="nexora-modal-body" style="gap:10px;">
-                <div class="d-flex justify-content-between"><strong>Class name</strong><span>{{ classroom.name }}</span></div>
-                <div class="d-flex justify-content-between"><strong>Section</strong><span>{{ classroom.section }}</span></div>
-                <div class="d-flex justify-content-between"><strong>Supervisor</strong><span>Supervisor (you)</span></div>
-                <div class="d-flex justify-content-between align-items-center"><strong>Code</strong><span><span id="modalCode">{{ classroom.code }}</span> <button class="btn btn-sm btn-outline-primary ms-2" onclick="copyClassCode()">Copy</button></span></div>
-                <div class="d-flex justify-content-between"><strong>Students</strong><span>{{ classroom.student_count }}</span></div>
-                <div class="d-flex justify-content-between"><strong>Assignments</strong><span>{{ assignments|length }}</span></div>
-                <div class="d-flex justify-content-between"><strong>Announcements</strong><span>{{ announcements|length }}</span></div>
-                <div class="d-flex justify-content-between"><strong>Status</strong><span class="badge {% if classroom.status == 'Active' %}bg-success{% else %}bg-secondary{% endif %}">{{ classroom.status }}</span></div>
-                {% if classroom.created_at %}<div class="d-flex justify-content-between"><strong>Created</strong><span>{{ classroom.created_at }}</span></div>{% endif %}
-                {% if classroom.description %}<div><strong>Description</strong><p class="text-muted small mt-1">{{ classroom.description }}</p></div>{% endif %}
-            </div>
-            <div class="nexora-modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="document.getElementById('classInfoModal').classList.remove('open')">Close</button>
+        <div id="classInfoModal" class="nexora-modal-overlay" onclick="if(event.target===this) this.classList.remove('open')">
+            <div class="nexora-modal" style="max-width:520px;">
+                <div class="nexora-modal-header">
+                    <h2>Class Information</h2>
+                    <p>Details for this classroom</p>
+                    <button type="button" class="nexora-modal-close" onclick="document.getElementById('classInfoModal').classList.remove('open')">×</button>
+                </div>
+                <div class="nexora-modal-body" style="gap:10px;">
+                    <div class="d-flex justify-content-between"><strong>Class name</strong><span>{{ classroom.name }}</span></div>
+                    <div class="d-flex justify-content-between"><strong>Section</strong><span>{{ classroom.section }}</span></div>
+                    <div class="d-flex justify-content-between"><strong>Supervisor</strong><span>Supervisor (you)</span></div>
+                    <div class="d-flex justify-content-between align-items-center"><strong>Code</strong><span><span id="modalCode">{{ classroom.code }}</span> <button class="btn btn-sm btn-outline-primary ms-2" onclick="copyClassCode()">Copy</button></span></div>
+                    <div class="d-flex justify-content-between"><strong>Students</strong><span>{{ classroom.student_count }}</span></div>
+                    <div class="d-flex justify-content-between"><strong>Assignments</strong><span>{{ assignments|length }}</span></div>
+                    <div class="d-flex justify-content-between"><strong>Announcements</strong><span>{{ announcements|length }}</span></div>
+                    <div class="d-flex justify-content-between"><strong>Status</strong><span class="badge {% if classroom.status == 'Active' %}bg-success{% else %}bg-secondary{% endif %}">{{ classroom.status }}</span></div>
+                    {% if classroom.created_at %}<div class="d-flex justify-content-between"><strong>Created</strong><span>{{ classroom.created_at }}</span></div>{% endif %}
+                    {% if classroom.description %}<div><strong>Description</strong><p class="text-muted small mt-1">{{ classroom.description }}</p></div>{% endif %}
+                </div>
+                <div class="nexora-modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('classInfoModal').classList.remove('open')">Close</button>
+                </div>
             </div>
         </div>
-    </div>
-    <script>
-        function copyClassCode(){
-            const code = (document.getElementById('classCodeBadge')?.innerText || document.getElementById('peopleCode')?.innerText || '{{ classroom.code }}').trim();
-            const done = () => { if(window.showToast) showToast('✓ Class code copied: ' + code); };
-            if(navigator.clipboard && navigator.clipboard.writeText){
-                navigator.clipboard.writeText(code).then(done).catch(()=> { if(window.showToast) showToast('✓ Class code copied: ' + code); });
-            } else {
-                const ta=document.createElement('textarea'); ta.value=code; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy'); done();}catch(e){ if(window.showToast) showToast('✓ Class code copied: ' + code); } ta.remove();
+        <script>
+            function copyClassCode(){
+                const code = (document.getElementById('classCodeBadge')?.innerText || document.getElementById('peopleCode')?.innerText || '{{ classroom.code }}').trim();
+                const done = () => { if(window.showToast) showToast('✓ Class code copied: ' + code); };
+                if(navigator.clipboard && navigator.clipboard.writeText){
+                    navigator.clipboard.writeText(code).then(done).catch(()=> { if(window.showToast) showToast('✓ Class code copied: ' + code); });
+                } else {
+                    const ta=document.createElement('textarea'); ta.value=code; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy'); done();}catch(e){ if(window.showToast) showToast('✓ Class code copied: ' + code); } ta.remove();
+                }
             }
-        }
-        function openClassTab(tabName, btn){
-            document.querySelectorAll('.profile-tab').forEach(t=> t.classList.remove('active'));
-            const el=document.getElementById(tabName);
-            if(el) el.classList.add('active');
-            document.querySelectorAll('.profile-tab-button').forEach(b=> b.classList.remove('active'));
-            if(btn) btn.classList.add('active');
-        }
-    </script>
-</body>
+            function openClassTab(tabName, btn){
+                document.querySelectorAll('.profile-tab').forEach(t=> t.classList.remove('active'));
+                const el=document.getElementById(tabName);
+                if(el) el.classList.add('active');
+                document.querySelectorAll('.profile-tab-button').forEach(b=> b.classList.remove('active'));
+                if(btn) btn.classList.add('active');
+            }
+        </script>
+    </body>
 </html>

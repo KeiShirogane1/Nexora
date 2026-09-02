@@ -1,194 +1,194 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Classwork - {{ classroom.name }} - Nexora</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">
-</head>
-<body class="supervisor-classwork-page">
-    {% include 'components/supervisor_sidebar.html' %}
-    <main class="page-content nexora-app-main">
-        <div class="nexora-page supervisor-classwork-shell">
-            <div class="supervisor-classwork-heading">
-                <div>
-                    <a href="{{ url_for('classroom.supervisor_class', class_id=classroom.id) }}" class="supervisor-classwork-back">← Back to {{ classroom.name }}</a>
-                    <h1>Classwork</h1>
-                    <p>{{ classroom.section }} · Create assignments, online activities, resources, and projects for your students.</p>
-                </div>
-                <div class="d-flex align-items-center gap-2">
-                    <a href="{{ url_for('classwork_gradebook.supervisor_gradebook', class_id=classroom.id) }}" class="btn btn-outline-primary">Gradebook</a>
-                    <a href="{{ url_for('classwork_ml_insights.supervisor_insights', class_id=classroom.id) }}" class="btn btn-outline-primary">Performance Insights</a>
-                    <a href="{{ url_for('classwork_ml_insights.supervisor_insights', class_id=classroom.id) }}" class="btn btn-primary">ML Insights</a>
-                    {% if classroom.archived %}<span class="supervisor-classwork-archived">Archived class</span>{% endif %}
-                </div>
-            </div>
-
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% for category, message in messages %}
-                <div class="alert alert-{{ 'danger' if category == 'danger' else 'success' if category == 'success' else 'warning' if category == 'warning' else 'info' }}" role="alert">{{ message }}</div>
-                {% endfor %}
-            {% endwith %}
-
-            <div class="supervisor-classwork-grid">
-                <section class="supervisor-classwork-create-card">
-                    <div class="supervisor-classwork-card-heading">
-                        <div>
-                            <span class="supervisor-classwork-eyebrow">NEW ACTIVITY</span>
-                            <h2>Create classwork</h2>
-                            <p>Choose an activity, set how students complete it, then publish.</p>
-                        </div>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Classwork - {{ classroom.name }} - Nexora</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">
+    </head>
+    <body class="supervisor-classwork-page">
+        {% include 'components/supervisor_sidebar.html' %}
+        <main class="page-content nexora-app-main">
+            <div class="nexora-page supervisor-classwork-shell">
+                <div class="supervisor-classwork-heading">
+                    <div>
+                        <a href="{{ url_for('classroom.supervisor_class', class_id=classroom.id) }}" class="supervisor-classwork-back">← Back to {{ classroom.name }}</a>
+                        <h1>Classwork</h1>
+                        <p>{{ classroom.section }} · Create assignments, online activities, resources, and projects for your students.</p>
                     </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <a href="{{ url_for('classwork_gradebook.supervisor_gradebook', class_id=classroom.id) }}" class="btn btn-outline-primary">Gradebook</a>
+                        <a href="{{ url_for('classwork_ml_insights.supervisor_insights', class_id=classroom.id) }}" class="btn btn-outline-primary">Performance Insights</a>
+                        <a href="{{ url_for('classwork_ml_insights.supervisor_insights', class_id=classroom.id) }}" class="btn btn-primary">ML Insights</a>
+                        {% if classroom.archived %}<span class="supervisor-classwork-archived">Archived class</span>{% endif %}
+                    </div>
+                </div>
 
-                    <form method="POST" enctype="multipart/form-data" class="supervisor-classwork-form">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'danger' else 'success' if category == 'success' else 'warning' if category == 'warning' else 'info' }}" role="alert">{{ message }}</div>
+                    {% endfor %}
+                {% endwith %}
 
-                        <label class="supervisor-form-label">Activity type</label>
-                        <div class="supervisor-activity-types">
-                            {% for key, label in activity_types.items() %}
-                            <label class="supervisor-activity-option">
-                                <input type="radio" name="activity_type" value="{{ key }}" {% if loop.first %}checked{% endif %}>
-                                <span>
-                                    <strong>{{ label }}</strong>
-                                    <small>
-                                        {% if key == 'assignment' %}Written or practical individual task.
-                                        {% elif key == 'google_form' %}Google Forms quiz, test, or long test.
-                                        {% elif key == 'google_doc' %}Google Docs, Sheets, or external document activity.
-                                        {% elif key == 'file_reference' %}Reference material students should open or read.
-                                        {% elif key == 'project' %}Individual project or major output.
-                                        {% else %}Collaborative group project or activity.
-                                        {% endif %}
-                                    </small>
-                                </span>
-                            </label>
-                            {% endfor %}
-                        </div>
-
-                        <div class="row g-3">
-                            <div class="col-12">
-                                <label class="supervisor-form-label" for="title">Title</label>
-                                <input id="title" name="title" class="form-control" maxlength="200" required placeholder="e.g. Handwritten Long Test">
-                            </div>
-                            <div class="col-12">
-                                <label class="supervisor-form-label" for="description">Instructions</label>
-                                <textarea id="description" name="description" class="form-control" rows="5" maxlength="5000" placeholder="Explain what students need to do and what they should submit."></textarea>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="supervisor-form-label" for="due_at">Due date</label>
-                                <input id="due_at" name="due_at" type="datetime-local" class="form-control">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="supervisor-form-label" for="points">Maximum score</label>
-                                <input id="points" name="points" type="number" min="0" max="10000" value="100" class="form-control">
-                            </div>
-                        </div>
-
-                        <div class="supervisor-resource-box">
+                <div class="supervisor-classwork-grid">
+                    <section class="supervisor-classwork-create-card">
+                        <div class="supervisor-classwork-card-heading">
                             <div>
-                                <strong>External activity or resource</strong>
-                                <p>Paste a Google Forms/Docs link or attach instructions/reference material.</p>
+                                <span class="supervisor-classwork-eyebrow">NEW ACTIVITY</span>
+                                <h2>Create classwork</h2>
+                                <p>Choose an activity, set how students complete it, then publish.</p>
                             </div>
+                        </div>
+
+                        <form method="POST" enctype="multipart/form-data" class="supervisor-classwork-form">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                            <label class="supervisor-form-label">Activity type</label>
+                            <div class="supervisor-activity-types">
+                                {% for key, label in activity_types.items() %}
+                                    <label class="supervisor-activity-option">
+                                        <input type="radio" name="activity_type" value="{{ key }}" {% if loop.first %}checked{% endif %}>
+                                        <span>
+                                            <strong>{{ label }}</strong>
+                                            <small>
+                                                {% if key == 'assignment' %}Written or practical individual task.
+                                                {% elif key == 'google_form' %}Google Forms quiz, test, or long test.
+                                                {% elif key == 'google_doc' %}Google Docs, Sheets, or external document activity.
+                                                {% elif key == 'file_reference' %}Reference material students should open or read.
+                                                {% elif key == 'project' %}Individual project or major output.
+                                                {% else %}Collaborative group project or activity.
+                                                {% endif %}
+                                            </small>
+                                        </span>
+                                    </label>
+                                {% endfor %}
+                            </div>
+
                             <div class="row g-3">
                                 <div class="col-12">
-                                    <label class="supervisor-form-label" for="external_url">Link</label>
-                                    <input id="external_url" name="external_url" type="url" class="form-control" placeholder="https://docs.google.com/...">
+                                    <label class="supervisor-form-label" for="title">Title</label>
+                                    <input id="title" name="title" class="form-control" maxlength="200" required placeholder="e.g. Handwritten Long Test">
                                 </div>
-                                <div class="col-md-5">
-                                    <label class="supervisor-form-label" for="resource_label">Link label</label>
-                                    <input id="resource_label" name="resource_label" class="form-control" maxlength="120" placeholder="Open quiz / Open document">
+                                <div class="col-12">
+                                    <label class="supervisor-form-label" for="description">Instructions</label>
+                                    <textarea id="description" name="description" class="form-control" rows="5" maxlength="5000" placeholder="Explain what students need to do and what they should submit."></textarea>
                                 </div>
-                                <div class="col-md-7">
-                                    <label class="supervisor-form-label" for="resource_file">Reference file</label>
-                                    <input id="resource_file" name="resource_file" type="file" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.png,.jpg,.jpeg,.gif,.zip">
-                                    <small class="text-muted">Maximum 5 MB.</small>
+                                <div class="col-md-6">
+                                    <label class="supervisor-form-label" for="due_at">Due date</label>
+                                    <input id="due_at" name="due_at" type="datetime-local" class="form-control">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="supervisor-form-label" for="points">Maximum score</label>
+                                    <input id="points" name="points" type="number" min="0" max="10000" value="100" class="form-control">
                                 </div>
                             </div>
-                        </div>
 
-                        <div class="supervisor-options-row">
-                            <label class="supervisor-check-option">
-                                <input type="checkbox" name="allow_file_upload" id="allow_file_upload">
-                                <span><strong>Allow student submissions</strong><small>Students can upload photos, handwritten pages, PDFs, documents, or other allowed files.</small></span>
-                            </label>
-                            <label class="supervisor-check-option">
-                                <input type="checkbox" name="group_mode" id="group_mode">
-                                <span><strong>Group activity</strong><small>Use this activity as a group submission.</small></span>
-                            </label>
-                            <label class="supervisor-group-size-field" for="max_group_size">
-                                <span>Max group size</span>
-                                <input id="max_group_size" name="max_group_size" type="number" min="1" max="100" value="1" class="form-control">
-                            </label>
-                        </div>
-
-                        <div class="supervisor-classwork-form-footer">
-                            <a href="{{ url_for('classroom.supervisor_class', class_id=classroom.id) }}" class="btn btn-light">Cancel</a>
-                            <button type="submit" class="btn btn-primary" {% if classroom.archived %}disabled{% endif %}>Create Classwork</button>
-                        </div>
-                    </form>
-                </section>
-
-                <aside class="supervisor-classwork-list-card">
-                    <div class="supervisor-classwork-card-heading">
-                        <div>
-                            <span class="supervisor-classwork-eyebrow">CLASSWORK</span>
-                            <h2>Activities</h2>
-                        </div>
-                        <span class="supervisor-classwork-count">{{ assignments|length }}</span>
-                    </div>
-
-                    {% if assignments %}
-                    <div class="supervisor-classwork-items">
-                        {% for item in assignments %}
-                        <article class="supervisor-classwork-item">
-                            <div class="supervisor-classwork-item-top">
+                            <div class="supervisor-resource-box">
                                 <div>
-                                    <span class="supervisor-classwork-type">{{ activity_types.get(item.activity_type, 'Assignment') }}</span>
-                                    <h3>{{ item.title }}</h3>
+                                    <strong>External activity or resource</strong>
+                                    <p>Paste a Google Forms/Docs link or attach instructions/reference material.</p>
                                 </div>
-                                <span class="supervisor-classwork-points">{{ item.points }} pts</span>
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <label class="supervisor-form-label" for="external_url">Link</label>
+                                        <input id="external_url" name="external_url" type="url" class="form-control" placeholder="https://docs.google.com/...">
+                                    </div>
+                                    <div class="col-md-5">
+                                        <label class="supervisor-form-label" for="resource_label">Link label</label>
+                                        <input id="resource_label" name="resource_label" class="form-control" maxlength="120" placeholder="Open quiz / Open document">
+                                    </div>
+                                    <div class="col-md-7">
+                                        <label class="supervisor-form-label" for="resource_file">Reference file</label>
+                                        <input id="resource_file" name="resource_file" type="file" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.png,.jpg,.jpeg,.gif,.zip">
+                                        <small class="text-muted">Maximum 5 MB.</small>
+                                    </div>
+                                </div>
                             </div>
-                            {% if item.description %}<p>{{ item.description[:150] }}{% if item.description|length > 150 %}…{% endif %}</p>{% endif %}
-                            <div class="supervisor-classwork-item-meta">
-                                {% if item.due_at %}<span>Due {{ item.due_at }}</span>{% else %}<span>No due date</span>{% endif %}
-                                {% if item.group_mode %}<span>Group · max {{ item.max_group_size }}</span>{% endif %}
-                                {% if item.allow_file_upload %}<span>Student submissions</span>{% endif %}
-                            </div>
-                            <div class="supervisor-classwork-resource-links">
-                                {% if item.external_url %}<a href="{{ item.external_url }}" target="_blank" rel="noopener noreferrer">{{ item.resource_label or 'Open link' }} ↗</a>{% endif %}
-                                {% if item.resource_filepath %}<a href="{{ url_for('uploaded_file', filename=item.resource_filepath) }}" target="_blank" rel="noopener noreferrer">{{ item.resource_filename or 'Open file' }} ↗</a>{% endif %}
-                                <a href="{{ url_for('classwork_submissions.supervisor_submissions', class_id=classroom.id, assignment_id=item.id) }}" class="supervisor-view-submissions">View submissions</a>
-                                {% if item.activity_type == 'google_form' or item.external_url %}
-                                <a href="{{ url_for('classwork_scores.import_scores', class_id=classroom.id, assignment_id=item.id) }}" class="supervisor-import-scores-link">Import scores</a>
-                                {% endif %}
-                            </div>
-                        </article>
-                        {% endfor %}
-                    </div>
-                    {% else %}
-                    <div class="supervisor-classwork-empty">
-                        <div>📝</div>
-                        <h3>No classwork yet</h3>
-                        <p>Create your first activity. Students will see it in their classwork area.</p>
-                    </div>
-                    {% endif %}
-                </aside>
-            </div>
-        </div>
-    </main>
 
-    <script>
-        const groupMode = document.getElementById('group_mode');
-        const groupSize = document.getElementById('max_group_size');
-        if (groupMode && groupSize) {
-            function syncGroupSize() {
-                groupSize.disabled = !groupMode.checked;
-                if (!groupMode.checked) groupSize.value = 1;
+                            <div class="supervisor-options-row">
+                                <label class="supervisor-check-option">
+                                    <input type="checkbox" name="allow_file_upload" id="allow_file_upload">
+                                    <span><strong>Allow student submissions</strong><small>Students can upload photos, handwritten pages, PDFs, documents, or other allowed files.</small></span>
+                                </label>
+                                <label class="supervisor-check-option">
+                                    <input type="checkbox" name="group_mode" id="group_mode">
+                                    <span><strong>Group activity</strong><small>Use this activity as a group submission.</small></span>
+                                </label>
+                                <label class="supervisor-group-size-field" for="max_group_size">
+                                    <span>Max group size</span>
+                                    <input id="max_group_size" name="max_group_size" type="number" min="1" max="100" value="1" class="form-control">
+                                </label>
+                            </div>
+
+                            <div class="supervisor-classwork-form-footer">
+                                <a href="{{ url_for('classroom.supervisor_class', class_id=classroom.id) }}" class="btn btn-light">Cancel</a>
+                                <button type="submit" class="btn btn-primary" {% if classroom.archived %}disabled{% endif %}>Create Classwork</button>
+                            </div>
+                        </form>
+                    </section>
+
+                    <aside class="supervisor-classwork-list-card">
+                        <div class="supervisor-classwork-card-heading">
+                            <div>
+                                <span class="supervisor-classwork-eyebrow">CLASSWORK</span>
+                                <h2>Activities</h2>
+                            </div>
+                            <span class="supervisor-classwork-count">{{ assignments|length }}</span>
+                        </div>
+
+                        {% if assignments %}
+                            <div class="supervisor-classwork-items">
+                                {% for item in assignments %}
+                                    <article class="supervisor-classwork-item">
+                                        <div class="supervisor-classwork-item-top">
+                                            <div>
+                                                <span class="supervisor-classwork-type">{{ activity_types.get(item.activity_type, 'Assignment') }}</span>
+                                                <h3>{{ item.title }}</h3>
+                                            </div>
+                                            <span class="supervisor-classwork-points">{{ item.points }} pts</span>
+                                        </div>
+                                        {% if item.description %}<p>{{ item.description[:150] }}{% if item.description|length > 150 %}…{% endif %}</p>{% endif %}
+                                        <div class="supervisor-classwork-item-meta">
+                                            {% if item.due_at %}<span>Due {{ item.due_at }}</span>{% else %}<span>No due date</span>{% endif %}
+                                            {% if item.group_mode %}<span>Group · max {{ item.max_group_size }}</span>{% endif %}
+                                            {% if item.allow_file_upload %}<span>Student submissions</span>{% endif %}
+                                        </div>
+                                        <div class="supervisor-classwork-resource-links">
+                                            {% if item.external_url %}<a href="{{ item.external_url }}" target="_blank" rel="noopener noreferrer">{{ item.resource_label or 'Open link' }} ↗</a>{% endif %}
+                                            {% if item.resource_filepath %}<a href="{{ url_for('uploaded_file', filename=item.resource_filepath) }}" target="_blank" rel="noopener noreferrer">{{ item.resource_filename or 'Open file' }} ↗</a>{% endif %}
+                                            <a href="{{ url_for('classwork_submissions.supervisor_submissions', class_id=classroom.id, assignment_id=item.id) }}" class="supervisor-view-submissions">View submissions</a>
+                                            {% if item.activity_type == 'google_form' or item.external_url %}
+                                                <a href="{{ url_for('classwork_scores.import_scores', class_id=classroom.id, assignment_id=item.id) }}" class="supervisor-import-scores-link">Import scores</a>
+                                            {% endif %}
+                                        </div>
+                                    </article>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="supervisor-classwork-empty">
+                                <div>📝</div>
+                                <h3>No classwork yet</h3>
+                                <p>Create your first activity. Students will see it in their classwork area.</p>
+                            </div>
+                        {% endif %}
+                    </aside>
+                </div>
+            </div>
+        </main>
+
+        <script>
+            const groupMode = document.getElementById('group_mode');
+            const groupSize = document.getElementById('max_group_size');
+            if (groupMode && groupSize) {
+                function syncGroupSize() {
+                    groupSize.disabled = !groupMode.checked;
+                    if (!groupMode.checked) groupSize.value = 1;
+                }
+                groupMode.addEventListener('change', syncGroupSize);
+                syncGroupSize();
             }
-            groupMode.addEventListener('change', syncGroupSize);
-            syncGroupSize();
-        }
-    </script>
-</body>
+        </script>
+    </body>
 </html>

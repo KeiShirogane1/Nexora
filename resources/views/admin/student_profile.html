@@ -1,836 +1,836 @@
 <!DOCTYPE html>
 <html>
 
-<head>
-    <meta charset="UTF-8">
+    <head>
+        <meta charset="UTF-8">
 
-<title>Student Profile - Nexora</title>
+        <title>Student Profile - Nexora</title>
 
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+              rel="stylesheet">
 
-<link rel="stylesheet"
-href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+        <link rel="stylesheet"
+              href="{{ url_for('static', filename='css/style.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
 
-<link rel="stylesheet"
-href="{{ url_for('static', filename='css/modals.css') }}">
+        <link rel="stylesheet"
+              href="{{ url_for('static', filename='css/modals.css') }}">
 
-</head>
+    </head>
 
-<body class="nexora-admin-body">
+    <body class="nexora-admin-body">
 
-{% include 'components/admin_sidebar.html' %}
+        {% include 'components/admin_sidebar.html' %}
 
-<main class="admin-main nexora-app-main">
-<div class="nexora-page">
+        <main class="admin-main nexora-app-main">
+            <div class="nexora-page">
 
-<div class="compact-dashboard">
+                <div class="compact-dashboard">
 
 <!-- HEADER -->
 
-{% with messages = get_flashed_messages(with_categories=true) %}
+                    {% with messages = get_flashed_messages(with_categories=true) %}
 
-{% if messages %}
+                        {% if messages %}
 
-<div class="flash-container">
+                            <div class="flash-container">
 
-{% for category, message in messages %}
+                                {% for category, message in messages %}
 
-<div class="flash-popup {{ category }}">
+                                    <div class="flash-popup {{ category }}">
 
-<span>
-{{ message }}
-</span>
+                                        <span>
+                                            {{ message }}
+                                        </span>
 
-<button onclick="this.parentElement.remove()">
-×
-</button>
+                                        <button onclick="this.parentElement.remove()">
+                                            ×
+                                        </button>
 
-</div>
+                                    </div>
 
-{% endfor %}
+                                {% endfor %}
 
-</div>
+                            </div>
 
-{% endif %}
+                        {% endif %}
 
-{% endwith %}
+                    {% endwith %}
 
-<div class="dashboard-header">
+                    <div class="dashboard-header">
 
-<div>
+                        <div>
 
-<h1>
-Student Profile
-</h1>
+                            <h1>
+                                Student Profile
+                            </h1>
 
-<p>
-View student information and internship details.
-</p>
+                            <p>
+                                View student information and internship details.
+                            </p>
 
-</div>
+                        </div>
 
-<div class="system-badge">
-👤 Student Account
-</div>
+                        <div class="system-badge">
+                            👤 Student Account
+                        </div>
 
-</div>
+                    </div>
 
 <!-- PROFILE HEADER -->
 
-<div class="dashboard-box profile-card">
+                    <div class="dashboard-box profile-card">
 
-<div class="profile-top">
+                        <div class="profile-top">
 
-{% if student.profile_picture %}
+                            {% if student.profile_picture %}
 
-<img 
-src="{{ url_for('uploaded_file', filename='profile_pictures/' + student.profile_picture) }}"
-class="admin-profile-image">
+                                <img
+                                    src="{{ url_for('uploaded_file', filename='profile_pictures/' + student.profile_picture) }}"
+                                    class="admin-profile-image">
 
-{% else %}
+                            {% else %}
 
-<div class="default-profile">
-👤
-</div>
+                                <div class="default-profile">
+                                    👤
+                                </div>
 
-{% endif %}
+                            {% endif %}
 
-<div class="profile-main">
+                            <div class="profile-main">
 
-<div class="profile-title">
+                                <div class="profile-title">
 
-<h2>
-{{ student.first_name }}
-{{ student.middle_name }}
-{{ student.last_name }}
-</h2>
+                                    <h2>
+                                        {{ student.first_name }}
+                                        {{ student.middle_name }}
+                                        {{ student.last_name }}
+                                    </h2>
 
-<p>
-@{{ student.username }}
-</p>
+                                    <p>
+                                        @{{ student.username }}
+                                    </p>
 
-{% if student.status == "inactive" %}
+                                    {% if student.status == "inactive" %}
 
-<span class="badge bg-danger">
-Inactive Student
-</span>
+                                        <span class="badge bg-danger">
+                                            Inactive Student
+                                        </span>
 
-{% elif student.role == "student" %}
+                                    {% elif student.role == "student" %}
 
-<span class="badge bg-success">
-Active Student
-</span>
+                                        <span class="badge bg-success">
+                                            Active Student
+                                        </span>
 
-{% else %}
+                                    {% else %}
 
-<span class="badge bg-warning text-dark">
-Pending Student
-</span>
+                                        <span class="badge bg-warning text-dark">
+                                            Pending Student
+                                        </span>
 
-{% endif %}
+                                    {% endif %}
 
-</div>
+                                </div>
 
-<div class="profile-summary">
+                                <div class="profile-summary">
 
-<div class="summary-item">
+                                    <div class="summary-item">
 
-<strong>
-Account ID
-</strong>
+                                        <strong>
+                                            Account ID
+                                        </strong>
 
-<p>
-#{{ student.id }}
-</p>
+                                        <p>
+                                            #{{ student.id }}
+                                        </p>
 
-</div>
+                                    </div>
 
-<div class="summary-item">
+                                    <div class="summary-item">
 
-<strong>
-Username
-</strong>
+                                        <strong>
+                                            Username
+                                        </strong>
 
-<p>
-{{ student.username }}
-</p>
+                                        <p>
+                                            {{ student.username }}
+                                        </p>
 
-</div>
+                                    </div>
 
-<div class="summary-item">
+                                    <div class="summary-item">
 
-<strong>
-Program
-</strong>
+                                        <strong>
+                                            Program
+                                        </strong>
 
-<p>
-{{ student.major_program or "Not Provided" }}
-</p>
+                                        <p>
+                                            {{ student.major_program or "Not Provided" }}
+                                        </p>
 
-</div>
+                                    </div>
 
-<div class="summary-item">
+                                    <div class="summary-item">
 
-<strong>
-Internship Status
-</strong>
+                                        <strong>
+                                            Internship Status
+                                        </strong>
 
-<p>
+                                        <p>
 
-{% if internship %}
+                                            {% if internship %}
 
-{{ internship.status }}
+                                                {{ internship.status }}
 
-{% else %}
+                                            {% else %}
 
-Not Assigned
+                                                Not Assigned
 
-{% endif %}
+                                            {% endif %}
 
-</p>
+                                        </p>
 
-</div>
+                                    </div>
 
-</div>
+                                </div>
 
-<div class="profile-actions">
+                                <div class="profile-actions">
 
-<a href="{{ url_for('admin.edit_student', student_id=student.id) }}"
-class="btn btn-primary">
+                                    <a href="{{ url_for('admin.edit_student', student_id=student.id) }}"
+                                       class="btn btn-primary">
 
-✏️ Edit Profile
+                                        ✏️ Edit Profile
 
-</a>
+                                    </a>
 
-<a href="{{ url_for('admin.profile_history', student_id=student.id) }}"
-class="btn btn-info">
+                                    <a href="{{ url_for('admin.profile_history', student_id=student.id) }}"
+                                       class="btn btn-info">
 
-📜 Profile History
+                                        📜 Profile History
 
-</a>
+                                    </a>
 
-<form method="POST" action="{{ url_for('admin.reset_student_password', student_id=student.id) }}" style="display:inline;">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <button type="submit" class="btn btn-warning">🔑 Reset Password</button>
-</form>
+                                    <form method="POST" action="{{ url_for('admin.reset_student_password', student_id=student.id) }}" style="display:inline;">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-warning">🔑 Reset Password</button>
+                                    </form>
 
-{% if student.status == "inactive" %}
+                                    {% if student.status == "inactive" %}
 
-<form method="POST" action="{{ url_for('admin.activate_student', student_id=student.id) }}" style="display:inline;">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <button type="submit" class="btn btn-success">✅ Activate Account</button>
-</form>
+                                        <form method="POST" action="{{ url_for('admin.activate_student', student_id=student.id) }}" style="display:inline;">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-success">✅ Activate Account</button>
+                                        </form>
 
-{% else %}
+                                    {% else %}
 
-<button 
-class="btn btn-danger"
-onclick="openDeactivateModal()">
+                                        <button
+                                            class="btn btn-danger"
+                                            onclick="openDeactivateModal()">
 
-🚫 Deactivate Account
+                                            🚫 Deactivate Account
 
-</button>
+                                        </button>
 
-{% endif %}
+                                    {% endif %}
 
-</div>
+                                </div>
 
-</div>
+                            </div>
 
-</div>
+                        </div>
 
-</div>
+                    </div>
 
 <!-- PROFILE COMPLETION -->
 
-<div class="dashboard-box">
+                    <div class="dashboard-box">
 
-<h3>
-Profile Completion
-</h3>
+                        <h3>
+                            Profile Completion
+                        </h3>
 
-<div class="progress-container">
+                        <div class="progress-container">
 
-<div class="progress-bar"
-data-progress="{{ completion_percentage }}">
-</div>
+                            <div class="progress-bar"
+                                 data-progress="{{ completion_percentage }}">
+                            </div>
 
-</div>
+                        </div>
 
-<h4>
+                        <h4>
 
-{{ completion_percentage }}%
+                            {{ completion_percentage }}%
 
-</h4>
+                        </h4>
 
-{% if missing_fields %}
+                        {% if missing_fields %}
 
-<div class="alert alert-warning">
+                            <div class="alert alert-warning">
 
-<strong>
-Missing Information:
-</strong>
+                                <strong>
+                                    Missing Information:
+                                </strong>
 
-<ul>
+                                <ul>
 
-{% for field in missing_fields %}
+                                    {% for field in missing_fields %}
 
-<li>
-{{ field }}
-</li>
+                                        <li>
+                                            {{ field }}
+                                        </li>
 
-{% endfor %}
+                                    {% endfor %}
 
-</ul>
+                                </ul>
 
-</div>
+                            </div>
 
-{% else %}
+                        {% else %}
 
-<div class="alert alert-success">
+                            <div class="alert alert-success">
 
-✓ Profile Complete
+                                ✓ Profile Complete
 
-</div>
+                            </div>
 
-{% endif %}
+                        {% endif %}
 
-</div>
+                    </div>
 
 <!-- BASIC INFORMATION -->
 
-<div class="dashboard-box">
+                    <div class="dashboard-box">
 
-<h3>
-Basic Information
-</h3>
+                        <h3>
+                            Basic Information
+                        </h3>
 
-<div class="info-grid">
+                        <div class="info-grid">
 
-<div>
+                            <div>
 
-<strong>
-Student ID
-</strong>
+                                <strong>
+                                    Student ID
+                                </strong>
 
-<p>
-{{ student.student_id or "Not Provided" }}
-</p>
+                                <p>
+                                    {{ student.student_id or "Not Provided" }}
+                                </p>
 
-</div>
+                            </div>
 
-<div>
+                            <div>
 
-<strong>
-Age
-</strong>
+                                <strong>
+                                    Age
+                                </strong>
 
-<p>
-{{ student.age or "Not Provided" }}
-</p>
+                                <p>
+                                    {{ student.age or "Not Provided" }}
+                                </p>
 
-</div>
+                            </div>
 
-<div>
+                            <div>
 
-<strong>
-Grade / Year
-</strong>
+                                <strong>
+                                    Grade / Year
+                                </strong>
 
-<p>
-{{ student.grade_year or "Not Provided" }}
-</p>
+                                <p>
+                                    {{ student.grade_year or "Not Provided" }}
+                                </p>
 
-</div>
+                            </div>
 
-<div>
+                            <div>
 
-<strong>
-Major / Program
-</strong>
+                                <strong>
+                                    Major / Program
+                                </strong>
 
-<p>
-{{ student.major_program or "Not Provided" }}
-</p>
+                                <p>
+                                    {{ student.major_program or "Not Provided" }}
+                                </p>
 
-</div>
+                            </div>
 
-</div>
+                        </div>
 
-</div>
+                    </div>
 
 <!-- CONTACT -->
 
-<div class="dashboard-box">
+                    <div class="dashboard-box">
 
-<h3>
-Contact Information
-</h3>
+                        <h3>
+                            Contact Information
+                        </h3>
 
-<div class="info-grid">
+                        <div class="info-grid">
 
-<div>
+                            <div>
 
-<strong>
-Account Email
-</strong>
+                                <strong>
+                                    Account Email
+                                </strong>
 
-<p>
-{{ student.email or "Not Provided" }}
-</p>
+                                <p>
+                                    {{ student.email or "Not Provided" }}
+                                </p>
 
-</div>
+                            </div>
 
-<div>
+                            <div>
 
-<strong>
-Phone Number
-</strong>
+                                <strong>
+                                    Phone Number
+                                </strong>
 
-<p>
-{{ student.phone_number or "Not Provided" }}
-</p>
+                                <p>
+                                    {{ student.phone_number or "Not Provided" }}
+                                </p>
 
-</div>
+                            </div>
 
-<div class="full">
+                            <div class="full">
 
-<strong>
-Home Address
-</strong>
+                                <strong>
+                                    Home Address
+                                </strong>
 
-<p>
-{{ student.home_address or "Not Provided" }}
-</p>
+                                <p>
+                                    {{ student.home_address or "Not Provided" }}
+                                </p>
 
-</div>
+                            </div>
 
-</div>
+                        </div>
 
-</div>
+                    </div>
 
 <!-- EMERGENCY -->
 
-<div class="dashboard-box">
+                    <div class="dashboard-box">
 
-<h3>
-Emergency Contact
-</h3>
+                        <h3>
+                            Emergency Contact
+                        </h3>
 
-<div class="info-grid">
+                        <div class="info-grid">
 
-<div>
+                            <div>
 
-<strong>
-Name
-</strong>
+                                <strong>
+                                    Name
+                                </strong>
 
-<p>
-{{ student.emergency_name or "Not Provided" }}
-</p>
+                                <p>
+                                    {{ student.emergency_name or "Not Provided" }}
+                                </p>
 
-</div>
+                            </div>
 
-<div>
+                            <div>
 
-<strong>
-Relationship
-</strong>
+                                <strong>
+                                    Relationship
+                                </strong>
 
-<p>
-{{ student.emergency_relationship or "Not Provided" }}
-</p>
+                                <p>
+                                    {{ student.emergency_relationship or "Not Provided" }}
+                                </p>
 
-</div>
+                            </div>
 
-<div>
+                            <div>
 
-<strong>
-Phone
-</strong>
+                                <strong>
+                                    Phone
+                                </strong>
 
-<p>
-{{ student.emergency_phone or "Not Provided" }}
-</p>
+                                <p>
+                                    {{ student.emergency_phone or "Not Provided" }}
+                                </p>
 
-</div>
+                            </div>
 
-<div>
+                            <div>
 
-<strong>
-Email
-</strong>
+                                <strong>
+                                    Email
+                                </strong>
 
-<p>
-{{ student.emergency_email or "Not Provided" }}
-</p>
+                                <p>
+                                    {{ student.emergency_email or "Not Provided" }}
+                                </p>
 
-</div>
+                            </div>
 
-</div>
+                        </div>
 
-</div>
+                    </div>
 
 <!-- INTERNSHIP INFORMATION -->
 
-<div class="dashboard-box">
+                    <div class="dashboard-box">
 
-<h3>
-Internship Information
-</h3>
+                        <h3>
+                            Internship Information
+                        </h3>
 
-<div class="info-grid">
+                        <div class="info-grid">
 
-<div>
+                            <div>
 
-<strong>
-Company
-</strong>
+                                <strong>
+                                    Company
+                                </strong>
 
-<p>
+                                <p>
 
-{% if internship %}
+                                    {% if internship %}
 
-{{ internship.company_name }}
+                                        {{ internship.company_name }}
 
-{% else %}
+                                    {% else %}
 
-Not Assigned
+                                        Not Assigned
 
-{% endif %}
+                                    {% endif %}
 
-</p>
+                                </p>
 
-</div>
+                            </div>
 
-<div>
+                            <div>
 
-<strong>
-Position
-</strong>
+                                <strong>
+                                    Position
+                                </strong>
 
-<p>
+                                <p>
 
-{% if internship %}
+                                    {% if internship %}
 
-{{ internship.position }}
+                                        {{ internship.position }}
 
-{% else %}
+                                    {% else %}
 
-Not Assigned
+                                        Not Assigned
 
-{% endif %}
+                                    {% endif %}
 
-</p>
+                                </p>
 
-</div>
+                            </div>
 
-<div>
+                            <div>
 
-<strong>
-Supervisor
-</strong>
+                                <strong>
+                                    Supervisor
+                                </strong>
 
-<p>
+                                <p>
 
-{% if internship %}
+                                    {% if internship %}
 
-{{ internship.supervisor_name }}
+                                        {{ internship.supervisor_name }}
 
-{% else %}
+                                    {% else %}
 
-Not Assigned
+                                        Not Assigned
 
-{% endif %}
+                                    {% endif %}
 
-</p>
+                                </p>
 
-</div>
+                            </div>
 
-<div>
+                            <div>
 
-<strong>
-Status
-</strong>
+                                <strong>
+                                    Status
+                                </strong>
 
-<p>
+                                <p>
 
-{% if internship %}
+                                    {% if internship %}
 
-{{ internship.status }}
+                                        {{ internship.status }}
 
-{% else %}
+                                    {% else %}
 
-No Internship
+                                        No Internship
 
-{% endif %}
+                                    {% endif %}
 
-</p>
+                                </p>
 
-</div>
+                            </div>
 
-<div>
+                            <div>
 
-<strong>
-Start Date
-</strong>
+                                <strong>
+                                    Start Date
+                                </strong>
 
-<p>
+                                <p>
 
-{% if internship %}
+                                    {% if internship %}
 
-{{ internship.start_date }}
+                                        {{ internship.start_date }}
 
-{% else %}
+                                    {% else %}
 
--
+                                        -
 
-{% endif %}
+                                    {% endif %}
 
-</p>
+                                </p>
 
-</div>
+                            </div>
 
-<div>
+                            <div>
 
-<strong>
-End Date
-</strong>
+                                <strong>
+                                    End Date
+                                </strong>
 
-<p>
+                                <p>
 
-{% if internship %}
+                                    {% if internship %}
 
-{{ internship.end_date }}
+                                        {{ internship.end_date }}
 
-{% else %}
+                                    {% else %}
 
--
+                                        -
 
-{% endif %}
+                                    {% endif %}
 
-</p>
+                                </p>
 
-</div>
+                            </div>
 
-<div>
+                            <div>
 
-<strong>
-Required Hours
-</strong>
+                                <strong>
+                                    Required Hours
+                                </strong>
 
-<p>
+                                <p>
 
-{% if internship %}
+                                    {% if internship %}
 
-{{ internship.required_hours }} hours
+                                        {{ internship.required_hours }} hours
 
-{% else %}
+                                    {% else %}
 
--
+                                        -
 
-{% endif %}
+                                    {% endif %}
 
-</p>
+                                </p>
 
-</div>
+                            </div>
 
-<div>
+                            <div>
 
-<strong>
-Completed Hours
-</strong>
+                                <strong>
+                                    Completed Hours
+                                </strong>
 
-<p>
+                                <p>
 
-{% if internship %}
+                                    {% if internship %}
 
-{{ internship.completed_hours }} hours
+                                        {{ internship.completed_hours }} hours
 
-{% else %}
+                                    {% else %}
 
-0 hours
+                                        0 hours
 
-{% endif %}
+                                    {% endif %}
 
-</p>
+                                </p>
 
-</div>
+                            </div>
 
-</div>
+                        </div>
 
-</div>
+                    </div>
 
 <!-- DOCUMENTS -->
 
-<div class="dashboard-box">
+                    <div class="dashboard-box">
 
-<h3>
-Documents
-</h3>
+                        <h3>
+                            Documents
+                        </h3>
 
-{% if documents %}
+                        {% if documents %}
 
-<div class="document-list">
+                            <div class="document-list">
 
-{% for doc in documents %}
+                                {% for doc in documents %}
 
-<div class="document-item">
+                                    <div class="document-item">
 
-<div>
+                                        <div>
 
-<strong>
-📄 {{ doc.filename }}
-</strong>
+                                            <strong>
+                                                📄 {{ doc.filename }}
+                                            </strong>
 
-<p>
-Uploaded:
-{{ doc.uploaded_at }}
-</p>
+                                            <p>
+                                                Uploaded:
+                                                {{ doc.uploaded_at }}
+                                            </p>
 
-</div>
+                                        </div>
 
-<a href="{{ url_for('uploaded_file', filename='documents/' + doc.filename) }}"
-target="_blank"
-class="btn btn-primary">
+                                        <a href="{{ url_for('uploaded_file', filename='documents/' + doc.filename) }}"
+                                           target="_blank"
+                                           class="btn btn-primary">
 
-View
+                                            View
 
-</a>
+                                        </a>
 
-</div>
+                                    </div>
 
-{% endfor %}
+                                {% endfor %}
 
-</div>
+                            </div>
 
-{% else %}
+                        {% else %}
 
-<div class="alert alert-info">
+                            <div class="alert alert-info">
 
-No documents uploaded yet.
+                                No documents uploaded yet.
 
-</div>
+                            </div>
 
-{% endif %}
+                        {% endif %}
 
-</div>
+                    </div>
 
-<a href="{{ url_for('admin.admin_students') }}"
-class="btn btn-light">
+                    <a href="{{ url_for('admin.admin_students') }}"
+                       class="btn btn-light">
 
-← Back to Students
+                        ← Back to Students
 
-</a>
+                    </a>
 
-</div>
+                </div>
 
-</div>
-</main>
+            </div>
+        </main>
 
 <!-- DEACTIVATE MODAL -->
 
-<div id="deactivateModal" class="modal-overlay">
+        <div id="deactivateModal" class="modal-overlay">
 
-<div class="deactivate-modal">
+            <div class="deactivate-modal">
 
-<button 
-class="modal-close"
-onclick="closeDeactivateModal()">
+                <button
+                    class="modal-close"
+                    onclick="closeDeactivateModal()">
 
-×
+                    ×
 
-</button>
+                </button>
 
-<div class="modal-icon">
+                <div class="modal-icon">
 
-❌
+                    ❌
 
-</div>
+                </div>
 
-<h2>
-Are you sure?
-</h2>
+                <h2>
+                    Are you sure?
+                </h2>
 
-<p>
-Are you sure you want to deactivate this account?
-</p>
+                <p>
+                    Are you sure you want to deactivate this account?
+                </p>
 
-<div class="modal-actions">
+                <div class="modal-actions">
 
-<button 
-class="btn btn-light"
-onclick="closeDeactivateModal()">
+                    <button
+                        class="btn btn-light"
+                        onclick="closeDeactivateModal()">
 
-Cancel
+                        Cancel
 
-</button>
+                    </button>
 
-<form method="POST" action="{{ url_for('admin.deactivate_student', student_id=student.id) }}" style="display:inline;">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <button type="submit" class="btn btn-danger">Deactivate</button>
-</form>
+                    <form method="POST" action="{{ url_for('admin.deactivate_student', student_id=student.id) }}" style="display:inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-danger">Deactivate</button>
+                    </form>
 
-</div>
+                </div>
 
-</div>
+            </div>
 
-</div>
+        </div>
 
-<script>
+        <script>
 
-const progress = document.querySelector(".progress-bar");
+            const progress = document.querySelector(".progress-bar");
 
-if (progress) {
-    progress.style.width = progress.dataset.progress + "%";
-}
+            if (progress) {
+                progress.style.width = progress.dataset.progress + "%";
+            }
 
 /* AUTO CLOSE FLASH MESSAGE */
 
-setTimeout(function () {
+            setTimeout(function () {
 
-    document.querySelectorAll(".flash-popup").forEach(function (alert) {
+                document.querySelectorAll(".flash-popup").forEach(function (alert) {
 
-        alert.style.transition = "all 0.3s ease";
-        alert.style.opacity = "0";
-        alert.style.transform = "translateY(-15px)";
+                    alert.style.transition = "all 0.3s ease";
+                    alert.style.opacity = "0";
+                    alert.style.transform = "translateY(-15px)";
 
-        setTimeout(function () {
-            alert.remove();
-        }, 300);
+                    setTimeout(function () {
+                        alert.remove();
+                    }, 300);
 
-    });
+                });
 
-}, 5000);
+            }, 5000);
 
-function openDeactivateModal(){
+            function openDeactivateModal(){
 
-    document.getElementById(
-        "deactivateModal"
-    ).style.display = "flex";
+                document.getElementById(
+                    "deactivateModal"
+                ).style.display = "flex";
 
-    document.body.classList.add(
-        "modal-open"
-    );
+                document.body.classList.add(
+                    "modal-open"
+                );
 
-}
+            }
 
-function closeDeactivateModal(){
+            function closeDeactivateModal(){
 
-    document.getElementById(
-        "deactivateModal"
-    ).style.display = "none";
+                document.getElementById(
+                    "deactivateModal"
+                ).style.display = "none";
 
-    document.body.classList.remove(
-        "modal-open"
-    );
+                document.body.classList.remove(
+                    "modal-open"
+                );
 
-}
+            }
 
-</script>
+        </script>
 
-</body>
+    </body>
 
 </html>

@@ -1,77 +1,77 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <meta charset="UTF-8">
-    <title>Submission - {{ assignment.title }}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">
-</head>
-<body class="analytics-aesthetic">
-    {% include 'components/supervisor_sidebar.html' %}
-    <div class="page-content nexora-app-main">
-        <div class="nexora-page">
-            <a href="{{ url_for('classroom.supervisor_assignment_detail', class_id=classroom.id, assignment_id=assignment.id) }}" class="btn btn-light btn-sm mb-3">← Back to Submissions</a>
+    <head>
+        <meta charset="UTF-8">
+        <title>Submission - {{ assignment.title }}</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">
+    </head>
+    <body class="analytics-aesthetic">
+        {% include 'components/supervisor_sidebar.html' %}
+        <div class="page-content nexora-app-main">
+            <div class="nexora-page">
+                <a href="{{ url_for('classroom.supervisor_assignment_detail', class_id=classroom.id, assignment_id=assignment.id) }}" class="btn btn-light btn-sm mb-3">← Back to Submissions</a>
 
-            {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-            {% for category, message in messages %}
-            <div class="alert alert-{{ category }}">{{ message }}</div>
-            {% endfor %}
-            {% endif %}
-            {% endwith %}
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
 
-            <div class="card shadow-sm mb-4" style="border:1px solid #f1f5f9; border-radius:12px; overflow:hidden;">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0" style="font-weight:700;">{{ assignment.title }}</h5>
-                    <span class="badge bg-primary" style="font-size:0.85rem;">{{ student.username }}</span>
-                </div>
-                <div class="card-body">
-                    <div class="d-flex flex-wrap gap-2 mb-3">
-                        <span class="badge {% if submission.status=='graded' %}bg-success{% else %}bg-primary{% endif %}" style="padding:8px 12px;">{{ submission.status }}</span>
-                        {% if submission.grade %}<span class="badge bg-dark" style="padding:8px 12px;">Grade: {{ submission.grade }}</span>{% endif %}
+                <div class="card shadow-sm mb-4" style="border:1px solid #f1f5f9; border-radius:12px; overflow:hidden;">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0" style="font-weight:700;">{{ assignment.title }}</h5>
+                        <span class="badge bg-primary" style="font-size:0.85rem;">{{ student.username }}</span>
                     </div>
-                    <p class="mb-2"><strong>Student:</strong> {{ student.username }} <span class="text-muted">({{ student.email }})</span></p>
-                    {% if submission.content %}
-                    <div class="border rounded p-3 mb-3" style="background:#f8fafc; border-color:#e2e8f0;">
-                        <h6 style="font-weight:700; font-size:0.9rem; color:#0f172a;">Text Submission</h6>
-                        <p class="mb-0" style="white-space:pre-wrap;">{{ submission.content }}</p>
-                    </div>
-                    {% endif %}
-                    {% if submission.filename %}
-                    <div class="d-flex align-items-center gap-2 mb-3 p-3 border rounded" style="background:#f0f9ff; border-color:#bae6fd;">
-                        <span style="font-size:1.2rem;">📎</span>
-                        <span><strong>File:</strong> {{ submission.filename }}</span>
-                        <a href="{{ url_for('classroom.download_submission_supervisor', class_id=classroom.id, assignment_id=assignment.id, submission_id=submission.id) }}" class="btn btn-sm btn-primary ms-auto">Download</a>
-                    </div>
-                    {% endif %}
-                    <p class="small text-muted">Submitted: {{ submission.submitted_at }}</p>
-                    {% if submission.feedback %}
-                    <div class="alert alert-info mt-3">
-                        <strong>Feedback:</strong> {{ submission.feedback }}
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-
-            <div class="card shadow-sm" style="border:1px solid #f1f5f9; border-radius:12px; overflow:hidden;">
-                <div class="card-header bg-white"><h6 class="mb-0" style="font-weight:700;">Grade & Feedback</h6></div>
-                <div class="card-body">
-                    <form method="POST" action="{{ url_for('classroom.grade_submission', class_id=classroom.id, assignment_id=assignment.id, submission_id=submission.id) }}">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <div class="mb-3">
-                            <label class="form-label">Grade (e.g., 85, A, 90/100)</label>
-                            <input type="text" name="grade" class="form-control" value="{{ submission.grade or '' }}" maxlength="20" placeholder="e.g., 92 or A">
+                    <div class="card-body">
+                        <div class="d-flex flex-wrap gap-2 mb-3">
+                            <span class="badge {% if submission.status=='graded' %}bg-success{% else %}bg-primary{% endif %}" style="padding:8px 12px;">{{ submission.status }}</span>
+                            {% if submission.grade %}<span class="badge bg-dark" style="padding:8px 12px;">Grade: {{ submission.grade }}</span>{% endif %}
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Feedback</label>
-                            <textarea name="feedback" class="form-control" rows="3" maxlength="2000" placeholder="Provide constructive feedback...">{{ submission.feedback or '' }}</textarea>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Save Grade</button>
-                    </form>
+                        <p class="mb-2"><strong>Student:</strong> {{ student.username }} <span class="text-muted">({{ student.email }})</span></p>
+                        {% if submission.content %}
+                            <div class="border rounded p-3 mb-3" style="background:#f8fafc; border-color:#e2e8f0;">
+                                <h6 style="font-weight:700; font-size:0.9rem; color:#0f172a;">Text Submission</h6>
+                                <p class="mb-0" style="white-space:pre-wrap;">{{ submission.content }}</p>
+                            </div>
+                        {% endif %}
+                        {% if submission.filename %}
+                            <div class="d-flex align-items-center gap-2 mb-3 p-3 border rounded" style="background:#f0f9ff; border-color:#bae6fd;">
+                                <span style="font-size:1.2rem;">📎</span>
+                                <span><strong>File:</strong> {{ submission.filename }}</span>
+                                <a href="{{ url_for('classroom.download_submission_supervisor', class_id=classroom.id, assignment_id=assignment.id, submission_id=submission.id) }}" class="btn btn-sm btn-primary ms-auto">Download</a>
+                            </div>
+                        {% endif %}
+                        <p class="small text-muted">Submitted: {{ submission.submitted_at }}</p>
+                        {% if submission.feedback %}
+                            <div class="alert alert-info mt-3">
+                                <strong>Feedback:</strong> {{ submission.feedback }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="card shadow-sm" style="border:1px solid #f1f5f9; border-radius:12px; overflow:hidden;">
+                    <div class="card-header bg-white"><h6 class="mb-0" style="font-weight:700;">Grade & Feedback</h6></div>
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('classroom.grade_submission', class_id=classroom.id, assignment_id=assignment.id, submission_id=submission.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <div class="mb-3">
+                                <label class="form-label">Grade (e.g., 85, A, 90/100)</label>
+                                <input type="text" name="grade" class="form-control" value="{{ submission.grade or '' }}" maxlength="20" placeholder="e.g., 92 or A">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Feedback</label>
+                                <textarea name="feedback" class="form-control" rows="3" maxlength="2000" placeholder="Provide constructive feedback...">{{ submission.feedback or '' }}</textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Save Grade</button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</body>
+    </body>
 </html>

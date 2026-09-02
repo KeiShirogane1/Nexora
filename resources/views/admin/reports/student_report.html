@@ -2,694 +2,696 @@
 
 <html>
 
-<head>
-    <meta charset="UTF-8">
+    <head>
+        <meta charset="UTF-8">
 
-<title>
-    Student Report - Nexora
-</title>
+        <title>
+            Student Report - Nexora
+        </title>
 
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-      rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+              rel="stylesheet">
 
-<link rel="stylesheet"
-      href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+        <link rel="stylesheet"
+              href="{{ url_for('static', filename='css/style.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
 
-</head>
+    </head>
 
-<body class="report-page">
+    <body class="report-page">
 
-    {% include 'components/admin_sidebar.html' %}
+        {% include 'components/admin_sidebar.html' %}
 
-<div class="admin-main nexora-app-main">
-        <div class="nexora-page">
+        <div class="admin-main nexora-app-main">
+            <div class="nexora-page">
 
         <!-- REPORT HEADER -->
 
-        <div class="card shadow-sm mb-4">
-
-            <div class="card-body">
-
-                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
-
-                    <div>
-
-                        <h1 class="mb-1">
-
-                            {{ student[1] }}
-
-                        </h1>
-
-                        <p class="text-muted mb-1">
-
-                            Course · University · Company Name
-
-                        </p>
-
-                        <p class="text-muted mb-0">
-
-                            Individual Internship Report
-
-                        </p>
-
-                    </div>
-
-                    <div>
-
-                        <a href="{{ url_for('admin.attendance_report') }}"
-                           class="btn btn-outline-secondary">
-
-                            ← Back to Attendance Report
-
-                        </a>
-                        <a href="{{ url_for('admin.admin_reports_list') }}"
-                           class="btn btn-outline-secondary">
-
-                            ← Back to Reports
-
-                        </a>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-        <!-- REPORT TABS -->
-
-        <div class="profile-tabs mb-4">
-
-            <button class="profile-tab-button active" data-tab="overview" onclick="openReportTab('overview', this)">
-
-                Overview
-
-            </button>
-
-            <button class="profile-tab-button" data-tab="attendance" onclick="openReportTab('attendance', this)">
-
-                Attendance & Logbook
-
-            </button>
-
-            <button class="profile-tab-button" data-tab="evaluation" onclick="openReportTab('evaluation', this)">
-
-                Evaluation
-
-            </button>
-
-            <button class="profile-tab-button" data-tab="progress" onclick="openReportTab('progress', this)">
-
-                Progress
-
-            </button>
-
-            <button class="profile-tab-button" data-tab="performance" onclick="openReportTab('performance', this)">
-
-                Performance
-
-            </button>
-
-            <button class="profile-tab-button" data-tab="recommendations" onclick="openReportTab('recommendations', this)">
-
-                Recommendations
-
-            </button>
-
-        </div>
-
-        <!-- OVERVIEW TAB -->
-
-        <div id="overview" class="report-tab active mb-3">
-
-            <!-- SUMMARY METRICS -->
-
-            <div class="row g-4 mb-4">
-
-                <!-- ATTENDANCE -->
-
-                <div class="col-md-4">
-
-                    <div class="card shadow-sm p-4 h-100">
-
-                        <h2>
-
-                            {{ total_sessions }}
-
-                        </h2>
-
-                        <p class="text-muted mb-0">
-
-                            Attendance Sessions
-
-                        </p>
-
-                    </div>
-
-                </div>
-
-                <!-- HOURS -->
-
-                <div class="col-md-4">
-
-                    <div class="card shadow-sm p-4 h-100">
-
-                        <h2>
-
-                            {{ total_hours }}
-
-                        </h2>
-
-                        <p class="text-muted mb-0">
-
-                            Total Hours Rendered
-
-                        </p>
-
-                    </div>
-
-                </div>
-
-                <!-- LOGBOOK -->
-
-                <div class="col-md-4">
-
-                    <div class="card shadow-sm p-4 h-100">
-
-                        <h2>
-
-                            {{ total_logs }}
-
-                        </h2>
-
-                        <p class="text-muted mb-0">
-
-                            Logbook Entries
-
-                        </p>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-            <!-- INTERNSHIP SUMMARY -->
-
-            <div class="card shadow-sm mb-4">
-
-                <div class="card-header">
-
-                    <h5 class="mb-0">
-
-                        Internship Summary
-
-                    </h5>
-
-                </div>
-
-                <div class="card-body">
-
-                    <p class="text-muted mb-0">
-
-                        This overview summarizes the intern's current internship activity.
-                        Additional calculated insights from evaluation, task, and progress
-                        data will appear here as the corresponding report modules are
-                        implemented.
-
-                    </p>
-
-                </div>
-
-            </div>
-
-            <!-- REPORT STATUS -->
-
-            <div class="row g-4">
-
-                <div class="col-md-6">
-
-                    <div class="card shadow-sm h-100">
-
-                        <div class="card-body">
-
-                            <h5>
-
-                                Evaluation
-
-                            </h5>
-
-                            <p class="text-muted mb-0">
-
-                                Supervisor evaluation data and performance classifications
-                                will appear here.
-
-                            </p>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-                <div class="col-md-6">
-
-                    <div class="card shadow-sm h-100">
-
-                        <div class="card-body">
-
-                            <h5>
-
-                                Progress
-
-                            </h5>
-
-                            <p class="text-muted mb-0">
-
-                                Calculated internship progress and performance insights
-                                will appear here.
-
-                            </p>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    <!-- ATTENDANCE & LOGBOOK TAB -->
-
-            <div id="attendance" class="report-tab mb-3">
-
-                <!-- ATTENDANCE INTERPRETATION -->
-
                 <div class="card shadow-sm mb-4">
-
-                    <div class="card-header bg-info">
-
-                        <h5 class="mb-0">
-                            Attendance Interpretation
-                        </h5>
-
-                    </div>
 
                     <div class="card-body">
 
-                        <p class="mb-0">
-                            {{ attendance_interpretation }}
-                        </p>
+                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+
+                            <div>
+
+                                <h1 class="mb-1">
+
+                                    {{ student[1] }}
+
+                                </h1>
+
+                                <p class="text-muted mb-1">
+
+                                    Course · University · Company Name
+
+                                </p>
+
+                                <p class="text-muted mb-0">
+
+                                    Individual Internship Report
+
+                                </p>
+
+                            </div>
+
+                            <div>
+
+                                <a href="{{ url_for('admin.attendance_report') }}"
+                                   class="btn btn-outline-secondary">
+
+                                    ← Back to Attendance Report
+
+                                </a>
+                                <a href="{{ url_for('admin.admin_reports_list') }}"
+                                   class="btn btn-outline-secondary">
+
+                                    ← Back to Reports
+
+                                </a>
+
+                            </div>
+
+                        </div>
 
                     </div>
 
                 </div>
+
+        <!-- REPORT TABS -->
+
+                <div class="profile-tabs mb-4">
+
+                    <button class="profile-tab-button active" data-tab="overview" onclick="openReportTab('overview', this)">
+
+                        Overview
+
+                    </button>
+
+                    <button class="profile-tab-button" data-tab="attendance" onclick="openReportTab('attendance', this)">
+
+                        Attendance & Logbook
+
+                    </button>
+
+                    <button class="profile-tab-button" data-tab="evaluation" onclick="openReportTab('evaluation', this)">
+
+                        Evaluation
+
+                    </button>
+
+                    <button class="profile-tab-button" data-tab="progress" onclick="openReportTab('progress', this)">
+
+                        Progress
+
+                    </button>
+
+                    <button class="profile-tab-button" data-tab="performance" onclick="openReportTab('performance', this)">
+
+                        Performance
+
+                    </button>
+
+                    <button class="profile-tab-button" data-tab="recommendations" onclick="openReportTab('recommendations', this)">
+
+                        Recommendations
+
+                    </button>
+
+                </div>
+
+        <!-- OVERVIEW TAB -->
+
+                <div id="overview" class="report-tab active mb-3">
+
+            <!-- SUMMARY METRICS -->
+
+                    <div class="row g-4 mb-4">
+
+                <!-- ATTENDANCE -->
+
+                        <div class="col-md-4">
+
+                            <div class="card shadow-sm p-4 h-100">
+
+                                <h2>
+
+                                    {{ total_sessions }}
+
+                                </h2>
+
+                                <p class="text-muted mb-0">
+
+                                    Attendance Sessions
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                <!-- HOURS -->
+
+                        <div class="col-md-4">
+
+                            <div class="card shadow-sm p-4 h-100">
+
+                                <h2>
+
+                                    {{ total_hours }}
+
+                                </h2>
+
+                                <p class="text-muted mb-0">
+
+                                    Total Hours Rendered
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                <!-- LOGBOOK -->
+
+                        <div class="col-md-4">
+
+                            <div class="card shadow-sm p-4 h-100">
+
+                                <h2>
+
+                                    {{ total_logs }}
+
+                                </h2>
+
+                                <p class="text-muted mb-0">
+
+                                    Logbook Entries
+
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+            <!-- INTERNSHIP SUMMARY -->
+
+                    <div class="card shadow-sm mb-4">
+
+                        <div class="card-header">
+
+                            <h5 class="mb-0">
+
+                                Internship Summary
+
+                            </h5>
+
+                        </div>
+
+                        <div class="card-body">
+
+                            <p class="text-muted mb-0">
+
+                                This overview summarizes the intern's current internship activity.
+                                Additional calculated insights from evaluation, task, and progress
+                                data will appear here as the corresponding report modules are
+                                implemented.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+            <!-- REPORT STATUS -->
+
+                    <div class="row g-4">
+
+                        <div class="col-md-6">
+
+                            <div class="card shadow-sm h-100">
+
+                                <div class="card-body">
+
+                                    <h5>
+
+                                        Evaluation
+
+                                    </h5>
+
+                                    <p class="text-muted mb-0">
+
+                                        Supervisor evaluation data and performance classifications
+                                        will appear here.
+
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-6">
+
+                            <div class="card shadow-sm h-100">
+
+                                <div class="card-body">
+
+                                    <h5>
+
+                                        Progress
+
+                                    </h5>
+
+                                    <p class="text-muted mb-0">
+
+                                        Calculated internship progress and performance insights
+                                        will appear here.
+
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+    <!-- ATTENDANCE & LOGBOOK TAB -->
+
+                <div id="attendance" class="report-tab mb-3">
+
+                <!-- ATTENDANCE INTERPRETATION -->
+
+                    <div class="card shadow-sm mb-4">
+
+                        <div class="card-header bg-info">
+
+                            <h5 class="mb-0">
+                                Attendance Interpretation
+                            </h5>
+
+                        </div>
+
+                        <div class="card-body">
+
+                            <p class="mb-0">
+                                {{ attendance_interpretation }}
+                            </p>
+
+                        </div>
+
+                    </div>
 
                 <!-- ATTENDANCE METRICS -->
 
-                <div class="row g-4 mb-4">
+                    <div class="row g-4 mb-4">
 
                     <!-- TOTAL SESSIONS -->
 
-                    <div class="col-md-3">
+                        <div class="col-md-3">
 
-                        <div class="card shadow-sm p-4 h-100">
+                            <div class="card shadow-sm p-4 h-100">
 
-                            <h2>
-                                {{ total_sessions }}
-                            </h2>
+                                <h2>
+                                    {{ total_sessions }}
+                                </h2>
 
-                            <p class="text-muted mb-0">
-                                Attendance Sessions
-                            </p>
+                                <p class="text-muted mb-0">
+                                    Attendance Sessions
+                                </p>
+
+                            </div>
 
                         </div>
-
-                    </div>
 
                     <!-- TOTAL HOURS -->
 
-                    <div class="col-md-3">
+                        <div class="col-md-3">
 
-                        <div class="card shadow-sm p-4 h-100">
+                            <div class="card shadow-sm p-4 h-100">
 
-                            <h2>
-                                {{ "%.1f"|format(total_hours) }}
-                            </h2>
+                                <h2>
+                                    {{ "%.1f"|format(total_hours) }}
+                                </h2>
 
-                            <p class="text-muted mb-0">
-                                Hours Rendered
-                            </p>
+                                <p class="text-muted mb-0">
+                                    Hours Rendered
+                                </p>
+
+                            </div>
 
                         </div>
-
-                    </div>
 
                     <!-- AVERAGE HOURS -->
 
-                    <div class="col-md-3">
+                        <div class="col-md-3">
 
-                        <div class="card shadow-sm p-4 h-100">
+                            <div class="card shadow-sm p-4 h-100">
 
-                            <h2>
-                                {{ "%.1f"|format(average_hours) }}
-                            </h2>
+                                <h2>
+                                    {{ "%.1f"|format(average_hours) }}
+                                </h2>
 
-                            <p class="text-muted mb-0">
-                                Avg. Hours / Session
-                            </p>
+                                <p class="text-muted mb-0">
+                                    Avg. Hours / Session
+                                </p>
+
+                            </div>
 
                         </div>
-
-                    </div>
 
                     <!-- LOGBOOK ENTRIES -->
 
-                    <div class="col-md-3">
+                        <div class="col-md-3">
 
-                        <div class="card shadow-sm p-4 h-100">
+                            <div class="card shadow-sm p-4 h-100">
 
-                            <h2>
-                                {{ total_logs }}
-                            </h2>
+                                <h2>
+                                    {{ total_logs }}
+                                </h2>
 
-                            <p class="text-muted mb-0">
-                                Logbook Entries
-                            </p>
+                                <p class="text-muted mb-0">
+                                    Logbook Entries
+                                </p>
+
+                            </div>
 
                         </div>
 
                     </div>
-
-                </div>
 
                 <!-- ATTENDANCE + LOGBOOK -->
 
-                <div class="row g-4">
+                    <div class="row g-4">
 
                     <!-- ATTENDANCE HISTORY -->
 
-                    <div class="col-lg-8">
+                        <div class="col-lg-8">
 
-                        <div class="card shadow-sm h-100">
+                            <div class="card shadow-sm h-100">
 
-                            <div class="card-header bg-warning">
+                                <div class="card-header bg-warning">
 
-                                <h5 class="mb-0">
-                                    Attendance History
-                                </h5>
+                                    <h5 class="mb-0">
+                                        Attendance History
+                                    </h5>
 
-                            </div>
+                                </div>
 
-                            <div class="card-body admin-scroll">
+                                <div class="card-body admin-scroll">
 
-                                {% if attendance %}
+                                    {% if attendance %}
 
-                                    <div class="table-responsive">
+                                        <div class="table-responsive">
 
-                                        <table class="table table-hover align-middle">
+                                            <table class="table table-hover align-middle">
 
-                                            <thead>
-
-                                                <tr>
-
-                                                    <th>
-                                                        Date
-                                                    </th>
-
-                                                    <th>
-                                                        Clock In
-                                                    </th>
-
-                                                    <th>
-                                                        Clock Out
-                                                    </th>
-
-                                                    <th>
-                                                        Hours Rendered
-                                                    </th>
-
-                                                    <th>
-                                                        Status
-                                                    </th>
-
-                                                </tr>
-
-                                            </thead>
-
-                                            <tbody>
-
-                                                {% for session in attendance %}
+                                                <thead>
 
                                                     <tr>
 
-                                                        <td>
-                                                            {{ session[1] }}
-                                                        </td>
+                                                        <th>
+                                                            Date
+                                                        </th>
 
-                                                        <td>
-                                                            {{ session[2] }}
-                                                        </td>
+                                                        <th>
+                                                            Clock In
+                                                        </th>
 
-                                                        <td>
+                                                        <th>
+                                                            Clock Out
+                                                        </th>
 
-                                                            {% if session[3] %}
+                                                        <th>
+                                                            Hours Rendered
+                                                        </th>
 
-                                                                {{ session[3] }}
-
-                                                            {% else %}
-
-                                                                <span class="text-muted">
-                                                                    Still Active
-                                                                </span>
-
-                                                            {% endif %}
-
-                                                        </td>
-
-                                                        <td>
-
-                                                            {% if session[4] is not none %}
-
-                                                                {{ "%.1f"|format(session[4]) }}
-
-                                                            {% else %}
-
-                                                                —
-
-                                                            {% endif %}
-
-                                                        </td>
-
-                                                        <td>
-
-                                                            {% if session[5] == 'Closed' %}
-
-                                                                <span class="badge bg-success">
-                                                                    Completed
-                                                                </span>
-
-                                                            {% else %}
-
-                                                                <span class="badge bg-warning">
-                                                                    {{ session[5] }}
-                                                                </span>
-
-                                                            {% endif %}
-
-                                                        </td>
+                                                        <th>
+                                                            Status
+                                                        </th>
 
                                                     </tr>
 
-                                                {% endfor %}
+                                                </thead>
 
-                                            </tbody>
+                                                <tbody>
 
-                                        </table>
+                                                    {% for session in attendance %}
 
-                                    </div>
+                                                        <tr>
 
-                                {% else %}
+                                                            <td>
+                                                                {{ session[1] }}
+                                                            </td>
 
-                                    <p class="text-muted mb-0">
-                                        No attendance sessions recorded yet.
-                                    </p>
+                                                            <td>
+                                                                {{ session[2] }}
+                                                            </td>
 
-                                {% endif %}
+                                                            <td>
 
-                            </div>
+                                                                {% if session[3] %}
 
-                            <!-- Pagination -->
-                            <div class="card-footer mb-3">
-                                    {% if attendance_total_pages > 1 %}
+                                                                    {{ session[3] }}
 
-                                                <nav class="mt-3">
+                                                                {% else %}
 
-                                                    <ul class="pagination pagination-sm justify-content-center mb-0">
+                                                                    <span class="text-muted">
+                                                                        Still Active
+                                                                    </span>
 
-                                                        <li class="page-item {% if attendance_page == 1 %}disabled{% endif %}">
+                                                                {% endif %}
 
-                                                            <a class="page-link"
-                                                               href="?tab=attendance&attendance_page={{ attendance_page - 1 }}&logbook_page={{ logbook_page }}">
+                                                            </td>
 
-                                                                Previous
+                                                            <td>
 
-                                                            </a>
+                                                                {% if session[4] is not none %}
 
-                                                        </li>
+                                                                    {{ "%.1f"|format(session[4]) }}
 
-                                                        {% for page in range(1, attendance_total_pages + 1) %}
+                                                                {% else %}
 
-                                                            <li class="page-item {% if page == attendance_page %}active{% endif %}">
+                                                                    —
 
-                                                                <a class="page-link"
-                                                                   href="?tab=attendance&attendance_page={{ page }}&logbook_page={{ logbook_page }}">
+                                                                {% endif %}
 
-                                                                    {{ page }}
+                                                            </td>
 
-                                                                </a>
+                                                            <td>
 
-                                                            </li>
+                                                                {% if session[5] == 'Closed' %}
 
-                                                        {% endfor %}
+                                                                    <span class="badge bg-success">
+                                                                        Completed
+                                                                    </span>
 
-                                                        <li class="page-item {% if attendance_page == attendance_total_pages %}disabled{% endif %}">
+                                                                {% else %}
 
-                                                            <a class="page-link"
-                                                               href="?tab=attendance&attendance_page={{ attendance_page + 1 }}&logbook_page={{ logbook_page }}">
+                                                                    <span class="badge bg-warning">
+                                                                        {{ session[5] }}
+                                                                    </span>
 
-                                                                Next
+                                                                {% endif %}
 
-                                                            </a>
+                                                            </td>
 
-                                                        </li>
+                                                        </tr>
 
-                                                    </ul>
+                                                    {% endfor %}
 
-                                                </nav>
+                                                </tbody>
 
-                                            {% endif %}
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                    <!-- logbook entries by date -->
-
-                    <div class="col-lg-4">
-
-                        <div class="card shadow-sm h-100">
-
-                            <div class="card-header bg-success">
-
-                                <h5 class="mb-0">
-                                    Internship Logbook
-                                </h5>
-
-                            </div>
-
-                            <div class="card-body admin-scroll">
-
-                                {% if logbook_days %}
-
-                                    {% for day in logbook_days %}
-
-                                        <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
-
-                                            <div>
-
-                                                <strong>
-                                                    {{ day.date }}
-                                                </strong>
-
-                                                <br>
-
-                                                <small class="text-muted">
-
-                                                    {{ day.entries }}
-                                                    {% if day.entries == 1 %}
-                                                        entry
-                                                    {% else %}
-                                                        entries
-                                                    {% endif %}
-
-                                                </small>
-
-                                            </div>
-
-                                            <a href="{{ url_for('admin.student_logbook', student_id=student[0], date=day.url_date) }}"
-                                               class="btn btn-sm btn-outline-success">
-
-                                                View
-
-                                            </a>
+                                            </table>
 
                                         </div>
 
-                                    {% endfor %}
+                                    {% else %}
 
-                                {% else %}
+                                        <p class="text-muted mb-0">
+                                            No attendance sessions recorded yet.
+                                        </p>
 
-                                    <p class="text-muted mb-0">
-                                        No logbook entries recorded yet.
-                                    </p>
+                                    {% endif %}
 
-                                {% endif %}
-
-                            </div>
+                                </div>
 
                             <!-- Pagination -->
-                            <div class="card-footer mb-3">
-                                {% if logbook_total_pages > 1 %}
+                                <div class="card-footer mb-3">
+                                    {% if attendance_total_pages > 1 %}
 
-                                    <nav class="mt-3">
+                                        <nav class="mt-3">
 
-                                        <ul class="pagination pagination-sm justify-content-center mb-0">
+                                            <ul class="pagination pagination-sm justify-content-center mb-0">
 
-                                            <li class="page-item {% if logbook_page == 1 %}disabled{% endif %}">
+                                                <li class="page-item {% if attendance_page == 1 %}disabled{% endif %}">
 
-                                                <a class="page-link" href="?tab=attendance&logbook_page={{ logbook_page - 1 }}&attendance_page={{ attendance_page }}">
+                                                    <a class="page-link"
+                                                       href="?tab=attendance&attendance_page={{ attendance_page - 1 }}&logbook_page={{ logbook_page }}">
 
-                                                Previous
-
-                                                </a>
-
-                                            </li>
-
-                                            {% for page in range(1, logbook_total_pages + 1) %}
-
-                                                <li class="page-item {% if page == logbook_page %}active{% endif %}">
-
-                                                    <a class="page-link" href="?tab=attendance&logbook_page={{ page }}&attendance_page={{ attendance_page }}">
-
-                                                        {{ page }}
+                                                        Previous
 
                                                     </a>
 
                                                 </li>
 
-                                            {% endfor %}
+                                                {% for page in range(1, attendance_total_pages + 1) %}
 
-                                            <li class="page-item {% if logbook_page == logbook_total_pages %}disabled{% endif %}">
+                                                    <li class="page-item {% if page == attendance_page %}active{% endif %}">
 
-                                                <a class="page-link" href="?tab=attendance&logbook_page={{ logbook_page + 1 }}&attendance_page={{ attendance_page }}">
+                                                        <a class="page-link"
+                                                           href="?tab=attendance&attendance_page={{ page }}&logbook_page={{ logbook_page }}">
 
-                                                    Next
+                                                            {{ page }}
+
+                                                        </a>
+
+                                                    </li>
+
+                                                {% endfor %}
+
+                                                <li class="page-item {% if attendance_page == attendance_total_pages %}disabled{% endif %}">
+
+                                                    <a class="page-link"
+                                                       href="?tab=attendance&attendance_page={{ attendance_page + 1 }}&logbook_page={{ logbook_page }}">
+
+                                                        Next
+
+                                                    </a>
+
+                                                </li>
+
+                                            </ul>
+
+                                        </nav>
+
+                                    {% endif %}
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    <!-- logbook entries by date -->
+
+                        <div class="col-lg-4">
+
+                            <div class="card shadow-sm h-100">
+
+                                <div class="card-header bg-success">
+
+                                    <h5 class="mb-0">
+                                        Internship Logbook
+                                    </h5>
+
+                                </div>
+
+                                <div class="card-body admin-scroll">
+
+                                    {% if logbook_days %}
+
+                                        {% for day in logbook_days %}
+
+                                            <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
+
+                                                <div>
+
+                                                    <strong>
+                                                        {{ day.date }}
+                                                    </strong>
+
+                                                    <br>
+
+                                                    <small class="text-muted">
+
+                                                        {{ day.entries }}
+                                                        {% if day.entries == 1 %}
+                                                            entry
+                                                        {% else %}
+                                                            entries
+                                                        {% endif %}
+
+                                                    </small>
+
+                                                </div>
+
+                                                <a href="{{ url_for('admin.student_logbook', student_id=student[0], date=day.url_date) }}"
+                                                   class="btn btn-sm btn-outline-success">
+
+                                                    View
 
                                                 </a>
 
-                                            </li>
+                                            </div>
 
-                                        </ul>
+                                        {% endfor %}
 
-                                    </nav>
+                                    {% else %}
 
-                                {% endif %}
+                                        <p class="text-muted mb-0">
+                                            No logbook entries recorded yet.
+                                        </p>
+
+                                    {% endif %}
+
+                                </div>
+
+                            <!-- Pagination -->
+                                <div class="card-footer mb-3">
+                                    {% if logbook_total_pages > 1 %}
+
+                                        <nav class="mt-3">
+
+                                            <ul class="pagination pagination-sm justify-content-center mb-0">
+
+                                                <li class="page-item {% if logbook_page == 1 %}disabled{% endif %}">
+
+                                                    <a class="page-link" href="?tab=attendance&logbook_page={{ logbook_page - 1 }}&attendance_page={{ attendance_page }}">
+
+                                                        Previous
+
+                                                    </a>
+
+                                                </li>
+
+                                                {% for page in range(1, logbook_total_pages + 1) %}
+
+                                                    <li class="page-item {% if page == logbook_page %}active{% endif %}">
+
+                                                        <a class="page-link" href="?tab=attendance&logbook_page={{ page }}&attendance_page={{ attendance_page }}">
+
+                                                            {{ page }}
+
+                                                        </a>
+
+                                                    </li>
+
+                                                {% endfor %}
+
+                                                <li class="page-item {% if logbook_page == logbook_total_pages %}disabled{% endif %}">
+
+                                                    <a class="page-link" href="?tab=attendance&logbook_page={{ logbook_page + 1 }}&attendance_page={{ attendance_page }}">
+
+                                                        Next
+
+                                                    </a>
+
+                                                </li>
+
+                                            </ul>
+
+                                        </nav>
+
+                                    {% endif %}
+                                </div>
+
                             </div>
 
                         </div>
@@ -697,735 +699,733 @@
                     </div>
 
                 </div>
-
-            </div>
 
         <!-- EVALUATION TAB -->
 
-    <div id="evaluation" class="report-tab mb-2">
+                <div id="evaluation" class="report-tab mb-2">
 
-        <div class="row g-4 mb-4">
+                    <div class="row g-4 mb-4">
 
         <!-- TOTAL EVALUATIONS -->
 
-        <div class="col-md-4">
+                        <div class="col-md-4">
 
-            <div class="card shadow-sm p-4 h-100">
+                            <div class="card shadow-sm p-4 h-100">
 
-                <h2>
-                    {{ feedback|length }}
-                </h2>
+                                <h2>
+                                    {{ feedback|length }}
+                                </h2>
 
-                <p class="text-muted mb-0">
-                    Total Evaluations
-                </p>
+                                <p class="text-muted mb-0">
+                                    Total Evaluations
+                                </p>
 
-            </div>
+                            </div>
 
-        </div>
+                        </div>
 
         <!-- LATEST EVALUATION -->
 
-        <div class="col-md-4">
+                        <div class="col-md-4">
 
-            <div class="card shadow-sm p-4 h-100">
+                            <div class="card shadow-sm p-4 h-100">
 
-                {% if feedback %}
+                                {% if feedback %}
 
-                    <h2>
-                        {{ feedback[0][2] }}
-                    </h2>
-
-                {% else %}
-
-                    <h2>
-                        —
-                    </h2>
-
-                {% endif %}
-
-                <p class="text-muted mb-0">
-                    Latest Performance Rating
-                </p>
-
-            </div>
-
-        </div>
-
-        <!-- ML ANALYSIS -->
-
-        <div class="col-md-4">
-
-            <div class="card shadow-sm p-4 h-100">
-
-                {% if overall_ml_analysis %}
-
-                    <h2>
-                        {{ overall_ml_analysis }}
-                    </h2>
-
-                {% else %}
-
-                    <h2>
-                        —
-                    </h2>
-
-                {% endif %}
-
-                <p class="text-muted mb-0">
-                    Overall ML Classification
-                </p>
-
-            </div>
-
-        </div>
-
-        <!-- ML FEEDBACK ANALYSIS -->
-
-        <div class="col-12">
-
-            <div class="card shadow-sm mb-4">
-
-                <div class="card-header bg-primary">
-
-                    <h5 class="mb-0">
-                        ML Feedback Analysis
-                    </h5>
-
-                </div>
-
-                <div class="card-body">
-
-                    {% if ml_distribution %}
-
-                        <div class="row g-3">
-
-                            {% for item in ml_distribution %}
-
-                                <div class="col-md">
-
-                                    <div class="border rounded p-3 h-100">
-
-                                        <h5 class="mb-1">
-                                            {{ item.count }}
-                                        </h5>
-
-                                        <p class="text-muted mb-0">
-                                            {{ item.label }}
-                                        </p>
-
-                                    </div>
-
-                                </div>
-
-                            {% endfor %}
-
-                        </div>
-
-                        <hr class="my-4">
-
-                        <h6>
-                            Structured Insight
-                        </h6>
-
-                        <p class="mb-0">
-
-                            {{ ml_insight }}
-
-                        </p>
-
-                    {% else %}
-
-                        <p class="text-muted mb-0">
-
-                            No supervisor feedback is available
-                            for ML analysis yet.
-
-                        </p>
-
-                    {% endif %}
-
-                </div>
-
-            </div>
-
-        </div>
-
-        <!-- ML SENTIMENT -->
-        <div class="col-12">
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-success">
-                    <h5 class="mb-0">Overall Sentiment</h5>
-                </div>
-                <div class="card-body">
-                    {% if sentiment_distribution and total_feedback > 0 %}
-                        <div class="row g-3">
-                            {% for item in sentiment_distribution %}
-                                <div class="col-md-4">
-                                    <div class="border rounded p-3 h-100 text-center">
-                                        <h5 class="mb-1">{{ item.count }}</h5>
-                                        <p class="text-muted mb-0">{{ item.label }}</p>
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <p class="text-muted mb-0">No feedback available for ML analysis.</p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-
-        <!-- ML COMPETENCY -->
-        <div class="col-12">
-            <div class="card shadow-sm mb-4">
-                <div class="card-header" style="background-color:#6f42c1; color:white;">
-                    <h5 class="mb-0">Competency Summary</h5>
-                </div>
-                <div class="card-body">
-                    {% if competency_distribution and total_feedback > 0 %}
-                        <div class="row g-3">
-                            {% for item in competency_distribution %}
-                                <div class="col-md">
-                                    <div class="border rounded p-3 h-100 text-center">
-                                        <h5 class="mb-1">{{ item.count }}</h5>
-                                        <p class="text-muted mb-0 small">{{ item.label }}</p>
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        </div>
-                        <p class="small text-muted mt-3 mb-0">Competency assessment is derived from the performance classification using the current thesis dataset (not a separately trained competency classifier).</p>
-                    {% else %}
-                        <p class="text-muted mb-0">No feedback available for ML analysis.</p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-
-        <!-- RECOMMENDATION SUMMARY -->
-        <div class="col-12">
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-warning">
-                    <h5 class="mb-0">Recommendation Summary</h5>
-                </div>
-                <div class="card-body">
-                    {% if recommendation_summary and total_feedback > 0 %}
-                        {% for rec in recommendation_summary %}
-                            <div class="border rounded p-3 mb-2">
-                                <p class="mb-0">{{ rec }}</p>
-                            </div>
-                        {% endfor %}
-                    {% else %}
-                        <p class="text-muted mb-0">No feedback available for ML analysis.</p>
-                    {% endif %}
-                    {% if total_feedback > 0 %}
-                    <p class="small text-muted mt-2 mb-0">Recommendations are derived from the performance classification (existing Phase 7 mapping).</p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-
-        <!-- CONFIDENCE & MODEL COMPARISON -->
-        <div class="col-12">
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-dark text-white">
-                    <h5 class="mb-0">Model Details (NB vs SVM) &amp; Confidence</h5>
-                </div>
-                <div class="card-body">
-                    {% if total_feedback > 0 %}
-                        <p class="mb-3"><strong>Average Confidence:</strong> {{ "%.3f"|format(average_confidence) }}</p>
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-6">
-                                <h6>Naive Bayes Distribution</h6>
-                                {% for item in model_comparison.nb_distribution %}
-                                    <div class="d-flex justify-content-between border-bottom py-1">
-                                        <span>{{ item.label }}</span><span class="badge bg-primary">{{ item.count }}</span>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                            <div class="col-md-6">
-                                <h6>SVM Distribution</h6>
-                                {% for item in model_comparison.svm_distribution %}
-                                    <div class="d-flex justify-content-between border-bottom py-1">
-                                        <span>{{ item.label }}</span><span class="badge bg-secondary">{{ item.count }}</span>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                        {% if model_comparison.agreement_rate is not none %}
-                            <p class="mb-0 small text-muted">NB/SVM Agreement: {{ "%.1f"|format(model_comparison.agreement_rate*100) }}%</p>
-                        {% endif %}
-                    {% else %}
-                        <p class="text-muted mb-0">No feedback available for ML analysis.</p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-
-        <!-- EVALUATION HISTORY -->
-
-        <div class="col-12">
-            <div class="card shadow-sm mb-4">
-
-            <div class="card-header bg-info">
-
-                <h5 class="mb-0">
-                    Supervisor Evaluation History
-                </h5>
-
-            </div>
-
-            <div class="card-body">
-
-            {% if feedback %}
-
-                {% for fb in feedback %}
-
-                    <div class="border-bottom pb-3 mb-3">
-
-                        <div class="d-flex justify-content-between align-items-start gap-3">
-
-                            <div>
-                                <h6 class="mb-1">
-                                    {{ fb[2] }} {% if fb[4] and fb[4] != fb[2] %}<span class="badge bg-success ms-2">ML: {{ fb[4] }}</span>{% endif %}
-                                </h6>
-                                <small class="text-muted">
-                                    Evaluated by {{ fb[3] }}
-                                </small>
-                                {% if fb[5] %}
-                                <div class="mt-1">
-                                    <span class="badge {% if fb[5]=='Positive' %}bg-success{% elif fb[5]=='Neutral' %}bg-secondary{% else %}bg-danger{% endif %}">{{ fb[5] }}</span>
-                                    {% if fb[6] %}<span class="badge bg-info ms-1">{{ fb[6] }}</span>{% endif %}
-                                    {% if fb[9] is not none %}<span class="badge bg-dark ms-1">Conf {{ "%.2f"|format(fb[9]) }}</span>{% endif %}
-                                </div>
-                                {% endif %}
-                                {% if fb[8] %}<small class="text-muted">NB: {{ fb[4] }} | SVM: {{ fb[8] }}</small>{% endif %}
-                                {% if fb[7] %}<p class="small mb-0 mt-1"><em>{{ fb[7] }}</em></p>{% endif %}
-                            </div>
-
-                            <small class="text-muted">
-
-                                {{ fb[1] }}
-
-                            </small>
-
-                        </div>
-
-                        <p class="mb-0 mt-2">
-
-                            {{ fb[0] }}
-
-                        </p>
-
-                    </div>
-
-                {% endfor %}
-
-                    {% else %}
-
-                        <p class="text-muted mb-0">
-
-                            No supervisor evaluations recorded yet.
-                        </p>
-                        <p class="text-muted mb-0">No feedback available for ML analysis.</p>
-
-                    {% endif %}
-
-                </div>
-
-            </div>
-        </div>
-
-    </div>
-
-    </div>
-
-    <!-- PROGRESS TAB -->
-
-        <div id="progress" class="report-tab mb-3">
-
-            <!-- TASK SUMMARY -->
-
-            <div class="row g-4 mb-4">
-
-            <!-- TOTAL TASKS -->
-
-            <div class="col-md-3">
-
-                    <div class="card shadow-sm p-4 h-100">
-
-                        <h2 class="text-info">
-                            {{ total_tasks }}
-                        </h2>
-
-                        <p class="text-muted mb-0">
-                            Tasks Assigned
-                        </p>
-
-                    </div>
-
-                </div>
-
-                <!-- COMPLETED TASKS -->
-
-                <div class="col-md-3">
-
-                    <div class="card shadow-sm p-4 h-100">
-
-                        <h2 class="text-primary">
-                            {{ completed_tasks }}
-                        </h2>
-
-                        <p class="text-muted mb-0">
-                            Tasks Completed
-                        </p>
-
-                    </div>
-
-                </div>
-
-                <!-- PENDING TASKS -->
-
-                <div class="col-md-3">
-
-                    <div class="card shadow-sm p-4 h-100">
-
-                        <h2 class="text-secondary">
-                            {{ pending_tasks }}
-                        </h2>
-
-                        <p class="text-muted mb-0">
-                            Pending Tasks
-                        </p>
-
-                    </div>
-
-                </div>
-
-                <!-- REOPENED TASKS -->
-
-                <div class="col-md-3">
-
-                    <div class="card shadow-sm p-4 h-100">
-
-                        <h2>
-                            {{ reopened_tasks }}
-                        </h2>
-
-                        <p class="text-muted mb-0">
-                            Reopened Tasks
-                        </p>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-            <!-- TASK COMPLETION PROGRESS -->
-
-            <div class="card shadow-sm mb-4">
-
-                <div class="card-header bg-info">
-
-                    <h5 class="mb-0">
-                        Task Completion Progress
-                    </h5>
-
-                </div>
-
-                <div class="card-body">
-
-                    <div class="d-flex justify-content-between mb-2">
-
-                        <span class="text-muted">
-                            Completion Rate
-                        </span>
-
-                        <strong>
-                            {{ "%.1f"|format(task_progress) }}%
-                        </strong>
-
-                    </div>
-
-                    <div class="progress"
-                        role="progressbar"
-                        aria-valuenow="{{ task_progress }}"
-                        aria-valuemin="0"
-                        aria-valuemax="100">
-
-                        <div class="progress-bar"
-                            style="--progress-width: {{ task_progress }}%; width: var(--progress-width);">
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-            <!-- ACTIVITY SUMMARY -->
-
-            <div class="row g-4 mb-4">
-
-                <!-- ATTENDANCE -->
-
-                <div class="col-md-3">
-
-                    <div class="card shadow-sm p-4 h-100">
-
-                        <h4>
-                            {{ total_sessions }}
-                        </h4>
-
-                        <p class="text-muted mb-0">
-                            Attendance Sessions
-                        </p>
-
-                    </div>
-
-                </div>
-
-                <!-- HOURS -->
-
-                <div class="col-md-3">
-
-                    <div class="card shadow-sm p-4 h-100">
-
-                        <h4>
-                            {{ total_hours }}
-                        </h4>
-
-                        <p class="text-muted mb-0">
-                            Hours Rendered
-                        </p>
-
-                    </div>
-
-                </div>
-
-                <!-- LOGBOOK -->
-
-                <div class="col-md-3">
-
-                    <div class="card shadow-sm p-4 h-100">
-
-                        <h4>
-                            {{ total_logs }}
-                        </h4>
-
-                        <p class="text-muted mb-0">
-                            Logbook Entries
-                        </p>
-
-                    </div>
-
-                </div>
-
-                <!-- EVALUATIONS -->
-
-                <div class="col-md-3">
-
-                    <div class="card shadow-sm p-4 h-100">
-
-                        <h4>
-                            {{ feedback|length }}
-                        </h4>
-
-                        <p class="text-muted mb-0">
-                            Evaluations
-                        </p>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-            <!-- TASK STATUS BREAKDOWN -->
-
-            <div class="card shadow-sm mb-4">
-
-                <div class="card-header">
-
-                    <h5 class="mb-0">
-                        Task Status Breakdown
-                    </h5>
-
-                </div>
-
-                <div class="card-body">
-
-                    {% if tasks %}
-
-                        {% for task in tasks %}
-
-                            <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
-
-                                <div>
-
-                                    <strong>
-                                        {{ task[1] }}
-                                    </strong>
-
-                                    <br>
-
-                                    <small class="text-muted">
-
-                                        Assigned:
-                                        {{ task[3] }}
-
-                                    </small>
-
-                                </div>
-
-                                {% if task[2] == 'Reviewed' %}
-
-                                    <span class="badge bg-primary">
-                                        Reviewed
-                                    </span>
-
-                                {% elif task[2] == 'Submitted' %}
-
-                                    <span class="badge bg-success">
-                                        Submitted
-                                    </span>
-
-                                {% elif task[2] == 'Reopened' %}
-
-                                    <span class="badge bg-info">
-                                        Reopened
-                                    </span>
+                                    <h2>
+                                        {{ feedback[0][2] }}
+                                    </h2>
 
                                 {% else %}
 
-                                    <span class="badge bg-warning">
-                                        Pending
-                                    </span>
+                                    <h2>
+                                        —
+                                    </h2>
 
                                 {% endif %}
 
+                                <p class="text-muted mb-0">
+                                    Latest Performance Rating
+                                </p>
+
                             </div>
 
-                        {% endfor %}
+                        </div>
 
-                        {% else %}
+        <!-- ML ANALYSIS -->
 
-                            <p class="text-muted mb-0">
-                                No tasks recorded yet.
-                            </p>
+                        <div class="col-md-4">
 
-                        {% endif %}
+                            <div class="card shadow-sm p-4 h-100">
+
+                                {% if overall_ml_analysis %}
+
+                                    <h2>
+                                        {{ overall_ml_analysis }}
+                                    </h2>
+
+                                {% else %}
+
+                                    <h2>
+                                        —
+                                    </h2>
+
+                                {% endif %}
+
+                                <p class="text-muted mb-0">
+                                    Overall ML Classification
+                                </p>
+
+                            </div>
+
+                        </div>
+
+        <!-- ML FEEDBACK ANALYSIS -->
+
+                        <div class="col-12">
+
+                            <div class="card shadow-sm mb-4">
+
+                                <div class="card-header bg-primary">
+
+                                    <h5 class="mb-0">
+                                        ML Feedback Analysis
+                                    </h5>
+
+                                </div>
+
+                                <div class="card-body">
+
+                                    {% if ml_distribution %}
+
+                                        <div class="row g-3">
+
+                                            {% for item in ml_distribution %}
+
+                                                <div class="col-md">
+
+                                                    <div class="border rounded p-3 h-100">
+
+                                                        <h5 class="mb-1">
+                                                            {{ item.count }}
+                                                        </h5>
+
+                                                        <p class="text-muted mb-0">
+                                                            {{ item.label }}
+                                                        </p>
+
+                                                    </div>
+
+                                                </div>
+
+                                            {% endfor %}
+
+                                        </div>
+
+                                        <hr class="my-4">
+
+                                        <h6>
+                                            Structured Insight
+                                        </h6>
+
+                                        <p class="mb-0">
+
+                                            {{ ml_insight }}
+
+                                        </p>
+
+                                    {% else %}
+
+                                        <p class="text-muted mb-0">
+
+                                            No supervisor feedback is available
+                                            for ML analysis yet.
+
+                                        </p>
+
+                                    {% endif %}
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+        <!-- ML SENTIMENT -->
+                        <div class="col-12">
+                            <div class="card shadow-sm mb-4">
+                                <div class="card-header bg-success">
+                                    <h5 class="mb-0">Overall Sentiment</h5>
+                                </div>
+                                <div class="card-body">
+                                    {% if sentiment_distribution and total_feedback > 0 %}
+                                        <div class="row g-3">
+                                            {% for item in sentiment_distribution %}
+                                                <div class="col-md-4">
+                                                    <div class="border rounded p-3 h-100 text-center">
+                                                        <h5 class="mb-1">{{ item.count }}</h5>
+                                                        <p class="text-muted mb-0">{{ item.label }}</p>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        <p class="text-muted mb-0">No feedback available for ML analysis.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+        <!-- ML COMPETENCY -->
+                        <div class="col-12">
+                            <div class="card shadow-sm mb-4">
+                                <div class="card-header" style="background-color:#6f42c1; color:white;">
+                                    <h5 class="mb-0">Competency Summary</h5>
+                                </div>
+                                <div class="card-body">
+                                    {% if competency_distribution and total_feedback > 0 %}
+                                        <div class="row g-3">
+                                            {% for item in competency_distribution %}
+                                                <div class="col-md">
+                                                    <div class="border rounded p-3 h-100 text-center">
+                                                        <h5 class="mb-1">{{ item.count }}</h5>
+                                                        <p class="text-muted mb-0 small">{{ item.label }}</p>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                        <p class="small text-muted mt-3 mb-0">Competency assessment is derived from the performance classification using the current thesis dataset (not a separately trained competency classifier).</p>
+                                    {% else %}
+                                        <p class="text-muted mb-0">No feedback available for ML analysis.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+        <!-- RECOMMENDATION SUMMARY -->
+                        <div class="col-12">
+                            <div class="card shadow-sm mb-4">
+                                <div class="card-header bg-warning">
+                                    <h5 class="mb-0">Recommendation Summary</h5>
+                                </div>
+                                <div class="card-body">
+                                    {% if recommendation_summary and total_feedback > 0 %}
+                                        {% for rec in recommendation_summary %}
+                                            <div class="border rounded p-3 mb-2">
+                                                <p class="mb-0">{{ rec }}</p>
+                                            </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        <p class="text-muted mb-0">No feedback available for ML analysis.</p>
+                                    {% endif %}
+                                    {% if total_feedback > 0 %}
+                                        <p class="small text-muted mt-2 mb-0">Recommendations are derived from the performance classification (existing Phase 7 mapping).</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+        <!-- CONFIDENCE & MODEL COMPARISON -->
+                        <div class="col-12">
+                            <div class="card shadow-sm mb-4">
+                                <div class="card-header bg-dark text-white">
+                                    <h5 class="mb-0">Model Details (NB vs SVM) &amp; Confidence</h5>
+                                </div>
+                                <div class="card-body">
+                                    {% if total_feedback > 0 %}
+                                        <p class="mb-3"><strong>Average Confidence:</strong> {{ "%.3f"|format(average_confidence) }}</p>
+                                        <div class="row g-3 mb-3">
+                                            <div class="col-md-6">
+                                                <h6>Naive Bayes Distribution</h6>
+                                                {% for item in model_comparison.nb_distribution %}
+                                                    <div class="d-flex justify-content-between border-bottom py-1">
+                                                        <span>{{ item.label }}</span><span class="badge bg-primary">{{ item.count }}</span>
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                            <div class="col-md-6">
+                                                <h6>SVM Distribution</h6>
+                                                {% for item in model_comparison.svm_distribution %}
+                                                    <div class="d-flex justify-content-between border-bottom py-1">
+                                                        <span>{{ item.label }}</span><span class="badge bg-secondary">{{ item.count }}</span>
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        {% if model_comparison.agreement_rate is not none %}
+                                            <p class="mb-0 small text-muted">NB/SVM Agreement: {{ "%.1f"|format(model_comparison.agreement_rate*100) }}%</p>
+                                        {% endif %}
+                                    {% else %}
+                                        <p class="text-muted mb-0">No feedback available for ML analysis.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+        <!-- EVALUATION HISTORY -->
+
+                        <div class="col-12">
+                            <div class="card shadow-sm mb-4">
+
+                                <div class="card-header bg-info">
+
+                                    <h5 class="mb-0">
+                                        Supervisor Evaluation History
+                                    </h5>
+
+                                </div>
+
+                                <div class="card-body">
+
+                                    {% if feedback %}
+
+                                        {% for fb in feedback %}
+
+                                            <div class="border-bottom pb-3 mb-3">
+
+                                                <div class="d-flex justify-content-between align-items-start gap-3">
+
+                                                    <div>
+                                                        <h6 class="mb-1">
+                                                            {{ fb[2] }} {% if fb[4] and fb[4] != fb[2] %}<span class="badge bg-success ms-2">ML: {{ fb[4] }}</span>{% endif %}
+                                                        </h6>
+                                                        <small class="text-muted">
+                                                            Evaluated by {{ fb[3] }}
+                                                        </small>
+                                                        {% if fb[5] %}
+                                                            <div class="mt-1">
+                                                                <span class="badge {% if fb[5]=='Positive' %}bg-success{% elif fb[5]=='Neutral' %}bg-secondary{% else %}bg-danger{% endif %}">{{ fb[5] }}</span>
+                                                                {% if fb[6] %}<span class="badge bg-info ms-1">{{ fb[6] }}</span>{% endif %}
+                                                                {% if fb[9] is not none %}<span class="badge bg-dark ms-1">Conf {{ "%.2f"|format(fb[9]) }}</span>{% endif %}
+                                                            </div>
+                                                        {% endif %}
+                                                        {% if fb[8] %}<small class="text-muted">NB: {{ fb[4] }} | SVM: {{ fb[8] }}</small>{% endif %}
+                                                        {% if fb[7] %}<p class="small mb-0 mt-1"><em>{{ fb[7] }}</em></p>{% endif %}
+                                                    </div>
+
+                                                    <small class="text-muted">
+
+                                                        {{ fb[1] }}
+
+                                                    </small>
+
+                                                </div>
+
+                                                <p class="mb-0 mt-2">
+
+                                                    {{ fb[0] }}
+
+                                                </p>
+
+                                            </div>
+
+                                        {% endfor %}
+
+                                    {% else %}
+
+                                        <p class="text-muted mb-0">
+
+                                            No supervisor evaluations recorded yet.
+                                        </p>
+                                        <p class="text-muted mb-0">No feedback available for ML analysis.</p>
+
+                                    {% endif %}
+
+                                </div>
+
+                            </div>
+                        </div>
 
                     </div>
 
                 </div>
 
+    <!-- PROGRESS TAB -->
+
+                <div id="progress" class="report-tab mb-3">
+
+            <!-- TASK SUMMARY -->
+
+                    <div class="row g-4 mb-4">
+
+            <!-- TOTAL TASKS -->
+
+                        <div class="col-md-3">
+
+                            <div class="card shadow-sm p-4 h-100">
+
+                                <h2 class="text-info">
+                                    {{ total_tasks }}
+                                </h2>
+
+                                <p class="text-muted mb-0">
+                                    Tasks Assigned
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                <!-- COMPLETED TASKS -->
+
+                        <div class="col-md-3">
+
+                            <div class="card shadow-sm p-4 h-100">
+
+                                <h2 class="text-primary">
+                                    {{ completed_tasks }}
+                                </h2>
+
+                                <p class="text-muted mb-0">
+                                    Tasks Completed
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                <!-- PENDING TASKS -->
+
+                        <div class="col-md-3">
+
+                            <div class="card shadow-sm p-4 h-100">
+
+                                <h2 class="text-secondary">
+                                    {{ pending_tasks }}
+                                </h2>
+
+                                <p class="text-muted mb-0">
+                                    Pending Tasks
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                <!-- REOPENED TASKS -->
+
+                        <div class="col-md-3">
+
+                            <div class="card shadow-sm p-4 h-100">
+
+                                <h2>
+                                    {{ reopened_tasks }}
+                                </h2>
+
+                                <p class="text-muted mb-0">
+                                    Reopened Tasks
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+            <!-- TASK COMPLETION PROGRESS -->
+
+                    <div class="card shadow-sm mb-4">
+
+                        <div class="card-header bg-info">
+
+                            <h5 class="mb-0">
+                                Task Completion Progress
+                            </h5>
+
+                        </div>
+
+                        <div class="card-body">
+
+                            <div class="d-flex justify-content-between mb-2">
+
+                                <span class="text-muted">
+                                    Completion Rate
+                                </span>
+
+                                <strong>
+                                    {{ "%.1f"|format(task_progress) }}%
+                                </strong>
+
+                            </div>
+
+                            <div class="progress"
+                                 role="progressbar"
+                                 aria-valuenow="{{ task_progress }}"
+                                 aria-valuemin="0"
+                                 aria-valuemax="100">
+
+                                <div class="progress-bar"
+                                     style="--progress-width: {{ task_progress }}%; width: var(--progress-width);">
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+            <!-- ACTIVITY SUMMARY -->
+
+                    <div class="row g-4 mb-4">
+
+                <!-- ATTENDANCE -->
+
+                        <div class="col-md-3">
+
+                            <div class="card shadow-sm p-4 h-100">
+
+                                <h4>
+                                    {{ total_sessions }}
+                                </h4>
+
+                                <p class="text-muted mb-0">
+                                    Attendance Sessions
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                <!-- HOURS -->
+
+                        <div class="col-md-3">
+
+                            <div class="card shadow-sm p-4 h-100">
+
+                                <h4>
+                                    {{ total_hours }}
+                                </h4>
+
+                                <p class="text-muted mb-0">
+                                    Hours Rendered
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                <!-- LOGBOOK -->
+
+                        <div class="col-md-3">
+
+                            <div class="card shadow-sm p-4 h-100">
+
+                                <h4>
+                                    {{ total_logs }}
+                                </h4>
+
+                                <p class="text-muted mb-0">
+                                    Logbook Entries
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                <!-- EVALUATIONS -->
+
+                        <div class="col-md-3">
+
+                            <div class="card shadow-sm p-4 h-100">
+
+                                <h4>
+                                    {{ feedback|length }}
+                                </h4>
+
+                                <p class="text-muted mb-0">
+                                    Evaluations
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+            <!-- TASK STATUS BREAKDOWN -->
+
+                    <div class="card shadow-sm mb-4">
+
+                        <div class="card-header">
+
+                            <h5 class="mb-0">
+                                Task Status Breakdown
+                            </h5>
+
+                        </div>
+
+                        <div class="card-body">
+
+                            {% if tasks %}
+
+                                {% for task in tasks %}
+
+                                    <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
+
+                                        <div>
+
+                                            <strong>
+                                                {{ task[1] }}
+                                            </strong>
+
+                                            <br>
+
+                                            <small class="text-muted">
+
+                                                Assigned:
+                                                {{ task[3] }}
+
+                                            </small>
+
+                                        </div>
+
+                                        {% if task[2] == 'Reviewed' %}
+
+                                            <span class="badge bg-primary">
+                                                Reviewed
+                                            </span>
+
+                                        {% elif task[2] == 'Submitted' %}
+
+                                            <span class="badge bg-success">
+                                                Submitted
+                                            </span>
+
+                                        {% elif task[2] == 'Reopened' %}
+
+                                            <span class="badge bg-info">
+                                                Reopened
+                                            </span>
+
+                                        {% else %}
+
+                                            <span class="badge bg-warning">
+                                                Pending
+                                            </span>
+
+                                        {% endif %}
+
+                                    </div>
+
+                                {% endfor %}
+
+                            {% else %}
+
+                                <p class="text-muted mb-0">
+                                    No tasks recorded yet.
+                                </p>
+
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
                 <!-- PROGRESS INTERPRETATION -->
 
-                <div class="card shadow-sm">
+                    <div class="card shadow-sm">
 
-                    <div class="card-header bg-info">
+                        <div class="card-header bg-info">
 
-                        <h5 class="mb-0">
-                            Progress Interpretation
-                        </h5>
+                            <h5 class="mb-0">
+                                Progress Interpretation
+                            </h5>
+
+                        </div>
+
+                        <div class="card-body">
+
+                            <p class="mb-0 text-default">
+
+                                {{ progress_interpretation }}
+
+                            </p>
+
+                        </div>
 
                     </div>
 
-                    <div class="card-body">
+                </div>
 
-                        <p class="mb-0 text-default">
+        <!-- Performance Metrics -->
+                <div id="performance" class="report-tab active mb-3">
 
-                            {{ progress_interpretation }}
+                </div>
 
-                        </p>
-
-                    </div>
+         <!-- Recommendations -->
+                <div id="recommendations" class="report-tab active mb-3">
 
                 </div>
 
             </div>
-
-        <!-- Performance Metrics -->
-         <div id="performance" class="report-tab active mb-3">
-
-         </div>
-
-         <!-- Recommendations -->
-          <div id="recommendations" class="report-tab active mb-3">
-
-          </div>
-
-</div>
-</div>
+        </div>
 
 <!-- script -->
 
-<script>
+        <script>
 
 // NAVIGATIONS
 
-    function openReportTab(tabName, button) {
+            function openReportTab(tabName, button) {
 
-        const tabs =
-            document.querySelectorAll(".report-tab");
+                const tabs =
+                    document.querySelectorAll(".report-tab");
 
-        tabs.forEach(function(tab) {
+                tabs.forEach(function(tab) {
 
-            tab.classList.remove("active");
+                    tab.classList.remove("active");
 
-        });
+                });
 
-        const selectedTab =
-            document.getElementById(tabName);
+                const selectedTab =
+                    document.getElementById(tabName);
 
-        if (selectedTab) {
+                if (selectedTab) {
 
-            selectedTab.classList.add("active");
+                    selectedTab.classList.add("active");
 
-        }
+                }
 
-        const buttons =
-            document.querySelectorAll(".profile-tab-button");
+                const buttons =
+                    document.querySelectorAll(".profile-tab-button");
 
-        buttons.forEach(function(btn) {
+                buttons.forEach(function(btn) {
 
-            btn.classList.remove("active");
+                    btn.classList.remove("active");
 
-        });
+                });
 
-        if (button) {
+                if (button) {
 
-            button.classList.add("active");
+                    button.classList.add("active");
 
-        }
+                }
 
-    }
+            }
 
 // RESTORE ACTIVE TAB AFTER PAGE LOAD
 
-    document.addEventListener("DOMContentLoaded", function() {
+            document.addEventListener("DOMContentLoaded", function() {
 
-        const activeTab =
-            "{{ active_tab }}";
+                const activeTab =
+                    "{{ active_tab }}";
 
-        const activeButton =
-            document.querySelector(
-                '.profile-tab-button[data-tab="' + activeTab + '"]'
-            );
+                const activeButton =
+                    document.querySelector(
+                        '.profile-tab-button[data-tab="' + activeTab + '"]'
+                    );
 
-        if (activeButton) {
+                if (activeButton) {
 
-            openReportTab(activeTab, activeButton);
+                    openReportTab(activeTab, activeButton);
 
-        }
+                }
 
-    });
+            });
 
 // SIDEBAR
 
-</body>
+            </body>
 
-</html>
+            </html>

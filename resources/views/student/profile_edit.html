@@ -1,162 +1,162 @@
 <!DOCTYPE html>
 <html>
 
-<head>
-    <meta charset="UTF-8">
+    <head>
+        <meta charset="UTF-8">
 
-<title>
-Edit Profile - Nexora
-</title>
+        <title>
+            Edit Profile - Nexora
+        </title>
 
 
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+              rel="stylesheet">
 
 
-<link rel="stylesheet"
-href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
+        <link rel="stylesheet"
+              href="{{ url_for('static', filename='css/style.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
 
 
-</head>
+    </head>
 
 
-<body>
+    <body>
 
 
-{% set errors = errors or {} %}
+        {% set errors = errors or {} %}
 
 
-<div class="admin-main no-admin-sidebar">
-    
+        <div class="admin-main no-admin-sidebar">
 
-<div class="profile-page-container">
 
+            <div class="profile-page-container">
 
 
-<div class="dashboard-header">
 
+                <div class="dashboard-header">
 
-<div>
 
+                    <div>
 
-<h1>
-Update Information
-</h1>
 
-<a href="{{ url_for('student.student_profile') }}"
-class="btn btn-secondary mb-3">
+                        <h1>
+                            Update Information
+                        </h1>
 
-← Back to Profile
+                        <a href="{{ url_for('student.student_profile') }}"
+                           class="btn btn-secondary mb-3">
 
-</a>
+                            ← Back to Profile
 
+                        </a>
 
-<p>
-Edit your profile information
-</p>
 
+                        <p>
+                            Edit your profile information
+                        </p>
 
-</div>
 
+                    </div>
 
-</div>
 
+                </div>
 
 
 
-{% with messages = get_flashed_messages(with_categories=true) %}
 
-{% if messages %}
+                {% with messages = get_flashed_messages(with_categories=true) %}
 
+                    {% if messages %}
 
-<div class="flash-container">
 
+                        <div class="flash-container">
 
-{% for category,message in messages %}
 
+                            {% for category,message in messages %}
 
-<div class="flash-popup {{ category }}">
 
+                                <div class="flash-popup {{ category }}">
 
-<span>
-{{ message }}
-</span>
 
+                                    <span>
+                                        {{ message }}
+                                    </span>
 
-<button onclick="this.parentElement.remove()">
-×
-</button>
 
+                                    <button onclick="this.parentElement.remove()">
+                                        ×
+                                    </button>
 
-</div>
 
+                                </div>
 
-{% endfor %}
 
+                            {% endfor %}
 
-</div>
 
+                        </div>
 
-{% endif %}
 
-{% endwith %}
+                    {% endif %}
 
+                {% endwith %}
 
 
 
 
-<div class="dashboard-box">
 
+                <div class="dashboard-box">
 
 
-<form method="POST" novalidate>
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
+                    <form method="POST" novalidate>
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
 
-<div class="row g-3">
 
+                        <div class="row g-3">
 
 
-<div class="col-12">
 
-<h3>
-Personal Information
-</h3>
+                            <div class="col-12">
 
-</div>
+                                <h3>
+                                    Personal Information
+                                </h3>
+
+                            </div>
 
 
 
 
 <!-- FIRST NAME -->
 
-<div class="col-md-4">
+                            <div class="col-md-4">
 
 
-<label>
-First Name
-</label>
+                                <label>
+                                    First Name
+                                </label>
 
 
-<input
-type="text"
-name="first_name"
-class="form-control {% if errors.first_name %}is-invalid{% endif %}"
-value="{{ student.first_name or '' }}">
+                                <input
+                                    type="text"
+                                    name="first_name"
+                                    class="form-control {% if errors.first_name %}is-invalid{% endif %}"
+                                    value="{{ student.first_name or '' }}">
 
 
-{% if errors.first_name %}
+                                {% if errors.first_name %}
 
-<div class="field-error">
-{{ errors.first_name }}
-</div>
+                                    <div class="field-error">
+                                        {{ errors.first_name }}
+                                    </div>
 
-{% endif %}
+                                {% endif %}
 
 
-</div>
+                            </div>
 
 
 
@@ -165,32 +165,32 @@ value="{{ student.first_name or '' }}">
 <!-- MIDDLE NAME -->
 
 
-<div class="col-md-4">
+                            <div class="col-md-4">
 
 
-<label>
-Middle Name
-</label>
+                                <label>
+                                    Middle Name
+                                </label>
 
 
-<input
-type="text"
-name="middle_name"
-class="form-control {% if errors.middle_name %}is-invalid{% endif %}"
-value="{{ student.middle_name or '' }}">
+                                <input
+                                    type="text"
+                                    name="middle_name"
+                                    class="form-control {% if errors.middle_name %}is-invalid{% endif %}"
+                                    value="{{ student.middle_name or '' }}">
 
 
-{% if errors.middle_name %}
+                                {% if errors.middle_name %}
 
-<div class="field-error">
-{{ errors.middle_name }}
-</div>
+                                    <div class="field-error">
+                                        {{ errors.middle_name }}
+                                    </div>
 
-{% endif %}
+                                {% endif %}
 
 
 
-</div>
+                            </div>
 
 
 
@@ -199,32 +199,32 @@ value="{{ student.middle_name or '' }}">
 <!-- LAST NAME -->
 
 
-<div class="col-md-4">
+                            <div class="col-md-4">
 
 
-<label>
-Last Name
-</label>
+                                <label>
+                                    Last Name
+                                </label>
 
 
-<input
-type="text"
-name="last_name"
-class="form-control {% if errors.last_name %}is-invalid{% endif %}"
-value="{{ student.last_name or '' }}">
+                                <input
+                                    type="text"
+                                    name="last_name"
+                                    class="form-control {% if errors.last_name %}is-invalid{% endif %}"
+                                    value="{{ student.last_name or '' }}">
 
 
 
-{% if errors.last_name %}
+                                {% if errors.last_name %}
 
-<div class="field-error">
-{{ errors.last_name }}
-</div>
+                                    <div class="field-error">
+                                        {{ errors.last_name }}
+                                    </div>
 
-{% endif %}
+                                {% endif %}
 
 
-</div>
+                            </div>
 
 
 
@@ -235,32 +235,32 @@ value="{{ student.last_name or '' }}">
 <!-- AGE -->
 
 
-<div class="col-md-4">
+                            <div class="col-md-4">
 
 
-<label>
-Age
-</label>
+                                <label>
+                                    Age
+                                </label>
 
 
-<input
-type="number"
-name="age"
-class="form-control {% if errors.age %}is-invalid{% endif %}"
-value="{{ student.age or '' }}">
+                                <input
+                                    type="number"
+                                    name="age"
+                                    class="form-control {% if errors.age %}is-invalid{% endif %}"
+                                    value="{{ student.age or '' }}">
 
 
 
-{% if errors.age %}
+                                {% if errors.age %}
 
-<div class="field-error">
-{{ errors.age }}
-</div>
+                                    <div class="field-error">
+                                        {{ errors.age }}
+                                    </div>
 
-{% endif %}
+                                {% endif %}
 
 
-</div>
+                            </div>
 
 
 
@@ -271,32 +271,32 @@ value="{{ student.age or '' }}">
 <!-- STUDENT ID -->
 
 
-<div class="col-md-4">
+                            <div class="col-md-4">
 
 
-<label>
-Student ID
-</label>
+                                <label>
+                                    Student ID
+                                </label>
 
 
-<input
-type="text"
-name="student_id"
-class="form-control {% if errors.student_id %}is-invalid{% endif %}"
-value="{{ student.student_id or '' }}">
+                                <input
+                                    type="text"
+                                    name="student_id"
+                                    class="form-control {% if errors.student_id %}is-invalid{% endif %}"
+                                    value="{{ student.student_id or '' }}">
 
 
 
-{% if errors.student_id %}
+                                {% if errors.student_id %}
 
-<div class="field-error">
-{{ errors.student_id }}
-</div>
+                                    <div class="field-error">
+                                        {{ errors.student_id }}
+                                    </div>
 
-{% endif %}
+                                {% endif %}
 
 
-</div>
+                            </div>
 
 
 
@@ -308,23 +308,23 @@ value="{{ student.student_id or '' }}">
 <!-- YEAR -->
 
 
-<div class="col-md-4">
+                            <div class="col-md-4">
 
 
-<label>
-Grade / Year
-</label>
+                                <label>
+                                    Grade / Year
+                                </label>
 
 
-<input
-type="text"
-name="grade_year"
-class="form-control"
-value="{{ student.grade_year or '' }}">
+                                <input
+                                    type="text"
+                                    name="grade_year"
+                                    class="form-control"
+                                    value="{{ student.grade_year or '' }}">
 
 
 
-</div>
+                            </div>
 
 
 
@@ -337,23 +337,23 @@ value="{{ student.grade_year or '' }}">
 <!-- PROGRAM -->
 
 
-<div class="col-md-6">
+                            <div class="col-md-6">
 
 
-<label>
-Major / Program
-</label>
+                                <label>
+                                    Major / Program
+                                </label>
 
 
-<input
-type="text"
-name="major_program"
-class="form-control"
-value="{{ student.major_program or '' }}">
+                                <input
+                                    type="text"
+                                    name="major_program"
+                                    class="form-control"
+                                    value="{{ student.major_program or '' }}">
 
 
 
-</div>
+                            </div>
 
 
 
@@ -364,22 +364,22 @@ value="{{ student.major_program or '' }}">
 <!-- EMAIL -->
 
 
-<div class="col-md-6">
+                            <div class="col-md-6">
 
 
-<label>
-User Email
-</label>
+                                <label>
+                                    User Email
+                                </label>
 
 
-<input
-type="email"
-class="form-control"
-value="{{ student.email }}"
-readonly>
+                                <input
+                                    type="email"
+                                    class="form-control"
+                                    value="{{ student.email }}"
+                                    readonly>
 
 
-</div>
+                            </div>
 
 
 
@@ -392,57 +392,57 @@ readonly>
 <!-- CONTACT -->
 
 
-<div class="col-md-6">
+                            <div class="col-md-6">
 
 
-<label>
-Phone Number
-</label>
+                                <label>
+                                    Phone Number
+                                </label>
 
 
-<input
-type="text"
-name="phone_number"
-class="form-control {% if errors.phone_number %}is-invalid{% endif %}"
-value="{{ student.phone_number or '' }}">
-
-
-
-{% if errors.phone_number %}
-
-<div class="field-error">
-{{ errors.phone_number }}
-</div>
-
-{% endif %}
-
-
-</div>
+                                <input
+                                    type="text"
+                                    name="phone_number"
+                                    class="form-control {% if errors.phone_number %}is-invalid{% endif %}"
+                                    value="{{ student.phone_number or '' }}">
 
 
 
+                                {% if errors.phone_number %}
+
+                                    <div class="field-error">
+                                        {{ errors.phone_number }}
+                                    </div>
+
+                                {% endif %}
+
+
+                            </div>
 
 
 
 
 
-<div class="col-md-6">
-
-
-<label>
-Home Address
-</label>
-
-
-<input
-type="text"
-name="home_address"
-class="form-control"
-value="{{ student.home_address or '' }}">
 
 
 
-</div>
+                            <div class="col-md-6">
+
+
+                                <label>
+                                    Home Address
+                                </label>
+
+
+                                <input
+                                    type="text"
+                                    name="home_address"
+                                    class="form-control"
+                                    value="{{ student.home_address or '' }}">
+
+
+
+                            </div>
 
 
 
@@ -454,60 +454,60 @@ value="{{ student.home_address or '' }}">
 <!-- EMERGENCY -->
 
 
-<div class="col-12">
+                            <div class="col-12">
 
-<h3 class="mt-4">
-Emergency Contact
-</h3>
+                                <h3 class="mt-4">
+                                    Emergency Contact
+                                </h3>
 
 
-</div>
+                            </div>
 
 
 
 
 
 
-<div class="col-md-3">
+                            <div class="col-md-3">
 
 
-<label>
-Name
-</label>
+                                <label>
+                                    Name
+                                </label>
 
 
-<input
-type="text"
-name="emergency_name"
-class="form-control"
-value="{{ student.emergency_name or '' }}">
+                                <input
+                                    type="text"
+                                    name="emergency_name"
+                                    class="form-control"
+                                    value="{{ student.emergency_name or '' }}">
 
 
 
-</div>
+                            </div>
 
 
 
 
 
 
-<div class="col-md-3">
+                            <div class="col-md-3">
 
 
-<label>
-Relationship
-</label>
+                                <label>
+                                    Relationship
+                                </label>
 
 
-<input
-type="text"
-name="emergency_relationship"
-class="form-control"
-value="{{ student.emergency_relationship or '' }}">
+                                <input
+                                    type="text"
+                                    name="emergency_relationship"
+                                    class="form-control"
+                                    value="{{ student.emergency_relationship or '' }}">
 
 
 
-</div>
+                            </div>
 
 
 
@@ -515,23 +515,23 @@ value="{{ student.emergency_relationship or '' }}">
 
 
 
-<div class="col-md-3">
+                            <div class="col-md-3">
 
 
-<label>
-Phone
-</label>
+                                <label>
+                                    Phone
+                                </label>
 
 
-<input
-type="text"
-name="emergency_phone"
-class="form-control"
-value="{{ student.emergency_phone or '' }}">
+                                <input
+                                    type="text"
+                                    name="emergency_phone"
+                                    class="form-control"
+                                    value="{{ student.emergency_phone or '' }}">
 
 
 
-</div>
+                            </div>
 
 
 
@@ -539,28 +539,28 @@ value="{{ student.emergency_phone or '' }}">
 
 
 
-<div class="col-md-3">
+                            <div class="col-md-3">
 
 
-<label>
-Email
-</label>
+                                <label>
+                                    Email
+                                </label>
 
 
-<input
-type="email"
-name="emergency_email"
-class="form-control"
-value="{{ student.emergency_email or '' }}">
+                                <input
+                                    type="email"
+                                    name="emergency_email"
+                                    class="form-control"
+                                    value="{{ student.emergency_email or '' }}">
 
 
 
-</div>
+                            </div>
 
 
 
 
-</div>
+                        </div>
 
 
 
@@ -568,79 +568,79 @@ value="{{ student.emergency_email or '' }}">
 
 
 
-<br>
+                        <br>
 
 
 
 
 
 
-<button
-type="submit"
-class="btn btn-primary">
+                        <button
+                            type="submit"
+                            class="btn btn-primary">
 
-Save Changes
+                            Save Changes
 
-</button>
+                        </button>
 
 
 
 
 
-<a href="{{ url_for('student.student_profile') }}"
-class="btn btn-secondary">
+                        <a href="{{ url_for('student.student_profile') }}"
+                           class="btn btn-secondary">
 
-Back to Profile
+                            Back to Profile
 
-</a>
+                        </a>
 
 
 
 
 
-</form>
+                    </form>
 
 
-</div>
+                </div>
 
 
-</div>
+            </div>
 
 
-</div>
+        </div>
 
 
-<script>
+        <script>
 
 
-document
-.querySelectorAll(".flash-popup")
-.forEach(function(alert){
+            document
+                .querySelectorAll(".flash-popup")
+                .forEach(function(alert){
 
 
-setTimeout(function(){
+                    setTimeout(function(){
 
 
-alert.style.opacity="0";
+                        alert.style.opacity="0";
 
 
-setTimeout(function(){
+                        setTimeout(function(){
 
-alert.remove();
+                            alert.remove();
 
-},300);
+                        },300);
 
 
-},5000);
+                    },5000);
 
 
 
-});
+                });
 
 
-</script>
+        </script>
 
-</body>
+    </body>
 
 
 </html>

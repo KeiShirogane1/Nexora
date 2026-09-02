@@ -1,314 +1,314 @@
 <!DOCTYPE html>
 <html>
 
-<head>
-    <meta charset="UTF-8">
+    <head>
+        <meta charset="UTF-8">
 
-    <title>Edit Task - Nexora</title>
+        <title>Edit Task - Nexora</title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-          rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+              rel="stylesheet">
 
-    <link rel="stylesheet"
-          href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">
+        <link rel="stylesheet"
+              href="{{ url_for('static', filename='css/style.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">
 
-</head>
+    </head>
 
 
-<body class="work-page">
+    <body class="work-page">
 
-    {% include 'components/supervisor_sidebar.html' %}
+        {% include 'components/supervisor_sidebar.html' %}
 
-    <div class="page-content nexora-app-main">
+        <div class="page-content nexora-app-main">
 
-        <div class="nexora-page">
+            <div class="nexora-page">
 
 
         <!-- PAGE HEADER -->
 
-        <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
 
 
-            <div>
+                    <div>
 
-                <h1>
-                    Edit Task
-                </h1>
-
-
-                <p class="text-muted mb-0">
-
-                    Update the details of this internship task.
-
-                </p>
-
-            </div>
+                        <h1>
+                            Edit Task
+                        </h1>
 
 
+                        <p class="text-muted mb-0">
 
-            <a href="/supervisor/task/{{ task_id }}"
-               class="btn btn-secondary">
+                            Update the details of this internship task.
 
-                ← Back to Task
+                        </p>
 
-            </a>
+                    </div>
 
 
-        </div>
+
+                    <a href="/supervisor/task/{{ task_id }}"
+                       class="btn btn-secondary">
+
+                        ← Back to Task
+
+                    </a>
+
+
+                </div>
 
 
 
 
         <!-- EDIT TASK CARD -->
 
-        <div class="card shadow-sm">
+                <div class="card shadow-sm">
 
 
-            <div class="card-body">
+                    <div class="card-body">
 
 
-                <form method="POST">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <form method="POST">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
 
                     <!-- TASK TITLE -->
 
-                    <div class="mb-3">
+                            <div class="mb-3">
 
 
-                        <label class="form-label">
+                                <label class="form-label">
 
-                            Task Title
+                                    Task Title
 
-                        </label>
-
-
-
-                        <input
-
-                            type="text"
-
-                            class="form-control"
-
-                            name="task_title"
-
-                            value="{{ task[2] }}"
-
-                            required>
+                                </label>
 
 
-                    </div>
+
+                                <input
+
+                                    type="text"
+
+                                    class="form-control"
+
+                                    name="task_title"
+
+                                    value="{{ task[2] }}"
+
+                                    required>
+
+
+                            </div>
 
 
 
 
                     <!-- DESCRIPTION -->
 
-                    <div class="mb-3">
+                            <div class="mb-3">
 
 
-                        <label class="form-label">
+                                <label class="form-label">
 
-                            Task Description
+                                    Task Description
 
-                        </label>
-
-
-
-                        <textarea
-
-                            class="form-control"
-
-                            name="task_description"
-
-                            rows="6"
-
-                            required>{{ task[3] }}</textarea>
+                                </label>
 
 
-                    </div>
+
+                                <textarea
+
+                                    class="form-control"
+
+                                    name="task_description"
+
+                                    rows="6"
+
+                                    required>{{ task[3] }}</textarea>
+
+
+                            </div>
 
 
 
 
                     <!-- DEADLINE -->
 
-                    <div class="mb-4">
+                            <div class="mb-4">
 
 
-                        <label class="form-label">
+                                <label class="form-label">
 
-                            Deadline
+                                    Deadline
 
-                        </label>
-
-
-
-                        <input
-
-                            type="datetime-local"
-
-                            class="form-control"
-
-                            name="deadline"
-
-                            value="{{ task[4] or '' }}">
-
-
-                    </div>
+                                </label>
 
 
 
+                                <input
 
-                    <hr>
+                                    type="datetime-local"
+
+                                    class="form-control"
+
+                                    name="deadline"
+
+                                    value="{{ task[4] or '' }}">
+
+
+                            </div>
+
+
+
+
+                            <hr>
 
 
 
 
                     <!-- SUBMISSION SETTINGS -->
 
-                    <h5 class="mb-3">
+                            <h5 class="mb-3">
 
-                        Submission Settings
+                                Submission Settings
 
-                    </h5>
+                            </h5>
 
 
 
 
                     <!-- REQUIRE SUBMISSION -->
 
-                    <div class="form-check mb-2">
+                            <div class="form-check mb-2">
 
 
-                        <input
+                                <input
 
-                            class="form-check-input"
+                                    class="form-check-input"
 
-                            type="checkbox"
+                                    type="checkbox"
 
-                            id="requires_submission"
+                                    id="requires_submission"
 
-                            name="requires_submission"
+                                    name="requires_submission"
 
-                            {% if task[5] == 1 %}
+                                    {% if task[5] == 1 %}
 
-                                checked
+                                        checked
 
-                            {% endif %}>
-
-
-                        <label
-
-                            class="form-check-label"
-
-                            for="requires_submission">
+                                    {% endif %}>
 
 
-                            Requires File Submission
+                                <label
+
+                                    class="form-check-label"
+
+                                    for="requires_submission">
 
 
-                        </label>
+                                    Requires File Submission
 
 
-                    </div>
+                                </label>
+
+
+                            </div>
 
 
 
 
                     <!-- ALLOW LATE SUBMISSION -->
 
-                    <div class="form-check mb-4">
+                            <div class="form-check mb-4">
 
 
-                        <input
+                                <input
 
-                            class="form-check-input"
+                                    class="form-check-input"
 
-                            type="checkbox"
+                                    type="checkbox"
 
-                            id="allow_late_submission"
+                                    id="allow_late_submission"
 
-                            name="allow_late_submission"
+                                    name="allow_late_submission"
 
-                            {% if task[6] == 1 %}
+                                    {% if task[6] == 1 %}
 
-                                checked
+                                        checked
 
-                            {% endif %}>
-
-
-                        <label
-
-                            class="form-check-label"
-
-                            for="allow_late_submission">
+                                    {% endif %}>
 
 
-                            Allow Late Submission
+                                <label
+
+                                    class="form-check-label"
+
+                                    for="allow_late_submission">
 
 
-                        </label>
+                                    Allow Late Submission
 
 
-                    </div>
+                                </label>
+
+
+                            </div>
 
 
 
 
-                    <hr>
+                            <hr>
 
 
 
 
                     <!-- ACTIONS -->
 
-                    <div class="d-flex gap-2">
+                            <div class="d-flex gap-2">
 
 
-                        <button
+                                <button
 
-                            type="submit"
+                                    type="submit"
 
-                            class="btn btn-success">
-
-
-                            Save Changes
+                                    class="btn btn-success">
 
 
-                        </button>
+                                    Save Changes
+
+
+                                </button>
 
 
 
-                        <a
+                                <a
 
-                            href="/supervisor/task/{{ task_id }}"
+                                    href="/supervisor/task/{{ task_id }}"
 
-                            class="btn btn-outline-secondary">
-
-
-                            Cancel
+                                    class="btn btn-outline-secondary">
 
 
-                        </a>
+                                    Cancel
+
+
+                                </a>
+
+
+                            </div>
+
+
+                        </form>
 
 
                     </div>
 
 
-                </form>
+                </div>
 
 
             </div>
 
 
-        </div>
+        </body>
 
-
-    </div>
-
-
-</body>
-
-</html>
+    </html>
