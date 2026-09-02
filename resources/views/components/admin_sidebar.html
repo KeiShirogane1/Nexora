@@ -3,8 +3,8 @@
 {% include 'components/logout_modal.html' %}{% include 'components/toast.html' %}{% include 'components/notification_bell.html' %}
 <script>
 (function(){
-  async function hideTrashed(){ if(!location.pathname.startsWith('/admin/users/'))return; try{const r=await fetch('/admin/trash/data');const d=await r.json();const ids=new Set((d.ids||[]).map(String));document.querySelectorAll('#studentsTable tbody tr[data-id], tbody tr[data-id]').forEach(row=>{if(ids.has(row.dataset.id))row.style.display='none';});}catch(e){} }
-  window.confirmDelete=function(id){ if(!confirm('Move this account to Trash? It can be restored for 30 days.'))return false; fetch('/admin/trash/delete/'+id,{method:'POST',headers:{'X-CSRFToken':'{{ csrf_token() }}'}}).then(r=>{if(!r.ok)throw 0;location.reload()}).catch(()=>alert('Unable to move this account to Trash.')); return false; };
-  setTimeout(hideTrashed,50);
+ async function hideTrashed(){if(!location.pathname.startsWith('/admin/users/'))return;try{const r=await fetch('/admin/trash/data');const d=await r.json();const ids=new Set((d.ids||[]).map(String));document.querySelectorAll('tbody tr[data-id]').forEach(row=>{if(ids.has(row.dataset.id))row.style.display='none';});}catch(e){}}
+ function moveDelete(id){if(!confirm('Move this account to Trash? It can be restored for 30 days.'))return false;fetch('/admin/trash/delete/'+id,{method:'POST',headers:{'X-CSRFToken':'{{ csrf_token() }}'}}).then(r=>{if(!r.ok)throw 0;location.reload()}).catch(()=>alert('Unable to move this account to Trash.'));return false;}
+ setTimeout(function(){window.confirmDelete=moveDelete;hideTrashed();},0);
 })();
 </script>
