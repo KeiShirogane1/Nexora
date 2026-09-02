@@ -1,485 +1,322 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
     <head>
         <meta charset="UTF-8">
-
-        <title>
-            Complete Student Profile - Nexora
-        </title>
-
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Complete Student Profile - Nexora</title>
         <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-
-        <link
-            rel="stylesheet"
-            href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
+        <style>
+            body {
+                min-height: 100vh;
+                margin: 0;
+                padding: 40px 20px;
+                display: flex;
+                align-items: flex-start;
+                justify-content: center;
+                background: linear-gradient(135deg, #eff6ff, #f8fafc 55%, #dbeafe);
+                color: #0f172a;
+                font-family: Arial, Helvetica, sans-serif;
+            }
+            .profile-modal {
+                width: min(680px, 100%);
+                margin: 0 auto;
+                padding: 36px;
+                background: #ffffff;
+                border: 1px solid #e2e8f0;
+                border-radius: 20px;
+                box-shadow: 0 20px 55px rgba(15, 23, 42, 0.12);
+            }
+            .profile-modal h2 {
+                margin: 0;
+                font-size: 2rem;
+                font-weight: 800;
+                color: #0f172a;
+            }
+            .progress {
+                margin: 8px 0 28px;
+                color: #64748b;
+                font-size: 0.9rem;
+                font-weight: 600;
+            }
+            .step {
+                display: none;
+            }
+            .step.active {
+                display: block;
+            }
+            .step h3 {
+                margin: 0 0 18px;
+                color: #0f172a;
+                font-size: 1.15rem;
+                font-weight: 800;
+            }
+            .step > input,
+            .step > textarea {
+                display: block;
+                width: 100%;
+                min-height: 44px;
+                margin: 0 0 12px;
+                padding: 11px 13px;
+                box-sizing: border-box;
+                border: 1px solid #cbd5e1;
+                border-radius: 10px;
+                background: #fff;
+                color: #0f172a;
+                font: inherit;
+            }
+            .step > textarea {
+                min-height: 120px;
+                resize: vertical;
+            }
+            .step > input:focus,
+            .step > textarea:focus {
+                outline: none;
+                border-color: #2563eb;
+                box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+            }
+            .upload {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                margin: 14px 0;
+                padding: 13px 15px;
+                border: 1px dashed #94a3b8;
+                border-radius: 10px;
+                background: #f8fafc;
+                color: #334155;
+                font-weight: 700;
+                cursor: pointer;
+            }
+            .upload input[type="file"] {
+                flex: 1;
+                min-width: 0;
+            }
+            .crop-wrapper {
+                display: none;
+                margin: 14px 0;
+                padding: 12px;
+                border: 1px solid #e2e8f0;
+                border-radius: 14px;
+                background: #f8fafc;
+                overflow: hidden;
+            }
+            .crop-wrapper.active {
+                display: block;
+            }
+            .crop-wrapper img {
+                display: block;
+                width: 100%;
+                max-height: 360px;
+            }
+            .crop-buttons {
+                display: none;
+                gap: 10px;
+                margin: 10px 0 14px;
+            }
+            .crop-buttons button,
+            .step > button {
+                min-height: 42px;
+                padding: 10px 16px;
+                border: 0;
+                border-radius: 10px;
+                background: #2563eb;
+                color: #fff;
+                font: inherit;
+                font-weight: 700;
+                cursor: pointer;
+            }
+            .crop-buttons button {
+                background: #eff6ff;
+                color: #1d4ed8;
+                border: 1px solid #bfdbfe;
+            }
+            .crop-buttons button:hover,
+            .step > button:hover {
+                filter: brightness(0.96);
+            }
+            .step > button:not(.back) {
+                width: 100%;
+                margin-top: 6px;
+            }
+            .step > button.back {
+                margin-right: 8px;
+                background: #fff;
+                color: #334155;
+                border: 1px solid #cbd5e1;
+            }
+            .input-error {
+                border-color: #ef4444 !important;
+                background: #fff7f7 !important;
+            }
+            .input-success {
+                border-color: #22c55e !important;
+            }
+            @media (max-width: 700px) {
+                body {
+                    padding: 20px 12px;
+                }
+                .profile-modal {
+                    padding: 24px 18px;
+                    border-radius: 16px;
+                }
+                .profile-modal h2 {
+                    font-size: 1.55rem;
+                }
+            }
+        </style>
     </head>
-
-
     <body>
-
-
         <div class="profile-modal">
-
-
-
-            <h2>
-                Complete Your Student Profile
-            </h2>
-
-
-            <div class="progress">
-
-                Step <span id="number">1</span> of 3
-
-            </div>
-
-
-
-            <form method="POST"
-                  enctype="multipart/form-data">
+            <h2>Complete Your Student Profile</h2>
+            <div class="progress">Step <span id="number">1</span> of 3</div>
+            <form method="POST" enctype="multipart/form-data">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-                <input
-                    type="hidden"
-                    name="cropped_image"
-                    id="croppedImage">
-
-<!-- STEP 1 -->
-
+                <input type="hidden" name="cropped_image" id="croppedImage">
 
                 <div class="step active">
-
-
-                    <h3>
-                        Basic Information
-                    </h3>
-
-
-                    <input
-                        name="first_name"
-                        placeholder="First Name">
-
-
-                    <input
-                        name="middle_name"
-                        placeholder="Middle Name">
-
-
-                    <input
-                        name="last_name"
-                        placeholder="Last Name">
-
-
-                    <input
-                        type="number"
-                        name="age"
-                        placeholder="Age">
-
-
-                    <input
-                        id="student_id"
-                        name="student_id"
-                        placeholder="Student ID">
-
-
-
+                    <h3>Basic Information</h3>
+                    <input name="first_name" placeholder="First Name">
+                    <input name="middle_name" placeholder="Middle Name">
+                    <input name="last_name" placeholder="Last Name">
+                    <input type="number" name="age" placeholder="Age">
+                    <input id="student_id" name="student_id" placeholder="Student ID">
                     <label class="upload">
-
-
                         📷 Upload Profile Picture
-
-
-                        <input
-                            type="file"
-                            name="profile_picture"
-                            accept="image/*"
-                            onchange="loadImage(event)">
-
-
+                        <input type="file" name="profile_picture" accept="image/*" onchange="loadImage(event)">
                     </label>
-
-
-
                     <div class="crop-wrapper">
-
-
-                        <img id="preview">
-
-
+                        <img id="preview" alt="Profile preview">
                     </div>
-
-
-
-                    <div
-                        id="cropButtons"
-                        class="crop-buttons">
-
-
-                        <button
-                            type="button"
-                            onclick="zoomIn()">
-
-                            Zoom +
-
-                        </button>
-
-
-                        <button
-                            type="button"
-                            onclick="zoomOut()">
-
-                            Zoom -
-
-                        </button>
-
-
+                    <div id="cropButtons" class="crop-buttons">
+                        <button type="button" onclick="zoomIn()">Zoom +</button>
+                        <button type="button" onclick="zoomOut()">Zoom -</button>
                     </div>
-
-
-
-
-                    <button
-                        type="button"
-                        onclick="validateStep1()">
-
-                        Next →
-
-                    </button>
-
-
-
+                    <button type="button" onclick="validateStep1()">Next →</button>
                 </div>
-
-<!-- STEP 2 -->
 
                 <div class="step">
-
-
-                    <h3>
-                        Contact Information
-                    </h3>
-
-
-                    <input
-                        name="phone_number"
-                        placeholder="09XXXXXXXXX"
-                        maxlength="11">
-
-
-                    <textarea
-                        name="home_address"
-                        placeholder="House Number, Street, Barangay, City/Municipality, Province">
-                    </textarea>
-
-
-
-                    <button
-                        type="button"
-                        class="back"
-                        onclick="previousStep()">
-
-                        ← Back
-
-                    </button>
-
-
-
-                    <button
-                        type="button"
-                        onclick="validateStep2()">
-
-                        Next →
-
-                    </button>
-
-
-
+                    <h3>Contact Information</h3>
+                    <input name="phone_number" placeholder="09XXXXXXXXX" maxlength="11">
+                    <textarea name="home_address" placeholder="House Number, Street, Barangay, City/Municipality, Province"></textarea>
+                    <button type="button" class="back" onclick="previousStep()">← Back</button>
+                    <button type="button" onclick="validateStep2()">Next →</button>
                 </div>
-
-
-
-
-
-<!-- STEP 3 -->
-
 
                 <div class="step">
-
-
-                    <h3>
-                        Class Information
-                    </h3>
-
-
-
-                    <input
-                        name="grade_year"
-                        placeholder="Example: 4th Year / Grade 12">
-
-
-
-                    <input
-                        name="major_program"
-                        placeholder="Example: Bachelor of Science in Information Technology">
-
-
-
-
-
-                    <button
-                        type="button"
-                        class="back"
-                        onclick="previousStep()">
-
-                        ← Back
-
-                    </button>
-
-
-
-
-                    <button
-                        type="button"
-                        onclick="validateStep3()">
-
-                        Complete Profile
-
-                    </button>
-
-
-
+                    <h3>Class Information</h3>
+                    <input name="grade_year" placeholder="Example: 4th Year / Grade 12">
+                    <input name="major_program" placeholder="Example: Bachelor of Science in Information Technology">
+                    <button type="button" class="back" onclick="previousStep()">← Back</button>
+                    <button type="button" onclick="validateStep3()">Complete Profile</button>
                 </div>
-
-
             </form>
-
-
         </div>
 
-
-
-        <script>
-
-        </script>
-
-
-
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
         <script>
             let currentStep = 0;
-
+            let cropper;
             const steps = document.querySelectorAll(".step");
-
             const number = document.getElementById("number");
 
-            /* ==========================
-               FIELD ERROR HANDLING
-            ========================== */
-
             function checkField(input) {
-                if (input.value.trim() === "") {
-                    input.classList.add("input-error");
-
-                    input.classList.remove("input-success");
-
+                if (!input || input.value.trim() === "") {
+                    if (input) {
+                        input.classList.add("input-error");
+                        input.classList.remove("input-success");
+                    }
                     return false;
                 }
-
                 input.classList.remove("input-error");
-
                 input.classList.add("input-success");
-
                 return true;
             }
 
-            // remove red while typing
-
-            document.querySelectorAll("input, textarea").forEach(function (input) {
+            document.querySelectorAll("input, textarea").forEach((input) => {
                 input.addEventListener("input", function () {
                     if (this.value.trim() !== "") {
                         this.classList.remove("input-error");
-
                         this.classList.add("input-success");
                     }
                 });
             });
 
-            /* ==========================
-               STEP 1 VALIDATION
-            ========================== */
-
             function validateStep1() {
-                let fields = [
-                    "first_name",
-                    "middle_name",
-                    "last_name",
-                    "age",
-                    "student_id",
-                ];
-
-                let valid = true;
-
-                fields.forEach(function (field) {
-                    let input = document.querySelector(`input[name="${field}"]`);
-
-                    if (!checkField(input)) {
-                        valid = false;
-                    }
-                });
-
-                if (valid) {
-                    nextStep();
-                }
+                const fields = ["first_name", "middle_name", "last_name", "age", "student_id"];
+                const valid = fields.every((field) => checkField(document.querySelector(`input[name="${field}"]`)));
+                if (valid) nextStep();
             }
-
-            /* ==========================
-               STEP 2 VALIDATION
-            ========================== */
 
             function validateStep2() {
-                let phone = document.querySelector('input[name="phone_number"]');
-
-                let address = document.querySelector('textarea[name="home_address"]');
-
-                let valid = true;
-
-                if (!checkField(phone)) {
-                    valid = false;
-                }
-
-                if (!checkField(address)) {
-                    valid = false;
-                }
-
+                const phone = document.querySelector('input[name="phone_number"]');
+                const address = document.querySelector('textarea[name="home_address"]');
+                let valid = checkField(phone) && checkField(address);
                 if (phone.value.trim() !== "" && phone.value.length !== 11) {
                     phone.classList.add("input-error");
-
                     phone.classList.remove("input-success");
-
                     valid = false;
                 }
-
-                if (valid) {
-                    nextStep();
-                }
+                if (valid) nextStep();
             }
-
-            /* ==========================
-               STEP 3 VALIDATION
-            ========================== */
 
             function validateStep3() {
-                let year = document.querySelector('input[name="grade_year"]');
-
-                let program = document.querySelector('input[name="major_program"]');
-
-                let valid = true;
-
-                if (!checkField(year)) {
-                    valid = false;
+                const year = document.querySelector('input[name="grade_year"]');
+                const program = document.querySelector('input[name="major_program"]');
+                const valid = checkField(year) && checkField(program);
+                if (!valid) return;
+                if (cropper) {
+                    document.getElementById("croppedImage").value = cropper.getCroppedCanvas({ width: 400, height: 400 }).toDataURL("image/jpeg");
                 }
-
-                if (!checkField(program)) {
-                    valid = false;
-                }
-
-                if (valid) {
-                    if (cropper) {
-                        let canvas = cropper.getCroppedCanvas({
-                            width: 400,
-                            height: 400,
-                        });
-
-                        document.getElementById("croppedImage").value =
-                            canvas.toDataURL("image/jpeg");
-                    }
-
-                    document.querySelector("form").submit();
-                }
+                document.querySelector("form").submit();
             }
 
-            /* ==========================
-               STEP CONTROL
-            ========================== */
-
             function nextStep() {
-                if (currentStep < steps.length - 1) {
-                    steps[currentStep].classList.remove("active");
-
-                    currentStep++;
-
-                    steps[currentStep].classList.add("active");
-
-                    number.innerHTML = currentStep + 1;
-                }
+                if (currentStep >= steps.length - 1) return;
+                steps[currentStep].classList.remove("active");
+                currentStep += 1;
+                steps[currentStep].classList.add("active");
+                number.textContent = currentStep + 1;
             }
 
             function previousStep() {
-                if (currentStep > 0) {
-                    steps[currentStep].classList.remove("active");
-
-                    currentStep--;
-
-                    steps[currentStep].classList.add("active");
-
-                    number.innerHTML = currentStep + 1;
-                }
+                if (currentStep <= 0) return;
+                steps[currentStep].classList.remove("active");
+                currentStep -= 1;
+                steps[currentStep].classList.add("active");
+                number.textContent = currentStep + 1;
             }
 
-            /* ==========================
-               CROPPER
-            ========================== */
-
-            let cropper;
-
             function loadImage(event) {
-                let image = document.getElementById("preview");
-
-                let wrapper = document.querySelector(".crop-wrapper");
-
-                let buttons = document.getElementById("cropButtons");
-
-                image.src = URL.createObjectURL(event.target.files[0]);
-
+                const file = event.target.files && event.target.files[0];
+                if (!file) return;
+                const image = document.getElementById("preview");
+                const wrapper = document.querySelector(".crop-wrapper");
+                const buttons = document.getElementById("cropButtons");
+                if (cropper) cropper.destroy();
+                image.onload = function () {
+                    cropper = new Cropper(image, {
+                        aspectRatio: 1,
+                        viewMode: 1,
+                        dragMode: "move",
+                        autoCropArea: 0.8,
+                        movable: true,
+                        zoomable: true,
+                        background: false,
+                    });
+                };
+                image.src = URL.createObjectURL(file);
                 wrapper.classList.add("active");
-
                 buttons.style.display = "flex";
-
-                if (cropper) {
-                    cropper.destroy();
-                }
-
-                cropper = new Cropper(image, {
-                    aspectRatio: 1,
-
-                    viewMode: 1,
-
-                    dragMode: "move",
-
-                    autoCropArea: 0.8,
-
-                    movable: true,
-
-                    zoomable: true,
-
-                    background: false,
-                });
             }
 
             function zoomIn() {
-                if (cropper) {
-                    cropper.zoom(0.1);
-                }
+                if (cropper) cropper.zoom(0.1);
             }
 
             function zoomOut() {
-                if (cropper) {
-                    cropper.zoom(-0.1);
-                }
+                if (cropper) cropper.zoom(-0.1);
             }
         </script>
-
-
     </body>
-
 </html>
