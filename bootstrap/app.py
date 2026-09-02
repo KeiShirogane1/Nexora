@@ -5,7 +5,6 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 load_dotenv(BASE_DIR / ".env")
 
 from flask import Flask, send_from_directory, session
@@ -33,7 +32,7 @@ from app.Models.db import get_db_connection, using_postgres
 from app.Services.classroom_service import ensure_classroom_schema
 from app.Services.classwork_submission_service import ensure_classwork_submission_schema
 from app.Services.classwork_score_schema import ensure_classwork_score_schema
-from app.Services.notification_service import get_user_notifications, get_unread_count
+from app.Services.notification_service import get_user_notifications, get_recent_notifications, get_unread_count
 
 app = Flask(
     __name__,
@@ -81,7 +80,6 @@ def _set_security_headers(response):
 UPLOAD_FOLDER = BASE_DIR / "storage" / "uploads"
 UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = str(UPLOAD_FOLDER)
-
 PROFILE_UPLOAD_FOLDER = UPLOAD_FOLDER / "profile_pictures"
 PROFILE_UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)
 app.config["PROFILE_UPLOAD_FOLDER"] = str(PROFILE_UPLOAD_FOLDER)
@@ -110,11 +108,7 @@ def repair_missing_student_profiles():
                 SELECT u.id, 0
                 FROM users u
                 WHERE u.role = 'student'
-                  AND NOT EXISTS (
-                      SELECT 1
-                      FROM student_profiles sp
-                      WHERE sp.user_id = u.id
-                  )
+                  AND NOT EXISTS (SELECT 1 FROM student_profiles sp WHERE sp.user_id = u.id)
                 ON CONFLICT (user_id) DO NOTHING
             """)
         else:
@@ -123,11 +117,7 @@ def repair_missing_student_profiles():
                 SELECT u.id, 0
                 FROM users u
                 WHERE u.role = 'student'
-                  AND NOT EXISTS (
-                      SELECT 1
-                      FROM student_profiles sp
-                      WHERE sp.user_id = u.id
-                  )
+                  AND NOT EXISTS (SELECT 1 FROM student_profiles sp WHERE sp.user_id = u.id)
             """)
         conn.commit()
     except Exception as exc:
@@ -136,7 +126,6 @@ def repair_missing_student_profiles():
     finally:
         cursor.close()
         conn.close()
-
 
 initialize_database()
 ensure_classroom_schema()
@@ -164,13 +153,57 @@ app.register_blueprint(notifications_bp)
 
 @app.context_processor
 def inject_notifications():
-    if "user_id" in session:
+    if "user_id" not in session:
+        return {
+            "notifications": [],
+            "recent_notifications": [],
+            "unread_count": 0,
+            "sidebar_profile": None,
+        }
+
+    user_id = session["user_id"]
+    sidebar_profile = None
+    try:
+        conn = get_db_connection()
         try:
-            return {"notifications": get_user_notifications(session["user_id"], limit=20), "unread_count": get_unread_count(session["user_id"])}
-        except Exception as e:
-            print("inject_notifications failed:", e)
-            return {"notifications": [], "unread_count": 0}
-    return {"notifications": [], "unread_count": 0}
+            user = conn.execute(
+                "SELECT id, username, email, role FROM users WHERE id = ?",
+                (user_id,),
+            ).fetchone()
+            if user:
+                sidebar_profile = {
+                    "id": user["id"],
+                    "username": user["username"],
+                    "email": user["email"],
+                    "role": user["role"],
+                    "profile_picture": None,
+                }
+                if user["role"] == "student":
+                    profile = conn.execute(
+                        "SELECT first_name, last_name, profile_picture FROM student_profiles WHERE user_id = ?",
+                        (user_id,),
+                    ).fetchone()
+                    if profile:
+                        sidebar_profile["first_name"] = profile["first_name"]
+                        sidebar_profile["last_name"] = profile["last_name"]
+                        sidebar_profile["profile_picture"] = profile["profile_picture"]
+        finally:
+            conn.close()
+
+        return {
+            "notifications": get_user_notifications(user_id, limit=20),
+            "recent_notifications": get_recent_notifications(user_id, days=7, limit=10),
+            "unread_count": get_unread_count(user_id),
+            "sidebar_profile": sidebar_profile,
+        }
+    except Exception as e:
+        print("inject_notifications failed:", e)
+        return {
+            "notifications": [],
+            "recent_notifications": [],
+            "unread_count": 0,
+            "sidebar_profile": sidebar_profile,
+        }
 
 if __name__ == "__main__":
     app.run(debug=app.debug)
