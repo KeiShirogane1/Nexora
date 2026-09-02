@@ -1,81 +1,81 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Classwork - {{ classroom.name }} - Nexora</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
-</head>
-<body class="student-page student-classwork-page">
-    {% include 'components/student_sidebar.html' %}
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Classwork - {{ classroom.name }} - Nexora</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
+    </head>
+    <body class="student-page student-classwork-page">
+        {% include 'components/student_sidebar.html' %}
 
-    <main class="student-main-content nexora-app-main">
-        <div class="nexora-page student-classwork-shell">
-            <a href="{{ url_for('classroom.student_class', class_id=classroom.id) }}" class="student-classwork-back">← Back to {{ classroom.name }}</a>
+        <main class="student-main-content nexora-app-main">
+            <div class="nexora-page student-classwork-shell">
+                <a href="{{ url_for('classroom.student_class', class_id=classroom.id) }}" class="student-classwork-back">← Back to {{ classroom.name }}</a>
 
-            <header class="student-classwork-header">
-                <div>
-                    <span class="student-classwork-eyebrow">{{ classroom.section }}</span>
-                    <h1>Classwork</h1>
-                    <p>Assignments, quizzes, documents, projects, and other activities from your supervisor.</p>
-                </div>
-                <div class="student-classwork-header-actions">
-                    <a href="{{ url_for('student_gradebook.gradebook', class_id=classroom.id) }}" class="btn btn-outline-primary">View Gradebook</a>
-                    <a href="{{ url_for('classwork_ml_insights.student_insights', class_id=classroom.id) }}" class="btn btn-outline-primary">Performance Insights</a>
-                    <a href="{{ url_for('classwork_ml_insights.student_insights', class_id=classroom.id) }}" class="btn btn-primary">ML Insights</a>
-                    <div class="student-classwork-summary">
-                        <strong>{{ assignments|length }}</strong>
-                        <span>activities</span>
+                <header class="student-classwork-header">
+                    <div>
+                        <span class="student-classwork-eyebrow">{{ classroom.section }}</span>
+                        <h1>Classwork</h1>
+                        <p>Assignments, quizzes, documents, projects, and other activities from your supervisor.</p>
                     </div>
-                </div>
-            </header>
-
-            {% if assignments %}
-                <section class="student-classwork-list" aria-label="Classwork activities">
-                    {% for item in assignments %}
-                    <a href="{{ url_for('student_classwork.detail', class_id=classroom.id, assignment_id=item.id) }}" class="student-classwork-card">
-                        <div class="student-classwork-card-top">
-                            <div>
-                                <span class="student-classwork-type">{{ item.activity_label }}</span>
-                                <h2>{{ item.title }}</h2>
-                            </div>
-                            {% if item.submission %}
-                                <span class="student-classwork-status is-complete">{{ item.submission.status|capitalize }}</span>
-                            {% else %}
-                                <span class="student-classwork-status">Not submitted</span>
-                            {% endif %}
+                    <div class="student-classwork-header-actions">
+                        <a href="{{ url_for('student_gradebook.gradebook', class_id=classroom.id) }}" class="btn btn-outline-primary">View Gradebook</a>
+                        <a href="{{ url_for('classwork_ml_insights.student_insights', class_id=classroom.id) }}" class="btn btn-outline-primary">Performance Insights</a>
+                        <a href="{{ url_for('classwork_ml_insights.student_insights', class_id=classroom.id) }}" class="btn btn-primary">ML Insights</a>
+                        <div class="student-classwork-summary">
+                            <strong>{{ assignments|length }}</strong>
+                            <span>activities</span>
                         </div>
+                    </div>
+                </header>
 
-                        {% if item.description %}
-                            <p class="student-classwork-description">{{ item.description[:180] }}{% if item.description|length > 180 %}…{% endif %}</p>
-                        {% endif %}
+                {% if assignments %}
+                    <section class="student-classwork-list" aria-label="Classwork activities">
+                        {% for item in assignments %}
+                            <a href="{{ url_for('student_classwork.detail', class_id=classroom.id, assignment_id=item.id) }}" class="student-classwork-card">
+                                <div class="student-classwork-card-top">
+                                    <div>
+                                        <span class="student-classwork-type">{{ item.activity_label }}</span>
+                                        <h2>{{ item.title }}</h2>
+                                    </div>
+                                    {% if item.submission %}
+                                        <span class="student-classwork-status is-complete">{{ item.submission.status|capitalize }}</span>
+                                    {% else %}
+                                        <span class="student-classwork-status">Not submitted</span>
+                                    {% endif %}
+                                </div>
 
-                        <div class="student-classwork-meta">
-                            <span>Score: {{ item.points }} pts</span>
-                            {% if item.due_at %}<span>Due: {{ item.due_at }}</span>{% else %}<span>No due date</span>{% endif %}
-                            {% if item.group_mode %}<span>Group · max {{ item.max_group_size }}</span>{% endif %}
-                        </div>
+                                {% if item.description %}
+                                    <p class="student-classwork-description">{{ item.description[:180] }}{% if item.description|length > 180 %}…{% endif %}</p>
+                                {% endif %}
 
-                        <div class="student-classwork-resources">
-                            {% if item.external_url %}<span>🔗 {{ item.resource_label or 'External activity' }}</span>{% endif %}
-                            {% if item.resource_filename %}<span>📎 {{ item.resource_filename }}</span>{% endif %}
-                            {% if item.allow_file_upload %}<span>📤 File submission</span>{% endif %}
-                        </div>
+                                <div class="student-classwork-meta">
+                                    <span>Score: {{ item.points }} pts</span>
+                                    {% if item.due_at %}<span>Due: {{ item.due_at }}</span>{% else %}<span>No due date</span>{% endif %}
+                                    {% if item.group_mode %}<span>Group · max {{ item.max_group_size }}</span>{% endif %}
+                                </div>
 
-                        <div class="student-classwork-card-footer">Open activity <span aria-hidden="true">→</span></div>
-                    </a>
-                    {% endfor %}
-                </section>
-            {% else %}
-                <section class="student-classwork-empty">
-                    <div class="student-classwork-empty-icon" aria-hidden="true">📝</div>
-                    <h2>No classwork yet</h2>
-                    <p>Your supervisor has not published any activities for this class.</p>
-                </section>
-            {% endif %}
-        </div>
-    </main>
-</body>
+                                <div class="student-classwork-resources">
+                                    {% if item.external_url %}<span>🔗 {{ item.resource_label or 'External activity' }}</span>{% endif %}
+                                    {% if item.resource_filename %}<span>📎 {{ item.resource_filename }}</span>{% endif %}
+                                    {% if item.allow_file_upload %}<span>📤 File submission</span>{% endif %}
+                                </div>
+
+                                <div class="student-classwork-card-footer">Open activity <span aria-hidden="true">→</span></div>
+                            </a>
+                        {% endfor %}
+                    </section>
+                {% else %}
+                    <section class="student-classwork-empty">
+                        <div class="student-classwork-empty-icon" aria-hidden="true">📝</div>
+                        <h2>No classwork yet</h2>
+                        <p>Your supervisor has not published any activities for this class.</p>
+                    </section>
+                {% endif %}
+            </div>
+        </main>
+    </body>
 </html>

@@ -1,141 +1,141 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gradebook - {{ classroom.name }} - Nexora</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">
-    <style>
-        .supervisor-gradebook-page { background:#f1f5f9; color:#0f172a; min-height:100vh; }
-        .supervisor-gradebook-shell { max-width:1500px; margin:0 auto; }
-        .supervisor-gradebook-heading { display:flex; align-items:flex-end; justify-content:space-between; gap:24px; margin-bottom:22px; }
-        .supervisor-gradebook-heading h1 { margin:8px 0 5px; font-size:2rem; font-weight:800; letter-spacing:-.025em; }
-        .supervisor-gradebook-heading p { margin:0; color:#64748b; }
-        .supervisor-gradebook-back { color:#2563eb; text-decoration:none; font-size:.86rem; font-weight:700; }
-        .supervisor-gradebook-back:hover { text-decoration:underline; }
-        .supervisor-gradebook-actions { display:flex; gap:10px; flex-wrap:wrap; }
-        .supervisor-gradebook-card { background:#fff; border:1px solid #e8eef7; border-radius:18px; box-shadow:0 8px 28px rgba(15,23,42,.07); overflow:hidden; }
-        .supervisor-gradebook-toolbar { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:18px 20px; border-bottom:1px solid #eef2f7; }
-        .supervisor-gradebook-summary { color:#64748b; font-size:.82rem; }
-        .supervisor-gradebook-wrap { overflow:auto; max-width:100%; }
-        .supervisor-gradebook-table { margin:0; min-width:max-content; border-collapse:separate; border-spacing:0; }
-        .supervisor-gradebook-table th, .supervisor-gradebook-table td { border-color:#eef2f7; vertical-align:middle; }
-        .supervisor-gradebook-table thead th { background:#f8fafc; color:#475569; font-size:.72rem; font-weight:800; white-space:nowrap; padding:13px 12px; }
-        .supervisor-gradebook-table tbody td { padding:12px; font-size:.8rem; }
-        .supervisor-gradebook-student { position:sticky; left:0; z-index:3; min-width:220px; max-width:260px; background:#fff; box-shadow:1px 0 0 #eef2f7; }
-        .supervisor-gradebook-table thead .supervisor-gradebook-student { z-index:5; background:#f8fafc; }
-        .supervisor-gradebook-student strong { display:block; color:#0f172a; font-size:.82rem; }
-        .supervisor-gradebook-student small { display:block; margin-top:3px; color:#94a3b8; font-size:.7rem; overflow:hidden; text-overflow:ellipsis; }
-        .supervisor-gradebook-assignment { min-width:115px; text-align:center; }
-        .supervisor-gradebook-assignment-title { display:block; max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-        .supervisor-gradebook-points { display:block; margin-top:3px; color:#94a3b8; font-size:.66rem; font-weight:600; }
-        .supervisor-gradebook-cell { min-width:115px; text-align:center; }
-        .supervisor-gradebook-score { display:block; color:#0f172a; font-weight:800; }
-        .supervisor-gradebook-percent { display:block; margin-top:2px; color:#64748b; font-size:.68rem; }
-        .supervisor-gradebook-method { display:inline-block; margin-top:5px; padding:2px 6px; border-radius:999px; background:#f1f5f9; color:#64748b; font-size:.58rem; font-weight:800; text-transform:uppercase; letter-spacing:.04em; }
-        .supervisor-gradebook-missing { color:#94a3b8; font-weight:700; }
-        .supervisor-gradebook-overall { min-width:105px; text-align:center; font-weight:800; }
-        .supervisor-gradebook-overall small { display:block; margin-top:3px; color:#94a3b8; font-size:.65rem; font-weight:600; }
-        .supervisor-gradebook-empty { padding:55px 24px; text-align:center; color:#64748b; }
-        .supervisor-gradebook-empty h2 { margin:0 0 7px; color:#0f172a; font-size:1.1rem; font-weight:800; }
-        .supervisor-gradebook-empty p { margin:0; font-size:.84rem; }
-        @media (max-width: 800px) {
-            .supervisor-gradebook-heading { align-items:flex-start; flex-direction:column; }
-            .supervisor-gradebook-heading h1 { font-size:1.65rem; }
-            .supervisor-gradebook-student { min-width:180px; }
-        }
-    </style>
-</head>
-<body class="supervisor-gradebook-page">
-    {% include 'components/supervisor_sidebar.html' %}
-    <main class="page-content nexora-app-main">
-        <div class="nexora-page supervisor-gradebook-shell">
-            <div class="supervisor-gradebook-heading">
-                <div>
-                    <a href="{{ url_for('classroom.supervisor_class', class_id=classroom.id) }}" class="supervisor-gradebook-back">← Back to {{ classroom.name }}</a>
-                    <h1>Gradebook</h1>
-                    <p>{{ classroom.section }} · Normalized scores from manual grading and score imports.</p>
-                </div>
-                <div class="supervisor-gradebook-actions">
-                    <a class="btn btn-outline-primary" href="{{ url_for('classwork_ml_insights.supervisor_insights', class_id=classroom.id) }}">Performance Insights</a>
-                    <a class="btn btn-outline-primary" href="{{ url_for('classwork_ml_insights.supervisor_insights', class_id=classroom.id) }}">ML Insights</a>
-                    <a class="btn btn-outline-primary" href="{{ url_for('performance_reports.supervisor_reports', class_id=classroom.id) }}">Reports</a>
-                    <a class="btn btn-primary" href="{{ url_for('classwork_gradebook_export.export_supervisor_gradebook', class_id=classroom.id) }}">Export CSV</a>
-                </div>
-            </div>
-
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% for category, message in messages %}
-                <div class="alert alert-{{ 'danger' if category == 'danger' else 'success' if category == 'success' else 'warning' if category == 'warning' else 'info' }}" role="alert">{{ message }}</div>
-                {% endfor %}
-            {% endwith %}
-
-            <section class="supervisor-gradebook-card">
-                <div class="supervisor-gradebook-toolbar">
-                    <div class="supervisor-gradebook-summary">
-                        <strong>{{ students|length }}</strong> student{{ '' if students|length == 1 else 's' }} ·
-                        <strong>{{ assignments|length }}</strong> classwork activit{{ 'y' if assignments|length == 1 else 'ies' }}
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Gradebook - {{ classroom.name }} - Nexora</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">
+        <style>
+            .supervisor-gradebook-page { background:#f1f5f9; color:#0f172a; min-height:100vh; }
+            .supervisor-gradebook-shell { max-width:1500px; margin:0 auto; }
+            .supervisor-gradebook-heading { display:flex; align-items:flex-end; justify-content:space-between; gap:24px; margin-bottom:22px; }
+            .supervisor-gradebook-heading h1 { margin:8px 0 5px; font-size:2rem; font-weight:800; letter-spacing:-.025em; }
+            .supervisor-gradebook-heading p { margin:0; color:#64748b; }
+            .supervisor-gradebook-back { color:#2563eb; text-decoration:none; font-size:.86rem; font-weight:700; }
+            .supervisor-gradebook-back:hover { text-decoration:underline; }
+            .supervisor-gradebook-actions { display:flex; gap:10px; flex-wrap:wrap; }
+            .supervisor-gradebook-card { background:#fff; border:1px solid #e8eef7; border-radius:18px; box-shadow:0 8px 28px rgba(15,23,42,.07); overflow:hidden; }
+            .supervisor-gradebook-toolbar { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:18px 20px; border-bottom:1px solid #eef2f7; }
+            .supervisor-gradebook-summary { color:#64748b; font-size:.82rem; }
+            .supervisor-gradebook-wrap { overflow:auto; max-width:100%; }
+            .supervisor-gradebook-table { margin:0; min-width:max-content; border-collapse:separate; border-spacing:0; }
+            .supervisor-gradebook-table th, .supervisor-gradebook-table td { border-color:#eef2f7; vertical-align:middle; }
+            .supervisor-gradebook-table thead th { background:#f8fafc; color:#475569; font-size:.72rem; font-weight:800; white-space:nowrap; padding:13px 12px; }
+            .supervisor-gradebook-table tbody td { padding:12px; font-size:.8rem; }
+            .supervisor-gradebook-student { position:sticky; left:0; z-index:3; min-width:220px; max-width:260px; background:#fff; box-shadow:1px 0 0 #eef2f7; }
+            .supervisor-gradebook-table thead .supervisor-gradebook-student { z-index:5; background:#f8fafc; }
+            .supervisor-gradebook-student strong { display:block; color:#0f172a; font-size:.82rem; }
+            .supervisor-gradebook-student small { display:block; margin-top:3px; color:#94a3b8; font-size:.7rem; overflow:hidden; text-overflow:ellipsis; }
+            .supervisor-gradebook-assignment { min-width:115px; text-align:center; }
+            .supervisor-gradebook-assignment-title { display:block; max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+            .supervisor-gradebook-points { display:block; margin-top:3px; color:#94a3b8; font-size:.66rem; font-weight:600; }
+            .supervisor-gradebook-cell { min-width:115px; text-align:center; }
+            .supervisor-gradebook-score { display:block; color:#0f172a; font-weight:800; }
+            .supervisor-gradebook-percent { display:block; margin-top:2px; color:#64748b; font-size:.68rem; }
+            .supervisor-gradebook-method { display:inline-block; margin-top:5px; padding:2px 6px; border-radius:999px; background:#f1f5f9; color:#64748b; font-size:.58rem; font-weight:800; text-transform:uppercase; letter-spacing:.04em; }
+            .supervisor-gradebook-missing { color:#94a3b8; font-weight:700; }
+            .supervisor-gradebook-overall { min-width:105px; text-align:center; font-weight:800; }
+            .supervisor-gradebook-overall small { display:block; margin-top:3px; color:#94a3b8; font-size:.65rem; font-weight:600; }
+            .supervisor-gradebook-empty { padding:55px 24px; text-align:center; color:#64748b; }
+            .supervisor-gradebook-empty h2 { margin:0 0 7px; color:#0f172a; font-size:1.1rem; font-weight:800; }
+            .supervisor-gradebook-empty p { margin:0; font-size:.84rem; }
+            @media (max-width: 800px) {
+                .supervisor-gradebook-heading { align-items:flex-start; flex-direction:column; }
+                .supervisor-gradebook-heading h1 { font-size:1.65rem; }
+                .supervisor-gradebook-student { min-width:180px; }
+            }
+        </style>
+    </head>
+    <body class="supervisor-gradebook-page">
+        {% include 'components/supervisor_sidebar.html' %}
+        <main class="page-content nexora-app-main">
+            <div class="nexora-page supervisor-gradebook-shell">
+                <div class="supervisor-gradebook-heading">
+                    <div>
+                        <a href="{{ url_for('classroom.supervisor_class', class_id=classroom.id) }}" class="supervisor-gradebook-back">← Back to {{ classroom.name }}</a>
+                        <h1>Gradebook</h1>
+                        <p>{{ classroom.section }} · Normalized scores from manual grading and score imports.</p>
                     </div>
-                    <span class="text-muted small">Overall = earned points ÷ graded possible points</span>
+                    <div class="supervisor-gradebook-actions">
+                        <a class="btn btn-outline-primary" href="{{ url_for('classwork_ml_insights.supervisor_insights', class_id=classroom.id) }}">Performance Insights</a>
+                        <a class="btn btn-outline-primary" href="{{ url_for('classwork_ml_insights.supervisor_insights', class_id=classroom.id) }}">ML Insights</a>
+                        <a class="btn btn-outline-primary" href="{{ url_for('performance_reports.supervisor_reports', class_id=classroom.id) }}">Reports</a>
+                        <a class="btn btn-primary" href="{{ url_for('classwork_gradebook_export.export_supervisor_gradebook', class_id=classroom.id) }}">Export CSV</a>
+                    </div>
                 </div>
 
-                {% if not students %}
-                <div class="supervisor-gradebook-empty">
-                    <h2>No students enrolled</h2>
-                    <p>Students will appear here after they join this class.</p>
-                </div>
-                {% elif not assignments %}
-                <div class="supervisor-gradebook-empty">
-                    <h2>No classwork yet</h2>
-                    <p>Create classwork first. Scores will appear here as students are graded or imported.</p>
-                </div>
-                {% else %}
-                <div class="supervisor-gradebook-wrap">
-                    <table class="table supervisor-gradebook-table">
-                        <thead>
-                            <tr>
-                                <th class="supervisor-gradebook-student">Student</th>
-                                {% for assignment in assignments %}
-                                <th class="supervisor-gradebook-assignment">
-                                    <span class="supervisor-gradebook-assignment-title" title="{{ assignment.title }}">{{ assignment.title }}</span>
-                                    <span class="supervisor-gradebook-points">{{ assignment.points }} pts</span>
-                                </th>
-                                {% endfor %}
-                                <th class="supervisor-gradebook-overall">Overall</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for student in students %}
-                            <tr>
-                                <td class="supervisor-gradebook-student">
-                                    <strong>{{ student.name }}</strong>
-                                    {% if student.student_number %}<small>{{ student.student_number }}</small>{% elif student.email %}<small>{{ student.email }}</small>{% endif %}
-                                </td>
-                                {% for cell in student.cells %}
-                                <td class="supervisor-gradebook-cell">
-                                    {% if cell.graded %}
-                                    <span class="supervisor-gradebook-score">{{ cell.score_display }}</span>
-                                    <span class="supervisor-gradebook-percent">{{ cell.percentage_display }}</span>
-                                    {% if cell.grading_method %}<span class="supervisor-gradebook-method">{{ cell.grading_method }}</span>{% endif %}
-                                    {% else %}
-                                    <span class="supervisor-gradebook-missing">—</span>
-                                    {% endif %}
-                                </td>
-                                {% endfor %}
-                                <td class="supervisor-gradebook-overall">
-                                    {{ student.overall_display }}
-                                    <small>{{ student.graded_count }}/{{ assignments|length }} graded</small>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                {% endif %}
-            </section>
-        </div>
-    </main>
-</body>
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'danger' else 'success' if category == 'success' else 'warning' if category == 'warning' else 'info' }}" role="alert">{{ message }}</div>
+                    {% endfor %}
+                {% endwith %}
+
+                <section class="supervisor-gradebook-card">
+                    <div class="supervisor-gradebook-toolbar">
+                        <div class="supervisor-gradebook-summary">
+                            <strong>{{ students|length }}</strong> student{{ '' if students|length == 1 else 's' }} ·
+                            <strong>{{ assignments|length }}</strong> classwork activit{{ 'y' if assignments|length == 1 else 'ies' }}
+                        </div>
+                        <span class="text-muted small">Overall = earned points ÷ graded possible points</span>
+                    </div>
+
+                    {% if not students %}
+                        <div class="supervisor-gradebook-empty">
+                            <h2>No students enrolled</h2>
+                            <p>Students will appear here after they join this class.</p>
+                        </div>
+                    {% elif not assignments %}
+                        <div class="supervisor-gradebook-empty">
+                            <h2>No classwork yet</h2>
+                            <p>Create classwork first. Scores will appear here as students are graded or imported.</p>
+                        </div>
+                    {% else %}
+                        <div class="supervisor-gradebook-wrap">
+                            <table class="table supervisor-gradebook-table">
+                                <thead>
+                                    <tr>
+                                        <th class="supervisor-gradebook-student">Student</th>
+                                        {% for assignment in assignments %}
+                                            <th class="supervisor-gradebook-assignment">
+                                                <span class="supervisor-gradebook-assignment-title" title="{{ assignment.title }}">{{ assignment.title }}</span>
+                                                <span class="supervisor-gradebook-points">{{ assignment.points }} pts</span>
+                                            </th>
+                                        {% endfor %}
+                                        <th class="supervisor-gradebook-overall">Overall</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for student in students %}
+                                        <tr>
+                                            <td class="supervisor-gradebook-student">
+                                                <strong>{{ student.name }}</strong>
+                                                {% if student.student_number %}<small>{{ student.student_number }}</small>{% elif student.email %}<small>{{ student.email }}</small>{% endif %}
+                                            </td>
+                                            {% for cell in student.cells %}
+                                                <td class="supervisor-gradebook-cell">
+                                                    {% if cell.graded %}
+                                                        <span class="supervisor-gradebook-score">{{ cell.score_display }}</span>
+                                                        <span class="supervisor-gradebook-percent">{{ cell.percentage_display }}</span>
+                                                        {% if cell.grading_method %}<span class="supervisor-gradebook-method">{{ cell.grading_method }}</span>{% endif %}
+                                                    {% else %}
+                                                        <span class="supervisor-gradebook-missing">—</span>
+                                                    {% endif %}
+                                                </td>
+                                            {% endfor %}
+                                            <td class="supervisor-gradebook-overall">
+                                                {{ student.overall_display }}
+                                                <small>{{ student.graded_count }}/{{ assignments|length }} graded</small>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endif %}
+                </section>
+            </div>
+        </main>
+    </body>
 </html>

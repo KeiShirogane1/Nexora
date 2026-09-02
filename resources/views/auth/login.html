@@ -1,94 +1,135 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nexora — Login</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <style>
-        .auth-brand { display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:18px; }
-        .auth-brand img { height:38px; width:auto; }
-        .auth-field { position:relative; text-align:left; margin:10px 0; }
-        .auth-field input { width:100% !important; box-sizing:border-box; }
-        .auth-field input[type="password"], .auth-field input[type="text"] { padding-right:46px !important; }
-        .auth-field .toggle-pass,
-        .login-container .toggle-pass {
-            position:absolute !important;
-            right:12px !important;
-            top:50% !important;
-            transform:translateY(-50%) !important;
-            width:32px !important;
-            min-width:32px !important;
-            max-width:32px !important;
-            height:32px !important;
-            min-height:32px !important;
-            padding:0 !important;
-            margin:0 !important;
-            border:0 !important;
-            border-radius:50% !important;
-            background:transparent !important;
-            color:#64748b !important;
-            box-shadow:none !important;
-            cursor:pointer !important;
-            display:flex !important;
-            align-items:center !important;
-            justify-content:center !important;
-            font-size:1rem !important;
-            line-height:1 !important;
-            z-index:2;
-        }
-        .auth-field .toggle-pass:hover,
-        .login-container .toggle-pass:hover { background:#f1f5f9 !important; color:#2563eb !important; }
-        .auth-error { margin:12px 0; padding:10px; background:#ffe5e5; color:#b00020; border-radius:6px; text-align:center; font-size:0.9rem; }
-        .auth-success { margin:12px 0; padding:10px; background:#e6f9ed; color:#0a6b2a; border-radius:6px; text-align:center; font-size:0.9rem; }
-    </style>
-</head>
-<body class="general-page">
-    <div class="login-container" style="width:400px;">
-        <div class="auth-brand">
-            <img src="{{ url_for('static', filename='images/Nexora Light.png') }}" alt="Nexora">
-            <strong style="font-size:1.1rem; color:#0f172a;">Nexora</strong>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Nexora — Login</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+        <style>
+            .auth-brand {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 10px;
+                margin-bottom: 18px;
+            }
+            .auth-brand img {
+                height: 38px;
+                width: auto;
+            }
+            .auth-field {
+                position: relative;
+                text-align: left;
+                margin: 10px 0;
+            }
+            .auth-field input {
+                width: 100% !important;
+                box-sizing: border-box;
+            }
+            .auth-field input[type="password"],
+            .auth-field input[type="text"] {
+                padding-right: 46px !important;
+            }
+            .auth-field .toggle-pass,
+            .login-container .toggle-pass {
+                position: absolute !important;
+                right: 12px !important;
+                top: 50% !important;
+                transform: translateY(-50%) !important;
+                width: 32px !important;
+                min-width: 32px !important;
+                max-width: 32px !important;
+                height: 32px !important;
+                min-height: 32px !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                border: 0 !important;
+                border-radius: 50% !important;
+                background: transparent !important;
+                color: #64748b !important;
+                box-shadow: none !important;
+                cursor: pointer !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                font-size: 1rem !important;
+                line-height: 1 !important;
+                z-index: 2;
+            }
+            .auth-field .toggle-pass:hover,
+            .login-container .toggle-pass:hover {
+                background: #f1f5f9 !important;
+                color: #2563eb !important;
+            }
+            .auth-error {
+                margin: 12px 0;
+                padding: 10px;
+                background: #ffe5e5;
+                color: #b00020;
+                border-radius: 6px;
+                text-align: center;
+                font-size: 0.9rem;
+            }
+            .auth-success {
+                margin: 12px 0;
+                padding: 10px;
+                background: #e6f9ed;
+                color: #0a6b2a;
+                border-radius: 6px;
+                text-align: center;
+                font-size: 0.9rem;
+            }
+        </style>
+    </head>
+    <body class="general-page">
+        <div class="login-container" style="width:400px;">
+            <div class="auth-brand">
+                <img src="{{ url_for('static', filename='images/Nexora Light.png') }}" alt="Nexora">
+                <strong style="font-size:1.1rem; color:#0f172a;">Nexora</strong>
+            </div>
+            <h2 style="margin-bottom:6px;">Welcome back</h2>
+            <p class="text-muted" style="font-size:0.9rem; margin-bottom:16px;">Sign in to your internship workspace</p>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="{{ 'auth-success' if category=='success' else 'auth-error' }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            {% if error %}
+                <div class="auth-error">{{ error }}</div>
+            {% endif %}
+            <form method="POST" novalidate>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="auth-field">
+                    <input type="text" name="username" placeholder="Username or email" value="{{ entered_username or '' }}" required autocomplete="username">
+                </div>
+                <div class="auth-field">
+                    <input type="password" id="loginPassword" name="password" placeholder="Password" required autocomplete="current-password">
+                    <button type="button" class="toggle-pass" onclick="togglePass('loginPassword', this)" aria-label="Show password" title="Show password">
+                        <span aria-hidden="true">👁</span>
+                    </button>
+                </div>
+                <p class="forgot-password-link" style="text-align:right; margin:8px 0 0; font-size:0.85rem;">
+                    <a href="{{ url_for('password.forgot_password') }}" style="color:#2563eb; text-decoration:none; font-weight:600;">Forgot Password?</a>
+                </p>
+                <button type="submit" style="width:100%; margin-top:16px;">Login</button>
+                <p class="signup-link">Don't have an account? <a href="{{ url_for('auth.signup') }}">Sign Up</a>
+                </p>
+            </form>
         </div>
-        <h2 style="margin-bottom:6px;">Welcome back</h2>
-        <p class="text-muted" style="font-size:0.9rem; margin-bottom:16px;">Sign in to your internship workspace</p>
-
-        {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-        {% for category, message in messages %}
-        <div class="{{ 'auth-success' if category=='success' else 'auth-error' }}">{{ message }}</div>
-        {% endfor %}
-        {% endif %}
-        {% endwith %}
-        {% if error %}
-        <div class="auth-error">{{ error }}</div>
-        {% endif %}
-
-        <form method="POST" novalidate>
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <div class="auth-field">
-                <input type="text" name="username" placeholder="Username or email" value="{{ entered_username or '' }}" required autocomplete="username">
-            </div>
-            <div class="auth-field">
-                <input type="password" id="loginPassword" name="password" placeholder="Password" required autocomplete="current-password">
-                <button type="button" class="toggle-pass" onclick="togglePass('loginPassword', this)" aria-label="Show password" title="Show password"><span aria-hidden="true">👁</span></button>
-            </div>
-            <p class="forgot-password-link" style="text-align:right; margin:8px 0 0; font-size:0.85rem;">
-                <a href="{{ url_for('password.forgot_password') }}" style="color:#2563eb; text-decoration:none; font-weight:600;">Forgot Password?</a>
-            </p>
-            <button type="submit" style="width:100%; margin-top:16px;">Login</button>
-            <p class="signup-link">Don't have an account? <a href="{{ url_for('auth.signup') }}">Sign Up</a></p>
-        </form>
-    </div>
-    <script>
-        function togglePass(id, btn){
-            const el=document.getElementById(id);
-            if(!el) return;
-            const visible = el.type === 'password';
-            el.type = visible ? 'text' : 'password';
-            btn.setAttribute('aria-label', visible ? 'Hide password' : 'Show password');
-            btn.setAttribute('title', visible ? 'Hide password' : 'Show password');
-            btn.innerHTML = visible ? '<span aria-hidden="true">🙈</span>' : '<span aria-hidden="true">👁</span>';
-        }
-    </script>
-</body>
+        <script>
+            function togglePass(id, btn) {
+                const el = document.getElementById(id);
+                if (!el) return;
+                const visible = el.type === "password";
+                el.type = visible ? "text" : "password";
+                btn.setAttribute("aria-label", visible ? "Hide password" : "Show password");
+                btn.setAttribute("title", visible ? "Hide password" : "Show password");
+                btn.innerHTML = visible
+                    ? '<span aria-hidden="true">🙈</span>'
+                    : '<span aria-hidden="true">👁</span>';
+            }
+        </script>
+    </body>
 </html>

@@ -1,640 +1,794 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <meta charset="UTF-8">
-    <title>Supervisor Management - Nexora</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
-</head>
-<body class="nexora-admin-body admin-supervisors-page">
+    <head>
+        <meta charset="UTF-8">
+        <title>Supervisor Management - Nexora</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
+    </head>
+    <body class="nexora-admin-body admin-supervisors-page">
 
-{% include 'components/admin_sidebar.html' %}
+        {% include 'components/admin_sidebar.html' %}
 
-<main class="admin-main nexora-app-main">
-<div class="nexora-page">
+        <main class="admin-main nexora-app-main">
+            <div class="nexora-page">
 
-<div class="compact-dashboard compact-dashboard-flush">
+                <div class="compact-dashboard compact-dashboard-flush">
 
     <!-- Page Header -->
-    <div class="supervisors-page-header">
-        <div>
-            <h1>Supervisor Management</h1>
-            <p>Manage supervisor accounts and information.</p>
-        </div>
-        <div class="header-actions">
-            <button type="button" class="btn-nexora-secondary" id="exportSupervisorsBtn" title="Export visible supervisors to CSV">
-                <span class="button-export-icon">⤓</span> Export
-            </button>
-            <button type="button" id="openSupervisorModalBtn" class="btn-nexora-primary btn-nexora-create">
-                <span class="btn-nexora-create-icon">＋</span> Add New Supervisor
-            </button>
-        </div>
-    </div>
+                    <div class="supervisors-page-header">
+                        <div>
+                            <h1>Supervisor Management</h1>
+                            <p>Manage supervisor accounts and information.</p>
+                        </div>
+                        <div class="header-actions">
+                            <button type="button" class="btn-nexora-secondary" id="exportSupervisorsBtn" title="Export visible supervisors to CSV">
+                                <span class="button-export-icon">⤓</span> Export
+                            </button>
+                            <button type="button" id="openSupervisorModalBtn" class="btn-nexora-primary btn-nexora-create">
+                                <span class="btn-nexora-create-icon">＋</span> Add New Supervisor
+                            </button>
+                        </div>
+                    </div>
 
     <!-- Summary Cards (computed via Jinja from existing data, no new backend variables) -->
-    {% set total_supervisors = supervisors|length %}
-    {% set pending_supervisors = supervisors|selectattr('role', 'equalto', 'pending_supervisor')|list|length %}
-    {% set active_supervisors = total_supervisors - pending_supervisors %}
-    <div class="summary-grid">
-        <div class="summary-card">
-            <div class="summary-icon total">👥</div>
-            <div class="summary-content">
-                <span class="summary-label">Total Supervisors</span>
-                <span class="summary-value">{{ total_supervisors }}</span>
-            </div>
-        </div>
-        <div class="summary-card">
-            <div class="summary-icon active">✅</div>
-            <div class="summary-content">
-                <span class="summary-label">Active Supervisors</span>
-                <span class="summary-value">{{ active_supervisors }}</span>
-            </div>
-        </div>
-        <div class="summary-card">
-            <div class="summary-icon pending">⏳</div>
-            <div class="summary-content">
-                <span class="summary-label">Pending Supervisors</span>
-                <span class="summary-value">{{ pending_supervisors }}</span>
-            </div>
-        </div>
-        <div class="summary-card">
-            <div class="summary-icon assigned">🎓</div>
-            <div class="summary-content">
-                <span class="summary-label">Assigned Students</span>
-                <span class="summary-value">{{ assignment_counts.values()|sum if assignment_counts else 0 }}</span>
-            </div>
-        </div>
-    </div>
+                    {% set total_supervisors = supervisors|length %}
+                    {% set pending_supervisors = supervisors|selectattr('role', 'equalto', 'pending_supervisor')|list|length %}
+                    {% set active_supervisors = total_supervisors - pending_supervisors %}
+                    <div class="summary-grid">
+                        <div class="summary-card">
+                            <div class="summary-icon total">👥</div>
+                            <div class="summary-content">
+                                <span class="summary-label">Total Supervisors</span>
+                                <span class="summary-value">{{ total_supervisors }}</span>
+                            </div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-icon active">✅</div>
+                            <div class="summary-content">
+                                <span class="summary-label">Active Supervisors</span>
+                                <span class="summary-value">{{ active_supervisors }}</span>
+                            </div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-icon pending">⏳</div>
+                            <div class="summary-content">
+                                <span class="summary-label">Pending Supervisors</span>
+                                <span class="summary-value">{{ pending_supervisors }}</span>
+                            </div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-icon assigned">🎓</div>
+                            <div class="summary-content">
+                                <span class="summary-label">Assigned Students</span>
+                                <span class="summary-value">{{ assignment_counts.values()|sum if assignment_counts else 0 }}</span>
+                            </div>
+                        </div>
+                    </div>
 
     <!-- Search / Filter Card -->
-    <div class="nexora-card filter-card">
-        <div class="filter-grid">
-            <div class="search-group">
-                <label for="supervisorSearch">Search</label>
-                <input type="text" id="supervisorSearch" class="form-control" placeholder="Search supervisors by name or email">
-            </div>
-            <div>
-                <label for="statusFilter">Status</label>
-                <select id="statusFilter" class="form-select">
-                    <option value="all">All Status</option>
-                    <option value="active">Active</option>
-                    <option value="pending">Pending</option>
-                    <option value="inactive">Inactive</option>
-                </select>
-            </div>
-            <div class="filter-actions-end">
-                <button type="button" class="btn-nexora-secondary filter-reset-button" id="resetFilters">Reset</button>
-            </div>
-        </div>
-    </div>
+                    <div class="nexora-card filter-card">
+                        <div class="filter-grid">
+                            <div class="search-group">
+                                <label for="supervisorSearch">Search</label>
+                                <input type="text" id="supervisorSearch" class="form-control" placeholder="Search supervisors by name or email">
+                            </div>
+                            <div>
+                                <label for="statusFilter">Status</label>
+                                <select id="statusFilter" class="form-select">
+                                    <option value="all">All Status</option>
+                                    <option value="active">Active</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="inactive">Inactive</option>
+                                </select>
+                            </div>
+                            <div class="filter-actions-end">
+                                <button type="button" class="btn-nexora-secondary filter-reset-button" id="resetFilters">Reset</button>
+                            </div>
+                        </div>
+                    </div>
 
     <!-- Bulk Selection Bar -->
-    <div class="bulk-bar" id="bulkBar">
-        <div class="bulk-left">
-            <input type="checkbox" id="selectAll" class="custom-checkbox">
-            <label for="selectAll" class="bulk-select-label">Select All</label>
-            <span class="bulk-divider">|</span>
-            <span id="selectedCount">0 selected</span>
-        </div>
-        <div class="bulk-actions">
-            <button type="button" class="btn-bulk-activate" id="bulkActivate" disabled>Activate</button>
-            <button type="button" class="btn-bulk-deactivate" id="bulkDeactivate" disabled>Deactivate</button>
-            <button type="button" class="btn-bulk-delete" id="bulkDelete" disabled>Delete</button>
-        </div>
-    </div>
+                    <div class="bulk-bar" id="bulkBar">
+                        <div class="bulk-left">
+                            <input type="checkbox" id="selectAll" class="custom-checkbox">
+                            <label for="selectAll" class="bulk-select-label">Select All</label>
+                            <span class="bulk-divider">|</span>
+                            <span id="selectedCount">0 selected</span>
+                        </div>
+                        <div class="bulk-actions">
+                            <button type="button" class="btn-bulk-activate" id="bulkActivate" disabled>Activate</button>
+                            <button type="button" class="btn-bulk-deactivate" id="bulkDeactivate" disabled>Deactivate</button>
+                            <button type="button" class="btn-bulk-delete" id="bulkDelete" disabled>Delete</button>
+                        </div>
+                    </div>
 
     <!-- Table Card -->
-    <div class="nexora-card table-card">
-        <div class="table-card-header">
-            <h3>Supervisor Directory</h3>
-            <span class="table-meta" id="supervisorCount">{{ supervisors|length }} supervisors</span>
-        </div>
-        <div class="table-responsive">
-            <table class="table nexora-table align-middle" id="supervisorsTable">
-                <thead>
-                    <tr>
-                        <th><input type="checkbox" id="headerCheckbox" class="custom-checkbox" title="Select all"></th>
-                        <th>#</th>
-                        <th>Supervisor</th>
-                        <th>Email</th>
-                        <th>Role / Status</th>
-                        <th>Assigned Students</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for supervisor in supervisors %}
-                    <tr data-username="{{ supervisor.username|lower }}" data-email="{{ (supervisor.email|lower) if supervisor.email else '' }}" data-status="{{ 'pending' if supervisor.role == 'pending_supervisor' else 'active' if supervisor.role == 'supervisor' else 'inactive' }}" data-id="{{ supervisor.id }}">
-                        <td><input type="checkbox" class="custom-checkbox row-checkbox" value="{{ supervisor.id }}"></td>
-                        <td class="text-muted table-index-cell">{{ loop.index }}</td>
-                        <td>
-                            <div class="supervisor-cell">
-                                <span class="avatar-sm">{{ supervisor.username[0]|upper }}</span>
-                                <span>{{ supervisor.username }}</span>
-                            </div>
-                        </td>
-                        <td>
-                            {% if supervisor.email %}
-                                <span class="table-email">{{ supervisor.email }}</span>
-                            {% else %}
-                                <span class="text-muted-placeholder">No email</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if supervisor.role == "pending_supervisor" %}
-                                <span class="status-badge status-pending"><span class="status-dot"></span> Pending</span>
-                            {% elif supervisor.status == "inactive" %}
-                                <span class="status-badge status-inactive"><span class="status-dot"></span> Inactive</span>
-                            {% else %}
-                                <span class="status-badge status-active"><span class="status-dot"></span> Active</span>
-                            {% endif %}
-                            <div class="supervisor-role-caption">{{ supervisor.role }}</div>
-                        </td>
-                        <td>{% set cnt = assignment_counts.get(supervisor.id, 0) %}{% if cnt %}<span class="badge bg-primary">{{ cnt }} student{{ 's' if cnt != 1 else '' }}</span>{% else %}<span class="text-muted-placeholder">—</span>{% endif %}</td>
-                        <td>
-                            <div class="actions-cell">
-                                <a href="{{ url_for('admin.supervisor_profile', supervisor_id=supervisor.id) }}" class="btn-view">View Profile</a>
-                                {% if supervisor.role == "pending_supervisor" %}
-                                    <form method="POST" action="{{ url_for('admin.approve_supervisor', user_id=supervisor.id) }}" style="display:inline;"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="btn-approve">Approve</button></form>
-                                    <form method="POST" action="{{ url_for('admin.reject_supervisor', user_id=supervisor.id) }}" style="display:inline;"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="btn-reject">Reject</button></form>
-                                {% endif %}
+                    <div class="nexora-card table-card">
+                        <div class="table-card-header">
+                            <h3>Supervisor Directory</h3>
+                            <span class="table-meta" id="supervisorCount">{{ supervisors|length }} supervisors</span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table nexora-table align-middle" id="supervisorsTable">
+                                <thead>
+                                    <tr>
+                                        <th><input type="checkbox" id="headerCheckbox" class="custom-checkbox" title="Select all"></th>
+                                        <th>#</th>
+                                        <th>Supervisor</th>
+                                        <th>Email</th>
+                                        <th>Role / Status</th>
+                                        <th>Assigned Students</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for supervisor in supervisors %}
+                                        <tr data-username="{{ supervisor.username|lower }}" data-email="{{ (supervisor.email|lower) if supervisor.email else '' }}" data-status="{{ 'pending' if supervisor.role == 'pending_supervisor' else 'active' if supervisor.role == 'supervisor' else 'inactive' }}" data-id="{{ supervisor.id }}">
+                                            <td><input type="checkbox" class="custom-checkbox row-checkbox" value="{{ supervisor.id }}"></td>
+                                            <td class="text-muted table-index-cell">{{ loop.index }}</td>
+                                            <td>
+                                                <div class="supervisor-cell">
+                                                    <span class="avatar-sm">{{ supervisor.username[0]|upper }}</span>
+                                                    <span>{{ supervisor.username }}</span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                {% if supervisor.email %}
+                                                    <span class="table-email">{{ supervisor.email }}</span>
+                                                {% else %}
+                                                    <span class="text-muted-placeholder">No email</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if supervisor.role == "pending_supervisor" %}
+                                                    <span class="status-badge status-pending"><span class="status-dot"></span> Pending</span>
+                                                {% elif supervisor.status == "inactive" %}
+                                                    <span class="status-badge status-inactive"><span class="status-dot"></span> Inactive</span>
+                                                {% else %}
+                                                    <span class="status-badge status-active"><span class="status-dot"></span> Active</span>
+                                                {% endif %}
+                                                <div class="supervisor-role-caption">{{ supervisor.role }}</div>
+                                            </td>
+                                            <td>{% set cnt = assignment_counts.get(supervisor.id, 0) %}{% if cnt %}<span class="badge bg-primary">{{ cnt }} student{{ 's' if cnt != 1 else '' }}</span>{% else %}<span class="text-muted-placeholder">—</span>{% endif %}</td>
+                                            <td>
+                                                <div class="actions-cell">
+                                                    <a href="{{ url_for('admin.supervisor_profile', supervisor_id=supervisor.id) }}" class="btn-view">View Profile</a>
+                                                    {% if supervisor.role == "pending_supervisor" %}
+                                                        <form method="POST" action="{{ url_for('admin.approve_supervisor', user_id=supervisor.id) }}" style="display:inline;"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="btn-approve">Approve</button></form>
+                                                        <form method="POST" action="{{ url_for('admin.reject_supervisor', user_id=supervisor.id) }}" style="display:inline;"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="btn-reject">Reject</button></form>
+                                                    {% endif %}
                                 <!-- Three-dot menu -->
-                                <div class="more-actions">
-                                    <button type="button" class="btn-more" onclick="toggleMenu('menu-{{ supervisor.id }}')" aria-label="More actions">⋮</button>
-                                    <div id="menu-{{ supervisor.id }}" class="dropdown-menu-nexora">
-                                        <a href="{{ url_for('admin.supervisor_profile', supervisor_id=supervisor.id) }}" class="dropdown-item-nexora">
-                                            <span>👁️</span> View Profile
-                                        </a>
-                                        <a href="{{ url_for('admin.edit_supervisor', supervisor_id=supervisor.id) }}" class="dropdown-item-nexora">
-                                            <span>✏️</span> Edit Supervisor
-                                        </a>
-                                        <form method="POST" action="{{ url_for('admin.deactivate_supervisor', supervisor_id=supervisor.id) }}" style="display:block;" onsubmit="return confirm('Deactivate this supervisor?')">
-                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                            <button type="submit" class="dropdown-item-nexora" style="width:100%;text-align:left;background:none;border:none;"><span>⏸️</span> Deactivate Supervisor</button>
-                                        </form>
-                                        <div class="dropdown-divider"></div>
-                                        {% if supervisor.role == "pending_supervisor" %}
-                                            <form method="POST" action="{{ url_for('admin.approve_supervisor', user_id=supervisor.id) }}" style="display:block;"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="dropdown-item-nexora dropdown-item-approve" style="width:100%;text-align:left;background:none;border:none;"><span>✅</span> Approve</button></form>
-                                            <form method="POST" action="{{ url_for('admin.reject_supervisor', user_id=supervisor.id) }}" style="display:block;"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="dropdown-item-nexora danger" style="width:100%;text-align:left;background:none;border:none;"><span>🚫</span> Reject</button></form>
-                                            <div class="dropdown-divider"></div>
-                                        {% endif %}
-                                        <a href="javascript:void(0)" class="dropdown-item-nexora danger" onclick="confirmDelete('{{ supervisor.id }}'); return false;">
-                                            <span>🗑️</span> Delete Supervisor
-                                        </a>
-                                    </div>
-                                </div>
+                                                    <div class="more-actions">
+                                                        <button type="button" class="btn-more" onclick="toggleMenu('menu-{{ supervisor.id }}')" aria-label="More actions">⋮</button>
+                                                        <div id="menu-{{ supervisor.id }}" class="dropdown-menu-nexora">
+                                                            <a href="{{ url_for('admin.supervisor_profile', supervisor_id=supervisor.id) }}" class="dropdown-item-nexora">
+                                                                <span>👁️</span> View Profile
+                                                            </a>
+                                                            <a href="{{ url_for('admin.edit_supervisor', supervisor_id=supervisor.id) }}" class="dropdown-item-nexora">
+                                                                <span>✏️</span> Edit Supervisor
+                                                            </a>
+                                                            <form method="POST" action="{{ url_for('admin.deactivate_supervisor', supervisor_id=supervisor.id) }}" style="display:block;" onsubmit="return confirm('Deactivate this supervisor?')">
+                                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                                <button type="submit" class="dropdown-item-nexora" style="width:100%;text-align:left;background:none;border:none;"><span>⏸️</span> Deactivate Supervisor</button>
+                                                            </form>
+                                                            <div class="dropdown-divider"></div>
+                                                            {% if supervisor.role == "pending_supervisor" %}
+                                                                <form method="POST" action="{{ url_for('admin.approve_supervisor', user_id=supervisor.id) }}" style="display:block;"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="dropdown-item-nexora dropdown-item-approve" style="width:100%;text-align:left;background:none;border:none;"><span>✅</span> Approve</button></form>
+                                                                <form method="POST" action="{{ url_for('admin.reject_supervisor', user_id=supervisor.id) }}" style="display:block;"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="dropdown-item-nexora danger" style="width:100%;text-align:left;background:none;border:none;"><span>🚫</span> Reject</button></form>
+                                                                <div class="dropdown-divider"></div>
+                                                            {% endif %}
+                                                            <a href="javascript:void(0)" class="dropdown-item-nexora danger" onclick="confirmDelete('{{ supervisor.id }}'); return false;">
+                                                                <span>🗑️</span> Delete Supervisor
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% if not supervisors %}
+                            <div class="empty-state">
+                                <div class="icon">👔</div>
+                                <div class="empty-state-title">No supervisors found</div>
+                                <div class="empty-state-copy">Try adjusting your search or filter.</div>
                             </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% if not supervisors %}
-        <div class="empty-state">
-            <div class="icon">👔</div>
-            <div class="empty-state-title">No supervisors found</div>
-            <div class="empty-state-copy">Try adjusting your search or filter.</div>
-        </div>
-        {% endif %}
-    </div>
+                        {% endif %}
+                    </div>
 
-    <a href="{{ url_for('admin.admin_users') }}" class="btn-nexora-secondary mt-2 back-to-users-link">
-        ← Back to Users
-    </a>
+                    <a href="{{ url_for('admin.admin_users') }}" class="btn-nexora-secondary mt-2 back-to-users-link">
+                        ← Back to Users
+                    </a>
 
-</div>
+                </div>
 
-</div>
-</main>
+            </div>
+        </main>
 
 <!-- Create Supervisor Modal -->
-<div id="supervisorModal" class="nexora-modal-overlay" aria-hidden="true">
-    <div class="nexora-modal" role="dialog" aria-modal="true" aria-labelledby="supervisorModalTitle">
-        <div class="nexora-modal-header">
-            <h2 id="supervisorModalTitle">Create Supervisor Account</h2>
-            <p>Create a new supervisor account. The supervisor will be added directly to the system.</p>
-            <button type="button" class="nexora-modal-close" id="closeSupervisorModal" aria-label="Close">×</button>
+        <div id="supervisorModal" class="nexora-modal-overlay" aria-hidden="true">
+            <div class="nexora-modal" role="dialog" aria-modal="true" aria-labelledby="supervisorModalTitle">
+                <div class="nexora-modal-header">
+                    <h2 id="supervisorModalTitle">Create Supervisor Account</h2>
+                    <p>Create a new supervisor account. The supervisor will be added directly to the system.</p>
+                    <button type="button" class="nexora-modal-close" id="closeSupervisorModal" aria-label="Close">×</button>
+                </div>
+                <form id="createSupervisorForm" novalidate>
+                    <div class="nexora-modal-body">
+                        <div id="supervisorFormGeneralError" class="field-error field-error-general"></div>
+                        <div class="nexora-form-group">
+                            <label for="supervisorFullName">Full Name <span class="req">*</span></label>
+                            <input type="text" id="supervisorFullName" name="full_name" class="nexora-form-control" placeholder="Maria Santos" required>
+                            <span class="field-error" id="err-supervisorFullName"></span>
+                        </div>
+                        <div class="nexora-form-group">
+                            <label for="supervisorUsername">Username <span class="req">*</span></label>
+                            <input type="text" id="supervisorUsername" name="username" class="nexora-form-control" placeholder="mariasantos" required>
+                            <span class="field-error" id="err-supervisorUsername"></span>
+                        </div>
+                        <div class="nexora-form-group">
+                            <label for="supervisorEmail">Email Address <span class="req">*</span></label>
+                            <input type="email" id="supervisorEmail" name="email" class="nexora-form-control" placeholder="maria@example.com" required>
+                            <span class="field-error" id="err-supervisorEmail"></span>
+                        </div>
+                        <div class="nexora-form-group">
+                            <label for="supervisorPassword">Password <span class="req">*</span></label>
+                            <div class="password-wrap">
+                                <input type="password" id="supervisorPassword" name="password" class="nexora-form-control" placeholder="Minimum 8 characters" required>
+                                <button type="button" class="password-toggle" data-target="supervisorPassword" aria-label="Toggle password">👁️</button>
+                            </div>
+                            <span class="field-error" id="err-supervisorPassword"></span>
+                        </div>
+                        <div class="nexora-form-group">
+                            <label for="supervisorConfirmPassword">Confirm Password <span class="req">*</span></label>
+                            <div class="password-wrap">
+                                <input type="password" id="supervisorConfirmPassword" name="confirm_password" class="nexora-form-control" placeholder="Repeat password" required>
+                                <button type="button" class="password-toggle" data-target="supervisorConfirmPassword" aria-label="Toggle password">👁️</button>
+                            </div>
+                            <span class="field-error" id="err-supervisorConfirmPassword"></span>
+                        </div>
+                        <div class="nexora-info-notice">
+                            The supervisor account will be created and added to the supervisor directory immediately. No approval required.
+                        </div>
+                    </div>
+                    <div class="nexora-modal-footer">
+                        <button type="button" class="btn-nexora-secondary" id="cancelSupervisorBtn">Cancel</button>
+                        <button type="submit" class="btn-nexora-primary" id="submitSupervisorBtn">Create Supervisor</button>
+                    </div>
+                </form>
+            </div>
         </div>
-        <form id="createSupervisorForm" novalidate>
-            <div class="nexora-modal-body">
-                <div id="supervisorFormGeneralError" class="field-error field-error-general"></div>
-                <div class="nexora-form-group">
-                    <label for="supervisorFullName">Full Name <span class="req">*</span></label>
-                    <input type="text" id="supervisorFullName" name="full_name" class="nexora-form-control" placeholder="Maria Santos" required>
-                    <span class="field-error" id="err-supervisorFullName"></span>
-                </div>
-                <div class="nexora-form-group">
-                    <label for="supervisorUsername">Username <span class="req">*</span></label>
-                    <input type="text" id="supervisorUsername" name="username" class="nexora-form-control" placeholder="mariasantos" required>
-                    <span class="field-error" id="err-supervisorUsername"></span>
-                </div>
-                <div class="nexora-form-group">
-                    <label for="supervisorEmail">Email Address <span class="req">*</span></label>
-                    <input type="email" id="supervisorEmail" name="email" class="nexora-form-control" placeholder="maria@example.com" required>
-                    <span class="field-error" id="err-supervisorEmail"></span>
-                </div>
-                <div class="nexora-form-group">
-                    <label for="supervisorPassword">Password <span class="req">*</span></label>
-                    <div class="password-wrap">
-                        <input type="password" id="supervisorPassword" name="password" class="nexora-form-control" placeholder="Minimum 8 characters" required>
-                        <button type="button" class="password-toggle" data-target="supervisorPassword" aria-label="Toggle password">👁️</button>
-                    </div>
-                    <span class="field-error" id="err-supervisorPassword"></span>
-                </div>
-                <div class="nexora-form-group">
-                    <label for="supervisorConfirmPassword">Confirm Password <span class="req">*</span></label>
-                    <div class="password-wrap">
-                        <input type="password" id="supervisorConfirmPassword" name="confirm_password" class="nexora-form-control" placeholder="Repeat password" required>
-                        <button type="button" class="password-toggle" data-target="supervisorConfirmPassword" aria-label="Toggle password">👁️</button>
-                    </div>
-                    <span class="field-error" id="err-supervisorConfirmPassword"></span>
-                </div>
-                <div class="nexora-info-notice">
-                    The supervisor account will be created and added to the supervisor directory immediately. No approval required.
-                </div>
-            </div>
-            <div class="nexora-modal-footer">
-                <button type="button" class="btn-nexora-secondary" id="cancelSupervisorBtn">Cancel</button>
-                <button type="submit" class="btn-nexora-primary" id="submitSupervisorBtn">Create Supervisor</button>
-            </div>
-        </form>
-    </div>
-</div>
 
-<script>
-async function confirmDelete(id){
-    if(!confirm("Soft-delete this supervisor? This will set status to inactive/rejected (preserves history).")) return;
-    try {
-        const resp = await fetch('{{ url_for("admin.bulk_action") }}', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}'},
-            body: JSON.stringify({ids: [parseInt(id)], action: 'delete'})
-        });
-        const data = await resp.json();
-        if(data.success){
-            if(window.showToast) showToast(data.updated_count + " supervisor(s) deleted (soft).");
-            location.reload();
-        } else {
-            if(window.showToast) showToast("Error: " + (data.error || "failed"));
-        }
-    } catch(e){
-        if(window.showToast) showToast("Network error", "error");
-    }
-}
-function toggleMenu(id){
-    // Close others
-    document.querySelectorAll('.dropdown-menu-nexora').forEach(el => {
-        if(el.id !== id) el.classList.remove('show');
-    });
-    const el = document.getElementById(id);
-    if(el) el.classList.toggle('show');
-}
-// Close menus when clicking outside
-document.addEventListener('click', function(e){
-    if(!e.target.closest('.more-actions')){
-        document.querySelectorAll('.dropdown-menu-nexora').forEach(el => el.classList.remove('show'));
-    }
-});
-</script>
-<script>
-(function() {
-    const searchInput = document.getElementById('supervisorSearch');
-    const statusFilter = document.getElementById('statusFilter');
-    const resetBtn = document.getElementById('resetFilters');
-    const table = document.getElementById('supervisorsTable');
-    const countEl = document.getElementById('supervisorCount');
-    const rows = Array.from(table.querySelectorAll('tbody tr[data-username]'));
-    const selectAll = document.getElementById('selectAll');
-    const headerCheckbox = document.getElementById('headerCheckbox');
-    const selectedCountEl = document.getElementById('selectedCount');
-    const bulkActivate = document.getElementById('bulkActivate');
-    const bulkDeactivate = document.getElementById('bulkDeactivate');
-    const bulkDelete = document.getElementById('bulkDelete');
-    const rowCheckboxes = Array.from(document.querySelectorAll('.row-checkbox'));
-
-    function updateBulkUI(){
-        const checked = rowCheckboxes.filter(cb => cb.checked && cb.closest('tr').style.display !== 'none').length;
-        if(selectedCountEl) selectedCountEl.textContent = checked + ' selected';
-        const hasSelection = checked > 0;
-        // Bulk buttons remain disabled (no backend), but visually enable to show intent, still no submit
-        // Keep disabled to prevent fake requests, but update text
-        if(bulkActivate) bulkActivate.disabled = !hasSelection;
-        if(bulkDeactivate) bulkDeactivate.disabled = !hasSelection;
-        if(bulkDelete) bulkDelete.disabled = !hasSelection;
-        // Keep header checkboxes in sync
-        const allVisibleChecked = rows.filter(r => r.style.display !== 'none').every(r => r.querySelector('.row-checkbox')?.checked);
-        if(selectAll) selectAll.checked = allVisibleChecked && rows.filter(r => r.style.display !== 'none').length > 0;
-        if(headerCheckbox) headerCheckbox.checked = selectAll ? selectAll.checked : false;
-    }
-
-    function applyFilters() {
-        const q = (searchInput.value || '').toLowerCase().trim();
-        const status = statusFilter.value;
-        let visible = 0;
-        rows.forEach(row => {
-            const username = row.getAttribute('data-username') || '';
-            const email = row.getAttribute('data-email') || '';
-            const rowStatus = row.getAttribute('data-status') || '';
-            let show = true;
-            if (q && !(username.includes(q) || email.includes(q))) show = false;
-            if (status !== 'all' && rowStatus !== status) show = false;
-            row.style.display = show ? '' : 'none';
-            // Uncheck hidden rows
-            if(!show){
-                const cb = row.querySelector('.row-checkbox');
-                if(cb) cb.checked = false;
-            }
-            if (show) visible++;
-        });
-        if (countEl) countEl.textContent = visible + ' supervisors';
-        updateBulkUI();
-    }
-
-    if (searchInput) searchInput.addEventListener('input', applyFilters);
-    if (statusFilter) statusFilter.addEventListener('change', applyFilters);
-    if (resetBtn) resetBtn.addEventListener('click', function() {
-        searchInput.value = '';
-        statusFilter.value = 'all';
-        applyFilters();
-    });
-
-    // Select All handlers
-    function handleSelectAll(checked){
-        rows.forEach(row => {
-            if(row.style.display !== 'none'){
-                const cb = row.querySelector('.row-checkbox');
-                if(cb) cb.checked = checked;
-            }
-        });
-        updateBulkUI();
-    }
-    if(selectAll) selectAll.addEventListener('change', function(){ handleSelectAll(this.checked); });
-    if(headerCheckbox) headerCheckbox.addEventListener('change', function(){ handleSelectAll(this.checked); });
-    rowCheckboxes.forEach(cb => cb.addEventListener('change', updateBulkUI));
-
-    // Bulk button handlers - client-side only, no backend submit
-        if(bulkActivate) bulkActivate.addEventListener('click', async function(){
-        const ids = rowCheckboxes.filter(cb => cb.checked).map(cb => cb.value);
-        if(!ids.length) return;
-        bulkActivate.disabled = true;
-        bulkActivate.textContent = 'Processing...';
-        try {
-            const resp = await fetch('{{ url_for("admin.bulk_action") }}', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}'},
-                body: JSON.stringify({ids: ids, action: 'activate'})
-            });
-            const data = await resp.json();
-            if(data.success){
-                if(window.showToast) showToast(data.updated_count + " supervisor(s) activated.");
-                location.reload();
-            } else {
-                if(window.showToast) showToast("Error: " + (data.error || "failed"));
-                bulkActivate.disabled = false;
-                bulkActivate.textContent = 'Activate';
-            }
-        } catch(e){
-            if(window.showToast) showToast("Network error", "error");
-            bulkActivate.disabled = false;
-            bulkActivate.textContent = 'Activate';
-        }
-    });
-    if(bulkDeactivate) bulkDeactivate.addEventListener('click', async function(){
-        const ids = rowCheckboxes.filter(cb => cb.checked).map(cb => cb.value);
-        if(!ids.length) return;
-        if(!confirm("Deactivate "+ids.length+" supervisor(s)? This will set status to inactive (soft).")){
-            return;
-        }
-        bulkDeactivate.disabled = true;
-        bulkDeactivate.textContent = 'Processing...';
-        try {
-            const resp = await fetch('{{ url_for("admin.bulk_action") }}', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}'},
-                body: JSON.stringify({ids: ids, action: 'deactivate'})
-            });
-            const data = await resp.json();
-            if(data.success){
-                if(window.showToast) showToast(data.updated_count + " supervisor(s) deactivated.");
-                location.reload();
-            } else {
-                if(window.showToast) showToast("Error: " + (data.error || "failed"));
-                bulkDeactivate.disabled = false;
-                bulkDeactivate.textContent = 'Deactivate';
-            }
-        } catch(e){
-            if(window.showToast) showToast("Network error", "error");
-            bulkDeactivate.disabled = false;
-            bulkDeactivate.textContent = 'Deactivate';
-        }
-    });
-    if(bulkDelete) bulkDelete.addEventListener('click', async function(){
-        const ids = rowCheckboxes.filter(cb => cb.checked).map(cb => cb.value);
-        if(!ids.length) return;
-        if(!confirm("Are you sure you want to delete "+ids.length+" supervisor(s)? This will soft-deactivate (status inactive / rejected) and preserve history.")){
-            return;
-        }
-        bulkDelete.disabled = true;
-        bulkDelete.textContent = 'Processing...';
-        try {
-            const resp = await fetch('{{ url_for("admin.bulk_action") }}', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}'},
-                body: JSON.stringify({ids: ids, action: 'delete'})
-            });
-            const data = await resp.json();
-            if(data.success){
-                if(window.showToast) showToast(data.updated_count + " supervisor(s) deleted (soft).");
-                location.reload();
-            } else {
-                if(window.showToast) showToast("Error: " + (data.error || "failed"));
-                bulkDelete.disabled = false;
-                bulkDelete.textContent = 'Delete';
-            }
-        } catch(e){
-            if(window.showToast) showToast("Network error", "error");
-            bulkDelete.disabled = false;
-            bulkDelete.textContent = 'Delete';
-        }
-    });
-
-    const exportBtn = document.getElementById('exportSupervisorsBtn');
-    if (exportBtn) exportBtn.addEventListener('click', function() {
-        const headers = ['#','Supervisor','Email','Role','Assigned Students'];
-        const lines = [headers.join(',')];
-        rows.forEach(row => {
-            if (row.style.display === 'none') return;
-            const cells = row.querySelectorAll('td');
-            if (cells.length < 7) return;
-            const idx = cells[1].innerText.trim();
-            const name = cells[2].innerText.trim().replace(/\n/g,' ').replace(/,/g,' ');
-            const email = cells[3].innerText.trim();
-            const role = cells[4].innerText.trim().replace(/\n/g,' ').replace(/,/g,' ');
-            const assigned = cells[5].innerText.trim();
-            lines.push([idx, '"'+name+'"', email, '"'+role+'"', assigned].join(','));
-        });
-        const blob = new Blob([lines.join('\n')], {type: 'text/csv'});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'nexora-supervisors.csv';
-        a.click();
-        URL.revokeObjectURL(url);
-    });
-
-    // Initial
-    updateBulkUI();
-})();
-</script>
-<script>
-// Supervisor Modal Logic
-(function(){
-    const modal = document.getElementById('supervisorModal');
-    const openBtn = document.getElementById('openSupervisorModalBtn');
-    const closeBtn = document.getElementById('closeSupervisorModal');
-    const cancelBtn = document.getElementById('cancelSupervisorBtn');
-    const form = document.getElementById('createSupervisorForm');
-    const submitBtn = document.getElementById('submitSupervisorBtn');
-    const generalError = document.getElementById('supervisorFormGeneralError');
-
-    function showError(field, message){
-        const input = document.getElementById(field);
-        const errEl = document.getElementById('err-' + field);
-        if(input) input.classList.add('error');
-        if(errEl){
-            errEl.textContent = message || '';
-            errEl.classList.toggle('show', !!message);
-        }
-    }
-    function clearErrors(){
-        if(!form) return;
-        form.querySelectorAll('.nexora-form-control').forEach(el => el.classList.remove('error'));
-        form.querySelectorAll('.field-error').forEach(el => { el.textContent = ''; el.classList.remove('show'); });
-        if(generalError){ generalError.textContent = ''; generalError.style.display = 'none'; }
-    }
-    function openModal(){
-        clearErrors();
-        if(form) form.reset();
-        modal.classList.add('open');
-        modal.setAttribute('aria-hidden', 'false');
-        document.body.style.overflow = 'hidden';
-        setTimeout(() => {
-            const el = document.getElementById('supervisorFullName');
-            if(el) el.focus();
-        }, 50);
-    }
-    function closeModal(){
-        modal.classList.remove('open');
-        modal.setAttribute('aria-hidden', 'true');
-        document.body.style.overflow = '';
-    }
-
-    if(openBtn) openBtn.addEventListener('click', openModal);
-    if(closeBtn) closeBtn.addEventListener('click', closeModal);
-    if(cancelBtn) cancelBtn.addEventListener('click', closeModal);
-    if(modal) modal.addEventListener('click', function(e){
-        if(e.target === modal) closeModal();
-    });
-    document.addEventListener('keydown', function(e){
-        if(e.key === 'Escape' && modal && modal.classList.contains('open')) closeModal();
-    });
-
-    document.querySelectorAll('#supervisorModal .password-toggle').forEach(btn => {
-        btn.addEventListener('click', function(){
-            const targetId = this.getAttribute('data-target');
-            const input = document.getElementById(targetId);
-            if(input){
-                input.type = input.type === 'password' ? 'text' : 'password';
-                this.textContent = input.type === 'password' ? '👁️' : '🙈';
-            }
-        });
-    });
-
-    if(form) form.addEventListener('submit', async function(e){
-        e.preventDefault();
-        clearErrors();
-        let hasError = false;
-
-        const fullName = document.getElementById('supervisorFullName').value.trim();
-        const username = document.getElementById('supervisorUsername').value.trim();
-        const email = document.getElementById('supervisorEmail').value.trim();
-        const password = document.getElementById('supervisorPassword').value;
-        const confirmPassword = document.getElementById('supervisorConfirmPassword').value;
-
-        if(!fullName){ showError('supervisorFullName','Full name is required.'); hasError = true; }
-        if(!username){ showError('supervisorUsername','Username is required.'); hasError = true; }
-        else if(username.length < 3){ showError('supervisorUsername','At least 3 characters.'); hasError = true; }
-        if(!email){ showError('supervisorEmail','Email is required.'); hasError = true; }
-        else if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ showError('supervisorEmail','Invalid email.'); hasError = true; }
-        if(!password){ showError('supervisorPassword','Password is required.'); hasError = true; }
-        else if(password.length < 8){ showError('supervisorPassword','At least 8 characters.'); hasError = true; }
-        if(password !== confirmPassword){ showError('supervisorConfirmPassword','Passwords do not match.'); hasError = true; }
-
-        if(hasError) return;
-
-        const originalText = submitBtn.textContent;
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Creating...';
-
-        const payload = {
-            full_name: fullName,
-            username: username,
-            email: email,
-            password: password,
-            confirm_password: confirmPassword
-        };
-
-        try {
-            const resp = await fetch('{{ url_for("admin.create_supervisor") }}', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': '{{ csrf_token() }}' },
-                body: JSON.stringify(payload)
-            });
-            const data = await resp.json();
-            if(resp.ok && data.success){
-                closeModal();
-                if(window.showToast) showToast(data.message || 'Supervisor created successfully.');
-                location.reload();
-            } else {
-                const errors = data.errors || {};
-                if(errors._general){
-                    generalError.textContent = errors._general;
-                    generalError.style.display = 'block';
+        <script>
+            async function confirmDelete(id) {
+                if (
+                    !confirm(
+                        "Soft-delete this supervisor? This will set status to inactive/rejected (preserves history).",
+                    )
+                )
+                    return;
+                try {
+                    const resp = await fetch('{{ url_for("admin.bulk_action") }}', {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRFToken": "{{ csrf_token() }}",
+                        },
+                        body: JSON.stringify({ ids: [parseInt(id)], action: "delete" }),
+                    });
+                    const data = await resp.json();
+                    if (data.success) {
+                        if (window.showToast)
+                            showToast(
+                                data.updated_count + " supervisor(s) deleted (soft).",
+                            );
+                        location.reload();
+                    } else {
+                        if (window.showToast)
+                            showToast("Error: " + (data.error || "failed"));
+                    }
+                } catch (e) {
+                    if (window.showToast) showToast("Network error", "error");
                 }
-                for(const [field, msg] of Object.entries(errors)){
-                    const fieldMap = {
-                        full_name: 'supervisorFullName',
-                        username: 'supervisorUsername',
-                        email: 'supervisorEmail',
-                        password: 'supervisorPassword',
-                        confirm_password: 'supervisorConfirmPassword'
-                    };
-                    const inputId = fieldMap[field] || field;
-                    showError(inputId, msg);
-                    if(field === '_general' && generalError){
-                        generalError.textContent = msg;
-                        generalError.style.display = 'block';
+            }
+            function toggleMenu(id) {
+                // Close others
+                document.querySelectorAll(".dropdown-menu-nexora").forEach((el) => {
+                    if (el.id !== id) el.classList.remove("show");
+                });
+                const el = document.getElementById(id);
+                if (el) el.classList.toggle("show");
+            }
+            // Close menus when clicking outside
+            document.addEventListener("click", function (e) {
+                if (!e.target.closest(".more-actions")) {
+                    document
+                        .querySelectorAll(".dropdown-menu-nexora")
+                        .forEach((el) => el.classList.remove("show"));
+                }
+            });
+        </script>
+        <script>
+            (function () {
+                const searchInput = document.getElementById("supervisorSearch");
+                const statusFilter = document.getElementById("statusFilter");
+                const resetBtn = document.getElementById("resetFilters");
+                const table = document.getElementById("supervisorsTable");
+                const countEl = document.getElementById("supervisorCount");
+                const rows = Array.from(table.querySelectorAll("tbody tr[data-username]"));
+                const selectAll = document.getElementById("selectAll");
+                const headerCheckbox = document.getElementById("headerCheckbox");
+                const selectedCountEl = document.getElementById("selectedCount");
+                const bulkActivate = document.getElementById("bulkActivate");
+                const bulkDeactivate = document.getElementById("bulkDeactivate");
+                const bulkDelete = document.getElementById("bulkDelete");
+                const rowCheckboxes = Array.from(
+                    document.querySelectorAll(".row-checkbox"),
+                );
+
+                function updateBulkUI() {
+                    const checked = rowCheckboxes.filter(
+                        (cb) => cb.checked && cb.closest("tr").style.display !== "none",
+                    ).length;
+                    if (selectedCountEl)
+                        selectedCountEl.textContent = checked + " selected";
+                    const hasSelection = checked > 0;
+                    // Bulk buttons remain disabled (no backend), but visually enable to show intent, still no submit
+                    // Keep disabled to prevent fake requests, but update text
+                    if (bulkActivate) bulkActivate.disabled = !hasSelection;
+                    if (bulkDeactivate) bulkDeactivate.disabled = !hasSelection;
+                    if (bulkDelete) bulkDelete.disabled = !hasSelection;
+                    // Keep header checkboxes in sync
+                    const allVisibleChecked = rows
+                        .filter((r) => r.style.display !== "none")
+                        .every((r) => r.querySelector(".row-checkbox")?.checked);
+                    if (selectAll)
+                        selectAll.checked =
+                            allVisibleChecked &&
+                            rows.filter((r) => r.style.display !== "none").length > 0;
+                    if (headerCheckbox)
+                        headerCheckbox.checked = selectAll ? selectAll.checked : false;
+                }
+
+                function applyFilters() {
+                    const q = (searchInput.value || "").toLowerCase().trim();
+                    const status = statusFilter.value;
+                    let visible = 0;
+                    rows.forEach((row) => {
+                        const username = row.getAttribute("data-username") || "";
+                        const email = row.getAttribute("data-email") || "";
+                        const rowStatus = row.getAttribute("data-status") || "";
+                        let show = true;
+                        if (q && !(username.includes(q) || email.includes(q))) show = false;
+                        if (status !== "all" && rowStatus !== status) show = false;
+                        row.style.display = show ? "" : "none";
+                        // Uncheck hidden rows
+                        if (!show) {
+                            const cb = row.querySelector(".row-checkbox");
+                            if (cb) cb.checked = false;
+                        }
+                        if (show) visible++;
+                    });
+                    if (countEl) countEl.textContent = visible + " supervisors";
+                    updateBulkUI();
+                }
+
+                if (searchInput) searchInput.addEventListener("input", applyFilters);
+                if (statusFilter) statusFilter.addEventListener("change", applyFilters);
+                if (resetBtn)
+                    resetBtn.addEventListener("click", function () {
+                        searchInput.value = "";
+                        statusFilter.value = "all";
+                        applyFilters();
+                    });
+
+                // Select All handlers
+                function handleSelectAll(checked) {
+                    rows.forEach((row) => {
+                        if (row.style.display !== "none") {
+                            const cb = row.querySelector(".row-checkbox");
+                            if (cb) cb.checked = checked;
+                        }
+                    });
+                    updateBulkUI();
+                }
+                if (selectAll)
+                    selectAll.addEventListener("change", function () {
+                        handleSelectAll(this.checked);
+                    });
+                if (headerCheckbox)
+                    headerCheckbox.addEventListener("change", function () {
+                        handleSelectAll(this.checked);
+                    });
+                rowCheckboxes.forEach((cb) => cb.addEventListener("change", updateBulkUI));
+
+                // Bulk button handlers - client-side only, no backend submit
+                if (bulkActivate)
+                    bulkActivate.addEventListener("click", async function () {
+                        const ids = rowCheckboxes
+                            .filter((cb) => cb.checked)
+                            .map((cb) => cb.value);
+                        if (!ids.length) return;
+                        bulkActivate.disabled = true;
+                        bulkActivate.textContent = "Processing...";
+                        try {
+                            const resp = await fetch('{{ url_for("admin.bulk_action") }}', {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "X-CSRFToken": "{{ csrf_token() }}",
+                                },
+                                body: JSON.stringify({ ids: ids, action: "activate" }),
+                            });
+                            const data = await resp.json();
+                            if (data.success) {
+                                if (window.showToast)
+                                    showToast(
+                                        data.updated_count + " supervisor(s) activated.",
+                                    );
+                                location.reload();
+                            } else {
+                                if (window.showToast)
+                                    showToast("Error: " + (data.error || "failed"));
+                                bulkActivate.disabled = false;
+                                bulkActivate.textContent = "Activate";
+                            }
+                        } catch (e) {
+                            if (window.showToast) showToast("Network error", "error");
+                            bulkActivate.disabled = false;
+                            bulkActivate.textContent = "Activate";
+                        }
+                    });
+                if (bulkDeactivate)
+                    bulkDeactivate.addEventListener("click", async function () {
+                        const ids = rowCheckboxes
+                            .filter((cb) => cb.checked)
+                            .map((cb) => cb.value);
+                        if (!ids.length) return;
+                        if (
+                            !confirm(
+                                "Deactivate " +
+                                    ids.length +
+                                    " supervisor(s)? This will set status to inactive (soft).",
+                            )
+                        ) {
+                            return;
+                        }
+                        bulkDeactivate.disabled = true;
+                        bulkDeactivate.textContent = "Processing...";
+                        try {
+                            const resp = await fetch('{{ url_for("admin.bulk_action") }}', {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "X-CSRFToken": "{{ csrf_token() }}",
+                                },
+                                body: JSON.stringify({ ids: ids, action: "deactivate" }),
+                            });
+                            const data = await resp.json();
+                            if (data.success) {
+                                if (window.showToast)
+                                    showToast(
+                                        data.updated_count + " supervisor(s) deactivated.",
+                                    );
+                                location.reload();
+                            } else {
+                                if (window.showToast)
+                                    showToast("Error: " + (data.error || "failed"));
+                                bulkDeactivate.disabled = false;
+                                bulkDeactivate.textContent = "Deactivate";
+                            }
+                        } catch (e) {
+                            if (window.showToast) showToast("Network error", "error");
+                            bulkDeactivate.disabled = false;
+                            bulkDeactivate.textContent = "Deactivate";
+                        }
+                    });
+                if (bulkDelete)
+                    bulkDelete.addEventListener("click", async function () {
+                        const ids = rowCheckboxes
+                            .filter((cb) => cb.checked)
+                            .map((cb) => cb.value);
+                        if (!ids.length) return;
+                        if (
+                            !confirm(
+                                "Are you sure you want to delete " +
+                                    ids.length +
+                                    " supervisor(s)? This will soft-deactivate (status inactive / rejected) and preserve history.",
+                            )
+                        ) {
+                            return;
+                        }
+                        bulkDelete.disabled = true;
+                        bulkDelete.textContent = "Processing...";
+                        try {
+                            const resp = await fetch('{{ url_for("admin.bulk_action") }}', {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "X-CSRFToken": "{{ csrf_token() }}",
+                                },
+                                body: JSON.stringify({ ids: ids, action: "delete" }),
+                            });
+                            const data = await resp.json();
+                            if (data.success) {
+                                if (window.showToast)
+                                    showToast(
+                                        data.updated_count +
+                                            " supervisor(s) deleted (soft).",
+                                    );
+                                location.reload();
+                            } else {
+                                if (window.showToast)
+                                    showToast("Error: " + (data.error || "failed"));
+                                bulkDelete.disabled = false;
+                                bulkDelete.textContent = "Delete";
+                            }
+                        } catch (e) {
+                            if (window.showToast) showToast("Network error", "error");
+                            bulkDelete.disabled = false;
+                            bulkDelete.textContent = "Delete";
+                        }
+                    });
+
+                const exportBtn = document.getElementById("exportSupervisorsBtn");
+                if (exportBtn)
+                    exportBtn.addEventListener("click", function () {
+                        const headers = [
+                            "#",
+                            "Supervisor",
+                            "Email",
+                            "Role",
+                            "Assigned Students",
+                        ];
+                        const lines = [headers.join(",")];
+                        rows.forEach((row) => {
+                            if (row.style.display === "none") return;
+                            const cells = row.querySelectorAll("td");
+                            if (cells.length < 7) return;
+                            const idx = cells[1].innerText.trim();
+                            const name = cells[2].innerText
+                                .trim()
+                                .replace(/\n/g, " ")
+                                .replace(/,/g, " ");
+                            const email = cells[3].innerText.trim();
+                            const role = cells[4].innerText
+                                .trim()
+                                .replace(/\n/g, " ")
+                                .replace(/,/g, " ");
+                            const assigned = cells[5].innerText.trim();
+                            lines.push(
+                                [
+                                    idx,
+                                    '"' + name + '"',
+                                    email,
+                                    '"' + role + '"',
+                                    assigned,
+                                ].join(","),
+                            );
+                        });
+                        const blob = new Blob([lines.join("\n")], { type: "text/csv" });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = "nexora-supervisors.csv";
+                        a.click();
+                        URL.revokeObjectURL(url);
+                    });
+
+                // Initial
+                updateBulkUI();
+            })();
+        </script>
+        <script>
+            // Supervisor Modal Logic
+            (function () {
+                const modal = document.getElementById("supervisorModal");
+                const openBtn = document.getElementById("openSupervisorModalBtn");
+                const closeBtn = document.getElementById("closeSupervisorModal");
+                const cancelBtn = document.getElementById("cancelSupervisorBtn");
+                const form = document.getElementById("createSupervisorForm");
+                const submitBtn = document.getElementById("submitSupervisorBtn");
+                const generalError = document.getElementById("supervisorFormGeneralError");
+
+                function showError(field, message) {
+                    const input = document.getElementById(field);
+                    const errEl = document.getElementById("err-" + field);
+                    if (input) input.classList.add("error");
+                    if (errEl) {
+                        errEl.textContent = message || "";
+                        errEl.classList.toggle("show", !!message);
                     }
                 }
-                if(Object.keys(errors).length === 0){
-                    generalError.textContent = 'Failed to create supervisor.';
-                    generalError.style.display = 'block';
+                function clearErrors() {
+                    if (!form) return;
+                    form.querySelectorAll(".nexora-form-control").forEach((el) =>
+                        el.classList.remove("error"),
+                    );
+                    form.querySelectorAll(".field-error").forEach((el) => {
+                        el.textContent = "";
+                        el.classList.remove("show");
+                    });
+                    if (generalError) {
+                        generalError.textContent = "";
+                        generalError.style.display = "none";
+                    }
                 }
-            }
-        } catch(err){
-            generalError.textContent = 'Network error. Please try again.';
-            generalError.style.display = 'block';
-        } finally {
-            submitBtn.disabled = false;
-            submitBtn.textContent = originalText;
-        }
-    });
-})();
-</script>
+                function openModal() {
+                    clearErrors();
+                    if (form) form.reset();
+                    modal.classList.add("open");
+                    modal.setAttribute("aria-hidden", "false");
+                    document.body.style.overflow = "hidden";
+                    setTimeout(() => {
+                        const el = document.getElementById("supervisorFullName");
+                        if (el) el.focus();
+                    }, 50);
+                }
+                function closeModal() {
+                    modal.classList.remove("open");
+                    modal.setAttribute("aria-hidden", "true");
+                    document.body.style.overflow = "";
+                }
 
-</body>
+                if (openBtn) openBtn.addEventListener("click", openModal);
+                if (closeBtn) closeBtn.addEventListener("click", closeModal);
+                if (cancelBtn) cancelBtn.addEventListener("click", closeModal);
+                if (modal)
+                    modal.addEventListener("click", function (e) {
+                        if (e.target === modal) closeModal();
+                    });
+                document.addEventListener("keydown", function (e) {
+                    if (e.key === "Escape" && modal && modal.classList.contains("open"))
+                        closeModal();
+                });
+
+                document
+                    .querySelectorAll("#supervisorModal .password-toggle")
+                    .forEach((btn) => {
+                        btn.addEventListener("click", function () {
+                            const targetId = this.getAttribute("data-target");
+                            const input = document.getElementById(targetId);
+                            if (input) {
+                                input.type =
+                                    input.type === "password" ? "text" : "password";
+                                this.textContent = input.type === "password" ? "👁️" : "🙈";
+                            }
+                        });
+                    });
+
+                if (form)
+                    form.addEventListener("submit", async function (e) {
+                        e.preventDefault();
+                        clearErrors();
+                        let hasError = false;
+
+                        const fullName = document
+                            .getElementById("supervisorFullName")
+                            .value.trim();
+                        const username = document
+                            .getElementById("supervisorUsername")
+                            .value.trim();
+                        const email = document
+                            .getElementById("supervisorEmail")
+                            .value.trim();
+                        const password =
+                            document.getElementById("supervisorPassword").value;
+                        const confirmPassword = document.getElementById(
+                            "supervisorConfirmPassword",
+                        ).value;
+
+                        if (!fullName) {
+                            showError("supervisorFullName", "Full name is required.");
+                            hasError = true;
+                        }
+                        if (!username) {
+                            showError("supervisorUsername", "Username is required.");
+                            hasError = true;
+                        } else if (username.length < 3) {
+                            showError("supervisorUsername", "At least 3 characters.");
+                            hasError = true;
+                        }
+                        if (!email) {
+                            showError("supervisorEmail", "Email is required.");
+                            hasError = true;
+                        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                            showError("supervisorEmail", "Invalid email.");
+                            hasError = true;
+                        }
+                        if (!password) {
+                            showError("supervisorPassword", "Password is required.");
+                            hasError = true;
+                        } else if (password.length < 8) {
+                            showError("supervisorPassword", "At least 8 characters.");
+                            hasError = true;
+                        }
+                        if (password !== confirmPassword) {
+                            showError(
+                                "supervisorConfirmPassword",
+                                "Passwords do not match.",
+                            );
+                            hasError = true;
+                        }
+
+                        if (hasError) return;
+
+                        const originalText = submitBtn.textContent;
+                        submitBtn.disabled = true;
+                        submitBtn.textContent = "Creating...";
+
+                        const payload = {
+                            full_name: fullName,
+                            username: username,
+                            email: email,
+                            password: password,
+                            confirm_password: confirmPassword,
+                        };
+
+                        try {
+                            const resp = await fetch(
+                                '{{ url_for("admin.create_supervisor") }}',
+                                {
+                                    method: "POST",
+                                    headers: {
+                                        "Content-Type": "application/json",
+                                        "X-Requested-With": "XMLHttpRequest",
+                                        "X-CSRFToken": "{{ csrf_token() }}",
+                                    },
+                                    body: JSON.stringify(payload),
+                                },
+                            );
+                            const data = await resp.json();
+                            if (resp.ok && data.success) {
+                                closeModal();
+                                if (window.showToast)
+                                    showToast(
+                                        data.message || "Supervisor created successfully.",
+                                    );
+                                location.reload();
+                            } else {
+                                const errors = data.errors || {};
+                                if (errors._general) {
+                                    generalError.textContent = errors._general;
+                                    generalError.style.display = "block";
+                                }
+                                for (const [field, msg] of Object.entries(errors)) {
+                                    const fieldMap = {
+                                        full_name: "supervisorFullName",
+                                        username: "supervisorUsername",
+                                        email: "supervisorEmail",
+                                        password: "supervisorPassword",
+                                        confirm_password: "supervisorConfirmPassword",
+                                    };
+                                    const inputId = fieldMap[field] || field;
+                                    showError(inputId, msg);
+                                    if (field === "_general" && generalError) {
+                                        generalError.textContent = msg;
+                                        generalError.style.display = "block";
+                                    }
+                                }
+                                if (Object.keys(errors).length === 0) {
+                                    generalError.textContent =
+                                        "Failed to create supervisor.";
+                                    generalError.style.display = "block";
+                                }
+                            }
+                        } catch (err) {
+                            generalError.textContent = "Network error. Please try again.";
+                            generalError.style.display = "block";
+                        } finally {
+                            submitBtn.disabled = false;
+                            submitBtn.textContent = originalText;
+                        }
+                    });
+            })();
+        </script>
+
+    </body>
 </html>
 

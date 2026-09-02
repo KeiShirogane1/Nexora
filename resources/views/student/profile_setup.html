@@ -1,200 +1,201 @@
 <!DOCTYPE html>
 <html>
 
-<head>
-    <meta charset="UTF-8">
+    <head>
+        <meta charset="UTF-8">
 
-<title>
-Complete Student Profile - Nexora
-</title>
+        <title>
+            Complete Student Profile - Nexora
+        </title>
 
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
-<link 
-rel="stylesheet"
-href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
-</head>
-
-
-<body>
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
+    </head>
 
 
-<div class="profile-modal">
+    <body>
 
 
-
-<h2>
-Complete Your Student Profile
-</h2>
-
-
-<div class="progress">
-
-Step <span id="number">1</span> of 3
-
-</div>
+        <div class="profile-modal">
 
 
 
-<form method="POST"
-enctype="multipart/form-data">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <h2>
+                Complete Your Student Profile
+            </h2>
 
-<input 
-type="hidden"
-name="cropped_image"
-id="croppedImage">
+
+            <div class="progress">
+
+                Step <span id="number">1</span> of 3
+
+            </div>
+
+
+
+            <form method="POST"
+                  enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <input
+                    type="hidden"
+                    name="cropped_image"
+                    id="croppedImage">
 
 <!-- STEP 1 -->
 
 
-<div class="step active">
+                <div class="step active">
 
 
-<h3>
-Basic Information
-</h3>
+                    <h3>
+                        Basic Information
+                    </h3>
 
 
-<input
-name="first_name"
-placeholder="First Name">
+                    <input
+                        name="first_name"
+                        placeholder="First Name">
 
 
-<input
-name="middle_name"
-placeholder="Middle Name">
+                    <input
+                        name="middle_name"
+                        placeholder="Middle Name">
 
 
-<input
-name="last_name"
-placeholder="Last Name">
+                    <input
+                        name="last_name"
+                        placeholder="Last Name">
 
 
-<input
-type="number"
-name="age"
-placeholder="Age">
+                    <input
+                        type="number"
+                        name="age"
+                        placeholder="Age">
 
 
-<input
-id="student_id"
-name="student_id"
-placeholder="Student ID">
-
-
-
-<label class="upload">
-
-
-📷 Upload Profile Picture
-
-
-<input
-type="file"
-name="profile_picture"
-accept="image/*"
-onchange="loadImage(event)">
-
-
-</label>
+                    <input
+                        id="student_id"
+                        name="student_id"
+                        placeholder="Student ID">
 
 
 
-<div class="crop-wrapper">
+                    <label class="upload">
 
 
-<img id="preview">
+                        📷 Upload Profile Picture
 
 
-</div>
+                        <input
+                            type="file"
+                            name="profile_picture"
+                            accept="image/*"
+                            onchange="loadImage(event)">
 
 
-
-<div
-id="cropButtons"
-class="crop-buttons">
-
-
-<button
-type="button"
-onclick="zoomIn()">
-
-Zoom +
-
-</button>
-
-
-<button
-type="button"
-onclick="zoomOut()">
-
-Zoom -
-
-</button>
-
-
-</div>
+                    </label>
 
 
 
-
-<button
-type="button"
-onclick="validateStep1()">
-
-Next →
-
-</button>
+                    <div class="crop-wrapper">
 
 
+                        <img id="preview">
 
-</div>
+
+                    </div>
+
+
+
+                    <div
+                        id="cropButtons"
+                        class="crop-buttons">
+
+
+                        <button
+                            type="button"
+                            onclick="zoomIn()">
+
+                            Zoom +
+
+                        </button>
+
+
+                        <button
+                            type="button"
+                            onclick="zoomOut()">
+
+                            Zoom -
+
+                        </button>
+
+
+                    </div>
+
+
+
+
+                    <button
+                        type="button"
+                        onclick="validateStep1()">
+
+                        Next →
+
+                    </button>
+
+
+
+                </div>
 
 <!-- STEP 2 -->
 
-<div class="step">
+                <div class="step">
 
 
-<h3>
-Contact Information
-</h3>
+                    <h3>
+                        Contact Information
+                    </h3>
 
 
-<input
-name="phone_number"
-placeholder="09XXXXXXXXX"
-maxlength="11">
+                    <input
+                        name="phone_number"
+                        placeholder="09XXXXXXXXX"
+                        maxlength="11">
 
 
-<textarea
-name="home_address"
-placeholder="House Number, Street, Barangay, City/Municipality, Province">
-</textarea>
-
-
-
-<button
-type="button"
-class="back"
-onclick="previousStep()">
-
-← Back
-
-</button>
+                    <textarea
+                        name="home_address"
+                        placeholder="House Number, Street, Barangay, City/Municipality, Province">
+                    </textarea>
 
 
 
-<button
-type="button"
-onclick="validateStep2()">
+                    <button
+                        type="button"
+                        class="back"
+                        onclick="previousStep()">
 
-Next →
+                        ← Back
 
-</button>
+                    </button>
 
 
 
-</div>
+                    <button
+                        type="button"
+                        onclick="validateStep2()">
+
+                        Next →
+
+                    </button>
+
+
+
+                </div>
 
 
 
@@ -203,595 +204,282 @@ Next →
 <!-- STEP 3 -->
 
 
-<div class="step">
+                <div class="step">
 
 
-<h3>
-Class Information
-</h3>
+                    <h3>
+                        Class Information
+                    </h3>
 
 
 
-<input
-name="grade_year"
-placeholder="Example: 4th Year / Grade 12">
+                    <input
+                        name="grade_year"
+                        placeholder="Example: 4th Year / Grade 12">
 
 
 
-<input
-name="major_program"
-placeholder="Example: Bachelor of Science in Information Technology">
+                    <input
+                        name="major_program"
+                        placeholder="Example: Bachelor of Science in Information Technology">
 
 
 
 
 
-<button
-type="button"
-class="back"
-onclick="previousStep()">
+                    <button
+                        type="button"
+                        class="back"
+                        onclick="previousStep()">
 
-← Back
+                        ← Back
 
-</button>
+                    </button>
 
 
 
 
-<button
-type="button"
-onclick="validateStep3()">
+                    <button
+                        type="button"
+                        onclick="validateStep3()">
 
-Complete Profile
+                        Complete Profile
 
-</button>
+                    </button>
 
 
 
-</div>
+                </div>
 
 
-</form>
+            </form>
 
 
-</div>
+        </div>
 
 
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
+        <script>
 
+        </script>
 
 
-<script>
 
+        <script>
+            let currentStep = 0;
 
-let currentStep = 0;
+            const steps = document.querySelectorAll(".step");
 
+            const number = document.getElementById("number");
 
-const steps =
-document.querySelectorAll(".step");
+            /* ==========================
+               FIELD ERROR HANDLING
+            ========================== */
 
+            function checkField(input) {
+                if (input.value.trim() === "") {
+                    input.classList.add("input-error");
 
-const number =
-document.getElementById("number");
+                    input.classList.remove("input-success");
 
+                    return false;
+                }
 
+                input.classList.remove("input-error");
 
-/* ==========================
-   FIELD ERROR HANDLING
-========================== */
+                input.classList.add("input-success");
 
-
-function checkField(input){
-
-
-    if(input.value.trim() === ""){
-
-
-        input.classList.add(
-            "input-error"
-        );
-
-
-        input.classList.remove(
-            "input-success"
-        );
-
-
-        return false;
-
-
-    }
-
-
-
-    input.classList.remove(
-        "input-error"
-    );
-
-
-    input.classList.add(
-        "input-success"
-    );
-
-
-    return true;
-
-
-}
-
-
-
-
-// remove red while typing
-
-document
-.querySelectorAll("input, textarea")
-.forEach(function(input){
-
-
-    input.addEventListener(
-        "input",
-        function(){
-
-
-            if(this.value.trim() !== ""){
-
-
-                this.classList.remove(
-                    "input-error"
-                );
-
-
-                this.classList.add(
-                    "input-success"
-                );
-
-
+                return true;
             }
 
+            // remove red while typing
 
-        }
-    );
+            document.querySelectorAll("input, textarea").forEach(function (input) {
+                input.addEventListener("input", function () {
+                    if (this.value.trim() !== "") {
+                        this.classList.remove("input-error");
 
+                        this.classList.add("input-success");
+                    }
+                });
+            });
 
-});
+            /* ==========================
+               STEP 1 VALIDATION
+            ========================== */
 
+            function validateStep1() {
+                let fields = [
+                    "first_name",
+                    "middle_name",
+                    "last_name",
+                    "age",
+                    "student_id",
+                ];
 
+                let valid = true;
 
+                fields.forEach(function (field) {
+                    let input = document.querySelector(`input[name="${field}"]`);
 
+                    if (!checkField(input)) {
+                        valid = false;
+                    }
+                });
 
-/* ==========================
-   STEP 1 VALIDATION
-========================== */
+                if (valid) {
+                    nextStep();
+                }
+            }
 
+            /* ==========================
+               STEP 2 VALIDATION
+            ========================== */
 
-function validateStep1(){
+            function validateStep2() {
+                let phone = document.querySelector('input[name="phone_number"]');
 
+                let address = document.querySelector('textarea[name="home_address"]');
 
-    let fields = [
+                let valid = true;
 
-        "first_name",
-        "middle_name",
-        "last_name",
-        "age",
-        "student_id"
+                if (!checkField(phone)) {
+                    valid = false;
+                }
 
-    ];
+                if (!checkField(address)) {
+                    valid = false;
+                }
 
+                if (phone.value.trim() !== "" && phone.value.length !== 11) {
+                    phone.classList.add("input-error");
 
+                    phone.classList.remove("input-success");
 
-    let valid = true;
+                    valid = false;
+                }
 
+                if (valid) {
+                    nextStep();
+                }
+            }
 
+            /* ==========================
+               STEP 3 VALIDATION
+            ========================== */
 
-    fields.forEach(function(field){
+            function validateStep3() {
+                let year = document.querySelector('input[name="grade_year"]');
 
+                let program = document.querySelector('input[name="major_program"]');
 
-        let input =
-        document.querySelector(
-            `input[name="${field}"]`
-        );
+                let valid = true;
 
+                if (!checkField(year)) {
+                    valid = false;
+                }
 
+                if (!checkField(program)) {
+                    valid = false;
+                }
 
-        if(!checkField(input)){
+                if (valid) {
+                    if (cropper) {
+                        let canvas = cropper.getCroppedCanvas({
+                            width: 400,
+                            height: 400,
+                        });
 
+                        document.getElementById("croppedImage").value =
+                            canvas.toDataURL("image/jpeg");
+                    }
 
-            valid = false;
+                    document.querySelector("form").submit();
+                }
+            }
 
+            /* ==========================
+               STEP CONTROL
+            ========================== */
 
-        }
+            function nextStep() {
+                if (currentStep < steps.length - 1) {
+                    steps[currentStep].classList.remove("active");
 
+                    currentStep++;
 
+                    steps[currentStep].classList.add("active");
 
-    });
+                    number.innerHTML = currentStep + 1;
+                }
+            }
 
+            function previousStep() {
+                if (currentStep > 0) {
+                    steps[currentStep].classList.remove("active");
 
+                    currentStep--;
 
-    if(valid){
+                    steps[currentStep].classList.add("active");
 
+                    number.innerHTML = currentStep + 1;
+                }
+            }
 
-        nextStep();
+            /* ==========================
+               CROPPER
+            ========================== */
 
+            let cropper;
 
-    }
+            function loadImage(event) {
+                let image = document.getElementById("preview");
 
+                let wrapper = document.querySelector(".crop-wrapper");
 
-}
+                let buttons = document.getElementById("cropButtons");
 
+                image.src = URL.createObjectURL(event.target.files[0]);
 
+                wrapper.classList.add("active");
 
+                buttons.style.display = "flex";
 
+                if (cropper) {
+                    cropper.destroy();
+                }
 
-/* ==========================
-   STEP 2 VALIDATION
-========================== */
+                cropper = new Cropper(image, {
+                    aspectRatio: 1,
 
+                    viewMode: 1,
 
-function validateStep2(){
+                    dragMode: "move",
 
+                    autoCropArea: 0.8,
 
-    let phone =
-    document.querySelector(
-        'input[name="phone_number"]'
-    );
+                    movable: true,
 
+                    zoomable: true,
 
-    let address =
-    document.querySelector(
-        'textarea[name="home_address"]'
-    );
+                    background: false,
+                });
+            }
 
+            function zoomIn() {
+                if (cropper) {
+                    cropper.zoom(0.1);
+                }
+            }
 
+            function zoomOut() {
+                if (cropper) {
+                    cropper.zoom(-0.1);
+                }
+            }
+        </script>
 
-    let valid = true;
 
-
-
-    if(!checkField(phone)){
-
-        valid=false;
-
-    }
-
-
-
-    if(!checkField(address)){
-
-        valid=false;
-
-    }
-
-
-
-
-    if(
-        phone.value.trim() !== "" &&
-        phone.value.length !== 11
-    ){
-
-
-        phone.classList.add(
-            "input-error"
-        );
-
-
-        phone.classList.remove(
-            "input-success"
-        );
-
-
-        valid=false;
-
-
-    }
-
-
-
-
-
-    if(valid){
-
-
-        nextStep();
-
-
-    }
-
-
-
-}
-
-
-
-
-
-/* ==========================
-   STEP 3 VALIDATION
-========================== */
-
-
-function validateStep3(){
-
-
-    let year =
-    document.querySelector(
-        'input[name="grade_year"]'
-    );
-
-
-
-    let program =
-    document.querySelector(
-        'input[name="major_program"]'
-    );
-
-
-
-    let valid=true;
-
-
-
-    if(!checkField(year)){
-
-
-        valid=false;
-
-
-    }
-
-
-
-    if(!checkField(program)){
-
-
-        valid=false;
-
-
-    }
-
-
-
-
-    if(valid){
-
-
-    if(cropper){
-
-        let canvas = cropper.getCroppedCanvas({
-            width:400,
-            height:400
-        });
-
-
-        document.getElementById(
-            "croppedImage"
-        ).value =
-        canvas.toDataURL("image/jpeg");
-
-
-    }
-
-
-    document
-    .querySelector("form")
-    .submit();
-
-
-}
-
-
-}
-
-
-
-
-
-
-/* ==========================
-   STEP CONTROL
-========================== */
-
-
-function nextStep(){
-
-
-    if(currentStep < steps.length-1){
-
-
-        steps[currentStep]
-        .classList.remove("active");
-
-
-
-        currentStep++;
-
-
-
-        steps[currentStep]
-        .classList.add("active");
-
-
-
-        number.innerHTML =
-        currentStep + 1;
-
-
-
-    }
-
-
-}
-
-
-
-
-
-function previousStep(){
-
-
-    if(currentStep > 0){
-
-
-        steps[currentStep]
-        .classList.remove("active");
-
-
-
-        currentStep--;
-
-
-
-        steps[currentStep]
-        .classList.add("active");
-
-
-
-        number.innerHTML =
-        currentStep + 1;
-
-
-    }
-
-
-}
-
-
-
-
-
-/* ==========================
-   CROPPER
-========================== */
-
-
-let cropper;
-
-
-
-function loadImage(event){
-
-
-    let image =
-    document.getElementById(
-        "preview"
-    );
-
-
-
-    let wrapper =
-    document.querySelector(
-        ".crop-wrapper"
-    );
-
-
-
-    let buttons =
-    document.getElementById(
-        "cropButtons"
-    );
-
-
-
-    image.src =
-    URL.createObjectURL(
-        event.target.files[0]
-    );
-
-
-
-    wrapper.classList.add(
-        "active"
-    );
-
-
-
-    buttons.style.display =
-    "flex";
-
-
-
-    if(cropper){
-
-
-        cropper.destroy();
-
-
-    }
-
-
-
-    cropper =
-    new Cropper(
-        image,
-        {
-
-            aspectRatio:1,
-
-            viewMode:1,
-
-            dragMode:"move",
-
-            autoCropArea:.8,
-
-            movable:true,
-
-            zoomable:true,
-
-            background:false
-
-
-        }
-    );
-
-
-}
-
-
-
-
-
-function zoomIn(){
-
-
-    if(cropper){
-
-
-        cropper.zoom(
-            0.1
-        );
-
-
-    }
-
-
-}
-
-
-
-
-function zoomOut(){
-
-
-    if(cropper){
-
-
-        cropper.zoom(
-            -0.1
-        );
-
-
-    }
-
-
-}
-
-
-
-</script>
-
-
-</body>
+    </body>
 
 </html>

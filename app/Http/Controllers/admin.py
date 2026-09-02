@@ -358,23 +358,24 @@ def admin_students():
 
         cursor.execute(
             """
-            SELECT
+            SELECT DISTINCT
                 users.id,
                 users.username,
                 users.email,
                 users.role,
                 student_profiles.major_program,
-                sup.username as supervisor_name
+                sup.username AS supervisor_name
             FROM users
-            LEFT JOIN student_profiles ON users.id = student_profiles.user_id
-            LEFT JOIN student_assignments sa ON users.id = sa.student_id
-            LEFT JOIN users sup ON sa.supervisor_id = sup.id
-            WHERE users.role IN 
-            (
+            LEFT JOIN student_profiles
+                ON users.id = student_profiles.user_id
+            LEFT JOIN student_assignments sa
+                ON users.id = sa.student_id
+            LEFT JOIN users sup
+                ON sa.supervisor_id = sup.id
+            WHERE users.role IN (
                 'student',
                 'pending_student'
             )
-            GROUP BY users.id
             ORDER BY users.username
             """
         )

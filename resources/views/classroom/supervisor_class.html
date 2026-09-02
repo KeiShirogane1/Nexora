@@ -1,94 +1,532 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ classroom.name }} - Nexora</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">
-    <style>
-        .nexora-class-page{width:100%;max-width:1400px;margin:0 auto;padding:28px 32px 48px;box-sizing:border-box}
-        .class-hero{background:#fff;border:1px solid #e5e7eb;border-radius:18px;overflow:hidden;box-shadow:0 4px 16px rgba(15,23,42,.06);margin-bottom:20px}
-        .class-hero-banner{height:88px;background:linear-gradient(135deg,#2563eb,#60a5fa)}
-        .class-hero-body{padding:22px 26px 24px}
-        .class-hero-row{display:flex;justify-content:space-between;align-items:flex-start;gap:24px}
-        .class-title{margin:0 0 5px;font-size:30px;line-height:1.15;font-weight:800;color:#172554}
-        .class-subtitle{margin:0 0 14px;color:#64748b;font-size:15px}
-        .class-code-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
-        .class-code{display:inline-flex;align-items:center;padding:7px 11px;border:1px solid #dbe3ef;border-radius:9px;background:#f8fafc;font-weight:700;color:#334155}
-        .class-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:9px}
-        .class-action-btn{min-height:42px;padding:9px 16px;border-radius:10px;font-weight:700;white-space:nowrap}
-        .class-action-primary{background:#2563eb;border:1px solid #2563eb;color:#fff;text-decoration:none}
-        .class-action-primary:hover{background:#1d4ed8;color:#fff}
-        .class-action-secondary{background:#fff;border:1px solid #cbd5e1;color:#1e293b}
-        .class-action-secondary:hover{background:#f8fafc}
-        .class-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 20px;padding:5px;background:#fff;border:1px solid #e5e7eb;border-radius:12px;box-shadow:0 2px 10px rgba(15,23,42,.04)}
-        .class-tabs .profile-tab-button{border:0;border-radius:8px;padding:9px 14px;color:#475569;background:transparent;font-weight:600}
-        .class-tabs .profile-tab-button.active{background:#2563eb;color:#fff}
-        .class-tabs a.profile-tab-button{text-decoration:none;display:inline-flex;align-items:center}
-        .class-card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;box-shadow:0 4px 14px rgba(15,23,42,.05);margin-bottom:18px;overflow:hidden}
-        .class-card-header{padding:17px 20px;border-bottom:1px solid #eef2f7;display:flex;justify-content:space-between;align-items:center;gap:14px}
-        .class-card-body{padding:20px}
-        .class-info-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px 34px}
-        .class-info-item strong{display:block;color:#64748b;font-size:13px;margin-bottom:5px;font-weight:700}
-        .class-info-item span{color:#1e293b;font-size:15px}
-        .empty-classwork{text-align:center;padding:44px 20px;color:#64748b}
-        .nexora-class-modal{display:none!important;position:fixed!important;inset:0!important;z-index:2000!important;align-items:center!important;justify-content:center!important;padding:24px!important;background:rgba(15,23,42,.48)!important}
-        .nexora-class-modal.open{display:flex!important}
-        .nexora-class-modal .nexora-modal{width:min(520px,100%);max-height:calc(100vh - 48px);overflow:auto}
-        @media(max-width:900px){.nexora-class-page{padding:20px 18px 36px}.class-hero-row{flex-direction:column}.class-actions{width:100%;justify-content:flex-start}.class-info-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-        @media(max-width:600px){.nexora-class-page{padding:16px 12px 28px}.class-hero-banner{height:62px}.class-hero-body{padding:18px}.class-title{font-size:25px}.class-actions{display:grid;grid-template-columns:1fr 1fr;width:100%}.class-action-btn{width:100%}.class-info-grid{grid-template-columns:1fr}.class-tabs{overflow-x:auto;flex-wrap:nowrap}.class-tabs .profile-tab-button{flex:0 0 auto}}
-    </style>
-</head>
-<body class="analytics-aesthetic">
-{% include 'components/supervisor_sidebar.html' %}
-<main class="page-content nexora-app-main">
-<div class="nexora-class-page">
-<section class="class-hero">
-<div class="class-hero-banner"></div>
-<div class="class-hero-body">
-<div class="class-hero-row">
-<div>
-<h1 class="class-title">{{ classroom.name }}</h1>
-<p class="class-subtitle">{{ classroom.section }}{% if classroom.description %} • {{ classroom.description }}{% endif %}</p>
-<div class="class-code-row">
-<span class="badge {% if classroom.status == 'Active' %}bg-success{% else %}bg-secondary{% endif %}">{{ classroom.status }}</span>
-<span class="class-code" id="classCodeBadge">{{ classroom.code }}</span>
-<button type="button" class="btn btn-sm btn-outline-primary" onclick="copyClassCode()">Copy code</button>
-<form method="POST" action="{{ url_for('classroom.regenerate_code', class_id=classroom.id) }}" class="d-inline" onsubmit="return confirm('Regenerate class code? Old code will stop working.')"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="btn btn-sm btn-outline-warning">Regenerate</button></form>
-</div></div>
-<div class="class-actions">
-<button type="button" class="class-action-btn class-action-secondary" onclick="openClassInfo()">ⓘ&nbsp; Class Info</button>
-<a href="{{ url_for('classwork.manage_classwork', class_id=classroom.id) }}" class="class-action-btn class-action-primary">👥&nbsp; Assign Task</a>
-<form method="POST" action="{{ url_for('classroom.archive_class', class_id=classroom.id) }}" class="d-inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="class-action-btn class-action-secondary">{% if classroom.archived %}Unarchive{% else %}Archive{% endif %}</button></form>
-</div></div>
-{% if classroom.archived %}<div class="alert alert-warning mt-3 mb-0">This class is archived. New announcements and assignments are disabled.</div>{% endif %}
-</div></section>
-{% with messages=get_flashed_messages(with_categories=true) %}{% if messages %}{% for category,message in messages %}<div class="alert alert-{{ 'danger' if category=='danger' else 'success' if category=='success' else 'warning' if category=='warning' else 'info' }}">{{ message }}</div>{% endfor %}{% endif %}{% endwith %}
-<nav class="class-tabs" aria-label="Class navigation">
-<button class="profile-tab-button active" onclick="openClassTab('stream',this)">Stream</button><button class="profile-tab-button" onclick="openClassTab('classwork',this)">Classwork</button><button class="profile-tab-button" onclick="openClassTab('people',this)">People</button>
-<a href="{{ url_for('classwork_gradebook.supervisor_gradebook',class_id=classroom.id) }}" class="profile-tab-button">Gradebook</a><a href="{{ url_for('classwork_ml_insights.supervisor_insights',class_id=classroom.id) }}" class="profile-tab-button">Performance Insights</a><a href="{{ url_for('performance_reports.supervisor_reports',class_id=classroom.id) }}" class="profile-tab-button">Reports</a>
-</nav>
-<section id="stream" class="profile-tab active">
-<div class="class-card"><div class="class-card-body"><h5 class="mb-3">Class Announcement</h5><form method="POST" action="{{ url_for('classroom.create_post',class_id=classroom.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="text" name="title" class="form-control mb-2" placeholder="Title (optional)" maxlength="200" {% if classroom.archived %}disabled{% endif %}><textarea name="body" class="form-control mb-3" rows="3" placeholder="Announce something to your class..." required maxlength="5000" {% if classroom.archived %}disabled{% endif %}></textarea><div class="text-end"><button type="submit" class="btn btn-primary" {% if classroom.archived %}disabled{% endif %}>Post</button></div></form></div></div>
-<div class="class-card"><div class="class-card-header"><h6 class="mb-0">Recent announcements</h6></div><div class="class-card-body">{% if announcements and announcements|length>0 %}{% for a in announcements %}<div class="border-bottom pb-3 mb-3">{% if a.title %}<strong>{{ a.title }}</strong><br>{% endif %}<p class="mb-1">{{ a.body }}</p></div>{% endfor %}{% else %}<p class="text-muted mb-0">No announcements yet. Use the composer above.</p>{% endif %}</div></div>
-<div class="class-card"><div class="class-card-body"><div class="class-info-grid">
-<div class="class-info-item"><strong>Class Code</strong><span>{{ classroom.code }}</span></div><div class="class-info-item"><strong>Description</strong><span>{{ classroom.description or '—' }}</span></div><div class="class-info-item"><strong>Internal Notes</strong><span>{{ classroom.internal_notes or '—' }}</span></div>
-<div class="class-info-item"><strong>Program</strong><span>{{ classroom.program or classroom.section or '—' }}</span></div><div class="class-info-item"><strong>Created</strong><span>{{ classroom.created_at or '—' }}</span></div><div class="class-info-item"><strong>Updated</strong><span>{{ classroom.updated_at or classroom.created_at or '—' }}</span></div>
-<div class="class-info-item"><strong>Max Interns</strong><span>{{ classroom.max_students or classroom.max_interns or '—' }}</span></div><div class="class-info-item"><strong>Status</strong><span class="badge {% if classroom.status == 'Active' %}bg-success{% else %}bg-secondary{% endif %}">{{ classroom.status }}</span></div><div class="class-info-item"><strong>Current Interns</strong><span>{{ classroom.student_count }}</span></div>
-</div></div></div>
-</section>
-<section id="classwork" class="profile-tab"><div class="class-card"><div class="class-card-header"><div><h6 class="mb-1">Classwork</h6><div class="small text-muted">Assignments, quizzes, Google activities, files, and projects.</div></div><div class="d-flex align-items-center gap-2"><span class="badge bg-primary">{{ assignments|length }} activities</span><a href="{{ url_for('classwork.manage_classwork',class_id=classroom.id) }}" class="btn btn-primary btn-sm">+ Create Classwork</a></div></div><div class="class-card-body">{% if assignments and assignments|length>0 %}{% for ass in assignments %}<a href="{{ url_for('classroom.supervisor_assignment_detail',class_id=classroom.id,assignment_id=ass.id) }}" class="text-decoration-none"><div class="border-bottom pb-3 mb-3 d-flex justify-content-between align-items-center"><div><strong>{{ ass.title }}</strong><div class="small text-muted">{{ ass.description[:80] if ass.description else '' }}</div></div><span class="badge bg-primary">View submissions</span></div></a>{% endfor %}{% else %}<div class="empty-classwork"><div style="font-size:34px">📝</div><h6>No classwork yet</h6><p>Create your first student activity using the Classwork Studio.</p><a href="{{ url_for('classwork.manage_classwork',class_id=classroom.id) }}" class="btn btn-primary">Create Classwork</a></div>{% endif %}</div></div></section>
-<section id="people" class="profile-tab"><div class="class-card"><div class="class-card-header"><h6 class="mb-0">People</h6><span class="badge bg-primary">{{ classroom.student_count }} students</span></div><div class="class-card-body"><h6>Teacher</h6><div class="d-flex align-items-center gap-2 border-bottom pb-3 mb-3"><span class="avatar-sm bg-primary text-white">S</span><span>Supervisor (you)</span></div><h6>Classmates / Students</h6>{% if students and students|length>0 %}{% for s in students %}<div class="d-flex justify-content-between align-items-center border-bottom py-3"><div><strong>{{ s.username if s.username is defined else s }}</strong>{% if s.email is defined %}<div class="small text-muted">{{ s.email }}</div>{% endif %}</div><form method="POST" action="{{ url_for('classroom.remove_student',class_id=classroom.id,student_id=s.id if s.id is defined else loop.index) }}" class="d-inline" onsubmit="return confirm('Remove {{ s.username if s.username is defined else s }} from class?')"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="btn btn-sm btn-outline-danger">Remove</button></form></div>{% endfor %}{% else %}<p class="text-muted mb-0">No students enrolled yet.</p><p class="small text-muted mt-2">Share class code <strong id="peopleCode">{{ classroom.code }}</strong> <button class="btn btn-sm btn-outline-primary ms-2" onclick="copyClassCode()">Copy</button></p>{% endif %}</div></div></section>
-</div></main>
-<div id="classInfoModal" class="nexora-class-modal" onclick="if(event.target===this)closeClassInfo()" aria-hidden="true"><div class="nexora-modal" role="dialog" aria-modal="true" aria-labelledby="classInfoTitle"><div class="nexora-modal-header"><h2 id="classInfoTitle">Class Information</h2><p>Details for this classroom</p><button type="button" class="nexora-modal-close" onclick="closeClassInfo()">×</button></div><div class="nexora-modal-body" style="gap:10px"><div class="d-flex justify-content-between"><strong>Class name</strong><span>{{ classroom.name }}</span></div><div class="d-flex justify-content-between"><strong>Section</strong><span>{{ classroom.section }}</span></div><div class="d-flex justify-content-between"><strong>Supervisor</strong><span>Supervisor (you)</span></div><div class="d-flex justify-content-between"><strong>Code</strong><span>{{ classroom.code }}</span></div><div class="d-flex justify-content-between"><strong>Students</strong><span>{{ classroom.student_count }}</span></div><div class="d-flex justify-content-between"><strong>Assignments</strong><span>{{ assignments|length }}</span></div><div class="d-flex justify-content-between"><strong>Announcements</strong><span>{{ announcements|length }}</span></div><div class="d-flex justify-content-between"><strong>Status</strong><span>{{ classroom.status }}</span></div></div><div class="nexora-modal-footer"><button type="button" class="btn btn-secondary" onclick="closeClassInfo()">Close</button></div></div></div>
-<script>
-function copyClassCode(){const code=(document.getElementById('classCodeBadge')?.innerText||document.getElementById('peopleCode')?.innerText||'{{ classroom.code }}').trim();if(navigator.clipboard?.writeText){navigator.clipboard.writeText(code).then(()=>window.showToast&&showToast('✓ Class code copied: '+code)).catch(()=>{});}else{const ta=document.createElement('textarea');ta.value=code;document.body.appendChild(ta);ta.select();try{document.execCommand('copy')}catch(e){}ta.remove();}}
-function openClassInfo(){document.getElementById('classInfoModal').classList.add('open');document.getElementById('classInfoModal').setAttribute('aria-hidden','false')}
-function closeClassInfo(){document.getElementById('classInfoModal').classList.remove('open');document.getElementById('classInfoModal').setAttribute('aria-hidden','true')}
-function openClassTab(name,btn){document.querySelectorAll('.profile-tab').forEach(x=>x.classList.remove('active'));const el=document.getElementById(name);if(el)el.classList.add('active');document.querySelectorAll('.class-tabs .profile-tab-button').forEach(x=>x.classList.remove('active'));if(btn)btn.classList.add('active')}
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeClassInfo()});
-</script>
-</body>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{{ classroom.name }} - Nexora</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">
+        <style>
+            .nexora-class-page {
+                width: 100%;
+                max-width: 1400px;
+                margin: 0 auto;
+                padding: 28px 32px 48px;
+                box-sizing: border-box;
+            }
+            .class-hero {
+                background: #fff;
+                border: 1px solid #e5e7eb;
+                border-radius: 18px;
+                overflow: hidden;
+                box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+                margin-bottom: 20px;
+            }
+            .class-hero-banner {
+                height: 88px;
+                background: linear-gradient(135deg, #2563eb, #60a5fa);
+            }
+            .class-hero-body {
+                padding: 22px 26px 24px;
+            }
+            .class-hero-row {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                gap: 24px;
+            }
+            .class-title {
+                margin: 0 0 5px;
+                font-size: 30px;
+                line-height: 1.15;
+                font-weight: 800;
+                color: #172554;
+            }
+            .class-subtitle {
+                margin: 0 0 14px;
+                color: #64748b;
+                font-size: 15px;
+            }
+            .class-code-row {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: 8px;
+            }
+            .class-code {
+                display: inline-flex;
+                align-items: center;
+                padding: 7px 11px;
+                border: 1px solid #dbe3ef;
+                border-radius: 9px;
+                background: #f8fafc;
+                font-weight: 700;
+                color: #334155;
+            }
+            .class-actions {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: flex-end;
+                align-items: center;
+                gap: 9px;
+            }
+            .class-action-btn {
+                min-height: 42px;
+                padding: 9px 16px;
+                border-radius: 10px;
+                font-weight: 700;
+                white-space: nowrap;
+            }
+            .class-action-primary {
+                background: #2563eb;
+                border: 1px solid #2563eb;
+                color: #fff;
+                text-decoration: none;
+            }
+            .class-action-primary:hover {
+                background: #1d4ed8;
+                color: #fff;
+            }
+            .class-action-secondary {
+                background: #fff;
+                border: 1px solid #cbd5e1;
+                color: #1e293b;
+            }
+            .class-action-secondary:hover {
+                background: #f8fafc;
+            }
+            .class-tabs {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px;
+                margin: 0 0 20px;
+                padding: 5px;
+                background: #fff;
+                border: 1px solid #e5e7eb;
+                border-radius: 12px;
+                box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+            }
+            .class-tabs .profile-tab-button {
+                border: 0;
+                border-radius: 8px;
+                padding: 9px 14px;
+                color: #475569;
+                background: transparent;
+                font-weight: 600;
+            }
+            .class-tabs .profile-tab-button.active {
+                background: #2563eb;
+                color: #fff;
+            }
+            .class-tabs a.profile-tab-button {
+                text-decoration: none;
+                display: inline-flex;
+                align-items: center;
+            }
+            .class-card {
+                background: #fff;
+                border: 1px solid #e5e7eb;
+                border-radius: 16px;
+                box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+                margin-bottom: 18px;
+                overflow: hidden;
+            }
+            .class-card-header {
+                padding: 17px 20px;
+                border-bottom: 1px solid #eef2f7;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 14px;
+            }
+            .class-card-body {
+                padding: 20px;
+            }
+            .class-info-grid {
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 18px 34px;
+            }
+            .class-info-item strong {
+                display: block;
+                color: #64748b;
+                font-size: 13px;
+                margin-bottom: 5px;
+                font-weight: 700;
+            }
+            .class-info-item span {
+                color: #1e293b;
+                font-size: 15px;
+            }
+            .empty-classwork {
+                text-align: center;
+                padding: 44px 20px;
+                color: #64748b;
+            }
+            .nexora-class-modal {
+                display: none !important;
+                position: fixed !important;
+                inset: 0 !important;
+                z-index: 2000 !important;
+                align-items: center !important;
+                justify-content: center !important;
+                padding: 24px !important;
+                background: rgba(15, 23, 42, 0.48) !important;
+            }
+            .nexora-class-modal.open {
+                display: flex !important;
+            }
+            .nexora-class-modal .nexora-modal {
+                width: min(520px, 100%);
+                max-height: calc(100vh - 48px);
+                overflow: auto;
+            }
+            @media (max-width: 900px) {
+                .nexora-class-page {
+                    padding: 20px 18px 36px;
+                }
+                .class-hero-row {
+                    flex-direction: column;
+                }
+                .class-actions {
+                    width: 100%;
+                    justify-content: flex-start;
+                }
+                .class-info-grid {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
+            }
+            @media (max-width: 600px) {
+                .nexora-class-page {
+                    padding: 16px 12px 28px;
+                }
+                .class-hero-banner {
+                    height: 62px;
+                }
+                .class-hero-body {
+                    padding: 18px;
+                }
+                .class-title {
+                    font-size: 25px;
+                }
+                .class-actions {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    width: 100%;
+                }
+                .class-action-btn {
+                    width: 100%;
+                }
+                .class-info-grid {
+                    grid-template-columns: 1fr;
+                }
+                .class-tabs {
+                    overflow-x: auto;
+                    flex-wrap: nowrap;
+                }
+                .class-tabs .profile-tab-button {
+                    flex: 0 0 auto;
+                }
+            }
+        </style>
+    </head>
+    <body class="analytics-aesthetic">
+        {% include 'components/supervisor_sidebar.html' %}
+        <main class="page-content nexora-app-main">
+            <div class="nexora-class-page">
+                <section class="class-hero">
+                    <div class="class-hero-banner">
+                    </div>
+                    <div class="class-hero-body">
+                        <div class="class-hero-row">
+                            <div>
+                                <h1 class="class-title">{{ classroom.name }}</h1>
+                                <p class="class-subtitle">{{ classroom.section }}{% if classroom.description %} • {{ classroom.description }}{% endif %}
+                                </p>
+                                <div class="class-code-row">
+                                    <span class="badge {% if classroom.status == 'Active' %}bg-success{% else %}bg-secondary{% endif %}">{{ classroom.status }}</span>
+                                    <span class="class-code" id="classCodeBadge">{{ classroom.code }}</span>
+                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="copyClassCode()">Copy code</button>
+                                    <form method="POST" action="{{ url_for('classroom.regenerate_code', class_id=classroom.id) }}" class="d-inline" onsubmit="return confirm('Regenerate class code? Old code will stop working.')">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-warning">Regenerate</button>
+                                    </form>
+                                </div>
+                            </div>
+                            <div class="class-actions">
+                                <button type="button" class="class-action-btn class-action-secondary" onclick="openClassInfo()">ⓘ&nbsp; Class Info</button>
+                                <a href="{{ url_for('classwork.manage_classwork', class_id=classroom.id) }}" class="class-action-btn class-action-primary">👥&nbsp; Assign Task</a>
+                                <form method="POST" action="{{ url_for('classroom.archive_class', class_id=classroom.id) }}" class="d-inline">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="class-action-btn class-action-secondary">
+                                        {% if classroom.archived %}Unarchive{% else %}Archive{% endif %}
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        {% if classroom.archived %}
+                            <div class="alert alert-warning mt-3 mb-0">This class is archived. New announcements and assignments are disabled.</div>
+                        {% endif %}
+                    </div>
+                </section>
+                {% with messages=get_flashed_messages(with_categories=true) %}{% if messages %}{% for category,message in messages %}
+                    <div class="alert alert-{{ 'danger' if category=='danger' else 'success' if category=='success' else 'warning' if category=='warning' else 'info' }}">{{ message }}</div>
+                {% endfor %}{% endif %}{% endwith %}
+                <nav class="class-tabs" aria-label="Class navigation">
+                    <button class="profile-tab-button active" onclick="openClassTab('stream',this)">Stream</button>
+                    <button class="profile-tab-button" onclick="openClassTab('classwork',this)">Classwork</button>
+                    <button class="profile-tab-button" onclick="openClassTab('people',this)">People</button>
+                    <a href="{{ url_for('classwork_gradebook.supervisor_gradebook',class_id=classroom.id) }}" class="profile-tab-button">Gradebook</a>
+                    <a href="{{ url_for('classwork_ml_insights.supervisor_insights',class_id=classroom.id) }}" class="profile-tab-button">Performance Insights</a>
+                    <a href="{{ url_for('performance_reports.supervisor_reports',class_id=classroom.id) }}" class="profile-tab-button">Reports</a>
+                </nav>
+                <section id="stream" class="profile-tab active">
+                    <div class="class-card">
+                        <div class="class-card-body">
+                            <h5 class="mb-3">Class Announcement</h5>
+                            <form method="POST" action="{{ url_for('classroom.create_post',class_id=classroom.id) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="text" name="title" class="form-control mb-2" placeholder="Title (optional)" maxlength="200" {% if classroom.archived %}disabled{% endif %}>
+                                <textarea name="body" class="form-control mb-3" rows="3" placeholder="Announce something to your class..." required maxlength="5000" {% if classroom.archived %}disabled{% endif %}>
+                                </textarea>
+                                <div class="text-end">
+                                    <button type="submit" class="btn btn-primary" {% if classroom.archived %}disabled{% endif %}>Post</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="class-card">
+                        <div class="class-card-header">
+                            <h6 class="mb-0">Recent announcements</h6>
+                        </div>
+                        <div class="class-card-body">
+                            {% if announcements and announcements|length>0 %}{% for a in announcements %}
+                                <div class="border-bottom pb-3 mb-3">
+                                    {% if a.title %}
+                                        <strong>{{ a.title }}</strong>
+                                        <br>
+                                    {% endif %}
+                                    <p class="mb-1">{{ a.body }}</p>
+                                </div>
+                            {% endfor %}{% else %}
+                                <p class="text-muted mb-0">No announcements yet. Use the composer above.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="class-card">
+                        <div class="class-card-body">
+                            <div class="class-info-grid">
+                                <div class="class-info-item">
+                                    <strong>Class Code</strong>
+                                    <span>{{ classroom.code }}</span>
+                                </div>
+                                <div class="class-info-item">
+                                    <strong>Description</strong>
+                                    <span>{{ classroom.description or '—' }}</span>
+                                </div>
+                                <div class="class-info-item">
+                                    <strong>Internal Notes</strong>
+                                    <span>{{ classroom.internal_notes or '—' }}</span>
+                                </div>
+                                <div class="class-info-item">
+                                    <strong>Program</strong>
+                                    <span>{{ classroom.program or classroom.section or '—' }}</span>
+                                </div>
+                                <div class="class-info-item">
+                                    <strong>Created</strong>
+                                    <span>{{ classroom.created_at or '—' }}</span>
+                                </div>
+                                <div class="class-info-item">
+                                    <strong>Updated</strong>
+                                    <span>{{ classroom.updated_at or classroom.created_at or '—' }}</span>
+                                </div>
+                                <div class="class-info-item">
+                                    <strong>Max Interns</strong>
+                                    <span>{{ classroom.max_students or classroom.max_interns or '—' }}</span>
+                                </div>
+                                <div class="class-info-item">
+                                    <strong>Status</strong>
+                                    <span class="badge {% if classroom.status == 'Active' %}bg-success{% else %}bg-secondary{% endif %}">{{ classroom.status }}</span>
+                                </div>
+                                <div class="class-info-item">
+                                    <strong>Current Interns</strong>
+                                    <span>{{ classroom.student_count }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <section id="classwork" class="profile-tab">
+                    <div class="class-card">
+                        <div class="class-card-header">
+                            <div>
+                                <h6 class="mb-1">Classwork</h6>
+                                <div class="small text-muted">Assignments, quizzes, Google activities, files, and projects.</div>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge bg-primary">{{ assignments|length }} activities</span>
+                                <a href="{{ url_for('classwork.manage_classwork',class_id=classroom.id) }}" class="btn btn-primary btn-sm">+ Create Classwork</a>
+                            </div>
+                        </div>
+                        <div class="class-card-body">
+                            {% if assignments and assignments|length>0 %}{% for ass in assignments %}
+                                <a href="{{ url_for('classroom.supervisor_assignment_detail',class_id=classroom.id,assignment_id=ass.id) }}" class="text-decoration-none">
+                                    <div class="border-bottom pb-3 mb-3 d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>{{ ass.title }}</strong>
+                                            <div class="small text-muted">{{ ass.description[:80] if ass.description else '' }}</div>
+                                        </div>
+                                        <span class="badge bg-primary">View submissions</span>
+                                    </div>
+                                </a>
+                            {% endfor %}{% else %}
+                                <div class="empty-classwork">
+                                    <div style="font-size:34px">📝</div>
+                                    <h6>No classwork yet</h6>
+                                    <p>Create your first student activity using the Classwork Studio.</p>
+                                    <a href="{{ url_for('classwork.manage_classwork',class_id=classroom.id) }}" class="btn btn-primary">Create Classwork</a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </section>
+                <section id="people" class="profile-tab">
+                    <div class="class-card">
+                        <div class="class-card-header">
+                            <h6 class="mb-0">People</h6>
+                            <span class="badge bg-primary">{{ classroom.student_count }} students</span>
+                        </div>
+                        <div class="class-card-body">
+                            <h6>Teacher</h6>
+                            <div class="d-flex align-items-center gap-2 border-bottom pb-3 mb-3">
+                                <span class="avatar-sm bg-primary text-white">S</span>
+                                <span>Supervisor (you)</span>
+                            </div>
+                            <h6>Classmates / Students</h6>
+                            {% if students and students|length>0 %}{% for s in students %}
+                                <div class="d-flex justify-content-between align-items-center border-bottom py-3">
+                                    <div>
+                                        <strong>{{ s.username if s.username is defined else s }}</strong>
+                                        {% if s.email is defined %}
+                                            <div class="small text-muted">{{ s.email }}</div>
+                                        {% endif %}
+                                    </div>
+                                    <form method="POST" action="{{ url_for('classroom.remove_student',class_id=classroom.id,student_id=s.id if s.id is defined else loop.index) }}" class="d-inline" onsubmit="return confirm('Remove {{ s.username if s.username is defined else s }} from class?')">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+                                    </form>
+                                </div>
+                            {% endfor %}{% else %}
+                                <p class="text-muted mb-0">No students enrolled yet.</p>
+                                <p class="small text-muted mt-2">Share class code <strong id="peopleCode">{{ classroom.code }}</strong>
+                                    <button class="btn btn-sm btn-outline-primary ms-2" onclick="copyClassCode()">Copy</button>
+                                </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+        <div id="classInfoModal" class="nexora-class-modal" onclick="if(event.target===this)closeClassInfo()" aria-hidden="true">
+            <div class="nexora-modal" role="dialog" aria-modal="true" aria-labelledby="classInfoTitle">
+                <div class="nexora-modal-header">
+                    <h2 id="classInfoTitle">Class Information</h2>
+                    <p>Details for this classroom</p>
+                    <button type="button" class="nexora-modal-close" onclick="closeClassInfo()">×</button>
+                </div>
+                <div class="nexora-modal-body" style="gap:10px">
+                    <div class="d-flex justify-content-between">
+                        <strong>Class name</strong>
+                        <span>{{ classroom.name }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <strong>Section</strong>
+                        <span>{{ classroom.section }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <strong>Supervisor</strong>
+                        <span>Supervisor (you)</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <strong>Code</strong>
+                        <span>{{ classroom.code }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <strong>Students</strong>
+                        <span>{{ classroom.student_count }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <strong>Assignments</strong>
+                        <span>{{ assignments|length }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <strong>Announcements</strong>
+                        <span>{{ announcements|length }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <strong>Status</strong>
+                        <span>{{ classroom.status }}</span>
+                    </div>
+                </div>
+                <div class="nexora-modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeClassInfo()">Close</button>
+                </div>
+            </div>
+        </div>
+        <script>
+            function copyClassCode() {
+                const code = (
+                    document.getElementById("classCodeBadge")?.innerText ||
+                    document.getElementById("peopleCode")?.innerText ||
+                    "{{ classroom.code }}"
+                ).trim();
+                if (navigator.clipboard?.writeText) {
+                    navigator.clipboard
+                        .writeText(code)
+                        .then(
+                            () =>
+                                window.showToast &&
+                                showToast("✓ Class code copied: " + code),
+                        )
+                        .catch(() => {});
+                } else {
+                    const ta = document.createElement("textarea");
+                    ta.value = code;
+                    document.body.appendChild(ta);
+                    ta.select();
+                    try {
+                        document.execCommand("copy");
+                    } catch (e) {}
+                    ta.remove();
+                }
+            }
+            function openClassInfo() {
+                document.getElementById("classInfoModal").classList.add("open");
+                document
+                    .getElementById("classInfoModal")
+                    .setAttribute("aria-hidden", "false");
+            }
+            function closeClassInfo() {
+                document.getElementById("classInfoModal").classList.remove("open");
+                document
+                    .getElementById("classInfoModal")
+                    .setAttribute("aria-hidden", "true");
+            }
+            function openClassTab(name, btn) {
+                document
+                    .querySelectorAll(".profile-tab")
+                    .forEach((x) => x.classList.remove("active"));
+                const el = document.getElementById(name);
+                if (el) el.classList.add("active");
+                document
+                    .querySelectorAll(".class-tabs .profile-tab-button")
+                    .forEach((x) => x.classList.remove("active"));
+                if (btn) btn.classList.add("active");
+            }
+            document.addEventListener("keydown", (e) => {
+                if (e.key === "Escape") closeClassInfo();
+            });
+        </script>
+    </body>
 </html>

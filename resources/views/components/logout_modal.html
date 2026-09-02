@@ -1,34 +1,44 @@
 <div id="nexora-logout-overlay" class="nexora-logout-overlay" role="dialog" aria-modal="true" aria-labelledby="logout-title">
-  <div class="nexora-logout-modal" role="document">
-    <div class="nexora-logout-header">
-      <h3 id="logout-title">Log out?</h3>
-      <button type="button" class="nexora-logout-close" onclick="closeLogoutModal()" aria-label="Close">×</button>
+    <div class="nexora-logout-modal" role="document">
+        <div class="nexora-logout-header">
+            <h3 id="logout-title">Log out?</h3>
+            <button type="button" class="nexora-logout-close" onclick="closeLogoutModal()" aria-label="Close">×</button>
+        </div>
+        <div class="nexora-logout-body">
+            <p>You will be signed out of Nexora and redirected to the home page.</p>
+        </div>
+        <div class="nexora-logout-footer">
+            <button type="button" class="btn-secondary-nexora" onclick="closeLogoutModal()">Cancel</button>
+            <a href="{{ url_for('auth.logout') }}" class="btn-danger-nexora">Log out</a>
+        </div>
     </div>
-    <div class="nexora-logout-body">
-      <p>You will be signed out of Nexora and redirected to the home page.</p>
-    </div>
-    <div class="nexora-logout-footer">
-      <button type="button" class="btn-secondary-nexora" onclick="closeLogoutModal()">Cancel</button>
-      <a href="{{ url_for('auth.logout') }}" class="btn-danger-nexora">Log out</a>
-    </div>
-  </div>
 </div>
 <script>
-(function(){
-  window.openLogoutModal = function(){
-    const el = document.getElementById('nexora-logout-overlay');
-    if(el){ el.classList.add('open'); document.body.style.overflow='hidden'; }
-  };
-  window.closeLogoutModal = function(){
-    const el = document.getElementById('nexora-logout-overlay');
-    if(el){ el.classList.remove('open'); document.body.style.overflow=''; }
-  };
-  document.addEventListener('keydown', function(e){
-    if(e.key === 'Escape'){ closeLogoutModal(); }
-  });
-  document.addEventListener('click', function(e){
-    const overlay = document.getElementById('nexora-logout-overlay');
-    if(overlay && e.target === overlay){ closeLogoutModal(); }
-  });
-})();
+    (function () {
+        window.openLogoutModal = function () {
+            const el = document.getElementById("nexora-logout-overlay");
+            if (el) {
+                el.classList.add("open");
+                document.body.style.overflow = "hidden";
+            }
+        };
+        window.closeLogoutModal = function () {
+            const el = document.getElementById("nexora-logout-overlay");
+            if (el) {
+                el.classList.remove("open");
+                document.body.style.overflow = "";
+            }
+        };
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape") {
+                closeLogoutModal();
+            }
+        });
+        document.addEventListener("click", function (e) {
+            const overlay = document.getElementById("nexora-logout-overlay");
+            if (overlay && e.target === overlay) {
+                closeLogoutModal();
+            }
+        });
+    })();
 </script>
