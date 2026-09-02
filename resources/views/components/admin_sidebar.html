@@ -1,36 +1,10 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/nexora-ui.css') }}">
-<aside class="admin-sidebar compact-sidebar" id="mainSidebar">
-    <div class="sidebar-header">
-        <button class="hamburger-btn sidebar-toggle" aria-label="Toggle sidebar">☰</button>
-        <a class="sidebar-brand" href="{{ url_for('admin.admin_dashboard') }}" aria-label="Nexora home">
-            <img src="{{ url_for('static', filename='images/Nexora.png') }}" alt="Nexora"><span>Nexora</span>
-        </a>
-    </div>
-    <a href="{{ url_for('admin.admin_dashboard') }}" class="sidebar-profile" style="text-decoration:none;color:inherit;display:block;">
-        <img src="{{ url_for('static', filename='images/default_profile.png') }}" class="sidebar-avatar" alt="Administrator">
-        <h4>Administrator</h4><p>View dashboard</p>
-    </a>
-    <ul class="sidebar-menu">
-        <li><a href="{{ url_for('admin.admin_dashboard') }}" class="{% if request.path == '/admin/dashboard' %}active{% endif %}"><span class="nav-icon">🏠</span><span>Dashboard</span></a></li>
-        <li class="nav-group {% if request.path.startswith('/admin/users') %}open{% endif %}">
-            <button class="nav-parent {% if request.path.startswith('/admin/users') %}active-parent{% endif %}" onclick="this.parentElement.classList.toggle('open')"><span class="nav-icon">👥</span><span>Users</span><span class="nav-arrow">▾</span></button>
-            <ul class="submenu">
-                <li><a href="{{ url_for('admin.admin_students') }}" class="{% if request.path == '/admin/users/students' %}active{% endif %}"><span class="nav-icon">🎓</span><span>Students</span></a></li>
-                <li><a href="{{ url_for('admin.admin_supervisors') }}" class="{% if request.path == '/admin/users/supervisors' %}active{% endif %}"><span class="nav-icon">👔</span><span>Supervisors</span></a></li>
-                <li><a href="/admin/trash" class="{% if request.path == '/admin/trash' %}active{% endif %}"><span class="nav-icon">🗑️</span><span>Trash</span></a></li>
-            </ul>
-        </li>
-        <li><a href="{{ url_for('admin.internship_assign') }}" class="{% if request.path == '/admin/internship-assign' %}active{% endif %}"><span class="nav-icon">🏢</span><span>Internship</span></a></li>
-        <li class="nav-group {% if request.path.startswith('/admin/reports') %}open{% endif %}">
-            <button class="nav-parent {% if request.path.startswith('/admin/reports') %}active-parent{% endif %}" onclick="this.parentElement.classList.toggle('open')"><span class="nav-icon">📊</span><span>Reports</span><span class="nav-arrow">▾</span></button>
-            <ul class="submenu">
-                <li><a href="{{ url_for('admin.admin_reports_list') }}" class="{% if request.path == '/admin/reports' %}active{% endif %}"><span class="nav-icon">📄</span><span>Overview</span></a></li>
-            </ul>
-        </li>
-        <li><a href="{{ url_for('notifications.notification_list') }}" class="{% if request.path == '/notifications' %}active{% endif %}"><span class="nav-icon">🔔</span><span>Notifications</span>{% if unread_count %}<span class="sidebar-notification-badge">{{ unread_count }}</span>{% endif %}</a></li>
-        <li class="sidebar-menu-divider"><a href="javascript:void(0)" class="logout-link" onclick="openLogoutModal(); return false;"><span class="nav-icon">🚪</span><span>Logout</span></a></li>
-    </ul>
-</aside>
-{% include 'components/logout_modal.html' %}
-{% include 'components/toast.html' %}
-{% include 'components/notification_bell.html' %}
+<aside class="admin-sidebar compact-sidebar" id="mainSidebar"><div class="sidebar-header"><button class="hamburger-btn sidebar-toggle" aria-label="Toggle sidebar">☰</button><a class="sidebar-brand" href="{{ url_for('admin.admin_dashboard') }}"><img src="{{ url_for('static',filename='images/Nexora.png') }}" alt="Nexora"><span>Nexora</span></a></div><a href="{{ url_for('admin.admin_dashboard') }}" class="sidebar-profile" style="text-decoration:none;color:inherit;display:block"><img src="{{ url_for('static',filename='images/default_profile.png') }}" class="sidebar-avatar" alt="Administrator"><h4>Administrator</h4><p>View dashboard</p></a><ul class="sidebar-menu"><li><a href="{{ url_for('admin.admin_dashboard') }}" class="{% if request.path=='/admin/dashboard' %}active{% endif %}"><span class="nav-icon">🏠</span><span>Dashboard</span></a></li><li class="nav-group {% if request.path.startswith('/admin/users') %}open{% endif %}"><button class="nav-parent {% if request.path.startswith('/admin/users') %}active-parent{% endif %}" onclick="this.parentElement.classList.toggle('open')"><span class="nav-icon">👥</span><span>Users</span><span class="nav-arrow">▾</span></button><ul class="submenu"><li><a href="{{ url_for('admin.admin_students') }}" class="{% if request.path=='/admin/users/students' %}active{% endif %}"><span class="nav-icon">🎓</span><span>Students</span></a></li><li><a href="{{ url_for('admin.admin_supervisors') }}" class="{% if request.path=='/admin/users/supervisors' %}active{% endif %}"><span class="nav-icon">👔</span><span>Supervisors</span></a></li><li><a href="/admin/trash" class="{% if request.path=='/admin/trash' %}active{% endif %}"><span class="nav-icon">🗑️</span><span>Trash</span></a></li></ul></li><li><a href="{{ url_for('admin.internship_assign') }}" class="{% if request.path=='/admin/internship-assign' %}active{% endif %}"><span class="nav-icon">🏢</span><span>Internship</span></a></li><li class="nav-group {% if request.path.startswith('/admin/reports') %}open{% endif %}"><button class="nav-parent {% if request.path.startswith('/admin/reports') %}active-parent{% endif %}" onclick="this.parentElement.classList.toggle('open')"><span class="nav-icon">📊</span><span>Reports</span><span class="nav-arrow">▾</span></button><ul class="submenu"><li><a href="{{ url_for('admin.admin_reports_list') }}" class="{% if request.path=='/admin/reports' %}active{% endif %}"><span class="nav-icon">📄</span><span>Overview</span></a></li></ul></li><li><a href="{{ url_for('notifications.notification_list') }}" class="{% if request.path=='/notifications' %}active{% endif %}"><span class="nav-icon">🔔</span><span>Notifications</span>{% if unread_count %}<span class="sidebar-notification-badge">{{ unread_count }}</span>{% endif %}</a></li><li class="sidebar-menu-divider"><a href="javascript:void(0)" class="logout-link" onclick="openLogoutModal();return false"><span class="nav-icon">🚪</span><span>Logout</span></a></li></ul></aside>
+{% include 'components/logout_modal.html' %}{% include 'components/toast.html' %}{% include 'components/notification_bell.html' %}
+<script>
+(function(){
+  async function hideTrashed(){ if(!location.pathname.startsWith('/admin/users/'))return; try{const r=await fetch('/admin/trash/data');const d=await r.json();const ids=new Set((d.ids||[]).map(String));document.querySelectorAll('#studentsTable tbody tr[data-id], tbody tr[data-id]').forEach(row=>{if(ids.has(row.dataset.id))row.style.display='none';});}catch(e){} }
+  window.confirmDelete=function(id){ if(!confirm('Move this account to Trash? It can be restored for 30 days.'))return false; fetch('/admin/trash/delete/'+id,{method:'POST',headers:{'X-CSRFToken':'{{ csrf_token() }}'}}).then(r=>{if(!r.ok)throw 0;location.reload()}).catch(()=>alert('Unable to move this account to Trash.')); return false; };
+  setTimeout(hideTrashed,50);
+})();
+</script>
