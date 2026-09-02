@@ -152,6 +152,21 @@
             .input-success {
                 border-color: #22c55e !important;
             }
+            .image-error {
+                display: none;
+                margin: 8px 0 12px;
+                padding: 10px 12px;
+                border: 1px solid #fecaca;
+                border-radius: 8px;
+                background: #fef2f2;
+                color: #dc2626;
+                font-size: 0.85rem;
+                font-weight: 600;
+                line-height: 1.4;
+            }
+            .image-error.show {
+                display: block;
+            }
             @media (max-width: 700px) {
                 body {
                     padding: 20px 12px;
@@ -192,6 +207,7 @@
                         <button type="button" onclick="zoomIn()">Zoom +</button>
                         <button type="button" onclick="zoomOut()">Zoom -</button>
                     </div>
+                    <div id="imageError" class="image-error" style="display:none;" role="alert"></div>
                     <button type="button" onclick="validateStep1()">Next →</button>
                 </div>
 
@@ -216,9 +232,38 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
         <script>
             let currentStep = 0;
-            let cropper;
+            let cropper = null;
+            let currentObjectUrl = null;
+            let cropperReady = false;
+            let imageSelected = false;
+            let imageLoadPending = false;
             const steps = document.querySelectorAll(".step");
             const number = document.getElementById("number");
+
+            function showImageError(msg) {
+                const el = document.getElementById("imageError");
+                if (!el) return;
+                el.textContent = msg;
+                el.style.display = "block";
+                el.classList.add("show");
+            }
+            function clearImageError() {
+                const el = document.getElementById("imageError");
+                if (!el) return;
+                el.textContent = "";
+                el.style.display = "none";
+                el.classList.remove("show");
+            }
+            function resetCropperState() {
+                if (cropper) {
+                    try {
+                        cropper.destroy();
+                    } catch (e) {}
+                }
+                cropper = null;
+                cropperReady = false;
+                imageLoadPending = false;
+            }
 
             function checkField(input) {
                 if (!input || input.value.trim() === "") {
@@ -265,8 +310,23 @@
                 const program = document.querySelector('input[name="major_program"]');
                 const valid = checkField(year) && checkField(program);
                 if (!valid) return;
-                if (cropper) {
-                    document.getElementById("croppedImage").value = cropper.getCroppedCanvas({ width: 400, height: 400 }).toDataURL("image/jpeg");
+                const fileInput = document.querySelector('input[type="file"][name="profile_picture"]');
+                const hasFile = fileInput && fileInput.files && fileInput.files.length > 0;
+                if (hasFile && (imageLoadPending || !cropperReady)) {
+                    showImageError("Image is still loading. Please wait for the crop box to appear before completing your profile.");
+                    return;
+                }
+                if (hasFile && imageSelected && !cropper) {
+                    showImageError("Image failed to load. Please select a valid image or remove it before completing your profile.");
+                    return;
+                }
+                if (cropper && cropperReady) {
+                    try {
+                        document.getElementById("croppedImage").value = cropper.getCroppedCanvas({ width: 400, height: 400 }).toDataURL("image/jpeg");
+                    } catch (e) {
+                        showImageError("Failed to process image. Please try a different image.");
+                        return;
+                    }
                 }
                 document.querySelector("form").submit();
             }
@@ -289,33 +349,137 @@
 
             function loadImage(event) {
                 const file = event.target.files && event.target.files[0];
-                if (!file) return;
                 const image = document.getElementById("preview");
                 const wrapper = document.querySelector(".crop-wrapper");
                 const buttons = document.getElementById("cropButtons");
-                if (cropper) cropper.destroy();
+                clearImageError();
+                if (!file) {
+                    imageSelected = false;
+                    imageLoadPending = false;
+                    resetCropperState();
+                    if (currentObjectUrl) {
+                        try {
+                            URL.revokeObjectURL(currentObjectUrl);
+                        } catch (e) {}
+                        currentObjectUrl = null;
+                    }
+                    try {
+                        image.removeAttribute("src");
+                    } catch (e) {}
+                    if (wrapper) wrapper.classList.remove("active");
+                    if (buttons) buttons.style.display = "none";
+                    return;
+                }
+                const isImage = file.type ? file.type.startsWith("image/") : /\.(png|jpe?g|gif|webp|bmp)$/i.test(file.name);
+                if (!isImage) {
+                    imageSelected = false;
+                    imageLoadPending = false;
+                    resetCropperState();
+                    if (currentObjectUrl) {
+                        try {
+                            URL.revokeObjectURL(currentObjectUrl);
+                        } catch (e) {}
+                        currentObjectUrl = null;
+                    }
+                    try {
+                        image.removeAttribute("src");
+                    } catch (e) {}
+                    if (wrapper) wrapper.classList.remove("active");
+                    if (buttons) buttons.style.display = "none";
+                    showImageError("Invalid file. Please select a valid image (PNG, JPG, GIF).");
+                    try {
+                        event.target.value = "";
+                    } catch (e) {}
+                    return;
+                }
+                imageSelected = true;
+                imageLoadPending = true;
+                cropperReady = false;
+                if (cropper) {
+                    try {
+                        cropper.destroy();
+                    } catch (e) {}
+                    cropper = null;
+                }
+                if (currentObjectUrl) {
+                    try {
+                        URL.revokeObjectURL(currentObjectUrl);
+                    } catch (e) {}
+                    currentObjectUrl = null;
+                }
+                if (wrapper) wrapper.classList.remove("active");
+                if (buttons) buttons.style.display = "none";
+                try {
+                    currentObjectUrl = URL.createObjectURL(file);
+                } catch (e) {
+                    showImageError("Failed to load image. Please try again.");
+                    imageSelected = false;
+                    imageLoadPending = false;
+                    return;
+                }
                 image.onload = function () {
-                    cropper = new Cropper(image, {
-                        aspectRatio: 1,
-                        viewMode: 1,
-                        dragMode: "move",
-                        autoCropArea: 0.8,
-                        movable: true,
-                        zoomable: true,
-                        background: false,
-                    });
+                    if (typeof window.Cropper === "undefined") {
+                        showImageError("Image cropping unavailable. Please refresh the page.");
+                        imageLoadPending = false;
+                        return;
+                    }
+                    try {
+                        if (cropper) {
+                            try {
+                                cropper.destroy();
+                            } catch (e2) {}
+                            cropper = null;
+                        }
+                        cropper = new window.Cropper(image, {
+                            aspectRatio: 1,
+                            viewMode: 1,
+                            dragMode: "move",
+                            autoCropArea: 0.8,
+                            movable: true,
+                            zoomable: true,
+                            background: false,
+                        });
+                        cropperReady = true;
+                        imageLoadPending = false;
+                        clearImageError();
+                        if (wrapper) wrapper.classList.add("active");
+                        if (buttons) buttons.style.display = "flex";
+                    } catch (e) {
+                        cropper = null;
+                        cropperReady = false;
+                        imageLoadPending = false;
+                        if (wrapper) wrapper.classList.remove("active");
+                        if (buttons) buttons.style.display = "none";
+                        showImageError("Failed to initialize image editor. Please try a different image.");
+                    }
                 };
-                image.src = URL.createObjectURL(file);
-                wrapper.classList.add("active");
-                buttons.style.display = "flex";
+                image.onerror = function () {
+                    resetCropperState();
+                    if (currentObjectUrl) {
+                        try {
+                            URL.revokeObjectURL(currentObjectUrl);
+                        } catch (e) {}
+                        currentObjectUrl = null;
+                    }
+                    try {
+                        image.removeAttribute("src");
+                    } catch (e) {}
+                    if (wrapper) wrapper.classList.remove("active");
+                    if (buttons) buttons.style.display = "none";
+                    showImageError("Failed to load image. The file may be corrupt or not a valid image.");
+                    try {
+                        event.target.value = "";
+                    } catch (e) {}
+                };
+                image.src = currentObjectUrl;
             }
 
             function zoomIn() {
-                if (cropper) cropper.zoom(0.1);
+                if (cropper && cropperReady) cropper.zoom(0.1);
             }
 
             function zoomOut() {
-                if (cropper) cropper.zoom(-0.1);
+                if (cropper && cropperReady) cropper.zoom(-0.1);
             }
         </script>
     </body>
