@@ -1,39 +1,23 @@
+<link rel="stylesheet" href="{{ url_for('static', filename='css/nexora-ui.css') }}">
 <aside class="student-sidebar compact-sidebar" id="mainSidebar">
     <div class="sidebar-header">
         <button class="hamburger-btn sidebar-toggle" aria-label="Toggle sidebar">☰</button>
-        <a class="sidebar-brand" href="{{ url_for('student.student_dashboard') }}" aria-label="Nexora home">
-            <img src="{{ url_for('static', filename='images/Nexora.png') }}" alt="Nexora">
-            <h3>Nexora</h3>
-        </a>
+        <a class="sidebar-brand" href="{{ url_for('student.student_dashboard') }}" aria-label="Nexora home"><img src="{{ url_for('static', filename='images/Nexora.png') }}" alt="Nexora"><h3>Nexora</h3></a>
     </div>
-
     <a href="{{ url_for('student.student_profile') }}" class="sidebar-profile" aria-label="Open student profile">
-        {% if sidebar_profile and sidebar_profile.profile_picture %}
-            <img src="{{ url_for('profile_picture', filename=sidebar_profile.profile_picture) }}" class="sidebar-avatar" alt="Profile picture" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_profile.png') }}';">
-        {% else %}
-            <img src="{{ url_for('static', filename='images/default_profile.png') }}" class="sidebar-avatar" alt="Default profile picture">
-        {% endif %}
+        {% if sidebar_profile and sidebar_profile.profile_picture %}<img src="{{ url_for('profile_picture', filename=sidebar_profile.profile_picture) }}" class="sidebar-avatar" alt="Profile picture" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_profile.png') }}';">
+        {% else %}<img src="{{ url_for('static', filename='images/default_profile.png') }}" class="sidebar-avatar" alt="Default profile picture">{% endif %}
         <h4>{% if sidebar_profile and sidebar_profile.first_name %}{{ sidebar_profile.first_name }} {{ sidebar_profile.last_name or '' }}{% else %}{{ sidebar_profile.username if sidebar_profile else 'Student' }}{% endif %}</h4>
         <p>Student · View profile</p>
     </a>
-
     <ul class="sidebar-menu">
         <li><a href="{{ url_for('student.student_dashboard') }}" class="{% if request.path == '/student/dashboard' %}active{% endif %}"><span class="nav-icon">🏠</span><span>Dashboard</span></a></li>
         <li><a href="{{ url_for('classroom.student_classes') }}" class="{% if request.path.startswith('/student/classes') %}active{% endif %}"><span class="nav-icon">🏫</span><span>My Classes</span></a></li>
         <li><a href="{{ url_for('student.logbook') }}" class="{% if request.path == '/student/logbook' %}active{% endif %}"><span class="nav-icon">📘</span><span>Logbook</span></a></li>
         <li><a href="{{ url_for('student.tasks') }}" class="{% if request.path == '/student/tasks' %}active{% endif %}"><span class="nav-icon">✅</span><span>Tasks</span></a></li>
         <li><a href="{{ url_for('student.documents') }}" class="{% if request.path == '/student/documents' %}active{% endif %}"><span class="nav-icon">📂</span><span>Documents</span></a></li>
-        <li>
-            <a href="{{ url_for('notifications.notification_list') }}" class="{% if request.path == '/notifications' %}active{% endif %}">
-                <span class="nav-icon">🔔</span><span>Notifications</span>
-                {% if unread_count %}<span class="sidebar-notification-badge">{{ unread_count }}</span>{% endif %}
-            </a>
-        </li>
-        <li class="sidebar-menu-divider">
-            <a href="javascript:void(0)" class="logout-link" onclick="openLogoutModal(); return false;">
-                <span class="nav-icon">🚪</span><span>Logout</span>
-            </a>
-        </li>
+        <li><a href="{{ url_for('notifications.notification_list') }}" class="{% if request.path == '/notifications' %}active{% endif %}"><span class="nav-icon">🔔</span><span>Notifications</span>{% if unread_count %}<span class="sidebar-notification-badge">{{ unread_count }}</span>{% endif %}</a></li>
+        <li class="sidebar-menu-divider"><a href="javascript:void(0)" class="logout-link" onclick="openLogoutModal(); return false;"><span class="nav-icon">🚪</span><span>Logout</span></a></li>
     </ul>
 </aside>
 {% include 'components/logout_modal.html' %}
