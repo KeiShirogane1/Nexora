@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 BASE_DIR=Path(__file__).resolve().parent.parent; load_dotenv(BASE_DIR/".env")
-from flask import Flask,send_from_directory,session
+from flask import Flask,send_from_directory,session,redirect,url_for,flash
 from app.Http.Controllers.auth import auth
 from app.Http.Controllers.password import password
 from app.Http.Controllers.student import student
@@ -34,7 +34,7 @@ _secret=os.environ.get("SECRET_KEY")
 if not _secret:
     if os.environ.get("FLASK_ENV")=="production" or os.environ.get("NEXORA_ENV")=="production": raise RuntimeError("SECRET_KEY must be set in production")
     _secret="dev-secret-key-change-me-not-for-production"
-app.secret_key=_secret; app.config.update(SECRET_KEY=_secret,SESSION_COOKIE_HTTPONLY=True,SESSION_COOKIE_SAMESITE="Lax",MAX_CONTENT_LENGTH=5*1024*1024); app.config["SESSION_COOKIE_SECURE"]=os.environ.get("SESSION_COOKIE_SECURE","").lower() in ("1","true","yes") or os.environ.get("FLASK_ENV")=="production" or os.environ.get("NEXORA_ENV")=="production"; _debug=os.environ.get("FLASK_DEBUG",os.environ.get("NEXORA_DEBUG","0")); app.debug=_debug.lower() in ("1","true","yes"); app.config["WTF_CSRF_ENABLED"]=True; app.config["WTF_CSRF_TIME_LIMIT"]=None
+app.secret_key=_secret; app.config.update(SECRET_KEY=_secret,SESSION_COOKIE_HTTPONLY=True,SESSION_COOKIE_SAMESITE="Lax",MAX_CONTENT_LENGTH=5*1024*1024); app.config["SESSION_COOKIE_SECURE"]=os.environ.get("SESSION_COOKIE_SECURE","").lower() in ("1","true","yes") or os.environ.get("FLASK_ENV")=="production" or os.environ.get("NEXORA_ENV")=="production"; app.config["WTF_CSRF_ENABLED"]=True; app.config["WTF_CSRF_TIME_LIMIT"]=None; _debug=os.environ.get("FLASK_DEBUG",os.environ.get("NEXORA_DEBUG","0")); app.debug=_debug.lower() in ("1","true","yes")
 try:
  from flask_wtf.csrf import CSRFProtect
  csrf=CSRFProtect(app)
@@ -43,9 +43,7 @@ except ImportError as exc:
  csrf=None
 @app.after_request
 def _security(response):
- response.headers["X-Content-Type-Options"]="nosniff"; response.headers["X-Frame-Options"]="DENY"; response.headers["Referrer-Policy"]="strict-origin-when-cross-origin"; response.headers["Content-Security-Policy"]="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' https: data:; connect-src 'self'; frame-ancestors 'none'"
- if app.config.get("SESSION_COOKIE_SECURE"): response.headers["Strict-Transport-Security"]="max-age=31536000; includeSubDomains"
- return response
+ response.headers["X-Content-Type-Options"]="nosniff"; response.headers["X-Frame-Options"]="DENY"; response.headers["Referrer-Policy"]="strict-origin-when-cross-origin"; response.headers["Content-Security-Policy"]="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' https: data:; connect-src 'self'; frame-ancestors 'none'"; return response
 UPLOAD_FOLDER=BASE_DIR/"storage"/"uploads"; UPLOAD_FOLDER.mkdir(parents=True,exist_ok=True); app.config["UPLOAD_FOLDER"]=str(UPLOAD_FOLDER); PROFILE_UPLOAD_FOLDER=UPLOAD_FOLDER/"profile_pictures"; PROFILE_UPLOAD_FOLDER.mkdir(parents=True,exist_ok=True); app.config["PROFILE_UPLOAD_FOLDER"]=str(PROFILE_UPLOAD_FOLDER)
 @app.route("/uploads/<path:filename>")
 def uploaded_file(filename): return send_from_directory(str(UPLOAD_FOLDER),filename)
@@ -61,14 +59,43 @@ def user_profile_picture(user_id):
 def favicon(): return send_from_directory(str(BASE_DIR/"resources"/"assets"/"images"),"Nexora.png",mimetype="image/png")
 @app.route("/health")
 def health(): return {"status":"ok"},200
+
+def ensure_session_version_schema():
+ conn=get_db_connection(); cur=conn.cursor()
+ try:
+  if using_postgres(): cur.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS session_version INTEGER NOT NULL DEFAULT 0")
+  else:
+   cols=[r[1] for r in cur.execute("PRAGMA table_info(users)").fetchall()]
+   if "session_version" not in cols: cur.execute("ALTER TABLE users ADD COLUMN session_version INTEGER NOT NULL DEFAULT 0")
+  conn.commit()
+ except Exception as exc: conn.rollback(); print("session version schema skipped:",exc)
+ finally: cur.close(); conn.close()
+
 def repair_missing_student_profiles():
  conn=get_db_connection(); cur=conn.cursor()
  try:
   sql=("INSERT INTO student_profiles (user_id,profile_completed) SELECT u.id,0 FROM users u WHERE u.role='student' AND NOT EXISTS (SELECT 1 FROM student_profiles sp WHERE sp.user_id=u.id) ON CONFLICT (user_id) DO NOTHING" if using_postgres() else "INSERT OR IGNORE INTO student_profiles (user_id,profile_completed) SELECT u.id,0 FROM users u WHERE u.role='student' AND NOT EXISTS (SELECT 1 FROM student_profiles sp WHERE sp.user_id=u.id)"); cur.execute(sql); conn.commit()
  except Exception as exc: conn.rollback(); print("student profile repair skipped:",exc)
  finally: cur.close(); conn.close()
-initialize_database(); ensure_classroom_schema(); ensure_classwork_submission_schema(); ensure_classwork_score_schema(); repair_missing_student_profiles()
+initialize_database(); ensure_classroom_schema(); ensure_classwork_submission_schema(); ensure_classwork_score_schema(); ensure_session_version_schema(); repair_missing_student_profiles()
 for bp in (auth,password,student,student_classwork,student_gradebook,student_classmates,supervisor,admin,classroom,classwork,classwork_submissions,classwork_grading,classwork_scores,classwork_gradebook,classwork_gradebook_export,classwork_ml_insights,performance_reports,admin_reports_overview,admin_trash,notifications_bp): app.register_blueprint(bp)
+
+@app.before_request
+def enforce_single_supervisor_session():
+ if session.get("role")!="supervisor" or not session.get("user_id") or request_path_is_auth(): return None
+ conn=get_db_connection()
+ try:
+  row=conn.execute("SELECT session_version FROM users WHERE id=?",(session["user_id"],)).fetchone()
+ finally: conn.close()
+ current=(row[0] if row else None)
+ if current is not None and session.get("session_version")!=int(current):
+  session.clear(); session["login_error"]="You were signed out because this supervisor account logged in on another device."; return redirect(url_for("auth.login"))
+ return None
+
+def request_path_is_auth():
+ from flask import request
+ return request.path in ("/login","/logout","/signup","/") or request.path.startswith("/static/")
+
 @app.context_processor
 def inject_notifications():
  if "user_id" not in session:return {"notifications":[],"recent_notifications":[],"unread_count":0,"sidebar_profile":None}
