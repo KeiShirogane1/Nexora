@@ -34,12 +34,7 @@ from app.Services.classwork_submission_service import ensure_classwork_submissio
 from app.Services.classwork_score_schema import ensure_classwork_score_schema
 from app.Services.notification_service import get_user_notifications, get_recent_notifications, get_unread_count
 
-app = Flask(
-    __name__,
-    template_folder=str(BASE_DIR / "resources" / "views"),
-    static_folder=str(BASE_DIR / "resources" / "assets"),
-    static_url_path="/static"
-)
+app = Flask(__name__, template_folder=str(BASE_DIR / "resources" / "views"), static_folder=str(BASE_DIR / "resources" / "assets"), static_url_path="/static")
 
 _dev_fallback = "dev-secret-key-change-me-not-for-production"
 _secret = os.environ.get("SECRET_KEY")
@@ -92,32 +87,31 @@ def uploaded_file(filename):
 def profile_picture(filename):
     return send_from_directory(app.config["PROFILE_UPLOAD_FOLDER"], filename)
 
+@app.route("/favicon.ico")
+def favicon():
+    return send_from_directory(str(BASE_DIR / "resources" / "assets" / "images"), "Nexora.png", mimetype="image/png")
+
 @app.route("/health")
 def health():
     return {"status": "ok"}, 200
 
 
 def repair_missing_student_profiles():
-    """Create the profile row for any existing student account missing one."""
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
         if using_postgres():
             cursor.execute("""
                 INSERT INTO student_profiles (user_id, profile_completed)
-                SELECT u.id, 0
-                FROM users u
-                WHERE u.role = 'student'
-                  AND NOT EXISTS (SELECT 1 FROM student_profiles sp WHERE sp.user_id = u.id)
+                SELECT u.id, 0 FROM users u
+                WHERE u.role = 'student' AND NOT EXISTS (SELECT 1 FROM student_profiles sp WHERE sp.user_id = u.id)
                 ON CONFLICT (user_id) DO NOTHING
             """)
         else:
             cursor.execute("""
                 INSERT OR IGNORE INTO student_profiles (user_id, profile_completed)
-                SELECT u.id, 0
-                FROM users u
-                WHERE u.role = 'student'
-                  AND NOT EXISTS (SELECT 1 FROM student_profiles sp WHERE sp.user_id = u.id)
+                SELECT u.id, 0 FROM users u
+                WHERE u.role = 'student' AND NOT EXISTS (SELECT 1 FROM student_profiles sp WHERE sp.user_id = u.id)
             """)
         conn.commit()
     except Exception as exc:
@@ -154,56 +148,27 @@ app.register_blueprint(notifications_bp)
 @app.context_processor
 def inject_notifications():
     if "user_id" not in session:
-        return {
-            "notifications": [],
-            "recent_notifications": [],
-            "unread_count": 0,
-            "sidebar_profile": None,
-        }
-
+        return {"notifications": [], "recent_notifications": [], "unread_count": 0, "sidebar_profile": None}
     user_id = session["user_id"]
     sidebar_profile = None
     try:
         conn = get_db_connection()
         try:
-            user = conn.execute(
-                "SELECT id, username, email, role FROM users WHERE id = ?",
-                (user_id,),
-            ).fetchone()
+            user = conn.execute("SELECT id, username, email, role FROM users WHERE id = ?", (user_id,)).fetchone()
             if user:
-                sidebar_profile = {
-                    "id": user["id"],
-                    "username": user["username"],
-                    "email": user["email"],
-                    "role": user["role"],
-                    "profile_picture": None,
-                }
+                sidebar_profile = {"id": user["id"], "username": user["username"], "email": user["email"], "role": user["role"], "profile_picture": None}
                 if user["role"] == "student":
-                    profile = conn.execute(
-                        "SELECT first_name, last_name, profile_picture FROM student_profiles WHERE user_id = ?",
-                        (user_id,),
-                    ).fetchone()
+                    profile = conn.execute("SELECT first_name, last_name, profile_picture FROM student_profiles WHERE user_id = ?", (user_id,)).fetchone()
                     if profile:
                         sidebar_profile["first_name"] = profile["first_name"]
                         sidebar_profile["last_name"] = profile["last_name"]
                         sidebar_profile["profile_picture"] = profile["profile_picture"]
         finally:
             conn.close()
-
-        return {
-            "notifications": get_user_notifications(user_id, limit=20),
-            "recent_notifications": get_recent_notifications(user_id, days=7, limit=10),
-            "unread_count": get_unread_count(user_id),
-            "sidebar_profile": sidebar_profile,
-        }
+        return {"notifications": get_user_notifications(user_id, limit=20), "recent_notifications": get_recent_notifications(user_id, days=7, limit=10), "unread_count": get_unread_count(user_id), "sidebar_profile": sidebar_profile}
     except Exception as e:
         print("inject_notifications failed:", e)
-        return {
-            "notifications": [],
-            "recent_notifications": [],
-            "unread_count": 0,
-            "sidebar_profile": sidebar_profile,
-        }
+        return {"notifications": [], "recent_notifications": [], "unread_count": 0, "sidebar_profile": sidebar_profile}
 
 if __name__ == "__main__":
     app.run(debug=app.debug)
