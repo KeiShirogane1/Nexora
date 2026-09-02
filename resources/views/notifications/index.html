@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications - Nexora</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% if session.get('role') == 'student' %}<link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">{% elif session.get('role') == 'supervisor' %}<link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">{% else %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">{% endif %}
+</head>
+<body class="nexora-notifications-page">
+    {% if session.get('role') == 'student' %}
+        {% include 'components/student_sidebar.html' %}
+    {% elif session.get('role') == 'supervisor' %}
+        {% include 'components/supervisor_sidebar.html' %}
+    {% else %}
+        {% include 'components/admin_sidebar.html' %}
+    {% endif %}
+
+    <main class="nexora-app-main">
+        <div class="nexora-page notification-history-shell">
+            <div class="notification-history-header">
+                <div>
+                    <span class="notification-eyebrow">Nexora</span>
+                    <h1>Notifications</h1>
+                    <p>Review your complete notification history.</p>
+                </div>
+                {% if unread_count %}<button class="notification-history-mark" type="button" onclick="markAllNotificationsRead()">Mark all as read</button>{% endif %}
+            </div>
+
+            <section class="notification-history-card">
+                {% if notifications %}
+                    {% for notif in notifications %}
+                        <article class="notification-history-item {% if notif['is_read'] == 0 %}unread{% endif %}">
+                            <div class="notification-history-icon">{% if notif['notification_type'] == 'success' %}✓{% elif notif['notification_type'] in ['error','warning'] %}!{% elif notif['notification_type'] == 'task' %}✓{% elif notif['notification_type'] == 'feedback' %}✦{% else %}i{% endif %}</div>
+                            <div class="notification-history-body">
+                                <div class="notification-history-title-row"><h2>{{ notif['title'] }}</h2>{% if notif['is_read'] == 0 %}<span>NEW</span>{% endif %}</div>
+                                <p>{{ notif['message'] }}</p>
+                                <small>{{ notif['created_at'] }}</small>
+                            </div>
+                            {% if notif['link_url'] %}<a class="notification-history-open" href="{{ notif['link_url'] }}" onclick="markOne({{ notif['id'] }})">Open</a>{% endif %}
+                        </article>
+                    {% endfor %}
+                {% else %}
+                    <div class="notification-history-empty"><div>🔔</div><h2>No notifications yet</h2><p>New updates, grades, assignments, and feedback will appear here.</p></div>
+                {% endif %}
+            </section>
+        </div>
+    </main>
+<script>
+function markOne(id){ fetch('/notification/read/'+id,{method:'POST',headers:{'X-CSRFToken':'{{ csrf_token() }}'}}).catch(()=>{}); }
+function markAllNotificationsRead(){ fetch('/notifications/read-all',{method:'POST',headers:{'X-CSRFToken':'{{ csrf_token() }}'}}).then(()=>location.reload()).catch(()=>{}); }
+</script>
+</body>
+</html>
