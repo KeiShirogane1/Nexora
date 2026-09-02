@@ -56,9 +56,7 @@ def get_user(identifier, password):
         ):
             return None
 
-
         if user["status"] == "inactive":
-
             return "inactive"
 
         return user
@@ -76,26 +74,20 @@ def welcome():
 @auth.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        username = request.form["username"].strip()
-        password = request.form["password"]
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "")
 
         user = get_user(
-        username,
-        password
-    )
-
+            username,
+            password
+        )
 
         if user == "inactive":
-
             session["login_error"] = (
                 "Your account has been deactivated. Please contact the administrator."
             )
-
             session["login_username"] = username
-
-            return redirect(
-                url_for("auth.login")
-            )
+            return redirect(url_for("auth.login"))
 
         if user and user["role"] in ("pending_student", "pending_supervisor"):
             session["login_error"] = (
@@ -111,51 +103,24 @@ def login():
             session["login_username"] = username
             return redirect(url_for("auth.login"))
 
-
         if user:
             role = user["role"]
-
             session["user_id"] = user["id"]
             session["role"] = role
 
             if role == "student":
-                return redirect(
-                    url_for("student.student_dashboard")
-                )
-
+                return redirect(url_for("student.student_dashboard"))
             elif role == "supervisor":
-                return redirect(
-                    url_for("supervisor.supervisor_dashboard")
-                )
-
+                return redirect(url_for("supervisor.supervisor_dashboard"))
             elif role == "admin":
-                return redirect(
-                    url_for("admin.admin_dashboard")
-                )
+                return redirect(url_for("admin.admin_dashboard"))
 
-        # Save the warning temporarily.
-        session["login_error"] = (
-            "Invalid username or password ❌"
-        )
-
+        session["login_error"] = "Invalid username or password ❌"
         session["login_username"] = username
+        return redirect(url_for("auth.login"))
 
-        # Redirect back to login instead of directly
-        # returning the failed POST page.
-        return redirect(
-            url_for("auth.login")
-        )
-
-    # These values are shown only once.
-    error = session.pop(
-        "login_error",
-        None
-    )
-
-    entered_username = session.pop(
-        "login_username",
-        ""
-    )
+    error = session.pop("login_error", None)
+    entered_username = session.pop("login_username", "")
 
     return render_template(
         "auth/login.html",
@@ -163,70 +128,50 @@ def login():
         entered_username=entered_username
     )
 
+
 @auth.route("/signup", methods=["GET", "POST"])
 def signup():
-
     if request.method == "POST":
+        # Use .get() so malformed/partial submissions never raise BadRequestKeyError.
+        username = request.form.get("username", "").strip()
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
+        confirm_password = request.form.get("confirm_password", "")
+        account_type = request.form.get("account_type", "").strip().lower()
 
-        username = request.form["username"].strip()
+        # Validate the complete form before touching the database.
+        if not username:
+            flash("Username is required.", "danger")
+            return render_template("auth/signup.html")
 
-        email = (
-            request.form["email"]
-            .strip()
-            .lower()
-        )
-
-        password = request.form["password"]
-
-        confirm_password = request.form["confirm_password"]
-        
-        account_type = request.form["account_type"]
+        if not email:
+            flash("Email address is required.", "danger")
+            return render_template("auth/signup.html")
 
         if account_type not in ("student", "supervisor"):
+            flash("Please select an account type.", "danger")
+            return render_template("auth/signup.html")
 
-            flash(
-                "Invalid account type.",
-                "danger"
-            )
+        if not password:
+            flash("Password is required.", "danger")
+            return render_template("auth/signup.html")
 
-            return render_template(
-                "auth/signup.html"
-            )
-        
-        
-        # Password confirmation
+        if not confirm_password:
+            flash("Please confirm your password.", "danger")
+            return render_template("auth/signup.html")
+
         if password != confirm_password:
+            flash("Passwords do not match ❌", "danger")
+            return render_template("auth/signup.html")
 
-            flash(
-                "Passwords do not match ❌",
-                "danger"
-            )
-
-            return render_template(
-                "auth/signup.html"
-            )
-
-
-        # Password length
         if len(password) < 8:
-
-            flash(
-                "Password must be at least 8 characters ❌",
-                "danger"
-            )
-
-            return render_template(
-                "auth/signup.html"
-            )
-
+            flash("Password must be at least 8 characters ❌", "danger")
+            return render_template("auth/signup.html")
 
         conn = get_db_connection()
         cursor = conn.cursor()
 
-
         try:
-
-            # Duplicate username/email check
             cursor.execute(
                 """
                 SELECT id
@@ -234,30 +179,16 @@ def signup():
                 WHERE username = ?
                 OR LOWER(email) = LOWER(?)
                 """,
-                (
-                    username,
-                    email
-                )
+                (username, email)
             )
-
 
             existing_user = cursor.fetchone()
 
-
             if existing_user:
-
-                flash(
-                    "Username or email already exists ❌",
-                    "danger"
-                )
-
-                return render_template(
-                    "auth/signup.html"
-                )
-
+                flash("Username or email already exists ❌", "danger")
+                return render_template("auth/signup.html")
 
             password_hash = hash_password(password)
-            
             pending_role = (
                 "pending_student"
                 if account_type == "student"
@@ -273,7 +204,6 @@ def signup():
                     password,
                     role
                 )
-
                 VALUES
                 (?, ?, ?, ?)
                 """,
@@ -285,12 +215,9 @@ def signup():
                 )
             )
 
-
             user_id = cursor.lastrowid
 
-
             if account_type == "student":
-
                 cursor.execute(
                     """
                     INSERT INTO student_profiles
@@ -298,36 +225,26 @@ def signup():
                         user_id,
                         profile_completed
                     )
-
                     VALUES
                     (?,0)
                     """,
-                    (
-                        user_id,
-                    )
+                    (user_id,)
                 )
-
 
             conn.commit()
 
-
+        except Exception:
+            conn.rollback()
+            raise
         finally:
-
             cursor.close()
             conn.close()
-
-
 
         flash(
             "Account created successfully. Wait for approval.",
             "success"
         )
 
-        return redirect(
-            url_for("auth.login")
-        )
+        return redirect(url_for("auth.login"))
 
-
-    return render_template(
-        "auth/signup.html"
-    )
+    return render_template("auth/signup.html")
