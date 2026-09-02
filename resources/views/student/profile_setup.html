@@ -8,6 +8,7 @@
             Complete Student Profile - Nexora
         </title>
 
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
         <link
             rel="stylesheet"
@@ -258,537 +259,224 @@
 
 
 
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
+        <script>
+
+        </script>
 
 
 
         <script>
-
-
             let currentStep = 0;
 
+            const steps = document.querySelectorAll(".step");
 
-            const steps =
-                document.querySelectorAll(".step");
+            const number = document.getElementById("number");
 
+            /* ==========================
+               FIELD ERROR HANDLING
+            ========================== */
 
-            const number =
-                document.getElementById("number");
+            function checkField(input) {
+                if (input.value.trim() === "") {
+                    input.classList.add("input-error");
 
-
-
-/* ==========================
-   FIELD ERROR HANDLING
-========================== */
-
-
-            function checkField(input){
-
-
-                if(input.value.trim() === ""){
-
-
-                    input.classList.add(
-                        "input-error"
-                    );
-
-
-                    input.classList.remove(
-                        "input-success"
-                    );
-
+                    input.classList.remove("input-success");
 
                     return false;
-
-
                 }
 
+                input.classList.remove("input-error");
 
-
-                input.classList.remove(
-                    "input-error"
-                );
-
-
-                input.classList.add(
-                    "input-success"
-                );
-
+                input.classList.add("input-success");
 
                 return true;
-
-
             }
 
+            // remove red while typing
 
+            document.querySelectorAll("input, textarea").forEach(function (input) {
+                input.addEventListener("input", function () {
+                    if (this.value.trim() !== "") {
+                        this.classList.remove("input-error");
 
-
-// remove red while typing
-
-            document
-                .querySelectorAll("input, textarea")
-                .forEach(function(input){
-
-
-                    input.addEventListener(
-                        "input",
-                        function(){
-
-
-                            if(this.value.trim() !== ""){
-
-
-                                this.classList.remove(
-                                    "input-error"
-                                );
-
-
-                                this.classList.add(
-                                    "input-success"
-                                );
-
-
-                            }
-
-
-                        }
-                    );
-
-
+                        this.classList.add("input-success");
+                    }
                 });
+            });
 
+            /* ==========================
+               STEP 1 VALIDATION
+            ========================== */
 
-
-
-
-/* ==========================
-   STEP 1 VALIDATION
-========================== */
-
-
-            function validateStep1(){
-
-
+            function validateStep1() {
                 let fields = [
-
                     "first_name",
                     "middle_name",
                     "last_name",
                     "age",
-                    "student_id"
-
+                    "student_id",
                 ];
 
-
-
                 let valid = true;
 
+                fields.forEach(function (field) {
+                    let input = document.querySelector(`input[name="${field}"]`);
 
-
-                fields.forEach(function(field){
-
-
-                    let input =
-                        document.querySelector(
-                            `input[name="${field}"]`
-                        );
-
-
-
-                    if(!checkField(input)){
-
-
+                    if (!checkField(input)) {
                         valid = false;
-
-
                     }
-
-
-
                 });
 
-
-
-                if(valid){
-
-
+                if (valid) {
                     nextStep();
-
-
                 }
-
-
             }
 
+            /* ==========================
+               STEP 2 VALIDATION
+            ========================== */
 
+            function validateStep2() {
+                let phone = document.querySelector('input[name="phone_number"]');
 
-
-
-/* ==========================
-   STEP 2 VALIDATION
-========================== */
-
-
-            function validateStep2(){
-
-
-                let phone =
-                    document.querySelector(
-                        'input[name="phone_number"]'
-                    );
-
-
-                let address =
-                    document.querySelector(
-                        'textarea[name="home_address"]'
-                    );
-
-
+                let address = document.querySelector('textarea[name="home_address"]');
 
                 let valid = true;
 
-
-
-                if(!checkField(phone)){
-
-                    valid=false;
-
+                if (!checkField(phone)) {
+                    valid = false;
                 }
 
-
-
-                if(!checkField(address)){
-
-                    valid=false;
-
+                if (!checkField(address)) {
+                    valid = false;
                 }
 
+                if (phone.value.trim() !== "" && phone.value.length !== 11) {
+                    phone.classList.add("input-error");
 
+                    phone.classList.remove("input-success");
 
-
-                if(
-                    phone.value.trim() !== "" &&
-                    phone.value.length !== 11
-                ){
-
-
-                    phone.classList.add(
-                        "input-error"
-                    );
-
-
-                    phone.classList.remove(
-                        "input-success"
-                    );
-
-
-                    valid=false;
-
-
+                    valid = false;
                 }
 
-
-
-
-
-                if(valid){
-
-
+                if (valid) {
                     nextStep();
-
-
                 }
-
-
-
             }
 
+            /* ==========================
+               STEP 3 VALIDATION
+            ========================== */
 
+            function validateStep3() {
+                let year = document.querySelector('input[name="grade_year"]');
 
+                let program = document.querySelector('input[name="major_program"]');
 
+                let valid = true;
 
-/* ==========================
-   STEP 3 VALIDATION
-========================== */
-
-
-            function validateStep3(){
-
-
-                let year =
-                    document.querySelector(
-                        'input[name="grade_year"]'
-                    );
-
-
-
-                let program =
-                    document.querySelector(
-                        'input[name="major_program"]'
-                    );
-
-
-
-                let valid=true;
-
-
-
-                if(!checkField(year)){
-
-
-                    valid=false;
-
-
+                if (!checkField(year)) {
+                    valid = false;
                 }
 
-
-
-                if(!checkField(program)){
-
-
-                    valid=false;
-
-
+                if (!checkField(program)) {
+                    valid = false;
                 }
 
-
-
-
-                if(valid){
-
-
-                    if(cropper){
-
+                if (valid) {
+                    if (cropper) {
                         let canvas = cropper.getCroppedCanvas({
-                            width:400,
-                            height:400
+                            width: 400,
+                            height: 400,
                         });
 
-
-                        document.getElementById(
-                            "croppedImage"
-                        ).value =
+                        document.getElementById("croppedImage").value =
                             canvas.toDataURL("image/jpeg");
-
-
                     }
 
-
-                    document
-                        .querySelector("form")
-                        .submit();
-
-
+                    document.querySelector("form").submit();
                 }
-
-
             }
 
+            /* ==========================
+               STEP CONTROL
+            ========================== */
 
-
-
-
-
-/* ==========================
-   STEP CONTROL
-========================== */
-
-
-            function nextStep(){
-
-
-                if(currentStep < steps.length-1){
-
-
-                    steps[currentStep]
-                        .classList.remove("active");
-
-
+            function nextStep() {
+                if (currentStep < steps.length - 1) {
+                    steps[currentStep].classList.remove("active");
 
                     currentStep++;
 
+                    steps[currentStep].classList.add("active");
 
-
-                    steps[currentStep]
-                        .classList.add("active");
-
-
-
-                    number.innerHTML =
-                        currentStep + 1;
-
-
-
+                    number.innerHTML = currentStep + 1;
                 }
-
-
             }
 
-
-
-
-
-            function previousStep(){
-
-
-                if(currentStep > 0){
-
-
-                    steps[currentStep]
-                        .classList.remove("active");
-
-
+            function previousStep() {
+                if (currentStep > 0) {
+                    steps[currentStep].classList.remove("active");
 
                     currentStep--;
 
+                    steps[currentStep].classList.add("active");
 
-
-                    steps[currentStep]
-                        .classList.add("active");
-
-
-
-                    number.innerHTML =
-                        currentStep + 1;
-
-
+                    number.innerHTML = currentStep + 1;
                 }
-
-
             }
 
-
-
-
-
-/* ==========================
-   CROPPER
-========================== */
-
+            /* ==========================
+               CROPPER
+            ========================== */
 
             let cropper;
 
+            function loadImage(event) {
+                let image = document.getElementById("preview");
 
+                let wrapper = document.querySelector(".crop-wrapper");
 
-            function loadImage(event){
+                let buttons = document.getElementById("cropButtons");
 
+                image.src = URL.createObjectURL(event.target.files[0]);
 
-                let image =
-                    document.getElementById(
-                        "preview"
-                    );
+                wrapper.classList.add("active");
 
+                buttons.style.display = "flex";
 
-
-                let wrapper =
-                    document.querySelector(
-                        ".crop-wrapper"
-                    );
-
-
-
-                let buttons =
-                    document.getElementById(
-                        "cropButtons"
-                    );
-
-
-
-                image.src =
-                    URL.createObjectURL(
-                        event.target.files[0]
-                    );
-
-
-
-                wrapper.classList.add(
-                    "active"
-                );
-
-
-
-                buttons.style.display =
-                    "flex";
-
-
-
-                if(cropper){
-
-
+                if (cropper) {
                     cropper.destroy();
-
-
                 }
 
+                cropper = new Cropper(image, {
+                    aspectRatio: 1,
 
+                    viewMode: 1,
 
-                cropper =
-                    new Cropper(
-                        image,
-                        {
+                    dragMode: "move",
 
-                            aspectRatio:1,
+                    autoCropArea: 0.8,
 
-                            viewMode:1,
+                    movable: true,
 
-                            dragMode:"move",
+                    zoomable: true,
 
-                            autoCropArea:.8,
-
-                            movable:true,
-
-                            zoomable:true,
-
-                            background:false
-
-
-                        }
-                    );
-
-
+                    background: false,
+                });
             }
 
-
-
-
-
-            function zoomIn(){
-
-
-                if(cropper){
-
-
-                    cropper.zoom(
-                        0.1
-                    );
-
-
+            function zoomIn() {
+                if (cropper) {
+                    cropper.zoom(0.1);
                 }
-
-
             }
 
-
-
-
-            function zoomOut(){
-
-
-                if(cropper){
-
-
-                    cropper.zoom(
-                        -0.1
-                    );
-
-
+            function zoomOut() {
+                if (cropper) {
+                    cropper.zoom(-0.1);
                 }
-
-
             }
-
-
-
         </script>
 
 

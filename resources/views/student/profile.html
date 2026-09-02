@@ -593,179 +593,88 @@
 
             </div>
         </div>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
-
         <script>
 
-            let cropper;
+        </script>
 
+        <script>
+            let cropper;
 
             document
                 .getElementById("profileUpload")
-                .addEventListener(
-                    "change",
-                    function(event){
+                .addEventListener("change", function (event) {
+                    let file = event.target.files[0];
 
+                    if (!file) {
+                        return;
+                    }
 
-                        let file = event.target.files[0];
+                    let image = document.getElementById("cropImage");
 
+                    image.src = URL.createObjectURL(file);
 
-                        if(!file){
-                            return;
-                        }
+                    document.getElementById("cropModal").style.display = "flex";
 
+                    if (cropper) {
+                        cropper.destroy();
+                    }
 
-                        let image =
-                            document.getElementById(
-                                "cropImage"
-                            );
-
-
-                        image.src =
-                            URL.createObjectURL(file);
-
-
-                        document
-                            .getElementById("cropModal")
-                            .style.display="flex";
-
-
-
-                        if(cropper){
-
-                            cropper.destroy();
-
-                        }
-
-
-
-                        image.onload = function(){
-
-
-                            cropper =
-                                new Cropper(
-                                    image,
-                                    {
-                                        aspectRatio:1,
-                                        viewMode:1,
-                                        dragMode:"move",
-                                        background:false
-                                    }
-                                );
-
-
-                        };
-
-
-                    });
-
-
-
-
-            function saveProfilePicture(){
-
-
-                cropper
-                    .getCroppedCanvas({
-                        width:500,
-                        height:500
-                    })
-                    .toBlob(
-                        function(blob){
-
-
-                            let formData =
-                                new FormData();
-
-
-                            formData.append(
-                                "profile_picture",
-                                blob,
-                                "profile.jpg"
-                            );
-
-
-
-                            fetch(
-                                "/student/profile/photo",
-                                {
-                                    method:"POST",
-                                    headers: {
-                                        "X-CSRFToken": "{{ csrf_token() }}"
-                                    },
-                                    body:formData
-                                }
-
-                            )
-                                .then(
-                                    ()=>{
-
-                                        location.reload();
-
-                                    }
-
-                                );
-
-
-
+                    image.onload = function () {
+                        cropper = new Cropper(image, {
+                            aspectRatio: 1,
+                            viewMode: 1,
+                            dragMode: "move",
+                            background: false,
                         });
-
-
-            }
-
-            function closeCropModal(){
-
-
-                document
-                    .getElementById("cropModal")
-                    .style.display="none";
-
-
-                if(cropper){
-
-                    cropper.destroy();
-
-                    cropper=null;
-
-                }
-
-
-            }
-
-
-            document
-                .querySelectorAll(".flash-popup")
-                .forEach(function(message){
-
-
-                    setTimeout(function(){
-
-
-                        message.style.transition =
-                            "all 0.4s ease";
-
-
-                        message.style.opacity =
-                            "0";
-
-
-                        message.style.transform =
-                            "translateX(40px)";
-
-
-                        setTimeout(function(){
-
-                            message.remove();
-
-                        },400);
-
-
-                    },5000);
-
-
+                    };
                 });
 
+            function saveProfilePicture() {
+                cropper
+                    .getCroppedCanvas({
+                        width: 500,
+                        height: 500,
+                    })
+                    .toBlob(function (blob) {
+                        let formData = new FormData();
 
+                        formData.append("profile_picture", blob, "profile.jpg");
+
+                        fetch("/student/profile/photo", {
+                            method: "POST",
+                            headers: {
+                                "X-CSRFToken": "{{ csrf_token() }}",
+                            },
+                            body: formData,
+                        }).then(() => {
+                            location.reload();
+                        });
+                    });
+            }
+
+            function closeCropModal() {
+                document.getElementById("cropModal").style.display = "none";
+
+                if (cropper) {
+                    cropper.destroy();
+
+                    cropper = null;
+                }
+            }
+
+            document.querySelectorAll(".flash-popup").forEach(function (message) {
+                setTimeout(function () {
+                    message.style.transition = "all 0.4s ease";
+
+                    message.style.opacity = "0";
+
+                    message.style.transform = "translateX(40px)";
+
+                    setTimeout(function () {
+                        message.remove();
+                    }, 400);
+                }, 5000);
+            });
         </script>
     </body>
 </html>

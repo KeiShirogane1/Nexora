@@ -123,21 +123,45 @@
             </div>
         </div>
         <script>
-            function copyStudentCode(){
-                const code = (document.getElementById('studentCodeBadge')?.innerText || '{{ classroom.code }}').trim();
-                const done = () => { if(window.showToast) showToast('✓ Class code copied: ' + code); };
-                if(navigator.clipboard && navigator.clipboard.writeText){
-                    navigator.clipboard.writeText(code).then(done).catch(()=> { if(window.showToast) showToast('✓ Class code copied: ' + code); });
+            function copyStudentCode() {
+                const code = (
+                    document.getElementById("studentCodeBadge")?.innerText ||
+                    "{{ classroom.code }}"
+                ).trim();
+                const done = () => {
+                    if (window.showToast) showToast("✓ Class code copied: " + code);
+                };
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard
+                        .writeText(code)
+                        .then(done)
+                        .catch(() => {
+                            if (window.showToast) showToast("✓ Class code copied: " + code);
+                        });
                 } else {
-                    const ta=document.createElement('textarea'); ta.value=code; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy'); done();}catch(e){ if(window.showToast) showToast('✓ Class code copied: ' + code); } ta.remove();
+                    const ta = document.createElement("textarea");
+                    ta.value = code;
+                    document.body.appendChild(ta);
+                    ta.select();
+                    try {
+                        document.execCommand("copy");
+                        done();
+                    } catch (e) {
+                        if (window.showToast) showToast("✓ Class code copied: " + code);
+                    }
+                    ta.remove();
                 }
             }
-            function openClassTab(tabName, btn){
-                document.querySelectorAll('.profile-tab').forEach(t=> t.classList.remove('active'));
-                const el=document.getElementById(tabName);
-                if(el) el.classList.add('active');
-                document.querySelectorAll('.profile-tab-button').forEach(b=> b.classList.remove('active'));
-                if(btn) btn.classList.add('active');
+            function openClassTab(tabName, btn) {
+                document
+                    .querySelectorAll(".profile-tab")
+                    .forEach((t) => t.classList.remove("active"));
+                const el = document.getElementById(tabName);
+                if (el) el.classList.add("active");
+                document
+                    .querySelectorAll(".profile-tab-button")
+                    .forEach((b) => b.classList.remove("active"));
+                if (btn) btn.classList.add("active");
             }
         </script>
     </body>

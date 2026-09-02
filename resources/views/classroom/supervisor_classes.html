@@ -80,35 +80,40 @@
 
         <script>
             function copyClassCode(button) {
-                const code = button.dataset.code || '';
+                const code = button.dataset.code || "";
                 if (!code) return;
 
                 const finish = () => {
                     const original = button.innerHTML;
                     button.innerHTML = '<span aria-hidden="true">✓</span> Copied';
-                    button.classList.add('is-copied');
+                    button.classList.add("is-copied");
                     window.setTimeout(() => {
                         button.innerHTML = original;
-                        button.classList.remove('is-copied');
+                        button.classList.remove("is-copied");
                     }, 1400);
                 };
 
                 if (navigator.clipboard && window.isSecureContext) {
-                    navigator.clipboard.writeText(code).then(finish).catch(() => fallbackCopy(code, finish));
+                    navigator.clipboard
+                        .writeText(code)
+                        .then(finish)
+                        .catch(() => fallbackCopy(code, finish));
                 } else {
                     fallbackCopy(code, finish);
                 }
             }
 
             function fallbackCopy(text, callback) {
-                const input = document.createElement('textarea');
+                const input = document.createElement("textarea");
                 input.value = text;
-                input.setAttribute('readonly', '');
-                input.style.position = 'fixed';
-                input.style.opacity = '0';
+                input.setAttribute("readonly", "");
+                input.style.position = "fixed";
+                input.style.opacity = "0";
                 document.body.appendChild(input);
                 input.select();
-                try { document.execCommand('copy'); } catch (e) {}
+                try {
+                    document.execCommand("copy");
+                } catch (e) {}
                 input.remove();
                 callback();
             }

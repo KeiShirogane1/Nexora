@@ -1,3 +1,40 @@
+<style>
+/* Floating notification control must never cover page action buttons. */
+.notification-wrapper {
+    position: fixed !important;
+    top: 18px !important;
+    right: 24px !important;
+    z-index: 1100 !important;
+    width: 48px !important;
+    height: 48px !important;
+}
+.notification-button {
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
+    min-height: 48px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: relative !important;
+    z-index: 1101 !important;
+}
+.notification-dropdown {
+    position: absolute !important;
+    top: 56px !important;
+    right: 0 !important;
+    z-index: 1102 !important;
+}
+.notification-count {
+    position: absolute !important;
+    top: -3px !important;
+    right: -3px !important;
+}
+</style>
+
 <div class="notification-wrapper">
     <button class="notification-button" onclick="toggleNotifications()" aria-label="Notifications">
         🔔
@@ -30,46 +67,55 @@
 </div>
 
 <script>
-    function toggleNotifications(){
+    function toggleNotifications() {
         const dropdown = document.getElementById("notificationDropdown");
-        dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+        dropdown.style.display =
+            dropdown.style.display === "block" ? "none" : "block";
     }
 
-    function markNotificationRead(notificationId, el){
-        fetch("/notification/read/" + notificationId, { method: "POST", headers: {"X-CSRFToken": "{{ csrf_token() }}"} })
-            .then(response => {
-                if(response.ok){
-                    if(el) el.classList.remove("unread");
+    function markNotificationRead(notificationId, el) {
+        fetch("/notification/read/" + notificationId, {
+            method: "POST",
+            headers: { "X-CSRFToken": "{{ csrf_token() }}" },
+        })
+            .then((response) => {
+                if (response.ok) {
+                    if (el) el.classList.remove("unread");
                     const countEl = document.getElementById("notificationCount");
-                    if(countEl){
+                    if (countEl) {
                         let c = parseInt(countEl.textContent) || 0;
                         c = Math.max(0, c - 1);
-                        if(c === 0) countEl.remove();
+                        if (c === 0) countEl.remove();
                         else countEl.textContent = c;
                     }
                 }
             })
-            .catch(()=>{});
+            .catch(() => {});
     }
 
-    function markAllRead(e){
-        if(e) e.stopPropagation();
-        fetch("/notifications/read-all", { method: "POST", headers: {"X-CSRFToken": "{{ csrf_token() }}"} })
-            .then(r => r.json())
-            .then(data => {
-                if(data.ok){
-                    document.querySelectorAll(".notification-item.unread").forEach(el=>el.classList.remove("unread"));
+    function markAllRead(e) {
+        if (e) e.stopPropagation();
+        fetch("/notifications/read-all", {
+            method: "POST",
+            headers: { "X-CSRFToken": "{{ csrf_token() }}" },
+        })
+            .then((r) => r.json())
+            .then((data) => {
+                if (data.ok) {
+                    document
+                        .querySelectorAll(".notification-item.unread")
+                        .forEach((el) => el.classList.remove("unread"));
                     const c = document.getElementById("notificationCount");
-                    if(c) c.remove();
+                    if (c) c.remove();
                 }
             });
     }
 
-    document.addEventListener("click", function(event){
+    document.addEventListener("click", function (event) {
         const wrapper = document.querySelector(".notification-wrapper");
         const dropdown = document.getElementById("notificationDropdown");
-        if(wrapper && !wrapper.contains(event.target)){
-            dropdown.style.display="none";
+        if (wrapper && !wrapper.contains(event.target)) {
+            dropdown.style.display = "none";
         }
     });
 </script>
