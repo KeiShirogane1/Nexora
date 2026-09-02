@@ -21,6 +21,7 @@ from app.Http.Controllers.classwork_gradebook_export import classwork_gradebook_
 from app.Http.Controllers.classwork_ml_insights import classwork_ml_insights
 from app.Http.Controllers.performance_reports import performance_reports
 from app.Http.Controllers.admin_reports_overview import admin_reports_overview
+from app.Http.Controllers.admin_trash import admin_trash
 from app.Http.Controllers.notifications import notifications_bp
 from scripts.init_db import initialize_database
 from app.Models.db import get_db_connection,using_postgres
@@ -28,15 +29,12 @@ from app.Services.classroom_service import ensure_classroom_schema
 from app.Services.classwork_submission_service import ensure_classwork_submission_schema
 from app.Services.classwork_score_schema import ensure_classwork_score_schema
 from app.Services.notification_service import get_user_notifications,get_recent_notifications,get_unread_count
-
 app=Flask(__name__,template_folder=str(BASE_DIR/"resources"/"views"),static_folder=str(BASE_DIR/"resources"/"assets"),static_url_path="/static")
 _secret=os.environ.get("SECRET_KEY")
 if not _secret:
     if os.environ.get("FLASK_ENV")=="production" or os.environ.get("NEXORA_ENV")=="production": raise RuntimeError("SECRET_KEY must be set in production")
     _secret="dev-secret-key-change-me-not-for-production"
-app.secret_key=_secret; app.config.update(SECRET_KEY=_secret,SESSION_COOKIE_HTTPONLY=True,SESSION_COOKIE_SAMESITE="Lax",MAX_CONTENT_LENGTH=5*1024*1024)
-app.config["SESSION_COOKIE_SECURE"]=os.environ.get("SESSION_COOKIE_SECURE","").lower() in ("1","true","yes") or os.environ.get("FLASK_ENV")=="production" or os.environ.get("NEXORA_ENV")=="production"
-_debug=os.environ.get("FLASK_DEBUG",os.environ.get("NEXORA_DEBUG","0")); app.debug=_debug.lower() in ("1","true","yes"); app.config["WTF_CSRF_ENABLED"]=True; app.config["WTF_CSRF_TIME_LIMIT"]=None
+app.secret_key=_secret; app.config.update(SECRET_KEY=_secret,SESSION_COOKIE_HTTPONLY=True,SESSION_COOKIE_SAMESITE="Lax",MAX_CONTENT_LENGTH=5*1024*1024); app.config["SESSION_COOKIE_SECURE"]=os.environ.get("SESSION_COOKIE_SECURE","").lower() in ("1","true","yes") or os.environ.get("FLASK_ENV")=="production" or os.environ.get("NEXORA_ENV")=="production"; _debug=os.environ.get("FLASK_DEBUG",os.environ.get("NEXORA_DEBUG","0")); app.debug=_debug.lower() in ("1","true","yes"); app.config["WTF_CSRF_ENABLED"]=True; app.config["WTF_CSRF_TIME_LIMIT"]=None
 try:
  from flask_wtf.csrf import CSRFProtect
  csrf=CSRFProtect(app)
@@ -48,8 +46,7 @@ def _security(response):
  response.headers["X-Content-Type-Options"]="nosniff"; response.headers["X-Frame-Options"]="DENY"; response.headers["Referrer-Policy"]="strict-origin-when-cross-origin"; response.headers["Content-Security-Policy"]="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' https: data:; connect-src 'self'; frame-ancestors 'none'"
  if app.config.get("SESSION_COOKIE_SECURE"): response.headers["Strict-Transport-Security"]="max-age=31536000; includeSubDomains"
  return response
-UPLOAD_FOLDER=BASE_DIR/"storage"/"uploads"; UPLOAD_FOLDER.mkdir(parents=True,exist_ok=True); app.config["UPLOAD_FOLDER"]=str(UPLOAD_FOLDER)
-PROFILE_UPLOAD_FOLDER=UPLOAD_FOLDER/"profile_pictures"; PROFILE_UPLOAD_FOLDER.mkdir(parents=True,exist_ok=True); app.config["PROFILE_UPLOAD_FOLDER"]=str(PROFILE_UPLOAD_FOLDER)
+UPLOAD_FOLDER=BASE_DIR/"storage"/"uploads"; UPLOAD_FOLDER.mkdir(parents=True,exist_ok=True); app.config["UPLOAD_FOLDER"]=str(UPLOAD_FOLDER); PROFILE_UPLOAD_FOLDER=UPLOAD_FOLDER/"profile_pictures"; PROFILE_UPLOAD_FOLDER.mkdir(parents=True,exist_ok=True); app.config["PROFILE_UPLOAD_FOLDER"]=str(PROFILE_UPLOAD_FOLDER)
 @app.route("/uploads/<path:filename>")
 def uploaded_file(filename): return send_from_directory(str(UPLOAD_FOLDER),filename)
 @app.route("/uploads/profile_pictures/<filename>")
@@ -59,22 +56,19 @@ def user_profile_picture(user_id):
  conn=get_db_connection()
  try: row=conn.execute("SELECT profile_picture FROM student_profiles WHERE user_id=?",(user_id,)).fetchone(); filename=row[0] if row else None
  finally: conn.close()
- if filename: return send_from_directory(str(PROFILE_UPLOAD_FOLDER),filename)
- return send_from_directory(str(BASE_DIR/"resources"/"assets"/"images"),"default_profile.png")
+ return send_from_directory(str(PROFILE_UPLOAD_FOLDER if filename else BASE_DIR/"resources"/"assets"/"images"),filename or "default_profile.png")
 @app.route("/favicon.ico")
 def favicon(): return send_from_directory(str(BASE_DIR/"resources"/"assets"/"images"),"Nexora.png",mimetype="image/png")
 @app.route("/health")
 def health(): return {"status":"ok"},200
-
 def repair_missing_student_profiles():
  conn=get_db_connection(); cur=conn.cursor()
  try:
-  sql=("INSERT INTO student_profiles (user_id,profile_completed) SELECT u.id,0 FROM users u WHERE u.role='student' AND NOT EXISTS (SELECT 1 FROM student_profiles sp WHERE sp.user_id=u.id) ON CONFLICT (user_id) DO NOTHING" if using_postgres() else "INSERT OR IGNORE INTO student_profiles (user_id,profile_completed) SELECT u.id,0 FROM users u WHERE u.role='student' AND NOT EXISTS (SELECT 1 FROM student_profiles sp WHERE sp.user_id=u.id)")
-  cur.execute(sql); conn.commit()
+  sql=("INSERT INTO student_profiles (user_id,profile_completed) SELECT u.id,0 FROM users u WHERE u.role='student' AND NOT EXISTS (SELECT 1 FROM student_profiles sp WHERE sp.user_id=u.id) ON CONFLICT (user_id) DO NOTHING" if using_postgres() else "INSERT OR IGNORE INTO student_profiles (user_id,profile_completed) SELECT u.id,0 FROM users u WHERE u.role='student' AND NOT EXISTS (SELECT 1 FROM student_profiles sp WHERE sp.user_id=u.id)"); cur.execute(sql); conn.commit()
  except Exception as exc: conn.rollback(); print("student profile repair skipped:",exc)
  finally: cur.close(); conn.close()
 initialize_database(); ensure_classroom_schema(); ensure_classwork_submission_schema(); ensure_classwork_score_schema(); repair_missing_student_profiles()
-for bp in (auth,password,student,student_classwork,student_gradebook,student_classmates,supervisor,admin,classroom,classwork,classwork_submissions,classwork_grading,classwork_scores,classwork_gradebook,classwork_gradebook_export,classwork_ml_insights,performance_reports,admin_reports_overview,notifications_bp): app.register_blueprint(bp)
+for bp in (auth,password,student,student_classwork,student_gradebook,student_classmates,supervisor,admin,classroom,classwork,classwork_submissions,classwork_grading,classwork_scores,classwork_gradebook,classwork_gradebook_export,classwork_ml_insights,performance_reports,admin_reports_overview,admin_trash,notifications_bp): app.register_blueprint(bp)
 @app.context_processor
 def inject_notifications():
  if "user_id" not in session:return {"notifications":[],"recent_notifications":[],"unread_count":0,"sidebar_profile":None}
