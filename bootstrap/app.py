@@ -29,6 +29,7 @@ from app.Http.Controllers.performance_reports import performance_reports
 from app.Http.Controllers.notifications import notifications_bp
 
 from scripts.init_db import initialize_database
+from app.Models.db import get_db_connection, using_postgres
 from app.Services.classroom_service import ensure_classroom_schema
 from app.Services.classwork_submission_service import ensure_classwork_submission_schema
 from app.Services.classwork_score_schema import ensure_classwork_score_schema
@@ -97,10 +98,51 @@ def profile_picture(filename):
 def health():
     return {"status": "ok"}, 200
 
+
+def repair_missing_student_profiles():
+    """Create the profile row for any existing student account missing one."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        if using_postgres():
+            cursor.execute("""
+                INSERT INTO student_profiles (user_id, profile_completed)
+                SELECT u.id, 0
+                FROM users u
+                WHERE u.role = 'student'
+                  AND NOT EXISTS (
+                      SELECT 1
+                      FROM student_profiles sp
+                      WHERE sp.user_id = u.id
+                  )
+                ON CONFLICT (user_id) DO NOTHING
+            """)
+        else:
+            cursor.execute("""
+                INSERT OR IGNORE INTO student_profiles (user_id, profile_completed)
+                SELECT u.id, 0
+                FROM users u
+                WHERE u.role = 'student'
+                  AND NOT EXISTS (
+                      SELECT 1
+                      FROM student_profiles sp
+                      WHERE sp.user_id = u.id
+                  )
+            """)
+        conn.commit()
+    except Exception as exc:
+        conn.rollback()
+        print("student profile repair skipped:", exc)
+    finally:
+        cursor.close()
+        conn.close()
+
+
 initialize_database()
 ensure_classroom_schema()
 ensure_classwork_submission_schema()
 ensure_classwork_score_schema()
+repair_missing_student_profiles()
 
 app.register_blueprint(auth)
 app.register_blueprint(password)
