@@ -1,76 +1,184 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="UTF-8">
-        <title>{{ assignment.title }} - Nexora</title>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
-    </head>
-    <body class="student-page">
-        {% include 'components/student_sidebar.html' %}
-        <div class="student-main-content nexora-app-main">
-            <div class="nexora-page">
-                <a href="{{ url_for('classroom.student_class', class_id=classroom.id) }}" class="btn btn-light btn-sm mb-3">← Back to Class</a>
-
-                {% with messages = get_flashed_messages(with_categories=true) %}
-                    {% if messages %}
-                        {% for category, message in messages %}
-                            <div class="alert alert-{{ 'danger' if category=='danger' else 'success' if category=='success' else 'warning' if category=='warning' else 'info' }}">{{ message }}</div>
-                        {% endfor %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ assignment.title }} - Nexora</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
+    <style>
+        :root {
+            --nx-green:#12a879; --nx-green-dark:#07865f; --nx-green-soft:#eaf8f3;
+            --nx-ink:#142033; --nx-muted:#697486; --nx-line:#e6eaf0; --nx-bg:#f7f9fb;
+        }
+        *{box-sizing:border-box}
+        body.student-assignment-page{margin:0;background:var(--nx-bg);color:var(--nx-ink);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+        .assignment-main{margin-left:268px;min-height:100vh;padding:0 34px 40px}
+        .assignment-top{height:76px;display:flex;align-items:center;justify-content:flex-end}
+        .assignment-top-actions{display:flex;align-items:center;gap:18px}
+        .assignment-search{width:260px;height:42px;border:1px solid var(--nx-line);border-radius:12px;background:#fff;padding:0 15px;color:var(--nx-muted);outline:none}
+        .assignment-profile{display:flex;align-items:center;gap:10px;font-weight:700}
+        .assignment-profile img{width:40px;height:40px;border-radius:50%;object-fit:cover;border:1px solid var(--nx-line)}
+        .assignment-wrap{max-width:1180px;margin:0 auto}
+        .assignment-breadcrumb{display:flex;align-items:center;gap:8px;margin:8px 0 22px;font-size:13px;color:var(--nx-muted)}
+        .assignment-breadcrumb a{color:var(--nx-green-dark);font-weight:700;text-decoration:none}
+        .assignment-hero{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;margin-bottom:26px}
+        .assignment-eyebrow{display:block;margin-bottom:8px;font-size:11px;font-weight:800;letter-spacing:.13em;color:var(--nx-green-dark)}
+        .assignment-hero h1{margin:0;font-size:32px;line-height:1.15;letter-spacing:-.03em}
+        .assignment-subtitle{margin:8px 0 0;color:var(--nx-muted);font-size:14px}
+        .assignment-back{border:1px solid var(--nx-line);background:#fff;color:var(--nx-ink);text-decoration:none;border-radius:11px;padding:10px 15px;font-size:13px;font-weight:700;white-space:nowrap}
+        .assignment-grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:20px;align-items:start}
+        .assignment-card{background:#fff;border:1px solid var(--nx-line);border-radius:16px;box-shadow:0 5px 18px rgba(20,32,51,.045);padding:24px}
+        .assignment-card+.assignment-card{margin-top:20px}
+        .assignment-card-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:20px}
+        .assignment-card h2{font-size:18px;margin:0;font-weight:800;letter-spacing:-.01em}
+        .assignment-card h3{font-size:14px;margin:22px 0 12px;font-weight:800}
+        .assignment-description{font-size:14px;line-height:1.75;color:#394456;white-space:pre-wrap}
+        .assignment-meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:22px}
+        .assignment-meta-item{padding:14px;border:1px solid var(--nx-line);border-radius:12px;background:#fbfcfd}
+        .assignment-meta-item span{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--nx-muted);font-weight:800;margin-bottom:5px}
+        .assignment-meta-item strong{font-size:14px}
+        .assignment-pill{display:inline-flex;align-items:center;padding:7px 10px;border-radius:999px;background:var(--nx-green-soft);color:var(--nx-green-dark);font-size:12px;font-weight:800}
+        .assignment-pill.is-danger{background:#fff0f0;color:#b42318}
+        .assignment-alert{padding:13px 14px;border-radius:12px;font-size:13px;margin-top:18px}
+        .assignment-alert.warning{background:#fff7e8;border:1px solid #f4dfb3;color:#8a5b00}
+        .assignment-alert.success{background:var(--nx-green-soft);border:1px solid #ccefe1;color:var(--nx-green-dark)}
+        .assignment-alert.info{background:#eff6ff;border:1px solid #d7e8ff;color:#245b93}
+        .assignment-alert.danger{background:#fff0f0;border:1px solid #f4cccc;color:#a61b1b}
+        .submission-status{font-size:12px;font-weight:800;padding:7px 10px;border-radius:999px;background:#f1f3f5;color:#596474}
+        .submission-status.graded{background:var(--nx-green-soft);color:var(--nx-green-dark)}
+        .submission-status.submitted{background:#edf4ff;color:#2863a0}
+        .submission-details{display:grid;gap:12px}
+        .submission-detail{padding:13px 14px;border:1px solid var(--nx-line);border-radius:12px;background:#fbfcfd}
+        .submission-detail span{display:block;color:var(--nx-muted);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px}
+        .submission-detail p{margin:0;color:#394456;font-size:13px;line-height:1.65;white-space:pre-wrap}
+        .submission-detail a{color:var(--nx-green-dark);font-weight:700;text-decoration:none}
+        .assignment-form-group{margin-bottom:18px}
+        .assignment-form-group label{display:block;font-size:13px;font-weight:800;margin-bottom:8px}
+        .assignment-form-group textarea,.assignment-form-group input[type=file]{width:100%;border:1px solid var(--nx-line);border-radius:11px;background:#fff;padding:12px 13px;font-size:13px;color:var(--nx-ink)}
+        .assignment-form-group textarea{min-height:130px;resize:vertical;outline:none}
+        .assignment-form-group textarea:focus,.assignment-form-group input[type=file]:focus{border-color:var(--nx-green);box-shadow:0 0 0 3px rgba(18,168,121,.1)}
+        .assignment-help{display:block;margin-top:7px;color:var(--nx-muted);font-size:11px;line-height:1.5}
+        .assignment-submit{width:100%;border:0;border-radius:11px;background:var(--nx-green);color:#fff;padding:12px 16px;font-size:13px;font-weight:800;cursor:pointer}
+        .assignment-submit:hover{background:var(--nx-green-dark)}
+        .assignment-side-list{display:grid;gap:12px}
+        .assignment-side-item{display:flex;justify-content:space-between;gap:12px;padding-bottom:13px;border-bottom:1px solid var(--nx-line)}
+        .assignment-side-item:last-child{padding-bottom:0;border-bottom:0}
+        .assignment-side-item span{font-size:12px;color:var(--nx-muted)}
+        .assignment-side-item strong{text-align:right;font-size:13px}
+        .assignment-note{font-size:12px;line-height:1.65;color:var(--nx-muted);margin:0}
+        .assignment-flashes{display:grid;gap:10px;margin-bottom:20px}
+        @media(max-width:900px){.assignment-main{margin-left:0;padding:0 18px 30px}.assignment-grid{grid-template-columns:1fr}.assignment-top{height:64px}.assignment-search{width:190px}.assignment-hero{align-items:flex-start;flex-direction:column}.assignment-back{align-self:flex-start}}
+        @media(max-width:600px){.assignment-top-actions{width:100%;justify-content:flex-end}.assignment-search{display:none}.assignment-hero h1{font-size:27px}.assignment-meta{grid-template-columns:1fr}.assignment-card{padding:19px}}
+    </style>
+</head>
+<body class="student-page student-assignment-page">
+    {% include 'components/student_sidebar.html' %}
+    <main class="assignment-main">
+        <div class="assignment-top">
+            <div class="assignment-top-actions">
+                <input class="assignment-search" type="search" placeholder="Search..." aria-label="Search">
+                <a href="{{ url_for('notifications.notification_list') }}" aria-label="Notifications" style="text-decoration:none;font-size:20px;color:var(--nx-ink)">♢</a>
+                <div class="assignment-profile">
+                    {% if profile is defined and profile[5] %}
+                        <img src="{{ url_for('profile_picture', filename=profile[5]) }}" alt="Profile">
+                    {% else %}
+                        <img src="{{ url_for('static', filename='images/default_profile.png') }}" alt="Profile">
                     {% endif %}
-                {% endwith %}
-
-                <div class="card shadow-sm mb-4">
-                    <div class="card-body">
-                        <h3>{{ assignment.title }}</h3>
-                        <p class="text-muted">{{ assignment.description or 'No description.' }}</p>
-                        <div class="d-flex gap-2 small">
-                            <span class="badge bg-primary">{{ assignment.points }} pts</span>
-                            {% if assignment.due_at %}
-                                <span class="badge {% if past_due %}bg-danger{% else %}bg-secondary{% endif %}">Due: {{ assignment.due_at }}</span>
-                            {% else %}
-                                <span class="badge bg-secondary">No due date</span>
-                            {% endif %}
-                        </div>
-                        {% if past_due %}<div class="alert alert-danger mt-3">Deadline has passed.</div>{% endif %}
-                    </div>
+                    {% if profile is defined %}<span>{{ profile[0] }}</span>{% endif %}
                 </div>
+            </div>
+        </div>
 
-                <div class="card shadow-sm mb-4">
-                    <div class="card-header bg-white"><h6 class="mb-0">Your Submission</h6></div>
-                    <div class="card-body">
+        <div class="assignment-wrap">
+            <div class="assignment-breadcrumb">
+                <a href="{{ url_for('classroom.student_class', class_id=classroom.id) }}">My Class</a><span>›</span><span>Assignment</span>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="assignment-flashes">
+                        {% for category, message in messages %}
+                            <div class="assignment-alert {{ 'danger' if category=='danger' else 'success' if category=='success' else 'warning' if category=='warning' else 'info' }}">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <header class="assignment-hero">
+                <div>
+                    <span class="assignment-eyebrow">ASSIGNMENT</span>
+                    <h1>{{ assignment.title }}</h1>
+                    <p class="assignment-subtitle">{{ classroom.name }}{% if classroom.section %} · {{ classroom.section }}{% endif %}</p>
+                </div>
+                <a href="{{ url_for('classroom.student_class', class_id=classroom.id) }}" class="assignment-back">← Back to Class</a>
+            </header>
+
+            <div class="assignment-grid">
+                <div>
+                    <section class="assignment-card">
+                        <div class="assignment-card-heading">
+                            <h2>Assignment Details</h2>
+                            {% if past_due %}<span class="assignment-pill is-danger">Deadline passed</span>{% else %}<span class="assignment-pill">Active</span>{% endif %}
+                        </div>
+                        <div class="assignment-description">{{ assignment.description or 'No description.' }}</div>
+                        <div class="assignment-meta">
+                            <div class="assignment-meta-item"><span>Points</span><strong>{{ assignment.points }} pts</strong></div>
+                            <div class="assignment-meta-item"><span>Due date</span><strong>{% if assignment.due_at %}{{ assignment.due_at }}{% else %}No due date{% endif %}</strong></div>
+                        </div>
+                        {% if past_due %}<div class="assignment-alert danger">The deadline has passed. Submission may still be accepted depending on your class policy.</div>{% endif %}
+                    </section>
+
+                    <section class="assignment-card">
+                        <div class="assignment-card-heading"><h2>Your Submission</h2>{% if submission %}<span class="submission-status {{ submission.status }}">{{ submission.status|replace('_',' ')|capitalize }}</span>{% else %}<span class="submission-status">Not submitted</span>{% endif %}</div>
                         {% if submission %}
-                            <p><strong>Status:</strong> <span class="badge {% if submission.status=='graded' %}bg-success{% elif submission.status=='submitted' %}bg-primary{% else %}bg-secondary{% endif %}">{{ submission.status }}</span></p>
-                            {% if submission.grade %}<p><strong>Grade:</strong> {{ submission.grade }}</p>{% endif %}
-                            {% if submission.feedback %}<p><strong>Feedback:</strong> {{ submission.feedback }}</p>{% endif %}
-                            {% if submission.content %}<p><strong>Text:</strong> {{ submission.content }}</p>{% endif %}
-                            {% if submission.filename %}
-                                <p><strong>File:</strong> <a href="{{ url_for('classroom.download_own_submission', class_id=classroom.id, assignment_id=assignment.id) }}">{{ submission.filename }}</a></p>
-                            {% endif %}
-                            <p class="small text-muted">Submitted: {{ submission.submitted_at }}</p>
-                            <hr>
-                            <h6>Resubmit</h6>
+                            <div class="submission-details">
+                                {% if submission.grade is not none %}<div class="submission-detail"><span>Grade</span><p>{{ submission.grade }} / {{ assignment.points }}</p></div>{% endif %}
+                                {% if submission.feedback %}<div class="submission-detail"><span>Feedback</span><p>{{ submission.feedback }}</p></div>{% endif %}
+                                {% if submission.content %}<div class="submission-detail"><span>Text response</span><p>{{ submission.content }}</p></div>{% endif %}
+                                {% if submission.filename %}<div class="submission-detail"><span>File attachment</span><p><a href="{{ url_for('classroom.download_own_submission', class_id=classroom.id, assignment_id=assignment.id) }}">📎 {{ submission.filename }}</a></p></div>{% endif %}
+                                <div class="submission-detail"><span>Submitted</span><p>{{ submission.submitted_at }}</p></div>
+                            </div>
+                            <h3>Resubmit your work</h3>
                         {% else %}
-                            <p class="text-muted">No submission yet.</p>
+                            <p class="assignment-note" style="margin-bottom:20px">No submission yet. Complete the work below and submit it when you're ready.</p>
                         {% endif %}
 
                         <form method="POST" action="{{ url_for('classroom.student_submit_assignment', class_id=classroom.id, assignment_id=assignment.id) }}" enctype="multipart/form-data">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <div class="mb-3">
-                                <label class="form-label">Text response</label>
-                                <textarea name="content" class="form-control" rows="4" placeholder="Type your answer...">{{ submission.content if submission else '' }}</textarea>
+                            <div class="assignment-form-group">
+                                <label for="assignment-content">Text response</label>
+                                <textarea id="assignment-content" name="content" maxlength="10000" placeholder="Type your answer...">{{ submission.content if submission else '' }}</textarea>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label">File attachment (optional)</label>
-                                <input type="file" name="file" class="form-control">
-                                <small class="text-muted">Allowed: pdf, docx, doc, xlsx, xls, pptx, txt, zip, png, jpg, jpeg, gif. Max 5MB.</small>
+                            <div class="assignment-form-group">
+                                <label for="assignment-file">File attachment <span style="font-weight:500;color:var(--nx-muted)">(optional)</span></label>
+                                <input id="assignment-file" type="file" name="file">
+                                <small class="assignment-help">Allowed: PDF, DOCX, DOC, XLSX, XLS, PPTX, TXT, ZIP, PNG, JPG, JPEG, GIF. Maximum 5 MB.</small>
                             </div>
-                            <button type="submit" class="btn btn-primary">{% if submission %}Resubmit{% else %}Submit{% endif %}</button>
+                            <button type="submit" class="assignment-submit">{% if submission %}Resubmit Assignment{% else %}Submit Assignment{% endif %}</button>
                         </form>
-                    </div>
+                    </section>
                 </div>
+
+                <aside>
+                    <section class="assignment-card">
+                        <div class="assignment-card-heading"><h2>Assignment Summary</h2></div>
+                        <div class="assignment-side-list">
+                            <div class="assignment-side-item"><span>Class</span><strong>{{ classroom.name }}</strong></div>
+                            {% if classroom.section %}<div class="assignment-side-item"><span>Section</span><strong>{{ classroom.section }}</strong></div>{% endif %}
+                            <div class="assignment-side-item"><span>Points</span><strong>{{ assignment.points }}</strong></div>
+                            <div class="assignment-side-item"><span>Due</span><strong>{% if assignment.due_at %}{{ assignment.due_at }}{% else %}No due date{% endif %}</strong></div>
+                            <div class="assignment-side-item"><span>Status</span><strong>{% if submission %}{{ submission.status|replace('_',' ')|capitalize }}{% else %}Not submitted{% endif %}</strong></div>
+                        </div>
+                    </section>
+                    <section class="assignment-card">
+                        <div class="assignment-card-heading"><h2>Submission Tips</h2></div>
+                        <p class="assignment-note">Review your response before submitting. Make sure any attached file is the correct version and within the 5 MB limit.</p>
+                    </section>
+                </aside>
             </div>
         </div>
-    </body>
+    </main>
+</body>
 </html>
