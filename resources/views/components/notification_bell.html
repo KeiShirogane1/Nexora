@@ -1,141 +1,103 @@
 <style>
-/* Student redesign: notifications belong to the sidebar, not as a floating control. */
-.notification-wrapper {
-    display: none !important;
-}
+/* Student dashboard utilities. */
+.notification-wrapper { display:none !important; }
 
-/* Match the approved dashboard header: search + profile only. */
-.nx-top::before {
-    content: "⌕";
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 34px;
-    height: 34px;
-    color: #142033;
-    font-size: 24px;
-    line-height: 1;
-    margin-right: 2px;
+/* Collapsible sidebar matching the reference UI. */
+.nx-collapse-toggle {
+    position:absolute;
+    right:-13px;
+    top:50%;
+    transform:translateY(-50%);
+    width:27px;
+    height:27px;
+    border:1px solid #dfe6e9;
+    border-radius:50%;
+    background:#12a879;
+    color:#fff;
+    display:grid;
+    place-items:center;
+    padding:0;
+    z-index:300;
+    cursor:pointer;
+    box-shadow:0 3px 10px rgba(20,32,51,.14);
+    font-size:16px;
+    line-height:1;
+    transition:transform .2s ease,background .2s ease;
 }
+.nx-collapse-toggle:hover { background:#07865f; }
+.nx-sidebar.nx-collapsed {
+    width:82px !important;
+    padding-left:12px !important;
+    padding-right:12px !important;
+}
+.nx-sidebar.nx-collapsed .nx-brand { justify-content:center; padding:0; }
+.nx-sidebar.nx-collapsed .nx-brand strong,
+.nx-sidebar.nx-collapsed .nx-brand small,
+.nx-sidebar.nx-collapsed .nx-profile > span,
+.nx-sidebar.nx-collapsed .nx-label,
+.nx-sidebar.nx-collapsed .nx-divider,
+.nx-sidebar.nx-collapsed .nx-footer { display:none !important; }
+.nx-sidebar.nx-collapsed .nx-profile { justify-content:center; margin:25px 0 20px; }
+.nx-sidebar.nx-collapsed .nx-profile img { width:48px; height:48px; }
+.nx-sidebar.nx-collapsed .nx-nav a { justify-content:center; padding:0; gap:0; }
+.nx-sidebar.nx-collapsed .nx-nav a:not(.notification-unread) { color:#253146; }
+.nx-sidebar.nx-collapsed .nx-nav .ico { width:auto; }
+.nx-sidebar.nx-collapsed .nx-badge { position:absolute !important; right:5px; top:4px; min-width:16px !important; height:16px !important; font-size:8px !important; padding:0 4px !important; }
+.nx-sidebar.nx-collapsed .nx-nav a { position:relative; }
+.nx-sidebar.nx-collapsed .nx-collapse-toggle { transform:translateY(-50%) rotate(180deg); }
+.nx-student.nx-sidebar-collapsed .nx-main { margin-left:114px !important; }
+.nx-student.nx-sidebar-collapsed .nx-wrap { max-width:1160px; }
 
-.nx-top-profile span {
-    display: none !important;
-}
+/* Match the approved dashboard header: functional search + notification + profile. */
+.nx-top::before { display:none !important; }
+.nx-top-profile span { display:inline !important; }
 
 /* Unread notifications: red border + red count badge in sidebar. */
-.nx-nav a:has(.nx-badge) {
-    border: 1.5px solid #ef4444 !important;
-    color: #334155 !important;
-}
-
-.nx-nav a:has(.nx-badge) .ico {
-    color: #ef4444 !important;
-}
-
-.nx-nav a .nx-badge {
-    position: static !important;
-    margin-left: auto !important;
-    min-width: 20px !important;
-    height: 20px !important;
-    padding: 0 5px !important;
-    border-radius: 999px !important;
-    background: #ef4444 !important;
-    color: #fff !important;
-    font-size: 10px !important;
-    font-weight: 800 !important;
-    display: inline-grid !important;
-    place-items: center !important;
-    line-height: 1 !important;
-}
-
-/* The dashboard already renders the notification count in the sidebar. */
-.nx-top-action {
-    display: none !important;
-}
-
-/* Add the competency summary shown in the approved dashboard mockup. */
-.nx-progress::after {
-    content: "Progress by Competency\A Technical Skills                         80%\A Communication                           65%\A Teamwork                                  70%\A Problem Solving                         55%\A Professionalism                         60%";
-    white-space: pre;
-    display: block;
-    grid-column: 1 / -1;
-    margin-top: 2px;
-    padding-top: 12px;
-    border-top: 1px solid #f0f2f5;
-    color: #5f6b7a;
-    font-size: 9px;
-    line-height: 2.05;
-}
-
-/* Keep the competency summary hidden on very small screens where the progress
-   card becomes narrow; the full progress page remains available. */
-@media (max-width: 760px) {
-    .nx-progress::after {
-        font-size: 8px;
-        line-height: 1.9;
-    }
-}
+.nx-nav a:has(.nx-badge) { border:1.5px solid #ef4444 !important; color:#334155 !important; }
+.nx-nav a:has(.nx-badge) .ico { color:#ef4444 !important; }
+.nx-nav a .nx-badge { position:static; margin-left:auto; min-width:20px; height:20px; padding:0 5px; border-radius:999px; background:#ef4444 !important; color:#fff !important; font-size:10px; font-weight:800; display:inline-grid; place-items:center; line-height:1; }
+.nx-top-action { display:none !important; }
 </style>
 
-<!--
-  Notification dropdown is retained for non-dashboard student pages.
-  On the redesigned dashboard it is hidden so the sidebar is the single
-  notification entry point.
--->
 <div class="notification-wrapper">
-    <button type="button" class="notification-button" onclick="toggleNotifications(event)" aria-label="Recent notifications" aria-expanded="false">
-        🔔
-        {% if unread_count > 0 %}<span class="notification-count" id="notificationCount">{{ unread_count }}</span>{% endif %}
-    </button>
+    <button type="button" class="notification-button" onclick="toggleNotifications(event)" aria-label="Recent notifications" aria-expanded="false">🔔{% if unread_count > 0 %}<span class="notification-count" id="notificationCount">{{ unread_count }}</span>{% endif %}</button>
     <div id="notificationDropdown" class="notification-dropdown" role="menu">
-        <div class="notification-dropdown-header">
-            <strong>Recent notifications</strong>
-            <span>Last 7 days</span>
-        </div>
+        <div class="notification-dropdown-header"><strong>Recent notifications</strong><span>Last 7 days</span></div>
         {% if recent_notifications %}
             {% for notif in recent_notifications %}
                 <div id="notif-{{ notif['id'] }}" class="notification-item {% if notif['is_read'] == 0 %}unread{% endif %}" onclick="openNotification({{ notif['id'] }}, '{{ notif['link_url'] or '' }}', this)">
-                    <strong>{{ notif['title'] }}</strong>
-                    <p>{{ notif['message'] }}</p>
-                    <small>{{ notif['created_at'] }}</small>
+                    <strong>{{ notif['title'] }}</strong><p>{{ notif['message'] }}</p><small>{{ notif['created_at'] }}</small>
                 </div>
             {% endfor %}
-            {% if unread_count > 0 %}
-                <div class="notification-mark-all"><button type="button" onclick="markAllRead(event)" class="notification-mark-all-button">Mark all as read</button></div>
-            {% endif %}
-        {% else %}
-            <div class="notification-empty">No notifications in the last 7 days.</div>
-        {% endif %}
+            {% if unread_count > 0 %}<div class="notification-mark-all"><button type="button" onclick="markAllRead(event)" class="notification-mark-all-button">Mark all as read</button></div>{% endif %}
+        {% else %}<div class="notification-empty">No notifications in the last 7 days.</div>{% endif %}
     </div>
 </div>
 
 <script>
 function toggleNotifications(event) {
     if (event) event.stopPropagation();
-    const dropdown = document.getElementById('notificationDropdown');
-    const button = document.querySelector('.notification-button');
-    if (!dropdown) return;
-    const open = dropdown.style.display === 'block';
-    dropdown.style.display = open ? 'none' : 'block';
-    if (button) button.setAttribute('aria-expanded', String(!open));
+    const dropdown=document.getElementById('notificationDropdown'); const button=document.querySelector('.notification-button');
+    if (!dropdown) return; const open=dropdown.style.display==='block'; dropdown.style.display=open?'none':'block'; if(button)button.setAttribute('aria-expanded',String(!open));
 }
-function openNotification(notificationId, link, el) {
-    markNotificationRead(notificationId, el, false);
-    if (link) window.location.href = link;
-}
-function markNotificationRead(notificationId, el, redirectAfter) {
-    fetch('/notification/read/' + notificationId, { method:'POST', headers:{'X-CSRFToken':'{{ csrf_token() }}'} })
-      .then(r => { if (r.ok) { if (el) el.classList.remove('unread'); const c=document.getElementById('notificationCount'); if(c){let n=Math.max(0,(parseInt(c.textContent)||0)-1); if(n===0)c.remove(); else c.textContent=n;} } })
-      .catch(()=>{});
-}
-function markAllRead(e) {
-    if(e) e.stopPropagation();
-    fetch('/notifications/read-all', { method:'POST', headers:{'X-CSRFToken':'{{ csrf_token() }}'} })
-      .then(r=>r.json()).then(data=>{ if(data.ok){document.querySelectorAll('.notification-item.unread').forEach(el=>el.classList.remove('unread')); const c=document.getElementById('notificationCount'); if(c)c.remove();} }).catch(()=>{});
-}
-document.addEventListener('click', function(event) {
-    const wrapper=document.querySelector('.notification-wrapper');
-    const dropdown=document.getElementById('notificationDropdown');
-    if(wrapper && dropdown && !wrapper.contains(event.target)) dropdown.style.display='none';
+function openNotification(notificationId,link,el){markNotificationRead(notificationId,el,false);if(link)window.location.href=link;}
+function markNotificationRead(notificationId,el,redirectAfter){fetch('/notification/read/'+notificationId,{method:'POST',headers:{'X-CSRFToken':'{{ csrf_token() }}'}}).then(r=>{if(r.ok){if(el)el.classList.remove('unread');const c=document.getElementById('notificationCount');if(c){let n=Math.max(0,(parseInt(c.textContent)||0)-1);if(n===0)c.remove();else c.textContent=n;}}}).catch(()=>{});}
+function markAllRead(e){if(e)e.stopPropagation();fetch('/notifications/read-all',{method:'POST',headers:{'X-CSRFToken':'{{ csrf_token() }}'}}).then(r=>r.json()).then(data=>{if(data.ok){document.querySelectorAll('.notification-item.unread').forEach(el=>el.classList.remove('unread'));const c=document.getElementById('notificationCount');if(c)c.remove();}}).catch(()=>{});}
+document.addEventListener('click',function(event){const wrapper=document.querySelector('.notification-wrapper');const dropdown=document.getElementById('notificationDropdown');if(wrapper&&dropdown&&!wrapper.contains(event.target))dropdown.style.display='none';});
+
+/* Create the collapse control only on the redesigned student sidebar. */
+document.addEventListener('DOMContentLoaded',function(){
+    const sidebar=document.querySelector('.nx-sidebar');
+    const student=document.querySelector('.nx-student');
+    if(!sidebar||!student)return;
+    const button=document.createElement('button');
+    button.type='button'; button.className='nx-collapse-toggle'; button.setAttribute('aria-label','Collapse sidebar'); button.setAttribute('aria-expanded','true'); button.innerHTML='‹';
+    sidebar.appendChild(button);
+    button.addEventListener('click',function(){
+        const collapsed=sidebar.classList.toggle('nx-collapsed');
+        student.classList.toggle('nx-sidebar-collapsed',collapsed);
+        button.setAttribute('aria-expanded',String(!collapsed));
+        button.setAttribute('aria-label',collapsed?'Expand sidebar':'Collapse sidebar');
+    });
 });
 </script>
