@@ -6,11 +6,9 @@
     <title>Tasks - Nexora</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/student-tasks.css') }}">
 </head>
 <body class="student-page student-tasks-page">
     {% include 'components/student_sidebar.html' %}
-
     <main class="student-tasks-main">
         <header class="student-tasks-topbar" aria-label="Student portal header">
             <div class="student-tasks-topbar-left">
@@ -21,189 +19,54 @@
                 </label>
             </div>
             <div class="student-tasks-topbar-right">
-                <span class="student-tasks-notification" aria-label="Notifications">
-                    ♧
-                    {% if unread_count|default(0) > 0 %}
-                        <span class="student-tasks-notification-badge">{{ unread_count }}</span>
-                    {% endif %}
-                </span>
+                <span class="student-tasks-notification" aria-label="Notifications">♧{% if unread_count|default(0) > 0 %}<span class="student-tasks-notification-badge">{{ unread_count }}</span>{% endif %}</span>
                 <div class="student-tasks-user">
-                    {% if sidebar_profile and sidebar_profile.profile_picture %}
-                        <img src="{{ url_for('profile_picture', filename=sidebar_profile.profile_picture) }}" alt="Profile picture">
-                    {% elif profile is defined and profile and profile[5] %}
-                        <img src="{{ url_for('profile_picture', filename=profile[5]) }}" alt="Profile picture">
-                    {% else %}
-                        <img src="{{ url_for('static', filename='images/default_profile.png') }}" alt="Default profile picture">
-                    {% endif %}
-                    <span class="student-tasks-user-copy">
-                        <strong>{% if sidebar_profile and sidebar_profile.first_name %}{{ sidebar_profile.first_name }} {{ sidebar_profile.last_name or '' }}{% elif profile is defined and profile %}{{ profile[0] }} {{ profile[2] }}{% else %}Student{% endif %}</strong>
-                        <span>Student</span>
-                    </span>
+                    {% if sidebar_profile and sidebar_profile.profile_picture %}<img src="{{ url_for('profile_picture', filename=sidebar_profile.profile_picture) }}" alt="Profile picture">
+                    {% elif profile is defined and profile and profile[5] %}<img src="{{ url_for('profile_picture', filename=profile[5]) }}" alt="Profile picture">
+                    {% else %}<img src="{{ url_for('static', filename='images/default_profile.png') }}" alt="Default profile picture">{% endif %}
+                    <span class="student-tasks-user-copy"><strong>{% if sidebar_profile and sidebar_profile.first_name %}{{ sidebar_profile.first_name }} {{ sidebar_profile.last_name or '' }}{% elif profile is defined and profile %}{{ profile[0] }} {{ profile[2] }}{% else %}Student{% endif %}</strong><span>Student</span></span>
                 </div>
             </div>
         </header>
-
-        {% set completed_count = namespace(value=0) %}
-        {% set pending_count = namespace(value=0) %}
-        {% set overdue_count = namespace(value=0) %}
+        {% set completed_count = namespace(value=0) %}{% set pending_count = namespace(value=0) %}{% set overdue_count = namespace(value=0) %}
         {% for task in tasks %}
-            {% if task[4] == 'Submitted' or task[4] == 'Reviewed' %}
-                {% set completed_count.value = completed_count.value + 1 %}
-            {% else %}
-                {% set pending_count.value = pending_count.value + 1 %}
-            {% endif %}
-            {% if task[4] == 'Overdue' %}
-                {% set overdue_count.value = overdue_count.value + 1 %}
-            {% endif %}
+            {% if task[4] == 'Submitted' or task[4] == 'Reviewed' %}{% set completed_count.value = completed_count.value + 1 %}{% else %}{% set pending_count.value = pending_count.value + 1 %}{% endif %}
+            {% if task[4] == 'Overdue' %}{% set overdue_count.value = overdue_count.value + 1 %}{% endif %}
         {% endfor %}
-
         <div class="student-tasks-content">
             <section class="student-tasks-heading" aria-labelledby="tasks-heading">
-                <div>
-                    <h1 id="tasks-heading">Tasks</h1>
-                    <p>View all your tasks, track progress, and manage deadlines.</p>
-                </div>
+                <div><h1 id="tasks-heading">Tasks</h1><p>View all your tasks, track progress, and manage deadlines.</p></div>
                 <a class="student-tasks-primary-button" href="#task-list">＋ View Tasks</a>
             </section>
-
             <section class="student-tasks-stats" aria-label="Task summary">
-                <article class="student-tasks-stat">
-                    <span class="student-tasks-stat-icon" aria-hidden="true">▣</span>
-                    <div class="student-tasks-stat-copy">
-                        <span>Total Tasks</span>
-                        <strong>{{ tasks|length }}</strong>
-                        <small>All assigned tasks</small>
-                    </div>
-                </article>
-                <article class="student-tasks-stat">
-                    <span class="student-tasks-stat-icon" aria-hidden="true">⌛</span>
-                    <div class="student-tasks-stat-copy">
-                        <span>Pending</span>
-                        <strong>{{ pending_count.value }}</strong>
-                        <small>Awaiting completion</small>
-                    </div>
-                </article>
-                <article class="student-tasks-stat">
-                    <span class="student-tasks-stat-icon" aria-hidden="true">✓</span>
-                    <div class="student-tasks-stat-copy">
-                        <span>Completed</span>
-                        <strong>{{ completed_count.value }}</strong>
-                        <small>Submitted or reviewed</small>
-                    </div>
-                </article>
-                <article class="student-tasks-stat">
-                    <span class="student-tasks-stat-icon" aria-hidden="true">□</span>
-                    <div class="student-tasks-stat-copy">
-                        <span>Overdue</span>
-                        <strong>{{ overdue_count.value }}</strong>
-                        <small>Need attention</small>
-                    </div>
-                </article>
+                <article class="student-tasks-stat"><span class="student-tasks-stat-icon" aria-hidden="true">▣</span><div class="student-tasks-stat-copy"><span>Total Tasks</span><strong>{{ tasks|length }}</strong><small>All assigned tasks</small></div></article>
+                <article class="student-tasks-stat"><span class="student-tasks-stat-icon" aria-hidden="true">⌛</span><div class="student-tasks-stat-copy"><span>Pending</span><strong>{{ pending_count.value }}</strong><small>Awaiting completion</small></div></article>
+                <article class="student-tasks-stat"><span class="student-tasks-stat-icon" aria-hidden="true">✓</span><div class="student-tasks-stat-copy"><span>Completed</span><strong>{{ completed_count.value }}</strong><small>Submitted or reviewed</small></div></article>
+                <article class="student-tasks-stat"><span class="student-tasks-stat-icon" aria-hidden="true">□</span><div class="student-tasks-stat-copy"><span>Overdue</span><strong>{{ overdue_count.value }}</strong><small>Need attention</small></div></article>
             </section>
-
             <section class="student-tasks-toolbar" aria-label="Task filters">
-                <div class="student-tasks-filter">All Status <span aria-hidden="true">⌄</span></div>
-                <div class="student-tasks-filter">All Classes <span aria-hidden="true">⌄</span></div>
-                <div class="student-tasks-filter">All Priorities <span aria-hidden="true">⌄</span></div>
-                <label class="student-tasks-filter-search">
-                    <span aria-hidden="true">⌕</span>
-                    <input type="search" placeholder="Search tasks...">
-                </label>
+                <div class="student-tasks-filter">All Status <span aria-hidden="true">⌄</span></div><div class="student-tasks-filter">All Classes <span aria-hidden="true">⌄</span></div><div class="student-tasks-filter">All Priorities <span aria-hidden="true">⌄</span></div>
+                <label class="student-tasks-filter-search"><span aria-hidden="true">⌕</span><input type="search" placeholder="Search tasks..."></label>
             </section>
-
             <section class="student-tasks-grid">
-                <section class="student-tasks-list-card" id="task-list" aria-labelledby="task-list-heading">
-                    <div class="student-tasks-tabs" role="tablist" aria-label="Task status">
-                        <span class="student-tasks-tab is-active" role="tab" aria-selected="true">All Tasks</span>
-                        <span class="student-tasks-tab" role="tab" aria-selected="false">Pending</span>
-                        <span class="student-tasks-tab" role="tab" aria-selected="false">Completed</span>
-                        <span class="student-tasks-tab" role="tab" aria-selected="false">Overdue</span>
-                    </div>
-
-                    {% if tasks %}
-                        {% for task in tasks %}
-                            {% set is_complete = task[4] == 'Submitted' or task[4] == 'Reviewed' %}
-                            {% set is_overdue = task[4] == 'Overdue' %}
-                            <article class="student-task-row">
-                                <div class="student-task-title">
-                                    <span class="student-task-icon" aria-hidden="true">{% if is_complete %}✓{% else %}▤{% endif %}</span>
-                                    <div>
-                                        <strong>{{ task[1] }}</strong>
-                                        <span>Assigned {{ task[2] }} · Due {{ task[3] or 'No deadline' }}</span>
-                                    </div>
-                                </div>
-                                <span class="student-task-priority {% if is_complete %}is-low{% endif %}">{% if is_complete %}Done{% elif is_overdue %}High{% else %}Pending{% endif %}</span>
-                                <div class="student-task-due {% if is_overdue %}is-overdue{% endif %}">
-                                    <strong>{% if is_overdue %}Needs attention{% elif task[3] %}Due {{ task[3] }}{% else %}No deadline{% endif %}</strong>
-                                    <span>{{ task[4] or 'Pending' }}</span>
-                                </div>
-                                <div class="student-task-progress {% if is_complete %}is-complete{% endif %}" aria-label="{% if is_complete %}100{% else %}0{% endif %} percent complete">
-                                    <span>{% if is_complete %}100%{% else %}0%{% endif %}</span>
-                                </div>
-                                <a class="student-task-menu" href="/student/task/{{ task[0] }}" aria-label="View {{ task[1] }}">⋮</a>
-                            </article>
-                        {% endfor %}
-                    {% else %}
-                        <div class="student-tasks-empty">
-                            <strong>No tasks have been assigned yet</strong>
-                            <span>Your supervisor will assign tasks here.</span>
-                        </div>
-                    {% endif %}
-
-                    <div class="student-tasks-pagination">
-                        <span>Showing {{ tasks|length }} of {{ tasks|length }} tasks</span>
-                        <div class="student-tasks-page-buttons" aria-label="Pagination">
-                            <span class="student-tasks-page-button">‹</span>
-                            <span class="student-tasks-page-button is-active">1</span>
-                            <span class="student-tasks-page-button">›</span>
-                        </div>
-                    </div>
+                <section class="student-tasks-list-card" id="task-list" aria-label="Task list">
+                    <div class="student-tasks-tabs" role="tablist" aria-label="Task status"><span class="student-tasks-tab is-active" role="tab" aria-selected="true">All Tasks</span><span class="student-tasks-tab" role="tab" aria-selected="false">Pending</span><span class="student-tasks-tab" role="tab" aria-selected="false">Completed</span><span class="student-tasks-tab" role="tab" aria-selected="false">Overdue</span></div>
+                    {% if tasks %}{% for task in tasks %}
+                        {% set is_complete = task[4] == 'Submitted' or task[4] == 'Reviewed' %}{% set is_overdue = task[4] == 'Overdue' %}
+                        <article class="student-task-row">
+                            <div class="student-task-title"><span class="student-task-icon" aria-hidden="true">{% if is_complete %}✓{% else %}▤{% endif %}</span><div><strong>{{ task[1] }}</strong><span>Assigned {{ task[2] }} · Due {{ task[3] or 'No deadline' }}</span></div></div>
+                            <span class="student-task-priority {% if is_complete %}is-low{% endif %}">{% if is_complete %}Done{% elif is_overdue %}High{% else %}Pending{% endif %}</span>
+                            <div class="student-task-due {% if is_overdue %}is-overdue{% endif %}"><strong>{% if is_overdue %}Needs attention{% elif task[3] %}Due {{ task[3] }}{% else %}No deadline{% endif %}</strong><span>{{ task[4] or 'Pending' }}</span></div>
+                            <div class="student-task-progress {% if is_complete %}is-complete{% endif %}" aria-label="{% if is_complete %}100{% else %}0{% endif %} percent complete"><span>{% if is_complete %}100%{% else %}0%{% endif %}</span></div>
+                            <a class="student-task-menu" href="/student/task/{{ task[0] }}" aria-label="View {{ task[1] }}">⋮</a>
+                        </article>
+                    {% endfor %}{% else %}<div class="student-tasks-empty"><strong>No tasks have been assigned yet</strong><span>Your supervisor will assign tasks here.</span></div>{% endif %}
+                    <div class="student-tasks-pagination"><span>Showing {{ tasks|length }} of {{ tasks|length }} tasks</span><div class="student-tasks-page-buttons" aria-label="Pagination"><span class="student-tasks-page-button">‹</span><span class="student-tasks-page-button is-active">1</span><span class="student-tasks-page-button">›</span></div></div>
                 </section>
-
                 <aside class="student-tasks-side" aria-label="Task information">
-                    <section class="student-tasks-side-card">
-                        <h2>Task Summary</h2>
-                        <div class="student-task-chart">
-                            <div class="student-task-donut">
-                                <div class="student-task-donut-copy">
-                                    <strong>{{ tasks|length }}</strong>
-                                    <span>Total Tasks</span>
-                                </div>
-                            </div>
-                            <div class="student-task-legend">
-                                <div class="student-task-legend-row"><span class="student-task-dot"></span>Completed <strong>{{ completed_count.value }}</strong></div>
-                                <div class="student-task-legend-row"><span class="student-task-dot pending"></span>Pending <strong>{{ pending_count.value }}</strong></div>
-                                <div class="student-task-legend-row"><span class="student-task-dot overdue"></span>Overdue <strong>{{ overdue_count.value }}</strong></div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <section class="student-tasks-side-card">
-                        <h2>Upcoming Deadlines</h2>
-                        {% if tasks %}
-                            {% for task in tasks[:3] %}
-                                <div class="student-task-deadline">
-                                    <span class="student-task-deadline-icon" aria-hidden="true">▤</span>
-                                    <div>
-                                        <strong>{{ task[1] }}</strong>
-                                        <span>{{ task[3] or 'No deadline' }}</span>
-                                    </div>
-                                    <em>{% if task[4] == 'Submitted' or task[4] == 'Reviewed' %}Completed{% else %}Pending{% endif %}</em>
-                                </div>
-                            {% endfor %}
-                        {% else %}
-                            <div class="student-tasks-empty">No upcoming deadlines.</div>
-                        {% endif %}
-                        <a class="student-tasks-view-all" href="#task-list">View All Tasks</a>
-                    </section>
-
-                    <section class="student-tasks-side-card student-tasks-tip">
-                        <span class="student-tasks-tip-icon" aria-hidden="true">💡</span>
-                        <div>
-                            <strong>Productivity Tip</strong>
-                            <span>Break larger tasks into smaller, manageable steps to stay productive.</span>
-                        </div>
-                    </section>
+                    <section class="student-tasks-side-card"><h2>Task Summary</h2><div class="student-task-chart"><div class="student-task-donut"><div class="student-task-donut-copy"><strong>{{ tasks|length }}</strong><span>Total Tasks</span></div></div><div class="student-task-legend"><div class="student-task-legend-row"><span class="student-task-dot"></span>Completed <strong>{{ completed_count.value }}</strong></div><div class="student-task-legend-row"><span class="student-task-dot pending"></span>Pending <strong>{{ pending_count.value }}</strong></div><div class="student-task-legend-row"><span class="student-task-dot overdue"></span>Overdue <strong>{{ overdue_count.value }}</strong></div></div></div></section>
+                    <section class="student-tasks-side-card"><h2>Upcoming Deadlines</h2>{% if tasks %}{% for task in tasks[:3] %}<div class="student-task-deadline"><span class="student-task-deadline-icon" aria-hidden="true">▤</span><div><strong>{{ task[1] }}</strong><span>{{ task[3] or 'No deadline' }}</span></div><em>{% if task[4] == 'Submitted' or task[4] == 'Reviewed' %}Completed{% else %}Pending{% endif %}</em></div>{% endfor %}{% else %}<div class="student-tasks-empty">No upcoming deadlines.</div>{% endif %}<a class="student-tasks-view-all" href="#task-list">View All Tasks</a></section>
+                    <section class="student-tasks-side-card student-tasks-tip"><span class="student-tasks-tip-icon" aria-hidden="true">💡</span><div><strong>Productivity Tip</strong><span>Break larger tasks into smaller, manageable steps to stay productive.</span></div></section>
                 </aside>
             </section>
         </div>
