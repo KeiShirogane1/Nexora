@@ -2,12 +2,14 @@
 /* Student dashboard utilities. */
 .notification-wrapper { display:none !important; }
 
-/* Collapsible sidebar matching the reference UI. */
+/* Collapsible sidebar matching the reference UI. The sidebar must allow the
+   circular control to sit outside its right edge. */
+.nx-sidebar { overflow:visible !important; transition:width .2s ease, padding .2s ease; }
 .nx-collapse-toggle {
     position:absolute;
-    right:-13px;
-    top:50%;
-    transform:translateY(-50%);
+    right:-14px;
+    top:50px;
+    transform:none;
     width:27px;
     height:27px;
     border:1px solid #dfe6e9;
@@ -22,7 +24,7 @@
     box-shadow:0 3px 10px rgba(20,32,51,.14);
     font-size:16px;
     line-height:1;
-    transition:transform .2s ease,background .2s ease;
+    transition:transform .2s ease,background .2s ease,right .2s ease;
 }
 .nx-collapse-toggle:hover { background:#07865f; }
 .nx-sidebar.nx-collapsed {
@@ -44,7 +46,7 @@
 .nx-sidebar.nx-collapsed .nx-nav .ico { width:auto; }
 .nx-sidebar.nx-collapsed .nx-badge { position:absolute !important; right:5px; top:4px; min-width:16px !important; height:16px !important; font-size:8px !important; padding:0 4px !important; }
 .nx-sidebar.nx-collapsed .nx-nav a { position:relative; }
-.nx-sidebar.nx-collapsed .nx-collapse-toggle { transform:translateY(-50%) rotate(180deg); }
+.nx-sidebar.nx-collapsed .nx-collapse-toggle { transform:rotate(180deg); }
 .nx-student.nx-sidebar-collapsed .nx-main { margin-left:114px !important; }
 .nx-student.nx-sidebar-collapsed .nx-wrap { max-width:1160px; }
 
@@ -57,6 +59,10 @@
 .nx-nav a:has(.nx-badge) .ico { color:#ef4444 !important; }
 .nx-nav a .nx-badge { position:static; margin-left:auto; min-width:20px; height:20px; padding:0 5px; border-radius:999px; background:#ef4444 !important; color:#fff !important; font-size:10px; font-weight:800; display:inline-grid; place-items:center; line-height:1; }
 .nx-top-action { display:none !important; }
+
+@media (max-width:760px) {
+    .nx-collapse-toggle { display:none !important; }
+}
 </style>
 
 <div class="notification-wrapper">
@@ -85,19 +91,21 @@ function markNotificationRead(notificationId,el,redirectAfter){fetch('/notificat
 function markAllRead(e){if(e)e.stopPropagation();fetch('/notifications/read-all',{method:'POST',headers:{'X-CSRFToken':'{{ csrf_token() }}'}}).then(r=>r.json()).then(data=>{if(data.ok){document.querySelectorAll('.notification-item.unread').forEach(el=>el.classList.remove('unread'));const c=document.getElementById('notificationCount');if(c)c.remove();}}).catch(()=>{});}
 document.addEventListener('click',function(event){const wrapper=document.querySelector('.notification-wrapper');const dropdown=document.getElementById('notificationDropdown');if(wrapper&&dropdown&&!wrapper.contains(event.target))dropdown.style.display='none';});
 
-/* Create the collapse control only on the redesigned student sidebar. */
+/* Create the collapse control only on the redesigned student dashboard. */
 document.addEventListener('DOMContentLoaded',function(){
     const sidebar=document.querySelector('.nx-sidebar');
     const student=document.querySelector('.nx-student');
     if(!sidebar||!student)return;
     const button=document.createElement('button');
-    button.type='button'; button.className='nx-collapse-toggle'; button.setAttribute('aria-label','Collapse sidebar'); button.setAttribute('aria-expanded','true'); button.innerHTML='‹';
+    button.type='button'; button.className='nx-collapse-toggle'; button.setAttribute('aria-label','Collapse sidebar'); button.setAttribute('aria-expanded','true'); button.setAttribute('title','Collapse sidebar'); button.innerHTML='‹';
     sidebar.appendChild(button);
     button.addEventListener('click',function(){
         const collapsed=sidebar.classList.toggle('nx-collapsed');
         student.classList.toggle('nx-sidebar-collapsed',collapsed);
         button.setAttribute('aria-expanded',String(!collapsed));
         button.setAttribute('aria-label',collapsed?'Expand sidebar':'Collapse sidebar');
+        button.setAttribute('title',collapsed?'Expand sidebar':'Collapse sidebar');
+        button.innerHTML=collapsed?'›':'‹';
     });
 });
 </script>
