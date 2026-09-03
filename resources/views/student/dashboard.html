@@ -1,1 +1,134 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Student Dashboard - Nexora</title><link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}"><link rel="stylesheet" href="{{ url_for('static',filename='css/student.css') }}"><link rel="stylesheet" href="{{ url_for('static',filename='css/nexora-ui.css') }}"></head><body class="student-page"><div>{% include 'components/student_sidebar.html' %}</div><main class="student-main-content nexora-app-main"><div class="nexora-page student-dashboard-container"><section class="dashboard-welcome"><h1>Welcome, {{ profile[0] }} 🎓</h1><p>Here is your internship progress overview.</p></section><section class="dashboard-stats"><div class="stat-card"><div class="stat-icon">📘</div><h3>Logs</h3><p>{{ log_count }}</p></div><div class="stat-card"><div class="stat-icon">✅</div><h3>Tasks</h3><p>{{ task_completed }}/{{ task_total }}</p>{% set task_progress=(task_completed/task_total*100) if task_total else 0 %}<div class="ui-progress" style="margin:8px 0 0;height:6px"><span style="width:{{ task_progress }}%"></span></div><small>{{ '%.0f'|format(task_progress) }}% complete</small></div><div class="stat-card"><div class="stat-icon">📂</div><h3>Documents</h3><p>{{ document_count }}</p></div><div class="stat-card"><div class="stat-icon">🕒</div><h3>Attendance</h3><p>{{ attendance_count }}</p></div></section><section class="dashboard-profile-card"><div>{% if profile[5] %}<img src="{{ url_for('profile_picture',filename=profile[5]) }}" class="dashboard-avatar" alt="Profile picture" onerror="this.onerror=null;this.src='{{ url_for('static',filename='images/default_profile.png') }}';">{% else %}<img src="{{ url_for('static',filename='images/default_profile.png') }}" class="dashboard-avatar" alt="Default profile picture">{% endif %}</div><div class="dashboard-profile-info"><span class="profile-role-tag">Student</span><h2>{{ profile[0] }} {{ profile[1] or '' }} {{ profile[2] }}</h2><p>🎓 {{ profile[9] }}</p><p>🆔 {{ profile[4] }}</p><p>📚 {{ profile[8] }}</p><a href="{{ url_for('student.student_profile') }}" class="ui-primary-btn">View Profile</a></div></section>{% if internship %}<section class="profile-modern-card"><div class="section-heading"><div><h2>Internship Overview</h2><p>{{ internship[0] }} · {{ internship[1] }}</p></div><span class="profile-completion-pill">{{ internship[7] }}</span></div><div class="profile-info-grid"><div class="info-list"><div><b>Supervisor</b><span>{{ internship[2] }}</span></div><div><b>Duration</b><span>{{ internship[3] }} to {{ internship[4] }}</span></div></div><div class="info-list"><div><b>Required Hours</b><span>{{ internship[5] }} hrs</span></div><div><b>Completed Hours</b><span>{{ internship[6] }} hrs</span></div></div></div>{% set hours_progress=(internship[6]/internship[5]*100) if internship[5] and internship[5]|int>0 else 0 %}<div class="ui-progress"><span style="width:{{ [hours_progress,100]|min }}%"></span></div><small>{{ '%.0f'|format(hours_progress) }}% of required hours completed</small></section>{% endif %}<div class="profile-info-grid"><section class="profile-modern-card"><h2>Latest Tasks</h2>{% if recent_tasks %}{% for task in recent_tasks %}<div class="info-list"><div><b>{{ task[3] if task|length>3 else 'Task' }}</b><span>{{ task[9] if task|length>9 else 'Pending' }}</span></div></div>{% endfor %}{% else %}<p>No tasks yet.</p>{% endif %}</section><section class="profile-modern-card"><h2>Recent Documents</h2>{% if recent_documents %}{% for doc in recent_documents %}<div class="info-list"><div><b>{{ doc[2] if doc|length>2 else 'Document' }}</b><span>{{ doc[4] if doc|length>4 else 'Uploaded' }}</span></div></div>{% endfor %}{% else %}<p>No documents uploaded.</p>{% endif %}</section></div></div></main></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Student Dashboard - Nexora</title>
+  <link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static',filename='css/student.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static',filename='css/nexora-ui.css') }}">
+  <style>
+    .student-redesign{--sr-ink:#172033;--sr-muted:#7b8495;--sr-line:#e8ebf1;--sr-soft:#f6f8fb;--sr-accent:#315efb;min-height:100vh;background:#f8f9fc;color:var(--sr-ink)}
+    .student-redesign *{box-sizing:border-box}
+    .sr-sidebar{position:fixed;inset:0 auto 0 0;width:238px;background:#fff;border-right:1px solid var(--sr-line);padding:24px 15px;z-index:50;display:flex;flex-direction:column}
+    .sr-brand{display:flex;align-items:center;gap:10px;padding:0 10px 28px;text-decoration:none;color:var(--sr-ink)}
+    .sr-brand img{width:34px;height:34px;object-fit:contain}.sr-brand strong{font-size:20px;letter-spacing:-.4px}
+    .sr-menu-label{font-size:10px;font-weight:800;letter-spacing:.12em;color:#a1a8b6;padding:0 13px 9px;text-transform:uppercase}
+    .sr-nav{display:flex;flex-direction:column;gap:5px}.sr-nav a{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 13px;border-radius:11px;color:#687184;text-decoration:none;font-size:14px;font-weight:600;transition:.18s}
+    .sr-nav a:hover{background:#f4f6fa;color:var(--sr-ink)}.sr-nav a.active{background:#edf2ff;color:var(--sr-accent);font-weight:750}.sr-icon{width:20px;text-align:center;font-size:17px}
+    .sr-sidebar-bottom{margin-top:auto;border-top:1px solid var(--sr-line);padding-top:15px}.sr-mini-profile{display:flex;align-items:center;gap:10px;padding:8px 9px 14px;text-decoration:none;color:var(--sr-ink)}
+    .sr-avatar{width:38px;height:38px;border-radius:50%;object-fit:cover;background:#edf1f7}.sr-mini-profile strong{display:block;font-size:13px}.sr-mini-profile span{display:block;color:var(--sr-muted);font-size:11px;margin-top:2px}
+    .sr-main{margin-left:238px;min-height:100vh}.sr-topbar{height:72px;background:#fff;border-bottom:1px solid var(--sr-line);display:flex;align-items:center;justify-content:space-between;padding:0 34px;position:sticky;top:0;z-index:30}
+    .sr-top-title{font-size:14px;font-weight:700;color:#657083}.sr-top-actions{display:flex;align-items:center;gap:18px}.sr-bell{font-size:19px;color:#687184}.sr-top-profile{display:flex;align-items:center;gap:9px;text-decoration:none;color:var(--sr-ink);font-size:13px;font-weight:700}.sr-top-profile img{width:35px;height:35px;border-radius:50%;object-fit:cover}
+    .sr-content{padding:34px;max-width:1400px;margin:auto}.sr-welcome{margin-bottom:25px}.sr-welcome h1{margin:0;font-size:29px;line-height:1.15;letter-spacing:-.7px}.sr-welcome p{margin:8px 0 0;color:var(--sr-muted);font-size:14px}
+    .sr-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:17px;margin-bottom:20px}.sr-card{background:#fff;border:1px solid var(--sr-line);border-radius:16px;box-shadow:0 4px 18px rgba(23,32,51,.035)}
+    .sr-stat{padding:21px 22px;display:flex;align-items:center;gap:16px;min-height:106px}.sr-stat-icon{width:47px;height:47px;border-radius:13px;display:grid;place-items:center;background:#f0f3ff;font-size:21px}.sr-stat-copy small{display:block;color:var(--sr-muted);font-size:12px;font-weight:650;margin-bottom:5px}.sr-stat-copy strong{display:block;font-size:23px;letter-spacing:-.4px}.sr-stat-copy span{display:block;color:var(--sr-muted);font-size:11px;margin-top:4px}
+    .sr-main-grid{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(280px,.8fr);gap:20px}.sr-calendar-card{padding:22px}.sr-card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}.sr-card-head h2{font-size:17px;margin:0;letter-spacing:-.2px}.sr-card-head p{margin:4px 0 0;color:var(--sr-muted);font-size:12px}.sr-month{font-size:13px;font-weight:750;color:#4f5869}
+    .sr-week,.sr-days{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}.sr-week div{text-align:center;color:#a0a7b4;font-size:10px;font-weight:800;text-transform:uppercase;padding-bottom:5px}.sr-day{min-height:54px;border-radius:10px;padding:8px;text-align:right;color:#596275;font-size:12px;background:#fafbfc;border:1px solid transparent}.sr-day.muted{color:#c1c6d0;background:transparent}.sr-day.today{background:#315efb;color:#fff;font-weight:800;box-shadow:0 5px 12px rgba(49,94,251,.18)}.sr-day.has-task:after{content:'';display:block;width:5px;height:5px;border-radius:50%;background:#8d98ab;margin:6px auto 0}.sr-day.today.has-task:after{background:#fff}
+    .sr-agenda{padding:22px}.sr-agenda-list{display:flex;flex-direction:column;gap:11px}.sr-event{display:flex;gap:11px;padding:13px 0;border-bottom:1px solid #f0f2f5}.sr-event:last-child{border-bottom:0}.sr-event-date{min-width:40px;height:40px;border-radius:10px;background:#f2f4f8;display:grid;place-items:center;font-size:10px;font-weight:800;color:#667083;text-align:center}.sr-event strong{display:block;font-size:12px;line-height:1.35}.sr-event span{display:block;color:var(--sr-muted);font-size:10px;margin-top:4px}.sr-empty{padding:24px 4px;text-align:center;color:var(--sr-muted);font-size:12px}
+    .sr-bottom{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px}.sr-info{padding:22px}.sr-info-row{display:flex;justify-content:space-between;gap:20px;padding:11px 0;border-bottom:1px solid #f0f2f5;font-size:12px}.sr-info-row:last-child{border-bottom:0}.sr-info-row b{color:#677184}.sr-info-row span{text-align:right;font-weight:650}.sr-progress{height:8px;background:#edf0f5;border-radius:99px;overflow:hidden;margin-top:15px}.sr-progress span{display:block;height:100%;background:#315efb;border-radius:99px}
+    @media(max-width:950px){.sr-sidebar{width:205px}.sr-main{margin-left:205px}.sr-main-grid{grid-template-columns:1fr}.sr-bottom{grid-template-columns:1fr}.sr-content{padding:25px}.sr-topbar{padding:0 25px}}
+    @media(max-width:700px){.sr-sidebar{position:static;width:100%;height:auto;border-right:0;border-bottom:1px solid var(--sr-line);padding:15px}.sr-brand{padding-bottom:15px}.sr-nav{display:grid;grid-template-columns:repeat(3,1fr)}.sr-nav a{justify-content:center;padding:0 7px}.sr-menu-label,.sr-sidebar-bottom{display:none}.sr-main{margin-left:0}.sr-topbar{height:60px;padding:0 16px}.sr-top-title{display:none}.sr-content{padding:20px 16px}.sr-stats{grid-template-columns:1fr}.sr-welcome h1{font-size:25px}.sr-day{min-height:44px;padding:6px;font-size:11px}}
+  </style>
+</head>
+<body class="student-page student-redesign">
+  <aside class="sr-sidebar">
+    <a class="sr-brand" href="{{ url_for('student.student_dashboard') }}"><img src="{{ url_for('static',filename='images/Nexora.png') }}" alt="Nexora"><strong>Nexora</strong></a>
+    <div class="sr-menu-label">Menu</div>
+    <nav class="sr-nav" aria-label="Student navigation">
+      <a class="active" href="{{ url_for('student.student_dashboard') }}"><span class="sr-icon">▦</span><span>Dashboard</span></a>
+      <a href="{{ url_for('student.logbook') }}"><span class="sr-icon">◔</span><span>Progress</span></a>
+      <a href="{{ url_for('classroom.student_classes') }}"><span class="sr-icon">◌</span><span>Discussion</span></a>
+      <a href="{{ url_for('student.documents') }}"><span class="sr-icon">▤</span><span>Reports</span></a>
+      <a href="{{ url_for('student.tasks') }}"><span class="sr-icon">◇</span><span>Grades</span></a>
+      <a href="{{ url_for('student.student_profile') }}"><span class="sr-icon">◎</span><span>Profile</span></a>
+    </nav>
+    <div class="sr-sidebar-bottom">
+      <a class="sr-mini-profile" href="{{ url_for('student.student_profile') }}">
+        {% if profile[5] %}<img class="sr-avatar" src="{{ url_for('profile_picture',filename=profile[5]) }}" alt="Profile">{% else %}<img class="sr-avatar" src="{{ url_for('static',filename='images/default_profile.png') }}" alt="Profile">{% endif %}
+        <div><strong>{{ profile[0] }} {{ profile[2] }}</strong><span>Student</span></div>
+      </a>
+    </div>
+  </aside>
+
+  <main class="sr-main">
+    <header class="sr-topbar">
+      <span class="sr-top-title">Student Portal</span>
+      <div class="sr-top-actions">
+        <span class="sr-bell" aria-label="Notifications">♧</span>
+        <a class="sr-top-profile" href="{{ url_for('student.student_profile') }}">
+          {% if profile[5] %}<img src="{{ url_for('profile_picture',filename=profile[5]) }}" alt="Profile">{% else %}<img src="{{ url_for('static',filename='images/default_profile.png') }}" alt="Profile">{% endif %}
+          <span>{{ profile[0] }}</span>
+        </a>
+      </div>
+    </header>
+
+    <div class="sr-content">
+      <section class="sr-welcome">
+        <h1>Welcome back, {{ profile[0] }}.</h1>
+        <p>Here is your internship progress at a glance.</p>
+      </section>
+
+      {% set hours_progress=((internship[6]|float)/(internship[5]|float)*100) if internship and internship[5] and internship[5]|float>0 else 0 %}
+      <section class="sr-stats">
+        <article class="sr-card sr-stat"><div class="sr-stat-icon">◔</div><div class="sr-stat-copy"><small>Internship Progress</small><strong>{{ '%.0f'|format([hours_progress,100]|min) }}%</strong><span>{{ internship[6] if internship else 0 }} / {{ internship[5] if internship else 0 }} hours completed</span></div></article>
+        <article class="sr-card sr-stat"><div class="sr-stat-icon">◷</div><div class="sr-stat-copy"><small>Days Remaining</small><strong id="sr-days-remaining">—</strong><span>{% if internship %}Until internship end{% else %}No internship schedule{% endif %}</span></div></article>
+        <article class="sr-card sr-stat"><div class="sr-stat-icon">◉</div><div class="sr-stat-copy"><small>Supervision</small><strong>{{ internship[2] if internship else 'Not assigned' }}</strong><span>{% if internship %}Current internship supervisor{% else %}No supervisor assigned{% endif %}</span></div></article>
+      </section>
+
+      <section class="sr-main-grid">
+        <article class="sr-card sr-calendar-card">
+          <div class="sr-card-head"><div><h2>Calendar</h2><p>Your internship schedule</p></div><span class="sr-month" id="sr-month-label"></span></div>
+          <div class="sr-week"><div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div></div>
+          <div class="sr-days" id="sr-calendar-days"></div>
+        </article>
+
+        <article class="sr-card sr-agenda">
+          <div class="sr-card-head"><div><h2>Upcoming Agenda</h2><p>Recent and upcoming tasks</p></div></div>
+          <div class="sr-agenda-list">
+            {% if recent_tasks %}
+              {% for task in recent_tasks[:5] %}
+              <div class="sr-event"><div class="sr-event-date">TASK</div><div><strong>{{ task[3] if task|length>3 else 'Task' }}</strong><span>{{ task[9] if task|length>9 else 'Pending' }}</span></div></div>
+              {% endfor %}
+            {% else %}<div class="sr-empty">No upcoming tasks yet.</div>{% endif %}
+          </div>
+        </article>
+      </section>
+
+      <section class="sr-bottom">
+        <article class="sr-card sr-info">
+          <div class="sr-card-head"><div><h2>Internship Overview</h2><p>Your current placement</p></div></div>
+          <div class="sr-info-row"><b>Company</b><span>{{ internship[0] if internship else 'Not assigned' }}</span></div>
+          <div class="sr-info-row"><b>Position</b><span>{{ internship[1] if internship else 'Not assigned' }}</span></div>
+          <div class="sr-info-row"><b>Status</b><span>{{ internship[7] if internship else 'Not assigned' }}</span></div>
+          <div class="sr-progress"><span style="width:{{ [hours_progress,100]|min }}%"></span></div>
+        </article>
+        <article class="sr-card sr-info">
+          <div class="sr-card-head"><div><h2>Quick Summary</h2><p>Your Nexora activity</p></div></div>
+          <div class="sr-info-row"><b>Logbook Entries</b><span>{{ log_count }}</span></div>
+          <div class="sr-info-row"><b>Tasks Completed</b><span>{{ task_completed }} / {{ task_total }}</span></div>
+          <div class="sr-info-row"><b>Documents</b><span>{{ document_count }}</span></div>
+          <div class="sr-info-row"><b>Attendance Records</b><span>{{ attendance_count }}</span></div>
+        </article>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    (function(){
+      const endDate={{ (internship[4] if internship else '')|tojson }};
+      const daysEl=document.getElementById('sr-days-remaining');
+      if(endDate&&daysEl){const end=new Date(endDate);const now=new Date();end.setHours(23,59,59,999);const days=Math.max(0,Math.ceil((end-now)/86400000));daysEl.textContent=Number.isFinite(days)?days:'—';}
+      const taskDates=[];
+      const monthLabel=document.getElementById('sr-month-label'),grid=document.getElementById('sr-calendar-days');
+      if(!monthLabel||!grid)return;
+      const now=new Date(),year=now.getFullYear(),month=now.getMonth();
+      monthLabel.textContent=now.toLocaleDateString(undefined,{month:'long',year:'numeric'}).toUpperCase();
+      const first=new Date(year,month,1).getDay(),total=new Date(year,month+1,0).getDate(),prevTotal=new Date(year,month,0).getDate();
+      for(let i=0;i<first;i++){const d=document.createElement('div');d.className='sr-day muted';d.textContent=prevTotal-first+i+1;grid.appendChild(d)}
+      for(let day=1;day<=total;day++){const d=document.createElement('div');d.className='sr-day';d.textContent=day;if(day===now.getDate())d.classList.add('today');if(taskDates.includes(day))d.classList.add('has-task');grid.appendChild(d)}
+      const cells=grid.children.length;for(let i=1;i<=42-cells;i++){const d=document.createElement('div');d.className='sr-day muted';d.textContent=i;grid.appendChild(d)}
+    })();
+  </script>
+</body>
+</html>
