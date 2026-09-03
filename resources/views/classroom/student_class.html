@@ -1,1 +1,131 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{ classroom.name }} - Nexora</title><link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}"><link rel="stylesheet" href="{{ url_for('static',filename='css/student.css') }}"><link rel="stylesheet" href="{{ url_for('static',filename='css/nexora-ui.css') }}"></head><body class="student-page">{% include 'components/student_sidebar.html' %}<main class="student-main-content nexora-app-main"><div class="nexora-page"><section class="class-detail-hero profile-modern-card"><div class="class-detail-cover"></div><div class="class-detail-body"><div><span class="ui-eyebrow">{{ classroom.section }} · {{ classroom.supervisor }}</span><h1>{{ classroom.name }}</h1><p>{{ classroom.description or 'Your internship classroom.' }}</p></div><div class="class-code-box"><span>Class code</span><strong>{{ classroom.code }}</strong><div class="class-code-actions"><button type="button" class="ui-secondary-btn" onclick="copyStudentCode()">Copy</button><button type="button" class="ui-secondary-btn" onclick="document.getElementById('studentInfoModal').classList.add('open')">Class Info</button></div></div></div></section><nav class="profile-tabs" aria-label="Class navigation"><button class="profile-tab-button active" onclick="openClassTab('stream',this)">Stream</button><a href="{{ url_for('student_classwork.index',class_id=classroom.id) }}" class="profile-tab-button">Classwork</a><a href="{{ url_for('student_gradebook.gradebook',class_id=classroom.id) }}" class="profile-tab-button">Gradebook</a><a href="{{ url_for('classwork_ml_insights.student_insights',class_id=classroom.id) }}" class="profile-tab-button">ML Insights</a><a href="{{ url_for('performance_reports.student_reports',class_id=classroom.id) }}" class="profile-tab-button">Report</a><button class="profile-tab-button" onclick="openClassTab('people',this)">People</button></nav><section id="stream" class="profile-tab active"><div class="profile-modern-card"><div class="section-heading"><div><h2>Announcements</h2><p>Updates from your supervisor.</p></div></div>{% if announcements %}{% for a in announcements %}<article class="class-announcement"><h3>{{ a.title or 'Announcement' }}</h3><p>{{ a.body }}</p></article>{% endfor %}{% else %}<div class="student-classwork-empty"><div class="student-classwork-empty-icon">📢</div><h2>No announcements yet</h2><p>Your supervisor has not posted an announcement.</p></div>{% endif %}</div></section><section id="people" class="profile-tab"><div class="profile-modern-card"><div class="section-heading"><div><h2>People</h2><p>Everyone enrolled in this classroom.</p></div><span class="profile-completion-pill">{{ classmates|length + 1 }} students</span></div><div class="people-section-title">Teacher</div><div class="people-person"><div class="people-avatar">{{ classroom.supervisor[0]|upper if classroom.supervisor else 'S' }}</div><div><strong>{{ classroom.supervisor }}</strong><small>Supervisor</small></div><div class="people-actions"><a href="{{ url_for('student_classmates.teacher_profile',class_id=classroom.id) }}">View Profile</a></div></div><div class="people-section-title">Students</div><div class="people-person people-self"><div class="people-avatar">{% if sidebar_profile and sidebar_profile.profile_picture %}<img src="{{ url_for('profile_picture',filename=sidebar_profile.profile_picture) }}" alt="You">{% else %}{{ (sidebar_profile.username[0] if sidebar_profile and sidebar_profile.username else 'Y')|upper }}{% endif %}</div><div><strong>{{ sidebar_profile.first_name ~ ' ' ~ sidebar_profile.last_name if sidebar_profile and sidebar_profile.first_name else (sidebar_profile.username if sidebar_profile else 'You') }}</strong><small>You · Current student</small></div><div class="people-actions"><a href="{{ url_for('student.student_profile') }}">Profile</a></div></div>{% for c in classmates %}<div class="people-person"><div class="people-avatar"><img src="{{ url_for('user_profile_picture',user_id=c.id) }}" alt="{{ c.username }}"></div><div><strong>{{ c.username }}</strong><small>{{ c.email or 'Classmate' }}</small></div><div class="people-actions"><a href="{{ url_for('student_classmates.classmate_profile',class_id=classroom.id,student_id=c.id) }}">Profile</a><a href="{{ url_for('student_classmates.classmate_insights',class_id=classroom.id,student_id=c.id) }}">ML Insights</a></div></div>{% else %}<div class="student-classwork-empty"><div class="student-classwork-empty-icon">👥</div><h2>No other classmates yet</h2><p>You are currently the only student enrolled in this class.</p></div>{% endfor %}</div></section></div></main><div id="studentInfoModal" class="nexora-modal-overlay" onclick="if(event.target===this)this.classList.remove('open')"><div class="nexora-modal"><div class="nexora-modal-header"><h2>Class Information</h2><p>Classroom details</p><button type="button" class="nexora-modal-close" onclick="document.getElementById('studentInfoModal').classList.remove('open')">×</button></div><div class="nexora-modal-body"><div class="info-list"><div><b>Class</b><span>{{ classroom.name }}</span></div><div><b>Section</b><span>{{ classroom.section }}</span></div><div><b>Teacher</b><span>{{ classroom.supervisor }}</span></div><div><b>Code</b><span>{{ classroom.code }}</span></div><div><b>Status</b><span>{{ classroom.status }}</span></div></div></div></div></div><script>function copyStudentCode(){const code={{ classroom.code|tojson }};const done=()=>window.showToast&&showToast('Class code copied.');if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(code).then(done).catch(()=>fallbackCopy(code))}else fallbackCopy(code)}function fallbackCopy(code){const ta=document.createElement('textarea');ta.value=code;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');if(window.showToast)showToast('Class code copied.')}finally{ta.remove()}}function openClassTab(name,btn){document.querySelectorAll('.profile-tab').forEach(x=>x.classList.remove('active'));document.getElementById(name)?.classList.add('active');document.querySelectorAll('.profile-tab-button').forEach(x=>x.classList.remove('active'));btn?.classList.add('active')}</script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ classroom.name }} - Nexora</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/nexora-ui.css') }}">
+    <style>
+        :root{--nx-green:#12a879;--nx-green-dark:#07865f;--nx-green-soft:#eaf8f3;--nx-ink:#142033;--nx-muted:#697486;--nx-line:#e6eaf0;--nx-bg:#f7f9fb}
+        body.nx-class-page{margin:0;background:var(--nx-bg);color:var(--nx-ink);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+        .class-main{margin-left:268px;min-height:100vh;padding:0 34px 40px}
+        .class-top{height:76px;display:flex;justify-content:flex-end;align-items:center}
+        .class-top-tools{display:flex;align-items:center;gap:17px}
+        .class-search{width:260px;height:42px;border:1px solid var(--nx-line);border-radius:12px;background:#fff;padding:0 14px;outline:0;color:var(--nx-ink)}
+        .class-profile{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:800}
+        .class-profile img{width:40px;height:40px;border-radius:50%;object-fit:cover;border:1px solid var(--nx-line)}
+        .class-wrap{max-width:1180px;margin:auto}
+        .class-breadcrumb{display:flex;gap:8px;align-items:center;color:var(--nx-muted);font-size:13px;margin:8px 0 20px}
+        .class-breadcrumb a{color:var(--nx-green-dark);font-weight:800;text-decoration:none}
+        .class-hero{background:#fff;border:1px solid var(--nx-line);border-radius:18px;overflow:hidden;box-shadow:0 5px 18px rgba(20,32,51,.045)}
+        .class-cover{height:110px;background:linear-gradient(135deg,var(--nx-green-soft),#f8fbfa)}
+        .class-hero-body{padding:25px 28px;display:flex;justify-content:space-between;gap:24px;align-items:flex-start}
+        .class-eyebrow{display:block;font-size:11px;font-weight:800;letter-spacing:.13em;color:var(--nx-green-dark);margin-bottom:8px;text-transform:uppercase}
+        .class-hero h1{margin:0;font-size:31px;letter-spacing:-.03em;line-height:1.15}
+        .class-description{margin:9px 0 0;color:var(--nx-muted);font-size:14px;line-height:1.6;max-width:680px}
+        .class-code{min-width:190px;padding:15px;border:1px solid var(--nx-line);border-radius:13px;background:#fbfcfd}
+        .class-code span{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.09em;color:var(--nx-muted);font-weight:800}
+        .class-code strong{display:block;font-size:20px;letter-spacing:.08em;margin:5px 0 11px}
+        .class-code-actions{display:flex;gap:7px}
+        .class-code button{border:1px solid var(--nx-line);background:#fff;border-radius:9px;padding:7px 10px;font-size:11px;font-weight:800;color:var(--nx-ink);cursor:pointer}
+        .class-code button:hover{border-color:var(--nx-green);color:var(--nx-green-dark)}
+        .class-tabs{display:flex;gap:4px;border-bottom:1px solid var(--nx-line);margin:22px 0 20px;padding:0 5px;overflow-x:auto}
+        .class-tab{border:0;background:transparent;color:var(--nx-muted);padding:12px 16px;font-size:13px;font-weight:800;white-space:nowrap;text-decoration:none;border-bottom:2px solid transparent;cursor:pointer}
+        .class-tab:hover{color:var(--nx-green-dark)}
+        .class-tab.active{color:var(--nx-green-dark);border-bottom-color:var(--nx-green)}
+        .class-card{background:#fff;border:1px solid var(--nx-line);border-radius:16px;padding:23px;box-shadow:0 5px 18px rgba(20,32,51,.04)}
+        .class-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:15px;margin-bottom:20px}
+        .class-heading h2{margin:0;font-size:18px;font-weight:800;letter-spacing:-.01em}
+        .class-heading p{margin:5px 0 0;color:var(--nx-muted);font-size:12px}
+        .class-count{background:var(--nx-green-soft);color:var(--nx-green-dark);border-radius:999px;padding:7px 10px;font-size:11px;font-weight:800;white-space:nowrap}
+        .announcement{padding:18px 0;border-top:1px solid var(--nx-line)}
+        .announcement:first-of-type{border-top:0;padding-top:0}
+        .announcement h3{margin:0 0 7px;font-size:15px;font-weight:800}
+        .announcement p{margin:0;color:#4c5869;font-size:13px;line-height:1.7;white-space:pre-wrap}
+        .empty-state{text-align:center;padding:48px 20px;color:var(--nx-muted)}
+        .empty-icon{width:48px;height:48px;margin:0 auto 12px;border-radius:14px;background:var(--nx-green-soft);display:flex;align-items:center;justify-content:center;font-size:22px}
+        .empty-state h3{margin:0 0 5px;color:var(--nx-ink);font-size:16px}
+        .empty-state p{margin:0;font-size:12px}
+        .people-group-title{margin:22px 0 10px;font-size:11px;text-transform:uppercase;letter-spacing:.1em;font-weight:800;color:var(--nx-muted)}
+        .person{display:flex;align-items:center;gap:13px;padding:13px 0;border-top:1px solid var(--nx-line)}
+        .person:first-of-type{border-top:0}
+        .person-avatar{width:42px;height:42px;border-radius:50%;background:var(--nx-green-soft);color:var(--nx-green-dark);display:flex;align-items:center;justify-content:center;font-weight:800;overflow:hidden;flex:0 0 42px}
+        .person-avatar img{width:100%;height:100%;object-fit:cover}
+        .person-info{min-width:0;flex:1}.person-info strong{display:block;font-size:13px}.person-info small{display:block;margin-top:3px;color:var(--nx-muted);font-size:11px}
+        .person-actions{display:flex;gap:7px}.person-actions a{border:1px solid var(--nx-line);border-radius:9px;padding:7px 10px;color:var(--nx-green-dark);font-size:11px;font-weight:800;text-decoration:none}.person-actions a:hover{border-color:var(--nx-green);background:var(--nx-green-soft)}
+        .modal-actions{display:flex;gap:8px;margin-top:20px}.modal-actions button{border:1px solid var(--nx-line);background:#fff;border-radius:9px;padding:8px 12px;font-weight:800;font-size:12px;cursor:pointer}
+        .class-info-list{display:grid;gap:0}.class-info-row{display:flex;justify-content:space-between;gap:20px;padding:13px 0;border-bottom:1px solid var(--nx-line);font-size:13px}.class-info-row:last-child{border-bottom:0}.class-info-row b{color:var(--nx-muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em}.class-info-row span{text-align:right;font-weight:700}
+        @media(max-width:900px){.class-main{margin-left:0;padding:0 18px 30px}.class-top{height:64px}.class-search{width:190px}.class-hero-body{flex-direction:column}.class-code{width:100%}}
+        @media(max-width:600px){.class-search{display:none}.class-hero h1{font-size:27px}.class-hero-body,.class-card{padding:19px}.class-tabs{margin-top:16px}.person{align-items:flex-start}.person-actions{flex-direction:column}}
+    </style>
+</head>
+<body class="student-page nx-class-page">
+    {% include 'components/student_sidebar.html' %}
+    <main class="class-main">
+        <div class="class-top">
+            <div class="class-top-tools">
+                <input class="class-search" type="search" placeholder="Search..." aria-label="Search">
+                <a href="{{ url_for('notifications.notification_list') }}" aria-label="Notifications" style="font-size:20px;color:var(--nx-ink);text-decoration:none">♢</a>
+                <div class="class-profile">
+                    {% if sidebar_profile and sidebar_profile.profile_picture %}<img src="{{ url_for('profile_picture',filename=sidebar_profile.profile_picture) }}" alt="Profile">{% elif profile is defined and profile[5] %}<img src="{{ url_for('profile_picture',filename=profile[5]) }}" alt="Profile">{% else %}<img src="{{ url_for('static',filename='images/default_profile.png') }}" alt="Profile">{% endif %}
+                    <span>{% if sidebar_profile and sidebar_profile.first_name %}{{ sidebar_profile.first_name }}{% elif profile is defined %}{{ profile[0] }}{% endif %}</span>
+                </div>
+            </div>
+        </div>
+        <div class="class-wrap">
+            <div class="class-breadcrumb"><a href="{{ url_for('classroom.student_classes') }}">My Classes</a><span>›</span><span>{{ classroom.name }}</span></div>
+            <section class="class-hero">
+                <div class="class-cover"></div>
+                <div class="class-hero-body">
+                    <div>
+                        <span class="class-eyebrow">{{ classroom.section }}{% if classroom.supervisor %} · {{ classroom.supervisor }}{% endif %}</span>
+                        <h1>{{ classroom.name }}</h1>
+                        <p class="class-description">{{ classroom.description or 'Your internship classroom.' }}</p>
+                    </div>
+                    <div class="class-code">
+                        <span>Class code</span><strong>{{ classroom.code }}</strong>
+                        <div class="class-code-actions"><button type="button" onclick="copyStudentCode()">Copy</button><button type="button" onclick="document.getElementById('studentInfoModal').classList.add('open')">Class Info</button></div>
+                    </div>
+                </div>
+            </section>
+            <nav class="class-tabs" aria-label="Class navigation">
+                <button class="class-tab active" onclick="openClassTab('stream',this)">Stream</button>
+                <a href="{{ url_for('student_classwork.index',class_id=classroom.id) }}" class="class-tab">Classwork</a>
+                <a href="{{ url_for('student_gradebook.gradebook',class_id=classroom.id) }}" class="class-tab">Gradebook</a>
+                <a href="{{ url_for('classwork_ml_insights.student_insights',class_id=classroom.id) }}" class="class-tab">ML Insights</a>
+                <a href="{{ url_for('performance_reports.student_reports',class_id=classroom.id) }}" class="class-tab">Report</a>
+                <button class="class-tab" onclick="openClassTab('people',this)">People</button>
+            </nav>
+            <section id="stream" class="class-tab-panel">
+                <div class="class-card">
+                    <div class="class-heading"><div><h2>Announcements</h2><p>Updates from your supervisor.</p></div></div>
+                    {% if announcements %}{% for a in announcements %}<article class="announcement"><h3>{{ a.title or 'Announcement' }}</h3><p>{{ a.body }}</p></article>{% endfor %}{% else %}<div class="empty-state"><div class="empty-icon">📢</div><h3>No announcements yet</h3><p>Your supervisor has not posted an announcement.</p></div>{% endif %}
+                </div>
+            </section>
+            <section id="people" class="class-tab-panel" style="display:none">
+                <div class="class-card">
+                    <div class="class-heading"><div><h2>People</h2><p>Everyone enrolled in this classroom.</p></div><span class="class-count">{{ classmates|length + 1 }} students</span></div>
+                    <div class="people-group-title">Teacher</div>
+                    <div class="person"><div class="person-avatar">{{ classroom.supervisor[0]|upper if classroom.supervisor else 'S' }}</div><div class="person-info"><strong>{{ classroom.supervisor }}</strong><small>Supervisor</small></div><div class="person-actions"><a href="{{ url_for('student_classmates.teacher_profile',class_id=classroom.id) }}">View Profile</a></div></div>
+                    <div class="people-group-title">Students</div>
+                    <div class="person"><div class="person-avatar">{% if sidebar_profile and sidebar_profile.profile_picture %}<img src="{{ url_for('profile_picture',filename=sidebar_profile.profile_picture) }}" alt="You">{% else %}{{ (sidebar_profile.username[0] if sidebar_profile and sidebar_profile.username else 'Y')|upper }}{% endif %}</div><div class="person-info"><strong>{{ sidebar_profile.first_name ~ ' ' ~ sidebar_profile.last_name if sidebar_profile and sidebar_profile.first_name else (sidebar_profile.username if sidebar_profile else 'You') }}</strong><small>You · Current student</small></div><div class="person-actions"><a href="{{ url_for('student.student_profile') }}">Profile</a></div></div>
+                    {% for c in classmates %}<div class="person"><div class="person-avatar"><img src="{{ url_for('user_profile_picture',user_id=c.id) }}" alt="{{ c.username }}"></div><div class="person-info"><strong>{{ c.username }}</strong><small>{{ c.email or 'Classmate' }}</small></div><div class="person-actions"><a href="{{ url_for('student_classmates.classmate_profile',class_id=classroom.id,student_id=c.id) }}">Profile</a><a href="{{ url_for('student_classmates.classmate_insights',class_id=classroom.id,student_id=c.id) }}">ML Insights</a></div></div>{% else %}<div class="empty-state"><div class="empty-icon">👥</div><h3>No other classmates yet</h3><p>You are currently the only student enrolled in this class.</p></div>{% endfor %}
+                </div>
+            </section>
+        </div>
+    </main>
+    <div id="studentInfoModal" class="nexora-modal-overlay" onclick="if(event.target===this)this.classList.remove('open')">
+        <div class="nexora-modal">
+            <div class="nexora-modal-header"><h2>Class Information</h2><p>Classroom details</p><button type="button" class="nexora-modal-close" onclick="document.getElementById('studentInfoModal').classList.remove('open')">×</button></div>
+            <div class="nexora-modal-body"><div class="class-info-list"><div class="class-info-row"><b>Class</b><span>{{ classroom.name }}</span></div><div class="class-info-row"><b>Section</b><span>{{ classroom.section }}</span></div><div class="class-info-row"><b>Teacher</b><span>{{ classroom.supervisor }}</span></div><div class="class-info-row"><b>Code</b><span>{{ classroom.code }}</span></div><div class="class-info-row"><b>Status</b><span>{{ classroom.status }}</span></div></div><div class="modal-actions"><button type="button" onclick="document.getElementById('studentInfoModal').classList.remove('open')">Close</button></div></div>
+        </div>
+    </div>
+    <script>
+        function copyStudentCode(){const code={{ classroom.code|tojson }};const done=()=>window.showToast&&showToast('Class code copied.');if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(code).then(done).catch(()=>fallbackCopy(code))}else fallbackCopy(code)}
+        function fallbackCopy(code){const ta=document.createElement('textarea');ta.value=code;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');if(window.showToast)showToast('Class code copied.')}finally{ta.remove()}}
+        function openClassTab(name,btn){document.querySelectorAll('.class-tab-panel').forEach(x=>x.style.display='none');const target=document.getElementById(name);if(target)target.style.display='block';document.querySelectorAll('.class-tab').forEach(x=>x.classList.remove('active'));if(btn)btn.classList.add('active')}
+    </script>
+</body>
+</html>
