@@ -1,53 +1,3 @@
-<style>
-/* Student dashboard sidebar collapse control. This component is already
-   included by dashboard.html, so the control is guaranteed to render. */
-body.nx-student .nx-sidebar { overflow: visible !important; }
-body.nx-student .nx-collapse-toggle {
-    position: absolute;
-    right: -14px;
-    top: 50px;
-    width: 28px;
-    height: 28px;
-    border: 2px solid #fff;
-    border-radius: 50%;
-    background: #12a879;
-    color: #fff;
-    display: grid;
-    place-items: center;
-    padding: 0;
-    z-index: 9999;
-    cursor: pointer;
-    box-shadow: 0 3px 10px rgba(20,32,51,.18);
-    font: 900 17px/1 Arial, sans-serif;
-    transition: right .2s ease, transform .2s ease, background .15s ease;
-}
-body.nx-student .nx-collapse-toggle:hover { background: #07865f; }
-body.nx-student.nx-sidebar-collapsed .nx-collapse-toggle {
-    right: -14px;
-    transform: none;
-}
-body.nx-student.nx-sidebar-collapsed .nx-sidebar {
-    width: 82px !important;
-    padding-left: 12px !important;
-    padding-right: 12px !important;
-}
-body.nx-student.nx-sidebar-collapsed .nx-main { margin-left: 114px !important; }
-body.nx-student.nx-sidebar-collapsed .nx-brand { justify-content: center; padding: 0; }
-body.nx-student.nx-sidebar-collapsed .nx-brand > span:last-child,
-body.nx-student.nx-sidebar-collapsed .nx-profile > span,
-body.nx-student.nx-sidebar-collapsed .nx-label,
-body.nx-student.nx-sidebar-collapsed .nx-rule,
-body.nx-student.nx-sidebar-collapsed .nx-divider,
-body.nx-student.nx-sidebar-collapsed .nx-footer { display: none !important; }
-body.nx-student.nx-sidebar-collapsed .nx-profile { justify-content: center; margin: 25px 0 20px; }
-body.nx-student.nx-sidebar-collapsed .nx-profile img { width: 48px; height: 48px; }
-body.nx-student.nx-sidebar-collapsed .nx-nav { gap: 4px; }
-body.nx-student.nx-sidebar-collapsed .nx-nav a { justify-content: center; padding: 0; gap: 0; position: relative; }
-body.nx-student.nx-sidebar-collapsed .nx-nav .ico { width: auto; }
-body.nx-student.nx-sidebar-collapsed .nx-nav a .nx-badge { position: absolute !important; right: 4px; top: 3px; min-width: 15px !important; height: 15px !important; padding: 0 4px !important; font-size: 7px !important; }
-@media (max-width:760px) { body.nx-student .nx-collapse-toggle { display:none; } }
-</style>
-
 <div id="nexora-logout-overlay" class="nexora-logout-overlay" role="dialog" aria-modal="true" aria-labelledby="logout-title">
     <div class="nexora-logout-modal" role="document">
         <div class="nexora-logout-header">
@@ -78,34 +28,6 @@ body.nx-student.nx-sidebar-collapsed .nx-nav a .nx-badge { position: absolute !i
     document.addEventListener("click", function (e) {
         const overlay = document.getElementById("nexora-logout-overlay");
         if (overlay && e.target === overlay) closeLogoutModal();
-    });
-
-    /* This component is included by the student dashboard. Build the control
-       here instead of depending on the notification component, which the
-       redesigned dashboard intentionally does not render. */
-    document.addEventListener("DOMContentLoaded", function () {
-        const body = document.body;
-        const sidebar = document.querySelector(".nx-sidebar");
-        if (!body.classList.contains("nx-student") || !sidebar || document.querySelector(".nx-collapse-toggle")) return;
-
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "nx-collapse-toggle";
-        button.textContent = "‹";
-        button.setAttribute("aria-label", "Collapse sidebar");
-        button.setAttribute("aria-expanded", "true");
-        button.setAttribute("title", "Collapse sidebar");
-        sidebar.appendChild(button);
-
-        button.addEventListener("click", function (event) {
-            event.preventDefault();
-            event.stopPropagation();
-            const collapsed = body.classList.toggle("nx-sidebar-collapsed");
-            button.textContent = collapsed ? "›" : "‹";
-            button.setAttribute("aria-expanded", String(!collapsed));
-            button.setAttribute("aria-label", collapsed ? "Expand sidebar" : "Collapse sidebar");
-            button.setAttribute("title", collapsed ? "Expand sidebar" : "Collapse sidebar");
-        });
     });
 })();
 </script>
