@@ -1,68 +1,27 @@
 <style>
-/* Student dashboard utilities. */
 .notification-wrapper { display:none !important; }
-
-/* Collapsible sidebar matching the reference UI. The sidebar must allow the
-   circular control to sit outside its right edge. */
 .nx-sidebar { overflow:visible !important; transition:width .2s ease, padding .2s ease; }
-.nx-collapse-toggle {
-    position:absolute;
-    right:-14px;
-    top:50px;
-    transform:none;
-    width:27px;
-    height:27px;
-    border:1px solid #dfe6e9;
-    border-radius:50%;
-    background:#12a879;
-    color:#fff;
-    display:grid;
-    place-items:center;
-    padding:0;
-    z-index:300;
-    cursor:pointer;
-    box-shadow:0 3px 10px rgba(20,32,51,.14);
-    font-size:16px;
-    line-height:1;
-    transition:transform .2s ease,background .2s ease,right .2s ease;
-}
+.nx-collapse-toggle { position:absolute; right:-14px; top:50px; width:27px; height:27px; border:1px solid #dfe6e9; border-radius:50%; background:#12a879; color:#fff; display:grid; place-items:center; padding:0; z-index:300; cursor:pointer; box-shadow:0 3px 10px rgba(20,32,51,.14); font-size:16px; line-height:1; transition:transform .2s ease,background .2s ease; }
 .nx-collapse-toggle:hover { background:#07865f; }
-.nx-sidebar.nx-collapsed {
-    width:82px !important;
-    padding-left:12px !important;
-    padding-right:12px !important;
-}
+.nx-sidebar.nx-collapsed { width:82px !important; padding-left:12px !important; padding-right:12px !important; }
 .nx-sidebar.nx-collapsed .nx-brand { justify-content:center; padding:0; }
-.nx-sidebar.nx-collapsed .nx-brand strong,
-.nx-sidebar.nx-collapsed .nx-brand small,
-.nx-sidebar.nx-collapsed .nx-profile > span,
-.nx-sidebar.nx-collapsed .nx-label,
-.nx-sidebar.nx-collapsed .nx-divider,
-.nx-sidebar.nx-collapsed .nx-footer { display:none !important; }
+.nx-sidebar.nx-collapsed .nx-brand strong,.nx-sidebar.nx-collapsed .nx-brand small,.nx-sidebar.nx-collapsed .nx-profile > span,.nx-sidebar.nx-collapsed .nx-label,.nx-sidebar.nx-collapsed .nx-divider,.nx-sidebar.nx-collapsed .nx-footer { display:none !important; }
 .nx-sidebar.nx-collapsed .nx-profile { justify-content:center; margin:25px 0 20px; }
 .nx-sidebar.nx-collapsed .nx-profile img { width:48px; height:48px; }
-.nx-sidebar.nx-collapsed .nx-nav a { justify-content:center; padding:0; gap:0; }
-.nx-sidebar.nx-collapsed .nx-nav a:not(.notification-unread) { color:#253146; }
-.nx-sidebar.nx-collapsed .nx-nav .ico { width:auto; }
-.nx-sidebar.nx-collapsed .nx-badge { position:absolute !important; right:5px; top:4px; min-width:16px !important; height:16px !important; font-size:8px !important; padding:0 4px !important; }
-.nx-sidebar.nx-collapsed .nx-nav a { position:relative; }
+/* Anchor text is a bare text node, so font-size:0 is required to hide it. */
+.nx-sidebar.nx-collapsed .nx-nav a { justify-content:center !important; padding:0 !important; gap:0 !important; font-size:0 !important; min-height:42px; position:relative; }
+.nx-sidebar.nx-collapsed .nx-nav a .ico { width:auto !important; font-size:18px !important; line-height:1; }
+.nx-sidebar.nx-collapsed .nx-nav a .nx-badge { position:absolute !important; right:3px; top:3px; min-width:16px !important; height:16px !important; font-size:8px !important; padding:0 4px !important; }
 .nx-sidebar.nx-collapsed .nx-collapse-toggle { transform:rotate(180deg); }
 .nx-student.nx-sidebar-collapsed .nx-main { margin-left:114px !important; }
 .nx-student.nx-sidebar-collapsed .nx-wrap { max-width:1160px; }
-
-/* Match the approved dashboard header: functional search + notification + profile. */
 .nx-top::before { display:none !important; }
 .nx-top-profile span { display:inline !important; }
-
-/* Unread notifications: red border + red count badge in sidebar. */
 .nx-nav a:has(.nx-badge) { border:1.5px solid #ef4444 !important; color:#334155 !important; }
 .nx-nav a:has(.nx-badge) .ico { color:#ef4444 !important; }
 .nx-nav a .nx-badge { position:static; margin-left:auto; min-width:20px; height:20px; padding:0 5px; border-radius:999px; background:#ef4444 !important; color:#fff !important; font-size:10px; font-weight:800; display:inline-grid; place-items:center; line-height:1; }
 .nx-top-action { display:none !important; }
-
-@media (max-width:760px) {
-    .nx-collapse-toggle { display:none !important; }
-}
+@media (max-width:760px) { .nx-collapse-toggle { display:none !important; } }
 </style>
 
 <div class="notification-wrapper">
@@ -91,7 +50,6 @@ function markNotificationRead(notificationId,el,redirectAfter){fetch('/notificat
 function markAllRead(e){if(e)e.stopPropagation();fetch('/notifications/read-all',{method:'POST',headers:{'X-CSRFToken':'{{ csrf_token() }}'}}).then(r=>r.json()).then(data=>{if(data.ok){document.querySelectorAll('.notification-item.unread').forEach(el=>el.classList.remove('unread'));const c=document.getElementById('notificationCount');if(c)c.remove();}}).catch(()=>{});}
 document.addEventListener('click',function(event){const wrapper=document.querySelector('.notification-wrapper');const dropdown=document.getElementById('notificationDropdown');if(wrapper&&dropdown&&!wrapper.contains(event.target))dropdown.style.display='none';});
 
-/* Create the collapse control only on the redesigned student dashboard. */
 document.addEventListener('DOMContentLoaded',function(){
     const sidebar=document.querySelector('.nx-sidebar');
     const student=document.querySelector('.nx-student');
