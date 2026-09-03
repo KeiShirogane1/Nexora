@@ -1,80 +1,383 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="UTF-8">
-        <title>Edit Log - Nexora</title>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Log Entry - Nexora</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
+    <style>
+        :root {
+            --nx-green: #12a879;
+            --nx-green-dark: #07865f;
+            --nx-green-soft: #eaf8f3;
+            --nx-ink: #142033;
+            --nx-muted: #697486;
+            --nx-line: #e6eaf0;
+            --nx-bg: #f7f9fb;
+            --nx-warning: #f4a62a;
+            --nx-warning-soft: #fff7e8;
+        }
 
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-              rel="stylesheet">
+        body.content-page {
+            background: var(--nx-bg);
+            color: var(--nx-ink);
+        }
 
-        <link rel="stylesheet"
-              href="{{ url_for('static', filename='css/style.css') }}">
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
-    </head>
+        .nx-log-main {
+            min-height: 100vh;
+            padding: 32px 38px 56px;
+        }
 
-    <body class="content-page">
+        .nx-log-wrap {
+            width: min(900px, 100%);
+            margin: 0 auto;
+        }
 
-        {% include 'components/student_sidebar.html' %}
+        .nx-breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 24px;
+            font-size: 13px;
+            color: var(--nx-muted);
+        }
 
-        <div class="student-main-content nexora-app-main">
-            <div class="nexora-page">
+        .nx-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            color: var(--nx-green-dark);
+            text-decoration: none;
+            font-weight: 700;
+        }
 
-                <div class="profile-page-container">
+        .nx-back:hover { color: var(--nx-green); }
 
-                    <div class="alert alert-warning">
-                        You may edit this log only while today's internship session is still open.
-                    </div>
+        .nx-page-heading {
+            margin-bottom: 24px;
+        }
 
-                    <div class="card">
+        .nx-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 7px 11px;
+            border-radius: 999px;
+            background: var(--nx-green-soft);
+            color: var(--nx-green-dark);
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: .02em;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
 
-                        <div class="card-header bg-warning">
-                            <h4 class="mb-0">
-                                ✏️ Edit Log Entry
-                            </h4>
-                        </div>
+        .nx-page-heading h1 {
+            margin: 0 0 7px;
+            font-size: clamp(27px, 3vw, 36px);
+            line-height: 1.15;
+            font-weight: 800;
+            letter-spacing: -.025em;
+        }
 
-                        <div class="card-body">
+        .nx-page-heading p {
+            margin: 0;
+            color: var(--nx-muted);
+            font-size: 15px;
+        }
 
-                            <form method="POST">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        .nx-session-note {
+            display: flex;
+            align-items: flex-start;
+            gap: 13px;
+            padding: 16px 18px;
+            margin-bottom: 18px;
+            border: 1px solid #f2d39b;
+            border-radius: 14px;
+            background: var(--nx-warning-soft);
+            color: #77500e;
+        }
 
-                                <div class="mb-3">
+        .nx-session-icon {
+            width: 34px;
+            height: 34px;
+            flex: 0 0 34px;
+            display: grid;
+            place-items: center;
+            border-radius: 10px;
+            background: #fff0cf;
+            font-size: 16px;
+        }
 
-                                    <label class="form-label">
-                                        Log Entry
-                                    </label>
+        .nx-session-note strong {
+            display: block;
+            margin-bottom: 2px;
+            color: #68460b;
+            font-size: 14px;
+        }
 
-                                    <textarea
-                                        class="form-control"
-                                        name="content"
-                                        rows="8"
-                                        required>{{ log[1] }}</textarea>
+        .nx-session-note span {
+            font-size: 13px;
+            line-height: 1.55;
+        }
 
-                                </div>
+        .nx-editor-card {
+            overflow: hidden;
+            border: 1px solid var(--nx-line);
+            border-radius: 20px;
+            background: #fff;
+            box-shadow: 0 12px 35px rgba(20, 32, 51, .06);
+        }
 
-                                <button
-                                    class="btn btn-primary"
-                                    type="submit">
+        .nx-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 22px 24px;
+            border-bottom: 1px solid var(--nx-line);
+        }
 
-                                    Save Changes
+        .nx-card-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
 
-                                </button>
+        .nx-card-title-icon {
+            width: 42px;
+            height: 42px;
+            display: grid;
+            place-items: center;
+            border-radius: 12px;
+            background: var(--nx-green-soft);
+            color: var(--nx-green-dark);
+            font-size: 18px;
+        }
 
-                                <a
-                                    href="/student/logbook"
-                                    class="btn btn-secondary">
+        .nx-card-title h2 {
+            margin: 0;
+            font-size: 17px;
+            font-weight: 800;
+        }
 
-                                    Cancel
+        .nx-card-title p {
+            margin: 3px 0 0;
+            color: var(--nx-muted);
+            font-size: 12px;
+        }
 
-                                </a>
+        .nx-edit-label {
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: #f5f7fa;
+            color: var(--nx-muted);
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+        }
 
-                            </form>
+        .nx-editor-body {
+            padding: 26px 24px 24px;
+        }
 
-                        </div>
+        .nx-form-label {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 9px;
+            color: var(--nx-ink);
+            font-size: 14px;
+            font-weight: 800;
+        }
 
-                    </div>
+        .nx-required {
+            color: #d64a4a;
+        }
 
+        .nx-editor {
+            width: 100%;
+            min-height: 260px;
+            resize: vertical;
+            padding: 16px 17px;
+            border: 1px solid #dfe4eb;
+            border-radius: 14px;
+            outline: none;
+            color: var(--nx-ink);
+            background: #fff;
+            font-size: 15px;
+            line-height: 1.7;
+            transition: border-color .18s ease, box-shadow .18s ease;
+        }
+
+        .nx-editor::placeholder { color: #9aa4b2; }
+
+        .nx-editor:focus {
+            border-color: var(--nx-green);
+            box-shadow: 0 0 0 4px rgba(18, 168, 121, .11);
+        }
+
+        .nx-help {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            margin-top: 9px;
+            color: var(--nx-muted);
+            font-size: 12px;
+        }
+
+        .nx-actions {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 10px;
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid var(--nx-line);
+        }
+
+        .nx-btn {
+            min-height: 43px;
+            padding: 0 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border-radius: 11px;
+            font-size: 13px;
+            font-weight: 800;
+            text-decoration: none;
+            cursor: pointer;
+            transition: transform .16s ease, box-shadow .16s ease, background .16s ease;
+        }
+
+        .nx-btn:hover { transform: translateY(-1px); }
+
+        .nx-btn-secondary {
+            border: 1px solid var(--nx-line);
+            background: #fff;
+            color: #4d596a;
+        }
+
+        .nx-btn-secondary:hover {
+            background: #f7f9fb;
+            color: var(--nx-ink);
+        }
+
+        .nx-btn-primary {
+            border: 1px solid var(--nx-green);
+            background: var(--nx-green);
+            color: #fff;
+            box-shadow: 0 7px 18px rgba(18, 168, 121, .18);
+        }
+
+        .nx-btn-primary:hover {
+            background: var(--nx-green-dark);
+            color: #fff;
+            box-shadow: 0 9px 22px rgba(18, 168, 121, .24);
+        }
+
+        @media (max-width: 800px) {
+            .nx-log-main { padding: 24px 18px 42px; }
+            .nx-card-header { align-items: flex-start; }
+        }
+
+        @media (max-width: 560px) {
+            .nx-log-main { padding: 20px 14px 36px; }
+            .nx-card-header,
+            .nx-editor-body { padding-left: 18px; padding-right: 18px; }
+            .nx-edit-label { display: none; }
+            .nx-actions { flex-direction: column-reverse; align-items: stretch; }
+            .nx-btn { width: 100%; }
+            .nx-help { flex-direction: column; gap: 3px; }
+        }
+    </style>
+</head>
+<body class="content-page">
+    {% include 'components/student_sidebar.html' %}
+
+    <main class="student-main-content nexora-app-main nx-log-main">
+        <div class="nx-log-wrap">
+            <nav class="nx-breadcrumb" aria-label="Breadcrumb">
+                <a class="nx-back" href="{{ url_for('student.logbook') }}">← Back to Logbook</a>
+                <span>/</span>
+                <span>Edit Entry</span>
+            </nav>
+
+            <header class="nx-page-heading">
+                <div class="nx-eyebrow">✎ Logbook</div>
+                <h1>Edit Log Entry</h1>
+                <p>Update your internship journal while keeping the original entry intact.</p>
+            </header>
+
+            <div class="nx-session-note" role="note">
+                <div class="nx-session-icon">⏱</div>
+                <div>
+                    <strong>Today's session is still open</strong>
+                    <span>You may edit this log only while today's internship session is still open.</span>
                 </div>
             </div>
-        </body>
-    </html>
+
+            <section class="nx-editor-card">
+                <div class="nx-card-header">
+                    <div class="nx-card-title">
+                        <div class="nx-card-title-icon">✎</div>
+                        <div>
+                            <h2>Log Entry</h2>
+                            <p>Make your changes below, then save when you're ready.</p>
+                        </div>
+                    </div>
+                    <span class="nx-edit-label">Editing</span>
+                </div>
+
+                <div class="nx-editor-body">
+                    <form method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                        <label class="nx-form-label" for="log-content">
+                            <span>What did you accomplish today? <span class="nx-required">*</span></span>
+                        </label>
+
+                        <textarea
+                            id="log-content"
+                            class="nx-editor"
+                            name="content"
+                            rows="10"
+                            required
+                            placeholder="Describe the work you completed, what you learned, and any important observations...">{{ log[1] }}</textarea>
+
+                        <div class="nx-help">
+                            <span>Keep your entry clear, specific, and relevant to your internship.</span>
+                            <span id="nx-char-count">0 characters</span>
+                        </div>
+
+                        <div class="nx-actions">
+                            <a href="{{ url_for('student.logbook') }}" class="nx-btn nx-btn-secondary">Cancel</a>
+                            <button class="nx-btn nx-btn-primary" type="submit">✓ Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        (function () {
+            const editor = document.getElementById('log-content');
+            const count = document.getElementById('nx-char-count');
+            if (!editor || !count) return;
+
+            function updateCount() {
+                const value = editor.value || '';
+                count.textContent = value.length + (value.length === 1 ? ' character' : ' characters');
+            }
+
+            editor.addEventListener('input', updateCount);
+            updateCount();
+        })();
+    </script>
+</body>
+</html>
