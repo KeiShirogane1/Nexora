@@ -1,1 +1,70 @@
-<link rel="stylesheet" href="{{ url_for('static',filename='css/nexora-ui.css') }}"><link rel="stylesheet" href="{{ url_for('static',filename='css/role-fixes.css') }}"><aside class="student-sidebar compact-sidebar" id="mainSidebar"><div class="sidebar-header"><button class="hamburger-btn sidebar-toggle" aria-label="Toggle sidebar">☰</button><a class="sidebar-brand" href="{{ url_for('student.student_dashboard') }}"><img src="{{ url_for('static',filename='images/Nexora.png') }}" alt="Nexora"><h3>Nexora</h3></a></div><a href="{{ url_for('student.student_profile') }}" class="sidebar-profile" aria-label="Open student profile">{% if sidebar_profile and sidebar_profile.profile_picture %}<img src="{{ url_for('profile_picture',filename=sidebar_profile.profile_picture) }}" class="sidebar-avatar" alt="Profile picture" onerror="this.onerror=null;this.src='{{ url_for('static',filename='images/default_profile.png') }}';">{% else %}<img src="{{ url_for('static',filename='images/default_profile.png') }}" class="sidebar-avatar" alt="Default profile picture">{% endif %}<h4>{% if sidebar_profile and sidebar_profile.first_name %}{{ sidebar_profile.first_name }} {{ sidebar_profile.last_name or '' }}{% else %}{{ sidebar_profile.username if sidebar_profile else 'Student' }}{% endif %}</h4><p>Student · View profile</p></a><ul class="sidebar-menu"><li><a href="{{ url_for('student.student_dashboard') }}" class="{% if request.path=='/student/dashboard' %}active{% endif %}"><span class="nav-icon">🏠</span><span>Dashboard</span></a></li><li><a href="{{ url_for('classroom.student_classes') }}" class="{% if request.path.startswith('/student/classes') %}active{% endif %}"><span class="nav-icon">🏫</span><span>My Classes</span></a></li><li><a href="{{ url_for('student.logbook') }}" class="{% if request.path=='/student/logbook' %}active{% endif %}"><span class="nav-icon">📘</span><span>Logbook</span></a></li><li><a href="{{ url_for('student.tasks') }}" class="{% if request.path=='/student/tasks' %}active{% endif %}"><span class="nav-icon">✅</span><span>Tasks</span></a></li><li><a href="{{ url_for('student.documents') }}" class="{% if request.path=='/student/documents' %}active{% endif %}"><span class="nav-icon">📂</span><span>Documents</span></a></li><li><a href="{{ url_for('notifications.notification_list') }}" class="{% if request.path=='/notifications' %}active{% endif %}"><span class="nav-icon">🔔</span><span>Notifications</span>{% if unread_count %}<span class="sidebar-notification-badge">{{ unread_count }}</span>{% endif %}</a></li><li class="sidebar-menu-divider"><a href="javascript:void(0)" class="logout-link" onclick="openLogoutModal();return false"><span class="nav-icon">🚪</span><span>Logout</span></a></li></ul></aside>{% include 'components/logout_modal.html' %}{% include 'components/toast.html' %}{% include 'components/notification_bell.html' %}
+<style>
+  .student-sidebar.nx-sidebar{position:fixed;left:0;top:0;bottom:0;width:268px!important;background:#fff!important;border-right:1px solid #e8edf0!important;box-shadow:4px 0 22px rgba(20,32,51,.035)!important;padding:28px 20px 0!important;display:flex!important;flex-direction:column!important;z-index:100!important;overflow:visible!important;color:#142033!important;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;box-sizing:border-box!important}
+  .student-sidebar.nx-sidebar *{box-sizing:border-box}
+  .student-sidebar.nx-sidebar .nx-brand{display:flex;align-items:center;gap:13px;text-decoration:none;color:#142033;padding:0 4px}
+  .student-sidebar.nx-sidebar .nx-logo{width:42px;height:42px;border-radius:12px;background:#eef9f5;display:grid;place-items:center;color:#12a879;font-size:25px;font-weight:900}
+  .student-sidebar.nx-sidebar .nx-brand strong{font-size:20px;letter-spacing:-.5px}
+  .student-sidebar.nx-sidebar .nx-brand small{display:block;color:#7a8493;font-size:9px;margin-top:2px;white-space:nowrap}
+  .student-sidebar.nx-sidebar .nx-profile{display:flex;align-items:center;gap:12px;margin:34px 4px 23px;text-decoration:none;color:#142033}
+  .student-sidebar.nx-sidebar .nx-profile img{width:58px;height:58px;border-radius:50%;object-fit:cover;border:1px solid #e8edf0}
+  .student-sidebar.nx-sidebar .nx-profile .nx-profile-copy strong{font-size:14px;display:block}
+  .student-sidebar.nx-sidebar .nx-profile .nx-profile-copy span{font-size:10px;color:#697486;display:block;margin-top:3px}
+  .student-sidebar.nx-sidebar .nx-profile .nx-profile-copy em{font-style:normal;color:#12a879;font-size:10px;font-weight:700;display:block;margin-top:5px}
+  .student-sidebar.nx-sidebar .nx-rule{height:1px;background:#e6eaf0;margin:0 0 15px}
+  .student-sidebar.nx-sidebar .nx-label{font-size:10px;font-weight:800;letter-spacing:.04em;color:#6f7a89;padding:0 9px 8px;text-transform:uppercase}
+  .student-sidebar.nx-sidebar .nx-nav{display:flex;flex-direction:column;gap:3px}
+  .student-sidebar.nx-sidebar .nx-nav a{display:flex;align-items:center;gap:14px;min-height:42px;padding:0 13px;border-radius:10px;text-decoration:none;color:#253146;font-size:13px;font-weight:600}
+  .student-sidebar.nx-sidebar .nx-nav a:hover{background:#f5f8f7}
+  .student-sidebar.nx-sidebar .nx-nav a.active{background:#eaf8f3;color:#07865f}
+  .student-sidebar.nx-sidebar .nx-nav .ico{width:22px;text-align:center;font-size:18px;color:#07865f;font-weight:700}
+  .student-sidebar.nx-sidebar .nx-nav a.notification-unread{border:1.5px solid #ef4444;background:#fff;color:#253146}
+  .student-sidebar.nx-sidebar .nx-nav a.notification-unread .ico{color:#ef4444}
+  .student-sidebar.nx-sidebar .nx-badge{min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:#ef4444;color:#fff;font-size:9px;display:grid;place-items:center;font-weight:800;margin-left:auto;line-height:20px}
+  .student-sidebar.nx-sidebar .nx-divider{height:1px;background:#e6eaf0;margin:12px 0 10px}
+  .student-sidebar.nx-sidebar .nx-footer{margin-top:auto;margin-left:-20px;margin-right:-20px;height:92px;background:#eef9f5;position:relative;display:flex;align-items:flex-end;padding:0 25px 16px}
+  .student-sidebar.nx-sidebar .nx-footer:before{content:"";position:absolute;left:-8%;right:-8%;top:-28px;height:55px;background:#fff;border-radius:50% 50% 0 0/100% 100% 0 0}
+  .student-sidebar.nx-sidebar .nx-footer .cap{font-size:20px;margin-right:11px;z-index:1}
+  .student-sidebar.nx-sidebar .nx-footer p{margin:0;z-index:1;color:#607183;font-size:10px;line-height:1.45}
+  @media(max-width:1050px){.student-sidebar.nx-sidebar{width:235px!important}}
+  @media(max-width:760px){.student-sidebar.nx-sidebar{position:relative!important;left:0;top:0;bottom:auto;width:100%!important;height:auto;margin:0;border-radius:0;padding-bottom:12px!important}.student-sidebar.nx-sidebar .nx-footer{display:none}.student-sidebar.nx-sidebar .nx-profile{margin:20px 4px}.student-sidebar.nx-sidebar .nx-nav{display:grid;grid-template-columns:repeat(2,1fr)}.student-sidebar.nx-sidebar .nx-divider{display:none}}
+</style>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/nexora-ui.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/role-fixes.css') }}">
+<aside class="student-sidebar nx-sidebar" id="mainSidebar">
+  <a class="nx-brand" href="{{ url_for('student.student_dashboard') }}">
+    <span class="nx-logo">N</span>
+    <span><strong>NEXORA</strong><small>Internship Management System</small></span>
+  </a>
+  <a class="nx-profile" href="{{ url_for('student.student_profile') }}">
+    {% if sidebar_profile and sidebar_profile.profile_picture %}
+      <img src="{{ url_for('profile_picture',filename=sidebar_profile.profile_picture) }}" alt="Profile" onerror="this.onerror=null;this.src='{{ url_for('static',filename='images/default_profile.png') }}';">
+    {% else %}
+      <img src="{{ url_for('static',filename='images/default_profile.png') }}" alt="Profile">
+    {% endif %}
+    <span class="nx-profile-copy">
+      <strong>{% if sidebar_profile and sidebar_profile.first_name %}{{ sidebar_profile.first_name }} {{ sidebar_profile.last_name or '' }}{% elif profile is defined %}{{ profile[0] }} {{ profile[2] }}{% else %}Student{% endif %}</strong>
+      <span>Student</span>
+      <em>View Profile →</em>
+    </span>
+  </a>
+  <div class="nx-rule"></div>
+  <div class="nx-label">Menu</div>
+  <nav class="nx-nav">
+    <a class="{% if request.path=='/student/dashboard' %}active{% endif %}" href="{{ url_for('student.student_dashboard') }}"><span class="ico">▦</span>Dashboard</a>
+    <a class="{% if request.path.startswith('/student/classes') %}active{% endif %}" href="{{ url_for('classroom.student_classes') }}"><span class="ico">♙</span>My Classes</a>
+    <a class="{% if request.path=='/student/logbook' %}active{% endif %}" href="{{ url_for('student.logbook') }}"><span class="ico">▤</span>Logbook</a>
+    <a class="{% if request.path=='/student/tasks' %}active{% endif %}" href="{{ url_for('student.tasks') }}"><span class="ico">☑</span>Tasks</a>
+    <a class="{% if request.path=='/student/documents' %}active{% endif %}" href="{{ url_for('student.documents') }}"><span class="ico">▧</span>Documents</a>
+    <a class="{% if unread_count|default(0) > 0 %}notification-unread{% endif %}" href="{{ url_for('notifications.notification_list') }}"><span class="ico">♧</span>Notifications{% if unread_count|default(0) > 0 %}<span class="nx-badge">{{ unread_count }}</span>{% endif %}</a>
+  </nav>
+  <div class="nx-divider"></div>
+  <div class="nx-label">Account</div>
+  <nav class="nx-nav">
+    <a class="{% if request.path=='/student/profile' %}active{% endif %}" href="{{ url_for('student.student_profile') }}"><span class="ico">◎</span>Profile</a>
+    <a href="javascript:void(0)" onclick="openLogoutModal();return false"><span class="ico">↪</span>Logout</a>
+  </nav>
+  <div class="nx-footer"><span class="cap">⌑</span><p>Stay focused, keep learning,<br>and make it happen. 💚</p></div>
+</aside>
+{% include 'components/logout_modal.html' %}
+{% include 'components/toast.html' %}
+{% include 'components/notification_bell.html' %}
