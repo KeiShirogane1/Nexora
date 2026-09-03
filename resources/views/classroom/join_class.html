@@ -1,35 +1,117 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="UTF-8">
-        <title>Join Class - Nexora</title>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
-    </head>
-    <body class="student-page">
-        {% include 'components/student_sidebar.html' %}
-        <div class="student-main-content nexora-app-main">
-            <div class="nexora-page">
-                <div class="nexora-page" style="max-width:640px; margin:0 auto;">
-                    <a href="{{ url_for('classroom.student_classes') }}" class="btn btn-light btn-sm mb-3">← Back to My Classes</a>
-                    <div class="card shadow-sm">
-                        <div class="card-body text-center">
-                            <div style="font-size:2rem; margin-bottom:8px;">🔑</div>
-                            <h4>Join class</h4>
-                            <p class="text-muted">Enter the class code shared by your supervisor.</p>
-                            <form method="POST" class="text-start mt-4" novalidate>
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <label for="class_code" class="form-label">Class code</label>
-                                <input type="text" id="class_code" name="class_code" class="form-control form-control-lg" placeholder="e.g., NEX-ABC123" value="{{ form.class_code if form.class_code else '' }}" required style="letter-spacing:.08em; text-transform:uppercase;">
-                                {% if errors and errors.class_code %}<div class="text-danger small mt-1">{{ errors.class_code }}</div>{% endif %}
-                                <div class="text-muted small mt-2">Ask your supervisor if you don't have a code. Class codes are 6-10 characters.</div>
-                                <button type="submit" class="btn btn-primary w-100 mt-4">Join</button>
-                            </form>
-                        </div>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Join Class - Nexora</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/nexora-ui.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/role-fixes.css') }}">
+    <style>
+        :root{--nx-green:#12a879;--nx-green-dark:#07865f;--nx-green-soft:#eaf8f3;--nx-ink:#142033;--nx-muted:#697486;--nx-line:#e6eaf0;--nx-bg:#f7f9fb}
+        *{box-sizing:border-box}
+        body{margin:0;background:var(--nx-bg);color:var(--nx-ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+        .nx-main{margin-left:268px;min-height:100vh;padding:0 34px 40px}
+        .nx-top{height:76px;display:flex;align-items:center;justify-content:flex-end;gap:16px}
+        .nx-top-search{display:flex;align-items:center;width:min(320px,32vw);height:40px;background:#fff;border:1px solid var(--nx-line);border-radius:10px;padding:0 13px;color:var(--nx-muted);gap:9px}
+        .nx-top-search input{border:0;outline:0;width:100%;font-size:13px;background:transparent;color:var(--nx-ink)}
+        .nx-top-icon{width:40px;height:40px;border:1px solid var(--nx-line);background:#fff;border-radius:10px;display:grid;place-items:center;text-decoration:none;color:var(--nx-ink);position:relative}
+        .nx-top-icon:hover{border-color:#cfd6df;color:var(--nx-green-dark)}
+        .nx-profile{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--nx-ink);padding-left:4px}
+        .nx-profile img{width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid #fff;box-shadow:0 1px 5px rgba(20,32,51,.12)}
+        .nx-profile-text strong{display:block;font-size:13px;line-height:17px}.nx-profile-text span{display:block;color:var(--nx-muted);font-size:11px}
+        .nx-breadcrumb{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--nx-muted);margin:10px 0 25px}.nx-breadcrumb a{color:var(--nx-muted);text-decoration:none}.nx-breadcrumb a:hover{color:var(--nx-green-dark)}.nx-breadcrumb .current{color:var(--nx-ink);font-weight:600}
+        .join-layout{max-width:920px;margin:0 auto}
+        .join-hero{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:22px}.join-eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.11em;font-weight:700;color:var(--nx-green-dark);margin-bottom:7px}.join-hero h1{font-size:30px;line-height:1.15;margin:0 0 7px;font-weight:750;letter-spacing:-.025em}.join-hero p{margin:0;color:var(--nx-muted);font-size:14px}
+        .back-link{display:inline-flex;align-items:center;gap:7px;padding:9px 13px;border:1px solid var(--nx-line);border-radius:9px;background:#fff;color:var(--nx-ink);font-size:12px;font-weight:650;text-decoration:none;white-space:nowrap}.back-link:hover{border-color:#ccd4dd;color:var(--nx-green-dark)}
+        .join-card{background:#fff;border:1px solid var(--nx-line);border-radius:16px;box-shadow:0 5px 22px rgba(20,32,51,.045);overflow:hidden}
+        .join-card-head{padding:27px 30px 22px;border-bottom:1px solid var(--nx-line);display:flex;align-items:center;gap:15px}.join-symbol{width:46px;height:46px;border-radius:12px;background:var(--nx-green-soft);color:var(--nx-green-dark);display:grid;place-items:center;font-size:22px}.join-card-head h2{font-size:17px;margin:0 0 4px;font-weight:700}.join-card-head p{font-size:12px;color:var(--nx-muted);margin:0}
+        .join-card-body{padding:30px}.form-label{display:block;font-size:12px;font-weight:700;margin:0 0 8px;color:var(--nx-ink)}.code-input{width:100%;height:52px;border:1px solid #d8dee6;border-radius:10px;padding:0 15px;font-size:16px;letter-spacing:.11em;text-transform:uppercase;color:var(--nx-ink);outline:0;background:#fff;transition:border-color .15s,box-shadow .15s}.code-input:focus{border-color:var(--nx-green);box-shadow:0 0 0 3px rgba(18,168,121,.12)}.code-input::placeholder{letter-spacing:.08em;color:#a0a9b6}.code-input.is-invalid{border-color:#dc3545}.field-error{font-size:12px;color:#c62f3d;margin-top:7px}.field-help{font-size:12px;color:var(--nx-muted);margin-top:9px;line-height:1.5}
+        .join-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:25px;padding-top:22px;border-top:1px solid var(--nx-line)}.btn-secondary{display:inline-flex;align-items:center;justify-content:center;height:42px;padding:0 17px;border:1px solid var(--nx-line);border-radius:9px;background:#fff;color:var(--nx-ink);font-size:12px;font-weight:700;text-decoration:none}.btn-primary-nx{height:42px;padding:0 22px;border:0;border-radius:9px;background:var(--nx-green);color:#fff;font-size:12px;font-weight:750;cursor:pointer;box-shadow:0 3px 8px rgba(18,168,121,.16)}.btn-primary-nx:hover{background:var(--nx-green-dark)}
+        .join-tips{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:15px}.tip{background:#fff;border:1px solid var(--nx-line);border-radius:12px;padding:16px}.tip-icon{font-size:16px;margin-bottom:8px}.tip strong{display:block;font-size:12px;margin-bottom:4px}.tip span{display:block;font-size:11px;line-height:1.5;color:var(--nx-muted)}
+        @media(max-width:900px){.nx-main{margin-left:0;padding:0 20px 30px}.nx-top-search{display:none}.join-hero{align-items:flex-start;flex-direction:column}.join-tips{grid-template-columns:1fr}}
+        @media(max-width:600px){.nx-main{padding:0 14px 25px}.nx-top{height:64px}.nx-profile-text{display:none}.nx-breadcrumb{margin-bottom:18px}.join-hero h1{font-size:26px}.back-link{width:100%;justify-content:center}.join-card-head,.join-card-body{padding:22px}.join-actions{flex-direction:column-reverse}.btn-secondary,.btn-primary-nx{width:100%}}
+    </style>
+</head>
+<body class="student-page">
+    {% include 'components/student_sidebar.html' %}
+
+    <main class="nx-main">
+        <header class="nx-top">
+            <div class="nx-top-search" aria-label="Search">
+                <span aria-hidden="true">⌕</span>
+                <input type="text" placeholder="Search" aria-label="Search">
+            </div>
+            <a href="{{ url_for('notifications.notification_list') }}" class="nx-top-icon" aria-label="Notifications">
+                <span aria-hidden="true">🔔</span>
+                {% if unread_count %}<span class="sidebar-notification-badge">{{ unread_count }}</span>{% endif %}
+            </a>
+            <a href="{{ url_for('student.student_profile') }}" class="nx-profile" aria-label="Open profile">
+                {% if sidebar_profile and sidebar_profile.profile_picture %}
+                    <img src="{{ url_for('profile_picture', filename=sidebar_profile.profile_picture) }}" alt="Profile picture" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_profile.png') }}';">
+                {% else %}
+                    <img src="{{ url_for('static', filename='images/default_profile.png') }}" alt="Default profile picture">
+                {% endif %}
+                <span class="nx-profile-text">
+                    <strong>{% if sidebar_profile and sidebar_profile.first_name %}{{ sidebar_profile.first_name }} {{ sidebar_profile.last_name or '' }}{% else %}Student{% endif %}</strong>
+                    <span>Student</span>
+                </span>
+            </a>
+        </header>
+
+        <div class="join-layout">
+            <nav class="nx-breadcrumb" aria-label="Breadcrumb">
+                <a href="{{ url_for('classroom.student_classes') }}">My Classes</a>
+                <span aria-hidden="true">›</span>
+                <span class="current">Join Class</span>
+            </nav>
+
+            <section class="join-hero">
+                <div>
+                    <div class="join-eyebrow">Classroom</div>
+                    <h1>Join a Class</h1>
+                    <p>Enter the class code provided by your supervisor to join your internship classroom.</p>
+                </div>
+                <a href="{{ url_for('classroom.student_classes') }}" class="back-link">← Back to My Classes</a>
+            </section>
+
+            <section class="join-card">
+                <div class="join-card-head">
+                    <div class="join-symbol" aria-hidden="true">🔑</div>
+                    <div>
+                        <h2>Class access code</h2>
+                        <p>Use the code shared by your supervisor.</p>
                     </div>
                 </div>
+                <div class="join-card-body">
+                    <form method="POST" novalidate>
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <label for="class_code" class="form-label">Class code</label>
+                        <input type="text" id="class_code" name="class_code" class="code-input{% if errors and errors.class_code %} is-invalid{% endif %}" placeholder="e.g. NEX-ABC123" value="{{ form.class_code if form.class_code else '' }}" maxlength="10" autocomplete="off" autocapitalize="characters" required>
+                        {% if errors and errors.class_code %}<div class="field-error">{{ errors.class_code }}</div>{% endif %}
+                        <div class="field-help">Class codes are 6–10 characters. If you don't have a code, ask your supervisor or instructor.</div>
+                        <div class="join-actions">
+                            <a href="{{ url_for('classroom.student_classes') }}" class="btn-secondary">Cancel</a>
+                            <button type="submit" class="btn-primary-nx">Join Class</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <div class="join-tips">
+                <div class="tip"><div class="tip-icon">🔤</div><strong>Check the code</strong><span>Enter the class code exactly as it was shared with you.</span></div>
+                <div class="tip"><div class="tip-icon">👤</div><strong>Need help?</strong><span>Contact your supervisor if you haven't received a class code.</span></div>
+                <div class="tip"><div class="tip-icon">✓</div><strong>Join securely</strong><span>Your class membership will be linked to your student account.</span></div>
             </div>
         </div>
-    </body>
+    </main>
+
+    <script>
+        const codeInput = document.getElementById('class_code');
+        if (codeInput) {
+            codeInput.addEventListener('input', () => {
+                codeInput.value = codeInput.value.toUpperCase().replace(/\s+/g, '');
+            });
+        }
+    </script>
+</body>
 </html>
