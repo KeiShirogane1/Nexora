@@ -1,6 +1,7 @@
 from flask import Blueprint,render_template,request,redirect,url_for,session,flash
 from app.Models.db import get_db_connection
 from app.Services.password_security import hash_password,verify_password
+from app.Services.notification_service import create_notification
 
 auth=Blueprint("auth",__name__)
 
@@ -52,12 +53,24 @@ def signup():
   if password!=confirm_password:flash("Passwords do not match ❌","danger");return render_template("auth/signup.html")
   if len(password)<8:flash("Password must be at least 8 characters ❌","danger");return render_template("auth/signup.html")
   conn=get_db_connection();cur=conn.cursor()
+  admin_ids=[]
   try:
    if cur.execute("SELECT id FROM users WHERE username=? OR LOWER(email)=LOWER(?)",(username,email)).fetchone():flash("Username or email already exists ❌","danger");return render_template("auth/signup.html")
    pending_role="pending_student" if account_type=="student" else "pending_supervisor";cur.execute("INSERT INTO users (username,email,password,role) VALUES (?,?,?,?)",(username,email,hash_password(password),pending_role));user_id=cur.lastrowid
    if account_type=="student":cur.execute("INSERT INTO student_profiles (user_id,profile_completed) VALUES (?,0)",(user_id,))
+   cur.execute("SELECT id FROM users WHERE role='admin'")
+   admin_ids=[row["id"] for row in cur.fetchall()]
    conn.commit()
   except Exception:conn.rollback();raise
   finally:cur.close();conn.close()
+
+  notification_title="New Student Approval Request" if account_type=="student" else "New Supervisor Approval Request"
+  notification_message=(f"A new student account request from {username} is waiting for administrator approval." if account_type=="student" else f"A new supervisor account request from {username} is waiting for administrator approval.")
+  for admin_id in admin_ids:
+   try:
+    create_notification(admin_id,notification_title,notification_message,"warning","/admin/users")
+   except Exception as e:
+    print("Approval notification failed:",e)
+
   flash("Account created successfully. Wait for approval.","success");return redirect(url_for("auth.login"))
  return render_template("auth/signup.html")
