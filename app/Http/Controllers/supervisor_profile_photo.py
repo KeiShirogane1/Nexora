@@ -10,7 +10,7 @@ supervisor_profile_photo = Blueprint("supervisor_profile_photo", __name__)
 
 
 def _profile_payload(form):
-    payload = {
+    return {
         "first_name": (form.get("first_name") or "").strip(),
         "middle_name": (form.get("middle_name") or "").strip(),
         "last_name": (form.get("last_name") or "").strip(),
@@ -30,13 +30,18 @@ def _profile_payload(form):
         "skills": (form.get("skills") or "").strip(),
         "bio": (form.get("bio") or "").strip(),
     }
-    return payload
 
 
-def _display_name(profile, username):
-    parts = [profile.get("first_name"), profile.get("middle_name"), profile.get("last_name")]
-    name = " ".join(x for x in parts if x)
-    return name or username
+def _profile_stats(user_id):
+    conn = get_db_connection()
+    try:
+        class_count = conn.execute("SELECT COUNT(*) FROM classrooms WHERE supervisor_id = ? AND archived = 0", (user_id,)).fetchone()[0]
+        intern_count = conn.execute("SELECT COUNT(DISTINCT student_id) FROM classroom_students cs JOIN classrooms c ON c.id = cs.classroom_id WHERE c.supervisor_id = ? AND c.archived = 0", (user_id,)).fetchone()[0]
+        assignment_count = conn.execute("SELECT COUNT(*) FROM tasks WHERE supervisor_id = ?", (user_id,)).fetchone()[0]
+        feedback_count = conn.execute("SELECT COUNT(*) FROM feedback WHERE supervisor_id = ?", (user_id,)).fetchone()[0]
+        return {"class_count": class_count, "intern_count": intern_count, "assignment_count": assignment_count, "feedback_count": feedback_count}
+    finally:
+        conn.close()
 
 
 def _render_supervisor_profile(user_id, errors=None):
@@ -50,12 +55,11 @@ def _render_supervisor_profile(user_id, errors=None):
     profile = get_or_create_supervisor_profile(user_id)
     profile_data = dict(profile.items()) if hasattr(profile, "items") else {}
     user_data = dict(user.items()) if hasattr(user, "items") else {}
-    return render_template("supervisor/profile.html", supervisor=user_data, profile=profile_data, errors=errors or {}, active_page="profile")
+    return render_template("supervisor/profile.html", supervisor=user_data, profile=profile_data, errors=errors or {}, active_page="profile", **_profile_stats(user_id))
 
 
 @supervisor_profile_photo.before_app_request
 def _supervisor_profile_page():
-    # Replace the legacy profile handler without changing the large supervisor controller.
     if request.path.rstrip("/") != "/supervisor/profile":
         return None
     if session.get("user_id") is None or session.get("role") != "supervisor":
@@ -115,7 +119,7 @@ def _supervisor_profile_page():
                 profile_data = dict(profile.items()) if profile and hasattr(profile, "items") else payload
                 for key, value in payload.items():
                     profile_data[key] = value
-                return render_template("supervisor/profile.html", supervisor=user_data, profile=profile_data, errors=errors, active_page="profile")
+                return render_template("supervisor/profile.html", supervisor=user_data, profile=profile_data, errors=errors, active_page="profile", **_profile_stats(user_id))
 
             conn.execute("UPDATE users SET username = ?, email = ? WHERE id = ?", (username, email, user_id))
             conn.execute("""
