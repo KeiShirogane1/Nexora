@@ -12,20 +12,29 @@
   .nx-student-shell .nx-nav{display:flex;flex-direction:column;gap:3px}.nx-student-shell .nx-nav a{display:flex;align-items:center;gap:14px;min-height:42px;padding:0 13px;border-radius:10px;text-decoration:none;color:#253146;font-size:13px;font-weight:600}.nx-student-shell .nx-nav a:hover{background:#f5f8f7}.nx-student-shell .nx-nav a.active{background:var(--green-soft);color:var(--green-dark)}.nx-student-shell .nx-nav .ico{width:22px;text-align:center;font-size:18px;color:var(--green-dark);font-weight:700}.nx-student-shell .nx-nav a.notification-unread{border:1.5px solid #ef4444;background:#fff}.nx-student-shell .nx-nav a.notification-unread .ico{color:#ef4444}
   .nx-student-shell .nx-badge{min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:#ef4444;color:#fff;font-size:9px;display:grid;place-items:center;font-weight:800;margin-left:auto;line-height:20px}.nx-student-shell .nx-divider{height:1px;background:var(--line);margin:12px 0 10px}
   .nx-student-shell .nx-footer{margin-top:auto;margin-left:-20px;margin-right:-20px;height:92px;background:#eef9f5;position:relative;display:flex;align-items:flex-end;padding:0 25px 16px}.nx-student-shell .nx-footer:before{content:"";position:absolute;left:-8%;right:-8%;top:-28px;height:55px;background:#fff;border-radius:50% 50% 0 0/100% 100% 0 0}.nx-student-shell .nx-footer .cap{font-size:20px;margin-right:11px;z-index:1}.nx-student-shell .nx-footer p{margin:0;z-index:1;color:#607183;font-size:10px;line-height:1.45}
+  /* The logout modal is included by this shared sidebar, but its global modal stylesheet is not loaded by every redesigned page. Keep it hidden until explicitly opened. */
+  .nx-student-shell ~ #nexora-logout-overlay{display:none;position:fixed;inset:0;z-index:5000;background:rgba(15,23,42,.58);align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px)}
+  .nx-student-shell ~ #nexora-logout-overlay.open{display:flex}
+  .nx-student-shell ~ #nexora-logout-overlay .nexora-logout-modal{width:min(420px,100%);background:#fff;border-radius:16px;box-shadow:0 24px 70px rgba(15,23,42,.22);overflow:hidden}
+  .nx-student-shell ~ #nexora-logout-overlay .nexora-logout-header{display:flex;align-items:center;justify-content:space-between;padding:20px 22px;border-bottom:1px solid var(--line)}
+  .nx-student-shell ~ #nexora-logout-overlay .nexora-logout-header h3{margin:0;color:var(--ink);font-size:17px}
+  .nx-student-shell ~ #nexora-logout-overlay .nexora-logout-close{width:32px;height:32px;border:0;border-radius:8px;background:#f5f7f9;color:var(--muted);font-size:20px;cursor:pointer}
+  .nx-student-shell ~ #nexora-logout-overlay .nexora-logout-body{padding:20px 22px;color:var(--muted);font-size:13px;line-height:1.55}
+  .nx-student-shell ~ #nexora-logout-overlay .nexora-logout-body p{margin:0}
+  .nx-student-shell ~ #nexora-logout-overlay .nexora-logout-footer{display:flex;justify-content:flex-end;gap:9px;padding:15px 22px;border-top:1px solid var(--line)}
+  .nx-student-shell ~ #nexora-logout-overlay .btn-secondary-nexora,.nx-student-shell ~ #nexora-logout-overlay .btn-danger-nexora{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:0 15px;border-radius:9px;font-size:12px;font-weight:750;text-decoration:none;cursor:pointer}
+  .nx-student-shell ~ #nexora-logout-overlay .btn-secondary-nexora{border:1px solid var(--line);background:#fff;color:var(--ink)}
+  .nx-student-shell ~ #nexora-logout-overlay .btn-danger-nexora{border:0;background:#dc3545;color:#fff}
   @media(max-width:1050px){.nx-student-shell .nx-sidebar{width:235px}}@media(max-width:760px){.nx-student-shell .nx-sidebar{position:relative;left:0;top:0;bottom:auto;width:100%;height:auto;margin:0;border-radius:0;padding-bottom:12px}.nx-student-shell .nx-footer{display:none}.nx-student-shell .nx-profile{margin:20px 4px}.nx-student-shell .nx-nav{display:grid;grid-template-columns:repeat(2,1fr)}}
 </style>
 <div class="nx-student-shell">
   <aside class="nx-sidebar" id="studentSidebar">
-    <a class="nx-brand" href="{{ url_for('student.student_dashboard') }}">
-      <span class="nx-logo">N</span>
-      <span><strong>NEXORA</strong><small>Internship Management System</small></span>
-    </a>
+    <a class="nx-brand" href="{{ url_for('student.student_dashboard') }}"><span class="nx-logo">N</span><span><strong>NEXORA</strong><small>Internship Management System</small></span></a>
     <a class="nx-profile" href="{{ url_for('student.student_profile') }}" aria-label="Open student profile">
       {% if sidebar_profile and sidebar_profile.profile_picture %}<img src="{{ url_for('profile_picture', filename=sidebar_profile.profile_picture) }}" alt="Profile picture" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_profile.png') }}';">{% else %}<img src="{{ url_for('static', filename='images/default_profile.png') }}" alt="Default profile picture">{% endif %}
       <span><strong>{% if sidebar_profile and sidebar_profile.first_name %}{{ sidebar_profile.first_name }} {{ sidebar_profile.last_name or '' }}{% else %}Student{% endif %}</strong><span>Student</span><em>View Profile →</em></span>
     </a>
-    <div class="nx-rule"></div>
-    <div class="nx-label">Menu</div>
+    <div class="nx-rule"></div><div class="nx-label">Menu</div>
     <nav class="nx-nav">
       <a href="{{ url_for('student.student_dashboard') }}" class="{% if request.path == '/student/dashboard' %}active{% endif %}"><span class="ico">▦</span>Dashboard</a>
       <a href="{{ url_for('classroom.student_classes') }}" class="{% if request.path.startswith('/student/classes') %}active{% endif %}"><span class="ico">♙</span>My Classes</a>
@@ -34,8 +43,7 @@
       <a href="{{ url_for('student.documents') }}" class="{% if request.path == '/student/documents' %}active{% endif %}"><span class="ico">▧</span>Documents</a>
       <a href="{{ url_for('notifications.notification_list') }}" class="{% if request.path == '/notifications' %}active{% endif %}{% if unread_count|default(0) > 0 %} notification-unread{% endif %}"><span class="ico">♧</span>Notifications{% if unread_count|default(0) > 0 %}<span class="nx-badge">{{ unread_count }}</span>{% endif %}</a>
     </nav>
-    <div class="nx-divider"></div>
-    <div class="nx-label">Account</div>
+    <div class="nx-divider"></div><div class="nx-label">Account</div>
     <nav class="nx-nav">
       <a href="{{ url_for('student.student_profile') }}"><span class="ico">◎</span>Profile</a>
       <a href="javascript:void(0)" onclick="openLogoutModal();return false"><span class="ico">↪</span>Logout</a>
