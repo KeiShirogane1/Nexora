@@ -1,171 +1,65 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="UTF-8">
-        <title>Internship Session - Nexora</title>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Internship Session - Nexora</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/nexora-ui.css') }}">
+  <style>
+    .nx-session{--green:#12a879;--green-dark:#07865f;--green-soft:#eaf8f3;--ink:#142033;--muted:#697486;--line:#e6eaf0;--bg:#f7f9fb;min-height:100vh;background:var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.nx-session *{box-sizing:border-box}.nx-main{margin-left:268px;min-height:100vh;padding:0 34px 40px}.nx-wrap{max-width:1160px;margin:0 auto}
+    .nx-top{height:76px;display:flex;align-items:center;justify-content:flex-end}.nx-tools{display:flex;align-items:center;gap:17px}.nx-search,.nx-notif{width:30px;height:36px;display:flex;align-items:center;justify-content:center;background:transparent;border:0;text-decoration:none;color:#253146}.nx-search{cursor:text}.nx-search-icon{font-size:24px;line-height:1}.nx-search input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}.nx-notif{position:relative}.nx-notif .bell{font-size:18px;line-height:1;filter:grayscale(1)}.nx-badge{position:absolute;right:-4px;top:0;min-width:17px;height:17px;padding:0 4px;border-radius:999px;background:#ef4444;color:#fff;font-size:8px;display:grid;place-items:center;font-weight:800;border:2px solid var(--bg)}.nx-profile{display:flex;align-items:center;gap:9px;text-decoration:none;color:var(--ink);font-size:12px;font-weight:700}.nx-profile img{width:34px;height:34px;border-radius:50%;object-fit:cover}
+    .nx-breadcrumb{display:flex;align-items:center;gap:7px;margin:7px 0 18px;color:#87919f;font-size:10px;font-weight:600}.nx-breadcrumb a{color:var(--green-dark);text-decoration:none}.nx-breadcrumb .arrow{color:#a5adb7;font-size:12px}.nx-heading{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin-bottom:22px}.nx-eyebrow{font-size:9px;letter-spacing:.08em;text-transform:uppercase;font-weight:800;color:var(--green-dark);margin-bottom:7px}.nx-heading h1{margin:0;font-size:25px;letter-spacing:-.7px;line-height:1.15}.nx-heading p{margin:7px 0 0;color:var(--muted);font-size:11px}.nx-back{display:inline-flex;align-items:center;gap:7px;padding:9px 13px;border:1px solid var(--line);background:#fff;border-radius:8px;color:#526073;text-decoration:none;font-size:10px;font-weight:800;white-space:nowrap}
+    .nx-grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:14px;align-items:start}.nx-card{background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 5px 18px rgba(20,32,51,.035)}.nx-card-head{padding:16px 18px;border-bottom:1px solid #f0f2f5;display:flex;align-items:center;justify-content:space-between}.nx-card-head h2{font-size:13px;margin:0}.nx-card-head span{font-size:9px;color:#8993a0}
+    .nx-summary{padding:20px}.nx-summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.nx-stat{padding:13px;border:1px solid #edf0f2;background:#fbfcfc;border-radius:9px}.nx-stat small{display:block;color:#7e8896;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}.nx-stat strong{display:block;color:var(--ink);font-size:12px;margin-top:5px;line-height:1.35}.nx-stat.active strong{color:var(--green-dark)}
+    .nx-timeline-card{margin-top:14px}.nx-timeline{padding:20px 22px 21px}.nx-timeline-item{position:relative;padding:0 0 22px 29px}.nx-timeline-item:last-child{padding-bottom:0}.nx-timeline-item:before{content:"";position:absolute;left:7px;top:19px;bottom:-1px;width:1px;background:#dfe8e4}.nx-timeline-item:last-child:before{display:none}.nx-dot{position:absolute;left:0;top:4px;width:15px;height:15px;border-radius:50%;background:var(--green-soft);border:3px solid #fff;box-shadow:0 0 0 1px #b9ded2}.nx-time{font-size:9px;color:var(--green-dark);font-weight:800}.nx-log{margin-top:7px;font-size:11px;line-height:1.65;color:#4d596b;white-space:pre-line}.nx-empty{padding:18px;border:1px dashed #dfe5e9;border-radius:9px;color:#7f8997;background:#fafbfc;font-size:10px;line-height:1.5}
+    .nx-side{display:flex;flex-direction:column;gap:12px}.nx-side-card{padding:17px}.nx-side-title{font-size:12px;font-weight:800;margin:0 0 13px}.nx-status{display:flex;align-items:center;gap:10px;padding:11px;border:1px solid #e8eeeb;background:#f8fbfa;border-radius:9px}.nx-status-dot{width:9px;height:9px;border-radius:50%;background:#aab3bd}.nx-status.open .nx-status-dot{background:var(--green)}.nx-status strong{display:block;font-size:11px}.nx-status small{display:block;color:#7d8795;font-size:8px;margin-top:3px}.nx-hours{font-size:28px;letter-spacing:-1px;font-weight:800}.nx-hours small{font-size:10px;letter-spacing:0;color:#7d8795;font-weight:600}.nx-hours-note{margin:6px 0 0;color:#8a94a1;font-size:8px;line-height:1.45}.nx-progress{height:6px;border-radius:99px;background:#edf1f3;overflow:hidden;margin-top:13px}.nx-progress i{display:block;height:100%;width:100%;background:var(--green);border-radius:99px}.nx-action{display:block;width:100%;text-align:center;border:1px solid var(--line);border-radius:8px;padding:10px;color:var(--green-dark);background:#fff;text-decoration:none;font-size:10px;font-weight:800}
+    @media(max-width:900px){.nx-main{margin-left:235px}.nx-grid{grid-template-columns:1fr 280px}.nx-summary-grid{grid-template-columns:1fr 1fr}}@media(max-width:760px){.nx-main{margin-left:0;padding:0 14px 25px}.nx-top{height:58px}.nx-heading{align-items:flex-start;flex-direction:column;gap:12px}.nx-heading h1{font-size:21px}.nx-back{align-self:stretch;justify-content:center}.nx-grid{grid-template-columns:1fr}.nx-summary-grid{grid-template-columns:1fr}.nx-timeline{padding:18px 15px}}
+  </style>
+</head>
+<body class="student-page nx-session nx-student">
+  {% include 'components/student_sidebar.html' %}
 
-        <link
-            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-            rel="stylesheet">
+  <main class="nx-main">
+    <div class="nx-wrap">
+      <header class="nx-top"><div class="nx-tools"><label class="nx-search" aria-label="Search"><span class="nx-search-icon">⌕</span><input type="search" placeholder="Search" autocomplete="off"></label><a class="nx-notif" href="{{ url_for('notifications.notification_list') }}" aria-label="Notifications"><span class="bell">♧</span>{% if unread_count|default(0) > 0 %}<span class="nx-badge">{{ unread_count }}</span>{% endif %}</a><a class="nx-profile" href="{{ url_for('student.student_profile') }}">{% if profile[5] %}<img src="{{ url_for('profile_picture',filename=profile[5]) }}" alt="Profile">{% else %}<img src="{{ url_for('static',filename='images/default_profile.png') }}" alt="Profile">{% endif %}<span>{{ profile[0] }}</span></a></div></header>
 
-        <link
-            rel="stylesheet"
-            href="{{ url_for('static', filename='css/style.css') }}">
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
-    </head>
+      <div class="nx-breadcrumb"><a href="{{ url_for('student.logbook') }}">Logbook</a><span class="arrow">›</span><span>Internship Session</span></div>
+      <section class="nx-heading"><div><div class="nx-eyebrow">Logbook</div><h1>Internship Session</h1><p>Detailed session timeline and attendance summary.</p></div><a class="nx-back" href="{{ url_for('student.logbook') }}">← Back to Logbook</a></section>
 
-    <body class="student-page">
-        {% include 'components/student_sidebar.html' %}
-        <div class="student-main-content nexora-app-main">
-            <div class="nexora-page">
-                <div class="container mt-4" style="max-width:900px;">
-                    <div class="d-flex align-items-center gap-3 mb-4">
-                        <div style="width:44px; height:44px; border-radius:12px; background:#e0e7ff; display:flex; align-items:center; justify-content:center; color:#2563eb; font-size:1.3rem;">🕒</div>
-                        <div>
-                            <h2 class="mb-0" style="font-weight:800;">Internship Session</h2>
-                            <small class="text-muted">Detailed session timeline</small>
-                        </div>
-                    </div>
-
-    <!-- Session Information -->
-                    <div class="card shadow-sm mb-4">
-
-                        <div class="card-header bg-primary text-white">
-                            Session Information
-                        </div>
-
-                        <div class="card-body">
-
-                            <div class="row mb-2">
-
-                                <div class="col-md-3">
-                                    <strong>Clock In</strong>
-                                </div>
-
-                                <div class="col-md-9">
-                                    {{ attendance[1] }}
-                                </div>
-
-                            </div>
-
-                            <div class="row mb-2">
-
-                                <div class="col-md-3">
-                                    <strong>Clock Out</strong>
-                                </div>
-
-                                <div class="col-md-9">
-                                    {% if attendance[2] %}
-                                        {{ attendance[2] }}
-                                    {% else %}
-                                        —
-                                    {% endif %}
-                                </div>
-
-                            </div>
-
-                            <div class="row mb-2">
-
-                                <div class="col-md-3">
-                                    <strong>Hours Rendered</strong>
-                                </div>
-
-                                <div class="col-md-9">
-
-                                    {% if attendance[3] %}
-                                        {{ attendance[3] }} Hours
-                                    {% else %}
-                                        In Progress
-                                    {% endif %}
-
-                                </div>
-
-                            </div>
-
-                            <div class="row">
-
-                                <div class="col-md-3">
-                                    <strong>Status</strong>
-                                </div>
-
-                                <div class="col-md-9">
-
-                                    {% if attendance[4] == "Open" %}
-                                        <span class="badge bg-success">
-                                            Currently Active
-                                        </span>
-                                    {% else %}
-                                        <span class="badge bg-secondary">
-                                            Closed
-                                        </span>
-                                    {% endif %}
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-    <!-- Activity Timeline -->
-                    <div class="card shadow-sm">
-
-                        <div class="card-header bg-dark text-white">
-                            Activity Timeline
-                        </div>
-
-                        <div class="card-body">
-
-                            {% if logs %}
-
-                                {% for log in logs %}
-
-                                    <div class="border-start border-4 border-primary ps-3 mb-4">
-
-                                        <div class="text-muted small">
-
-                                            🕒 {{ log[2] }}
-
-                                        </div>
-
-                                        <div class="mt-2">
-
-                                            {{ log[1] }}
-
-                                        </div>
-
-                                    </div>
-
-                                {% endfor %}
-
-                            {% else %}
-
-                                <div class="alert alert-info">
-
-                                    No log entries were recorded for this internship session.
-
-                                </div>
-
-                            {% endif %}
-
-                        </div>
-
-                    </div>
-
-                    <div class="mt-4">
-
-                        <a
-                            href="/student/logbook"
-                            class="btn btn-secondary">
-
-                            ← Back to Logbook
-                        </a>
-
-                    </div>
-
-                </div>
+      <div class="nx-grid">
+        <div>
+          <section class="nx-card">
+            <div class="nx-card-head"><h2>Session Information</h2><span>Attendance summary</span></div>
+            <div class="nx-summary">
+              <div class="nx-summary-grid">
+                <div class="nx-stat"><small>Clock In</small><strong>{{ attendance[1] }}</strong></div>
+                <div class="nx-stat"><small>Clock Out</small><strong>{% if attendance[2] %}{{ attendance[2] }}{% else %}—{% endif %}</strong></div>
+                <div class="nx-stat"><small>Hours Rendered</small><strong>{% if attendance[3] %}{{ attendance[3] }} Hours{% else %}In Progress{% endif %}</strong></div>
+              </div>
             </div>
+          </section>
+
+          <section class="nx-card nx-timeline-card">
+            <div class="nx-card-head"><h2>Activity Timeline</h2><span>{% if logs %}{{ logs|length }} entries{% else %}No entries{% endif %}</span></div>
+            <div class="nx-timeline">
+              {% if logs %}{% for log in logs %}<div class="nx-timeline-item"><span class="nx-dot"></span><div class="nx-time">◷ {{ log[2] }}</div><div class="nx-log">{{ log[1] }}</div></div>{% endfor %}{% else %}<div class="nx-empty">No log entries were recorded for this internship session.</div>{% endif %}
+            </div>
+          </section>
         </div>
-    </body>
+
+        <aside class="nx-side">
+          <section class="nx-card nx-side-card"><h2 class="nx-side-title">Session Status</h2>{% if attendance[4] == 'Open' %}<div class="nx-status open"><span class="nx-status-dot"></span><div><strong>Currently Active</strong><small>This internship session is still open.</small></div></div>{% else %}<div class="nx-status"><span class="nx-status-dot"></span><div><strong>Closed</strong><small>This internship session has ended.</small></div></div>{% endif %}</section>
+          <section class="nx-card nx-side-card"><h2 class="nx-side-title">Hours Rendered</h2><div class="nx-hours">{% if attendance[3] %}{{ attendance[3] }} <small>hrs</small>{% else %}—{% endif %}</div><p class="nx-hours-note">{% if attendance[3] %}Recorded time for this internship session.{% else %}Hours will appear once the session is completed.{% endif %}</p><div class="nx-progress"><i></i></div></section>
+          <section class="nx-card nx-side-card"><a class="nx-action" href="{{ url_for('student.logbook') }}">View All Logbook Entries →</a></section>
+        </aside>
+      </div>
+    </div>
+  </main>
+
+  {% include 'components/logout_modal.html' %}
+  {% include 'components/toast.html' %}
+  {% include 'components/notification_bell.html' %}
+</body>
 </html>
