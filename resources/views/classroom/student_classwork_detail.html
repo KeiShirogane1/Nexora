@@ -1,76 +1,181 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>{{ assignment.title }} - Nexora</title>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
-    </head>
-    <body class="student-page student-classwork-page">
-        {% include 'components/student_sidebar.html' %}
-        <main class="student-main-content nexora-app-main">
-            <div class="nexora-page student-classwork-shell">
-                <a href="{{ url_for('student_classwork.index', class_id=classroom.id) }}" class="student-classwork-back">← Back to Classwork</a>
-                <article class="student-classwork-detail-card">
-                    <header class="student-classwork-detail-header">
-                        <div>
-                            <span class="student-classwork-type">{{ assignment.activity_label }}</span>
-                            <h1>{{ assignment.title }}</h1>
-                            <p class="student-classwork-detail-subtitle">{{ classroom.name }} · {{ classroom.section }}</p>
-                        </div>
-                        <div class="student-classwork-detail-points"><strong>{{ assignment.points }}</strong><span>points</span></div>
-                    </header>
-                    <div class="student-classwork-detail-meta">
-                        {% if assignment.due_at %}<span>Due {{ assignment.due_at }}</span>{% else %}<span>No due date</span>{% endif %}
-                        {% if assignment.group_mode %}<span>Group activity · max {{ assignment.max_group_size }}</span>{% endif %}
-                        {% if assignment.allow_file_upload %}<span>File submission enabled</span>{% endif %}
-                    </div>
-                    {% if past_due %}<div class="alert alert-warning mt-4 mb-0">The deadline has passed. Your supervisor may still allow a submission.</div>{% endif %}
-                    <section class="student-classwork-detail-section">
-                        <h2>Instructions</h2>
-                        <div class="student-classwork-instructions">{{ assignment.description or 'No additional instructions were provided.' }}</div>
-                    </section>
-                    {% if assignment.external_url or assignment.resource_filepath %}
-                        <section class="student-classwork-detail-section">
-                            <h2>Resources</h2>
-                            <div class="student-classwork-resource-list">
-                                {% if assignment.external_url %}<a href="{{ assignment.external_url }}" target="_blank" rel="noopener noreferrer" class="student-classwork-resource-card"><span class="student-classwork-resource-icon">🔗</span><span><strong>{{ assignment.resource_label or 'Open external activity' }}</strong><small>Opens in a new tab</small></span><span>↗</span></a>{% endif %}
-                                {% if assignment.resource_filepath %}<a href="{{ url_for('uploaded_file', filename=assignment.resource_filepath) }}" target="_blank" rel="noopener noreferrer" class="student-classwork-resource-card"><span class="student-classwork-resource-icon">📎</span><span><strong>{{ assignment.resource_filename or 'Open attached file' }}</strong><small>Reference material</small></span><span>↗</span></a>{% endif %}
-                            </div>
-                        </section>
-                    {% endif %}
-                </article>
-                <section class="student-classwork-submission-card">
-                    <div class="student-classwork-section-heading">
-                        <div><span class="student-classwork-eyebrow">YOUR WORK</span><h2>Submission</h2></div>
-                        {% if submission %}<span class="student-classwork-status is-complete">{{ submission.status|replace('_', ' ')|capitalize }}</span>{% else %}<span class="student-classwork-status">Not submitted</span>{% endif %}
-                    </div>
-                    {% if submission %}
-                        <div class="student-classwork-submission-summary">
-                            <div><span>Attempt</span><strong>{{ submission.attempt_no }}</strong></div>
-                            {% if submission.grade is not none %}<div><span>Grade</span><strong>{{ submission.grade }} / {{ assignment.points }}</strong></div>{% endif %}
-                            {% if submission.submitted_at %}<div><span>Submitted</span><strong>{{ submission.submitted_at }}</strong></div>{% endif %}
-                            {% if submission.feedback %}<div class="student-classwork-feedback"><span>Supervisor feedback</span><p>{{ submission.feedback }}</p></div>{% endif %}
-                            {% if submission.content %}<div class="student-classwork-feedback"><span>Your written response</span><p>{{ submission.content }}</p></div>{% endif %}
-                            {% if submission.files %}<div class="student-classwork-feedback"><span>Submitted files</span>{% for file in submission.files %}<p class="mb-1"><a href="{{ url_for('classwork_submissions.student_file', class_id=classroom.id, assignment_id=assignment.id, file_id=file.id) }}">📎 {{ file.filename }}</a></p>{% endfor %}</div>{% endif %}
-                        </div>
-                        <hr>
-                        <h3>Submit a new attempt</h3>
-                    {% else %}<p class="text-muted">Upload your completed work below. Handwritten papers, drawings, photos, PDFs, and supported documents can be submitted as one attempt.</p>{% endif %}
-                    {% if classroom.archived %}
-                        <div class="alert alert-secondary mb-0">This class is archived, so new submissions are unavailable.</div>
-                    {% elif assignment.allow_file_upload %}
-                        <form method="POST" action="{{ submit_url }}" enctype="multipart/form-data" class="student-classwork-submit-form">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <div><label for="content" class="form-label">Written response (optional)</label><textarea id="content" name="content" class="form-control" rows="5" maxlength="10000" placeholder="Add an explanation or response if required..."></textarea></div>
-                            <div><label for="files" class="form-label">Upload your work</label><input id="files" type="file" name="files" class="form-control" multiple accept=".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip"><small class="text-muted">Up to 10 files. Maximum 5 MB per request. Use multiple photos for handwritten papers with several pages.</small></div>
-                            <button type="submit" class="btn btn-primary">{% if submission %}Submit New Attempt{% else %}Submit Work{% endif %}</button>
-                        </form>
-                    {% else %}<div class="alert alert-info mb-0">This activity does not currently accept file uploads.</div>{% endif %}
-                </section>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ assignment.title }} - Nexora</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
+    <style>
+        :root {
+            --nx-green:#12a879; --nx-green-dark:#07865f; --nx-green-soft:#eaf8f3;
+            --nx-ink:#142033; --nx-muted:#697486; --nx-line:#e6eaf0; --nx-bg:#f7f9fb;
+        }
+        *{box-sizing:border-box}
+        body.student-page{background:var(--nx-bg);color:var(--nx-ink)}
+        .nx-classwork-main{margin-left:268px;min-height:100vh;padding:0 34px 42px}
+        .nx-classwork-top{height:76px;display:flex;align-items:center;justify-content:flex-end;gap:22px}
+        .nx-search{width:min(360px,35vw);height:42px;background:#fff;border:1px solid var(--nx-line);border-radius:12px;display:flex;align-items:center;padding:0 14px;color:var(--nx-muted)}
+        .nx-search span{font-size:17px;margin-right:9px}.nx-search input{border:0;outline:0;width:100%;font-size:13px;color:var(--nx-ink);background:transparent}
+        .nx-top-link{color:var(--nx-muted);text-decoration:none;font-size:20px;position:relative}.nx-top-link:hover{color:var(--nx-green-dark)}
+        .nx-page{max-width:1180px;margin:0 auto}
+        .nx-breadcrumb{display:flex;align-items:center;gap:8px;margin:7px 0 22px;font-size:13px;color:var(--nx-muted)}
+        .nx-breadcrumb a{color:var(--nx-muted);text-decoration:none}.nx-breadcrumb a:hover{color:var(--nx-green-dark)}
+        .nx-eyebrow{display:block;color:var(--nx-green-dark);font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;margin-bottom:7px}
+        .nx-heading-row{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;margin-bottom:25px}
+        .nx-heading-row h1{font-size:30px;line-height:1.15;margin:0 0 7px;font-weight:750;letter-spacing:-.02em}
+        .nx-heading-row p{margin:0;color:var(--nx-muted);font-size:14px}
+        .nx-back{display:inline-flex;align-items:center;gap:8px;padding:10px 15px;border:1px solid var(--nx-line);border-radius:10px;background:#fff;color:var(--nx-ink);font-size:13px;font-weight:650;text-decoration:none;white-space:nowrap}
+        .nx-back:hover{border-color:#cdd5df;color:var(--nx-green-dark)}
+        .nx-grid{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:20px;align-items:start}
+        .nx-card{background:#fff;border:1px solid var(--nx-line);border-radius:16px;box-shadow:0 5px 18px rgba(20,32,51,.035)}
+        .nx-card-pad{padding:24px}
+        .nx-activity-card{overflow:hidden}
+        .nx-activity-header{padding:26px 28px 22px;border-bottom:1px solid var(--nx-line);display:flex;justify-content:space-between;gap:20px}
+        .nx-type{display:inline-flex;align-items:center;padding:6px 10px;border-radius:7px;background:var(--nx-green-soft);color:var(--nx-green-dark);font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+        .nx-activity-header h2{font-size:24px;line-height:1.25;margin:13px 0 7px;font-weight:750}
+        .nx-class-name{font-size:13px;color:var(--nx-muted);margin:0}
+        .nx-points{text-align:right;min-width:75px}.nx-points strong{display:block;font-size:22px;line-height:1.1}.nx-points span{font-size:11px;color:var(--nx-muted)}
+        .nx-meta{display:flex;flex-wrap:wrap;gap:9px;padding:15px 28px;border-bottom:1px solid var(--nx-line);background:#fbfcfd}
+        .nx-meta span{font-size:12px;color:var(--nx-muted);background:#fff;border:1px solid var(--nx-line);padding:7px 10px;border-radius:8px}
+        .nx-section{padding:25px 28px}.nx-section+.nx-section{border-top:1px solid var(--nx-line)}
+        .nx-section h3{font-size:15px;margin:0 0 14px;font-weight:750}.nx-instructions{font-size:14px;line-height:1.75;color:#3c4657;white-space:pre-wrap}
+        .nx-resource{display:flex;align-items:center;gap:12px;padding:13px 14px;border:1px solid var(--nx-line);border-radius:11px;text-decoration:none;color:var(--nx-ink);margin-top:9px}
+        .nx-resource:hover{border-color:#b9ddcf;background:#fbfefc}.nx-resource-icon{width:36px;height:36px;border-radius:9px;background:var(--nx-green-soft);display:grid;place-items:center;font-size:17px}.nx-resource-main{flex:1}.nx-resource strong{display:block;font-size:13px}.nx-resource small{display:block;color:var(--nx-muted);font-size:11px;margin-top:2px}
+        .nx-status-card h3,.nx-side-card h3{font-size:14px;font-weight:750;margin:0}.nx-status{margin:18px 0;padding:10px 12px;border-radius:9px;background:var(--nx-green-soft);color:var(--nx-green-dark);font-size:12px;font-weight:750}.nx-status.pending{background:#f4f6f8;color:var(--nx-muted)}
+        .nx-side-list{margin:0;padding:0;list-style:none}.nx-side-list li{display:flex;justify-content:space-between;gap:15px;padding:11px 0;border-bottom:1px solid var(--nx-line);font-size:12px}.nx-side-list li:last-child{border-bottom:0;padding-bottom:0}.nx-side-list span{color:var(--nx-muted)}.nx-side-list strong{text-align:right;font-weight:700}
+        .nx-submit-card{margin-top:20px}.nx-submit-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:15px;margin-bottom:20px}.nx-submit-heading h2{font-size:19px;margin:0 0 4px;font-weight:750}.nx-submit-heading p{margin:0;color:var(--nx-muted);font-size:12px}.nx-pill{padding:6px 9px;border-radius:7px;background:#f4f6f8;color:var(--nx-muted);font-size:10px;font-weight:800;white-space:nowrap;text-transform:uppercase}.nx-pill.complete{background:var(--nx-green-soft);color:var(--nx-green-dark)}
+        .nx-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}.nx-summary-item{padding:13px;border:1px solid var(--nx-line);border-radius:10px}.nx-summary-item span{display:block;color:var(--nx-muted);font-size:10px;text-transform:uppercase;letter-spacing:.06em}.nx-summary-item strong{display:block;margin-top:5px;font-size:13px}.nx-feedback{margin-top:14px;padding:14px;border-radius:10px;background:#fafbfc;border:1px solid var(--nx-line)}.nx-feedback span{font-size:10px;color:var(--nx-muted);font-weight:750;text-transform:uppercase;letter-spacing:.06em}.nx-feedback p{margin:7px 0 0;font-size:13px;line-height:1.6;white-space:pre-wrap}
+        .nx-form{display:grid;gap:17px}.nx-form label{font-size:12px;font-weight:700;margin-bottom:7px}.nx-form textarea,.nx-form input[type=file]{border:1px solid var(--nx-line);border-radius:10px;font-size:13px;padding:11px 12px}.nx-form textarea{resize:vertical;min-height:125px}.nx-form textarea:focus,.nx-form input[type=file]:focus{border-color:#9ddbc6;box-shadow:0 0 0 3px rgba(18,168,121,.08);outline:0}.nx-help{display:block;color:var(--nx-muted);font-size:11px;line-height:1.5;margin-top:7px}.nx-submit-btn{border:0;border-radius:10px;background:var(--nx-green);color:#fff;padding:11px 17px;font-size:13px;font-weight:750;width:max-content}.nx-submit-btn:hover{background:var(--nx-green-dark)}
+        .nx-alert{border-radius:10px!important;border:0!important;font-size:12px!important;margin:20px 28px 0!important;padding:12px 14px!important}
+        .nx-previous-file{font-size:12px;margin:7px 0 0}.nx-previous-file a{color:var(--nx-green-dark);text-decoration:none}.nx-previous-file a:hover{text-decoration:underline}
+        @media(max-width:900px){.nx-classwork-main{margin-left:0;padding:0 18px 30px}.nx-grid{grid-template-columns:1fr}.nx-heading-row{align-items:flex-start}.nx-search{width:250px}}
+        @media(max-width:640px){.nx-classwork-top{height:64px}.nx-search{display:none}.nx-heading-row{display:block}.nx-back{margin-top:16px}.nx-activity-header{padding:20px}.nx-meta,.nx-section{padding-left:20px;padding-right:20px}.nx-summary{grid-template-columns:1fr}.nx-heading-row h1{font-size:25px}}
+    </style>
+</head>
+<body class="student-page student-classwork-page">
+    {% include 'components/student_sidebar.html' %}
+
+    <main class="nx-classwork-main">
+        <div class="nx-classwork-top">
+            <div class="nx-search"><span>⌕</span><input type="search" placeholder="Search classwork..." aria-label="Search classwork"></div>
+            <a href="{{ url_for('notifications.notification_list') }}" class="nx-top-link" aria-label="Notifications">♢</a>
+        </div>
+
+        <div class="nx-page">
+            <div class="nx-breadcrumb">
+                <a href="{{ url_for('student_classwork.index', class_id=classroom.id) }}">Classwork</a><span>›</span><span>Activity Details</span>
             </div>
-        </main>
-    </body>
+
+            <div class="nx-heading-row">
+                <div>
+                    <span class="nx-eyebrow">Classwork</span>
+                    <h1>Activity Details</h1>
+                    <p>{{ classroom.name }} · {{ classroom.section }}</p>
+                </div>
+                <a href="{{ url_for('student_classwork.index', class_id=classroom.id) }}" class="nx-back">← Back to Classwork</a>
+            </div>
+
+            <div class="nx-grid">
+                <div>
+                    <article class="nx-card nx-activity-card">
+                        <header class="nx-activity-header">
+                            <div>
+                                <span class="nx-type">{{ assignment.activity_label }}</span>
+                                <h2>{{ assignment.title }}</h2>
+                                <p class="nx-class-name">{{ classroom.name }} · {{ classroom.section }}</p>
+                            </div>
+                            <div class="nx-points"><strong>{{ assignment.points }}</strong><span>points</span></div>
+                        </header>
+
+                        <div class="nx-meta">
+                            {% if assignment.due_at %}<span>Due {{ assignment.due_at }}</span>{% else %}<span>No due date</span>{% endif %}
+                            {% if assignment.group_mode %}<span>Group activity · max {{ assignment.max_group_size }}</span>{% endif %}
+                            {% if assignment.allow_file_upload %}<span>File submission enabled</span>{% endif %}
+                        </div>
+
+                        {% if past_due %}<div class="alert alert-warning nx-alert">The deadline has passed. Your supervisor may still allow a submission.</div>{% endif %}
+
+                        <section class="nx-section">
+                            <h3>Instructions</h3>
+                            <div class="nx-instructions">{{ assignment.description or 'No additional instructions were provided.' }}</div>
+                        </section>
+
+                        {% if assignment.external_url or assignment.resource_filepath %}
+                        <section class="nx-section">
+                            <h3>Resources</h3>
+                            {% if assignment.external_url %}
+                            <a href="{{ assignment.external_url }}" target="_blank" rel="noopener noreferrer" class="nx-resource">
+                                <span class="nx-resource-icon">↗</span><span class="nx-resource-main"><strong>{{ assignment.resource_label or 'Open external activity' }}</strong><small>Opens in a new tab</small></span><span>›</span>
+                            </a>
+                            {% endif %}
+                            {% if assignment.resource_filepath %}
+                            <a href="{{ url_for('uploaded_file', filename=assignment.resource_filepath) }}" target="_blank" rel="noopener noreferrer" class="nx-resource">
+                                <span class="nx-resource-icon">⌕</span><span class="nx-resource-main"><strong>{{ assignment.resource_filename or 'Open attached file' }}</strong><small>Reference material</small></span><span>›</span>
+                            </a>
+                            {% endif %}
+                        </section>
+                        {% endif %}
+                    </article>
+
+                    <section class="nx-card nx-submit-card nx-card-pad">
+                        <div class="nx-submit-heading">
+                            <div><span class="nx-eyebrow">Your Work</span><h2>Submission</h2><p>Submit your completed work for this activity.</p></div>
+                            {% if submission %}<span class="nx-pill complete">{{ submission.status|replace('_', ' ')|capitalize }}</span>{% else %}<span class="nx-pill">Not submitted</span>{% endif %}
+                        </div>
+
+                        {% if submission %}
+                        <div class="nx-summary">
+                            <div class="nx-summary-item"><span>Attempt</span><strong>{{ submission.attempt_no }}</strong></div>
+                            {% if submission.grade is not none %}<div class="nx-summary-item"><span>Grade</span><strong>{{ submission.grade }} / {{ assignment.points }}</strong></div>{% endif %}
+                            {% if submission.submitted_at %}<div class="nx-summary-item"><span>Submitted</span><strong>{{ submission.submitted_at }}</strong></div>{% endif %}
+                        </div>
+                        {% if submission.feedback %}<div class="nx-feedback"><span>Supervisor feedback</span><p>{{ submission.feedback }}</p></div>{% endif %}
+                        {% if submission.content %}<div class="nx-feedback"><span>Your written response</span><p>{{ submission.content }}</p></div>{% endif %}
+                        {% if submission.files %}<div class="nx-feedback"><span>Submitted files</span>{% for file in submission.files %}<p class="nx-previous-file"><a href="{{ url_for('classwork_submissions.student_file', class_id=classroom.id, assignment_id=assignment.id, file_id=file.id) }}">📎 {{ file.filename }}</a></p>{% endfor %}</div>{% endif %}
+                        <div style="height:1px;background:var(--nx-line);margin:21px 0"></div>
+                        <h3 style="font-size:14px;font-weight:750;margin:0 0 15px">Submit a new attempt</h3>
+                        {% else %}
+                        <p style="font-size:13px;color:var(--nx-muted);line-height:1.6;margin:0 0 20px">Upload your completed work below. Handwritten papers, drawings, photos, PDFs, and supported documents can be submitted as one attempt.</p>
+                        {% endif %}
+
+                        {% if classroom.archived %}
+                            <div class="alert alert-secondary mb-0" style="font-size:12px;border-radius:10px">This class is archived, so new submissions are unavailable.</div>
+                        {% elif assignment.allow_file_upload %}
+                        <form method="POST" action="{{ submit_url }}" enctype="multipart/form-data" class="nx-form">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <div><label for="content">Written response <span style="color:var(--nx-muted);font-weight:500">(optional)</span></label><textarea id="content" name="content" maxlength="10000" placeholder="Add an explanation or response if required..."></textarea></div>
+                            <div><label for="files">Upload your work</label><input id="files" type="file" name="files" multiple accept=".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip"><small class="nx-help">Up to 10 files. Maximum 5 MB per request. Use multiple photos for handwritten papers with several pages.</small></div>
+                            <button type="submit" class="nx-submit-btn">{% if submission %}Submit New Attempt{% else %}Submit Work{% endif %}</button>
+                        </form>
+                        {% else %}
+                            <div class="alert alert-info mb-0" style="font-size:12px;border-radius:10px">This activity does not currently accept file uploads.</div>
+                        {% endif %}
+                    </section>
+                </div>
+
+                <aside>
+                    <section class="nx-card nx-card-pad nx-status-card">
+                        <h3>Activity Status</h3>
+                        {% if submission %}<div class="nx-status">{{ submission.status|replace('_', ' ')|capitalize }}</div>{% else %}<div class="nx-status pending">Not submitted</div>{% endif %}
+                        <ul class="nx-side-list">
+                            <li><span>Points</span><strong>{{ assignment.points }}</strong></li>
+                            <li><span>Due date</span><strong>{% if assignment.due_at %}{{ assignment.due_at }}{% else %}None{% endif %}</strong></li>
+                            {% if assignment.group_mode %}<li><span>Group size</span><strong>Up to {{ assignment.max_group_size }}</strong></li>{% endif %}
+                            <li><span>File uploads</span><strong>{% if assignment.allow_file_upload %}Allowed{% else %}Not allowed{% endif %}</strong></li>
+                        </ul>
+                    </section>
+
+                    {% if submission %}
+                    <section class="nx-card nx-card-pad nx-side-card" style="margin-top:20px">
+                        <h3>Submission History</h3>
+                        <p style="font-size:12px;line-height:1.6;color:var(--nx-muted);margin:11px 0 0">Your latest attempt is shown above. You can submit another attempt when submissions are available.</p>
+                    </section>
+                    {% endif %}
+                </aside>
+            </div>
+        </div>
+    </main>
+</body>
 </html>
