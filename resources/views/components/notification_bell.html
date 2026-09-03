@@ -1,73 +1,64 @@
 <style>
+/* Student redesign: notifications belong to the sidebar, not as a floating control. */
 .notification-wrapper {
-    position: fixed !important;
-    top: 20px !important;
-    right: 24px !important;
-    z-index: 1200 !important;
-    width: 52px !important;
-    height: 52px !important;
+    display: none !important;
 }
-.notification-button {
-    width: 52px !important;
-    height: 52px !important;
-    border: 1px solid #e5e7eb !important;
-    border-radius: 50% !important;
-    background: #fff !important;
-    color: #0f172a !important;
-    box-shadow: 0 10px 30px rgba(15,23,42,.14) !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    font-size: 1.35rem !important;
-    cursor: pointer !important;
-    position: relative !important;
+
+/* Match the approved dashboard header: search + profile only. */
+.nx-top::before {
+    content: "⌕";
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    color: #142033;
+    font-size: 24px;
+    line-height: 1;
+    margin-right: 2px;
 }
-.notification-button:hover { transform: translateY(-1px); box-shadow: 0 12px 34px rgba(15,23,42,.18) !important; }
-.notification-count {
-    position: absolute !important;
-    top: -5px !important;
-    right: -5px !important;
-    min-width: 21px !important;
-    height: 21px !important;
-    padding: 0 6px !important;
+
+.nx-top-profile span {
+    display: none !important;
+}
+
+/* Unread notifications: red border + red count badge in sidebar. */
+.nx-nav a:has(.nx-badge) {
+    border: 1.5px solid #ef4444 !important;
+    color: #334155 !important;
+}
+
+.nx-nav a:has(.nx-badge) .ico {
+    color: #ef4444 !important;
+}
+
+.nx-nav a .nx-badge {
+    position: static !important;
+    margin-left: auto !important;
+    min-width: 20px !important;
+    height: 20px !important;
+    padding: 0 5px !important;
     border-radius: 999px !important;
     background: #ef4444 !important;
     color: #fff !important;
-    font-size: .68rem !important;
+    font-size: 10px !important;
     font-weight: 800 !important;
-    line-height: 21px !important;
-    text-align: center !important;
-    border: 2px solid #fff !important;
+    display: inline-grid !important;
+    place-items: center !important;
+    line-height: 1 !important;
 }
-.notification-dropdown {
-    display: none;
-    position: absolute !important;
-    top: 62px !important;
-    right: 0 !important;
-    width: 360px !important;
-    max-width: calc(100vw - 32px) !important;
-    max-height: 480px !important;
-    overflow: auto !important;
-    background: #fff !important;
-    border: 1px solid #e5e7eb !important;
-    border-radius: 16px !important;
-    box-shadow: 0 18px 50px rgba(15,23,42,.18) !important;
+
+/* The dashboard already renders the notification count in the sidebar. */
+.nx-top-action {
+    display: none !important;
 }
-.notification-dropdown-header { padding: 14px 16px; border-bottom: 1px solid #eef2f7; display:flex; justify-content:space-between; align-items:center; }
-.notification-dropdown-header strong { color:#0f172a; }
-.notification-dropdown-header span { color:#64748b; font-size:.72rem; }
-.notification-item { padding: 13px 16px; border-bottom:1px solid #f1f5f9; cursor:pointer; }
-.notification-item:hover { background:#f8fafc; }
-.notification-item.unread { background:#eff6ff; }
-.notification-item strong { display:block; color:#0f172a; font-size:.85rem; }
-.notification-item p { margin:4px 0; color:#475569; font-size:.78rem; line-height:1.45; }
-.notification-item small { color:#94a3b8; font-size:.68rem; }
-.notification-empty { padding:30px 18px; text-align:center; color:#64748b; }
-.notification-mark-all { padding:10px 14px; background:#fff; position:sticky; bottom:0; }
-.notification-mark-all-button { width:100%; border:0; border-radius:10px; padding:9px 12px; background:#eff6ff; color:#2563eb; font-weight:700; cursor:pointer; }
-@media (max-width: 640px) { .notification-wrapper { right:14px !important; } .notification-dropdown { width:320px !important; } }
 </style>
 
+<!--
+  Notification dropdown is retained for non-dashboard student pages.
+  On the redesigned dashboard it is hidden so the sidebar is the single
+  notification entry point.
+-->
 <div class="notification-wrapper">
     <button type="button" class="notification-button" onclick="toggleNotifications(event)" aria-label="Recent notifications" aria-expanded="false">
         🔔
