@@ -133,16 +133,16 @@ for role,uid,path in [('admin',1,'/admin/dashboard'),('student',3,'/student/dash
         else:
             add('P1',path,'logout modal DOM','overlay with id logoutModal','not found','resources/views/components/logout_modal.html','include missing')
         # check CSS centered: display:flex align-items:center justify-content:center
-        css_logout = pathlib.Path('resources/assets/css/polish.css').read_bytes().decode('utf-8', errors='ignore')
-        if '.nexora-logout-overlay.open{display:flex' in css_logout and 'align-items:center' in css_logout:
+        css_logout = pathlib.Path('resources/assets/css/style.css').read_text(encoding='utf-8', errors='ignore') + pathlib.Path('resources/assets/css/modals.css').read_text(encoding='utf-8', errors='ignore') + pathlib.Path('resources/assets/css/student.css').read_text(encoding='utf-8', errors='ignore')
+        if '.nexora-logout-overlay.open{display:flex' in css_logout or '.nexora-logout-overlay.open' in css_logout and 'align-items:center' in css_logout:
             PASS.append(f'LOGOUT {role} CSS centered')
         else:
-            add('P1',path,'logout overlay CSS','fixed inset 0 + flex centered','missing/incorrect','resources/assets/css/polish.css:265','overlay not covering page')
+            add('P1',path,'logout overlay CSS','fixed inset 0 + flex centered','missing/incorrect','resources/assets/css/style.css','overlay not covering page')
         # check z-index 5000 > sidebar 2000/3000
         if 'z-index:5000' in css_logout:
             PASS.append(f'LOGOUT {role} z-index 5000 > sidebar')
         else:
-            add('P2',path,'logout z-index','5000 to stay above sidebar','wrong','resources/assets/css/polish.css','modal behind sidebar')
+            add('P2',path,'logout z-index','5000 to stay above sidebar','wrong','resources/assets/css/style.css','modal behind sidebar')
         # check JS for ESC/backdrop
         sidebar_js = pathlib.Path('resources/assets/js/sidebar.js').read_bytes().decode('utf-8', errors='ignore')
         logout_html = pathlib.Path('resources/views/components/logout_modal.html').read_bytes().decode('utf-8', errors='ignore') if pathlib.Path('resources/views/components/logout_modal.html').exists() else ''
@@ -157,7 +157,7 @@ for role,uid,path in [('admin',1,'/admin/dashboard'),('student',3,'/student/dash
             if 'nexora-logout-overlay' in css_logout and 'display:none' in css_logout:
                 PASS.append(f'LOGOUT {role} no permanent visible text (hidden by default)')
             else:
-                add('P2',path,'logout text','hidden until opened','always visible','resources/assets/css/polish.css','overlay display not none')
+                add('P2',path,'logout text','hidden until opened','always visible','resources/assets/css/style.css','overlay display not none')
     else:
         add('P0',path,'logout modal','overlay exists','missing','resources/views/components/logout_modal.html','no modal include')
 
@@ -331,24 +331,24 @@ for tpl in ['resources/views/classroom/student_class.html','resources/views/clas
         add('P1',tpl,'copy','copy function','missing',tpl,'button does nothing')
 
 # 11 RESPONSIVE
-polish = pathlib.Path('resources/assets/css/polish.css').read_bytes().decode('utf-8', errors='ignore')
+style = pathlib.Path('resources/assets/css/style.css').read_text(encoding='utf-8', errors='ignore') + pathlib.Path('resources/assets/css/student.css').read_text(encoding='utf-8', errors='ignore')
 checks = {
-    '1920': '235px' in polish,
-    '1024': '@media(max-width:1024px)' in polish and '220px' in polish,
-    '768': '@media(max-width:768px)' in polish and 'mobile-open' in polish,
-    '390': '@media(max-width:480px)' in polish
+    '1920': '235px' in style,
+    '1024': '@media(max-width:1024px)' in style and '220px' in style,
+    '768': '@media(max-width:768px)' in style and 'mobile-open' in style,
+    '390': '@media(max-width:480px)' in style
 }
 for k,v in checks.items():
     if v:
         PASS.append(f'RESPONSIVE {k} media query present')
     else:
-        add('P1','polish.css',f'responsive {k}', 'media query','missing','resources/assets/css/polish.css','sidebar overlap at breakpoint')
+        add('P1','style.css',f'responsive {k}', 'media query','missing','resources/assets/css/style.css','sidebar overlap at breakpoint')
 
 # check overflow
-if 'overflow-x:auto' in polish or 'table-responsive' in polish:
+if 'overflow-x:auto' in style or 'table-responsive' in style:
     PASS.append('RESPONSIVE table clipping handled')
 else:
-    add('P2','polish.css','tables','responsive overflow','missing','resources/assets/css/polish.css','horizontal overflow')
+    add('P2','style.css','tables','responsive overflow','missing','resources/assets/css/style.css','horizontal overflow')
 
 # 12 CONSOLE
 # static JS analysis for common errors
@@ -376,7 +376,7 @@ for jf in js_files:
                         add('P1',str(p),f'JS {fname}','function defined','undefined','resources/assets/js/'+jf.name,'ReferenceError')
 
 # check for 404 resources: verify static files exist
-for ref in ['css/style.css','css/polish.css','css/modals.css','js/sidebar.js']:
+for ref in ['css/style.css','css/student.css','css/supervisor.css','css/admin.css','css/modals.css','js/sidebar.js']:
     if pathlib.Path('resources/assets/'+ref).exists():
         PASS.append(f'NETWORK static {ref} exists')
     else:

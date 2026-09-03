@@ -43,8 +43,26 @@ def test_no_hard_delete_users():
 
 def test_polish_css_import_present_and_modals_untouched():
     style=pathlib.Path("resources/assets/css/style.css").read_text(encoding="utf-8")
-    assert "@import url('polish.css')" in style
-    assert pathlib.Path("resources/assets/css/polish.css").exists()
+    assert "@import url('polish.css')" not in style
+    assert not pathlib.Path("resources/assets/css/polish.css").exists()
+    assert not pathlib.Path("resources/assets/css/role-fixes.css").exists()
+    assert not pathlib.Path("resources/assets/css/nexora-ui.css").exists()
+    assert pathlib.Path("resources/assets/css/style.css").exists()
+    assert pathlib.Path("resources/assets/css/student.css").exists()
+    assert pathlib.Path("resources/assets/css/supervisor.css").exists()
+    assert pathlib.Path("resources/assets/css/admin.css").exists()
+    assert pathlib.Path("resources/assets/css/modals.css").exists()
+    # Verify student sidebar CSS migrated correctly
+    student_css=pathlib.Path("resources/assets/css/student.css").read_text(encoding="utf-8")
+    assert ".nx-collapse-toggle" in student_css
+    assert ".nx-student-shell" in student_css
+    assert "width:268px" in student_css
+    # Verify student_sidebar.html no longer contains reusable sidebar <style> block
+    sidebar_html=pathlib.Path("resources/views/components/student_sidebar.html").read_text(encoding="utf-8")
+    assert "<style>" not in sidebar_html
+    # HTML should still contain the sidebar structure and collapse button
+    assert 'nx-collapse-toggle' in sidebar_html
+    assert 'id="studentSidebar"' in sidebar_html
     modals=pathlib.Path("resources/assets/css/modals.css").read_text(encoding="utf-8")
     # ensure modals.css still contains original header
     assert ".nexora-modal-overlay" in modals
@@ -76,20 +94,56 @@ def test_students_delete_uses_real_endpoint():
     assert 'javascript:void(0)' in txt
 
 def test_auth_invalid_password_and_inactive_blocked():
-    # Use real DB flow via mocked DB for inactive
     app.config["WTF_CSRF_ENABLED"]=False
     app.config["TESTING"]=True
     client=app.test_client()
     # Valid login page loads
     resp=client.get("/login")
     assert resp.status_code==200
-    # Mock inactive student trying admin dashboard
-    _login_as(client, 99, "admin")
-    mock_conn=MagicMock()
-    # Simulate admin dashboard with inactive check not relevant; just ensure student cannot access admin
+
+    # 1) Inactive account must return 403 — mock security layer correctly
     _login_as(client, 99, "student")
-    resp2=client.get("/admin/dashboard")
-    assert resp2.status_code==403
+    inactive_row=MagicMock()
+    inactive_row.__getitem__.side_effect=lambda k: {"role":"student","status":"inactive"}[k] if isinstance(k,str) else "inactive"
+    inactive_row.keys=lambda: ["role","status"]
+    inactive_row.__len__=lambda s: 2
+    mock_inactive_conn=MagicMock()
+    def _inactive_exec(sql, params=None):
+        if "SELECT role, status FROM users WHERE id" in sql:
+            m=MagicMock()
+            m.fetchone.return_value=inactive_row
+            return m
+        m=MagicMock()
+        m.fetchone.return_value=None
+        return m
+    mock_inactive_conn.execute.side_effect=_inactive_exec
+    mock_inactive_conn.close=lambda: None
+    with patch("app.Http.Middleware.security.get_db_connection", return_value=mock_inactive_conn):
+        resp2=client.get("/admin/dashboard")
+        assert resp2.status_code==403
+        assert b"Account deactivated" in resp2.get_data()
+
+    # 2) Role mismatch must reflect CURRENT intentional behavior: 302 redirect to correct dashboard (not 403)
+    _login_as(client, 99, "student")
+    mismatch_row=MagicMock()
+    mismatch_row.__getitem__.side_effect=lambda k: {"role":"student","status":"active"}[k] if isinstance(k,str) else "student"
+    mismatch_row.keys=lambda: ["role","status"]
+    mismatch_row.__len__=lambda s: 2
+    mock_mismatch_conn=MagicMock()
+    def _mismatch_exec(sql, params=None):
+        if "SELECT role, status FROM users WHERE id" in sql:
+            m=MagicMock()
+            m.fetchone.return_value=mismatch_row
+            return m
+        m=MagicMock()
+        m.fetchone.return_value=None
+        return m
+    mock_mismatch_conn.execute.side_effect=_mismatch_exec
+    mock_mismatch_conn.close=lambda: None
+    with patch("app.Http.Middleware.security.get_db_connection", return_value=mock_mismatch_conn):
+        resp3=client.get("/admin/dashboard")
+        assert resp3.status_code==302
+        assert resp3.headers.get("Location")=="/student/dashboard"
 
 def test_duplicate_active_internship_blocked():
     app.config["WTF_CSRF_ENABLED"]=False
@@ -147,9 +201,32 @@ def test_legacy_feedback_still_renders():
     app.config["WTF_CSRF_ENABLED"]=False
     app.config["TESTING"]=True
     client=app.test_client()
-    _login_as(client, 1, "admin")
-    mock_conn=MagicMock()
+    _login_as(client, 3, "admin")
+    # Security mock: active admin (ID 3 is known DB admin)
+    sec_row=MagicMock()
+    sec_row.__getitem__.side_effect=lambda k: {"role":"admin","status":"active"}[k] if isinstance(k,str) else "admin"
+    sec_row.keys=lambda: ["role","status"]
+    sec_row.__len__=lambda s: 2
+    def _sec_exec(sql, params=None):
+        if "SELECT role, status FROM users WHERE id" in sql:
+            m=MagicMock()
+            m.fetchone.return_value=sec_row
+            return m
+        m=MagicMock()
+        m.fetchone.return_value=None
+        m.fetchall.return_value=[]
+        return m
+    mock_sec_conn=MagicMock()
+    mock_sec_conn.execute.side_effect=_sec_exec
+    mock_sec_conn.close=lambda: None
+
+    mock_admin_conn=MagicMock()
     def exec_side(sql, params=None):
+        # Also handle security query if shared, but primary is admin queries
+        if "SELECT role, status FROM users WHERE id" in sql:
+            m=MagicMock()
+            m.fetchone.return_value=sec_row
+            return m
         m=MagicMock()
         if "SELECT id, username" in sql:
             m.fetchone.return_value=(30,"stu30")
@@ -161,33 +238,57 @@ def test_legacy_feedback_still_renders():
             m.fetchall.return_value=[]
             m.fetchone.return_value=None
         return m
-    mock_conn.execute.side_effect=exec_side
-    with patch("app.Http.Controllers.admin.get_db_connection", return_value=mock_conn):
+    mock_admin_conn.execute.side_effect=exec_side
+    mock_admin_conn.close=lambda: None
+    with patch("app.Http.Middleware.security.get_db_connection", return_value=mock_sec_conn), patch("app.Http.Controllers.admin.get_db_connection", return_value=mock_admin_conn):
         resp=client.get("/admin/reports/student/30")
         assert resp.status_code==200
 
 def test_responsive_no_horizontal_overflow_css():
-    polish=pathlib.Path("resources/assets/css/polish.css").read_text(encoding="utf-8")
-    assert "overflow-x:auto" in polish or "overflow-x" in polish
-    assert "@media" in polish
+    style=pathlib.Path("resources/assets/css/style.css").read_text(encoding="utf-8")
+    assert "overflow-x:auto" in style or "overflow-x" in style
+    assert "@media" in style
     # ensure tables are responsive
-    assert "table-responsive" in polish or "overflow-x" in polish
+    assert "table-responsive" in style or "overflow-x" in style
 
 def test_bulk_soft_delete_never_hard_deletes():
     app.config["WTF_CSRF_ENABLED"]=False
     app.config["TESTING"]=True
     client=app.test_client()
-    _login_as(client, 1, "admin")
-    mock_conn=MagicMock()
+    _login_as(client, 3, "admin")
+    # Security mock: active admin
+    sec_row=MagicMock()
+    sec_row.__getitem__.side_effect=lambda k: {"role":"admin","status":"active"}[k] if isinstance(k,str) else "admin"
+    sec_row.keys=lambda: ["role","status"]
+    sec_row.__len__=lambda s: 2
+    mock_sec_conn=MagicMock()
+    def _sec_exec(sql, params=None):
+        if "SELECT role, status FROM users WHERE id" in sql:
+            m=MagicMock()
+            m.fetchone.return_value=sec_row
+            return m
+        m=MagicMock()
+        m.fetchone.return_value=None
+        return m
+    mock_sec_conn.execute.side_effect=_sec_exec
+    mock_sec_conn.close=lambda: None
+
+    # Admin/bulk mock: cursor-based soft-delete
+    mock_admin_conn=MagicMock()
     mock_cur=MagicMock()
     row=MagicMock()
     row.__getitem__.side_effect=lambda k: {"role":"student","status":"active"}[k] if isinstance(k,str) else "student"
     row.keys=lambda: ["role","status"]
+    row.__len__=lambda s: 2
     mock_cur.fetchone.return_value=row
     mock_cur.rowcount=1
-    mock_conn.cursor.return_value=mock_cur
-    with patch("app.Http.Controllers.admin.get_db_connection", return_value=mock_conn):
+    mock_admin_conn.cursor.return_value=mock_cur
+    mock_admin_conn.close=lambda: None
+    mock_cur.close=lambda: None
+    with patch("app.Http.Middleware.security.get_db_connection", return_value=mock_sec_conn), patch("app.Http.Controllers.admin.get_db_connection", return_value=mock_admin_conn):
         resp=client.post("/admin/users/bulk", json={"ids":[50],"action":"delete"})
         assert resp.status_code==200
         calls="".join(str(c) for c in mock_cur.execute.call_args_list)
         assert "DELETE FROM users" not in calls
+        # Verify soft-delete path was taken (status update, not hard delete)
+        assert any("UPDATE users SET status = 'inactive'" in str(c) for c in mock_cur.execute.call_args_list)
