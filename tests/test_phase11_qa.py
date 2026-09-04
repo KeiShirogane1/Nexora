@@ -58,7 +58,8 @@ def test_polish_css_import_present_and_modals_untouched():
     # collapse toggle and shell now live in the unified sidebar file (single source of truth)
     assert ".nx-collapse-toggle" in sidebar_css
     assert ".nx-student-shell" in sidebar_css
-    assert "width:262px" in sidebar_css
+    # Accept normal CSS formatting with optional whitespace around the declaration colon.
+    assert "width:262px" in sidebar_css.replace(" ", "")
     # student.css must NOT contain duplicate white sidebar (migrated earlier, now removed for unification)
     assert "background:#fff;border-right" not in student_css or ".nx-sidebar" not in student_css
     # mains should use unified 262px width (not 268) when present
@@ -237,7 +238,7 @@ def test_legacy_feedback_still_renders():
         if "SELECT id, username" in sql:
             m.fetchone.return_value=(30,"stu30")
         elif "FROM feedback" in sql:
-            m.fetchall.return_value=[("Legacy comment without ML","2026-01-01 10:00:00","Satisfactory","sup1", None, None, None, None, None, None)]
+            m.fetchall.return_value=[("Legacy comment without ML","2026-01-01 10:00:00","Satisfactory","sup1", None, None, None, None, None)]
         elif "FROM attendance" in sql or "FROM logs" in sql or "FROM tasks" in sql:
             m.fetchall.return_value=[]
         else:
