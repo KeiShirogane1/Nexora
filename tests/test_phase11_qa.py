@@ -52,11 +52,17 @@ def test_polish_css_import_present_and_modals_untouched():
     assert pathlib.Path("resources/assets/css/supervisor.css").exists()
     assert pathlib.Path("resources/assets/css/admin.css").exists()
     assert pathlib.Path("resources/assets/css/modals.css").exists()
-    # Verify student sidebar CSS migrated correctly
+    # Verify student sidebar CSS migrated correctly (unified green sidebar in student-sidebar.css, single source)
     student_css=pathlib.Path("resources/assets/css/student.css").read_text(encoding="utf-8")
-    assert ".nx-collapse-toggle" in student_css
-    assert ".nx-student-shell" in student_css
-    assert "width:268px" in student_css
+    sidebar_css=pathlib.Path("resources/assets/css/student-sidebar.css").read_text(encoding="utf-8")
+    # collapse toggle and shell now live in the unified sidebar file (single source of truth)
+    assert ".nx-collapse-toggle" in sidebar_css
+    assert ".nx-student-shell" in sidebar_css
+    assert "width:262px" in sidebar_css
+    # student.css must NOT contain duplicate white sidebar (migrated earlier, now removed for unification)
+    assert "background:#fff;border-right" not in student_css or ".nx-sidebar" not in student_css
+    # mains should use unified 262px width (not 268) when present
+    assert ".nx-student-shell" not in student_css or "width:268px" not in student_css or "width:262px" in student_css
     # Verify student_sidebar.html no longer contains reusable sidebar <style> block
     sidebar_html=pathlib.Path("resources/views/components/student_sidebar.html").read_text(encoding="utf-8")
     assert "<style>" not in sidebar_html
