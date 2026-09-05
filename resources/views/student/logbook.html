@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Logbook - Nexora</title>
-
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
@@ -13,93 +12,43 @@
 <body class="student-page student-logbook-page">
     {% include 'components/student_sidebar.html' %}
 
-    <main class="student-logbook-main">
-        <header class="student-logbook-topbar" aria-label="Student portal header">
-            <div class="student-logbook-topbar-left">
-                <button class="student-logbook-menu-button" type="button" aria-label="Menu">☰</button>
-                <label class="student-logbook-search" aria-label="Search">
+    <main class="student-tasks-main student-logbook-main">
+        <header class="student-tasks-topbar" aria-label="Student portal header">
+            <div class="student-tasks-topbar-left">
+                <button class="student-tasks-menu-button" type="button" aria-label="Menu" onclick="window.toggleStudentSidebar && window.toggleStudentSidebar()">☰</button>
+                <label class="student-tasks-search" aria-label="Search">
                     <span aria-hidden="true">⌕</span>
                     <input type="search" placeholder="Search anything...">
                 </label>
             </div>
-
-            <div class="student-logbook-topbar-right">
-                <span class="student-logbook-notification" aria-label="Notifications">
-                    ♧
-                    {% if unread_count|default(0) > 0 %}
-                        <span class="student-logbook-notification-badge">{{ unread_count }}</span>
-                    {% endif %}
-                </span>
-                <div class="student-logbook-user">
-                    {% if sidebar_profile and sidebar_profile.profile_picture %}
-                        <img src="{{ url_for('profile_picture', filename=sidebar_profile.profile_picture) }}" alt="Profile picture">
-                    {% elif profile is defined and profile and profile[5] %}
-                        <img src="{{ url_for('profile_picture', filename=profile[5]) }}" alt="Profile picture">
-                    {% else %}
-                        <img src="{{ url_for('static', filename='images/default_profile.png') }}" alt="Default profile picture">
-                    {% endif %}
-                    <span class="student-logbook-user-copy">
-                        <strong>{% if sidebar_profile and sidebar_profile.first_name %}{{ sidebar_profile.first_name }} {{ sidebar_profile.last_name or '' }}{% elif profile is defined and profile %}{{ profile[0] }} {{ profile[2] }}{% else %}Student{% endif %}</strong>
-                        <span>Student</span>
-                    </span>
+            <div class="student-tasks-topbar-right">
+                <span class="student-tasks-notification" aria-label="Notifications">♧{% if unread_count|default(0) > 0 %}<span class="student-tasks-notification-badge">{{ unread_count }}</span>{% endif %}</span>
+                <div class="student-tasks-user">
+                    {% if sidebar_profile and sidebar_profile.profile_picture %}<img src="{{ url_for('profile_picture', filename=sidebar_profile.profile_picture) }}" alt="Profile picture">
+                    {% elif profile is defined and profile and profile[5] %}<img src="{{ url_for('profile_picture', filename=profile[5]) }}" alt="Profile picture">
+                    {% else %}<img src="{{ url_for('static', filename='images/default_profile.png') }}" alt="Default profile picture">{% endif %}
+                    <span class="student-tasks-user-copy"><strong>{% if sidebar_profile and sidebar_profile.first_name %}{{ sidebar_profile.first_name }} {{ sidebar_profile.last_name or '' }}{% elif profile is defined and profile %}{{ profile[0] }} {{ profile[2] }}{% else %}Student{% endif %}</strong><span>Student</span></span>
                 </div>
             </div>
         </header>
 
-        <div class="student-logbook-page-content">
+        <div class="student-tasks-content student-logbook-page-content">
             <section class="student-logbook-page-heading">
-                <div>
-                    <h1>Logbook</h1>
-                    <p>Track your daily activities, hours, and learnings.</p>
-                </div>
+                <div><h1>Logbook</h1><p>Track your daily activities, hours, and learnings.</p></div>
                 <div class="student-logbook-actions">
                     <a class="student-logbook-button student-logbook-button-outline" href="#attendance-history">▣ Calendar View</a>
-                    {% if attendance %}
-                        <a class="student-logbook-button student-logbook-button-primary" href="#new-log-entry">＋ New Log Entry</a>
-                    {% endif %}
+                    {% if attendance %}<a class="student-logbook-button student-logbook-button-primary" href="#new-log-entry">＋ New Log Entry</a>{% endif %}
                 </div>
             </section>
 
             {% set total_hours = namespace(value=0) %}
-            {% for session in history %}
-                {% if session[3] %}
-                    {% set total_hours.value = total_hours.value + (session[3]|float) %}
-                {% endif %}
-            {% endfor %}
+            {% for session in history %}{% if session[3] %}{% set total_hours.value = total_hours.value + (session[3]|float) %}{% endif %}{% endfor %}
 
             <section class="student-logbook-stats" aria-label="Logbook summary">
-                <article class="student-logbook-stat">
-                    <span class="student-logbook-stat-icon" aria-hidden="true">◷</span>
-                    <div class="student-logbook-stat-copy">
-                        <span>Total Hours</span>
-                        <strong>{{ '%.1f'|format(total_hours.value) }} hrs</strong>
-                        <small>Recorded sessions</small>
-                    </div>
-                </article>
-                <article class="student-logbook-stat">
-                    <span class="student-logbook-stat-icon" aria-hidden="true">✓</span>
-                    <div class="student-logbook-stat-copy">
-                        <span>Completed Logs</span>
-                        <strong>{{ logs|length }}</strong>
-                        <small>Log entries</small>
-                    </div>
-                </article>
-                <article class="student-logbook-stat">
-                    <span class="student-logbook-stat-icon" aria-hidden="true">□</span>
-                    <div class="student-logbook-stat-copy">
-                        <span>Days Logged</span>
-                        <strong>{{ history|length }}</strong>
-                        <small>Attendance records</small>
-                    </div>
-                </article>
-                <article class="student-logbook-stat">
-                    <span class="student-logbook-stat-icon" aria-hidden="true">◎</span>
-                    <div class="student-logbook-stat-copy">
-                        <span>Today's Status</span>
-                        <strong>{% if attendance %}Active{% else %}Ready{% endif %}</strong>
-                        <small>{% if attendance %}Session in progress{% else %}Clock in to begin{% endif %}</small>
-                    </div>
-                </article>
+                <article class="student-logbook-stat"><span class="student-logbook-stat-icon" aria-hidden="true">◷</span><div class="student-logbook-stat-copy"><span>Total Hours</span><strong>{{ '%.1f'|format(total_hours.value) }} hrs</strong><small>Recorded sessions</small></div></article>
+                <article class="student-logbook-stat"><span class="student-logbook-stat-icon" aria-hidden="true">✓</span><div class="student-logbook-stat-copy"><span>Completed Logs</span><strong>{{ logs|length }}</strong><small>Log entries</small></div></article>
+                <article class="student-logbook-stat"><span class="student-logbook-stat-icon" aria-hidden="true">□</span><div class="student-logbook-stat-copy"><span>Days Logged</span><strong>{{ history|length }}</strong><small>Attendance records</small></div></article>
+                <article class="student-logbook-stat"><span class="student-logbook-stat-icon" aria-hidden="true">◎</span><div class="student-logbook-stat-copy"><span>Today's Status</span><strong>{% if attendance %}Active{% else %}Ready{% endif %}</strong><small>{% if attendance %}Session in progress{% else %}Clock in to begin{% endif %}</small></div></article>
             </section>
 
             <section class="student-logbook-layout">
@@ -108,169 +57,31 @@
                         <div class="student-logbook-filter">May 1 - May 31, 2025 <span aria-hidden="true">⌄</span></div>
                         <div class="student-logbook-filter">All Status <span aria-hidden="true">⌄</span></div>
                         <div class="student-logbook-filter">All Activities <span aria-hidden="true">⌄</span></div>
-                        <label class="student-logbook-filter-search">
-                            <span aria-hidden="true">⌕</span>
-                            <input type="search" placeholder="Search logs...">
-                        </label>
+                        <label class="student-logbook-filter-search"><span aria-hidden="true">⌕</span><input type="search" placeholder="Search logs..."></label>
                     </div>
-
                     <section class="student-logbook-content-card" aria-labelledby="log-entries-heading">
-                        <div class="student-logbook-card-heading">
-                            <h2 id="log-entries-heading">Log Entries</h2>
-                            <span>{{ logs|length }} entries</span>
-                        </div>
-
+                        <div class="student-logbook-card-heading"><h2 id="log-entries-heading">Log Entries</h2><span>{{ logs|length }} entries</span></div>
                         {% if attendance %}
-                            <form class="student-logbook-new-entry" id="new-log-entry" method="POST" action="/student/log/add">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <h3>New Log Entry</h3>
-                                <textarea name="content" placeholder="What did you accomplish?" required></textarea>
-                                <div class="student-logbook-new-entry-footer">
-                                    <button class="student-logbook-button student-logbook-button-primary" type="submit">Add Log</button>
-                                </div>
-                            </form>
+                        <form class="student-logbook-new-entry" id="new-log-entry" method="POST" action="/student/log/add">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><h3>New Log Entry</h3><textarea name="content" placeholder="What did you accomplish?" required></textarea>
+                            <div class="student-logbook-new-entry-footer"><button class="student-logbook-button student-logbook-button-primary" type="submit">Add Log</button></div>
+                        </form>
                         {% endif %}
-
                         {% if logs %}
-                            <div class="table-responsive">
-                                <table class="student-logbook-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Date</th>
-                                            <th>Activity / Task</th>
-                                            <th>Hours</th>
-                                            <th>Type</th>
-                                            <th>Status</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for log in logs %}
-                                            <tr>
-                                                <td>
-                                                    <div class="student-logbook-entry-date">
-                                                        <strong>{{ log[2].strftime('%d') if log[2] and log[2].strftime is defined else '—' }}</strong>
-                                                        <span>{{ log[2].strftime('%b') if log[2] and log[2].strftime is defined else 'Log' }}</span>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <div class="student-logbook-entry-copy">
-                                                        <strong>{{ log[1] }}</strong>
-                                                        <span>Daily internship activity recorded in the Nexora logbook.</span>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <span class="student-logbook-hours">—</span>
-                                                </td>
-                                                <td>
-                                                    <span class="student-logbook-pill student-logbook-pill-type">Daily Log</span>
-                                                </td>
-                                                <td>
-                                                    <span class="student-logbook-pill student-logbook-pill-status">✓ Recorded</span>
-                                                </td>
-                                                <td>
-                                                    <div class="student-logbook-entry-actions">
-                                                        <a class="student-logbook-icon-button" href="/student/log/{{ log[0] }}/edit" aria-label="Edit log">✎</a>
-                                                        {% if attendance %}
-                                                            <form method="POST" action="/student/log/{{ log[0] }}/delete" onsubmit="return confirm('Delete this log entry? This action cannot be undone.')">
-                                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                                <button class="student-logbook-icon-button" type="submit" aria-label="Delete log">×</button>
-                                                            </form>
-                                                        {% endif %}
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        {% else %}
-                            <div class="student-logbook-empty">
-                                No log entries yet. Start your session and record your first activity.
-                            </div>
-                        {% endif %}
-
-                        <div class="student-logbook-pagination">
-                            <span>Showing {{ logs|length }} log entries</span>
-                            <span>‹ &nbsp; 1 &nbsp; ›</span>
-                        </div>
+                        <div class="table-responsive"><table class="student-logbook-table"><thead><tr><th>Date</th><th>Activity / Task</th><th>Hours</th><th>Type</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+                        {% for log in logs %}<tr><td><div class="student-logbook-entry-date"><strong>{{ log[2].strftime('%d') if log[2] and log[2].strftime is defined else '—' }}</strong><span>{{ log[2].strftime('%b') if log[2] and log[2].strftime is defined else 'Log' }}</span></div></td><td><div class="student-logbook-entry-copy"><strong>{{ log[1] }}</strong><span>Daily internship activity recorded in the Nexora logbook.</span></div></td><td><span class="student-logbook-hours">—</span></td><td><span class="student-logbook-pill student-logbook-pill-type">Daily Log</span></td><td><span class="student-logbook-pill student-logbook-pill-status">✓ Recorded</span></td><td><div class="student-logbook-entry-actions"><a class="student-logbook-icon-button" href="/student/log/{{ log[0] }}/edit" aria-label="Edit log">✎</a>{% if attendance %}<form method="POST" action="/student/log/{{ log[0] }}/delete" onsubmit="return confirm('Delete this log entry? This action cannot be undone.')"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="student-logbook-icon-button" type="submit" aria-label="Delete log">×</button></form>{% endif %}</div></td></tr>{% endfor %}
+                        </tbody></table></div>
+                        {% else %}<div class="student-logbook-empty">No log entries yet. Start your session and record your first activity.</div>{% endif %}
+                        <div class="student-logbook-pagination"><span>Showing {{ logs|length }} log entries</span><span>‹ &nbsp; 1 &nbsp; ›</span></div>
                     </section>
                 </div>
-
                 <aside aria-label="Logbook information">
-                    <section class="student-logbook-side-card" id="attendance-history">
-                        <h3>This Week Summary</h3>
-                        <div class="student-logbook-summary-list">
-                            <div class="student-logbook-summary-row">
-                                <span>◷ Hours Logged</span>
-                                <strong>{{ '%.1f'|format(total_hours.value) }} hrs</strong>
-                            </div>
-                            <div class="student-logbook-summary-row">
-                                <span>▣ Logs Created</span>
-                                <strong>{{ logs|length }}</strong>
-                            </div>
-                            <div class="student-logbook-summary-row">
-                                <span>⌛ Current Status</span>
-                                <strong>{% if attendance %}Active{% else %}Not started{% endif %}</strong>
-                            </div>
-                            <div class="student-logbook-summary-row">
-                                <span>✓ Attendance</span>
-                                <strong>{% if history %}Recorded{% else %}No records{% endif %}</strong>
-                            </div>
-                        </div>
-                    </section>
-
-                    <section class="student-logbook-side-card">
-                        <h3>Recent Activity</h3>
-                        {% if logs %}
-                            {% for log in logs[:3] %}
-                                <div class="student-logbook-achievement">
-                                    <span class="student-logbook-achievement-icon">✓</span>
-                                    <div>
-                                        <strong>Log Recorded</strong>
-                                        <span>{{ log[1]|truncate(58, True) }}</span>
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        {% else %}
-                            <div class="student-logbook-achievement">
-                                <span class="student-logbook-achievement-icon">○</span>
-                                <div>
-                                    <strong>No recent activity</strong>
-                                    <span>Your recent log entries will appear here.</span>
-                                </div>
-                            </div>
-                        {% endif %}
-                    </section>
-
-                    <section class="student-logbook-side-card student-logbook-help">
-                        <div class="student-logbook-help-copy">
-                            <strong>Need Help?</strong>
-                            <span>Learn how to make effective log entries.</span>
-                            <a href="#log-entries-heading">View Guidelines</a>
-                        </div>
-                        <span class="student-logbook-help-art" aria-hidden="true">▣</span>
-                    </section>
+                    <section class="student-logbook-side-card" id="attendance-history"><h3>This Week Summary</h3><div class="student-logbook-summary-list"><div class="student-logbook-summary-row"><span>◷ Hours Logged</span><strong>{{ '%.1f'|format(total_hours.value) }} hrs</strong></div><div class="student-logbook-summary-row"><span>▣ Logs Created</span><strong>{{ logs|length }}</strong></div><div class="student-logbook-summary-row"><span>⌛ Current Status</span><strong>{% if attendance %}Active{% else %}Not started{% endif %}</strong></div><div class="student-logbook-summary-row"><span>✓ Attendance</span><strong>{% if history %}Recorded{% else %}No records{% endif %}</strong></div></div></section>
+                    <section class="student-logbook-side-card"><h3>Recent Activity</h3>{% if logs %}{% for log in logs[:3] %}<div class="student-logbook-achievement"><span class="student-logbook-achievement-icon">✓</span><div><strong>Log Recorded</strong><span>{{ log[1]|truncate(58, True) }}</span></div></div>{% endfor %}{% else %}<div class="student-logbook-achievement"><span class="student-logbook-achievement-icon">○</span><div><strong>No recent activity</strong><span>Your recent log entries will appear here.</span></div></div>{% endif %}</section>
+                    <section class="student-logbook-side-card student-logbook-help"><div class="student-logbook-help-copy"><strong>Need Help?</strong><span>Learn how to make effective log entries.</span><a href="#log-entries-heading">View Guidelines</a></div><span class="student-logbook-help-art" aria-hidden="true">▣</span></section>
                 </aside>
             </section>
-
-            <section class="student-logbook-content-card d-none">
-                {% if history %}
-                    <table>
-                        <tbody>
-                            {% for session in history %}
-                                <tr>
-                                    <td>{{ session[1] }}</td>
-                                    <td>{{ session[2] if session[2] else '—' }}</td>
-                                    <td>{{ session[3] if session[3] else '—' }}</td>
-                                    <td>{{ session[4] }}</td>
-                                    <td><a href="/student/session/{{ session[0] }}">View Logs</a></td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                {% endif %}
-            </section>
+            <section class="student-logbook-content-card d-none">{% if history %}<table><tbody>{% for session in history %}<tr><td>{{ session[1] }}</td><td>{{ session[2] if session[2] else '—' }}</td><td>{{ session[3] if session[3] else '—' }}</td><td>{{ session[4] }}</td><td><a href="/student/session/{{ session[0] }}">View Logs</a></td></tr>{% endfor %}</tbody></table>{% endif %}</section>
         </div>
     </main>
 </body>
