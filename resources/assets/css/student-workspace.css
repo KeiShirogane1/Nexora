@@ -11,8 +11,6 @@ body.student-page {
     overflow-x: hidden;
 }
 
-/* Main page frame ----------------------------------------- */
-
 .student-logbook-main,
 .student-tasks-main {
     position: relative;
@@ -26,8 +24,6 @@ body.student-page {
     padding: 0;
     box-sizing: border-box;
 }
-
-/* Top bars ------------------------------------------------ */
 
 .student-logbook-topbar,
 .student-tasks-topbar {
@@ -55,8 +51,6 @@ body.student-page {
     margin: 0;
     box-sizing: border-box;
 }
-
-/* Logbook ----------------------------------------------- */
 
 .student-logbook-page-content {
     padding: 30px 34px 42px;
@@ -86,8 +80,6 @@ body.student-page {
     min-width: 0;
 }
 
-/* Tasks -------------------------------------------------- */
-
 .student-tasks-content {
     padding: 30px 34px 42px;
 }
@@ -105,15 +97,11 @@ body.student-page {
     min-width: 0;
 }
 
-/* Keep the two workspace pages aligned with the sidebar. */
-
 .nx-student-shell.nx-sidebar-collapsed + .student-logbook-main,
 .nx-student-shell.nx-sidebar-collapsed + .student-tasks-main {
     width: calc(100% - 76px) !important;
     margin-left: 76px !important;
 }
-
-/* Responsive -------------------------------------------- */
 
 @media (max-width: 1050px) {
     .student-logbook-main,
@@ -165,8 +153,6 @@ body.student-page {
     --student-card-shadow: 0 6px 20px rgba(20, 52, 38, 0.035);
 }
 
-/* The shared topbar is emitted by student_sidebar.html so every
-   student page gets the exact task/logbook header. */
 .student-global-topbar {
     position: fixed !important;
     top: 0 !important;
@@ -176,13 +162,16 @@ body.student-page {
     box-sizing: border-box !important;
 }
 
-/* Tasks and logbook already render their topbar inside <main>. */
+.nx-student-shell.nx-sidebar-collapsed ~ .student-global-topbar {
+    left: 76px !important;
+    width: calc(100% - 76px) !important;
+}
+
 body.student-tasks-page > .student-global-topbar,
 body.student-logbook-page > .student-global-topbar {
     display: none !important;
 }
 
-/* Reserve the same 78px header space everywhere else. */
 body.student-page > .nx-student-shell + .nx-main,
 body.student-page > .nx-student-shell + .classes-main,
 body.student-page > .nx-student-shell + .student-main-content,
@@ -191,13 +180,11 @@ body.student-page > .nx-student-shell + .nexora-app-main {
     box-sizing: border-box;
 }
 
-/* The old custom dashboard/classes headers are replaced by the shared topbar. */
 body.student-page > .nx-student-shell + .nx-main > .nx-top,
 body.student-page > .nx-student-shell + .classes-main > .classes-top {
     display: none !important;
 }
 
-/* Main shell and page background. */
 body.student-page:not(.student-tasks-page):not(.student-logbook-page) {
     background: var(--student-bg) !important;
     color: var(--student-ink) !important;
@@ -210,7 +197,6 @@ body.student-page .nx-wrap {
     max-width: 1440px !important;
 }
 
-/* Shared headings. */
 body.student-page .ui-page-heading h1,
 body.student-page .profile-page-heading h1,
 body.student-page .notification-history-header h1,
@@ -240,7 +226,6 @@ body.student-page .classes-eyebrow {
     letter-spacing: 0.09em !important;
 }
 
-/* Shared cards. */
 body.student-page .gradebook-card,
 body.student-page .documents-guide,
 body.student-page .notification-history-card,
@@ -260,7 +245,6 @@ body.student-page .documents-guide {
     margin-bottom: 18px !important;
 }
 
-/* Green task-style buttons. */
 body.student-page .ui-primary-btn,
 body.student-page .join-btn,
 body.student-page .empty-join,
@@ -292,8 +276,6 @@ body.student-page .open-class:hover {
     color: var(--student-green-dark) !important;
 }
 
-/* Dashboard: preserve its content/logic but make its visual system
-   match the task page. */
 body.student-page .nx-main {
     background: var(--student-bg) !important;
 }
@@ -316,11 +298,7 @@ body.student-page .nx-calendar-tools button {
     background: #fff !important;
 }
 
-body.student-page .nx-stat .sicon {
-    background: var(--student-green-soft) !important;
-    color: var(--student-green) !important;
-}
-
+body.student-page .nx-stat .sicon,
 body.student-page .nx-stat:nth-child(2) .sicon,
 body.student-page .nx-stat:nth-child(3) .sicon,
 body.student-page .nx-stat:nth-child(4) .sicon {
@@ -348,7 +326,6 @@ body.student-page .nx-day.event {
     color: var(--student-green-dark) !important;
 }
 
-/* Classes: same scale, spacing, green accents and card treatment. */
 body.student-page .classes-hero {
     margin-bottom: 26px !important;
 }
@@ -367,7 +344,6 @@ body.student-page .class-code {
     background: #fbfcfd !important;
 }
 
-/* Documents and profile blue accents are converted to the task green. */
 body.student-page .documents-guide-icon,
 body.student-page .profile-role-tag {
     background: var(--student-green-soft) !important;
@@ -390,7 +366,6 @@ body.student-page .profile-hero-cover {
     background: linear-gradient(135deg, #e7f7ed, #f7fbf8) !important;
 }
 
-/* Notifications follow the same compact task-card proportions. */
 body.student-page .notification-history-shell {
     padding-bottom: 42px !important;
 }
@@ -409,11 +384,15 @@ body.student-page .notification-history-item.unread {
     border-color: #bfe0ca !important;
 }
 
-/* Shared responsive positioning. */
 @media (max-width: 1050px) {
     .student-global-topbar {
         left: 235px !important;
         width: calc(100% - 235px) !important;
+    }
+
+    .nx-student-shell.nx-sidebar-collapsed ~ .student-global-topbar {
+        left: 76px !important;
+        width: calc(100% - 76px) !important;
     }
 
     body.student-page > .nx-student-shell + .nx-main,
