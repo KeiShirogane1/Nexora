@@ -8,124 +8,78 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
 </head>
-<body class="student-page">
+<body class="student-page student-documents-page">
     {% include 'components/student_sidebar.html' %}
 
-    <main class="student-main-content nexora-app-main">
-        <div class="nexora-page">
-            <header class="ui-page-heading">
+    <main class="nexora-app-main">
+        <div class="nexora-page student-documents-content">
+            <header class="student-section-heading">
                 <div>
-                    <span class="ui-eyebrow">Internship</span>
+                    <span class="student-section-eyebrow">Internship</span>
                     <h1>Documents</h1>
-                    <p>Keep your OJT requirements organized and easy to access.</p>
+                    <p>Keep your OJT requirements organized, accessible, and ready when you need them.</p>
                 </div>
-                <div class="profile-completion-pill">
-                    {{ docs|length }} uploaded
-                </div>
+                <a class="student-page-action" href="#document-upload">＋ Upload Document</a>
             </header>
 
-            <section class="documents-guide">
-                <div class="documents-guide-icon">📋</div>
+            <section class="student-documents-stats" aria-label="Document summary">
+                <article class="student-document-stat">
+                    <span class="student-document-stat-icon">▤</span>
+                    <div><span>Total Documents</span><strong>{{ docs|length }}</strong><small>Uploaded to Nexora</small></div>
+                </article>
+                <article class="student-document-stat">
+                    <span class="student-document-stat-icon">✓</span>
+                    <div><span>Available</span><strong>{{ docs|length }}</strong><small>Ready to view</small></div>
+                </article>
+                <article class="student-document-stat">
+                    <span class="student-document-stat-icon">↑</span>
+                    <div><span>Maximum Size</span><strong>5 MB</strong><small>Per document</small></div>
+                </article>
+            </section>
+
+            <section class="student-document-guide">
+                <div class="student-document-guide-icon">📋</div>
                 <div>
-                    <h2>Stay on top of your requirements</h2>
-                    <p>
-                        Upload the documents requested by your supervisor or school and keep your internship records in one place.
-                    </p>
-                    <div class="documents-examples">
-                        <span>Attendance records</span>
-                        <span>Weekly reports</span>
-                        <span>OJT forms</span>
-                        <span>Final documents</span>
-                    </div>
+                    <span class="student-section-eyebrow">Keep organized</span>
+                    <h2>Store your internship requirements in one place</h2>
+                    <p>Attendance records, weekly reports, OJT forms, and final documents can all be kept here for easy access.</p>
+                    <div class="student-document-tags"><span>Attendance records</span><span>Weekly reports</span><span>OJT forms</span><span>Final documents</span></div>
                 </div>
             </section>
 
-            <section class="gradebook-card document-upload-card">
-                <div class="gradebook-card-header">
-                    <div>
-                        <span class="ui-eyebrow">Document Center</span>
-                        <h2>Upload New Document</h2>
-                        <p>PDF, DOCX, XLSX, PPTX, TXT, ZIP, PNG, JPG · Maximum 5 MB.</p>
-                    </div>
+            <section class="student-documents-card" id="document-upload">
+                <div class="student-documents-card-header">
+                    <div><span class="student-section-eyebrow">Document Center</span><h2>Upload New Document</h2><p>PDF, DOCX, XLSX, PPTX, TXT, ZIP, PNG, JPG · Maximum 5 MB.</p></div>
                 </div>
-
-                <form method="POST" enctype="multipart/form-data" class="document-upload-form">
+                <form method="POST" enctype="multipart/form-data" class="student-document-upload-form">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <div class="document-upload-field">
-                        <label for="document-file">Choose a file</label>
-                        <input
-                            id="document-file"
-                            type="file"
-                            name="file"
-                            accept=".pdf,.docx,.xlsx,.pptx,.txt,.zip,.png,.jpg,.jpeg"
-                            required
-                        >
-                    </div>
-                    <button type="submit" class="ui-primary-btn">Upload Document</button>
+                    <label class="student-file-picker" for="document-file"><span>Choose a file</span><input id="document-file" type="file" name="file" accept=".pdf,.docx,.xlsx,.pptx,.txt,.zip,.png,.jpg,.jpeg" required></label>
+                    <button type="submit" class="student-page-action">Upload Document</button>
                 </form>
             </section>
 
-            <section class="gradebook-card">
-                <div class="gradebook-card-header">
-                    <div>
-                        <span class="ui-eyebrow">My Files</span>
-                        <h2>Your Documents</h2>
-                        <p>Documents you have uploaded to Nexora.</p>
-                    </div>
+            <section class="student-documents-card">
+                <div class="student-documents-card-header">
+                    <div><span class="student-section-eyebrow">My Files</span><h2>Your Documents</h2><p>Documents you have uploaded to Nexora.</p></div>
+                    <span>{{ docs|length }} files</span>
                 </div>
 
                 {% if docs %}
-                    <div class="table-responsive">
-                        <table class="gradebook-table">
-                            <thead>
-                                <tr>
-                                    <th>Document</th>
-                                    <th>Uploaded</th>
-                                    <th>Status</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for doc in docs %}
-                                    <tr>
-                                        <td>
-                                            <strong>📄 {{ doc[1] }}</strong>
-                                        </td>
-                                        <td>{{ doc[2] }}</td>
-                                        <td>
-                                            <span class="profile-completion-pill">Uploaded</span>
-                                        </td>
-                                        <td>
-                                            <a
-                                                href="/student/document/{{ doc[0] }}"
-                                                target="_blank"
-                                                class="ui-secondary-btn"
-                                            >
-                                                View
-                                            </a>
-                                        </td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                    <div class="student-document-list">
+                        {% for doc in docs %}
+                            <article class="student-document-row">
+                                <div class="student-document-file-icon">📄</div>
+                                <div class="student-document-file-info"><strong>{{ doc[1] }}</strong><span>Uploaded {{ doc[2] }}</span></div>
+                                <span class="student-document-status">Uploaded</span>
+                                <a href="/student/document/{{ doc[0] }}" target="_blank" class="student-document-view">View →</a>
+                            </article>
+                        {% endfor %}
                     </div>
                 {% else %}
-                    <div class="student-classwork-empty">
-                        <div class="student-classwork-empty-icon">📂</div>
-                        <h2>No documents uploaded yet</h2>
-                        <p>Upload a document above when your supervisor or school requests it.</p>
+                    <div class="student-documents-empty">
+                        <div>📂</div><strong>No documents uploaded yet</strong><span>Upload a document above when your supervisor or school requests it.</span>
                     </div>
                 {% endif %}
-            </section>
-
-            <section class="documents-guide">
-                <div class="documents-guide-icon">💡</div>
-                <div>
-                    <h2>Submission reminder</h2>
-                    <p>
-                        Check your internship requirements regularly so requested forms, reports, and final documents are submitted on time.
-                    </p>
-                </div>
             </section>
         </div>
     </main>
