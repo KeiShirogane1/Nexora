@@ -148,3 +148,302 @@ body.student-page {
         padding: 22px 18px 32px;
     }
 }
+
+/* =========================================================
+   Shared Student Theme — Task page is the canonical visual
+   language for every student-facing page.
+   ========================================================= */
+
+:root {
+    --student-green: #0a8f46;
+    --student-green-dark: #08783b;
+    --student-green-soft: #e7f7ed;
+    --student-bg: #f7faf8;
+    --student-ink: #10261d;
+    --student-muted: #718078;
+    --student-border: #e3eae5;
+    --student-card-shadow: 0 6px 20px rgba(20, 52, 38, 0.035);
+}
+
+/* The shared topbar is emitted by student_sidebar.html so every
+   student page gets the exact task/logbook header. */
+.student-global-topbar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 262px !important;
+    width: calc(100% - 262px) !important;
+    z-index: 900 !important;
+    box-sizing: border-box !important;
+}
+
+/* Tasks and logbook already render their topbar inside <main>. */
+body.student-tasks-page > .student-global-topbar,
+body.student-logbook-page > .student-global-topbar {
+    display: none !important;
+}
+
+/* Reserve the same 78px header space everywhere else. */
+body.student-page > .nx-student-shell + .nx-main,
+body.student-page > .nx-student-shell + .classes-main,
+body.student-page > .nx-student-shell + .student-main-content,
+body.student-page > .nx-student-shell + .nexora-app-main {
+    padding-top: 108px !important;
+    box-sizing: border-box;
+}
+
+/* The old custom dashboard/classes headers are replaced by the shared topbar. */
+body.student-page > .nx-student-shell + .nx-main > .nx-top,
+body.student-page > .nx-student-shell + .classes-main > .classes-top {
+    display: none !important;
+}
+
+/* Main shell and page background. */
+body.student-page:not(.student-tasks-page):not(.student-logbook-page) {
+    background: var(--student-bg) !important;
+    color: var(--student-ink) !important;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+}
+
+body.student-page .nexora-page,
+body.student-page .classes-wrap,
+body.student-page .nx-wrap {
+    max-width: 1440px !important;
+}
+
+/* Shared headings. */
+body.student-page .ui-page-heading h1,
+body.student-page .profile-page-heading h1,
+body.student-page .notification-history-header h1,
+body.student-page .classes-hero h1,
+body.student-page .nx-heading h1 {
+    color: #0d3b2b !important;
+    font-size: 2rem !important;
+    line-height: 1.15 !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.035em !important;
+}
+
+body.student-page .ui-page-heading p,
+body.student-page .profile-page-heading p,
+body.student-page .notification-history-header p,
+body.student-page .classes-hero p,
+body.student-page .nx-heading p {
+    color: #68776f !important;
+    font-size: 0.9rem !important;
+}
+
+body.student-page .ui-eyebrow,
+body.student-page .notification-eyebrow,
+body.student-page .classes-eyebrow {
+    color: var(--student-green) !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.09em !important;
+}
+
+/* Shared cards. */
+body.student-page .gradebook-card,
+body.student-page .documents-guide,
+body.student-page .notification-history-card,
+body.student-page .notification-history-item,
+body.student-page .profile-modern-card,
+body.student-page .profile-hero-card,
+body.student-page .nx-card,
+body.student-page .class-card,
+body.student-page .classes-empty {
+    border-color: var(--student-border) !important;
+    border-radius: 10px !important;
+    box-shadow: var(--student-card-shadow) !important;
+    background: #fff !important;
+}
+
+body.student-page .documents-guide {
+    margin-bottom: 18px !important;
+}
+
+/* Green task-style buttons. */
+body.student-page .ui-primary-btn,
+body.student-page .join-btn,
+body.student-page .empty-join,
+body.student-page .student-logbook-button-primary,
+body.student-page .profile-actions .ui-primary-btn {
+    background: var(--student-green) !important;
+    border-color: var(--student-green) !important;
+    color: #fff !important;
+}
+
+body.student-page .ui-primary-btn:hover,
+body.student-page .join-btn:hover,
+body.student-page .empty-join:hover,
+body.student-page .student-logbook-button-primary:hover {
+    background: var(--student-green-dark) !important;
+    border-color: var(--student-green-dark) !important;
+}
+
+body.student-page .ui-secondary-btn,
+body.student-page .open-class {
+    border-color: #bfe0ca !important;
+    color: var(--student-green) !important;
+    background: #fff !important;
+}
+
+body.student-page .ui-secondary-btn:hover,
+body.student-page .open-class:hover {
+    background: #f2fbf5 !important;
+    color: var(--student-green-dark) !important;
+}
+
+/* Dashboard: preserve its content/logic but make its visual system
+   match the task page. */
+body.student-page .nx-main {
+    background: var(--student-bg) !important;
+}
+
+body.student-page .nx-heading {
+    margin: 0 0 26px !important;
+}
+
+body.student-page .nx-card {
+    border-radius: 10px !important;
+    border-color: var(--student-border) !important;
+    box-shadow: var(--student-card-shadow) !important;
+}
+
+body.student-page .nx-heading .nx-select,
+body.student-page .nx-calendar-tools button {
+    border-color: #e1e8e3 !important;
+    border-radius: 8px !important;
+    color: #35473f !important;
+    background: #fff !important;
+}
+
+body.student-page .nx-stat .sicon {
+    background: var(--student-green-soft) !important;
+    color: var(--student-green) !important;
+}
+
+body.student-page .nx-stat:nth-child(2) .sicon,
+body.student-page .nx-stat:nth-child(3) .sicon,
+body.student-page .nx-stat:nth-child(4) .sicon {
+    background: var(--student-green-soft) !important;
+    color: var(--student-green) !important;
+}
+
+body.student-page .nx-stat .bar i,
+body.student-page .nx-track i,
+body.student-page .nx-day.today {
+    background-color: var(--student-green) !important;
+    border-color: var(--student-green) !important;
+}
+
+body.student-page .nx-view,
+body.student-page .nx-list-link {
+    border-color: #bfe0ca !important;
+    color: var(--student-green) !important;
+}
+
+body.student-page .nx-pill,
+body.student-page .nx-status,
+body.student-page .nx-day.event {
+    background: var(--student-green-soft) !important;
+    color: var(--student-green-dark) !important;
+}
+
+/* Classes: same scale, spacing, green accents and card treatment. */
+body.student-page .classes-hero {
+    margin-bottom: 26px !important;
+}
+
+body.student-page .class-card-cover {
+    background: linear-gradient(135deg, #e7f7ed, #f7fbf8) !important;
+}
+
+body.student-page .class-status.active {
+    background: var(--student-green-soft) !important;
+    color: var(--student-green-dark) !important;
+}
+
+body.student-page .class-code {
+    border-color: #e1e8e3 !important;
+    background: #fbfcfd !important;
+}
+
+/* Documents and profile blue accents are converted to the task green. */
+body.student-page .documents-guide-icon,
+body.student-page .profile-role-tag {
+    background: var(--student-green-soft) !important;
+    color: var(--student-green-dark) !important;
+}
+
+body.student-page .documents-examples span,
+body.student-page .profile-completion-pill,
+body.student-page .profile-check {
+    border-color: #e1e8e3 !important;
+}
+
+body.student-page .profile-completion-pill,
+body.student-page .profile-check.done {
+    background: var(--student-green-soft) !important;
+    color: var(--student-green-dark) !important;
+}
+
+body.student-page .profile-hero-cover {
+    background: linear-gradient(135deg, #e7f7ed, #f7fbf8) !important;
+}
+
+/* Notifications follow the same compact task-card proportions. */
+body.student-page .notification-history-shell {
+    padding-bottom: 42px !important;
+}
+
+body.student-page .notification-history-item {
+    min-height: 92px !important;
+    padding: 18px 20px !important;
+}
+
+body.student-page .notification-history-icon {
+    background: var(--student-green-soft) !important;
+    color: var(--student-green) !important;
+}
+
+body.student-page .notification-history-item.unread {
+    border-color: #bfe0ca !important;
+}
+
+/* Shared responsive positioning. */
+@media (max-width: 1050px) {
+    .student-global-topbar {
+        left: 235px !important;
+        width: calc(100% - 235px) !important;
+    }
+
+    body.student-page > .nx-student-shell + .nx-main,
+    body.student-page > .nx-student-shell + .classes-main,
+    body.student-page > .nx-student-shell + .student-main-content,
+    body.student-page > .nx-student-shell + .nexora-app-main {
+        padding-top: 108px !important;
+    }
+}
+
+@media (max-width: 760px) {
+    .student-global-topbar {
+        left: 0 !important;
+        width: 100% !important;
+    }
+
+    body.student-page > .nx-student-shell + .nx-main,
+    body.student-page > .nx-student-shell + .classes-main,
+    body.student-page > .nx-student-shell + .student-main-content,
+    body.student-page > .nx-student-shell + .nexora-app-main {
+        padding-top: 86px !important;
+    }
+}
+
+@media (max-width: 680px) {
+    body.student-page .ui-page-heading h1,
+    body.student-page .profile-page-heading h1,
+    body.student-page .notification-history-header h1,
+    body.student-page .classes-hero h1,
+    body.student-page .nx-heading h1 {
+        font-size: 1.65rem !important;
+    }
+}
