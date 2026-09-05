@@ -6,6 +6,57 @@
     <title>Notifications - Nexora</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     {% if session.get('role') == 'student' %}<link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">{% elif session.get('role') == 'supervisor' %}<link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">{% else %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">{% endif %}
+    <style>
+        /* Student notifications use the same vertical rhythm as Tasks. */
+        body.student-page.nexora-notifications-page .nexora-app-main {
+            margin: 0 0 0 262px !important;
+            width: calc(100% - 262px) !important;
+            padding: 72px 0 0 !important;
+            box-sizing: border-box !important;
+            min-height: 100vh;
+        }
+
+        body.student-page.nexora-notifications-page .student-notifications-page {
+            padding: 30px 34px 42px !important;
+            box-sizing: border-box;
+        }
+
+        body.student-page.nexora-notifications-page .student-tasks-heading h1 {
+            font-size: 2.5rem !important;
+            line-height: 1.05 !important;
+            font-weight: 800 !important;
+            letter-spacing: -0.035em !important;
+        }
+
+        .nx-student-shell.nx-sidebar-collapsed ~ .nexora-app-main {
+            margin-left: 76px !important;
+            width: calc(100% - 76px) !important;
+        }
+
+        @media (max-width: 1050px) {
+            body.student-page.nexora-notifications-page .nexora-app-main {
+                margin-left: 235px !important;
+                width: calc(100% - 235px) !important;
+            }
+
+            .nx-student-shell.nx-sidebar-collapsed ~ .nexora-app-main {
+                margin-left: 76px !important;
+                width: calc(100% - 76px) !important;
+            }
+        }
+
+        @media (max-width: 760px) {
+            body.student-page.nexora-notifications-page .nexora-app-main {
+                margin-left: 0 !important;
+                width: 100% !important;
+                padding-top: 64px !important;
+            }
+
+            body.student-page.nexora-notifications-page .student-notifications-page {
+                padding: 22px 18px 32px !important;
+            }
+        }
+    </style>
 </head>
 <body class="{% if session.get('role') == 'student' %}student-page {% endif %}nexora-notifications-page">
     {% if session.get('role') == 'student' %}
