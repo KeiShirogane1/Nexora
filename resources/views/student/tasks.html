@@ -11,24 +11,7 @@
 <body class="student-page student-tasks-page">
     {% include 'components/student_sidebar.html' %}
     <main class="student-tasks-main">
-        <header class="student-tasks-topbar" aria-label="Student portal header">
-            <div class="student-tasks-topbar-left">
-                <button class="student-tasks-menu-button" type="button" aria-label="Menu">☰</button>
-                <label class="student-tasks-search" aria-label="Search">
-                    <span aria-hidden="true">⌕</span>
-                    <input type="search" placeholder="Search anything...">
-                </label>
-            </div>
-            <div class="student-tasks-topbar-right">
-                <span class="student-tasks-notification" aria-label="Notifications">♧{% if unread_count|default(0) > 0 %}<span class="student-tasks-notification-badge">{{ unread_count }}</span>{% endif %}</span>
-                <div class="student-tasks-user">
-                    {% if sidebar_profile and sidebar_profile.profile_picture %}<img src="{{ url_for('profile_picture', filename=sidebar_profile.profile_picture) }}" alt="Profile picture">
-                    {% elif profile is defined and profile and profile[5] %}<img src="{{ url_for('profile_picture', filename=profile[5]) }}" alt="Profile picture">
-                    {% else %}<img src="{{ url_for('static', filename='images/default_profile.png') }}" alt="Default profile picture">{% endif %}
-                    <span class="student-tasks-user-copy"><strong>{% if sidebar_profile and sidebar_profile.first_name %}{{ sidebar_profile.first_name }} {{ sidebar_profile.last_name or '' }}{% elif profile is defined and profile %}{{ profile[0] }} {{ profile[2] }}{% else %}Student{% endif %}</strong><span>Student</span></span>
-                </div>
-            </div>
-        </header>
+        {% include 'components/student_topbar.html' %}
         {% set completed_count = namespace(value=0) %}{% set pending_count = namespace(value=0) %}{% set overdue_count = namespace(value=0) %}
         {% for task in tasks %}
             {% if task[4] == 'Submitted' or task[4] == 'Reviewed' %}{% set completed_count.value = completed_count.value + 1 %}{% else %}{% set pending_count.value = pending_count.value + 1 %}{% endif %}
