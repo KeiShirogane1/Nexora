@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     {% if session.get('role') == 'student' %}<link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">{% elif session.get('role') == 'supervisor' %}<link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">{% else %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">{% endif %}
     <style>
-        /* Student notifications use the same vertical rhythm as Tasks. */
         body.student-page.nexora-notifications-page .nexora-app-main {
             margin: 0 0 0 262px !important;
             width: calc(100% - 262px) !important;
@@ -21,7 +20,17 @@
             box-sizing: border-box;
         }
 
-        body.student-page.nexora-notifications-page .student-tasks-heading h1 {
+        /* Final override: student-theme-fix.css loads after this page stylesheet.
+           Use higher specificity so Notifications starts directly below the fixed topbar. */
+        html body.student-page.nexora-notifications-page > main.nexora-app-main {
+            padding-top: 0 !important;
+        }
+
+        html body.student-page.nexora-notifications-page > main.nexora-app-main > .student-notifications-page {
+            padding-top: 22px !important;
+        }
+
+        html body.student-page.nexora-notifications-page .student-tasks-heading h1 {
             font-size: 2.5rem !important;
             line-height: 1.05 !important;
             font-weight: 800 !important;
@@ -54,6 +63,10 @@
 
             body.student-page.nexora-notifications-page .student-notifications-page {
                 padding: 22px 18px 32px !important;
+            }
+
+            html body.student-page.nexora-notifications-page > main.nexora-app-main {
+                padding-top: 0 !important;
             }
         }
     </style>
