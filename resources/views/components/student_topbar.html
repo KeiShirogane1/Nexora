@@ -1,0 +1,18 @@
+<header class="student-tasks-topbar" aria-label="Student portal header">
+    <div class="student-tasks-topbar-left">
+        <button class="student-tasks-menu-button" type="button" aria-label="Menu" onclick="window.toggleStudentSidebar && window.toggleStudentSidebar()">☰</button>
+        <label class="student-tasks-search" aria-label="Search">
+            <span aria-hidden="true">⌕</span>
+            <input type="search" placeholder="Search anything...">
+        </label>
+    </div>
+    <div class="student-tasks-topbar-right">
+        <span class="student-tasks-notification" aria-label="Notifications">♧{% if unread_count|default(0) > 0 %}<span class="student-tasks-notification-badge">{{ unread_count }}</span>{% endif %}</span>
+        <div class="student-tasks-user">
+            {% if sidebar_profile and sidebar_profile.profile_picture %}<img src="{{ url_for('profile_picture', filename=sidebar_profile.profile_picture) }}" alt="Profile picture">
+            {% elif profile is defined and profile and profile[5] %}<img src="{{ url_for('profile_picture', filename=profile[5]) }}" alt="Profile picture">
+            {% else %}<img src="{{ url_for('static', filename='images/default_profile.png') }}" alt="Default profile picture">{% endif %}
+            <span class="student-tasks-user-copy"><strong>{% if sidebar_profile and sidebar_profile.first_name %}{{ sidebar_profile.first_name }} {{ sidebar_profile.last_name or '' }}{% elif profile is defined and profile %}{{ profile[0] }} {{ profile[2] }}{% else %}Student{% endif %}</strong><span>Student</span></span>
+        </div>
+    </div>
+</header>
