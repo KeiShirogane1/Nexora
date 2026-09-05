@@ -1,0 +1,502 @@
+/* =========================================================
+   Nexora Coding — Student Theme Final Fix
+   Keeps Documents + Notifications on the exact Task page frame
+   and keeps the shared sidebar/collapse control above page content.
+   ========================================================= */
+
+/* Shared page frame: same sidebar/topbar geometry as Tasks. */
+body.student-documents-page > .nexora-app-main,
+body.nexora-notifications-page.student-page > .nexora-app-main {
+    width: calc(100% - 262px) !important;
+    min-width: 0 !important;
+    min-height: 100vh !important;
+    margin: 0 !important;
+    margin-left: 262px !important;
+    padding: 72px 0 0 !important;
+    box-sizing: border-box !important;
+    background: var(--student-bg, #f7faf8) !important;
+}
+
+body.student-documents-page .student-documents-content,
+body.nexora-notifications-page.student-page .student-notifications-page {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 30px 34px 42px !important;
+    box-sizing: border-box !important;
+}
+
+/* Use the Task page heading scale/spacing for both pages. */
+body.student-documents-page .student-tasks-heading,
+body.nexora-notifications-page.student-page .student-tasks-heading {
+    margin: 0 0 24px !important;
+}
+
+body.student-documents-page .student-tasks-heading h1,
+body.nexora-notifications-page.student-page .student-tasks-heading h1 {
+    margin: 0 !important;
+    color: var(--student-ink, #10261d) !important;
+    font-size: 2rem !important;
+    line-height: 1.1 !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.035em !important;
+}
+
+body.student-documents-page .student-tasks-heading p,
+body.nexora-notifications-page.student-page .student-tasks-heading p {
+    margin: 7px 0 0 !important;
+    color: var(--student-muted, #718078) !important;
+    font-size: .9rem !important;
+    line-height: 1.5 !important;
+}
+
+/* Three-column stat rows use the same Task card proportions. */
+body.student-documents-page .student-tasks-stats,
+body.nexora-notifications-page.student-page .student-tasks-stats {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 16px !important;
+    margin: 0 0 18px !important;
+}
+
+body.student-documents-page .student-tasks-stat,
+body.nexora-notifications-page.student-page .student-tasks-stat {
+    min-width: 0 !important;
+    min-height: 108px !important;
+    padding: 18px 16px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 16px !important;
+    box-sizing: border-box !important;
+    border: 1px solid var(--student-border, #e3eae5) !important;
+    border-radius: 10px !important;
+    background: #fff !important;
+    box-shadow: var(--student-card-shadow, 0 6px 20px rgba(20,52,38,.035)) !important;
+}
+
+body.student-documents-page .student-tasks-stat-icon,
+body.nexora-notifications-page.student-page .student-tasks-stat-icon {
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
+    display: grid !important;
+    place-items: center !important;
+    border-radius: 14px !important;
+    background: var(--student-green-soft, #e7f7ed) !important;
+    color: var(--student-green, #0a8f46) !important;
+    font-size: 18px !important;
+    font-weight: 800 !important;
+}
+
+body.student-documents-page .student-tasks-stat-copy,
+body.nexora-notifications-page.student-page .student-tasks-stat-copy {
+    min-width: 0 !important;
+}
+
+body.student-documents-page .student-tasks-stat-copy span,
+body.nexora-notifications-page.student-page .student-tasks-stat-copy span {
+    display: block !important;
+    color: #35473f !important;
+    font-size: .72rem !important;
+    font-weight: 700 !important;
+}
+
+body.student-documents-page .student-tasks-stat-copy strong,
+body.nexora-notifications-page.student-page .student-tasks-stat-copy strong {
+    display: block !important;
+    margin-top: 3px !important;
+    color: #10261d !important;
+    font-size: 1.55rem !important;
+    line-height: 1 !important;
+    font-weight: 800 !important;
+}
+
+body.student-documents-page .student-tasks-stat-copy small,
+body.nexora-notifications-page.student-page .student-tasks-stat-copy small {
+    display: block !important;
+    margin-top: 5px !important;
+    color: #718078 !important;
+    font-size: .68rem !important;
+}
+
+/* Documents-specific cards. */
+body.student-documents-page .student-document-guide,
+body.student-documents-page .student-documents-card {
+    border: 1px solid var(--student-border, #e3eae5) !important;
+    border-radius: 10px !important;
+    background: #fff !important;
+    box-shadow: var(--student-card-shadow, 0 6px 20px rgba(20,52,38,.035)) !important;
+}
+
+body.student-documents-page .student-document-guide {
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 16px !important;
+    margin: 0 0 18px !important;
+    padding: 20px 22px !important;
+    box-sizing: border-box !important;
+}
+
+body.student-documents-page .student-document-guide-icon {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    display: grid !important;
+    place-items: center !important;
+    border-radius: 12px !important;
+    background: var(--student-green-soft, #e7f7ed) !important;
+}
+
+body.student-documents-page .student-document-guide h2,
+body.student-documents-page .student-documents-card h2 {
+    margin: 0 !important;
+    color: var(--student-ink, #10261d) !important;
+    font-size: 1.05rem !important;
+    line-height: 1.3 !important;
+    font-weight: 800 !important;
+}
+
+body.student-documents-page .student-document-guide p,
+body.student-documents-page .student-documents-card-header p {
+    margin: 6px 0 10px !important;
+    color: var(--student-muted, #718078) !important;
+    font-size: .82rem !important;
+    line-height: 1.5 !important;
+}
+
+body.student-documents-page .student-document-tags {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 7px !important;
+}
+
+body.student-documents-page .student-document-tags span {
+    padding: 6px 9px !important;
+    border: 1px solid #e1e8e3 !important;
+    border-radius: 999px !important;
+    background: #fbfcfd !important;
+    color: #47584f !important;
+    font-size: .7rem !important;
+    font-weight: 700 !important;
+}
+
+body.student-documents-page .student-documents-card {
+    overflow: hidden !important;
+    margin: 0 0 18px !important;
+}
+
+body.student-documents-page .student-documents-card-header {
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    gap: 18px !important;
+    padding: 20px 22px !important;
+    border-bottom: 1px solid #e8eee9 !important;
+}
+
+body.student-documents-page .student-documents-card-header > span {
+    color: #718078 !important;
+    font-size: .72rem !important;
+    font-weight: 700 !important;
+    white-space: nowrap !important;
+}
+
+body.student-documents-page .student-document-upload-form {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 20px 22px !important;
+    box-sizing: border-box !important;
+}
+
+body.student-documents-page .student-file-picker {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    min-height: 42px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 0 12px !important;
+    border: 1px solid #dfe7e2 !important;
+    border-radius: 9px !important;
+    background: #fff !important;
+    box-sizing: border-box !important;
+    color: #35473f !important;
+    font-size: .78rem !important;
+    font-weight: 700 !important;
+}
+
+body.student-documents-page .student-file-picker input[type="file"] {
+    flex: 1 !important;
+    min-width: 0 !important;
+    font: inherit !important;
+    color: #718078 !important;
+}
+
+body.student-documents-page .student-document-upload-form .student-page-action {
+    flex: 0 0 auto !important;
+}
+
+body.student-documents-page .student-document-list {
+    padding: 0 22px !important;
+}
+
+body.student-documents-page .student-document-row {
+    display: grid !important;
+    grid-template-columns: 42px minmax(0, 1fr) auto auto !important;
+    align-items: center !important;
+    gap: 12px !important;
+    padding: 14px 0 !important;
+    border-bottom: 1px solid #edf1ee !important;
+}
+
+body.student-documents-page .student-document-row:last-child {
+    border-bottom: 0 !important;
+}
+
+body.student-documents-page .student-document-file-icon {
+    width: 42px !important;
+    height: 42px !important;
+    display: grid !important;
+    place-items: center !important;
+    border-radius: 10px !important;
+    background: var(--student-green-soft, #e7f7ed) !important;
+}
+
+body.student-documents-page .student-document-file-info strong,
+body.student-documents-page .student-document-file-info span {
+    display: block !important;
+}
+
+body.student-documents-page .student-document-file-info strong {
+    color: #10261d !important;
+    font-size: .82rem !important;
+}
+
+body.student-documents-page .student-document-file-info span {
+    margin-top: 3px !important;
+    color: #718078 !important;
+    font-size: .7rem !important;
+}
+
+body.student-documents-page .student-document-status {
+    padding: 5px 8px !important;
+    border-radius: 999px !important;
+    background: var(--student-green-soft, #e7f7ed) !important;
+    color: var(--student-green-dark, #08783b) !important;
+    font-size: .68rem !important;
+    font-weight: 800 !important;
+}
+
+body.student-documents-page .student-document-view {
+    color: var(--student-green, #0a8f46) !important;
+    font-size: .75rem !important;
+    font-weight: 800 !important;
+    text-decoration: none !important;
+}
+
+body.student-documents-page .student-documents-empty,
+body.student-notifications-page .student-notifications-empty {
+    padding: 48px 24px !important;
+    text-align: center !important;
+}
+
+body.student-documents-page .student-documents-empty strong,
+body.student-documents-page .student-documents-empty span,
+body.student-notifications-page .student-notifications-empty strong,
+body.student-notifications-page .student-notifications-empty span {
+    display: block !important;
+}
+
+body.student-documents-page .student-documents-empty strong,
+body.student-notifications-page .student-notifications-empty strong {
+    margin-top: 8px !important;
+    color: #10261d !important;
+    font-size: .9rem !important;
+}
+
+body.student-documents-page .student-documents-empty span,
+body.student-notifications-page .student-notifications-empty span {
+    margin-top: 5px !important;
+    color: #718078 !important;
+    font-size: .78rem !important;
+}
+
+/* Notification card follows the same Task list-card language. */
+body.nexora-notifications-page.student-page .student-notifications-card {
+    overflow: hidden !important;
+    margin: 0 !important;
+    border: 1px solid var(--student-border, #e3eae5) !important;
+    border-radius: 10px !important;
+    background: #fff !important;
+    box-shadow: var(--student-card-shadow, 0 6px 20px rgba(20,52,38,.035)) !important;
+}
+
+body.nexora-notifications-page.student-page .student-notifications-card-header {
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    gap: 18px !important;
+    padding: 20px 22px !important;
+    border-bottom: 1px solid #e8eee9 !important;
+}
+
+body.nexora-notifications-page.student-page .student-notifications-card-header h2 {
+    margin: 0 !important;
+    color: #10261d !important;
+    font-size: 1.1rem !important;
+    line-height: 1.3 !important;
+    font-weight: 800 !important;
+}
+
+body.nexora-notifications-page.student-page .student-notifications-card-header p {
+    margin: 5px 0 0 !important;
+    color: #718078 !important;
+    font-size: .78rem !important;
+}
+
+body.nexora-notifications-page.student-page .student-notifications-card-header > span {
+    color: #718078 !important;
+    font-size: .72rem !important;
+    font-weight: 700 !important;
+    white-space: nowrap !important;
+}
+
+body.nexora-notifications-page.student-page .student-notification-row {
+    display: grid !important;
+    grid-template-columns: 44px minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    gap: 14px !important;
+    min-height: 92px !important;
+    padding: 18px 22px !important;
+    border-bottom: 1px solid #edf1ee !important;
+    box-sizing: border-box !important;
+}
+
+body.nexora-notifications-page.student-page .student-notification-row:last-child {
+    border-bottom: 0 !important;
+}
+
+body.nexora-notifications-page.student-page .student-notification-row.is-unread {
+    background: #fbfefc !important;
+}
+
+body.nexora-notifications-page.student-page .student-notification-icon {
+    width: 44px !important;
+    height: 44px !important;
+    display: grid !important;
+    place-items: center !important;
+    border-radius: 12px !important;
+    background: var(--student-green-soft, #e7f7ed) !important;
+    color: var(--student-green, #0a8f46) !important;
+    font-weight: 900 !important;
+}
+
+body.nexora-notifications-page.student-page .student-notification-title {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+}
+
+body.nexora-notifications-page.student-page .student-notification-title strong {
+    color: #10261d !important;
+    font-size: .84rem !important;
+    font-weight: 800 !important;
+}
+
+body.nexora-notifications-page.student-page .student-notification-title span {
+    padding: 3px 6px !important;
+    border-radius: 999px !important;
+    background: var(--student-green-soft, #e7f7ed) !important;
+    color: var(--student-green-dark, #08783b) !important;
+    font-size: .58rem !important;
+    font-weight: 900 !important;
+    letter-spacing: .04em !important;
+}
+
+body.nexora-notifications-page.student-page .student-notification-content p {
+    margin: 4px 0 0 !important;
+    color: #68776f !important;
+    font-size: .78rem !important;
+    line-height: 1.5 !important;
+}
+
+body.nexora-notifications-page.student-page .student-notification-content small {
+    display: block !important;
+    margin-top: 5px !important;
+    color: #8a9790 !important;
+    font-size: .68rem !important;
+}
+
+body.nexora-notifications-page.student-page .student-notification-open {
+    color: var(--student-green, #0a8f46) !important;
+    font-size: .74rem !important;
+    font-weight: 800 !important;
+    text-decoration: none !important;
+}
+
+/* Critical: the collapse control must sit above the page content. */
+.nx-student-shell {
+    z-index: 5000 !important;
+}
+
+.nx-student-shell .nx-collapse-toggle {
+    z-index: 6000 !important;
+}
+
+@media (max-width: 1050px) {
+    body.student-documents-page > .nexora-app-main,
+    body.nexora-notifications-page.student-page > .nexora-app-main {
+        width: calc(100% - 235px) !important;
+        margin-left: 235px !important;
+    }
+
+    .nx-student-shell.nx-sidebar-collapsed ~ .nexora-app-main {
+        width: calc(100% - 76px) !important;
+        margin-left: 76px !important;
+    }
+}
+
+.nx-student-shell.nx-sidebar-collapsed ~ .nexora-app-main {
+    width: calc(100% - 76px) !important;
+    margin-left: 76px !important;
+}
+
+@media (max-width: 760px) {
+    body.student-documents-page > .nexora-app-main,
+    body.nexora-notifications-page.student-page > .nexora-app-main {
+        width: 100% !important;
+        margin-left: 0 !important;
+        padding-top: 64px !important;
+    }
+
+    body.student-documents-page .student-documents-content,
+    body.nexora-notifications-page.student-page .student-notifications-page {
+        padding: 22px 18px 32px !important;
+    }
+
+    body.student-documents-page .student-tasks-heading,
+    body.nexora-notifications-page.student-page .student-tasks-heading {
+        align-items: flex-start !important;
+        flex-direction: column !important;
+    }
+
+    body.student-documents-page .student-tasks-stats,
+    body.nexora-notifications-page.student-page .student-tasks-stats {
+        grid-template-columns: 1fr !important;
+    }
+
+    body.student-documents-page .student-document-upload-form {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+
+    body.nexora-notifications-page.student-page .student-notification-row {
+        grid-template-columns: 44px minmax(0, 1fr) !important;
+    }
+
+    body.nexora-notifications-page.student-page .student-notification-open {
+        grid-column: 2;
+    }
+}
