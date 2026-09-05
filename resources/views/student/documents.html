@@ -12,35 +12,33 @@
     {% include 'components/student_sidebar.html' %}
 
     <main class="nexora-app-main">
-        <div class="nexora-page student-documents-content">
-            <header class="student-section-heading">
+        <div class="student-tasks-content student-documents-content">
+            <section class="student-tasks-heading" aria-labelledby="documents-heading">
                 <div>
-                    <span class="student-section-eyebrow">Internship</span>
-                    <h1>Documents</h1>
+                    <h1 id="documents-heading">Documents</h1>
                     <p>Keep your OJT requirements organized, accessible, and ready when you need them.</p>
                 </div>
-                <a class="student-page-action" href="#document-upload">＋ Upload Document</a>
-            </header>
+                <a class="student-tasks-primary-button" href="#document-upload">＋ Upload Document</a>
+            </section>
 
-            <section class="student-documents-stats" aria-label="Document summary">
-                <article class="student-document-stat">
-                    <span class="student-document-stat-icon">▤</span>
-                    <div><span>Total Documents</span><strong>{{ docs|length }}</strong><small>Uploaded to Nexora</small></div>
+            <section class="student-tasks-stats" aria-label="Document summary">
+                <article class="student-tasks-stat">
+                    <span class="student-tasks-stat-icon" aria-hidden="true">▤</span>
+                    <div class="student-tasks-stat-copy"><span>Total Documents</span><strong>{{ docs|length }}</strong><small>Uploaded to Nexora</small></div>
                 </article>
-                <article class="student-document-stat">
-                    <span class="student-document-stat-icon">✓</span>
-                    <div><span>Available</span><strong>{{ docs|length }}</strong><small>Ready to view</small></div>
+                <article class="student-tasks-stat">
+                    <span class="student-tasks-stat-icon" aria-hidden="true">✓</span>
+                    <div class="student-tasks-stat-copy"><span>Available</span><strong>{{ docs|length }}</strong><small>Ready to view</small></div>
                 </article>
-                <article class="student-document-stat">
-                    <span class="student-document-stat-icon">↑</span>
-                    <div><span>Maximum Size</span><strong>5 MB</strong><small>Per document</small></div>
+                <article class="student-tasks-stat">
+                    <span class="student-tasks-stat-icon" aria-hidden="true">↑</span>
+                    <div class="student-tasks-stat-copy"><span>Maximum Size</span><strong>5 MB</strong><small>Per document</small></div>
                 </article>
             </section>
 
             <section class="student-document-guide">
-                <div class="student-document-guide-icon">📋</div>
+                <div class="student-document-guide-icon" aria-hidden="true">📋</div>
                 <div>
-                    <span class="student-section-eyebrow">Keep organized</span>
                     <h2>Store your internship requirements in one place</h2>
                     <p>Attendance records, weekly reports, OJT forms, and final documents can all be kept here for easy access.</p>
                     <div class="student-document-tags"><span>Attendance records</span><span>Weekly reports</span><span>OJT forms</span><span>Final documents</span></div>
@@ -49,18 +47,18 @@
 
             <section class="student-documents-card" id="document-upload">
                 <div class="student-documents-card-header">
-                    <div><span class="student-section-eyebrow">Document Center</span><h2>Upload New Document</h2><p>PDF, DOCX, XLSX, PPTX, TXT, ZIP, PNG, JPG · Maximum 5 MB.</p></div>
+                    <div><h2>Upload New Document</h2><p>PDF, DOCX, XLSX, PPTX, TXT, ZIP, PNG, JPG · Maximum 5 MB.</p></div>
                 </div>
                 <form method="POST" enctype="multipart/form-data" class="student-document-upload-form">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <label class="student-file-picker" for="document-file"><span>Choose a file</span><input id="document-file" type="file" name="file" accept=".pdf,.docx,.xlsx,.pptx,.txt,.zip,.png,.jpg,.jpeg" required></label>
-                    <button type="submit" class="student-page-action">Upload Document</button>
+                    <button type="submit" class="student-tasks-primary-button">Upload Document</button>
                 </form>
             </section>
 
             <section class="student-documents-card">
                 <div class="student-documents-card-header">
-                    <div><span class="student-section-eyebrow">My Files</span><h2>Your Documents</h2><p>Documents you have uploaded to Nexora.</p></div>
+                    <div><h2>Your Documents</h2><p>Documents you have uploaded to Nexora.</p></div>
                     <span>{{ docs|length }} files</span>
                 </div>
 
@@ -77,7 +75,7 @@
                     </div>
                 {% else %}
                     <div class="student-documents-empty">
-                        <div>📂</div><strong>No documents uploaded yet</strong><span>Upload a document above when your supervisor or school requests it.</span>
+                        <div aria-hidden="true">📂</div><strong>No documents uploaded yet</strong><span>Upload a document above when your supervisor or school requests it.</span>
                     </div>
                 {% endif %}
             </section>
