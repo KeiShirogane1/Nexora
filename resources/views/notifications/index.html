@@ -20,14 +20,15 @@
             box-sizing: border-box;
         }
 
-        /* Final override: student-theme-fix.css loads after this page stylesheet.
-           Use higher specificity so Notifications starts directly below the fixed topbar. */
-        html body.student-page.nexora-notifications-page > main.nexora-app-main {
+        /* Final override: student-workspace.css also gives generic student
+           nexora-app-main pages 108px top padding. Notifications already has
+           the fixed shared topbar, so it must use the Task page frame instead. */
+        html body.student-page.nexora-notifications-page > .nx-student-shell + main.nexora-app-main {
             padding-top: 0 !important;
         }
 
         html body.student-page.nexora-notifications-page > main.nexora-app-main > .student-notifications-page {
-            padding-top: 22px !important;
+            padding-top: 30px !important;
         }
 
         html body.student-page.nexora-notifications-page .student-tasks-heading h1 {
@@ -66,6 +67,10 @@
             }
 
             html body.student-page.nexora-notifications-page > main.nexora-app-main {
+                padding-top: 0 !important;
+            }
+
+            html body.student-page.nexora-notifications-page > .nx-student-shell + main.nexora-app-main {
                 padding-top: 0 !important;
             }
         }
