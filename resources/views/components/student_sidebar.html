@@ -141,6 +141,24 @@
         button.setAttribute('title', isCollapsed ? 'Expand sidebar' : 'Collapse sidebar');
     }
 
+    function applyCanonicalStudentHeading() {
+        var headings = document.querySelectorAll(
+            'body.student-page .student-tasks-heading h1,' +
+            'body.student-page .student-logbook-page-heading h1,' +
+            'body.student-page .classes-hero h1,' +
+            'body.student-page .nx-heading h1,' +
+            'body.student-page .profile-page-heading h1'
+        );
+
+        headings.forEach(function (heading) {
+            heading.style.setProperty('margin', '0', 'important');
+            heading.style.setProperty('font-size', '32px', 'important');
+            heading.style.setProperty('line-height', '1.15', 'important');
+            heading.style.setProperty('font-weight', '800', 'important');
+            heading.style.setProperty('letter-spacing', '-0.03em', 'important');
+        });
+    }
+
     window.toggleStudentSidebar = function () {
         var elements = getStudentSidebarElements();
         if (!elements.shell || !elements.sidebar) return;
@@ -152,6 +170,12 @@
 
     var collapseButton = document.querySelector('.nx-collapse-toggle');
     if (collapseButton) collapseButton.addEventListener('click', window.toggleStudentSidebar);
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', applyCanonicalStudentHeading);
+    } else {
+        applyCanonicalStudentHeading();
+    }
 })();
 </script>
 
