@@ -10,6 +10,10 @@
     rel="stylesheet"
     href="{{ url_for('static', filename='css/student-workspace.css') }}"
 >
+<link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/student-shell-fix.css') }}"
+>
 
 <div class="nx-student-shell">
     <aside class="nx-sidebar" id="studentSidebar">
@@ -76,55 +80,24 @@
         <div class="nx-label">Menu</div>
 
         <nav class="nx-nav" aria-label="Student menu">
-            <a
-                href="{{ url_for('student.student_dashboard') }}"
-                class="{% if request.path == '/student/dashboard' %}active{% endif %}"
-            >
-                <span class="ico">▦</span>
-                <span>Dashboard</span>
+            <a href="{{ url_for('student.student_dashboard') }}" class="{% if request.path == '/student/dashboard' %}active{% endif %}">
+                <span class="ico">▦</span><span>Dashboard</span>
             </a>
-
-            <a
-                href="{{ url_for('classroom.student_classes') }}"
-                class="{% if request.path.startswith('/student/classes') %}active{% endif %}"
-            >
-                <span class="ico">♙</span>
-                <span>My Classes</span>
+            <a href="{{ url_for('classroom.student_classes') }}" class="{% if request.path.startswith('/student/classes') %}active{% endif %}">
+                <span class="ico">♙</span><span>My Classes</span>
             </a>
-
-            <a
-                href="{{ url_for('student.logbook') }}"
-                class="{% if request.path == '/student/logbook' %}active{% endif %}"
-            >
-                <span class="ico">▤</span>
-                <span>Logbook</span>
+            <a href="{{ url_for('student.logbook') }}" class="{% if request.path == '/student/logbook' %}active{% endif %}">
+                <span class="ico">▤</span><span>Logbook</span>
             </a>
-
-            <a
-                href="{{ url_for('student.tasks') }}"
-                class="{% if request.path == '/student/tasks' %}active{% endif %}"
-            >
-                <span class="ico">☑</span>
-                <span>Tasks</span>
+            <a href="{{ url_for('student.tasks') }}" class="{% if request.path == '/student/tasks' %}active{% endif %}">
+                <span class="ico">☑</span><span>Tasks</span>
             </a>
-
-            <a
-                href="{{ url_for('student.documents') }}"
-                class="{% if request.path == '/student/documents' %}active{% endif %}"
-            >
-                <span class="ico">▧</span>
-                <span>Documents</span>
+            <a href="{{ url_for('student.documents') }}" class="{% if request.path == '/student/documents' %}active{% endif %}">
+                <span class="ico">▧</span><span>Documents</span>
             </a>
-
-            <a
-                href="{{ url_for('notifications.notification_list') }}"
-                class="{% if request.path == '/notifications' %}active{% endif %}{% if unread_count|default(0) > 0 %} notification-unread{% endif %}"
-            >
-                <span class="ico">♧</span>
-                <span>Notifications</span>
-                {% if unread_count|default(0) > 0 %}
-                    <span class="nx-badge">{{ unread_count }}</span>
-                {% endif %}
+            <a href="{{ url_for('notifications.notification_list') }}" class="{% if request.path == '/notifications' %}active{% endif %}{% if unread_count|default(0) > 0 %} notification-unread{% endif %}">
+                <span class="ico">♧</span><span>Notifications</span>
+                {% if unread_count|default(0) > 0 %}<span class="nx-badge">{{ unread_count }}</span>{% endif %}
             </a>
         </nav>
 
@@ -132,27 +105,13 @@
         <div class="nx-label">Account</div>
 
         <nav class="nx-nav" aria-label="Student account">
-            <a href="{{ url_for('student.student_profile') }}">
-                <span class="ico">◎</span>
-                <span>Profile</span>
-            </a>
-
-            <a
-                href="javascript:void(0)"
-                onclick="openLogoutModal(); return false;"
-            >
-                <span class="ico">↪</span>
-                <span>Logout</span>
-            </a>
+            <a href="{{ url_for('student.student_profile') }}"><span class="ico">◎</span><span>Profile</span></a>
+            <a href="javascript:void(0)" onclick="openLogoutModal(); return false;"><span class="ico">↪</span><span>Logout</span></a>
         </nav>
 
         <div class="nx-footer">
             <span class="cap">◆</span>
-            <p>
-                Nexora Coding<br>
-                Empowering Future<br>
-                Developers
-            </p>
+            <p>Nexora Coding<br>Empowering Future<br>Developers</p>
         </div>
     </aside>
 </div>
@@ -169,41 +128,22 @@
     }
 
     function updateCollapseButton(button, isCollapsed) {
-        if (!button) {
-            return;
-        }
-
-        button.setAttribute(
-            'aria-label',
-            isCollapsed ? 'Expand student sidebar' : 'Collapse student sidebar'
-        );
-        button.setAttribute(
-            'title',
-            isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'
-        );
+        if (!button) return;
+        button.setAttribute('aria-label', isCollapsed ? 'Expand student sidebar' : 'Collapse student sidebar');
+        button.setAttribute('title', isCollapsed ? 'Expand sidebar' : 'Collapse sidebar');
     }
 
     window.toggleStudentSidebar = function () {
         var elements = getStudentSidebarElements();
-
-        if (!elements.shell || !elements.sidebar) {
-            return;
-        }
+        if (!elements.shell || !elements.sidebar) return;
 
         var isCollapsed = elements.sidebar.classList.toggle('nx-collapsed');
         elements.shell.classList.toggle('nx-sidebar-collapsed', isCollapsed);
-
-        updateCollapseButton(
-            elements.sidebar.querySelector('.nx-collapse-toggle'),
-            isCollapsed
-        );
+        updateCollapseButton(elements.sidebar.querySelector('.nx-collapse-toggle'), isCollapsed);
     };
 
     var collapseButton = document.querySelector('.nx-collapse-toggle');
-
-    if (collapseButton) {
-        collapseButton.addEventListener('click', window.toggleStudentSidebar);
-    }
+    if (collapseButton) collapseButton.addEventListener('click', window.toggleStudentSidebar);
 })();
 </script>
 
