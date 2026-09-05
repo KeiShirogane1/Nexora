@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     {% if session.get('role') == 'student' %}<link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">{% elif session.get('role') == 'supervisor' %}<link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">{% else %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">{% endif %}
     </head>
-<body class="nexora-notifications-page">
+<body class="{% if session.get('role') == 'student' %}student-page {% endif %}nexora-notifications-page">
     {% if session.get('role') == 'student' %}
         {% include 'components/student_sidebar.html' %}
     {% elif session.get('role') == 'supervisor' %}
