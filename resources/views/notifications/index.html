@@ -17,30 +17,29 @@
     {% endif %}
 
     <main class="nexora-app-main">
-        <div class="nexora-page student-notifications-page">
-            <header class="student-section-heading">
+        <div class="student-tasks-content student-notifications-page">
+            <section class="student-tasks-heading" aria-labelledby="notifications-heading">
                 <div>
-                    <span class="student-section-eyebrow">Updates</span>
-                    <h1>Notifications</h1>
+                    <h1 id="notifications-heading">Notifications</h1>
                     <p>Stay up to date with your internship activity, tasks, grades, and feedback.</p>
                 </div>
                 {% if unread_count %}
-                    <button class="student-page-action" type="button" onclick="markAllNotificationsRead()">✓ Mark all as read</button>
+                    <button class="student-tasks-primary-button" type="button" onclick="markAllNotificationsRead()">✓ Mark all as read</button>
                 {% endif %}
-            </header>
+            </section>
 
-            <section class="student-notification-stats" aria-label="Notification summary">
-                <article class="student-notification-stat">
-                    <span class="student-notification-stat-icon">♧</span>
-                    <div><span>Total Notifications</span><strong>{{ notifications|length }}</strong><small>All updates</small></div>
+            <section class="student-tasks-stats" aria-label="Notification summary">
+                <article class="student-tasks-stat">
+                    <span class="student-tasks-stat-icon" aria-hidden="true">♧</span>
+                    <div class="student-tasks-stat-copy"><span>Total Notifications</span><strong>{{ notifications|length }}</strong><small>All updates</small></div>
                 </article>
-                <article class="student-notification-stat">
-                    <span class="student-notification-stat-icon">●</span>
-                    <div><span>Unread</span><strong>{{ unread_count|default(0) }}</strong><small>Need your attention</small></div>
+                <article class="student-tasks-stat">
+                    <span class="student-tasks-stat-icon" aria-hidden="true">●</span>
+                    <div class="student-tasks-stat-copy"><span>Unread</span><strong>{{ unread_count|default(0) }}</strong><small>Need your attention</small></div>
                 </article>
-                <article class="student-notification-stat">
-                    <span class="student-notification-stat-icon">✓</span>
-                    <div><span>Read</span><strong>{{ (notifications|length) - (unread_count|default(0)) }}</strong><small>Already reviewed</small></div>
+                <article class="student-tasks-stat">
+                    <span class="student-tasks-stat-icon" aria-hidden="true">✓</span>
+                    <div class="student-tasks-stat-copy"><span>Read</span><strong>{{ (notifications|length) - (unread_count|default(0)) }}</strong><small>Already reviewed</small></div>
                 </article>
             </section>
 
