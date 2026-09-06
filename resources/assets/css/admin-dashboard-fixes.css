@@ -1,8 +1,43 @@
 /* Nexora Admin dashboard QA fixes.
    Keeps the shared sidebar identical while correcting shell alignment. */
+
+/* The Admin page must start at the top of the viewport like the Student Nexora shell. */
+html,
+body.admin-dashboard-page {
+    margin: 0 !important;
+    padding: 0 !important;
+    min-height: 100% !important;
+}
+
 body.admin-dashboard-page .admin-global-topbar {
     margin-top: 0 !important;
     top: 0 !important;
+}
+
+/* Prevent the logout confirmation component from ever occupying normal document flow.
+   It must only become visible when its .open state is explicitly added by the modal JS. */
+body.admin-dashboard-page #nexora-logout-overlay:not(.open) {
+    display: none !important;
+}
+body.admin-dashboard-page #nexora-logout-overlay.open {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 3000 !important;
+}
+
+/* Match the Student Nexora shell: sidebar starts flush with the viewport top and
+   the content/header begins immediately beside it, with no artificial top gap. */
+body.admin-dashboard-page .admin-sidebar {
+    top: 0 !important;
+}
+body.admin-dashboard-page .admin-global-topbar {
+    position: relative !important;
+    margin-left: var(--nexora-sidebar-width) !important;
+    width: calc(100% - var(--nexora-sidebar-width)) !important;
+}
+body.admin-dashboard-page .admin-main {
+    margin-left: var(--nexora-sidebar-width) !important;
+    width: calc(100% - var(--nexora-sidebar-width)) !important;
 }
 
 /* Shared Admin sidebar collapse control: visible on every Admin HTML page. */
@@ -37,6 +72,12 @@ body.admin-dashboard-page .admin-global-topbar {
 .admin-sidebar.closed .sidebar-collapse-control {
     right: -11px !important;
 }
+
 @media (max-width: 768px) {
+    body.admin-dashboard-page .admin-global-topbar,
+    body.admin-dashboard-page .admin-main {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
     .admin-sidebar .sidebar-collapse-control { display: none !important; }
 }
