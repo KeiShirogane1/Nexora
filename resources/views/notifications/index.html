@@ -5,88 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Notifications - Nexora</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    {% if session.get('role') == 'student' %}<link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">{% elif session.get('role') == 'supervisor' %}<link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">{% else %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">{% endif %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
     <style>
-        body.student-page.nexora-notifications-page .nexora-app-main {
-            margin: 0 0 0 262px !important;
-            width: calc(100% - 262px) !important;
-            padding: 72px 0 0 !important;
-            box-sizing: border-box !important;
-            min-height: 100vh;
+        body.student-notifications-page .student-tasks-content {
+            padding-top: 102px !important;
         }
 
-        body.student-page.nexora-notifications-page .student-notifications-page {
-            padding: 30px 34px 42px !important;
-            box-sizing: border-box;
-        }
-
-        /* Final override: student-workspace.css also gives generic student
-           nexora-app-main pages 108px top padding. Notifications already has
-           the fixed shared topbar, so it must use the Task page frame instead. */
-        html body.student-page.nexora-notifications-page > .nx-student-shell + main.nexora-app-main {
-            padding-top: 0 !important;
-        }
-
-        html body.student-page.nexora-notifications-page > main.nexora-app-main > .student-notifications-page {
-            padding-top: 30px !important;
-        }
-
-        html body.student-page.nexora-notifications-page .student-tasks-heading h1 {
+        body.student-notifications-page .student-tasks-heading h1 {
             font-size: 2.5rem !important;
             line-height: 1.05 !important;
             font-weight: 800 !important;
             letter-spacing: -0.035em !important;
         }
-
-        .nx-student-shell.nx-sidebar-collapsed ~ .nexora-app-main {
-            margin-left: 76px !important;
-            width: calc(100% - 76px) !important;
-        }
-
-        @media (max-width: 1050px) {
-            body.student-page.nexora-notifications-page .nexora-app-main {
-                margin-left: 235px !important;
-                width: calc(100% - 235px) !important;
-            }
-
-            .nx-student-shell.nx-sidebar-collapsed ~ .nexora-app-main {
-                margin-left: 76px !important;
-                width: calc(100% - 76px) !important;
-            }
-        }
-
-        @media (max-width: 760px) {
-            body.student-page.nexora-notifications-page .nexora-app-main {
-                margin-left: 0 !important;
-                width: 100% !important;
-                padding-top: 64px !important;
-            }
-
-            body.student-page.nexora-notifications-page .student-notifications-page {
-                padding: 22px 18px 32px !important;
-            }
-
-            html body.student-page.nexora-notifications-page > main.nexora-app-main {
-                padding-top: 0 !important;
-            }
-
-            html body.student-page.nexora-notifications-page > .nx-student-shell + main.nexora-app-main {
-                padding-top: 0 !important;
-            }
-        }
     </style>
 </head>
-<body class="{% if session.get('role') == 'student' %}student-page {% endif %}nexora-notifications-page">
-    {% if session.get('role') == 'student' %}
-        {% include 'components/student_sidebar.html' %}
-    {% elif session.get('role') == 'supervisor' %}
-        {% include 'components/supervisor_sidebar.html' %}
-    {% else %}
-        {% include 'components/admin_sidebar.html' %}
-    {% endif %}
-
-    <main class="nexora-app-main">
-        <div class="student-tasks-content student-notifications-page">
+<body class="student-page student-notifications-page">
+    {% include 'components/student_sidebar.html' %}
+    <main class="student-tasks-main student-notifications-main">
+        {% include 'components/student_topbar.html' %}
+        <div class="student-tasks-content student-notifications-content">
             <section class="student-tasks-heading" aria-labelledby="notifications-heading">
                 <div>
                     <h1 id="notifications-heading">Notifications</h1>
@@ -100,7 +37,7 @@
             <section class="student-tasks-stats" aria-label="Notification summary">
                 <article class="student-tasks-stat">
                     <span class="student-tasks-stat-icon" aria-hidden="true">♧</span>
-                    <div class="student-tasks-stat-copy"><span>Total Notifications</span><strong>{{ notifications|length }}</strong><small>All updates</small></div>
+                    <div class="student-tasks-stat-copy"><span>Total Notifications</span><strong>{{ total_count|default(0) }}</strong><small>All updates</small></div>
                 </article>
                 <article class="student-tasks-stat">
                     <span class="student-tasks-stat-icon" aria-hidden="true">●</span>
@@ -108,14 +45,14 @@
                 </article>
                 <article class="student-tasks-stat">
                     <span class="student-tasks-stat-icon" aria-hidden="true">✓</span>
-                    <div class="student-tasks-stat-copy"><span>Read</span><strong>{{ (notifications|length) - (unread_count|default(0)) }}</strong><small>Already reviewed</small></div>
+                    <div class="student-tasks-stat-copy"><span>Read</span><strong>{{ (total_count|default(0)) - (unread_count|default(0)) }}</strong><small>Already reviewed</small></div>
                 </article>
             </section>
 
-            <section class="student-notifications-card" aria-label="Notification history">
-                <div class="student-notifications-card-header">
-                    <div><h2>Recent Updates</h2><p>Your latest Nexora notifications.</p></div>
-                    <span>{{ notifications|length }} total</span>
+            <section class="student-tasks-list-card" aria-label="Notification history">
+                <div class="student-tasks-card-heading">
+                    <h2>Recent Updates</h2>
+                    <span>{{ total_count|default(0) }} total</span>
                 </div>
 
                 {% if notifications %}
@@ -134,9 +71,19 @@
                             </article>
                         {% endfor %}
                     </div>
+                    {% if total_pages > 1 %}
+                    <div class="student-tasks-pagination" style="padding:18px 22px;border-top:1px solid #e5e7eb">
+                        <span>Page {{ page }} of {{ total_pages }}</span>
+                        <div class="student-tasks-page-buttons">
+                            {% if page > 1 %}<a class="student-tasks-page-button" href="?page={{ page - 1 }}">‹</a>{% else %}<span class="student-tasks-page-button" style="opacity:.4">‹</span>{% endif %}
+                            {% for p in range(1, total_pages + 1) %}<a class="student-tasks-page-button {% if p == page %}is-active{% endif %}" href="?page={{ p }}">{{ p }}</a>{% endfor %}
+                            {% if page < total_pages %}<a class="student-tasks-page-button" href="?page={{ page + 1 }}">›</a>{% else %}<span class="student-tasks-page-button" style="opacity:.4">›</span>{% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
                 {% else %}
-                    <div class="student-notifications-empty">
-                        <div class="student-notifications-empty-icon">♧</div>
+                    <div class="student-tasks-empty">
+                        <div class="student-tasks-empty-icon">♧</div>
                         <strong>No notifications yet</strong>
                         <span>New updates, grades, assignments, and feedback will appear here.</span>
                     </div>

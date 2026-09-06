@@ -489,13 +489,28 @@ def logbook():
             for log in logs
         ]
 
-    # Attendance history
+    # Attendance history with pagination
+    page = request.args.get("page", 1, type=int)
+    per_page = 10
+    offset = (page - 1) * per_page
+
+    cursor.execute("""
+        SELECT COUNT(*)
+        FROM attendance
+        WHERE student_id = ?
+    """, (session["user_id"],))
+    total_history = cursor.fetchone()[0]
+    total_pages = max(1, (total_history + per_page - 1) // per_page)
+    page = max(1, min(page, total_pages))
+    offset = (page - 1) * per_page
+
     cursor.execute("""
         SELECT id, clock_in, clock_out, hours_rendered, status
         FROM attendance
         WHERE student_id = ?
         ORDER BY clock_in DESC
-    """, (session["user_id"],))
+        LIMIT ? OFFSET ?
+    """, (session["user_id"], per_page, offset))
 
     history = cursor.fetchall()
 
@@ -510,6 +525,13 @@ def logbook():
         for record in history
     ]
 
+    cursor.execute("""
+        SELECT COALESCE(SUM(hours_rendered), 0)
+        FROM attendance
+        WHERE student_id = ? AND status = 'Completed'
+    """, (session["user_id"],))
+    total_hours_all = cursor.fetchone()[0]
+
     conn.close()
 
     return render_template(
@@ -518,7 +540,11 @@ def logbook():
         logs=logs,
         history=history,
         profile=get_student_profile(),
-        active_page="logbook"
+        active_page="logbook",
+        page=page,
+        total_pages=total_pages,
+        total_history=total_history,
+        total_hours_all=total_hours_all
     )
 
 @student.route("/student/clock-out", methods=["POST"])
@@ -802,21 +828,63 @@ def tasks():
     conn = get_db_connection()
     cursor = conn.cursor()
 
+    page = request.args.get("page", 1, type=int)
+    per_page = 10
+    offset = (page - 1) * per_page
+
+    cursor.execute("""
+        SELECT COUNT(*)
+        FROM tasks
+        WHERE student_id = ?
+    """, (session["user_id"],))
+    total_count = cursor.fetchone()[0]
+    total_pages = max(1, (total_count + per_page - 1) // per_page)
+    page = max(1, min(page, total_pages))
+    offset = (page - 1) * per_page
+
     cursor.execute("""
         SELECT id, task_title, assigned_at, deadline, status
         FROM tasks
         WHERE student_id = ?
         ORDER BY assigned_at DESC
-    """, (session["user_id"],))
+        LIMIT ? OFFSET ?
+    """, (session["user_id"], per_page, offset))
 
     tasks = cursor.fetchall()
+
+    cursor.execute("""
+        SELECT COUNT(*)
+        FROM tasks
+        WHERE student_id = ? AND (status = 'Submitted' OR status = 'Reviewed')
+    """, (session["user_id"],))
+    all_completed = cursor.fetchone()[0]
+
+    cursor.execute("""
+        SELECT COUNT(*)
+        FROM tasks
+        WHERE student_id = ? AND status NOT IN ('Submitted', 'Reviewed')
+    """, (session["user_id"],))
+    all_pending = cursor.fetchone()[0]
+
+    cursor.execute("""
+        SELECT COUNT(*)
+        FROM tasks
+        WHERE student_id = ? AND status = 'Overdue'
+    """, (session["user_id"],))
+    all_overdue = cursor.fetchone()[0]
 
     conn.close()
 
     return render_template(
         "student/tasks.html",
         tasks=tasks,
-        active_page="tasks"
+        active_page="tasks",
+        page=page,
+        total_pages=total_pages,
+        total_count=total_count,
+        all_completed=all_completed,
+        all_pending=all_pending,
+        all_overdue=all_overdue
     )
 
 @student.route("/student/task/<int:task_id>")
@@ -1151,19 +1219,33 @@ def documents():
             )
             conn.commit()
 
+    page = request.args.get("page", 1, type=int)
+    per_page = 10
+    offset = (page - 1) * per_page
+
+    cursor.execute(
+        "SELECT COUNT(*) FROM documents WHERE student_id = ?",
+        (session['user_id'],)
+    )
+    total_count = int(cursor.fetchone()[0] or 0)
+    total_pages = max(1, (total_count + per_page - 1) // per_page)
+    page = max(1, min(page, total_pages))
+    offset = (page - 1) * per_page
+
     cursor.execute(
         """
         SELECT id, filename, uploaded_at
         FROM documents
         WHERE student_id = ?
         ORDER BY uploaded_at DESC
+        LIMIT ? OFFSET ?
         """,
-        (session['user_id'],)
+        (session['user_id'], per_page, offset)
     )
     docs = cursor.fetchall()
     conn.close()
 
-    return render_template('student/documents.html', docs=docs, active_page="documents")
+    return render_template('student/documents.html', docs=docs, active_page="documents", page=page, total_pages=total_pages, total_count=total_count)
 
 @student.route("/student/document/<int:document_id>")
 @role_required("student")
@@ -1406,7 +1488,7 @@ def student_profile():
         last_name,
         age,
         student_id,
-        profile_picture,
+        student_profiles.profile_picture,
         phone_number,
         home_address,
         grade_year,

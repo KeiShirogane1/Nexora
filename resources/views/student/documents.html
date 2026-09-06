@@ -24,11 +24,11 @@
             <section class="student-tasks-stats" aria-label="Document summary">
                 <article class="student-tasks-stat">
                     <span class="student-tasks-stat-icon" aria-hidden="true">▤</span>
-                    <div class="student-tasks-stat-copy"><span>Total Documents</span><strong>{{ docs|length }}</strong><small>Uploaded to Nexora</small></div>
+                    <div class="student-tasks-stat-copy"><span>Total Documents</span><strong>{{ total_count|default(0) }}</strong><small>Uploaded to Nexora</small></div>
                 </article>
                 <article class="student-tasks-stat">
                     <span class="student-tasks-stat-icon" aria-hidden="true">✓</span>
-                    <div class="student-tasks-stat-copy"><span>Available</span><strong>{{ docs|length }}</strong><small>Ready to view</small></div>
+                    <div class="student-tasks-stat-copy"><span>Available</span><strong>{{ total_count|default(0) }}</strong><small>Ready to view</small></div>
                 </article>
                 <article class="student-tasks-stat">
                     <span class="student-tasks-stat-icon" aria-hidden="true">↑</span>
@@ -59,7 +59,7 @@
             <section class="student-documents-card">
                 <div class="student-documents-card-header">
                     <div><h2>Your Documents</h2><p>Documents you have uploaded to Nexora.</p></div>
-                    <span>{{ docs|length }} files</span>
+                    <span>{{ total_count|default(0) }} files</span>
                 </div>
 
                 {% if docs %}
@@ -73,6 +73,16 @@
                             </article>
                         {% endfor %}
                     </div>
+                    {% if total_pages > 1 %}
+                    <div class="student-tasks-pagination" style="padding:18px 22px;border-top:1px solid #e5e7eb">
+                        <span>Page {{ page }} of {{ total_pages }}</span>
+                        <div class="student-tasks-page-buttons">
+                            {% if page > 1 %}<a class="student-tasks-page-button" href="?page={{ page - 1 }}">‹</a>{% else %}<span class="student-tasks-page-button" style="opacity:.4">‹</span>{% endif %}
+                            {% for p in range(1, total_pages + 1) %}<a class="student-tasks-page-button {% if p == page %}is-active{% endif %}" href="?page={{ p }}">{{ p }}</a>{% endfor %}
+                            {% if page < total_pages %}<a class="student-tasks-page-button" href="?page={{ page + 1 }}">›</a>{% else %}<span class="student-tasks-page-button" style="opacity:.4">›</span>{% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
                 {% else %}
                     <div class="student-documents-empty">
                         <div aria-hidden="true">📂</div><strong>No documents uploaded yet</strong><span>Upload a document above when your supervisor or school requests it.</span>

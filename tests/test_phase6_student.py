@@ -439,6 +439,19 @@ def test_document_upload_and_view():
     mock_cursor = MagicMock()
     mock_conn.cursor.return_value = mock_cursor
     mock_conn.execute.return_value.fetchone.return_value = {"status":"active"}
+    def cursor_exec_side(sql, params=None):
+        m = MagicMock()
+        if "SELECT status" in sql:
+            m.fetchone.return_value = {"status":"active"}
+        elif "COUNT(*)" in sql:
+            m.fetchone.return_value = (0,)
+            m.fetchall.return_value = []
+        else:
+            m.fetchone.return_value = None
+            m.fetchall.return_value = []
+        return m
+    mock_cursor.execute.side_effect = cursor_exec_side
+    mock_cursor.fetchone.return_value = (0,)
     def exec_side(sql, params=None):
         m = MagicMock()
         if "SELECT status" in sql:

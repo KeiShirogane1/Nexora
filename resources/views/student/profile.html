@@ -6,87 +6,124 @@
     <title>My Profile - Nexora</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
+    <style>
+        body.student-profile-page .student-tasks-content {
+            padding-top: 102px !important;
+        }
+
+        body.student-profile-page .student-tasks-heading h1 {
+            font-size: 2.5rem !important;
+            line-height: 1.05 !important;
+            font-weight: 800 !important;
+            letter-spacing: -0.035em !important;
+        }
+    </style>
 </head>
-<body class="student-page">
-{% include 'components/student_sidebar.html' %}
-<main class="student-main-content nexora-app-main">
-    <div class="nexora-page profile-modern-shell">
-        <header class="profile-page-heading">
-            <div><span class="ui-eyebrow">Account</span><h1>My Profile</h1><p>Manage your personal, academic, and contact information.</p></div>
-            <span class="profile-completion-pill">{{ profile_percentage|default(0) }}% complete</span>
-        </header>
-
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% for category, message in messages %}<div class="ui-alert ui-alert-{{ category }}">{{ message }}</div>{% endfor %}
-        {% endwith %}
-
-        <section class="profile-hero-card">
-            <div class="profile-hero-cover"></div>
-            <div class="profile-hero-content">
-                <div class="profile-avatar-wrap">
-                    <button type="button" class="profile-avatar-button" onclick="document.getElementById('profileUpload').click()" title="Change profile picture">
-                        {% if profile[5] %}<img id="profileCurrentImage" src="{{ url_for('profile_picture', filename=profile[5]) }}" alt="Profile picture" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_profile.png') }}';">
-                        {% else %}<img id="profileCurrentImage" src="{{ url_for('static', filename='images/default_profile.png') }}" alt="Default profile picture">{% endif %}
-                        <span>📷</span>
-                    </button>
-                    <input id="profileUpload" type="file" accept="image/png,image/jpeg,image/jpg,image/gif" hidden>
+<body class="student-page student-profile-page">
+    {% include 'components/student_sidebar.html' %}
+    <main class="student-tasks-main student-profile-main">
+        {% include 'components/student_topbar.html' %}
+        <div class="student-tasks-content student-profile-content">
+            <section class="student-tasks-heading" aria-labelledby="profile-heading">
+                <div>
+                    <span class="ui-eyebrow">Account</span>
+                    <h1 id="profile-heading">My Profile</h1>
+                    <p>Manage your personal, academic, and contact information.</p>
                 </div>
-                <div class="profile-hero-details">
-                    <span class="profile-role-tag">Student</span>
-                    <h2>{{ profile[0] }}{% if profile[1] %} {{ profile[1] }}{% endif %} {{ profile[2] }}</h2>
-                    <div class="profile-meta-grid">
-                        <span>🎓 {{ profile[9] or 'Program not set' }}</span><span>🆔 {{ profile[4] or 'Student ID not set' }}</span><span>📚 {{ profile[8] or 'Year level not set' }}</span><span>✉ {{ profile[14] or 'Email not set' }}</span>
+                <span class="profile-completion-pill">{{ profile_percentage|default(0) }}% complete</span>
+            </section>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% for category, message in messages %}
+                    <div class="ui-alert ui-alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endwith %}
+
+            <section class="student-tasks-list-card profile-hero-card">
+                <div class="profile-hero-cover"></div>
+                <div class="profile-hero-content">
+                    <div class="profile-avatar-wrap">
+                        <button type="button" class="profile-avatar-button" onclick="document.getElementById('profileUpload').click()" title="Change profile picture">
+                            {% if profile[5] %}<img id="profileCurrentImage" src="{{ url_for('profile_picture', filename=profile[5]) }}" alt="Profile picture" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_profile.png') }}';">
+                            {% else %}<img id="profileCurrentImage" src="{{ url_for('static', filename='images/default_profile.png') }}" alt="Default profile picture">{% endif %}
+                            <span>📷</span>
+                        </button>
+                        <input id="profileUpload" type="file" accept="image/png,image/jpeg,image/jpg,image/gif" hidden>
                     </div>
-                    <div class="profile-actions"><a href="{{ url_for('student.edit_profile') }}" class="ui-primary-btn">✏ Edit Profile</a><a href="{{ url_for('password.change_password') }}" class="ui-secondary-btn">🔑 Change Password</a></div>
+                    <div class="profile-hero-details">
+                        <span class="profile-role-tag">Student</span>
+                        <h2>{{ profile[0] }}{% if profile[1] %} {{ profile[1] }}{% endif %} {{ profile[2] }}</h2>
+                        <div class="profile-meta-grid">
+                            <span>🎓 {{ profile[9] or 'Program not set' }}</span><span>🆔 {{ profile[4] or 'Student ID not set' }}</span><span>📚 {{ profile[8] or 'Year level not set' }}</span><span>✉ {{ profile[14] or 'Email not set' }}</span>
+                        </div>
+                        <div class="profile-actions">
+                            <a href="{{ url_for('student.edit_profile') }}" class="student-tasks-primary-button ui-primary-btn">✏ Edit Profile</a>
+                            <a href="{{ url_for('password.change_password') }}" class="student-tasks-primary-button ui-secondary-btn" style="background:#fff;border-color:#bfe0ca;color:#0a8f46;">🔑 Change Password</a>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <section class="profile-modern-card">
-            <div class="section-heading"><div><h2>Profile Completion</h2><p>Keep your information complete and up to date.</p></div><strong>{{ profile_percentage|default(0) }}%</strong></div>
-            <div class="ui-progress"><span style="width:{{ profile_percentage|default(0) }}%"></span></div>
-            <div class="profile-check-grid">
-                <div class="profile-check {{ 'done' if profile[0] and profile[2] else '' }}">✓ <span>Personal information</span></div>
-                <div class="profile-check {{ 'done' if profile[4] and profile[8] and profile[9] else '' }}">✓ <span>Student information</span></div>
-                <div class="profile-check {{ 'done' if profile[6] and profile[7] else '' }}">✓ <span>Contact information</span></div>
-                <div class="profile-check {{ 'done' if profile[5] else '' }}">✓ <span>Profile picture</span></div>
-                <div class="profile-check {{ 'done' if profile[10] and profile[11] and profile[12] else '' }}">✓ <span>Emergency contact</span></div>
-            </div>
-        </section>
+            <section class="student-tasks-list-card profile-modern-card">
+                <div class="student-tasks-card-heading">
+                    <div><h2>Profile Completion</h2><p>Keep your information complete and up to date.</p></div>
+                    <strong>{{ profile_percentage|default(0) }}%</strong>
+                </div>
+                <div class="ui-progress" style="padding: 0 22px 18px;"><span style="width:{{ profile_percentage|default(0) }}%"></span></div>
+                <div class="profile-check-grid" style="padding: 0 22px 18px;">
+                    <div class="profile-check {{ 'done' if profile[0] and profile[2] else '' }}">✓ <span>Personal information</span></div>
+                    <div class="profile-check {{ 'done' if profile[4] and profile[8] and profile[9] else '' }}">✓ <span>Student information</span></div>
+                    <div class="profile-check {{ 'done' if profile[6] and profile[7] else '' }}">✓ <span>Contact information</span></div>
+                    <div class="profile-check {{ 'done' if profile[5] else '' }}">✓ <span>Profile picture</span></div>
+                    <div class="profile-check {{ 'done' if profile[10] and profile[11] and profile[12] else '' }}">✓ <span>Emergency contact</span></div>
+                </div>
+            </section>
 
-        <div class="profile-info-grid">
-            <section class="profile-modern-card"><h2>Personal Information</h2><div class="info-list"><div><b>First Name</b><span>{{ profile[0] or 'Not provided' }}</span></div><div><b>Middle Name</b><span>{{ profile[1] or 'Not provided' }}</span></div><div><b>Last Name</b><span>{{ profile[2] or 'Not provided' }}</span></div><div><b>Age</b><span>{{ profile[3] or 'Not provided' }}</span></div></div></section>
-            <section class="profile-modern-card"><h2>Student Information</h2><div class="info-list"><div><b>Student ID</b><span>{{ profile[4] or 'Not provided' }}</span></div><div><b>Program</b><span>{{ profile[9] or 'Not provided' }}</span></div><div><b>Department</b><span>Information Technology</span></div><div><b>Year Level</b><span>{{ profile[8] or 'Not provided' }}</span></div><div><b>School Email</b><span>{{ profile[14] or 'Not provided' }}</span></div></div></section>
-            <section class="profile-modern-card"><h2>Contact Information</h2><div class="info-list"><div><b>Phone</b><span>{{ profile[6] or 'Not provided' }}</span></div><div><b>Address</b><span>{{ profile[7] or 'Not provided' }}</span></div></div></section>
-            <section class="profile-modern-card"><h2>Emergency Contact</h2><div class="info-list"><div><b>Name</b><span>{{ profile[10] or 'Not added' }}</span></div><div><b>Relationship</b><span>{{ profile[11] or 'Not added' }}</span></div><div><b>Phone</b><span>{{ profile[12] or 'Not added' }}</span></div><div><b>Email</b><span>{{ profile[13] or 'Not added' }}</span></div></div></section>
+            <div class="profile-info-grid">
+                {% set has_personal = profile[0] or profile[2] %}
+                {% set has_student = profile[4] or profile[8] or profile[9] %}
+                {% set has_contact = profile[6] or profile[7] %}
+                {% set has_emergency = profile[10] or profile[12] %}
+                {% if not has_personal and not has_student and not has_contact and not has_emergency %}
+                <section class="student-tasks-list-card" style="grid-column:1/-1;text-align:center;padding:40px 28px">
+                    <div style="font-size:2.2rem;margin-bottom:10px">👤</div>
+                    <h2 style="font-size:1.1rem;font-weight:700;margin:0 0 6px">Your profile is empty</h2>
+                    <p style="color:var(--nx-ink-muted,#6b7280);font-size:.84rem;margin:0 0 16px">Complete your profile to help your supervisor and classmates get to know you.</p>
+                    <a href="{{ url_for('student.edit_profile') }}" class="student-tasks-primary-button" style="font-size:.8rem">Complete Profile</a>
+                </section>
+                {% endif %}
+                <section class="student-tasks-list-card profile-modern-card"><div class="student-tasks-card-heading"><h2>Personal Information</h2></div><div class="info-list" style="padding: 0 22px 18px;"><div><b>First Name</b><span>{{ profile[0] or 'Not provided' }}</span></div><div><b>Middle Name</b><span>{{ profile[1] or 'Not provided' }}</span></div><div><b>Last Name</b><span>{{ profile[2] or 'Not provided' }}</span></div><div><b>Age</b><span>{{ profile[3] or 'Not provided' }}</span></div></div></section>
+                <section class="student-tasks-list-card profile-modern-card"><div class="student-tasks-card-heading"><h2>Student Information</h2></div><div class="info-list" style="padding: 0 22px 18px;"><div><b>Student ID</b><span>{{ profile[4] or 'Not provided' }}</span></div><div><b>Program</b><span>{{ profile[9] or 'Not provided' }}</span></div><div><b>Department</b><span>Information Technology</span></div><div><b>Year Level</b><span>{{ profile[8] or 'Not provided' }}</span></div><div><b>School Email</b><span>{{ profile[14] or 'Not provided' }}</span></div></div></section>
+                <section class="student-tasks-list-card profile-modern-card"><div class="student-tasks-card-heading"><h2>Contact Information</h2></div><div class="info-list" style="padding: 0 22px 18px;"><div><b>Phone</b><span>{{ profile[6] or 'Not provided' }}</span></div><div><b>Address</b><span>{{ profile[7] or 'Not provided' }}</span></div></div></section>
+                <section class="student-tasks-list-card profile-modern-card"><div class="student-tasks-card-heading"><h2>Emergency Contact</h2></div><div class="info-list" style="padding: 0 22px 18px;"><div><b>Name</b><span>{{ profile[10] or 'Not added' }}</span></div><div><b>Relationship</b><span>{{ profile[11] or 'Not added' }}</span></div><div><b>Phone</b><span>{{ profile[12] or 'Not added' }}</span></div><div><b>Email</b><span>{{ profile[13] or 'Not added' }}</span></div></div></section>
+            </div>
+        </div>
+    </main>
+
+    <div id="cropModal" class="crop-editor-overlay" aria-hidden="true">
+        <div class="crop-editor" role="dialog" aria-modal="true" aria-labelledby="cropTitle">
+            <div class="crop-editor-header"><div><span class="ui-eyebrow">Profile picture</span><h2 id="cropTitle">Adjust your photo</h2><p>Drag to position, scroll to zoom, or use the controls below.</p></div><button type="button" onclick="closeCropModal()" class="crop-close">×</button></div>
+            <div class="crop-editor-stage"><img id="cropImage" alt="Crop preview"></div>
+            <div class="crop-controls"><button type="button" onclick="cropper && cropper.zoom(-0.1)">−</button><input id="cropZoom" type="range" min="0.1" max="3" step="0.05" value="1" oninput="setCropZoom(this.value)"><button type="button" onclick="cropper && cropper.zoom(0.1)">+</button><button type="button" onclick="cropper && cropper.rotate(-90)">↶ Rotate</button><button type="button" onclick="cropper && cropper.rotate(90)">↷ Rotate</button><button type="button" onclick="resetCrop()">Reset</button></div>
+            <div class="crop-editor-footer"><button type="button" class="ui-secondary-btn" onclick="closeCropModal()">Cancel</button><button type="button" id="savePictureButton" class="ui-primary-btn" onclick="saveProfilePicture()">Save Picture</button></div>
+            <div id="cropError" class="crop-error" hidden></div>
         </div>
     </div>
-</main>
-
-<div id="cropModal" class="crop-editor-overlay" aria-hidden="true">
-    <div class="crop-editor" role="dialog" aria-modal="true" aria-labelledby="cropTitle">
-        <div class="crop-editor-header"><div><span class="ui-eyebrow">Profile picture</span><h2 id="cropTitle">Adjust your photo</h2><p>Drag to position, scroll to zoom, or use the controls below.</p></div><button type="button" onclick="closeCropModal()" class="crop-close">×</button></div>
-        <div class="crop-editor-stage"><img id="cropImage" alt="Crop preview"></div>
-        <div class="crop-controls"><button type="button" onclick="cropper && cropper.zoom(-0.1)">−</button><input id="cropZoom" type="range" min="0.1" max="3" step="0.05" value="1" oninput="setCropZoom(this.value)"><button type="button" onclick="cropper && cropper.zoom(0.1)">+</button><button type="button" onclick="cropper && cropper.rotate(-90)">↶ Rotate</button><button type="button" onclick="cropper && cropper.rotate(90)">↷ Rotate</button><button type="button" onclick="resetCrop()">Reset</button></div>
-        <div class="crop-editor-footer"><button type="button" class="ui-secondary-btn" onclick="closeCropModal()">Cancel</button><button type="button" id="savePictureButton" class="ui-primary-btn" onclick="saveProfilePicture()">Save Picture</button></div>
-        <div id="cropError" class="crop-error" hidden></div>
-    </div>
-</div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
-<script>
-let cropper=null, selectedObjectUrl=null, cropReady=false;
-const upload=document.getElementById('profileUpload'), modal=document.getElementById('cropModal'), image=document.getElementById('cropImage'), errorBox=document.getElementById('cropError');
-function showCropError(message){ errorBox.textContent=message; errorBox.hidden=false; }
-function clearCropError(){ errorBox.hidden=true; errorBox.textContent=''; }
-function openCropModal(){ modal.style.display='flex'; modal.setAttribute('aria-hidden','false'); }
-function closeCropModal(){ if(cropper){cropper.destroy();cropper=null;} cropReady=false; if(selectedObjectUrl){URL.revokeObjectURL(selectedObjectUrl);selectedObjectUrl=null;} image.removeAttribute('src'); upload.value=''; modal.style.display='none'; modal.setAttribute('aria-hidden','true'); clearCropError(); }
-function resetCrop(){ if(cropper){cropper.reset(); document.getElementById('cropZoom').value=1;} }
-function setCropZoom(value){ if(cropper) cropper.zoomTo(parseFloat(value)); }
-upload.addEventListener('change',function(e){ const file=e.target.files && e.target.files[0]; if(!file)return; clearCropError(); if(!file.type.startsWith('image/')){showCropError('Please select a valid image.');return;} if(file.size>2*1024*1024){showCropError('Profile pictures must be 2MB or smaller.');return;} if(selectedObjectUrl)URL.revokeObjectURL(selectedObjectUrl); selectedObjectUrl=URL.createObjectURL(file); cropReady=false; openCropModal(); image.onload=function(){ if(cropper)cropper.destroy(); cropper=new Cropper(image,{aspectRatio:1,viewMode:1,dragMode:'move',autoCropArea:.9,background:false,responsive:true,zoomOnWheel:true,zoomOnTouch:true}); cropReady=true; document.getElementById('cropZoom').value=1; }; image.onerror=function(){cropReady=false;showCropError('This image could not be loaded. Please choose another photo.');}; image.src=selectedObjectUrl; });
-async function saveProfilePicture(){ clearCropError(); const button=document.getElementById('savePictureButton'); if(!cropper||!cropReady){showCropError('Please wait for the photo editor to finish loading.');return;} button.disabled=true; button.textContent='Saving…'; try{ const blob=await new Promise((resolve,reject)=>cropper.getCroppedCanvas({width:500,height:500,imageSmoothingEnabled:true,imageSmoothingQuality:'high'}).toBlob(b=>b?resolve(b):reject(new Error('Could not prepare image.')),'image/jpeg',.92)); const fd=new FormData(); fd.append('profile_picture',blob,'profile.jpg'); const response=await fetch('/student/profile/photo',{method:'POST',headers:{'X-CSRFToken':'{{ csrf_token() }}'},body:fd}); if(!response.ok)throw new Error(await response.text()||'The server rejected the image.'); closeCropModal(); location.reload(); }catch(err){showCropError(err.message||'Unable to save the picture.');button.disabled=false;button.textContent='Save Picture';} }
-modal.addEventListener('click',e=>{if(e.target===modal)closeCropModal();}); document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.style.display==='flex')closeCropModal();});
-</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
+    <script>
+    let cropper=null, selectedObjectUrl=null, cropReady=false;
+    const upload=document.getElementById('profileUpload'), modal=document.getElementById('cropModal'), image=document.getElementById('cropImage'), errorBox=document.getElementById('cropError');
+    function showCropError(message){ errorBox.textContent=message; errorBox.hidden=false; }
+    function clearCropError(){ errorBox.hidden=true; errorBox.textContent=''; }
+    function openCropModal(){ modal.style.display='flex'; modal.setAttribute('aria-hidden','false'); }
+    function closeCropModal(){ if(cropper){cropper.destroy();cropper=null;} cropReady=false; if(selectedObjectUrl){URL.revokeObjectURL(selectedObjectUrl);selectedObjectUrl=null;} image.removeAttribute('src'); upload.value=''; modal.style.display='none'; modal.setAttribute('aria-hidden','true'); clearCropError(); }
+    function resetCrop(){ if(cropper){cropper.reset(); document.getElementById('cropZoom').value=1;} }
+    function setCropZoom(value){ if(cropper) cropper.zoomTo(parseFloat(value)); }
+    upload.addEventListener('change',function(e){ const file=e.target.files && e.target.files[0]; if(!file)return; clearCropError(); if(!file.type.startsWith('image/')){showCropError('Please select a valid image.');return;} if(file.size>2*1024*1024){showCropError('Profile pictures must be 2MB or smaller.');return;} if(selectedObjectUrl)URL.revokeObjectURL(selectedObjectUrl); selectedObjectUrl=URL.createObjectURL(file); cropReady=false; openCropModal(); image.onload=function(){ if(cropper)cropper.destroy(); cropper=new Cropper(image,{aspectRatio:1,viewMode:1,dragMode:'move',autoCropArea:.9,background:false,responsive:true,zoomOnWheel:true,zoomOnTouch:true}); cropReady=true; document.getElementById('cropZoom').value=1; }; image.onerror=function(){cropReady=false;showCropError('This image could not be loaded. Please choose another photo.');}; image.src=selectedObjectUrl; });
+    async function saveProfilePicture(){ clearCropError(); const button=document.getElementById('savePictureButton'); if(!cropper||!cropReady){showCropError('Please wait for the photo editor to finish loading.');return;} button.disabled=true; button.textContent='Saving…'; try{ const blob=await new Promise((resolve,reject)=>cropper.getCroppedCanvas({width:500,height:500,imageSmoothingEnabled:true,imageSmoothingQuality:'high'}).toBlob(b=>b?resolve(b):reject(new Error('Could not prepare image.')),'image/jpeg',.92)); const fd=new FormData(); fd.append('profile_picture',blob,'profile.jpg'); const response=await fetch('/student/profile/photo',{method:'POST',headers:{'X-CSRFToken':'{{ csrf_token() }}'},body:fd}); if(!response.ok)throw new Error(await response.text()||'The server rejected the image.'); closeCropModal(); location.reload(); }catch(err){showCropError(err.message||'Unable to save the picture.');button.disabled=false;button.textContent='Save Picture';} }
+    modal.addEventListener('click',e=>{if(e.target===modal)closeCropModal();}); document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.style.display==='flex')closeCropModal();});
+    </script>
 </body>
 </html>
