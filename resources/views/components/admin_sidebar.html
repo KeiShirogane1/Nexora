@@ -1,4 +1,103 @@
-<style>
-.admin-sidebar{position:relative!important}
-.admin-sidebar .sidebar-collapse-control{position:absolute!important;top:50%!important;right:-11px!important;transform:translateY(-50%)!important;width:22px!important;height:22px!important;min-width:22px!important;min-height:22px!important;padding:0!important;margin:0!important;display:flex!important;align-items:center!important;justify-content:center!important;border:2px solid #fff!important;border-radius:50%!important;background:#ef5a2a!important;color:#fff!important;box-shadow:0 2px 7px rgba(15,23,42,.18)!important;font-size:15px!important;font-weight:800!important;line-height:1!important;z-index:1105!important;cursor:pointer!important}.admin-sidebar .sidebar-collapse-control:hover{background:#d9471b!important}.admin-sidebar.closed .sidebar-collapse-control{right:-11px!important}@media(max-width:768px){.admin-sidebar .sidebar-collapse-control{display:none!important}}
-</style><aside class="admin-sidebar compact-sidebar" id="mainSidebar"><div class="sidebar-header"><button class="hamburger-btn sidebar-toggle" aria-label="Toggle sidebar">☰</button><a class="sidebar-brand" href="{{ url_for('admin.admin_dashboard') }}"><img src="{{ url_for('static',filename='images/Nexora.png') }}" alt="Nexora"><span>Nexora</span></a></div><a href="{{ url_for('admin.admin_dashboard') }}" class="sidebar-profile" style="text-decoration:none;color:inherit;display:block"><img src="{{ url_for('static',filename='images/default_profile.png') }}" class="sidebar-avatar" alt="Administrator"><h4>Administrator</h4><p>View dashboard</p></a><ul class="sidebar-menu"><li><a href="{{ url_for('admin.admin_dashboard') }}" class="{% if request.path=='/admin/dashboard' %}active{% endif %}"><span class="nav-icon">🏠</span><span>Dashboard</span></a></li><li class="nav-group {% if request.path.startswith('/admin/users') %}open{% endif %}"><button class="nav-parent {% if request.path.startswith('/admin/users') %}active-parent{% endif %}" onclick="this.parentElement.classList.toggle('open')"><span class="nav-icon">👥</span><span>Users</span><span class="nav-arrow">▾</span></button><ul class="submenu"><li><a href="{{ url_for('admin.admin_students') }}" class="{% if request.path=='/admin/users/students' %}active{% endif %}"><span class="nav-icon">🎓</span><span>Students</span></a></li><li><a href="{{ url_for('admin.admin_supervisors') }}" class="{% if request.path=='/admin/users/supervisors' %}active{% endif %}"><span class="nav-icon">👔</span><span>Supervisors</span></a></li><li><a href="/admin/trash" class="{% if request.path=='/admin/trash' %}active{% endif %}"><span class="nav-icon">🗑️</span><span>Trash</span></a></li></ul></li><li><a href="{{ url_for('admin.internship_assign') }}" class="{% if request.path=='/admin/internship-assign' %}active{% endif %}"><span class="nav-icon">🏢</span><span>Internship</span></a></li><li class="nav-group {% if request.path.startswith('/admin/reports') %}open{% endif %}"><button class="nav-parent {% if request.path.startswith('/admin/reports') %}active-parent{% endif %}" onclick="this.parentElement.classList.toggle('open')"><span class="nav-icon">📊</span><span>Reports</span><span class="nav-arrow">▾</span></button><ul class="submenu"><li><a href="{{ url_for('admin.admin_reports_list') }}" class="{% if request.path=='/admin/reports' %}active{% endif %}"><span class="nav-icon">📄</span><span>Overview</span></a></li></ul></li><li><a href="{{ url_for('notifications.notification_list') }}" class="{% if request.path=='/notifications' %}active{% endif %}"><span class="nav-icon">🔔</span><span>Notifications</span>{% if unread_count %}<span class="sidebar-notification-badge">{{ unread_count }}</span>{% endif %}</a></li><li class="sidebar-menu-divider"><a href="javascript:void(0)" class="logout-link" onclick="openLogoutModal();return false"><span class="nav-icon">🚪</span><span>Logout</span></a></li></ul><button class="sidebar-collapse-control sidebar-toggle" type="button" aria-label="Collapse sidebar" title="Collapse sidebar">&lt;</button></aside>{% include 'components/logout_modal.html' %}{% include 'components/toast.html' %}{% include 'components/notification_bell.html' %}<script>(function(){async function hide(){if(!location.pathname.startsWith('/admin/users/'))return;try{const r=await fetch('/admin/trash/data'),d=await r.json(),ids=new Set((d.ids||[]).map(String));document.querySelectorAll('tbody tr[data-id]').forEach(x=>{if(ids.has(x.dataset.id))x.style.display='none'})}catch(e){}}function del(id){if(!confirm('Move this account to Trash? It can be restored for 30 days.'))return false;fetch('/admin/trash/delete/'+id,{method:'POST',headers:{'X-CSRFToken':'{{ csrf_token() }}'}}).then(r=>{if(!r.ok)throw 0;location.reload()}).catch(()=>alert('Unable to move this account to Trash.'));return false}function bulk(){const boxes=[...document.querySelectorAll('tbody .row-checkbox:checked')];if(!boxes.length)return;if(!confirm('Move '+boxes.length+' selected account(s) to Trash?'))return;Promise.all(boxes.map(x=>fetch('/admin/trash/delete/'+x.value,{method:'POST',headers:{'X-CSRFToken':'{{ csrf_token() }}'}}))).then(()=>location.reload()).catch(()=>alert('Some accounts could not be moved to Trash.'))}setTimeout(()=>{window.confirmDelete=del;const b=document.getElementById('bulkDelete');if(b){const n=b.cloneNode(true);b.replaceWith(n);n.disabled=false;n.addEventListener('click',bulk)}hide()},0)})();</script>
+<aside class="admin-sidebar compact-sidebar" id="mainSidebar">
+    <div class="sidebar-header">
+        <button class="hamburger-btn sidebar-toggle" type="button" aria-label="Toggle sidebar">☰</button>
+        <a class="sidebar-brand" href="{{ url_for('admin.admin_dashboard') }}">
+            <img src="{{ url_for('static',filename='images/Nexora.png') }}" alt="Nexora">
+            <span>NEXORA<small>CODING</small></span>
+        </a>
+    </div>
+
+    <a href="{{ url_for('admin.admin_dashboard') }}" class="sidebar-profile">
+        <img src="{{ url_for('static',filename='images/default_profile.png') }}" class="sidebar-avatar" alt="Administrator">
+        <div class="sidebar-profile-copy">
+            <h4>Administrator</h4>
+            <span>Admin</span>
+            <p>View profile <b>→</b></p>
+        </div>
+    </a>
+
+    <nav class="sidebar-nav" aria-label="Admin navigation">
+        <div class="sidebar-section-label">MENU</div>
+        <ul class="sidebar-menu">
+            <li>
+                <a href="{{ url_for('admin.admin_dashboard') }}" class="{% if request.path=='/admin/dashboard' %}active{% endif %}">
+                    <span class="nav-icon">⌂</span><span>Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-group {% if request.path.startswith('/admin/users') %}open{% endif %}">
+                <button class="nav-parent {% if request.path.startswith('/admin/users') %}active-parent{% endif %}" type="button" onclick="this.parentElement.classList.toggle('open')">
+                    <span class="nav-icon">♟</span><span>Users</span><span class="nav-arrow">›</span>
+                </button>
+                <ul class="submenu">
+                    <li><a href="{{ url_for('admin.admin_students') }}" class="{% if request.path=='/admin/users/students' %}active{% endif %}"><span class="nav-icon">♙</span><span>Students</span></a></li>
+                    <li><a href="{{ url_for('admin.admin_supervisors') }}" class="{% if request.path=='/admin/users/supervisors' %}active{% endif %}"><span class="nav-icon">♙</span><span>Supervisors</span></a></li>
+                    <li><a href="/admin/trash" class="{% if request.path=='/admin/trash' %}active{% endif %}"><span class="nav-icon">□</span><span>Trash</span></a></li>
+                </ul>
+            </li>
+            <li>
+                <a href="{{ url_for('admin.internship_assign') }}" class="{% if request.path=='/admin/internship-assign' %}active{% endif %}">
+                    <span class="nav-icon">▣</span><span>Internship</span><span class="nav-arrow">›</span>
+                </a>
+            </li>
+            <li class="nav-group {% if request.path.startswith('/admin/reports') %}open{% endif %}">
+                <button class="nav-parent {% if request.path.startswith('/admin/reports') %}active-parent{% endif %}" type="button" onclick="this.parentElement.classList.toggle('open')">
+                    <span class="nav-icon">▥</span><span>Reports</span><span class="nav-arrow">›</span>
+                </button>
+                <ul class="submenu">
+                    <li><a href="{{ url_for('admin.admin_reports_list') }}" class="{% if request.path=='/admin/reports' %}active{% endif %}"><span class="nav-icon">▤</span><span>Overview</span></a></li>
+                </ul>
+            </li>
+            <li>
+                <a href="{{ url_for('notifications.notification_list') }}" class="{% if request.path=='/notifications' %}active{% endif %}">
+                    <span class="nav-icon">♟</span><span>Notifications</span>
+                    {% if unread_count %}<span class="sidebar-notification-badge">{{ unread_count }}</span>{% endif %}
+                </a>
+            </li>
+        </ul>
+
+        <div class="sidebar-section-label account-label">ACCOUNT</div>
+        <ul class="sidebar-menu sidebar-account-menu">
+            <li><a href="{{ url_for('admin.admin_dashboard') }}"><span class="nav-icon">◉</span><span>Profile</span></a></li>
+            <li><a href="javascript:void(0)" class="logout-link" onclick="openLogoutModal();return false"><span class="nav-icon">↪</span><span>Logout</span></a></li>
+        </ul>
+    </nav>
+
+    <div class="sidebar-footer-brand">
+        <span class="footer-mark">◆</span>
+        <div><strong>Nexora Coding</strong><span>Empowering Future</span><span>Developers</span></div>
+    </div>
+
+    <button class="sidebar-collapse-control sidebar-toggle" type="button" aria-label="Collapse sidebar" title="Collapse sidebar">&lt;</button>
+</aside>
+
+{% include 'components/logout_modal.html' %}
+{% include 'components/toast.html' %}
+{% include 'components/notification_bell.html' %}
+<script>
+(function(){
+    async function hide(){
+        if(!location.pathname.startsWith('/admin/users/')) return;
+        try{
+            const r=await fetch('/admin/trash/data'),d=await r.json(),ids=new Set((d.ids||[]).map(String));
+            document.querySelectorAll('tbody tr[data-id]').forEach(x=>{if(ids.has(x.dataset.id))x.style.display='none'});
+        }catch(e){}
+    }
+    function del(id){
+        if(!confirm('Move this account to Trash? It can be restored for 30 days.'))return false;
+        fetch('/admin/trash/delete/'+id,{method:'POST',headers:{'X-CSRFToken':'{{ csrf_token() }}'}}).then(r=>{if(!r.ok)throw 0;location.reload()}).catch(()=>alert('Unable to move this account to Trash.'));
+        return false
+    }
+    function bulk(){
+        const boxes=[...document.querySelectorAll('tbody .row-checkbox:checked')];
+        if(!boxes.length)return;
+        if(!confirm('Move '+boxes.length+' selected account(s) to Trash?'))return;
+        Promise.all(boxes.map(x=>fetch('/admin/trash/delete/'+x.value,{method:'POST',headers:{'X-CSRFToken':'{{ csrf_token() }}'}}))).then(()=>location.reload()).catch(()=>alert('Some accounts could not be moved to Trash.'))
+    }
+    setTimeout(()=>{
+        window.confirmDelete=del;
+        const b=document.getElementById('bulkDelete');
+        if(b){const n=b.cloneNode(true);b.replaceWith(n);n.disabled=false;n.addEventListener('click',bulk)}
+        hide()
+    },0)
+})();
+</script>
