@@ -1,392 +1,189 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Nexora</title>
 
-    <head>
-        <meta charset="UTF-8">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
 
-        <title>Admin Dashboard - Nexora</title>
+<body class="nexora-admin-body admin-dashboard-page">
 
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-              rel="stylesheet">
+    {% include 'components/admin_sidebar.html' %}
 
-        <link rel="stylesheet"
-              href="{{ url_for('static', filename='css/style.css') }}">
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
-    </head>
+    <header class="admin-global-topbar" aria-label="Admin portal header">
+        <div class="admin-topbar-left">
+            <button class="admin-topbar-menu sidebar-toggle" type="button" aria-label="Menu">☰</button>
+            <label class="admin-search" aria-label="Search">
+                <span aria-hidden="true">⌕</span>
+                <input type="search" placeholder="Search anything...">
+            </label>
+        </div>
 
-    <body class="nexora-admin-body admin-dashboard-page">
+        <div class="admin-topbar-right">
+            <span class="admin-topbar-notification" aria-label="Notifications">♧{% if unread_count|default(0) > 0 %}<span class="admin-topbar-badge">{{ unread_count }}</span>{% endif %}</span>
+            <div class="admin-topbar-user">
+                <img src="{{ url_for('static', filename='images/default_profile.png') }}" alt="Administrator profile">
+                <span>
+                    <strong>Administrator</strong>
+                    <small>Admin</small>
+                </span>
+            </div>
+        </div>
+    </header>
 
-        {% include 'components/admin_sidebar.html' %}
+    <main class="admin-main nexora-app-main">
+        <div class="admin-dashboard-content">
 
-        <main class="admin-main nexora-app-main">
-            <div class="nexora-page">
+            <div class="admin-breadcrumb">Dashboard <span>/</span> Admin</div>
 
-                <div class="compact-dashboard">
+            <section class="dashboard-header admin-welcome-card">
+                <div>
+                    <h1>Admin Dashboard</h1>
+                    <p>Welcome back, Administrator.</p>
+                    <p>Monitor internship operations, student progress, and system activity.</p>
+                </div>
+                <div class="system-badge">
+                    <span class="status-dot"></span>
+                    System Online
+                </div>
+            </section>
 
-<!-- HEADER -->
+            <section class="metric-grid admin-metric-grid" aria-label="Dashboard statistics">
+                <div class="metric-box admin-metric-card">
+                    <div class="metric-icon">♟</div>
+                    <div><span>Students</span><strong>{{ students_count }}</strong></div>
+                </div>
+                <div class="metric-box admin-metric-card">
+                    <div class="metric-icon">♙</div>
+                    <div><span>Supervisors</span><strong>{{ supervisors_count }}</strong></div>
+                </div>
+                <div class="metric-box admin-metric-card">
+                    <div class="metric-icon">▣</div>
+                    <div><span>Internship Assignments</span><strong>{{ assignments_count }}</strong></div>
+                </div>
+                <div class="metric-box admin-metric-card">
+                    <div class="metric-icon">◎</div>
+                    <div><span>Online Interns</span><strong>{{ online_interns }}</strong></div>
+                </div>
+                <div class="metric-box admin-metric-card">
+                    <div class="metric-icon">◌</div>
+                    <div><span>Feedback Entries</span><strong>{{ feedback_count }}</strong></div>
+                </div>
+                <div class="metric-box admin-metric-card">
+                    <div class="metric-icon">◷</div>
+                    <div><span>Total Hours</span><strong>{{ total_hours }}</strong></div>
+                </div>
+            </section>
 
-                    <div class="dashboard-header">
+            <section class="dashboard-box admin-section-card">
+                <div class="admin-section-heading">
+                    <div>
+                        <h3>Internship Overview</h3>
+                        <p>Current internship activity across the platform.</p>
+                    </div>
+                </div>
+                <div class="status-row admin-status-row">
+                    <div class="admin-status-card">
+                        <span>Pending Approval</span>
+                        <strong>{{ pending_students }}</strong>
+                    </div>
+                    <div class="admin-status-card">
+                        <span>Active Internship</span>
+                        <strong>{{ active_internships }}</strong>
+                    </div>
+                    <div class="admin-status-card">
+                        <span>Completed</span>
+                        <strong>{{ completed_internships }}</strong>
+                    </div>
+                </div>
+            </section>
 
+            <section class="dashboard-box admin-section-card admin-quick-actions">
+                <div class="admin-section-heading">
+                    <div>
+                        <h3>Quick Actions</h3>
+                        <p>Common administrative tasks.</p>
+                    </div>
+                </div>
+                <div class="action-list">
+                    <a href="{{ url_for('admin.admin_users') }}"><span>✓</span> Approve Student Accounts</a>
+                    <a href="{{ url_for('admin.admin_users') }}"><span>♟</span> Manage Users</a>
+                    <a href="{{ url_for('admin.internship_assign') }}"><span>▣</span> Assign Internships</a>
+                    <a href="{{ url_for('admin.admin_reports_list') }}"><span>▤</span> View Reports</a>
+                </div>
+            </section>
+
+            <section class="dashboard-info-grid admin-info-grid">
+                <div class="dashboard-panel admin-panel-card">
+                    <div class="admin-section-heading">
                         <div>
-
-                            <h1>
-                                Admin Dashboard
-                            </h1>
-
-                            <p>
-                                Welcome back, Administrator.<br>
-                                Monitor internship operations, student progress, and system activity.
-                            </p>
-
+                            <h3>Recent Activities</h3>
+                            <p>Latest activity across the system.</p>
                         </div>
-
-                        <div class="system-badge">
-
-                            🟢 System Online
-
-                        </div>
-
                     </div>
-
-<!-- METRIC GRID -->
-
-                    <div class="metric-grid">
-
-    <!-- STUDENTS -->
-
-                        <div class="metric-box">
-
-                            <div class="metric-icon">
-                                👥
-                            </div>
-
-                            <div>
-
-                                <span>
-                                    Students
-                                </span>
-
-                                <strong>
-                                    {{ students_count }}
-                                </strong>
-
-                            </div>
-
-                        </div>
-
-    <!-- SUPERVISORS -->
-
-                        <div class="metric-box">
-
-                            <div class="metric-icon">
-                                🧑‍💼
-                            </div>
-
-                            <div>
-
-                                <span>
-                                    Supervisors
-                                </span>
-
-                                <strong>
-                                    {{ supervisors_count }}
-                                </strong>
-
-                            </div>
-
-                        </div>
-
-    <!-- ASSIGNMENTS -->
-
-                        <div class="metric-box">
-
-                            <div class="metric-icon">
-                                📋
-                            </div>
-
-                            <div>
-
-                                <span>
-                                    Internship Assignments
-                                </span>
-
-                                <strong>
-                                    {{ assignments_count }}
-                                </strong>
-
-                            </div>
-
-                        </div>
-
-    <!-- ONLINE INTERNS -->
-
-                        <div class="metric-box">
-
-                            <div class="metric-icon">
-                                🌐
-                            </div>
-
-                            <div>
-
-                                <span>
-                                    Online Interns
-                                </span>
-
-                                <strong>
-                                    {{ online_interns }}
-                                </strong>
-
-                            </div>
-
-                        </div>
-
-    <!-- FEEDBACK -->
-
-                        <div class="metric-box">
-
-                            <div class="metric-icon">
-                                💬
-                            </div>
-
-                            <div>
-
-                                <span>
-                                    Feedback Entries
-                                </span>
-
-                                <strong>
-                                    {{ feedback_count }}
-                                </strong>
-
-                            </div>
-
-                        </div>
-
-    <!-- HOURS -->
-
-                        <div class="metric-box">
-
-                            <div class="metric-icon">
-                                ⏱️
-                            </div>
-
-                            <div>
-
-                                <span>
-                                    Total Hours
-                                </span>
-
-                                <strong>
-                                    {{ total_hours }}
-                                </strong>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-<!-- INTERNSHIP SUMMARY -->
-
-                    <div class="dashboard-box">
-
-                        <h3>
-                            Internship Overview
-                        </h3>
-
-                        <div class="status-row">
-
-                            <div>
-
-                                <span>
-                                    Pending Approval
-                                </span>
-
-                                <strong>
-                                    {{ pending_students }}
-                                </strong>
-
-                            </div>
-
-                            <div>
-
-                                <span>
-                                    Active Internship
-                                </span>
-
-                                <strong>
-                                    {{ active_internships }}
-                                </strong>
-
-                            </div>
-
-                            <div>
-
-                                <span>
-                                    Completed
-                                </span>
-
-                                <strong>
-                                    {{ completed_internships }}
-                                </strong>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-<!-- QUICK ACTIONS -->
-
-                    <div class="dashboard-box">
-
-                        <h3>
-                            Quick Actions
-                        </h3>
-
-                        <div class="action-list">
-
-                            <a href="{{ url_for('admin.admin_users') }}">
-                                ✓ Approve Student Accounts
-                            </a>
-
-                            <a href="{{ url_for('admin.admin_users') }}">
-                                👥 Manage Users
-                            </a>
-
-                            <a href="{{ url_for('admin.internship_assign') }}">
-                                📋 Assign Internships
-                            </a>
-
-                            <a href="{{ url_for('admin.admin_reports_list') }}">
-                                📊 View Reports
-                            </a>
-
-                        </div>
-
-                    </div>
-
-<!-- ACTIVITY + SYSTEM MONITORING -->
-
-                    <div class="dashboard-info-grid">
-
-    <!-- RECENT ACTIVITIES -->
-
-                        <div class="dashboard-panel">
-
-                            <h3>
-                                Recent Activities
-                            </h3>
-
-                            <ul class="activity-list">
-                                <li>{{ students_count }} student accounts registered</li>
-                                <li>{{ supervisors_count }} supervisor accounts registered</li>
-                                <li>{{ assignments_count }} internship assignments</li>
-                                <li>{{ feedback_count }} feedback entries submitted</li>
-                            </ul>
-
-                        </div>
-
-    <!-- SYSTEM MONITORING -->
-
-                        <div class="dashboard-panel">
-
-                            <h3>
-                                System Monitoring
-                            </h3>
-
-                            <div class="system-row">
-
-                                <span>
-                                    Database Status
-                                </span>
-
-                                <strong class="online">
-                                    Online
-                                </strong>
-
-                            </div>
-
-                            <div class="system-row">
-
-                                <span>
-                                    Email Service
-                                </span>
-
-                                <strong class="online">
-                                    Connected
-                                </strong>
-
-                            </div>
-
-                            <div class="system-row">
-
-                                <span>
-                                    Last Backup
-                                </span>
-
-                                <strong>
-                                    Today
-                                </strong>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-<!-- REPORTS -->
-
-                    <div class="dashboard-box">
-
-                        <h3>
-                            Reports Center
-                        </h3>
-
-                        <div class="report-grid">
-
-                            <a href="{{ url_for('admin.attendance_report') }}">
-
-                                Attendance &
-                                Logbook
-
-                                <br>
-
-                                [ Open Report ]
-
-                            </a>
-
-                            <a href="{{ url_for('admin.admin_reports_list') }}">
-
-                                Supervisor
-                                Evaluation
-
-                                <br>
-
-                                [ Open Report ]
-
-                            </a>
-
-                            <a href="{{ url_for('admin.admin_reports_list') }}">
-
-                                Internship
-                                Progress
-
-                                <br>
-
-                                [ Open Report ]
-
-                            </a>
-
-                        </div>
-
-                    </div>
-
+                    <ul class="activity-list admin-activity-list">
+                        <li><span class="activity-marker"></span><span>{{ students_count }} student accounts registered</span></li>
+                        <li><span class="activity-marker"></span><span>{{ supervisors_count }} supervisor accounts registered</span></li>
+                        <li><span class="activity-marker"></span><span>{{ assignments_count }} internship assignments</span></li>
+                        <li><span class="activity-marker"></span><span>{{ feedback_count }} feedback entries submitted</span></li>
+                    </ul>
                 </div>
 
-            </div>
-        </main>
+                <div class="dashboard-panel admin-panel-card">
+                    <div class="admin-section-heading">
+                        <div>
+                            <h3>System Monitoring</h3>
+                            <p>Service health and availability.</p>
+                        </div>
+                    </div>
+                    <div class="system-row admin-system-row">
+                        <span><i class="system-status-dot"></i>Database Status</span>
+                        <strong class="online">Online</strong>
+                    </div>
+                    <div class="system-row admin-system-row">
+                        <span><i class="system-status-dot"></i>Email Service</span>
+                        <strong class="online">Connected</strong>
+                    </div>
+                    <div class="system-row admin-system-row">
+                        <span><i class="system-status-dot neutral"></i>Last Backup</span>
+                        <strong>Today</strong>
+                    </div>
+                </div>
+            </section>
 
-    </body>
+            <section class="dashboard-box admin-section-card">
+                <div class="admin-section-heading">
+                    <div>
+                        <h3>Reports Center</h3>
+                        <p>Access key administrative reports.</p>
+                    </div>
+                </div>
+                <div class="report-grid admin-report-grid">
+                    <a href="{{ url_for('admin.attendance_report') }}">
+                        <span class="report-icon">▤</span>
+                        <strong>Attendance &amp; Logbook</strong>
+                        <span>Open Report <b>→</b></span>
+                    </a>
+                    <a href="{{ url_for('admin.admin_reports_list') }}">
+                        <span class="report-icon">▥</span>
+                        <strong>Supervisor Evaluation</strong>
+                        <span>Open Report <b>→</b></span>
+                    </a>
+                    <a href="{{ url_for('admin.admin_reports_list') }}">
+                        <span class="report-icon">▦</span>
+                        <strong>Internship Progress</strong>
+                        <span>Open Report <b>→</b></span>
+                    </a>
+                </div>
+            </section>
 
+        </div>
+    </main>
+
+    <script src="{{ url_for('static', filename='js/admin_sidebar.js') }}"></script>
+</body>
 </html>
