@@ -1,0 +1,25 @@
+<header class="supervisor-topbar" aria-label="Supervisor portal header">
+    <div class="supervisor-topbar-left">
+        <button class="supervisor-menu-button" type="button" aria-label="Menu" onclick="document.getElementById('mainSidebar')?.classList.toggle('collapsed');document.querySelector('.supervisor-dashboard')?.classList.toggle('sidebar-collapsed');">☰</button>
+        <label class="supervisor-search" aria-label="Search">
+            <span aria-hidden="true">⌕</span>
+            <input type="search" placeholder="Search anything...">
+        </label>
+    </div>
+    <div class="supervisor-topbar-right">
+        <a class="supervisor-topbar-notification" href="{{ url_for('notifications.notification_list') }}" aria-label="Notifications">
+            ♧{% if unread_count|default(0) > 0 %}<span class="supervisor-topbar-notification-badge">{{ unread_count }}</span>{% endif %}
+        </a>
+        <a class="supervisor-topbar-user" href="{{ url_for('supervisor.supervisor_profile') }}">
+            {% if sidebar_profile and sidebar_profile.profile_picture %}
+                <img src="{{ url_for('profile_picture', filename=sidebar_profile.profile_picture) }}" alt="Supervisor profile">
+            {% else %}
+                <img src="{{ url_for('static', filename='images/default_profile.png') }}" alt="Supervisor profile">
+            {% endif %}
+            <span class="supervisor-topbar-user-copy">
+                <strong>{% if sidebar_profile and sidebar_profile.first_name %}{{ sidebar_profile.first_name }} {{ sidebar_profile.last_name or '' }}{% elif sidebar_profile %}{{ sidebar_profile.username }}{% else %}Supervisor{% endif %}</strong>
+                <span>Supervisor</span>
+            </span>
+        </a>
+    </div>
+</header>
