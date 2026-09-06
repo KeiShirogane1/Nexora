@@ -1,385 +1,153 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Supervisor Dashboard - Nexora</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor-dashboard.css') }}">
+</head>
+<body class="supervisor-dashboard-page">
+    {% include 'components/supervisor_sidebar.html' %}
 
-    <head>
-        <meta charset="UTF-8">
-        <title>Supervisor Dashboard - Nexora</title>
+    <main class="page-content supervisor-dashboard">
+        {% include 'components/supervisor_topbar.html' %}
 
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        <div class="nexora-page">
+            <section class="supervisor-dashboard-heading" aria-labelledby="dashboard-heading">
+                <div class="eyebrow">Supervisor Portal</div>
+                <h1 id="dashboard-heading">Supervisor Dashboard</h1>
+                <p>Monitor intern progress, attendance, activities, and evaluations.</p>
+            </section>
 
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">
-    </head>
-
-
-    <body class="analytics-aesthetic">
-
-
-        {% include 'components/supervisor_sidebar.html' %}
-
-
-        <div class="page-content supervisor-dashboard nexora-app-main">
-
-            <div class="nexora-page">
-
-
-            <!-- PAGE HEADER -->
-
-                <div class="mb-4">
-                    <div class="d-flex align-items-center gap-3">
-                        <div style="width:48px; height:48px; border-radius:12px; background:linear-gradient(135deg, #2563eb, #60a5fa); display:flex; align-items:center; justify-content:center; color:white; font-size:1.4rem;">📊</div>
-                        <div>
-                            <h1 class="mb-1" style="font-weight:800; letter-spacing:-0.02em;">
-                                Supervisor Dashboard
-                            </h1>
-
-                            <p class="text-muted mb-0">
-                                Monitor intern progress, attendance, activities, and evaluations.
-                            </p>
-                        </div>
+            <section class="supervisor-stat-grid" aria-label="Supervisor dashboard summary">
+                <article class="supervisor-stat-card">
+                    <span class="supervisor-stat-icon" aria-hidden="true">👥</span>
+                    <div class="supervisor-stat-copy">
+                        <span>Assigned Interns</span>
+                        <strong>{{ total_interns }}</strong>
+                        <small>Students under your supervision</small>
                     </div>
-                </div>
+                </article>
+                <article class="supervisor-stat-card">
+                    <span class="supervisor-stat-icon" aria-hidden="true">◉</span>
+                    <div class="supervisor-stat-copy">
+                        <span>Active Sessions</span>
+                        <strong>{{ active_sessions }}</strong>
+                        <small>Interns currently clocked in</small>
+                    </div>
+                </article>
+                <article class="supervisor-stat-card">
+                    <span class="supervisor-stat-icon" aria-hidden="true">●</span>
+                    <div class="supervisor-stat-copy">
+                        <span>Active Interns</span>
+                        <strong>{{ active_interns|length }}</strong>
+                        <small>Currently active</small>
+                    </div>
+                </article>
+                <article class="supervisor-stat-card">
+                    <span class="supervisor-stat-icon" aria-hidden="true">✓</span>
+                    <div class="supervisor-stat-copy">
+                        <span>Recent Tasks</span>
+                        <strong>{{ recent_tasks|length }}</strong>
+                        <small>Latest assigned tasks</small>
+                    </div>
+                </article>
+            </section>
 
-
-            <!-- MAIN DASHBOARD LAYOUT -->
-
-                <div class="row g-4">
-
-
-                <!-- LEFT WORKSPACE -->
-
-                    <div class="col-lg-8">
-
-
-                    <!-- SUMMARY CARDS -->
-
-                        <div class="row g-4 mb-4">
-
-
-                        <!-- ASSIGNED INTERNS -->
-
-                            <div class="col-md-6">
-
-                                <div class="card shadow-sm p-4 h-100">
-
-                                    <h5 class="text-muted">
-                                        Assigned Interns
-                                    </h5>
-
-                                    <hr>
-
-                                    <h2>
-                                        {{ total_interns }}
-                                    </h2>
-
-                                    <p class="mb-0">
-                                        Students currently under your supervision.
-                                    </p>
-
-                                </div>
-
-                            </div>
-
-
-                        <!-- ACTIVE SESSIONS -->
-
-                            <div class="col-md-6">
-
-                                <div class="card shadow-sm p-4 h-100">
-
-                                    <h5 class="text-muted">
-                                        Active Sessions
-                                    </h5>
-
-                                    <hr>
-
-                                    <h2>
-                                        {{ active_sessions }}
-                                    </h2>
-
-                                    <p class="mb-0">
-                                        Interns currently clocked in.
-                                    </p>
-
-                                </div>
-
-                            </div>
-
-
-                        </div>
-
-
-                    <!-- RECENT ACTIVITIES -->
-
-                        <div class="card shadow-sm">
-
-                            <div class="card-header bg-info">
-
-                                <h5 class="mb-0">
-                                    Recent Activities
-                                </h5>
-
-                            </div>
-
-
-                            <div class="card-body dashboard-scroll">
-
-
-                                {% if acts %}
-
-                                    {% for act in acts %}
-
-                                        <div class="border-bottom pb-3 mb-3 d-flex justify-content-between align-items-center gap-3">
-
-                                            <div class="flex-grow-1">
-
-                                                <strong>
-                                                    {{ act[0] }}
-                                                </strong>
-
-                                                <p class="mb-1">
-                                                    {{ act[1] }}
-                                                </p>
-
-                                                <small class="text-muted">
-                                                    {{ act[2] }}
-                                                </small>
-
-                                            </div>
-
-                                            <a href="/supervisor/student/{{ act[3] }}" class="btn btn-sm btn-primary flex-shrink-0">
-
-                                                View Intern
-
-                                            </a>
-
+            <section class="supervisor-dashboard-grid">
+                <article class="supervisor-dashboard-card">
+                    <header class="supervisor-dashboard-card-heading">
+                        <h2>Recent Activities</h2>
+                        {% if acts %}<span class="heading-link">{{ acts|length }} recent</span>{% endif %}
+                    </header>
+                    <div class="supervisor-dashboard-card-body">
+                        {% if acts %}
+                            <div class="supervisor-activity-list">
+                                {% for act in acts %}
+                                    <div class="supervisor-activity-item">
+                                        <span class="supervisor-activity-icon" aria-hidden="true">↗</span>
+                                        <div class="supervisor-activity-copy">
+                                            <strong>{{ act[0] }}</strong>
+                                            <p>{{ act[1] }}</p>
+                                            <small>{{ act[2] }}</small>
                                         </div>
-
-                                    {% endfor %}
-
-
-                                {% else %}
-
-                                    <p class="text-muted mb-0">
-                                        No recent activities.
-                                    </p>
-
-
-                                {% endif %}
-
-
+                                        <a href="/supervisor/student/{{ act[3] }}" class="supervisor-activity-action">View Intern</a>
+                                    </div>
+                                {% endfor %}
                             </div>
-
-                        </div>
-
-
+                        {% else %}
+                            <div class="supervisor-side-empty">No recent activities.</div>
+                        {% endif %}
                     </div>
+                </article>
 
-
-                <!-- RIGHT COLUMN -->
-
-                    <div class="col-lg-4">
-
-
-                    <!-- CURRENTLY ACTIVE INTERNS -->
-
-                        <div class="card shadow-sm mb-4 active-intern-scroll">
-
-
-                            <div class="card-header bg-success text-white">
-
-                                <h5 class="mb-0">
-                                    🟢 Currently Active Interns
-                                </h5>
-
-                            </div>
-
-
-                            <div class="card-body active-intern-scroll">
-
-
-                                {% if active_interns %}
-
-
+                <aside>
+                    <article class="supervisor-dashboard-card supervisor-side-card">
+                        <header class="supervisor-dashboard-card-heading">
+                            <h2>Currently Active Interns</h2>
+                        </header>
+                        <div class="supervisor-dashboard-card-body">
+                            {% if active_interns %}
+                                <div class="supervisor-active-list">
                                     {% for intern in active_interns %}
-
-                                        <div class="border-bottom pb-3 mb-3">
-
-
-                                            <strong>
-                                                {{ intern[0] }}
-                                            </strong>
-
-
-                                            <small class="text-muted d-block mt-1">
-
-                                                Clocked in:
-                                                {{ intern[1] }}
-
-                                            </small>
-
-
+                                        <div class="supervisor-active-item">
+                                            <span class="supervisor-active-name">{{ intern[0] }}</span>
+                                            <span class="supervisor-active-time">Clocked in: {{ intern[1] }}</span>
                                         </div>
-
-
                                     {% endfor %}
-
-
-                                {% else %}
-
-
-                                    <p class="text-muted mb-0">
-
-                                        No interns are currently clocked in.
-
-                                    </p>
-
-
-                                {% endif %}
-
-
-                            </div>
-
-
+                                </div>
+                            {% else %}
+                                <div class="supervisor-side-empty">No interns are currently clocked in.</div>
+                            {% endif %}
                         </div>
+                    </article>
 
-
-                    <!-- RECENT TASKS -->
-
-                        <div class="card shadow-sm">
-
-
-                            <div class="card-header bg-warning">
-
-                                <h5 class="mb-0">
-                                    Recent Tasks
-                                </h5>
-
-                            </div>
-
-
-                            <div class="card-body dashboard-scroll">
-
-
-                                {% if recent_tasks %}
-
-
+                    <article class="supervisor-dashboard-card supervisor-side-card">
+                        <header class="supervisor-dashboard-card-heading">
+                            <h2>Recent Tasks</h2>
+                        </header>
+                        <div class="supervisor-dashboard-card-body">
+                            {% if recent_tasks %}
+                                <div class="supervisor-task-list">
                                     {% for task in recent_tasks %}
-
-
-                                        <div class="border-bottom pb-3 mb-3">
-
-
-                                            <strong>
-                                                {{ task[0] }}
-                                            </strong>
-
-
-                                            <p class="mb-1">
-
-                                                Assigned to:
-                                                {{ task[1] }}
-
-                                            </p>
-
-
-                                    <!-- TASK STATUS -->
-
+                                        <div class="supervisor-task-item">
+                                            <span class="supervisor-task-name">{{ task[0] }}</span>
+                                            <span class="supervisor-task-meta">Assigned to: {{ task[1] }}</span>
                                             {% if task[2] == 'Submitted' %}
-
-                                                <span class="badge bg-success">
-                                                    Submitted
-                                                </span>
-
+                                                <span class="supervisor-status submitted">Submitted</span>
                                             {% elif task[2] == 'Reviewed' %}
-
-                                                <span class="badge bg-primary">
-                                                    Reviewed
-                                                </span>
-
+                                                <span class="supervisor-status reviewed">Reviewed</span>
                                             {% elif task[2] == 'Reopened' %}
-
-                                                <span class="badge bg-info">
-                                                    Reopened
-                                                </span>
-
+                                                <span class="supervisor-status reopened">Reopened</span>
                                             {% else %}
-
-                                                <span class="badge bg-warning">
-                                                    Pending
-                                                </span>
-
+                                                <span class="supervisor-status pending">Pending</span>
                                             {% endif %}
-
-
-                                    <!-- DEADLINE -->
-
-                                            {% if task[3] %}
-
-                                                <small class="text-muted d-block mt-2">
-
-                                                    Due:
-                                                    {{ task[3] }}
-
-                                                </small>
-
-                                            {% endif %}
-
-
+                                            {% if task[3] %}<span class="supervisor-task-meta">Due: {{ task[3] }}</span>{% endif %}
                                         </div>
-
-
                                     {% endfor %}
-
-
-                                {% else %}
-
-
-                                    <p class="text-muted mb-0">
-
-                                        No tasks available.
-
-                                    </p>
-
-
-                                {% endif %}
-
-
-                            </div>
-
-
+                                </div>
+                            {% else %}
+                                <div class="supervisor-side-empty">No tasks available.</div>
+                            {% endif %}
                         </div>
+                    </article>
+                </aside>
+            </section>
 
-
-                    </div>
-
-
+            <article class="supervisor-dashboard-card supervisor-analytics-card">
+                <header class="supervisor-dashboard-card-heading">
+                    <h2>Performance Analytics</h2>
+                </header>
+                <div class="supervisor-analytics-empty">
+                    <div class="supervisor-analytics-icon" aria-hidden="true">▥</div>
+                    <p>Reports, performance classifications, and machine learning insights will appear here.</p>
+                    <small>Evaluations are available in Feedback and Classroom.</small>
                 </div>
-
-
-            <!-- FUTURE ANALYTICS -->
-
-                <div class="card shadow-sm mt-5" style="border:1px solid #f1f5f9; border-radius:12px; overflow:hidden;">
-                    <div class="card-header" style="background:#fff; border-bottom:1px solid #f1f5f9;">
-                        <h5 class="mb-0" style="font-weight:700;">📊 Performance Analytics</h5>
-                    </div>
-                    <div class="card-body text-center">
-                        <div class="empty-state" style="border:none; background:transparent; padding:24px 20px;">
-                            <div class="icon" style="font-size:1.8rem;">📈</div>
-                            <p class="text-muted mb-0">
-                                Reports, performance classifications, and machine learning insights will appear here.
-                            </p>
-                            <small class="text-muted">Evaluations are available in Feedback and Classroom.</small>
-                        </div>
-                    </div>
-                </div>
-
-
-            </div>
-
+            </article>
         </div>
-
-
-    </body>
-
+    </main>
+</body>
 </html>
