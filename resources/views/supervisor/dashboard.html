@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor-dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor-sidebar-fix.css') }}">
 </head>
 <body class="supervisor-dashboard-page">
     {% include 'components/supervisor_sidebar.html' %}
@@ -32,120 +33,48 @@
             <section class="supervisor-stat-grid" aria-label="Supervisor dashboard summary">
                 <article class="supervisor-stat-card stat-blue">
                     <div class="supervisor-stat-icon" aria-hidden="true">♙</div>
-                    <div class="supervisor-stat-copy">
-                        <span>Assigned Interns</span>
-                        <strong>{{ total_interns }}</strong>
-                        <small>Students under your supervision</small>
-                    </div>
+                    <div class="supervisor-stat-copy"><span>Assigned Interns</span><strong>{{ total_interns }}</strong><small>Students under your supervision</small></div>
                     <a href="{{ url_for('supervisor.view_interns') }}" aria-label="View assigned interns">→</a>
                 </article>
                 <article class="supervisor-stat-card stat-green">
                     <div class="supervisor-stat-icon" aria-hidden="true">◷</div>
-                    <div class="supervisor-stat-copy">
-                        <span>Active Sessions</span>
-                        <strong>{{ active_sessions }}</strong>
-                        <small>Interns currently clocked in</small>
-                    </div>
+                    <div class="supervisor-stat-copy"><span>Active Sessions</span><strong>{{ active_sessions }}</strong><small>Interns currently clocked in</small></div>
                     <a href="{{ url_for('supervisor.view_interns') }}" aria-label="View active interns">→</a>
                 </article>
                 <article class="supervisor-stat-card stat-amber">
                     <div class="supervisor-stat-icon" aria-hidden="true">▣</div>
-                    <div class="supervisor-stat-copy">
-                        <span>Active Interns</span>
-                        <strong>{{ active_interns|length }}</strong>
-                        <small>Currently active right now</small>
-                    </div>
+                    <div class="supervisor-stat-copy"><span>Active Interns</span><strong>{{ active_interns|length }}</strong><small>Currently active right now</small></div>
                     <a href="{{ url_for('supervisor.view_interns') }}" aria-label="View active interns">→</a>
                 </article>
                 <article class="supervisor-stat-card stat-violet">
                     <div class="supervisor-stat-icon" aria-hidden="true">✓</div>
-                    <div class="supervisor-stat-copy">
-                        <span>Recent Tasks</span>
-                        <strong>{{ recent_tasks|length }}</strong>
-                        <small>Latest assigned task activity</small>
-                    </div>
+                    <div class="supervisor-stat-copy"><span>Recent Tasks</span><strong>{{ recent_tasks|length }}</strong><small>Latest assigned task activity</small></div>
                     <a href="{{ url_for('classroom.supervisor_classes') }}" aria-label="Open classes">→</a>
                 </article>
             </section>
 
             <section class="supervisor-dashboard-grid" aria-label="Supervisor activity overview">
                 <article class="supervisor-dashboard-card supervisor-activity-card">
-                    <header class="supervisor-dashboard-card-heading">
-                        <div>
-                            <span class="card-kicker">LIVE FEED</span>
-                            <h2>Recent Activities</h2>
-                        </div>
-                        {% if acts %}<span class="heading-count">{{ acts|length }} recent</span>{% endif %}
-                    </header>
+                    <header class="supervisor-dashboard-card-heading"><div><span class="card-kicker">LIVE FEED</span><h2>Recent Activities</h2></div>{% if acts %}<span class="heading-count">{{ acts|length }} recent</span>{% endif %}</header>
                     <div class="supervisor-dashboard-card-body">
-                        {% if acts %}
-                            <div class="supervisor-activity-list">
-                                {% for act in acts %}
-                                    <div class="supervisor-activity-item">
-                                        <span class="supervisor-activity-icon" aria-hidden="true">↗</span>
-                                        <div class="supervisor-activity-copy">
-                                            <strong>{{ act[0] }}</strong>
-                                            <p>{{ act[1] }}</p>
-                                            <small>{{ act[2] }}</small>
-                                        </div>
-                                        <a href="/supervisor/student/{{ act[3] }}" class="supervisor-activity-action">View Intern</a>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                        {% else %}
-                            <div class="supervisor-empty-state compact">
-                                <div class="empty-state-icon">↗</div>
-                                <strong>No recent activities</strong>
-                                <p>Intern submissions and supervision activity will appear here.</p>
-                            </div>
-                        {% endif %}
+                        {% if acts %}<div class="supervisor-activity-list">{% for act in acts %}<div class="supervisor-activity-item"><span class="supervisor-activity-icon" aria-hidden="true">↗</span><div class="supervisor-activity-copy"><strong>{{ act[0] }}</strong><p>{{ act[1] }}</p><small>{{ act[2] }}</small></div><a href="/supervisor/student/{{ act[3] }}" class="supervisor-activity-action">View Intern</a></div>{% endfor %}</div>
+                        {% else %}<div class="supervisor-empty-state compact"><div class="empty-state-icon">↗</div><strong>No recent activities</strong><p>Intern submissions and supervision activity will appear here.</p></div>{% endif %}
                     </div>
                 </article>
 
                 <aside class="supervisor-dashboard-side">
                     <article class="supervisor-dashboard-card supervisor-side-card">
-                        <header class="supervisor-dashboard-card-heading">
-                            <div><span class="card-kicker">LIVE STATUS</span><h2>Currently Active</h2></div>
-                            <span class="live-dot" aria-label="Live"></span>
-                        </header>
+                        <header class="supervisor-dashboard-card-heading"><div><span class="card-kicker">LIVE STATUS</span><h2>Currently Active</h2></div><span class="live-dot" aria-label="Live"></span></header>
                         <div class="supervisor-dashboard-card-body">
-                            {% if active_interns %}
-                                <div class="supervisor-active-list">
-                                    {% for intern in active_interns %}
-                                        <div class="supervisor-active-item">
-                                            <span class="active-avatar">{{ intern[0][0]|upper }}</span>
-                                            <div><strong>{{ intern[0] }}</strong><small>Clocked in {{ intern[1] }}</small></div>
-                                            <span class="active-pill">Active</span>
-                                        </div>
-                                    {% endfor %}
-                                </div>
-                            {% else %}
-                                <div class="supervisor-empty-state compact"><div class="empty-state-icon">◷</div><strong>No active interns</strong><p>No interns are currently clocked in.</p></div>
-                            {% endif %}
+                            {% if active_interns %}<div class="supervisor-active-list">{% for intern in active_interns %}<div class="supervisor-active-item"><span class="active-avatar">{{ intern[0][0]|upper }}</span><div><strong>{{ intern[0] }}</strong><small>Clocked in {{ intern[1] }}</small></div><span class="active-pill">Active</span></div>{% endfor %}</div>
+                            {% else %}<div class="supervisor-empty-state compact"><div class="empty-state-icon">◷</div><strong>No active interns</strong><p>No interns are currently clocked in.</p></div>{% endif %}
                         </div>
                     </article>
-
                     <article class="supervisor-dashboard-card supervisor-side-card">
-                        <header class="supervisor-dashboard-card-heading">
-                            <div><span class="card-kicker">TASK MONITOR</span><h2>Recent Tasks</h2></div>
-                        </header>
+                        <header class="supervisor-dashboard-card-heading"><div><span class="card-kicker">TASK MONITOR</span><h2>Recent Tasks</h2></div></header>
                         <div class="supervisor-dashboard-card-body">
-                            {% if recent_tasks %}
-                                <div class="supervisor-task-list">
-                                    {% for task in recent_tasks %}
-                                        <div class="supervisor-task-item">
-                                            <span class="task-marker" aria-hidden="true"></span>
-                                            <div class="task-copy"><strong>{{ task[0] }}</strong><small>Assigned to {{ task[1] }}</small>{% if task[3] %}<small>Due {{ task[3] }}</small>{% endif %}</div>
-                                            {% if task[2] == 'Submitted' %}<span class="supervisor-status submitted">Submitted</span>
-                                            {% elif task[2] == 'Reviewed' %}<span class="supervisor-status reviewed">Reviewed</span>
-                                            {% elif task[2] == 'Reopened' %}<span class="supervisor-status reopened">Reopened</span>
-                                            {% else %}<span class="supervisor-status pending">Pending</span>{% endif %}
-                                        </div>
-                                    {% endfor %}
-                                </div>
-                            {% else %}
-                                <div class="supervisor-empty-state compact"><div class="empty-state-icon">✓</div><strong>No tasks available</strong><p>New task activity will appear here.</p></div>
-                            {% endif %}
+                            {% if recent_tasks %}<div class="supervisor-task-list">{% for task in recent_tasks %}<div class="supervisor-task-item"><span class="task-marker" aria-hidden="true"></span><div class="task-copy"><strong>{{ task[0] }}</strong><small>Assigned to {{ task[1] }}</small>{% if task[3] %}<small>Due {{ task[3] }}</small>{% endif %}</div>{% if task[2] == 'Submitted' %}<span class="supervisor-status submitted">Submitted</span>{% elif task[2] == 'Reviewed' %}<span class="supervisor-status reviewed">Reviewed</span>{% elif task[2] == 'Reopened' %}<span class="supervisor-status reopened">Reopened</span>{% else %}<span class="supervisor-status pending">Pending</span>{% endif %}</div>{% endfor %}</div>
+                            {% else %}<div class="supervisor-empty-state compact"><div class="empty-state-icon">✓</div><strong>No tasks available</strong><p>New task activity will appear here.</p></div>{% endif %}
                         </div>
                     </article>
                 </aside>
@@ -153,16 +82,9 @@
 
             <section class="supervisor-lower-grid">
                 <article class="supervisor-dashboard-card supervisor-analytics-card">
-                    <header class="supervisor-dashboard-card-heading">
-                        <div><span class="card-kicker">INSIGHTS</span><h2>Performance Analytics</h2></div>
-                        <a href="{{ url_for('supervisor.view_interns') }}" class="section-link">View interns →</a>
-                    </header>
-                    <div class="supervisor-analytics-empty">
-                        <div class="analytics-visual" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
-                        <div><strong>Performance insights are ready for your data</strong><p>Reports, performance classifications, and machine learning insights will appear here as evaluation data becomes available.</p></div>
-                    </div>
+                    <header class="supervisor-dashboard-card-heading"><div><span class="card-kicker">INSIGHTS</span><h2>Performance Analytics</h2></div><a href="{{ url_for('supervisor.view_interns') }}" class="section-link">View interns →</a></header>
+                    <div class="supervisor-analytics-empty"><div class="analytics-visual" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div><div><strong>Performance insights are ready for your data</strong><p>Reports, performance classifications, and machine learning insights will appear here as evaluation data becomes available.</p></div></div>
                 </article>
-
                 <article class="supervisor-dashboard-card supervisor-actions-card">
                     <header class="supervisor-dashboard-card-heading"><div><span class="card-kicker">SHORTCUTS</span><h2>Supervisor Tools</h2></div></header>
                     <div class="supervisor-action-list">
