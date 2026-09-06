@@ -1,47 +1,40 @@
 <aside class="supervisor-sidebar" id="mainSidebar" aria-label="Supervisor navigation">
-    <div class="sidebar-header">
-        <a class="sidebar-brand" href="{{ url_for('supervisor.supervisor_dashboard') }}">
-            <img src="{{ url_for('static',filename='images/Nexora.png') }}" alt="Nexora">
-            <span class="sidebar-brand-text"><strong>Nexora</strong><small>CODING</small></span>
-        </a>
-        <button class="hamburger-btn sidebar-toggle sidebar-collapse-btn" type="button" aria-label="Collapse sidebar" title="Collapse sidebar">&lt;</button>
-    </div>
-
-    <a href="{{ url_for('supervisor.supervisor_profile') }}" class="sidebar-profile" aria-label="View supervisor profile">
-        <div class="sidebar-profile-icon">
-            {% if sidebar_profile and sidebar_profile.profile_picture %}
-                <img src="{{ url_for('profile_picture',filename=sidebar_profile.profile_picture) }}" class="sidebar-avatar" alt="Supervisor profile">
-            {% else %}
-                <img src="{{ url_for('static',filename='images/default_profile.png') }}" class="sidebar-avatar" alt="Supervisor profile">
-            {% endif %}
-        </div>
-        <div class="sidebar-profile-copy">
-            <h4>{{ sidebar_profile.username if sidebar_profile else 'Supervisor' }}</h4>
-            <p>Supervisor</p>
-            <span>View profile →</span>
-        </div>
+    <a class="sidebar-brand" href="{{ url_for('supervisor.supervisor_dashboard') }}">
+        <span class="sidebar-logo">N</span>
+        <span class="sidebar-brand-copy"><strong>NEXORA</strong><small>CODING</small></span>
     </a>
 
-    <div class="sidebar-nav-scroll">
-        <div class="sidebar-section-label">MENU</div>
-        <ul class="sidebar-menu">
-            <li><a href="{{ url_for('supervisor.supervisor_dashboard') }}" class="{% if active_page=='dashboard' %}active{% endif %}"><span class="nav-icon">⌂</span><span class="nav-label">Dashboard</span></a></li>
-            <li><a href="{{ url_for('supervisor.view_interns') }}" class="{% if active_page=='interns' %}active{% endif %}"><span class="nav-icon">♙</span><span class="nav-label">Assigned Interns</span></a></li>
-            <li><a href="{{ url_for('classroom.supervisor_classes') }}" class="{% if active_page=='classes' %}active{% endif %}"><span class="nav-icon">▣</span><span class="nav-label">My Classes</span></a></li>
-            <li><a href="{{ url_for('notifications.notification_list') }}" class="{% if request.path=='/notifications' %}active{% endif %}"><span class="nav-icon">♧</span><span class="nav-label">Notifications</span>{% if unread_count %}<span class="sidebar-notification-badge">{{ unread_count }}</span>{% endif %}</a></li>
-        </ul>
+    <a href="{{ url_for('supervisor.supervisor_profile') }}" class="sidebar-profile" aria-label="View supervisor profile">
+        {% if sidebar_profile and sidebar_profile.profile_picture %}
+            <img src="{{ url_for('profile_picture',filename=sidebar_profile.profile_picture) }}" class="sidebar-avatar" alt="Supervisor profile">
+        {% else %}
+            <img src="{{ url_for('static',filename='images/default_profile.png') }}" class="sidebar-avatar" alt="Supervisor profile">
+        {% endif %}
+        <span class="sidebar-profile-copy"><strong>{{ sidebar_profile.username if sidebar_profile else 'Supervisor' }}</strong><span>Supervisor</span><em>View Profile →</em></span>
+    </a>
 
-        <div class="sidebar-section-label sidebar-account-label">ACCOUNT</div>
-        <ul class="sidebar-menu sidebar-account-menu">
-            <li><a href="{{ url_for('supervisor.supervisor_profile') }}"><span class="nav-icon">◉</span><span class="nav-label">Profile</span></a></li>
-            <li><a href="javascript:void(0)" class="logout-link" onclick="openLogoutModal();return false"><span class="nav-icon">↪</span><span class="nav-label">Logout</span></a></li>
-        </ul>
-    </div>
+    <div class="sidebar-rule"></div>
+    <div class="sidebar-label">MENU</div>
+    <nav class="sidebar-nav" aria-label="Supervisor menu">
+        <a href="{{ url_for('supervisor.supervisor_dashboard') }}" class="{% if active_page=='dashboard' %}active{% endif %}"><span class="nav-icon">⌂</span><span class="nav-label">Dashboard</span></a>
+        <a href="{{ url_for('supervisor.view_interns') }}" class="{% if active_page=='interns' %}active{% endif %}"><span class="nav-icon">♙</span><span class="nav-label">Assigned Interns</span></a>
+        <a href="{{ url_for('classroom.supervisor_classes') }}" class="{% if active_page=='classes' %}active{% endif %}"><span class="nav-icon">▣</span><span class="nav-label">My Classes</span></a>
+        <a href="{{ url_for('notifications.notification_list') }}" class="{% if request.path=='/notifications' %}active{% endif %}"><span class="nav-icon">♧</span><span class="nav-label">Notifications</span>{% if unread_count %}<span class="sidebar-notification-badge">{{ unread_count }}</span>{% endif %}</a>
+    </nav>
+
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-label">ACCOUNT</div>
+    <nav class="sidebar-nav" aria-label="Supervisor account">
+        <a href="{{ url_for('supervisor.supervisor_profile') }}"><span class="nav-icon">◎</span><span class="nav-label">Profile</span></a>
+        <a href="javascript:void(0)" class="logout-link" onclick="openLogoutModal();return false"><span class="nav-icon">↪</span><span class="nav-label">Logout</span></a>
+    </nav>
 
     <div class="sidebar-footer">
-        <div class="sidebar-footer-mark">◆</div>
-        <div><strong>Nexora Coding</strong><span>Empowering Future<br>Developers</span></div>
+        <span class="footer-mark">◆</span>
+        <span><strong>Nexora Coding</strong><small>Empowering Future<br>Developers</small></span>
     </div>
+
+    <button class="sidebar-collapse-btn sidebar-toggle" type="button" aria-label="Collapse sidebar" title="Collapse sidebar">‹</button>
 </aside>
 {% include 'components/logout_modal.html' %}
 {% include 'components/toast.html' %}
