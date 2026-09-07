@@ -2,19 +2,9 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/role-sidebar.css') }}">
 
 <aside class="admin-sidebar compact-sidebar" id="mainSidebar">
-    <div class="sidebar-header">
-        <button
-            class="hamburger-btn sidebar-toggle"
-            type="button"
-            aria-label="Toggle sidebar"
-        >
-            ☰
-        </button>
-
-        <a class="sidebar-brand" href="{{ url_for('admin.admin_dashboard') }}">
-            <span>NEXORA<small>CODING</small></span>
-        </a>
-    </div>
+    <a class="sidebar-brand" href="{{ url_for('admin.admin_dashboard') }}">
+        <span>NEXORA<small>CODING</small></span>
+    </a>
 
     <a href="{{ url_for('admin.admin_dashboard') }}" class="sidebar-profile">
         <img
@@ -180,29 +170,33 @@
 
 <script>
 (function () {
-    function toggleSidebar() {
-        var sidebar = document.getElementById('mainSidebar');
-        if (!sidebar) return;
+    if (!window.__nexoraSidebarInit) {
+        window.__nexoraSidebarInit = true;
 
-        var isCollapsed = sidebar.classList.toggle('closed');
-        document.body.classList.toggle('sidebar-collapsed', isCollapsed);
+        function toggleSidebar() {
+            var sidebar = document.getElementById('mainSidebar');
+            if (!sidebar) return;
 
-        document.querySelectorAll('.sidebar-collapse-control').forEach(function (button) {
-            button.setAttribute(
-                'aria-label',
-                isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'
-            );
-            button.setAttribute(
-                'title',
-                isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'
-            );
-            button.innerHTML = isCollapsed ? '›' : '&lt;';
+            var isCollapsed = sidebar.classList.toggle('closed');
+            document.body.classList.toggle('sidebar-collapsed', isCollapsed);
+
+            document.querySelectorAll('.sidebar-collapse-control').forEach(function (button) {
+                button.setAttribute(
+                    'aria-label',
+                    isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'
+                );
+                button.setAttribute(
+                    'title',
+                    isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'
+                );
+                button.innerHTML = isCollapsed ? '›' : '&lt;';
+            });
+        }
+
+        document.querySelectorAll('.sidebar-toggle').forEach(function (button) {
+            button.addEventListener('click', toggleSidebar);
         });
     }
-
-    document.querySelectorAll('.sidebar-toggle').forEach(function (button) {
-        button.addEventListener('click', toggleSidebar);
-    });
 
     async function hideTrashedRows() {
         if (!location.pathname.startsWith('/admin/users/')) return;
