@@ -1,0 +1,450 @@
+/* =========================================================
+   Nexora Student Notification Popover
+   Shared by the Student topbar notification bell.
+   ========================================================= */
+
+.student-global-topbar .student-tasks-notification {
+    position: relative;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 38px;
+    height: 38px;
+    padding: 0;
+
+    border: 0;
+    border-radius: 10px;
+
+    background: transparent;
+    color: #0d3b2b;
+
+    cursor: pointer;
+
+    transition:
+        background 0.15s ease,
+        color 0.15s ease,
+        transform 0.15s ease;
+}
+
+.student-global-topbar .student-tasks-notification:hover,
+.student-global-topbar .student-tasks-notification[aria-expanded="true"] {
+    background: #eef8f1;
+    color: #0a8f46;
+}
+
+.student-global-topbar .student-tasks-notification:active {
+    transform: scale(0.96);
+}
+
+.student-global-topbar .student-notification-bell-icon {
+    display: block;
+
+    width: 20px;
+    height: 20px;
+
+    stroke: currentColor;
+}
+
+.student-global-topbar .student-tasks-notification-badge {
+    position: absolute;
+    top: 1px;
+    right: 0;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 17px;
+    height: 17px;
+    padding: 0 4px;
+
+    border: 2px solid #ffffff;
+    border-radius: 999px;
+
+    background: #ef4444;
+    color: #ffffff;
+
+    font-size: 8px;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.student-notification-popover {
+    position: fixed;
+    top: 66px;
+    right: 86px;
+    z-index: 1800;
+
+    width: min(390px, calc(100vw - 32px));
+    max-height: min(610px, calc(100vh - 90px));
+
+    overflow: hidden;
+
+    border: 1px solid #dfe8e2;
+    border-radius: 16px;
+
+    background: #ffffff;
+
+    box-shadow:
+        0 24px 60px rgba(10, 42, 30, 0.16),
+        0 6px 20px rgba(10, 42, 30, 0.08);
+}
+
+.student-notification-popover[hidden] {
+    display: none !important;
+}
+
+.student-notification-popover::before {
+    content: "";
+
+    position: absolute;
+    top: -7px;
+    right: 28px;
+
+    width: 14px;
+    height: 14px;
+
+    border-top: 1px solid #dfe8e2;
+    border-left: 1px solid #dfe8e2;
+
+    background: #ffffff;
+
+    transform: rotate(45deg);
+}
+
+.student-notification-popover-header {
+    position: relative;
+
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+
+    padding: 18px 18px 16px;
+
+    border-bottom: 1px solid #edf2ef;
+}
+
+.student-notification-eyebrow {
+    display: block;
+
+    margin-bottom: 4px;
+
+    color: #0a8f46;
+
+    font-size: 0.64rem;
+    font-weight: 800;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+}
+
+.student-notification-popover-header h2 {
+    margin: 0;
+
+    color: #10382a;
+
+    font-size: 1.06rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+.student-notification-popover-header p {
+    margin: 4px 0 0;
+
+    color: #7d8b84;
+
+    font-size: 0.68rem;
+    line-height: 1.45;
+}
+
+.student-notification-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 30px;
+    height: 30px;
+    padding: 0;
+
+    border: 0;
+    border-radius: 8px;
+
+    background: transparent;
+    color: #65766d;
+
+    font-size: 1.2rem;
+    line-height: 1;
+
+    cursor: pointer;
+}
+
+.student-notification-close:hover {
+    background: #f2f7f4;
+    color: #0d3b2b;
+}
+
+.student-notification-popover-body {
+    max-height: 410px;
+
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.student-notification-item {
+    position: relative;
+
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 11px;
+
+    width: 100%;
+    min-height: 76px;
+    padding: 13px 16px;
+
+    border: 0;
+    border-bottom: 1px solid #edf2ef;
+
+    background: #ffffff;
+    color: inherit;
+
+    text-align: left;
+
+    cursor: pointer;
+}
+
+.student-notification-item:hover {
+    background: #f8fbf9;
+}
+
+.student-notification-item.is-unread {
+    background: #f3fbf6;
+}
+
+.student-notification-item.is-unread:hover {
+    background: #edf8f1;
+}
+
+.student-notification-item-icon {
+    display: grid;
+    place-items: center;
+
+    width: 36px;
+    height: 36px;
+
+    border-radius: 11px;
+
+    font-size: 0.78rem;
+    font-weight: 900;
+}
+
+.student-notification-item-icon.is-info {
+    background: #e7f1ff;
+    color: #2e7ac5;
+}
+
+.student-notification-item-icon.is-success {
+    background: #e4f6ea;
+    color: #0a8f46;
+}
+
+.student-notification-item-icon.is-warning {
+    background: #fff2d8;
+    color: #b86d00;
+}
+
+.student-notification-item-icon.is-error {
+    background: #fde8eb;
+    color: #d93f4f;
+}
+
+.student-notification-item-copy {
+    display: grid;
+    min-width: 0;
+    gap: 3px;
+}
+
+.student-notification-item-copy strong {
+    overflow: hidden;
+
+    color: #173d30;
+
+    font-size: 0.76rem;
+    font-weight: 800;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.student-notification-item-copy > span {
+    display: -webkit-box;
+
+    overflow: hidden;
+
+    color: #687970;
+
+    font-size: 0.67rem;
+    line-height: 1.45;
+
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+.student-notification-item-copy small {
+    margin-top: 2px;
+
+    color: #9aa59f;
+
+    font-size: 0.59rem;
+}
+
+.student-notification-unread-dot {
+    width: 8px;
+    height: 8px;
+    margin-top: 5px;
+
+    border-radius: 50%;
+
+    background: #0a8f46;
+}
+
+.student-notification-empty-state {
+    display: grid;
+    place-items: center;
+
+    padding: 38px 24px;
+
+    text-align: center;
+}
+
+.student-notification-empty-icon {
+    display: grid;
+    place-items: center;
+
+    width: 48px;
+    height: 48px;
+    margin-bottom: 12px;
+
+    border-radius: 15px;
+
+    background: #e7f7ed;
+    color: #0a8f46;
+
+    font-size: 1.15rem;
+    font-weight: 900;
+}
+
+.student-notification-empty-state strong {
+    color: #173d30;
+
+    font-size: 0.82rem;
+    font-weight: 800;
+}
+
+.student-notification-empty-state p {
+    max-width: 245px;
+    margin: 6px 0 0;
+
+    color: #819087;
+
+    font-size: 0.68rem;
+    line-height: 1.5;
+}
+
+.student-notification-popover-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+
+    min-height: 58px;
+    padding: 10px 14px;
+
+    border-top: 1px solid #edf2ef;
+
+    background: #fbfdfb;
+}
+
+.student-notification-mark-all,
+.student-notification-read-status {
+    flex: 0 0 auto;
+
+    border: 0;
+    background: transparent;
+    color: #718078;
+
+    font-size: 0.64rem;
+    font-weight: 700;
+}
+
+.student-notification-mark-all {
+    padding: 7px 4px;
+
+    cursor: pointer;
+}
+
+.student-notification-mark-all:hover {
+    color: #0a8f46;
+}
+
+.student-notification-view-all {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+
+    min-height: 36px;
+    padding: 0 12px;
+
+    border: 1px solid #0a8f46;
+    border-radius: 9px;
+
+    background: #0a8f46;
+    color: #ffffff;
+
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-decoration: none;
+
+    transition:
+        background 0.15s ease,
+        border-color 0.15s ease,
+        transform 0.15s ease;
+}
+
+.student-notification-view-all:hover {
+    border-color: #08783b;
+    background: #08783b;
+    color: #ffffff;
+
+    transform: translateY(-1px);
+}
+
+@media (max-width: 760px) {
+    .student-notification-popover {
+        top: 58px;
+        right: 12px;
+
+        width: calc(100vw - 24px);
+        max-height: calc(100vh - 74px);
+    }
+
+    .student-notification-popover::before {
+        right: 62px;
+    }
+}
+
+@media (max-width: 430px) {
+    .student-notification-popover-footer {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .student-notification-mark-all,
+    .student-notification-read-status,
+    .student-notification-view-all {
+        width: 100%;
+        text-align: center;
+    }
+}
