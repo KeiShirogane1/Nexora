@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Dashboard - Nexora</title>
+
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
@@ -12,141 +13,210 @@
 <body class="student-page student-dashboard-page">
     {% include 'components/student_sidebar.html' %}
 
+    {#
+      FRONTEND CONTRACT FOR OPENCODE / BACKEND:
+      Existing controller variables used here:
+      profile, internship, log_count, task_total, task_completed,
+      document_count, attendance_count, recent_logs, recent_tasks,
+      recent_documents, recent_attendance.
+
+      Optional variables the backend can provide later without changing layout:
+      attendance_percentage (number)
+      recent_notifications (list of dicts: title, message, created_at, type, link_url)
+      dashboard_competencies (list/tuple pairs: label, percentage)
+    #}
+
     {% set required_hours = internship[5]|float if internship and internship[5] else 0 %}
     {% set completed_hours = internship[6]|float if internship and internship[6] else 0 %}
+    {% set remaining_hours = [required_hours - completed_hours, 0]|max %}
     {% set progress = ((completed_hours / required_hours) * 100) if required_hours > 0 else 0 %}
     {% set progress_capped = [progress, 100]|min %}
-    {% set remaining_hours = [required_hours - completed_hours, 0]|max %}
+    {% set has_attendance_percentage = attendance_percentage is defined and attendance_percentage is not none %}
+    {% set notification_rows = recent_notifications if recent_notifications is defined else [] %}
+    {% set competency_rows = dashboard_competencies if dashboard_competencies is defined else [
+        ('Technical Skills', 80),
+        ('Communication', 65),
+        ('Teamwork', 70),
+        ('Problem Solving', 55),
+        ('Professionalism', 60)
+    ] %}
 
     <main class="student-tasks-main student-dashboard-main">
         <div class="student-tasks-content student-dashboard-content">
+
             <section class="student-dashboard-heading" aria-labelledby="dashboard-heading">
-                <div>
-                    <div class="student-dashboard-breadcrumb"><span>Dashboard</span><span>›</span><span>Overview</span></div>
+                <div class="student-dashboard-heading-copy">
+                    <div class="student-dashboard-breadcrumb" aria-label="Breadcrumb">
+                        <span>Dashboard</span>
+                        <span aria-hidden="true">›</span>
+                        <span>Page</span>
+                    </div>
                     <h1 id="dashboard-heading">Dashboard</h1>
-                    <p>Here's your internship overview for today. Keep track of your progress, tasks, and recent activity.</p>
+                    <p>Here's your internship overview for today. Keep going, you're making great progress!</p>
                 </div>
-                <div class="student-dashboard-greeting">
-                    <span class="student-dashboard-greeting-icon">☀</span>
-                    <div>
-                        <small id="dashboard-greeting-label">Welcome back,</small>
+
+                <div class="student-dashboard-greeting" aria-label="Welcome message">
+                    <span class="student-dashboard-greeting-icon" aria-hidden="true">☀</span>
+                    <div class="student-dashboard-greeting-copy">
+                        <small id="dashboard-greeting-label">Good morning,</small>
                         <strong>{% if profile %}{{ profile[0] }} {{ profile[2] }}{% else %}Student{% endif %}</strong>
                         <span id="dashboard-current-date"></span>
                     </div>
                 </div>
             </section>
 
-            {% if not internship and task_total == 0 and log_count == 0 %}
-                <section class="student-dashboard-empty" aria-labelledby="empty-dashboard-title">
-                    <div class="student-dashboard-empty-icon">📋</div>
-                    <span class="student-dashboard-empty-eyebrow">Getting Started</span>
-                    <h2 id="empty-dashboard-title">No internship data yet</h2>
-                    <p>Once your internship is assigned and you begin logging hours, your progress, tasks, documents, and recent activity will appear here automatically.</p>
-                    <div class="student-dashboard-empty-actions">
-                        <a href="{{ url_for('student.logbook') }}" class="student-dashboard-button is-primary">Go to Logbook</a>
-                        <a href="{{ url_for('student.tasks') }}" class="student-dashboard-button">View Tasks</a>
-                        <a href="{{ url_for('classroom.student_classes') }}" class="student-dashboard-button">My Classes</a>
+            <section class="student-dashboard-stats" aria-label="Dashboard summary">
+                <article class="student-dashboard-stat">
+                    <div class="student-dashboard-stat-visual">
+                        <span class="student-dashboard-mini-ring" data-progress="{{ '%.0f'|format(progress_capped) }}"><span class="student-dashboard-mini-ring-icon" aria-hidden="true">▥</span></span>
                     </div>
-                </section>
-            {% else %}
-                <section class="student-dashboard-stats" aria-label="Dashboard summary">
-                    <article class="student-dashboard-stat">
-                        <div class="student-dashboard-stat-visual"><span class="student-dashboard-mini-ring" data-progress="{{ '%.0f'|format(progress_capped) }}"></span></div>
-                        <div class="student-dashboard-stat-copy"><span>Internship Progress</span><strong>{{ '%.0f'|format(progress_capped) }}%</strong><small>{{ completed_hours|round(1) }} / {{ required_hours|round(1) }} hours</small></div>
-                    </article>
-                    <article class="student-dashboard-stat"><span class="student-dashboard-stat-icon is-green">◷</span><div class="student-dashboard-stat-copy"><span>Hours Completed</span><strong>{{ completed_hours|round(1) }}</strong><small>This internship</small></div></article>
-                    <article class="student-dashboard-stat"><span class="student-dashboard-stat-icon is-amber">⌛</span><div class="student-dashboard-stat-copy"><span>Remaining Hours</span><strong>{{ remaining_hours|round(1) }}</strong><small>Until completion</small></div></article>
-                    <article class="student-dashboard-stat"><span class="student-dashboard-stat-icon is-green">✓</span><div class="student-dashboard-stat-copy"><span>Completed Tasks</span><strong>{{ task_completed }}</strong><small>Out of {{ task_total }} tasks</small></div></article>
-                    <article class="student-dashboard-stat"><span class="student-dashboard-stat-icon is-blue">▦</span><div class="student-dashboard-stat-copy"><span>Days Logged</span><strong>{{ attendance_count }}</strong><small>Attendance records</small></div></article>
-                    <article class="student-dashboard-stat"><span class="student-dashboard-stat-icon is-red">▣</span><div class="student-dashboard-stat-copy"><span>Days Remaining</span><strong id="dashboard-days-remaining">—</strong><small>Until internship ends</small></div></article>
-                </section>
+                    <div class="student-dashboard-stat-copy"><span>Internship Progress</span><strong>{{ '%.0f'|format(progress_capped) }}%</strong><small>{{ completed_hours|round(1) }} / {{ required_hours|round(1) }} hours</small></div>
+                </article>
+                <article class="student-dashboard-stat"><span class="student-dashboard-stat-icon is-green" aria-hidden="true">◷</span><div class="student-dashboard-stat-copy"><span>Hours Completed</span><strong>{{ completed_hours|round(1) }}</strong><small>This internship</small></div></article>
+                <article class="student-dashboard-stat"><span class="student-dashboard-stat-icon is-amber" aria-hidden="true">⌛</span><div class="student-dashboard-stat-copy"><span>Remaining Hours</span><strong>{{ remaining_hours|round(1) }}</strong><small>Until completion</small></div></article>
+                <article class="student-dashboard-stat"><span class="student-dashboard-stat-icon is-green" aria-hidden="true">✓</span><div class="student-dashboard-stat-copy"><span>Completed Tasks</span><strong>{{ task_completed }}</strong><small>Out of {{ task_total }} tasks</small></div></article>
+                <article class="student-dashboard-stat"><span class="student-dashboard-stat-icon is-blue" aria-hidden="true">♙</span><div class="student-dashboard-stat-copy"><span>Attendance Status</span><strong>{% if has_attendance_percentage %}{{ attendance_percentage|round(0)|int }}%{% else %}{{ attendance_count }}{% endif %}</strong><small>{% if has_attendance_percentage %}This month{% else %}Days logged{% endif %}</small></div></article>
+                <article class="student-dashboard-stat"><span class="student-dashboard-stat-icon is-red" aria-hidden="true">▣</span><div class="student-dashboard-stat-copy"><span>Days Remaining</span><strong id="dashboard-days-remaining">—</strong><small>Until internship ends</small></div></article>
+            </section>
 
-                <section class="student-dashboard-main-grid">
-                    <article class="student-dashboard-card" aria-labelledby="internship-progress-title">
-                        <header class="student-dashboard-card-header">
-                            <div class="student-dashboard-card-title"><span class="student-dashboard-card-icon">▥</span><h2 id="internship-progress-title">Internship Progress</h2></div>
-                            <a href="{{ url_for('student.logbook') }}">View Full Progress →</a>
-                        </header>
-                        <div class="student-dashboard-progress-body">
-                            <div class="student-dashboard-overall-progress">
-                                <div class="student-dashboard-progress-ring" data-progress="{{ '%.0f'|format(progress_capped) }}"><strong>{{ '%.0f'|format(progress_capped) }}%</strong></div>
-                                <strong>Overall Progress</strong><span>{{ completed_hours|round(1) }} / {{ required_hours|round(1) }} hours</span><small>Completed</small>
+            <section class="student-dashboard-workspace">
+                <article class="student-dashboard-card student-dashboard-progress-card" aria-labelledby="internship-progress-title">
+                    <header class="student-dashboard-card-header">
+                        <div class="student-dashboard-card-title"><span class="student-dashboard-card-icon" aria-hidden="true">▥</span><h2 id="internship-progress-title">Internship Progress</h2></div>
+                        <a href="{{ url_for('student.logbook') }}">View Full Progress <span aria-hidden="true">→</span></a>
+                    </header>
+
+                    <div class="student-dashboard-progress-body">
+                        <div class="student-dashboard-overall-progress">
+                            <div class="student-dashboard-progress-ring" data-progress="{{ '%.0f'|format(progress_capped) }}"><strong>{{ '%.0f'|format(progress_capped) }}%</strong></div>
+                            <strong>Overall Progress</strong>
+                            <span>{{ completed_hours|round(1) }} / {{ required_hours|round(1) }} hours</span>
+                            <small>Completed</small>
+                        </div>
+
+                        <div class="student-dashboard-progress-details">
+                            <div class="student-dashboard-hours">
+                                <div class="student-dashboard-progress-row"><div><span>Completed Hours</span><strong>{{ completed_hours|round(1) }} hrs</strong></div><div class="student-dashboard-track"><i data-width="{{ '%.1f'|format(progress_capped) }}"></i></div></div>
+                                <div class="student-dashboard-progress-row"><div><span>Remaining Hours</span><strong>{{ remaining_hours|round(1) }} hrs</strong></div><div class="student-dashboard-track"><i data-width="{{ '%.1f'|format((remaining_hours / required_hours * 100) if required_hours > 0 else 0) }}"></i></div></div>
+                                <div class="student-dashboard-progress-row"><div><span>Total Required Hours</span><strong>{{ required_hours|round(1) }} hrs</strong></div><div class="student-dashboard-track"><i data-width="{{ 100 if required_hours > 0 else 0 }}"></i></div></div>
                             </div>
-                            <div class="student-dashboard-progress-details">
-                                <div class="student-dashboard-hours">
-                                    <div class="student-dashboard-progress-row"><div><span>Completed Hours</span><strong>{{ completed_hours|round(1) }} hrs</strong></div><div class="student-dashboard-track"><i data-width="{{ '%.1f'|format(progress_capped) }}"></i></div></div>
-                                    <div class="student-dashboard-progress-row"><div><span>Remaining Hours</span><strong>{{ remaining_hours|round(1) }} hrs</strong></div><div class="student-dashboard-track"><i data-width="{{ '%.1f'|format(100-progress_capped) }}"></i></div></div>
-                                    <div class="student-dashboard-progress-row"><div><span>Total Required Hours</span><strong>{{ required_hours|round(1) }} hrs</strong></div><div class="student-dashboard-track"><i data-width="100"></i></div></div>
-                                </div>
-                                <div class="student-dashboard-competencies">
-                                    <div class="student-dashboard-subheading"><span>▥</span><h3>Progress by Competency</h3></div>
-                                    {% set competencies = [('Technical Skills',80),('Communication',65),('Teamwork',70),('Problem Solving',55),('Professionalism',60)] %}
-                                    {% for competency, value in competencies %}<div class="student-dashboard-competency-row"><span>{{ competency }}</span><div class="student-dashboard-track"><i data-width="{{ value }}"></i></div><strong>{{ value }}%</strong></div>{% endfor %}
-                                </div>
+
+                            <div class="student-dashboard-competencies">
+                                <div class="student-dashboard-subheading"><span aria-hidden="true">▥</span><h3>Progress by Competency</h3></div>
+                                {% for competency, value in competency_rows %}<div class="student-dashboard-competency-row"><span>{{ competency }}</span><div class="student-dashboard-track"><i data-width="{{ value }}"></i></div><strong>{{ value }}%</strong></div>{% endfor %}
                             </div>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="student-dashboard-card student-dashboard-calendar-card" aria-labelledby="dashboard-calendar-title">
+                    <header class="student-dashboard-card-header">
+                        <div class="student-dashboard-card-title"><span class="student-dashboard-card-icon" aria-hidden="true">▦</span><h2 id="dashboard-calendar-title">Calendar</h2></div>
+                        <a href="{{ url_for('student.logbook') }}#attendance-history">View Calendar <span aria-hidden="true">→</span></a>
+                    </header>
+                    <div class="student-dashboard-calendar-toolbar"><strong id="dashboard-calendar-month"></strong><div><button id="dashboard-calendar-prev" type="button" aria-label="Previous month">‹</button><button id="dashboard-calendar-today" type="button">Today</button><button id="dashboard-calendar-next" type="button" aria-label="Next month">›</button></div></div>
+                    <div class="student-dashboard-calendar-weekdays" aria-hidden="true"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div>
+                    <div class="student-dashboard-calendar-grid" id="dashboard-calendar-grid"></div>
+                </article>
+
+                <aside class="student-dashboard-right-stack">
+                    <article class="student-dashboard-card" aria-labelledby="upcoming-tasks-title">
+                        <header class="student-dashboard-card-header"><div class="student-dashboard-card-title"><span class="student-dashboard-card-icon" aria-hidden="true">☷</span><h2 id="upcoming-tasks-title">Upcoming Tasks</h2></div><a href="{{ url_for('student.tasks') }}">View All <span aria-hidden="true">→</span></a></header>
+                        <div class="student-dashboard-list student-dashboard-task-list">
+                            {% if recent_tasks %}
+                                {% for task in recent_tasks[:3] %}
+                                    {% set task_title = task[3] if task|length > 3 else 'Task' %}
+                                    {% set task_status = task[9] if task|length > 9 and task[9] else 'Pending' %}
+                                    <a class="student-dashboard-list-row" href="/student/task/{{ task[0] }}"><span class="student-dashboard-list-icon" aria-hidden="true">▤</span><span class="student-dashboard-list-copy"><strong>{{ task_title }}</strong><small>Internship task</small></span><em class="{% if task_status|string|lower in ['submitted','completed','reviewed'] %}is-complete{% else %}is-pending{% endif %}">{{ task_status }}</em></a>
+                                {% endfor %}
+                            {% else %}<div class="student-dashboard-list-empty"><strong>No upcoming tasks</strong><span>Assigned tasks will appear here.</span></div>{% endif %}
                         </div>
                     </article>
 
-                    <aside class="student-dashboard-side-stack">
-                        <article class="student-dashboard-card student-dashboard-calendar-card">
-                            <header class="student-dashboard-card-header"><div class="student-dashboard-card-title"><span class="student-dashboard-card-icon">▦</span><h2>Calendar</h2></div></header>
-                            <div class="student-dashboard-calendar-toolbar"><strong id="dashboard-calendar-month"></strong><div><button id="dashboard-calendar-prev" type="button">‹</button><button id="dashboard-calendar-today" type="button">Today</button><button id="dashboard-calendar-next" type="button">›</button></div></div>
-                            <div class="student-dashboard-calendar-weekdays"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div>
-                            <div class="student-dashboard-calendar-grid" id="dashboard-calendar-grid"></div>
-                        </article>
+                    <article class="student-dashboard-card student-dashboard-notifications-card" aria-labelledby="recent-notifications-title">
+                        <header class="student-dashboard-card-header"><div class="student-dashboard-card-title"><span class="student-dashboard-card-icon" aria-hidden="true">♧</span><h2 id="recent-notifications-title">Recent Notifications</h2></div><a href="{{ url_for('notifications.notification_list') }}">View All <span aria-hidden="true">→</span></a></header>
+                        <div class="student-dashboard-notification-list">
+                            {% if notification_rows %}
+                                {% for notification in notification_rows[:3] %}
+                                    <a class="student-dashboard-notification-row" href="{{ notification.link_url|default(url_for('notifications.notification_list')) }}"><span class="student-dashboard-notification-dot {% if notification.type|default('') == 'classroom' %}is-blue{% endif %}"></span><span class="student-dashboard-notification-icon" aria-hidden="true">♧</span><span class="student-dashboard-notification-copy"><strong>{{ notification.title|default('Notification') }}</strong><span>{{ notification.message|default('You have a new update.') }}</span></span><time>{{ notification.created_at|default('Recently') }}</time></a>
+                                {% endfor %}
+                            {% else %}<div class="student-dashboard-list-empty student-dashboard-notification-empty"><strong>No recent notifications</strong><span>Your latest updates will appear here.</span></div>{% endif %}
+                        </div>
+                    </article>
+                </aside>
 
-                        <article class="student-dashboard-card">
-                            <header class="student-dashboard-card-header"><div class="student-dashboard-card-title"><span class="student-dashboard-card-icon">☷</span><h2>Upcoming Tasks</h2></div><a href="{{ url_for('student.tasks') }}">View All →</a></header>
-                            <div class="student-dashboard-list">
-                                {% if recent_tasks %}{% for task in recent_tasks[:3] %}{% set task_title = task[3] if task|length>3 else 'Task' %}{% set task_status = task[9] if task|length>9 else 'Pending' %}
-                                <a class="student-dashboard-list-row" href="/student/task/{{ task[0] }}"><span class="student-dashboard-list-icon">▤</span><span class="student-dashboard-list-copy"><strong>{{ task_title }}</strong><small>Internship task</small></span><em class="{% if task_status|string|lower in ['submitted','completed','reviewed'] %}is-complete{% else %}is-pending{% endif %}">{{ task_status }}</em></a>
-                                {% endfor %}{% else %}<div class="student-dashboard-list-empty">No tasks available yet.</div>{% endif %}
-                            </div>
-                        </article>
-                    </aside>
-                </section>
-
-                <section class="student-dashboard-quick-actions">
-                    <div><span class="student-dashboard-quick-icon">⚡</span><div><strong>Quick Actions</strong><span>Jump directly to your most common internship activities.</span></div></div>
-                    <nav><a href="{{ url_for('student.logbook') }}" class="student-dashboard-button is-primary">▣ Go to Logbook</a><a href="{{ url_for('student.tasks') }}" class="student-dashboard-button">☷ View Tasks</a><a href="{{ url_for('classroom.student_classes') }}" class="student-dashboard-button">♙ My Classes</a></nav>
+                <section class="student-dashboard-quick-actions" aria-label="Quick actions">
+                    <div class="student-dashboard-quick-copy"><span class="student-dashboard-quick-icon" aria-hidden="true">⚡</span><div><strong>Quick Actions</strong><span>Get started with your most common tasks.</span></div></div>
+                    <nav aria-label="Dashboard quick actions"><a href="{{ url_for('student.logbook') }}" class="student-dashboard-button is-primary">▤ Go to Logbook</a><a href="{{ url_for('student.tasks') }}" class="student-dashboard-button">☷ View Tasks</a><a href="{{ url_for('classroom.join_class') }}" class="student-dashboard-button">♙ Join Class</a></nav>
                 </section>
 
                 <section class="student-dashboard-bottom-grid">
-                    <article class="student-dashboard-card">
-                        <header class="student-dashboard-card-header"><div class="student-dashboard-card-title"><span class="student-dashboard-card-icon">▤</span><h2>Recent Logbook Entries</h2></div><a href="{{ url_for('student.logbook') }}">View All →</a></header>
-                        <div class="student-dashboard-list">{% if recent_logs %}{% for log in recent_logs[:3] %}<a class="student-dashboard-list-row" href="{{ url_for('student.logbook') }}"><span class="student-dashboard-list-icon">▧</span><span class="student-dashboard-list-copy"><strong>{{ (log[1] if log|length>1 else 'Logbook entry')|string|truncate(48,True,'…') }}</strong><small>{% if log|length>2 and log[2] %}{{ log[2] }}{% else %}Recent activity{% endif %}</small></span><em class="is-complete">Recorded</em></a>{% endfor %}{% else %}<div class="student-dashboard-list-empty">No logbook entries yet.</div>{% endif %}</div>
+                    <article class="student-dashboard-card" aria-labelledby="recent-logbook-title">
+                        <header class="student-dashboard-card-header"><div class="student-dashboard-card-title"><span class="student-dashboard-card-icon" aria-hidden="true">▤</span><h2 id="recent-logbook-title">Recent Logbook Entries</h2></div><a href="{{ url_for('student.logbook') }}">View All <span aria-hidden="true">→</span></a></header>
+                        <div class="student-dashboard-list">
+                            {% if recent_logs %}{% for log in recent_logs[:3] %}<a class="student-dashboard-list-row" href="{{ url_for('student.logbook') }}"><span class="student-dashboard-list-icon" aria-hidden="true">▧</span><span class="student-dashboard-list-copy"><strong>{{ (log[1] if log|length > 1 else 'Logbook entry')|string|truncate(45, True, '…') }}</strong><small>{% if log|length > 2 and log[2] %}{{ log[2] }}{% else %}Recent logbook activity{% endif %}</small></span><em class="is-complete">Recorded</em></a>{% endfor %}
+                            {% else %}<div class="student-dashboard-list-empty"><strong>No logbook entries</strong><span>Your latest entries will appear here.</span></div>{% endif %}
+                        </div>
                     </article>
-                    <article class="student-dashboard-card">
-                        <header class="student-dashboard-card-header"><div class="student-dashboard-card-title"><span class="student-dashboard-card-icon">▥</span><h2>Recent Documents</h2></div><a href="{{ url_for('student.documents') }}">View All →</a></header>
-                        <div class="student-dashboard-list">{% if recent_documents %}{% for doc in recent_documents[:3] %}<a class="student-dashboard-list-row" href="/student/document/{{ doc[0] }}" target="_blank"><span class="student-dashboard-list-icon is-document">▧</span><span class="student-dashboard-list-copy"><strong>{{ doc[1] if doc|length>1 else 'Document' }}</strong><small>{% if doc|length>2 %}Uploaded {{ doc[2] }}{% else %}Uploaded document{% endif %}</small></span><span class="student-dashboard-row-arrow">→</span></a>{% endfor %}{% else %}<div class="student-dashboard-list-empty">No documents uploaded yet.</div>{% endif %}</div>
+
+                    <article class="student-dashboard-card" aria-labelledby="recent-documents-title">
+                        <header class="student-dashboard-card-header"><div class="student-dashboard-card-title"><span class="student-dashboard-card-icon" aria-hidden="true">▥</span><h2 id="recent-documents-title">Recent Documents</h2></div><a href="{{ url_for('student.documents') }}">View All <span aria-hidden="true">→</span></a></header>
+                        <div class="student-dashboard-list">
+                            {% if recent_documents %}{% for doc in recent_documents[:3] %}<a class="student-dashboard-list-row" href="/student/document/{{ doc[0] }}" target="_blank" rel="noopener"><span class="student-dashboard-list-icon is-document" aria-hidden="true">▧</span><span class="student-dashboard-list-copy"><strong>{{ doc[1] if doc|length > 1 else 'Document' }}</strong><small>{% if doc|length > 2 %}Uploaded {{ doc[2] }}{% else %}Uploaded document{% endif %}</small></span><span class="student-dashboard-row-arrow" aria-hidden="true">⋮</span></a>{% endfor %}
+                            {% else %}<div class="student-dashboard-list-empty"><strong>No documents uploaded</strong><span>Your latest files will appear here.</span></div>{% endif %}
+                        </div>
                     </article>
-                    <article class="student-dashboard-card student-dashboard-overview-card">
-                        <header class="student-dashboard-card-header"><div class="student-dashboard-card-title"><span class="student-dashboard-card-icon">▦</span><h2>Internship Overview</h2></div></header>
-                        <dl class="student-dashboard-overview-list"><div><dt>Company</dt><dd>{{ internship[0] if internship else 'Not assigned' }}</dd></div><div><dt>Program</dt><dd>{{ profile[9] if profile and profile[9] else 'Not specified' }}</dd></div><div><dt>Position</dt><dd>{{ internship[1] if internship else 'Not assigned' }}</dd></div><div><dt>Supervisor</dt><dd>{{ internship[2] if internship else 'Not assigned' }}</dd></div><div><dt>Status</dt><dd><span class="student-dashboard-status">{{ internship[7] if internship else 'Not assigned' }}</span></dd></div><div><dt>Start Date</dt><dd>{{ internship[3] if internship else '—' }}</dd></div><div><dt>End Date</dt><dd>{{ internship[4] if internship else '—' }}</dd></div></dl>
+
+                    <article class="student-dashboard-card student-dashboard-overview-card" aria-labelledby="internship-overview-title">
+                        <header class="student-dashboard-card-header"><div class="student-dashboard-card-title"><span class="student-dashboard-card-icon" aria-hidden="true">▦</span><h2 id="internship-overview-title">Internship Overview</h2></div></header>
+                        <dl class="student-dashboard-overview-list"><div><dt>Company</dt><dd>{{ internship[0] if internship else 'Not assigned' }}</dd></div><div><dt>Department</dt><dd>{{ profile[9] if profile and profile[9] else 'Not specified' }}</dd></div><div><dt>Position</dt><dd>{{ internship[1] if internship else 'Not assigned' }}</dd></div><div><dt>Supervisor</dt><dd>{{ internship[2] if internship else 'Not assigned' }}</dd></div><div><dt>Status</dt><dd><span class="student-dashboard-status">{{ internship[7] if internship else 'Not assigned' }}</span></dd></div><div><dt>Start Date</dt><dd>{{ internship[3] if internship else '—' }}</dd></div><div><dt>End Date</dt><dd>{{ internship[4] if internship else '—' }}</dd></div></dl>
                     </article>
                 </section>
 
-                <aside class="student-dashboard-tip"><span class="student-dashboard-tip-icon">💡</span><strong>Productivity Tip</strong><p>Break larger tasks into smaller, manageable steps to stay productive and make steady progress.</p></aside>
-            {% endif %}
+                <aside class="student-dashboard-tip" aria-label="Productivity tip"><span class="student-dashboard-tip-icon" aria-hidden="true">💡</span><strong>Productivity Tip</strong><p>Break larger tasks into smaller, manageable steps to stay productive and make steady progress.</p><button type="button" class="student-dashboard-tip-dismiss" aria-label="Dismiss productivity tip">Got it!</button></aside>
+            </section>
         </div>
     </main>
 
     <script>
-    (function(){
-        const endDate={{ (internship[4] if internship else '')|tojson }};
-        const days=document.getElementById('dashboard-days-remaining');
-        if(days&&endDate){const end=new Date(endDate);end.setHours(23,59,59,999);days.textContent=Math.max(0,Math.ceil((end-new Date())/86400000));}
-        const now=new Date(),date=document.getElementById('dashboard-current-date'),greeting=document.getElementById('dashboard-greeting-label');
-        if(date)date.textContent=now.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'});
-        if(greeting){const h=now.getHours();greeting.textContent=h<12?'Good morning,':h<18?'Good afternoon,':'Good evening,';}
-        document.querySelectorAll('[data-width]').forEach(el=>el.style.width=Math.max(0,Math.min(100,Number(el.dataset.width||0)))+'%');
-        document.querySelectorAll('[data-progress]').forEach(el=>el.style.setProperty('--dashboard-progress',Math.max(0,Math.min(100,Number(el.dataset.progress||0)))));
-        const grid=document.getElementById('dashboard-calendar-grid'),monthLabel=document.getElementById('dashboard-calendar-month');let view=new Date();
-        function renderCalendar(){if(!grid||!monthLabel)return;grid.innerHTML='';const y=view.getFullYear(),m=view.getMonth(),first=new Date(y,m,1).getDay(),total=new Date(y,m+1,0).getDate(),prev=new Date(y,m,0).getDate();monthLabel.textContent=view.toLocaleDateString(undefined,{month:'long',year:'numeric'});for(let i=first-1;i>=0;i--){const s=document.createElement('span');s.className='is-muted';s.textContent=prev-i;grid.appendChild(s);}for(let d=1;d<=total;d++){const s=document.createElement('span');s.textContent=d;if(new Date(y,m,d).toDateString()===now.toDateString())s.classList.add('is-today');grid.appendChild(s);}let n=1;while(grid.children.length<42){const s=document.createElement('span');s.className='is-muted';s.textContent=n++;grid.appendChild(s);}}
+    (function () {
+        const now = new Date();
+        const endDate = {{ (internship[4] if internship else '')|tojson }};
+        const daysRemaining = document.getElementById('dashboard-days-remaining');
+        if (daysRemaining) { if (endDate) { const end = new Date(endDate); end.setHours(23,59,59,999); daysRemaining.textContent = Math.max(0, Math.ceil((end-now)/86400000)); } else { daysRemaining.textContent = '—'; } }
+
+        const currentDate = document.getElementById('dashboard-current-date');
+        const greetingLabel = document.getElementById('dashboard-greeting-label');
+        if (currentDate) currentDate.textContent = now.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+        if (greetingLabel) { const hour = now.getHours(); greetingLabel.textContent = hour < 12 ? 'Good morning,' : hour < 18 ? 'Good afternoon,' : 'Good evening,'; }
+
+        document.querySelectorAll('[data-width]').forEach(function (bar) { const value = Math.max(0, Math.min(100, Number(bar.dataset.width || 0))); bar.style.width = value + '%'; });
+        document.querySelectorAll('[data-progress]').forEach(function (ring) { const value = Math.max(0, Math.min(100, Number(ring.dataset.progress || 0))); ring.style.setProperty('--dashboard-progress', value); });
+
+        const calendarGrid = document.getElementById('dashboard-calendar-grid');
+        const calendarMonth = document.getElementById('dashboard-calendar-month');
+        let calendarView = new Date();
+
+        function renderCalendar() {
+            if (!calendarGrid || !calendarMonth) return;
+            calendarGrid.innerHTML = '';
+            const year = calendarView.getFullYear();
+            const month = calendarView.getMonth();
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const previousMonthDays = new Date(year, month, 0).getDate();
+            calendarMonth.textContent = calendarView.toLocaleDateString(undefined,{month:'long',year:'numeric'});
+            for (let offset = firstDay - 1; offset >= 0; offset--) { const day = document.createElement('span'); day.className = 'is-muted'; day.textContent = previousMonthDays - offset; calendarGrid.appendChild(day); }
+            for (let dayNumber = 1; dayNumber <= daysInMonth; dayNumber++) { const day = document.createElement('span'); const date = new Date(year, month, dayNumber); day.textContent = dayNumber; if (date.toDateString() === now.toDateString()) day.classList.add('is-today'); calendarGrid.appendChild(day); }
+            let nextMonthDay = 1;
+            while (calendarGrid.children.length < 42) { const day = document.createElement('span'); day.className = 'is-muted'; day.textContent = nextMonthDay++; calendarGrid.appendChild(day); }
+        }
+
         renderCalendar();
-        document.getElementById('dashboard-calendar-prev')?.addEventListener('click',()=>{view.setMonth(view.getMonth()-1);renderCalendar();});
-        document.getElementById('dashboard-calendar-next')?.addEventListener('click',()=>{view.setMonth(view.getMonth()+1);renderCalendar();});
-        document.getElementById('dashboard-calendar-today')?.addEventListener('click',()=>{view=new Date();renderCalendar();});
+        document.getElementById('dashboard-calendar-prev')?.addEventListener('click', function () { calendarView.setMonth(calendarView.getMonth() - 1); renderCalendar(); });
+        document.getElementById('dashboard-calendar-next')?.addEventListener('click', function () { calendarView.setMonth(calendarView.getMonth() + 1); renderCalendar(); });
+        document.getElementById('dashboard-calendar-today')?.addEventListener('click', function () { calendarView = new Date(); renderCalendar(); });
+        document.querySelector('.student-dashboard-tip-dismiss')?.addEventListener('click', function () { this.closest('.student-dashboard-tip')?.remove(); });
     })();
     </script>
 </body>
