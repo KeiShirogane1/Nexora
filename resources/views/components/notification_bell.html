@@ -1,30 +1,262 @@
-<style>
-.notification-wrapper { display:none !important; }
-</style>
+<link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/student-notification-popover.css') }}"
+>
 
-<div class="notification-wrapper">
-    <button type="button" class="notification-button" onclick="toggleNotifications(event)" aria-label="Recent notifications" aria-expanded="false">🔔{% if unread_count > 0 %}<span class="notification-count" id="notificationCount">{{ unread_count }}</span>{% endif %}</button>
-    <div id="notificationDropdown" class="notification-dropdown" role="menu">
-        <div class="notification-dropdown-header"><strong>Recent notifications</strong><span>Last 7 days</span></div>
+<div
+    id="studentNotificationPopover"
+    class="student-notification-popover"
+    role="dialog"
+    aria-modal="false"
+    aria-labelledby="studentNotificationTitle"
+    hidden
+>
+    <div class="student-notification-popover-header">
+        <div>
+            <span class="student-notification-eyebrow">Notifications</span>
+            <h2 id="studentNotificationTitle">Recent Updates</h2>
+            <p>Latest notifications from the last 7 days.</p>
+        </div>
+
+        <button
+            type="button"
+            class="student-notification-close"
+            aria-label="Close notifications"
+            onclick="closeStudentNotifications()"
+        >
+            ×
+        </button>
+    </div>
+
+    <div class="student-notification-popover-body">
         {% if recent_notifications %}
-            {% for notif in recent_notifications %}
-                <div id="notif-{{ notif['id'] }}" class="notification-item {% if notif['is_read'] == 0 %}unread{% endif %}" onclick="openNotification({{ notif['id'] }}, '{{ notif['link_url'] or '' }}', this)">
-                    <strong>{{ notif['title'] }}</strong><p>{{ notif['message'] }}</p><small>{{ notif['created_at'] }}</small>
-                </div>
+            {% for notif in recent_notifications[:5] %}
+                <button
+                    type="button"
+                    id="student-notification-{{ notif['id'] }}"
+                    class="student-notification-item {% if notif['is_read'] == 0 %}is-unread{% endif %}"
+                    onclick="openStudentNotification({{ notif['id'] }}, {{ (notif['link_url'] or '')|tojson }}, this)"
+                >
+                    <span class="student-notification-item-icon {% if notif['notification_type'] == 'warning' %}is-warning{% elif notif['notification_type'] == 'error' %}is-error{% elif notif['notification_type'] in ['success', 'task', 'classroom'] %}is-success{% else %}is-info{% endif %}" aria-hidden="true">
+                        {% if notif['notification_type'] == 'warning' %}
+                            !
+                        {% elif notif['notification_type'] == 'error' %}
+                            ×
+                        {% elif notif['notification_type'] in ['success', 'task', 'classroom'] %}
+                            ✓
+                        {% else %}
+                            i
+                        {% endif %}
+                    </span>
+
+                    <span class="student-notification-item-copy">
+                        <strong>{{ notif['title'] }}</strong>
+                        <span>{{ notif['message'] }}</span>
+                        <small>{{ notif['created_at'] }}</small>
+                    </span>
+
+                    {% if notif['is_read'] == 0 %}
+                        <span class="student-notification-unread-dot" aria-label="Unread"></span>
+                    {% endif %}
+                </button>
             {% endfor %}
-            {% if unread_count > 0 %}<div class="notification-mark-all"><button type="button" onclick="markAllRead(event)" class="notification-mark-all-button">Mark all as read</button></div>{% endif %}
-        {% else %}<div class="notification-empty">No notifications in the last 7 days.</div>{% endif %}
+        {% else %}
+            <div class="student-notification-empty-state">
+                <span class="student-notification-empty-icon" aria-hidden="true">✓</span>
+                <strong>You're all caught up</strong>
+                <p>No notifications were received in the last 7 days.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="student-notification-popover-footer">
+        {% if unread_count|default(0) > 0 %}
+            <button
+                type="button"
+                class="student-notification-mark-all"
+                onclick="markAllStudentNotificationsRead(event)"
+            >
+                Mark all as read
+            </button>
+        {% else %}
+            <span class="student-notification-read-status">All caught up</span>
+        {% endif %}
+
+        <a
+            href="{{ url_for('notifications.notification_list') }}"
+            class="student-notification-view-all"
+        >
+            View All Notifications
+            <span aria-hidden="true">→</span>
+        </a>
     </div>
 </div>
 
 <script>
-function toggleNotifications(event) {
-    if (event) event.stopPropagation();
-    const dropdown=document.getElementById('notificationDropdown'); const button=document.querySelector('.notification-button');
-    if (!dropdown) return; const open=dropdown.style.display==='block'; dropdown.style.display=open?'none':'block'; if(button)button.setAttribute('aria-expanded',String(!open));
-}
-function openNotification(notificationId,link,el){markNotificationRead(notificationId,el,false);if(link)window.location.href=link;}
-function markNotificationRead(notificationId,el,redirectAfter){fetch('/notification/read/'+notificationId,{method:'POST',headers:{'X-CSRFToken':'{{ csrf_token() }}'}}).then(r=>{if(r.ok){if(el)el.classList.remove('unread');const c=document.getElementById('notificationCount');if(c){let n=Math.max(0,(parseInt(c.textContent)||0)-1);if(n===0)c.remove();else c.textContent=n;}}}).catch(()=>{});}
-function markAllRead(e){if(e)e.stopPropagation();fetch('/notifications/read-all',{method:'POST',headers:{'X-CSRFToken':'{{ csrf_token() }}'}}).then(r=>r.json()).then(data=>{if(data.ok){document.querySelectorAll('.notification-item.unread').forEach(el=>el.classList.remove('unread'));const c=document.getElementById('notificationCount');if(c)c.remove();}}).catch(()=>{});}
-document.addEventListener('click',function(event){const wrapper=document.querySelector('.notification-wrapper');const dropdown=document.getElementById('notificationDropdown');if(wrapper&&dropdown&&!wrapper.contains(event.target))dropdown.style.display='none';});
+(function () {
+    function getNotificationElements() {
+        return {
+            trigger: document.getElementById('studentNotificationTrigger'),
+            popover: document.getElementById('studentNotificationPopover')
+        };
+    }
+
+    window.toggleStudentNotifications = function (event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+
+        var elements = getNotificationElements();
+        if (!elements.popover || !elements.trigger) {
+            return;
+        }
+
+        var shouldOpen = elements.popover.hasAttribute('hidden');
+
+        if (shouldOpen) {
+            elements.popover.removeAttribute('hidden');
+            elements.trigger.setAttribute('aria-expanded', 'true');
+        } else {
+            closeStudentNotifications();
+        }
+    };
+
+    window.closeStudentNotifications = function () {
+        var elements = getNotificationElements();
+        if (!elements.popover) {
+            return;
+        }
+
+        elements.popover.setAttribute('hidden', '');
+
+        if (elements.trigger) {
+            elements.trigger.setAttribute('aria-expanded', 'false');
+        }
+    };
+
+    function updateStudentNotificationBadge() {
+        var badge = document.getElementById('studentNotificationBadge');
+        if (!badge) {
+            return;
+        }
+
+        var nextCount = Math.max(0, (parseInt(badge.textContent, 10) || 0) - 1);
+
+        if (nextCount === 0) {
+            badge.remove();
+        } else {
+            badge.textContent = nextCount;
+        }
+    }
+
+    window.openStudentNotification = function (notificationId, linkUrl, item) {
+        var isUnread = item && item.classList.contains('is-unread');
+
+        fetch('/notification/read/' + notificationId, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token() }}'
+            }
+        })
+            .then(function (response) {
+                if (!response.ok) {
+                    throw new Error('Unable to mark notification as read.');
+                }
+
+                if (isUnread && item) {
+                    item.classList.remove('is-unread');
+
+                    var dot = item.querySelector('.student-notification-unread-dot');
+                    if (dot) {
+                        dot.remove();
+                    }
+
+                    updateStudentNotificationBadge();
+                }
+
+                if (linkUrl) {
+                    window.location.href = linkUrl;
+                }
+            })
+            .catch(function () {
+                if (linkUrl) {
+                    window.location.href = linkUrl;
+                }
+            });
+    };
+
+    window.markAllStudentNotificationsRead = function (event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+
+        fetch('/notifications/read-all', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token() }}'
+            }
+        })
+            .then(function (response) {
+                if (!response.ok) {
+                    throw new Error('Unable to mark notifications as read.');
+                }
+
+                return response.json();
+            })
+            .then(function (data) {
+                if (!data.ok) {
+                    return;
+                }
+
+                document
+                    .querySelectorAll('.student-notification-item.is-unread')
+                    .forEach(function (item) {
+                        item.classList.remove('is-unread');
+
+                        var dot = item.querySelector('.student-notification-unread-dot');
+                        if (dot) {
+                            dot.remove();
+                        }
+                    });
+
+                var badge = document.getElementById('studentNotificationBadge');
+                if (badge) {
+                    badge.remove();
+                }
+
+                var markAllButton = document.querySelector('.student-notification-mark-all');
+                if (markAllButton) {
+                    var status = document.createElement('span');
+                    status.className = 'student-notification-read-status';
+                    status.textContent = 'All caught up';
+                    markAllButton.replaceWith(status);
+                }
+            })
+            .catch(function () {
+                /* Keep the current UI state when the request fails. */
+            });
+    };
+
+    document.addEventListener('click', function (event) {
+        var elements = getNotificationElements();
+        if (!elements.popover || elements.popover.hasAttribute('hidden')) {
+            return;
+        }
+
+        if (
+            !elements.popover.contains(event.target) &&
+            (!elements.trigger || !elements.trigger.contains(event.target))
+        ) {
+            closeStudentNotifications();
+        }
+    });
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+            closeStudentNotifications();
+        }
+    });
+})();
 </script>
