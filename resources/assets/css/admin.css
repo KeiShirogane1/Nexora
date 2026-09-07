@@ -499,3 +499,573 @@ body.admin-students-page {
 .admin-students-page .dropdown-item-nexora:not(.danger):hover { background:#fff1eb !important; color:#d9471b !important; }
 .admin-students-page .btn-more:hover,
 .admin-students-page .btn-more[aria-expanded="true"] { border-color:#f45125 !important; color:#d9471b !important; background:#fffaf8 !important; }
+
+/* Nexora Admin dashboard QA fixes.
+   Keeps the shared sidebar identical while correcting shell alignment. */
+
+/* The Admin page must start at the top of the viewport like the Student Nexora shell. */
+html,
+body.admin-dashboard-page {
+    margin: 0 !important;
+    padding: 0 !important;
+    min-height: 100% !important;
+}
+
+body.admin-dashboard-page .admin-global-topbar {
+    margin-top: 0 !important;
+    top: 0 !important;
+}
+
+/* Prevent the logout confirmation component from ever occupying normal document flow.
+   It must only become visible when its .open state is explicitly added by the modal JS. */
+body.admin-dashboard-page #nexora-logout-overlay:not(.open) {
+    display: none !important;
+}
+body.admin-dashboard-page #nexora-logout-overlay.open {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 3000 !important;
+}
+
+/* Match the Student Nexora shell: sidebar starts flush with the viewport top and
+   the content/header begins immediately beside it, with no artificial top gap. */
+body.admin-dashboard-page .admin-sidebar {
+    top: 0 !important;
+}
+body.admin-dashboard-page .admin-global-topbar {
+    position: relative !important;
+    margin-left: var(--nexora-sidebar-width) !important;
+    width: calc(100% - var(--nexora-sidebar-width)) !important;
+}
+body.admin-dashboard-page .admin-main {
+    margin-left: var(--nexora-sidebar-width) !important;
+    width: calc(100% - var(--nexora-sidebar-width)) !important;
+}
+
+/* Shared Admin sidebar collapse control: visible on every Admin HTML page. */
+.admin-sidebar .sidebar-collapse-control {
+    position: absolute !important;
+    top: 50% !important;
+    right: -11px !important;
+    transform: translateY(-50%) !important;
+    width: 22px !important;
+    height: 22px !important;
+    min-width: 22px !important;
+    min-height: 22px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 2px solid #fff !important;
+    border-radius: 50% !important;
+    background: #ef5a2a !important;
+    color: #fff !important;
+    box-shadow: 0 2px 7px rgba(15,23,42,.18) !important;
+    font-size: 15px !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+    z-index: 1105 !important;
+    cursor: pointer !important;
+}
+.admin-sidebar .sidebar-collapse-control:hover {
+    background: #d9471b !important;
+}
+.admin-sidebar.closed .sidebar-collapse-control {
+    right: -11px !important;
+}
+
+@media (max-width: 768px) {
+    body.admin-dashboard-page .admin-global-topbar,
+    body.admin-dashboard-page .admin-main {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+    .admin-sidebar .sidebar-collapse-control { display: none !important; }
+}
+
+/* =========================================================
+   NEXORA ADMIN DASHBOARD — RED/ORANGE REDESIGN
+   Scoped to .admin-dashboard-page only.
+   The shared admin sidebar component is intentionally untouched.
+   ========================================================= */
+
+body.admin-dashboard-page {
+    --admin-accent: #ef5a2a;
+    --admin-accent-dark: #d9471b;
+    --admin-accent-soft: #fff0eb;
+    --admin-accent-pale: #fff8f5;
+    --admin-bg: #f4f7f9;
+    --admin-surface: #ffffff;
+    --admin-border: #e5eaee;
+    --admin-text: #14212f;
+    --admin-muted: #6f7d8b;
+    --admin-sidebar: #101a2c;
+    background: var(--admin-bg) !important;
+    color: var(--admin-text);
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Shared shell: sidebar remains the existing admin component. */
+body.admin-dashboard-page .admin-sidebar .sidebar-menu a.active,
+body.admin-dashboard-page .admin-sidebar .sidebar-menu a.active-parent,
+body.admin-dashboard-page .admin-sidebar .nav-parent.active-parent {
+    background: var(--admin-accent) !important;
+    color: #fff !important;
+}
+body.admin-dashboard-page .admin-sidebar .sidebar-menu a.active .nav-icon,
+body.admin-dashboard-page .admin-sidebar .sidebar-menu a.active-parent .nav-icon { color: #fff !important; }
+
+.admin-global-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 900;
+    height: 64px;
+    margin-left: var(--nexora-sidebar-width);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 30px;
+    background: rgba(255,255,255,.97);
+    border-bottom: 1px solid var(--admin-border);
+    backdrop-filter: blur(12px);
+}
+.admin-topbar-left,
+.admin-topbar-right { display:flex; align-items:center; }
+.admin-topbar-left { gap:16px; min-width:0; }
+.admin-topbar-right { gap:22px; }
+.admin-topbar-menu {
+    width:34px;
+    height:34px;
+    border:1px solid transparent;
+    border-radius:9px;
+    background:transparent;
+    color:#26394b;
+    font-size:18px;
+    line-height:1;
+    cursor:pointer;
+}
+.admin-topbar-menu:hover { background:#f4f6f8; border-color:#e6eaee; }
+.admin-search {
+    width:330px;
+    height:38px;
+    display:flex;
+    align-items:center;
+    gap:9px;
+    padding:0 13px;
+    border:1px solid #dfe5ea;
+    border-radius:9px;
+    background:#f9fafb;
+    color:#84919d;
+}
+.admin-search:focus-within { border-color:#f0b29e; background:#fff; box-shadow:0 0 0 3px rgba(239,90,42,.08); }
+.admin-search span { font-size:16px; }
+.admin-search input {
+    width:100%;
+    border:0;
+    outline:0;
+    background:transparent;
+    color:#26394b;
+    font-size:12px;
+}
+.admin-search input::placeholder { color:#9aa5ae; }
+.admin-topbar-notification {
+    position:relative;
+    color:#4e6070;
+    font-size:17px;
+    text-decoration:none;
+    cursor:pointer;
+}
+.admin-topbar-badge {
+    position:absolute;
+    top:-7px;
+    right:-8px;
+    min-width:15px;
+    height:15px;
+    padding:0 4px;
+    border-radius:999px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:var(--admin-accent);
+    color:#fff;
+    font-size:9px;
+    font-weight:800;
+}
+.admin-topbar-user { display:flex; align-items:center; gap:9px; }
+.admin-topbar-user img { width:36px; height:36px; border-radius:50%; object-fit:cover; }
+.admin-topbar-user span { display:flex; flex-direction:column; line-height:1.15; }
+.admin-topbar-user strong { color:#1c2a39; font-size:11px; font-weight:800; }
+.admin-topbar-user small { color:#7e8b96; font-size:9px; margin-top:2px; }
+
+.admin-dashboard-content {
+    width:min(100%, 1260px);
+    margin:0 auto;
+    padding:28px 30px 46px;
+}
+.admin-breadcrumb {
+    margin:0 0 16px;
+    color:#82909c;
+    font-size:11px;
+    font-weight:600;
+}
+.admin-breadcrumb span { margin:0 6px; color:#b4bdc5; }
+
+/* Hero */
+.admin-hero-card {
+    position:relative;
+    overflow:hidden;
+    min-height:142px;
+    margin-bottom:18px;
+    padding:25px 27px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:25px;
+    border:1px solid var(--admin-border);
+    border-radius:14px;
+    background:linear-gradient(135deg,#fff 0%,#fff 72%,#fff6f2 100%);
+    box-shadow:0 8px 28px rgba(22,35,48,.055);
+}
+.admin-hero-card::after {
+    content:"";
+    position:absolute;
+    width:190px;
+    height:190px;
+    right:-75px;
+    top:-90px;
+    border-radius:50%;
+    background:rgba(239,90,42,.055);
+}
+.admin-hero-copy { position:relative; z-index:1; }
+.admin-eyebrow,
+.admin-card-kicker {
+    display:block;
+    color:var(--admin-accent);
+    font-size:9px;
+    font-weight:800;
+    letter-spacing:.12em;
+}
+.admin-hero-copy h1 {
+    margin:5px 0 5px;
+    color:#132030;
+    font-size:28px;
+    line-height:1.1;
+    font-weight:800;
+}
+.admin-hero-copy p { margin:0; color:#5e7080; font-size:12px; line-height:1.5; }
+.admin-hero-copy .admin-hero-description { color:#7b8995; margin-top:2px; }
+.admin-hero-status {
+    position:relative;
+    z-index:1;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    min-width:215px;
+    padding:12px 14px;
+    border:1px solid #dcefe4;
+    border-radius:11px;
+    background:#f7fcf9;
+}
+.admin-status-pulse { width:9px; height:9px; flex:0 0 9px; border-radius:50%; background:#20b66a; box-shadow:0 0 0 4px rgba(32,182,106,.10); }
+.admin-hero-status strong { display:block; color:#177747; font-size:11px; font-weight:800; }
+.admin-hero-status small { display:block; margin-top:3px; color:#779286; font-size:9px; }
+
+/* KPI row */
+.admin-metric-grid {
+    display:grid;
+    grid-template-columns:repeat(6,minmax(0,1fr));
+    gap:12px;
+    margin-bottom:18px;
+}
+.admin-metric-card {
+    min-width:0;
+    min-height:104px;
+    display:flex;
+    align-items:center;
+    gap:11px;
+    padding:15px;
+    border:1px solid var(--admin-border);
+    border-radius:12px;
+    background:#fff;
+    box-shadow:0 5px 20px rgba(22,35,48,.045);
+}
+.admin-metric-icon {
+    width:38px;
+    height:38px;
+    flex:0 0 38px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:10px;
+    font-size:15px;
+    font-weight:800;
+}
+.admin-icon-orange { background:#fff0eb; color:#ef5a2a; }
+.admin-icon-amber { background:#fff6df; color:#e19a16; }
+.admin-icon-red { background:#fff0f0; color:#df3c3c; }
+.admin-icon-slate { background:#eef3f6; color:#536777; }
+.admin-icon-purple { background:#f3efff; color:#7651c9; }
+.admin-icon-blue { background:#edf5ff; color:#3477c8; }
+.admin-metric-copy { min-width:0; }
+.admin-metric-copy span { display:block; color:#72808d; font-size:10px; line-height:1.35; white-space:normal; }
+.admin-metric-copy strong { display:block; margin-top:4px; color:#142333; font-size:23px; line-height:1; font-weight:800; }
+.admin-metric-copy small { display:block; margin-top:5px; color:#9aa5ae; font-size:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+/* Main cards */
+.admin-dashboard-grid { display:grid; gap:14px; }
+.admin-dashboard-grid-main { grid-template-columns:1.65fr 1fr; margin-bottom:14px; }
+.admin-dashboard-grid-lower { grid-template-columns:1.15fr .85fr; }
+.admin-surface-card {
+    border:1px solid var(--admin-border);
+    border-radius:13px;
+    background:#fff;
+    box-shadow:0 6px 22px rgba(22,35,48,.045);
+}
+.admin-card-heading {
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:15px;
+    padding:18px 19px 14px;
+}
+.admin-card-heading h2 { margin:4px 0 0; color:#162535; font-size:15px; line-height:1.25; font-weight:800; }
+.admin-card-heading p { margin:4px 0 0; color:#8996a1; font-size:10px; }
+.admin-text-link { color:var(--admin-accent); font-size:10px; font-weight:800; text-decoration:none; white-space:nowrap; }
+.admin-text-link:hover { color:var(--admin-accent-dark); }
+.admin-text-link span { font-size:13px; margin-left:3px; }
+
+/* Internship overview */
+.admin-overview-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; padding:0 19px 19px; }
+.admin-overview-stat { padding:14px; border:1px solid #e7ecef; border-radius:10px; background:#fafbfc; }
+.admin-stat-top { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.admin-stat-top span { color:#677785; font-size:10px; font-weight:600; }
+.admin-stat-top b { color:#1b2b3a; font-size:17px; }
+.admin-mini-track { height:5px; margin:11px 0 8px; overflow:hidden; border-radius:999px; background:#e9edf0; }
+.admin-mini-track span { display:block; height:100%; border-radius:inherit; background:var(--admin-accent); }
+.admin-overview-pending .admin-mini-track span { width:22%; background:#e7a02b; }
+.admin-overview-active .admin-mini-track span { width:62%; background:var(--admin-accent); }
+.admin-overview-complete .admin-mini-track span { width:38%; background:#25ae6b; }
+.admin-overview-stat small { color:#99a4ad; font-size:8px; }
+
+/* System */
+.admin-health-label { display:inline-flex; align-items:center; gap:6px; color:#14935a; font-size:9px; font-weight:800; }
+.admin-health-label i { width:7px; height:7px; border-radius:50%; background:#20b66a; }
+.admin-system-list { padding:0 19px 18px; }
+.admin-system-item {
+    min-height:42px;
+    margin-top:7px;
+    padding:0 12px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    border:1px solid #e9edef;
+    border-radius:9px;
+    background:#fafbfc;
+}
+.admin-system-item span { display:flex; align-items:center; gap:8px; color:#526473; font-size:10px; font-weight:600; }
+.admin-system-item span i { width:7px; height:7px; border-radius:50%; background:#22b86d; }
+.admin-system-item span i.neutral { background:#98a4ad; }
+.admin-system-item strong { color:#15945a; font-size:9px; font-weight:800; }
+.admin-system-item:last-child strong { color:#536473; }
+
+/* Quick actions */
+.admin-actions-card { margin-bottom:14px; }
+.admin-actions-heading { padding-bottom:11px; }
+.admin-action-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; padding:0 19px 19px; }
+.admin-action-tile {
+    min-height:72px;
+    display:grid;
+    grid-template-columns:32px 1fr 12px;
+    align-items:center;
+    gap:9px;
+    padding:11px;
+    border:1px solid #e6ebee;
+    border-radius:10px;
+    background:#fff;
+    color:#243545;
+    text-decoration:none;
+    transition:.16s ease;
+}
+.admin-action-tile:hover { transform:translateY(-2px); border-color:#f0b39f; background:#fffaf8; box-shadow:0 7px 18px rgba(22,35,48,.06); }
+.admin-action-icon { width:32px; height:32px; display:flex; align-items:center; justify-content:center; border-radius:9px; background:var(--admin-accent-soft); color:var(--admin-accent); font-size:13px; font-weight:800; }
+.admin-action-tile:nth-child(2) .admin-action-icon { background:#fff5e4; color:#dd911d; }
+.admin-action-tile:nth-child(3) .admin-action-icon { background:#fff0ed; color:#df4930; }
+.admin-action-tile:nth-child(4) .admin-action-icon { background:#edf5ff; color:#3477c8; }
+.admin-action-tile span:not(.admin-action-icon) { min-width:0; }
+.admin-action-tile strong { display:block; color:#253646; font-size:10px; font-weight:800; line-height:1.3; }
+.admin-action-tile small { display:block; margin-top:3px; color:#929da6; font-size:8px; line-height:1.3; }
+.admin-action-tile > b { color:var(--admin-accent); font-size:13px; }
+
+/* Recent activity */
+.admin-activity-list { list-style:none; margin:0; padding:0 19px 13px; }
+.admin-activity-list li { display:flex; align-items:center; gap:10px; min-height:49px; border-top:1px solid #edf0f2; }
+.admin-activity-icon { width:30px; height:30px; flex:0 0 30px; display:flex; align-items:center; justify-content:center; border-radius:9px; font-size:12px; font-weight:800; }
+.admin-activity-icon.orange { background:#fff0eb; color:#ef5a2a; }
+.admin-activity-icon.amber { background:#fff6df; color:#dd971c; }
+.admin-activity-icon.red { background:#fff0f0; color:#dc4040; }
+.admin-activity-icon.purple { background:#f3efff; color:#7550c9; }
+.admin-activity-list li > span:last-child { min-width:0; }
+.admin-activity-list strong { display:block; color:#314352; font-size:10px; font-weight:700; line-height:1.3; }
+.admin-activity-list small { display:block; margin-top:2px; color:#99a4ad; font-size:8px; }
+
+/* Reports */
+.admin-report-list { padding:0 19px 19px; }
+.admin-report-list a { min-height:49px; display:grid; grid-template-columns:31px 1fr 12px; align-items:center; gap:9px; border-top:1px solid #edf0f2; color:#263847; text-decoration:none; }
+.admin-report-list a:first-child { border-top:0; }
+.admin-report-icon { width:31px; height:31px; display:flex; align-items:center; justify-content:center; border-radius:9px; font-size:12px; font-weight:800; }
+.admin-report-icon.blue { background:#edf5ff; color:#3477c8; }
+.admin-report-icon.purple { background:#f3efff; color:#7651c9; }
+.admin-report-icon.orange { background:#fff0eb; color:#ef5a2a; }
+.admin-report-list strong { display:block; font-size:10px; font-weight:800; }
+.admin-report-list small { display:block; margin-top:2px; color:#9aa5ae; font-size:8px; }
+.admin-report-list b { color:var(--admin-accent); font-size:13px; }
+.admin-report-list a:hover strong { color:var(--admin-accent); }
+
+@media (max-width:1150px) {
+    .admin-metric-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+    .admin-action-grid { grid-template-columns:repeat(2,1fr); }
+    .admin-search { width:270px; }
+}
+@media (max-width:900px) {
+    .admin-dashboard-grid-main,
+    .admin-dashboard-grid-lower { grid-template-columns:1fr; }
+    .admin-dashboard-content { padding-left:20px; padding-right:20px; }
+}
+@media (max-width:768px) {
+    .admin-global-topbar { margin-left:0; height:58px; padding:0 16px; }
+    .admin-search { width:min(48vw,240px); }
+    .admin-topbar-user span { display:none; }
+    .admin-dashboard-content { padding:18px 16px 30px; }
+    .admin-hero-card { align-items:flex-start; flex-direction:column; padding:21px; }
+    .admin-hero-status { min-width:0; width:100%; }
+    .admin-metric-grid { grid-template-columns:1fr 1fr; }
+    .admin-overview-stats { grid-template-columns:1fr; }
+}
+@media (max-width:520px) {
+    .admin-topbar-right { gap:12px; }
+    .admin-search { width:150px; }
+    .admin-topbar-notification { display:none; }
+    .admin-metric-grid { grid-template-columns:1fr; }
+    .admin-action-grid { grid-template-columns:1fr; }
+    .admin-hero-copy h1 { font-size:23px; }
+}
+
+/* Nexora Admin dashboard QA fixes.
+   Keeps the shared sidebar identical while correcting shell alignment. */
+
+/* The Admin page must start at the top of the viewport like the Student Nexora shell. */
+html,
+body.admin-dashboard-page {
+    margin: 0 !important;
+    padding: 0 !important;
+    min-height: 100% !important;
+}
+
+body.admin-dashboard-page .admin-global-topbar {
+    margin-top: 0 !important;
+    top: 0 !important;
+}
+
+/* Prevent the logout confirmation component from ever occupying normal document flow.
+   It must only become visible when its .open state is explicitly added by the modal JS. */
+body.admin-dashboard-page #nexora-logout-overlay:not(.open) {
+    display: none !important;
+}
+body.admin-dashboard-page #nexora-logout-overlay.open {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 3000 !important;
+}
+
+/* Match the Student Nexora shell: sidebar starts flush with the viewport top and
+   the content/header begins immediately beside it, with no artificial top gap. */
+body.admin-dashboard-page .admin-sidebar {
+    top: 0 !important;
+}
+body.admin-dashboard-page .admin-global-topbar {
+    position: relative !important;
+    margin-left: var(--nexora-sidebar-width) !important;
+    width: calc(100% - var(--nexora-sidebar-width)) !important;
+}
+body.admin-dashboard-page .admin-main {
+    margin-left: var(--nexora-sidebar-width) !important;
+    width: calc(100% - var(--nexora-sidebar-width)) !important;
+}
+
+/* Shared Admin sidebar collapse control: visible on every Admin HTML page. */
+.admin-sidebar .sidebar-collapse-control {
+    position: absolute !important;
+    top: 50% !important;
+    right: -11px !important;
+    transform: translateY(-50%) !important;
+    width: 22px !important;
+    height: 22px !important;
+    min-width: 22px !important;
+    min-height: 22px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 2px solid #fff !important;
+    border-radius: 50% !important;
+    background: #ef5a2a !important;
+    color: #fff !important;
+    box-shadow: 0 2px 7px rgba(15,23,42,.18) !important;
+    font-size: 15px !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+    z-index: 1105 !important;
+    cursor: pointer !important;
+}
+.admin-sidebar .sidebar-collapse-control:hover {
+    background: #d9471b !important;
+}
+.admin-sidebar.closed .sidebar-collapse-control {
+    right: -11px !important;
+}
+
+@media (max-width: 768px) {
+    body.admin-dashboard-page .admin-global-topbar,
+    body.admin-dashboard-page .admin-main {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+    .admin-sidebar .sidebar-collapse-control { display: none !important; }
+}
+
+/* =========================================================
+   NEXORA ADMIN — STUDENT DESIGN LANGUAGE, RED-ORANGE THEME
+   Admin-specific content, shared Nexora layout language.
+   ========================================================= */
+body.admin-dashboard-page{
+  --a:#ea5b2a;--a-dark:#cf4518;--a-soft:#fff0eb;--bg:#f6f9f9;--border:#e4ece9;--text:#11251f;--muted:#6d807a;
+  background:var(--bg)!important;color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif!important;
+}
+body.admin-dashboard-page .admin-global-topbar{height:58px!important;margin-left:262px!important;width:calc(100% - 262px)!important;padding:0 22px!important;background:#fff!important;border-bottom:1px solid #e7eeec!important;box-shadow:none!important;}
+body.admin-dashboard-page .admin-topbar-left{gap:14px!important}.admin-topbar-menu{width:30px!important;height:30px!important;color:#294b43!important;font-size:18px!important}.admin-search{width:300px!important;height:36px!important;border-radius:7px!important;background:#f8fbfa!important;border-color:#dfe8e5!important}.admin-topbar-right{gap:20px!important}.admin-topbar-user img{width:34px!important;height:34px!important}.admin-topbar-user strong{font-size:11px!important}.admin-topbar-user small{font-size:9px!important}
+body.admin-dashboard-page .admin-main{margin-left:262px!important;width:calc(100% - 262px)!important;padding:0!important;}
+body.admin-dashboard-page .admin-dashboard-content{width:min(100%,1260px)!important;margin:0 auto!important;padding:26px 22px 44px!important;}
+body.admin-dashboard-page .admin-breadcrumb{margin:0 0 18px!important;color:#707674!important;font-size:10px!important;font-weight:600!important}
+body.admin-dashboard-page .admin-breadcrumb span{margin:0 6px!important;color:#b5c2bd!important}
+body.admin-dashboard-page .admin-hero-card{min-height:126px!important;margin-bottom:16px!important;padding:22px 24px!important;border:1px solid var(--border)!important;border-radius:10px!important;background:#fff!important;box-shadow:0 3px 14px rgba(25,55,47,.045)!important}
+body.admin-dashboard-page .admin-hero-card:after{width:160px!important;height:160px!important;right:-70px!important;top:-80px!important;background:rgba(234,91,42,.055)!important}
+body.admin-dashboard-page .admin-eyebrow,body.admin-dashboard-page .admin-card-kicker{color:var(--a)!important;font-size:8px!important;letter-spacing:.12em!important}
+body.admin-dashboard-page .admin-hero-copy h1{margin:5px 0 4px!important;color:#10251f!important;font-size:27px!important;line-height:1.1!important;font-weight:800!important;letter-spacing:-.025em!important}
+body.admin-dashboard-page .admin-hero-copy p{color:#627871!important;font-size:11px!important;line-height:1.45!important}.admin-hero-copy .admin-hero-description{color:#81918c!important;margin-top:2px!important}
+body.admin-dashboard-page .admin-hero-status{min-width:200px!important;padding:11px 13px!important;border:1px solid #dcece5!important;border-radius:10px!important;background:#f8fcfa!important}.admin-status-pulse{background:#20b66a!important}.admin-hero-status strong{font-size:10px!important}.admin-hero-status small{font-size:8px!important}
+body.admin-dashboard-page .admin-metric-grid{grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:12px!important;margin-bottom:16px!important}
+body.admin-dashboard-page .admin-metric-card{min-height:96px!important;padding:14px!important;border:1px solid var(--border)!important;border-radius:9px!important;background:#fff!important;box-shadow:0 3px 14px rgba(25,55,47,.04)!important;gap:10px!important}
+body.admin-dashboard-page .admin-metric-icon{width:36px!important;height:36px!important;flex:0 0 36px!important;border-radius:9px!important}.admin-icon-orange{background:#fff0eb!important;color:var(--a)!important}.admin-icon-amber{background:#fff7e3!important;color:#d99a1d!important}.admin-icon-red{background:#fff0ef!important;color:#dd4c36!important}.admin-icon-slate{background:#eef5f3!important;color:#507067!important}.admin-icon-purple{background:#f5efff!important;color:#7854c8!important}.admin-icon-blue{background:#edf5ff!important;color:#3778c7!important}
+body.admin-dashboard-page .admin-metric-copy span{font-size:9px!important;color:#6f817b!important}.admin-metric-copy strong{font-size:22px!important;color:#173028!important;margin-top:3px!important}.admin-metric-copy small{font-size:7px!important;color:#9aa9a4!important;margin-top:4px!important}
+body.admin-dashboard-page .admin-dashboard-grid-main{grid-template-columns:1.7fr .8fr!important;gap:12px!important;margin-bottom:12px!important}.admin-surface-card{border:1px solid var(--border)!important;border-radius:10px!important;box-shadow:0 3px 14px rgba(25,55,47,.04)!important;background:#fff!important}
+body.admin-dashboard-page .admin-card-heading{padding:15px 16px 11px!important}.admin-card-heading h2{font-size:14px!important;color:#173028!important;margin:4px 0 0!important}.admin-card-heading p{font-size:9px!important;color:#81918c!important;margin:3px 0 0!important}.admin-text-link{color:var(--a)!important;font-size:9px!important}
+body.admin-dashboard-page .admin-overview-stats{gap:8px!important;padding:0 16px 16px!important}.admin-overview-stat{padding:12px!important;border:1px solid #e7eeec!important;border-radius:8px!important;background:#fafcfc!important}.admin-stat-top span{font-size:9px!important;color:#657871!important}.admin-stat-top b{font-size:16px!important}.admin-mini-track{height:4px!important;margin:9px 0 7px!important;background:#e9efed!important}.admin-overview-pending .admin-mini-track span{background:#e2a028!important}.admin-overview-active .admin-mini-track span{background:var(--a)!important}.admin-overview-complete .admin-mini-track span{background:#20aa69!important}.admin-overview-stat small{font-size:7px!important;color:#97a6a1!important}
+body.admin-dashboard-page .admin-system-list{padding:0 16px 16px!important}.admin-system-item{min-height:39px!important;margin-top:6px!important;padding:0 10px!important;border:1px solid #e8eeec!important;border-radius:8px!important;background:#fafcfc!important}.admin-system-item span{font-size:9px!important}.admin-system-item strong{font-size:8px!important}
+body.admin-dashboard-page .admin-actions-card{margin-bottom:12px!important}.admin-action-grid{grid-template-columns:repeat(4,1fr)!important;gap:8px!important;padding:0 16px 16px!important}.admin-action-tile{min-height:64px!important;padding:10px!important;border-radius:8px!important;grid-template-columns:30px 1fr 10px!important;gap:8px!important}.admin-action-icon{width:30px!important;height:30px!important;border-radius:8px!important;background:var(--a-soft)!important;color:var(--a)!important}.admin-action-tile strong{font-size:9px!important}.admin-action-tile small{font-size:7px!important}.admin-action-tile>b{color:var(--a)!important}
+body.admin-dashboard-page .admin-dashboard-grid-lower{grid-template-columns:1.15fr .85fr!important;gap:12px!important}.admin-activity-list{padding:0 16px 12px!important}.admin-activity-list li{min-height:45px!important;gap:9px!important}.admin-activity-icon{width:28px!important;height:28px!important;flex:0 0 28px!important;border-radius:8px!important}.admin-activity-list strong{font-size:9px!important}.admin-activity-list small{font-size:7px!important}
+body.admin-dashboard-page .admin-report-list{padding:0 16px 16px!important}.admin-report-list a{min-height:45px!important;grid-template-columns:30px 1fr 10px!important;gap:8px!important}.admin-report-list a strong{font-size:9px!important}.admin-report-list a small{font-size:7px!important}.admin-report-icon{width:30px!important;height:30px!important;border-radius:8px!important}
+body.sidebar-collapsed.admin-dashboard-page .admin-global-topbar,body.sidebar-collapsed.admin-dashboard-page .admin-main{margin-left:76px!important;width:calc(100% - 76px)!important}
+@media(max-width:1100px){body.admin-dashboard-page .admin-metric-grid{grid-template-columns:repeat(3,1fr)!important}.admin-dashboard-grid-main,.admin-dashboard-grid-lower{grid-template-columns:1fr!important}.admin-action-grid{grid-template-columns:repeat(2,1fr)!important}}
+@media(max-width:760px){body.admin-dashboard-page .admin-global-topbar,body.admin-dashboard-page .admin-main{margin-left:0!important;width:100%!important}.admin-dashboard-content{padding:20px 16px 32px!important}.admin-metric-grid{grid-template-columns:1fr 1fr!important}.admin-hero-card{flex-direction:column!important;align-items:flex-start!important}.admin-hero-status{width:100%!important;min-width:0!important}.admin-action-grid{grid-template-columns:1fr!important}}
