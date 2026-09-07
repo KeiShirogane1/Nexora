@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin-dashboard-redesign.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin-dashboard-fixes.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin-student-theme.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin-notification-dropdown.css') }}">
 </head>
 <body class="nexora-admin-body admin-dashboard-page">
     {% include 'components/admin_sidebar.html' %}
@@ -22,9 +23,7 @@
             </label>
         </div>
         <div class="admin-topbar-right">
-            <a class="admin-topbar-notification" href="{{ url_for('notifications.notification_list') }}" aria-label="Notifications">
-                ♧{% if unread_count|default(0) > 0 %}<span class="admin-topbar-badge">{{ unread_count }}</span>{% endif %}
-            </a>
+            {% include 'components/admin_notification_bell.html' %}
             <div class="admin-topbar-user">
                 <img src="{{ url_for('static', filename='images/default_profile.png') }}" alt="Administrator profile">
                 <span><strong>Administrator</strong><small>Admin</small></span>
