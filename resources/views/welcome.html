@@ -1,117 +1,1290 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="UTF-8">
-        <title>Nexora - Welcome</title>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    </head>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Nexora connects students, supervisors, and administrators in one internship monitoring and evaluation workspace.">
+    <title>Nexora — Internship Monitoring System</title>
 
-    <body class="welcome-page">
+    <style>
+        /* =========================================================
+           NEXORA WELCOME PAGE
+           Canonical landing-page design.
+           This replaces the previous Welcome styling instead of
+           stacking another override layer on top of style.css.
+           ========================================================= */
 
-    <!-- NAVBAR -->
-        <nav class="nexora-navbar">
-            <a href="/" class="navbar-brand">
-                <img src="{{ url_for('static', filename='images/Nexora Light.png') }}" alt="Nexora Logo">
-                <span class="brand-text">Nexora</span>
-            </a>
-            <a href="/login" class="nav-login">Login</a>
-        </nav>
+        html:has(body.welcome-page) {
+            scroll-behavior: smooth;
+            background: #ffffff;
+        }
 
-    <!-- HERO SECTION -->
-        <section class="hero-section" id="hero">
-            <div class="hero-container">
-                <div class="hero-overlay"></div>
-                <div class="hero-box">
-                    <h1 class="hero-title"><font color="white">Welcome to Nexora!</font></h1>
-                    <p class="hero-subtitle">Your platform for tracking progress and potential.</p>
-                    <div class="hero-buttons">
-                        <a href="/login" class="btn-primary-hero">Get Started</a>
-                        <a href="#about" class="btn-secondary-hero">Learn More</a>
+        body.welcome-page {
+            --welcome-navy: #102a43;
+            --welcome-navy-2: #173f5f;
+            --welcome-teal: #0d9f8f;
+            --welcome-teal-dark: #087f73;
+            --welcome-teal-soft: #e9f8f5;
+            --welcome-blue: #2f74b5;
+            --welcome-bg: #f7fafb;
+            --welcome-text: #17354b;
+            --welcome-muted: #647b8c;
+            --welcome-line: #e2ebef;
+            --welcome-shadow: 0 24px 70px rgba(19, 55, 78, 0.11);
+
+            margin: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
+            background: #ffffff;
+            color: var(--welcome-text);
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body.welcome-page *,
+        body.welcome-page *::before,
+        body.welcome-page *::after {
+            box-sizing: border-box;
+        }
+
+        body.welcome-page a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        body.welcome-page a:focus-visible {
+            outline: 3px solid rgba(13, 159, 143, 0.24);
+            outline-offset: 3px;
+        }
+
+        /* Navigation */
+        body.welcome-page .nx-navbar {
+            position: fixed;
+            inset: 0 0 auto;
+            z-index: 1000;
+            height: 76px;
+            padding: 0 clamp(20px, 6vw, 86px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 28px;
+            background: rgba(255, 255, 255, 0.92);
+            border-bottom: 1px solid rgba(226, 235, 239, 0.92);
+            box-shadow: 0 8px 26px rgba(18, 48, 68, 0.035);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+        }
+
+        body.welcome-page .nx-brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 11px;
+            color: var(--welcome-navy);
+        }
+
+        body.welcome-page .nx-brand-logo {
+            width: 42px;
+            height: 42px;
+            object-fit: contain;
+        }
+
+        body.welcome-page .nx-brand-name {
+            font-size: 22px;
+            font-weight: 850;
+            letter-spacing: -0.7px;
+        }
+
+        body.welcome-page .nx-nav {
+            display: flex;
+            align-items: center;
+            gap: clamp(18px, 2.6vw, 34px);
+        }
+
+        body.welcome-page .nx-nav-link {
+            position: relative;
+            padding: 7px 0;
+            color: #536b7d;
+            font-size: 13px;
+            font-weight: 700;
+            transition: color 0.18s ease;
+        }
+
+        body.welcome-page .nx-nav-link::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 100%;
+            bottom: 0;
+            height: 2px;
+            border-radius: 999px;
+            background: var(--welcome-teal);
+            transition: right 0.2s ease;
+        }
+
+        body.welcome-page .nx-nav-link:hover {
+            color: var(--welcome-teal-dark);
+        }
+
+        body.welcome-page .nx-nav-link:hover::after {
+            right: 0;
+        }
+
+        body.welcome-page .nx-login {
+            min-height: 40px;
+            padding: 0 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            background: var(--welcome-navy);
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 800;
+            box-shadow: 0 9px 20px rgba(16, 42, 67, 0.12);
+            transition: 0.18s ease;
+        }
+
+        body.welcome-page .nx-login:hover {
+            background: var(--welcome-teal-dark);
+            transform: translateY(-2px);
+        }
+
+        /* Hero */
+        body.welcome-page .nx-hero {
+            position: relative;
+            min-height: 100vh;
+            padding: 142px clamp(20px, 6vw, 86px) 86px;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at 86% 24%, rgba(13, 159, 143, 0.12), transparent 28%),
+                radial-gradient(circle at 8% 82%, rgba(47, 116, 181, 0.08), transparent 31%),
+                linear-gradient(180deg, #ffffff 0%, #fbfdfd 100%);
+        }
+
+        body.welcome-page .nx-hero::before {
+            content: "";
+            position: absolute;
+            width: 430px;
+            height: 430px;
+            right: -185px;
+            top: 135px;
+            border: 1px solid rgba(13, 159, 143, 0.12);
+            border-radius: 50%;
+            box-shadow:
+                0 0 0 62px rgba(13, 159, 143, 0.025),
+                0 0 0 124px rgba(13, 159, 143, 0.015);
+        }
+
+        body.welcome-page .nx-hero-inner {
+            position: relative;
+            z-index: 2;
+            width: min(1220px, 100%);
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: minmax(0, 1.05fr) minmax(420px, 0.95fr);
+            align-items: center;
+            gap: clamp(48px, 6vw, 76px);
+        }
+
+        body.welcome-page .nx-hero-content {
+            max-width: 660px;
+        }
+
+        body.welcome-page .nx-eyebrow,
+        body.welcome-page .nx-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 13px;
+            border: 1px solid #d8f0eb;
+            border-radius: 999px;
+            background: var(--welcome-teal-soft);
+            color: var(--welcome-teal-dark);
+            font-size: 10px;
+            font-weight: 850;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        body.welcome-page .nx-eyebrow {
+            margin-bottom: 22px;
+        }
+
+        body.welcome-page .nx-eyebrow-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--welcome-teal);
+            box-shadow: 0 0 0 4px rgba(13, 159, 143, 0.1);
+        }
+
+        body.welcome-page .nx-hero-title {
+            margin: 0 0 24px;
+            color: var(--welcome-navy);
+            font-size: clamp(46px, 5.8vw, 74px);
+            line-height: 1.015;
+            font-weight: 850;
+            letter-spacing: -0.055em;
+        }
+
+        body.welcome-page .nx-hero-title span {
+            color: var(--welcome-teal);
+        }
+
+        body.welcome-page .nx-hero-text {
+            max-width: 600px;
+            margin: 0 0 31px;
+            color: var(--welcome-muted);
+            font-size: 17px;
+            line-height: 1.75;
+        }
+
+        body.welcome-page .nx-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        body.welcome-page .nx-btn {
+            min-width: 148px;
+            min-height: 46px;
+            padding: 0 22px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid transparent;
+            border-radius: 11px;
+            font-size: 13px;
+            font-weight: 800;
+            transition: 0.18s ease;
+        }
+
+        body.welcome-page .nx-btn-primary {
+            background: var(--welcome-teal);
+            color: #ffffff;
+            box-shadow: 0 12px 28px rgba(13, 159, 143, 0.22);
+        }
+
+        body.welcome-page .nx-btn-primary:hover {
+            background: var(--welcome-teal-dark);
+            transform: translateY(-3px);
+            box-shadow: 0 17px 35px rgba(13, 159, 143, 0.28);
+        }
+
+        body.welcome-page .nx-btn-secondary {
+            border-color: var(--welcome-line);
+            background: #ffffff;
+            color: var(--welcome-navy);
+        }
+
+        body.welcome-page .nx-btn-secondary:hover {
+            border-color: rgba(13, 159, 143, 0.55);
+            color: var(--welcome-teal-dark);
+            transform: translateY(-3px);
+        }
+
+        /* Dashboard preview */
+        body.welcome-page .nx-visual {
+            position: relative;
+            min-height: 500px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        body.welcome-page .nx-dashboard {
+            position: relative;
+            z-index: 3;
+            width: min(500px, 100%);
+            padding: 20px;
+            overflow: hidden;
+            border: 1px solid var(--welcome-line);
+            border-radius: 23px;
+            background: rgba(255, 255, 255, 0.98);
+            box-shadow: var(--welcome-shadow);
+            transform: rotate(0.7deg);
+        }
+
+        body.welcome-page .nx-dashboard-top,
+        body.welcome-page .nx-dashboard-brand,
+        body.welcome-page .nx-progress-head,
+        body.welcome-page .nx-activity-row {
+            display: flex;
+            align-items: center;
+        }
+
+        body.welcome-page .nx-dashboard-top {
+            justify-content: space-between;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--welcome-line);
+        }
+
+        body.welcome-page .nx-dashboard-brand {
+            gap: 9px;
+        }
+
+        body.welcome-page .nx-mini-logo {
+            width: 32px;
+            height: 32px;
+            display: grid;
+            place-items: center;
+            border-radius: 9px;
+            background: linear-gradient(135deg, var(--welcome-teal), var(--welcome-blue));
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 900;
+        }
+
+        body.welcome-page .nx-dashboard-brand strong {
+            color: var(--welcome-navy);
+            font-size: 12px;
+        }
+
+        body.welcome-page .nx-dashboard-dots {
+            display: flex;
+            gap: 5px;
+        }
+
+        body.welcome-page .nx-dashboard-dots i {
+            width: 6px;
+            height: 6px;
+            display: block;
+            border-radius: 50%;
+            background: #d0dde5;
+        }
+
+        body.welcome-page .nx-dashboard-welcome {
+            padding: 22px 3px 17px;
+        }
+
+        body.welcome-page .nx-dashboard-welcome small {
+            color: var(--welcome-muted);
+            font-size: 10px;
+        }
+
+        body.welcome-page .nx-dashboard-welcome h3 {
+            margin: 4px 0 0;
+            color: var(--welcome-navy);
+            font-size: 22px;
+            letter-spacing: -0.5px;
+        }
+
+        body.welcome-page .nx-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 9px;
+        }
+
+        body.welcome-page .nx-stat {
+            padding: 14px;
+            border: 1px solid #ebf1f4;
+            border-radius: 13px;
+            background: #f8fafb;
+        }
+
+        body.welcome-page .nx-stat-label,
+        body.welcome-page .nx-activity-copy small,
+        body.welcome-page .nx-floating small {
+            color: var(--welcome-muted);
+        }
+
+        body.welcome-page .nx-stat-label {
+            display: block;
+            font-size: 9px;
+            font-weight: 700;
+        }
+
+        body.welcome-page .nx-stat-number {
+            display: block;
+            margin-top: 4px;
+            color: var(--welcome-navy);
+            font-size: 21px;
+            font-weight: 850;
+        }
+
+        body.welcome-page .nx-progress {
+            margin-top: 11px;
+            padding: 16px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #edf9f7, #f1f7fb);
+        }
+
+        body.welcome-page .nx-progress-head {
+            justify-content: space-between;
+            margin-bottom: 9px;
+            color: var(--welcome-navy);
+            font-size: 10px;
+            font-weight: 800;
+        }
+
+        body.welcome-page .nx-progress-head span:last-child {
+            color: var(--welcome-teal-dark);
+        }
+
+        body.welcome-page .nx-progress-bar {
+            height: 7px;
+            overflow: hidden;
+            border-radius: 999px;
+            background: #dce7ec;
+        }
+
+        body.welcome-page .nx-progress-fill {
+            width: 78%;
+            height: 100%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, var(--welcome-blue), var(--welcome-teal));
+        }
+
+        body.welcome-page .nx-activity {
+            margin-top: 11px;
+            display: grid;
+            gap: 7px;
+        }
+
+        body.welcome-page .nx-activity-row {
+            gap: 9px;
+            padding: 9px;
+            border: 1px solid #ebf1f4;
+            border-radius: 10px;
+            background: #ffffff;
+        }
+
+        body.welcome-page .nx-activity-icon {
+            width: 27px;
+            height: 27px;
+            flex: 0 0 27px;
+            display: grid;
+            place-items: center;
+            border-radius: 8px;
+            background: var(--welcome-teal-soft);
+            color: var(--welcome-teal-dark);
+            font-size: 11px;
+            font-weight: 900;
+        }
+
+        body.welcome-page .nx-activity-copy {
+            min-width: 0;
+        }
+
+        body.welcome-page .nx-activity-copy strong,
+        body.welcome-page .nx-activity-copy small {
+            display: block;
+        }
+
+        body.welcome-page .nx-activity-copy strong {
+            color: var(--welcome-navy);
+            font-size: 10px;
+        }
+
+        body.welcome-page .nx-activity-copy small {
+            margin-top: 2px;
+            font-size: 8px;
+        }
+
+        body.welcome-page .nx-floating {
+            position: absolute;
+            z-index: 5;
+            min-width: 132px;
+            padding: 13px 15px;
+            border: 1px solid var(--welcome-line);
+            border-radius: 12px;
+            background: #ffffff;
+            box-shadow: 0 15px 34px rgba(19, 55, 78, 0.12);
+        }
+
+        body.welcome-page .nx-floating.one {
+            left: -18px;
+            bottom: 66px;
+        }
+
+        body.welcome-page .nx-floating.two {
+            right: -14px;
+            top: 72px;
+        }
+
+        body.welcome-page .nx-floating strong,
+        body.welcome-page .nx-floating small {
+            display: block;
+        }
+
+        body.welcome-page .nx-floating strong {
+            color: var(--welcome-teal-dark);
+            font-size: 20px;
+            line-height: 1;
+        }
+
+        body.welcome-page .nx-floating small {
+            margin-top: 3px;
+            font-size: 8px;
+            font-weight: 700;
+        }
+
+        /* Shared landing sections */
+        body.welcome-page .nx-trust {
+            padding: 25px clamp(20px, 6vw, 86px);
+            border-top: 1px solid var(--welcome-line);
+            border-bottom: 1px solid var(--welcome-line);
+            background: #ffffff;
+        }
+
+        body.welcome-page .nx-trust-inner,
+        body.welcome-page .nx-section,
+        body.welcome-page .nx-cta-box,
+        body.welcome-page .nx-footer-grid,
+        body.welcome-page .nx-footer-bottom {
+            width: min(1100px, 100%);
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        body.welcome-page .nx-trust-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+        }
+
+        body.welcome-page .nx-trust-label {
+            color: #8194a2;
+            font-size: 9px;
+            font-weight: 850;
+            letter-spacing: 0.13em;
+            text-transform: uppercase;
+        }
+
+        body.welcome-page .nx-trust-items {
+            display: flex;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            gap: 14px 32px;
+        }
+
+        body.welcome-page .nx-trust-item {
+            color: #607686;
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        body.welcome-page .nx-about,
+        body.welcome-page .nx-features,
+        body.welcome-page .nx-workflow {
+            padding: 105px clamp(20px, 6vw, 86px);
+        }
+
+        body.welcome-page .nx-about,
+        body.welcome-page .nx-workflow {
+            background: var(--welcome-bg);
+        }
+
+        body.welcome-page .nx-features {
+            background: #ffffff;
+        }
+
+        body.welcome-page .nx-label {
+            margin-bottom: 15px;
+        }
+
+        body.welcome-page .nx-section-title {
+            max-width: 740px;
+            margin: 0 0 17px;
+            color: var(--welcome-navy);
+            font-size: clamp(32px, 4vw, 49px);
+            line-height: 1.08;
+            font-weight: 850;
+            letter-spacing: -0.04em;
+        }
+
+        body.welcome-page .nx-section-description {
+            max-width: 720px;
+            margin: 0;
+            color: var(--welcome-muted);
+            font-size: 15px;
+            line-height: 1.8;
+        }
+
+        body.welcome-page .nx-about-grid {
+            margin-top: 48px;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        body.welcome-page .nx-about-card,
+        body.welcome-page .nx-feature,
+        body.welcome-page .nx-step {
+            border: 1px solid var(--welcome-line);
+            background: #ffffff;
+            transition: 0.18s ease;
+        }
+
+        body.welcome-page .nx-about-card {
+            padding: 26px;
+            border-radius: 16px;
+            box-shadow: 0 8px 27px rgba(19, 55, 78, 0.04);
+        }
+
+        body.welcome-page .nx-about-card:hover,
+        body.welcome-page .nx-feature:hover {
+            transform: translateY(-5px);
+            border-color: rgba(13, 159, 143, 0.32);
+            box-shadow: 0 17px 38px rgba(19, 55, 78, 0.08);
+        }
+
+        body.welcome-page .nx-card-icon {
+            width: 43px;
+            height: 43px;
+            margin-bottom: 19px;
+            display: grid;
+            place-items: center;
+            border-radius: 11px;
+            background: var(--welcome-teal-soft);
+            color: var(--welcome-teal-dark);
+            font-size: 16px;
+            font-weight: 900;
+        }
+
+        body.welcome-page .nx-about-card:nth-child(2) .nx-card-icon {
+            background: #edf5fc;
+            color: var(--welcome-blue);
+        }
+
+        body.welcome-page .nx-about-card:nth-child(3) .nx-card-icon {
+            background: #eff4f7;
+            color: var(--welcome-navy-2);
+        }
+
+        body.welcome-page .nx-about-card h3,
+        body.welcome-page .nx-feature h4,
+        body.welcome-page .nx-step h4 {
+            color: var(--welcome-navy);
+        }
+
+        body.welcome-page .nx-about-card h3 {
+            margin: 0 0 8px;
+            font-size: 17px;
+        }
+
+        body.welcome-page .nx-about-card p,
+        body.welcome-page .nx-feature p,
+        body.welcome-page .nx-step p {
+            margin: 0;
+            color: var(--welcome-muted);
+            font-size: 12px;
+            line-height: 1.7;
+        }
+
+        body.welcome-page .nx-feature-layout {
+            margin-top: 48px;
+            display: grid;
+            grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+            align-items: center;
+            gap: 62px;
+        }
+
+        body.welcome-page .nx-feature-intro h3 {
+            margin: 0 0 15px;
+            color: var(--welcome-navy);
+            font-size: 30px;
+            line-height: 1.16;
+            letter-spacing: -0.035em;
+        }
+
+        body.welcome-page .nx-feature-intro p {
+            margin: 0;
+            color: var(--welcome-muted);
+            font-size: 13px;
+            line-height: 1.8;
+        }
+
+        body.welcome-page .nx-feature-list {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        body.welcome-page .nx-feature {
+            padding: 20px;
+            border-radius: 14px;
+        }
+
+        body.welcome-page .nx-feature-number {
+            color: var(--welcome-teal-dark);
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: 0.1em;
+        }
+
+        body.welcome-page .nx-feature h4 {
+            margin: 8px 0 6px;
+            font-size: 14px;
+        }
+
+        body.welcome-page .nx-workflow-grid {
+            margin-top: 44px;
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 13px;
+        }
+
+        body.welcome-page .nx-step {
+            padding: 23px 19px;
+            border-radius: 14px;
+        }
+
+        body.welcome-page .nx-step-number {
+            width: 33px;
+            height: 33px;
+            margin-bottom: 17px;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            background: var(--welcome-navy);
+            color: #ffffff;
+            font-size: 10px;
+            font-weight: 900;
+        }
+
+        body.welcome-page .nx-step h4 {
+            margin: 0 0 6px;
+            font-size: 14px;
+        }
+
+        /* CTA */
+        body.welcome-page .nx-cta {
+            padding: 88px clamp(20px, 6vw, 86px);
+            background: #ffffff;
+        }
+
+        body.welcome-page .nx-cta-box {
+            position: relative;
+            overflow: hidden;
+            padding: 59px;
+            border-radius: 24px;
+            background: linear-gradient(125deg, var(--welcome-navy), #1a4a67);
+            box-shadow: 0 24px 58px rgba(16, 42, 67, 0.16);
+        }
+
+        body.welcome-page .nx-cta-box::after {
+            content: "";
+            position: absolute;
+            width: 340px;
+            height: 340px;
+            right: -115px;
+            top: -150px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 50%;
+            box-shadow:
+                0 0 0 55px rgba(255, 255, 255, 0.025),
+                0 0 0 110px rgba(255, 255, 255, 0.018);
+        }
+
+        body.welcome-page .nx-cta-content {
+            position: relative;
+            z-index: 2;
+            max-width: 650px;
+        }
+
+        body.welcome-page .nx-cta-label {
+            color: #70ded3;
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        body.welcome-page .nx-cta h2 {
+            margin: 11px 0 14px;
+            color: #ffffff;
+            font-size: clamp(30px, 4vw, 46px);
+            line-height: 1.08;
+            letter-spacing: -0.04em;
+        }
+
+        body.welcome-page .nx-cta p {
+            max-width: 590px;
+            margin: 0 0 23px;
+            color: rgba(255, 255, 255, 0.72);
+            font-size: 13px;
+            line-height: 1.75;
+        }
+
+        body.welcome-page .nx-cta .nx-btn-primary {
+            background: #ffffff;
+            color: var(--welcome-navy);
+            box-shadow: none;
+        }
+
+        body.welcome-page .nx-cta .nx-btn-primary:hover {
+            background: #f1fffc;
+            color: var(--welcome-teal-dark);
+        }
+
+        /* Footer */
+        body.welcome-page .nx-footer {
+            padding: 58px clamp(20px, 6vw, 86px) 24px;
+            background: #0d2133;
+            color: #ffffff;
+        }
+
+        body.welcome-page .nx-footer-grid {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr 1fr;
+            gap: 52px;
+        }
+
+        body.welcome-page .nx-footer-brand {
+            max-width: 330px;
+        }
+
+        body.welcome-page .nx-footer-brand-top {
+            margin-bottom: 13px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        body.welcome-page .nx-footer-logo {
+            width: 38px;
+            height: 38px;
+            object-fit: contain;
+        }
+
+        body.welcome-page .nx-footer-brand strong {
+            font-size: 19px;
+        }
+
+        body.welcome-page .nx-footer-brand p {
+            margin: 0;
+            color: rgba(255, 255, 255, 0.58);
+            font-size: 11px;
+            line-height: 1.75;
+        }
+
+        body.welcome-page .nx-footer-column h4 {
+            margin: 0 0 14px;
+            color: #ffffff;
+            font-size: 11px;
+        }
+
+        body.welcome-page .nx-footer-column a,
+        body.welcome-page .nx-footer-column span {
+            display: block;
+            color: rgba(255, 255, 255, 0.57);
+            font-size: 10px;
+            line-height: 2.2;
+            transition: color 0.16s ease;
+        }
+
+        body.welcome-page .nx-footer-column a:hover {
+            color: #72ded4;
+        }
+
+        body.welcome-page .nx-footer-bottom {
+            margin-top: 40px;
+            padding-top: 19px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 9px;
+        }
+
+        /* Motion */
+        @keyframes nxWelcomeFadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        body.welcome-page .nx-hero-content > * {
+            animation: nxWelcomeFadeUp 0.62s ease both;
+        }
+
+        body.welcome-page .nx-eyebrow { animation-delay: 0.04s; }
+        body.welcome-page .nx-hero-title { animation-delay: 0.1s; }
+        body.welcome-page .nx-hero-text { animation-delay: 0.16s; }
+        body.welcome-page .nx-actions { animation-delay: 0.22s; }
+        body.welcome-page .nx-dashboard { animation: nxWelcomeFadeUp 0.7s ease 0.12s both; }
+
+        /* Responsive */
+        @media (max-width: 1000px) {
+            body.welcome-page .nx-hero-inner {
+                grid-template-columns: 1fr;
+            }
+
+            body.welcome-page .nx-hero-content {
+                max-width: 760px;
+                margin: 0 auto;
+                text-align: center;
+            }
+
+            body.welcome-page .nx-hero-text {
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            body.welcome-page .nx-actions {
+                justify-content: center;
+            }
+
+            body.welcome-page .nx-visual {
+                width: min(600px, 100%);
+                margin: 0 auto;
+            }
+
+            body.welcome-page .nx-feature-layout {
+                grid-template-columns: 1fr;
+                gap: 36px;
+            }
+
+            body.welcome-page .nx-workflow-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 760px) {
+            body.welcome-page .nx-navbar {
+                height: 68px;
+                padding: 0 18px;
+            }
+
+            body.welcome-page .nx-nav-link:not(.nx-login) {
+                display: none;
+            }
+
+            body.welcome-page .nx-nav {
+                gap: 8px;
+            }
+
+            body.welcome-page .nx-brand-name {
+                font-size: 19px;
+            }
+
+            body.welcome-page .nx-brand-logo {
+                width: 37px;
+                height: 37px;
+            }
+
+            body.welcome-page .nx-login {
+                min-height: 38px;
+                padding: 0 15px;
+            }
+
+            body.welcome-page .nx-hero {
+                padding: 115px 18px 68px;
+            }
+
+            body.welcome-page .nx-hero-title {
+                font-size: clamp(39px, 12vw, 50px);
+            }
+
+            body.welcome-page .nx-hero-text {
+                font-size: 15px;
+            }
+
+            body.welcome-page .nx-visual {
+                min-height: 430px;
+            }
+
+            body.welcome-page .nx-dashboard {
+                padding: 15px;
+            }
+
+            body.welcome-page .nx-floating.one {
+                left: -4px;
+                bottom: 42px;
+            }
+
+            body.welcome-page .nx-floating.two {
+                right: -4px;
+                top: 40px;
+            }
+
+            body.welcome-page .nx-trust-inner {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            body.welcome-page .nx-trust-items {
+                justify-content: flex-start;
+                gap: 12px 22px;
+            }
+
+            body.welcome-page .nx-about,
+            body.welcome-page .nx-features,
+            body.welcome-page .nx-workflow {
+                padding: 76px 18px;
+            }
+
+            body.welcome-page .nx-about-grid,
+            body.welcome-page .nx-feature-list,
+            body.welcome-page .nx-workflow-grid {
+                grid-template-columns: 1fr;
+            }
+
+            body.welcome-page .nx-about-grid,
+            body.welcome-page .nx-feature-layout,
+            body.welcome-page .nx-workflow-grid {
+                margin-top: 36px;
+            }
+
+            body.welcome-page .nx-cta {
+                padding: 64px 18px;
+            }
+
+            body.welcome-page .nx-cta-box {
+                padding: 38px 24px;
+            }
+
+            body.welcome-page .nx-footer {
+                padding: 46px 18px 21px;
+            }
+
+            body.welcome-page .nx-footer-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 31px;
+            }
+
+            body.welcome-page .nx-footer-brand {
+                grid-column: 1 / -1;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body.welcome-page .nx-actions {
+                flex-direction: column;
+            }
+
+            body.welcome-page .nx-btn {
+                width: 100%;
+            }
+
+            body.welcome-page .nx-stats {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            body.welcome-page .nx-stat:last-child {
+                grid-column: 1 / -1;
+            }
+
+            body.welcome-page .nx-floating {
+                transform: scale(0.84);
+            }
+
+            body.welcome-page .nx-footer-grid {
+                grid-template-columns: 1fr;
+            }
+
+            body.welcome-page .nx-footer-brand {
+                grid-column: auto;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            html:has(body.welcome-page) {
+                scroll-behavior: auto;
+            }
+
+            body.welcome-page *,
+            body.welcome-page *::before,
+            body.welcome-page *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body class="welcome-page">
+    <nav class="nx-navbar" aria-label="Primary navigation">
+        <a href="/" class="nx-brand" aria-label="Nexora home">
+            <img class="nx-brand-logo" src="{{ url_for('static', filename='images/Nexora.png') }}" alt="Nexora Logo">
+            <span class="nx-brand-name">Nexora</span>
+        </a>
+
+        <div class="nx-nav">
+            <a href="#about" class="nx-nav-link">About</a>
+            <a href="#features" class="nx-nav-link">Features</a>
+            <a href="#workflow" class="nx-nav-link">How It Works</a>
+            <a href="#contact" class="nx-nav-link">Contact</a>
+            <a href="/login" class="nx-login">Login</a>
+        </div>
+    </nav>
+
+    <main>
+        <section class="nx-hero" id="hero">
+            <div class="nx-hero-inner">
+                <div class="nx-hero-content">
+                    <div class="nx-eyebrow">
+                        <span class="nx-eyebrow-dot" aria-hidden="true"></span>
+                        Internship Monitoring &amp; Evaluation
                     </div>
+
+                    <h1 class="nx-hero-title">
+                        Your internship.<br>
+                        <span>Connected.</span> Organized.
+                    </h1>
+
+                    <p class="nx-hero-text">
+                        Nexora brings students, supervisors, and administrators together
+                        in one organized workspace for tracking internship progress,
+                        tasks, documents, feedback, and performance.
+                    </p>
+
+                    <div class="nx-actions">
+                        <a href="/login" class="nx-btn nx-btn-primary">Get Started&nbsp; →</a>
+                        <a href="#about" class="nx-btn nx-btn-secondary">Explore Nexora</a>
+                    </div>
+                </div>
+
+                <div class="nx-visual" aria-label="Nexora dashboard preview">
+                    <div class="nx-dashboard">
+                        <div class="nx-dashboard-top">
+                            <div class="nx-dashboard-brand">
+                                <div class="nx-mini-logo">N</div>
+                                <strong>Internship Dashboard</strong>
+                            </div>
+                            <div class="nx-dashboard-dots" aria-hidden="true"><i></i><i></i><i></i></div>
+                        </div>
+
+                        <div class="nx-dashboard-welcome">
+                            <small>Internship Overview</small>
+                            <h3>Track your progress</h3>
+                        </div>
+
+                        <div class="nx-stats">
+                            <div class="nx-stat"><span class="nx-stat-label">Tasks</span><span class="nx-stat-number">24</span></div>
+                            <div class="nx-stat"><span class="nx-stat-label">Completed</span><span class="nx-stat-number">18</span></div>
+                            <div class="nx-stat"><span class="nx-stat-label">Documents</span><span class="nx-stat-number">12</span></div>
+                        </div>
+
+                        <div class="nx-progress">
+                            <div class="nx-progress-head"><span>Internship Progress</span><span>78%</span></div>
+                            <div class="nx-progress-bar"><div class="nx-progress-fill"></div></div>
+                        </div>
+
+                        <div class="nx-activity">
+                            <div class="nx-activity-row"><div class="nx-activity-icon">✓</div><div class="nx-activity-copy"><strong>Weekly report submitted</strong><small>Just now</small></div></div>
+                            <div class="nx-activity-row"><div class="nx-activity-icon">↑</div><div class="nx-activity-copy"><strong>Task progress updated</strong><small>Today</small></div></div>
+                            <div class="nx-activity-row"><div class="nx-activity-icon">★</div><div class="nx-activity-copy"><strong>Supervisor feedback received</strong><small>Yesterday</small></div></div>
+                        </div>
+                    </div>
+
+                    <div class="nx-floating one"><strong>18</strong><small>Tasks completed</small></div>
+                    <div class="nx-floating two"><strong>78%</strong><small>Overall progress</small></div>
                 </div>
             </div>
         </section>
 
-        <section class="about-section" id="about">
-            <div class="about-inner">
-                <span class="section-label">About Nexora</span>
-                <h2 class="about-title">What is Nexora?</h2>
-                <p class="about-text">
-                    Nexora is a modern internship monitoring system designed to help students, supervisors,
-                    and administrators stay organized, track progress, and manage documentation in one place.
+        <section class="nx-trust" aria-label="Nexora user groups">
+            <div class="nx-trust-inner">
+                <span class="nx-trust-label">One platform for</span>
+                <div class="nx-trust-items">
+                    <span class="nx-trust-item">Students</span>
+                    <span class="nx-trust-item">Supervisors</span>
+                    <span class="nx-trust-item">Administrators</span>
+                    <span class="nx-trust-item">Internship Programs</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="nx-about" id="about">
+            <div class="nx-section">
+                <span class="nx-label">About Nexora</span>
+                <h2 class="nx-section-title">Everything your internship program needs, in one place.</h2>
+                <p class="nx-section-description">
+                    Nexora is a modern internship monitoring and evaluation system designed
+                    to make internship management clearer, more organized, and easier to
+                    follow for everyone involved.
                 </p>
 
-                <div class="about-grid">
-                    <div class="about-card">
-                        <h3>Track Progress</h3>
-                        <p>Monitor tasks, updates, and milestones with a clear and structured experience.</p>
+                <div class="nx-about-grid">
+                    <article class="nx-about-card"><div class="nx-card-icon" aria-hidden="true">↗</div><h3>Track Progress</h3><p>Monitor tasks, milestones, activities, and internship progress through a structured workspace.</p></article>
+                    <article class="nx-about-card"><div class="nx-card-icon" aria-hidden="true">◉</div><h3>Stay Connected</h3><p>Give students, supervisors, and administrators a shared environment for communication and accountability.</p></article>
+                    <article class="nx-about-card"><div class="nx-card-icon" aria-hidden="true">✓</div><h3>Manage Records</h3><p>Keep internship documents, reports, feedback, grades, and important updates organized.</p></article>
+                </div>
+            </div>
+        </section>
+
+        <section class="nx-features" id="features">
+            <div class="nx-section">
+                <span class="nx-label">Platform Features</span>
+                <h2 class="nx-section-title">Designed around the internship journey.</h2>
+
+                <div class="nx-feature-layout">
+                    <div class="nx-feature-intro">
+                        <h3>Less confusion.<br>More progress.</h3>
+                        <p>Nexora gives every participant the tools they need to stay informed and focused throughout the internship experience.</p>
                     </div>
-                    <div class="about-card">
-                        <h3>Stay Connected</h3>
-                        <p>Give supervisors and students a shared view of responsibilities and expectations.</p>
-                    </div>
-                    <div class="about-card">
-                        <h3>Manage Records</h3>
-                        <p>Store documents and reports in a simple workspace built for internship programs.</p>
+
+                    <div class="nx-feature-list">
+                        <article class="nx-feature"><span class="nx-feature-number">01</span><h4>Task Management</h4><p>Organize assignments, activities, deadlines, and completion status.</p></article>
+                        <article class="nx-feature"><span class="nx-feature-number">02</span><h4>Progress Tracking</h4><p>Keep a clear view of internship milestones and overall progress.</p></article>
+                        <article class="nx-feature"><span class="nx-feature-number">03</span><h4>Documentation</h4><p>Keep reports and important internship documents organized.</p></article>
+                        <article class="nx-feature"><span class="nx-feature-number">04</span><h4>Feedback</h4><p>Connect feedback and evaluations directly to the internship experience.</p></article>
+                        <article class="nx-feature"><span class="nx-feature-number">05</span><h4>Notifications</h4><p>Stay informed about tasks, updates, feedback, and important activity.</p></article>
+                        <article class="nx-feature"><span class="nx-feature-number">06</span><h4>Role-Based Workspace</h4><p>Give students, supervisors, and administrators the tools relevant to their responsibilities.</p></article>
                     </div>
                 </div>
             </div>
         </section>
 
-    <!-- FOOTER -->
-        <footer class="nexora-footer" id="contact">
-            <div class="footer-grid">
-                <div class="footer-section">
-                    <h4>📧 Contact</h4>
-                    <div class="contact-item">
-                        <a href="mailto:six-sevensupport@nexora.com">six-sevensupport@nexora.com</a>
-                    </div>
-                    <div class="contact-item">
-                        <a href="tel:09175676767">09175676767</a>
-                    </div>
-                </div>
-                <div class="footer-section">
-                    <h4>📍 Address</h4>
-                    <div class="contact-item">
-                        167 Business Street<br>
-                        Portal City, Metro Manila<br>
-                        Philippines 1234
-                    </div>
-                </div>
-                <div class="footer-section">
-                    <h4>🔗 Quick Links</h4>
-                    <div class="footer-links">
-                        <a href="#">Privacy Policy</a><br>
-                        <a href="#">Terms of Service</a>
-                    </div>
+        <section class="nx-workflow" id="workflow">
+            <div class="nx-section">
+                <span class="nx-label">How It Works</span>
+                <h2 class="nx-section-title">A clearer path from start to finish.</h2>
+
+                <div class="nx-workflow-grid">
+                    <article class="nx-step"><div class="nx-step-number">01</div><h4>Set Up</h4><p>Students and supervisors access their respective Nexora workspaces.</p></article>
+                    <article class="nx-step"><div class="nx-step-number">02</div><h4>Work &amp; Track</h4><p>Internship activities, tasks, and progress are recorded throughout the experience.</p></article>
+                    <article class="nx-step"><div class="nx-step-number">03</div><h4>Review</h4><p>Supervisors can provide feedback and monitor internship development.</p></article>
+                    <article class="nx-step"><div class="nx-step-number">04</div><h4>Evaluate</h4><p>Internship records and evaluations remain organized for program management.</p></article>
                 </div>
             </div>
+        </section>
 
-            <div class="footer-divider"></div>
-
-            <div class="footer-bottom">
-                <p>&copy; 2026 Nexora. All rights reserved. | Internship Monitoring & Evaluation System</p>
+        <section class="nx-cta">
+            <div class="nx-cta-box">
+                <div class="nx-cta-content">
+                    <span class="nx-cta-label">Start with Nexora</span>
+                    <h2>Make every internship step easier to follow.</h2>
+                    <p>Bring internship activities, progress, documentation, and evaluation together in one connected workspace.</p>
+                    <a href="/login" class="nx-btn nx-btn-primary">Enter Nexora&nbsp; →</a>
+                </div>
             </div>
-        </footer>
+        </section>
+    </main>
 
-        <script>
-            document.addEventListener("DOMContentLoaded", () => {
-                const footer = document.querySelector(".nexora-footer");
-                if (!footer) return;
+    <footer class="nx-footer" id="contact">
+        <div class="nx-footer-grid">
+            <div class="nx-footer-brand">
+                <div class="nx-footer-brand-top">
+                    <img class="nx-footer-logo" src="{{ url_for('static', filename='images/Nexora Light.png') }}" alt="Nexora Logo">
+                    <strong>Nexora</strong>
+                </div>
+                <p>Internship Monitoring &amp; Evaluation System designed to connect students, supervisors, and administrators.</p>
+            </div>
 
-                const toggleFooter = () => {
-                    const nearBottom =
-                        window.innerHeight + window.scrollY >=
-                        document.documentElement.scrollHeight - 1;
-                    footer.classList.toggle("is-visible", nearBottom);
-                };
+            <div class="nx-footer-column">
+                <h4>Platform</h4>
+                <a href="#about">About</a>
+                <a href="#features">Features</a>
+                <a href="#workflow">How It Works</a>
+                <a href="/login">Login</a>
+            </div>
 
-                toggleFooter();
-                window.addEventListener("scroll", toggleFooter);
-                window.addEventListener("resize", toggleFooter);
-            });
-        </script>
+            <div class="nx-footer-column">
+                <h4>Contact</h4>
+                <a href="mailto:six-sevensupport@nexora.com">six-sevensupport@nexora.com</a>
+                <a href="tel:09175676767">09175676767</a>
+                <span>Metro Manila, Philippines</span>
+            </div>
+        </div>
 
-    </body>
+        <div class="nx-footer-bottom">© 2026 Nexora. All rights reserved. Internship Monitoring &amp; Evaluation System.</div>
+    </footer>
+</body>
 </html>
