@@ -37,6 +37,7 @@
         <a
             class="nx-brand"
             href="{{ url_for('student.student_dashboard') }}"
+            aria-label="Nexora Student Dashboard"
         >
             <span class="nx-logo">N</span>
             <span>
@@ -49,6 +50,7 @@
             class="nx-profile"
             href="{{ url_for('student.student_profile') }}"
             aria-label="Open student profile"
+            data-label="Profile"
         >
             {% if sidebar_profile and sidebar_profile.profile_picture %}
                 <img
@@ -88,22 +90,22 @@
         <div class="nx-label">Menu</div>
 
         <nav class="nx-nav" aria-label="Student menu">
-            <a href="{{ url_for('student.student_dashboard') }}" class="{% if request.path == '/student/dashboard' %}active{% endif %}">
+            <a href="{{ url_for('student.student_dashboard') }}" data-label="Dashboard" aria-label="Dashboard" class="{% if request.path == '/student/dashboard' %}active{% endif %}">
                 <span class="ico">▦</span><span>Dashboard</span>
             </a>
-            <a href="{{ url_for('classroom.student_classes') }}" class="{% if request.path.startswith('/student/classes') %}active{% endif %}">
+            <a href="{{ url_for('classroom.student_classes') }}" data-label="My Classes" aria-label="My Classes" class="{% if request.path.startswith('/student/classes') %}active{% endif %}">
                 <span class="ico">♙</span><span>My Classes</span>
             </a>
-            <a href="{{ url_for('student.logbook') }}" class="{% if request.path == '/student/logbook' %}active{% endif %}">
+            <a href="{{ url_for('student.logbook') }}" data-label="Logbook" aria-label="Logbook" class="{% if request.path == '/student/logbook' %}active{% endif %}">
                 <span class="ico">▤</span><span>Logbook</span>
             </a>
-            <a href="{{ url_for('student.tasks') }}" class="{% if request.path == '/student/tasks' %}active{% endif %}">
+            <a href="{{ url_for('student.tasks') }}" data-label="Tasks" aria-label="Tasks" class="{% if request.path == '/student/tasks' %}active{% endif %}">
                 <span class="ico">☑</span><span>Tasks</span>
             </a>
-            <a href="{{ url_for('student.documents') }}" class="{% if request.path == '/student/documents' %}active{% endif %}">
+            <a href="{{ url_for('student.documents') }}" data-label="Documents" aria-label="Documents" class="{% if request.path == '/student/documents' %}active{% endif %}">
                 <span class="ico">▧</span><span>Documents</span>
             </a>
-            <a href="{{ url_for('notifications.notification_list') }}" class="{% if request.path == '/notifications' %}active{% endif %}{% if unread_count|default(0) > 0 %} notification-unread{% endif %}">
+            <a href="{{ url_for('notifications.notification_list') }}" data-label="Notifications" aria-label="Notifications" class="{% if request.path == '/notifications' %}active{% endif %}{% if unread_count|default(0) > 0 %} notification-unread{% endif %}">
                 <span class="ico">♧</span><span>Notifications</span>
                 {% if unread_count|default(0) > 0 %}<span class="nx-badge">{{ unread_count }}</span>{% endif %}
             </a>
@@ -113,8 +115,8 @@
         <div class="nx-label">Account</div>
 
         <nav class="nx-nav" aria-label="Student account">
-            <a href="{{ url_for('student.student_profile') }}"><span class="ico">◎</span><span>Profile</span></a>
-            <a href="javascript:void(0)" onclick="openLogoutModal(); return false;"><span class="ico">↪</span><span>Logout</span></a>
+            <a href="{{ url_for('student.student_profile') }}" data-label="Profile" aria-label="Profile"><span class="ico">◎</span><span>Profile</span></a>
+            <a href="javascript:void(0)" data-label="Logout" aria-label="Logout" onclick="openLogoutModal(); return false;"><span class="ico">↪</span><span>Logout</span></a>
         </nav>
 
         <div class="nx-footer">
