@@ -4,54 +4,100 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Notifications - Nexora</title>
+
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
+
     <style>
-        body.student-notifications-page .student-tasks-content {
+        body.student-notifications-page .student-notifications-content {
             padding-top: 102px !important;
         }
 
-        body.student-notifications-page .student-tasks-heading h1 {
-            font-size: 2.5rem !important;
-            line-height: 1.05 !important;
-            font-weight: 800 !important;
-            letter-spacing: -0.035em !important;
+        body.student-notifications-page .student-notifications-card {
+            margin-bottom: 0;
+        }
+
+        body.student-notifications-page .student-notification-stat:nth-child(2) .student-notification-stat-icon {
+            background: #fff4df;
+            color: #d98200;
+        }
+
+        body.student-notifications-page .student-notification-stat:nth-child(3) .student-notification-stat-icon {
+            background: #e7f7ed;
+            color: #0a8f46;
+        }
+
+        body.student-notifications-page .student-notification-row:last-child {
+            border-bottom: 0;
+        }
+
+        @media (max-width: 760px) {
+            body.student-notifications-page .student-notifications-content {
+                padding-top: 86px !important;
+            }
         }
     </style>
 </head>
+
 <body class="student-page student-notifications-page">
     {% include 'components/student_sidebar.html' %}
+
     <main class="student-tasks-main student-notifications-main">
-        {% include 'components/student_topbar.html' %}
         <div class="student-tasks-content student-notifications-content">
-            <section class="student-tasks-heading" aria-labelledby="notifications-heading">
+            <section class="student-section-heading" aria-labelledby="notifications-heading">
                 <div>
+                    <span class="student-section-eyebrow">Student Portal</span>
                     <h1 id="notifications-heading">Notifications</h1>
                     <p>Stay up to date with your internship activity, tasks, grades, and feedback.</p>
                 </div>
+
                 {% if unread_count %}
-                    <button class="student-tasks-primary-button" type="button" onclick="markAllNotificationsRead()">✓ Mark all as read</button>
+                    <button
+                        class="student-page-action"
+                        type="button"
+                        onclick="markAllNotificationsRead()"
+                    >
+                        ✓ Mark all as read
+                    </button>
                 {% endif %}
             </section>
 
-            <section class="student-tasks-stats" aria-label="Notification summary">
-                <article class="student-tasks-stat">
-                    <span class="student-tasks-stat-icon" aria-hidden="true">♧</span>
-                    <div class="student-tasks-stat-copy"><span>Total Notifications</span><strong>{{ total_count|default(0) }}</strong><small>All updates</small></div>
+            <section class="student-notification-stats" aria-label="Notification summary">
+                <article class="student-notification-stat">
+                    <span class="student-notification-stat-icon" aria-hidden="true">🔔</span>
+                    <div>
+                        <span>Total Notifications</span>
+                        <strong>{{ total_count|default(0) }}</strong>
+                        <small>All updates</small>
+                    </div>
                 </article>
-                <article class="student-tasks-stat">
-                    <span class="student-tasks-stat-icon" aria-hidden="true">●</span>
-                    <div class="student-tasks-stat-copy"><span>Unread</span><strong>{{ unread_count|default(0) }}</strong><small>Need your attention</small></div>
+
+                <article class="student-notification-stat">
+                    <span class="student-notification-stat-icon" aria-hidden="true">●</span>
+                    <div>
+                        <span>Unread</span>
+                        <strong>{{ unread_count|default(0) }}</strong>
+                        <small>Need your attention</small>
+                    </div>
                 </article>
-                <article class="student-tasks-stat">
-                    <span class="student-tasks-stat-icon" aria-hidden="true">✓</span>
-                    <div class="student-tasks-stat-copy"><span>Read</span><strong>{{ (total_count|default(0)) - (unread_count|default(0)) }}</strong><small>Already reviewed</small></div>
+
+                <article class="student-notification-stat">
+                    <span class="student-notification-stat-icon" aria-hidden="true">✓</span>
+                    <div>
+                        <span>Read</span>
+                        <strong>{{ (total_count|default(0)) - (unread_count|default(0)) }}</strong>
+                        <small>Already reviewed</small>
+                    </div>
                 </article>
             </section>
 
-            <section class="student-tasks-list-card" aria-label="Notification history">
-                <div class="student-tasks-card-heading">
-                    <h2>Recent Updates</h2>
+            <section class="student-notifications-card" aria-label="Notification history">
+                <div class="student-notifications-card-header">
+                    <div>
+                        <h2>Recent Updates</h2>
+                        <p>Your latest internship and classroom activity.</p>
+                    </div>
                     <span>{{ total_count|default(0) }} total</span>
                 </div>
 
@@ -59,31 +105,74 @@
                     <div class="student-notification-list">
                         {% for notif in notifications %}
                             <article class="student-notification-row {% if notif['is_read'] == 0 %}is-unread{% endif %}">
-                                <div class="student-notification-icon">{% if notif['notification_type'] == 'success' %}✓{% elif notif['notification_type'] in ['error','warning'] %}!{% elif notif['notification_type'] == 'task' %}✓{% elif notif['notification_type'] == 'feedback' %}✦{% else %}i{% endif %}</div>
+                                <div class="student-notification-icon" aria-hidden="true">
+                                    {% if notif['notification_type'] == 'success' %}
+                                        ✓
+                                    {% elif notif['notification_type'] in ['error', 'warning'] %}
+                                        !
+                                    {% elif notif['notification_type'] == 'task' %}
+                                        ✓
+                                    {% elif notif['notification_type'] == 'feedback' %}
+                                        ✦
+                                    {% else %}
+                                        i
+                                    {% endif %}
+                                </div>
+
                                 <div class="student-notification-content">
-                                    <div class="student-notification-title"><strong>{{ notif['title'] }}</strong>{% if notif['is_read'] == 0 %}<span>NEW</span>{% endif %}</div>
+                                    <div class="student-notification-title">
+                                        <strong>{{ notif['title'] }}</strong>
+                                        {% if notif['is_read'] == 0 %}
+                                            <span>NEW</span>
+                                        {% endif %}
+                                    </div>
                                     <p>{{ notif['message'] }}</p>
                                     <small>{{ notif['created_at'] }}</small>
                                 </div>
+
                                 {% if notif['link_url'] %}
-                                    <a class="student-notification-open" href="{{ notif['link_url'] }}" onclick="markOne({{ notif['id'] }})">Open →</a>
+                                    <a
+                                        class="student-notification-open"
+                                        href="{{ notif['link_url'] }}"
+                                        onclick="markOne({{ notif['id'] }})"
+                                    >
+                                        Open →
+                                    </a>
                                 {% endif %}
                             </article>
                         {% endfor %}
                     </div>
+
                     {% if total_pages > 1 %}
-                    <div class="student-tasks-pagination" style="padding:18px 22px;border-top:1px solid #e5e7eb">
-                        <span>Page {{ page }} of {{ total_pages }}</span>
-                        <div class="student-tasks-page-buttons">
-                            {% if page > 1 %}<a class="student-tasks-page-button" href="?page={{ page - 1 }}">‹</a>{% else %}<span class="student-tasks-page-button" style="opacity:.4">‹</span>{% endif %}
-                            {% for p in range(1, total_pages + 1) %}<a class="student-tasks-page-button {% if p == page %}is-active{% endif %}" href="?page={{ p }}">{{ p }}</a>{% endfor %}
-                            {% if page < total_pages %}<a class="student-tasks-page-button" href="?page={{ page + 1 }}">›</a>{% else %}<span class="student-tasks-page-button" style="opacity:.4">›</span>{% endif %}
+                        <div class="student-tasks-pagination">
+                            <span>Page {{ page }} of {{ total_pages }}</span>
+                            <div class="student-tasks-page-buttons" aria-label="Notification pages">
+                                {% if page > 1 %}
+                                    <a class="student-tasks-page-button" href="?page={{ page - 1 }}">‹</a>
+                                {% else %}
+                                    <span class="student-tasks-page-button" aria-disabled="true">‹</span>
+                                {% endif %}
+
+                                {% for p in range(1, total_pages + 1) %}
+                                    <a
+                                        class="student-tasks-page-button {% if p == page %}is-active{% endif %}"
+                                        href="?page={{ p }}"
+                                    >
+                                        {{ p }}
+                                    </a>
+                                {% endfor %}
+
+                                {% if page < total_pages %}
+                                    <a class="student-tasks-page-button" href="?page={{ page + 1 }}">›</a>
+                                {% else %}
+                                    <span class="student-tasks-page-button" aria-disabled="true">›</span>
+                                {% endif %}
+                            </div>
                         </div>
-                    </div>
                     {% endif %}
                 {% else %}
-                    <div class="student-tasks-empty">
-                        <div class="student-tasks-empty-icon">♧</div>
+                    <div class="student-notifications-empty">
+                        <div class="student-notifications-empty-icon" aria-hidden="true">🔔</div>
                         <strong>No notifications yet</strong>
                         <span>New updates, grades, assignments, and feedback will appear here.</span>
                     </div>
@@ -92,9 +181,34 @@
         </div>
     </main>
 
-<script>
-function markOne(id){fetch('/notification/read/'+id,{method:'POST',headers:{'X-CSRFToken':'{{ csrf_token() }}'}}).catch(()=>{});}
-function markAllNotificationsRead(){fetch('/notifications/read-all',{method:'POST',headers:{'X-CSRFToken':'{{ csrf_token() }}'}}).then(()=>location.reload()).catch(()=>{});}
-</script>
+    <script>
+        function markOne(id) {
+            fetch('/notification/read/' + id, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                }
+            }).catch(function () {
+                /* Preserve navigation even if the read request fails. */
+            });
+        }
+
+        function markAllNotificationsRead() {
+            fetch('/notifications/read-all', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                }
+            })
+                .then(function (response) {
+                    if (response.ok) {
+                        window.location.reload();
+                    }
+                })
+                .catch(function () {
+                    /* Keep the current page state if the request fails. */
+                });
+        }
+    </script>
 </body>
 </html>
