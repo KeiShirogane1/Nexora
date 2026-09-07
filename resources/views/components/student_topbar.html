@@ -22,38 +22,38 @@
     </div>
 
     <div class="student-tasks-topbar-right">
-        <button
-            id="studentNotificationTrigger"
-            class="student-tasks-notification"
-            type="button"
-            aria-label="Open notifications"
-            aria-haspopup="dialog"
-            aria-expanded="false"
-            onclick="toggleStudentNotifications(event)"
-        >
-            <svg
-                class="student-notification-bell-icon"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
+        <div class="student-notification-menu">
+            <button
+                class="student-tasks-notification"
+                type="button"
+                aria-label="Open notifications"
+                aria-haspopup="dialog"
+                aria-expanded="false"
+                onclick="toggleStudentNotifications(event, this)"
             >
-                <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path>
-                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-            </svg>
-
-            {% if unread_count|default(0) > 0 %}
-                <span
-                    class="student-tasks-notification-badge"
-                    id="studentNotificationBadge"
+                <svg
+                    class="student-notification-bell-icon"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
                 >
-                    {{ unread_count }}
-                </span>
-            {% endif %}
-        </button>
+                    <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
+
+                {% if unread_count|default(0) > 0 %}
+                    <span class="student-tasks-notification-badge">
+                        {{ unread_count }}
+                    </span>
+                {% endif %}
+            </button>
+
+            {% include 'components/notification_bell.html' %}
+        </div>
 
         <div class="student-tasks-user">
             {% if sidebar_profile and sidebar_profile.profile_picture %}
