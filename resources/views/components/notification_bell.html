@@ -1,9 +1,7 @@
-<div
+<section
     class="student-notification-popover"
     role="dialog"
-    aria-modal="false"
     aria-label="Recent notifications"
-    hidden
 >
     <div class="student-notification-popover-header">
         <div>
@@ -28,8 +26,9 @@
                 <button
                     type="button"
                     class="student-notification-item {% if notif['is_read'] == 0 %}is-unread{% endif %}"
-                    data-link="{{ notif['link_url'] or '' }}"
-                    onclick="openStudentNotification({{ notif['id'] }}, this)"
+                    data-notification-id="{{ notif['id'] }}"
+                    data-link="{{ (notif['link_url'] or '')|e }}"
+                    onclick="openStudentNotification(this)"
                 >
                     <span
                         class="student-notification-item-icon {% if notif['notification_type'] == 'warning' %}is-warning{% elif notif['notification_type'] == 'error' %}is-error{% elif notif['notification_type'] in ['success', 'task', 'classroom'] %}is-success{% else %}is-info{% endif %}"
@@ -87,79 +86,52 @@
             <span aria-hidden="true">→</span>
         </a>
     </div>
-</div>
+</section>
 
 <script>
 (function () {
-    function getMenuFromElement(element) {
-        return element ? element.closest('.student-notification-menu') : null;
-    }
-
-    function closeMenu(menu) {
-        if (!menu) return;
-
-        var popover = menu.querySelector('.student-notification-popover');
-        var trigger = menu.querySelector('.student-tasks-notification');
-
-        if (popover) {
-            popover.setAttribute('hidden', '');
-        }
-
-        if (trigger) {
-            trigger.setAttribute('aria-expanded', 'false');
+    function closeDetails(details) {
+        if (details) {
+            details.removeAttribute('open');
         }
     }
 
-    function closeAllMenus(exceptMenu) {
-        document.querySelectorAll('.student-notification-menu').forEach(function (menu) {
-            if (menu !== exceptMenu) {
-                closeMenu(menu);
-            }
-        });
-    }
+    function updateBadgeCount(badge) {
+        if (!badge) return;
 
-    window.toggleStudentNotifications = function (event, trigger) {
-        if (event) {
-            event.preventDefault();
-            event.stopPropagation();
-        }
-
-        var menu = getMenuFromElement(trigger);
-        if (!menu) return;
-
-        var popover = menu.querySelector('.student-notification-popover');
-        if (!popover) return;
-
-        var shouldOpen = popover.hasAttribute('hidden');
-        closeAllMenus(menu);
-
-        if (shouldOpen) {
-            popover.removeAttribute('hidden');
-            trigger.setAttribute('aria-expanded', 'true');
+        var nextCount = Math.max(0, (parseInt(badge.textContent, 10) || 0) - 1);
+        if (nextCount === 0) {
+            badge.remove();
         } else {
-            closeMenu(menu);
+            badge.textContent = nextCount;
         }
-    };
-
-    window.closeStudentNotifications = function (button) {
-        closeMenu(getMenuFromElement(button));
-    };
+    }
 
     function decrementNotificationBadges() {
-        document.querySelectorAll('.student-tasks-notification-badge').forEach(function (badge) {
-            var nextCount = Math.max(0, (parseInt(badge.textContent, 10) || 0) - 1);
+        document.querySelectorAll('.student-tasks-notification-badge, .nx-nav .nx-badge').forEach(updateBadgeCount);
 
-            if (nextCount === 0) {
-                badge.remove();
-            } else {
-                badge.textContent = nextCount;
-            }
-        });
+        if (!document.querySelector('.nx-nav .nx-badge')) {
+            document.querySelectorAll('.nx-nav a.notification-unread').forEach(function (link) {
+                link.classList.remove('notification-unread');
+            });
+        }
     }
 
-    window.openStudentNotification = function (notificationId, item) {
-        var isUnread = item && item.classList.contains('is-unread');
-        var linkUrl = item ? item.getAttribute('data-link') : '';
+    window.closeStudentNotifications = function (button) {
+        closeDetails(button ? button.closest('.student-notification-menu') : null);
+    };
+
+    window.openStudentNotification = function (item) {
+        if (!item) return;
+
+        var notificationId = item.getAttribute('data-notification-id');
+        var linkUrl = item.getAttribute('data-link') || '';
+        var isUnread = item.classList.contains('is-unread');
+
+        if (!notificationId) {
+            if (linkUrl) window.location.href = linkUrl;
+            return;
+        }
 
         fetch('/notification/read/' + notificationId, {
             method: 'POST',
@@ -172,15 +144,15 @@
                     throw new Error('Unable to mark notification as read.');
                 }
 
-                if (isUnread && item) {
-                    document.querySelectorAll('.student-notification-item').forEach(function (candidate) {
-                        if (candidate.getAttribute('onclick') === item.getAttribute('onclick')) {
+                if (isUnread) {
+                    document
+                        .querySelectorAll('.student-notification-item[data-notification-id="' + notificationId + '"]')
+                        .forEach(function (candidate) {
                             candidate.classList.remove('is-unread');
 
                             var dot = candidate.querySelector('.student-notification-unread-dot');
                             if (dot) dot.remove();
-                        }
-                    });
+                        });
 
                     decrementNotificationBadges();
                 }
@@ -196,7 +168,7 @@
             });
     };
 
-    window.markAllStudentNotificationsRead = function (event, button) {
+    window.markAllStudentNotificationsRead = function (event) {
         if (event) {
             event.preventDefault();
             event.stopPropagation();
@@ -212,7 +184,6 @@
                 if (!response.ok) {
                     throw new Error('Unable to mark notifications as read.');
                 }
-
                 return response.json();
             })
             .then(function (data) {
@@ -225,8 +196,12 @@
                     if (dot) dot.remove();
                 });
 
-                document.querySelectorAll('.student-tasks-notification-badge').forEach(function (badge) {
+                document.querySelectorAll('.student-tasks-notification-badge, .nx-nav .nx-badge').forEach(function (badge) {
                     badge.remove();
+                });
+
+                document.querySelectorAll('.nx-nav a.notification-unread').forEach(function (link) {
+                    link.classList.remove('notification-unread');
                 });
 
                 document.querySelectorAll('.student-notification-mark-all').forEach(function (markAllButton) {
@@ -241,22 +216,32 @@
             });
     };
 
-    if (!window.__studentNotificationDocumentHandlersBound) {
+    if (!window.__studentNotificationDetailsHandlersBound) {
         document.addEventListener('click', function (event) {
-            document.querySelectorAll('.student-notification-menu').forEach(function (menu) {
-                if (!menu.contains(event.target)) {
-                    closeMenu(menu);
-                }
-            });
+            var clickedMenu = event.target.closest('.student-notification-menu');
+            var clickedSummary = event.target.closest('.student-tasks-notification');
+
+            if (clickedSummary && clickedMenu) {
+                document.querySelectorAll('.student-notification-menu[open]').forEach(function (menu) {
+                    if (menu !== clickedMenu) {
+                        closeDetails(menu);
+                    }
+                });
+                return;
+            }
+
+            if (!clickedMenu) {
+                document.querySelectorAll('.student-notification-menu[open]').forEach(closeDetails);
+            }
         });
 
         document.addEventListener('keydown', function (event) {
             if (event.key === 'Escape') {
-                closeAllMenus(null);
+                document.querySelectorAll('.student-notification-menu[open]').forEach(closeDetails);
             }
         });
 
-        window.__studentNotificationDocumentHandlersBound = true;
+        window.__studentNotificationDetailsHandlersBound = true;
     }
 })();
 </script>
