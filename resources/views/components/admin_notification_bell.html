@@ -1,0 +1,177 @@
+<div class="admin-notification-control">
+    <button
+        type="button"
+        class="admin-topbar-notification"
+        id="adminNotificationBell"
+        aria-label="Notifications"
+        aria-haspopup="dialog"
+        aria-expanded="false"
+        aria-controls="adminNotificationPopover"
+    >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path>
+            <path d="M10 21h4"></path>
+        </svg>
+        {% if unread_count|default(0) > 0 %}
+            <span class="admin-topbar-badge">{{ unread_count }}</span>
+        {% endif %}
+    </button>
+
+    <section
+        class="admin-notification-popover"
+        id="adminNotificationPopover"
+        role="dialog"
+        aria-label="Recent notifications"
+        hidden
+    >
+        <div class="admin-notification-popover-header">
+            <div>
+                <span class="admin-notification-eyebrow">Notifications</span>
+                <h2>Recent Updates</h2>
+                <p>Latest notifications from the last 7 days.</p>
+            </div>
+            <button
+                type="button"
+                class="admin-notification-close"
+                id="adminNotificationClose"
+                aria-label="Close notifications"
+            >
+                ×
+            </button>
+        </div>
+
+        <div class="admin-notification-popover-body">
+            {% if recent_notifications|default([]) %}
+                {% for notif in recent_notifications[:5] %}
+                    <button
+                        type="button"
+                        class="admin-notification-item {% if notif['is_read'] == 0 %}is-unread{% endif %}"
+                        data-notification-id="{{ notif['id'] }}"
+                        data-link="{{ (notif['link_url'] or '')|e }}"
+                    >
+                        <span class="admin-notification-item-icon" aria-hidden="true">
+                            {% if notif['notification_type'] == 'warning' %}
+                                !
+                            {% elif notif['notification_type'] == 'error' %}
+                                ×
+                            {% elif notif['notification_type'] in ['success', 'task', 'classroom'] %}
+                                ✓
+                            {% else %}
+                                i
+                            {% endif %}
+                        </span>
+                        <span class="admin-notification-item-copy">
+                            <strong>{{ notif['title'] }}</strong>
+                            <span>{{ notif['message'] }}</span>
+                            <small>{{ notif['created_at'] }}</small>
+                        </span>
+                        {% if notif['is_read'] == 0 %}
+                            <span class="admin-notification-unread-dot" aria-label="Unread"></span>
+                        {% endif %}
+                    </button>
+                {% endfor %}
+            {% else %}
+                <div class="admin-notification-empty">
+                    <span class="admin-notification-empty-icon" aria-hidden="true">✓</span>
+                    <strong>You're all caught up</strong>
+                    <p>No notifications were received in the last 7 days.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="admin-notification-popover-footer">
+            {% if unread_count|default(0) > 0 %}
+                <button type="button" class="admin-notification-mark-all" id="adminNotificationMarkAll">
+                    Mark all as read
+                </button>
+            {% else %}
+                <span class="admin-notification-read-status">All caught up</span>
+            {% endif %}
+            <a href="{{ url_for('notifications.notification_list') }}" class="admin-notification-view-all">
+                View All Notifications <span aria-hidden="true">→</span>
+            </a>
+        </div>
+    </section>
+</div>
+
+<script>
+(function () {
+    var control = document.querySelector('.admin-notification-control');
+    var bell = document.getElementById('adminNotificationBell');
+    var popover = document.getElementById('adminNotificationPopover');
+    var closeButton = document.getElementById('adminNotificationClose');
+
+    if (!control || !bell || !popover) return;
+
+    function closePopover() {
+        popover.hidden = true;
+        bell.setAttribute('aria-expanded', 'false');
+    }
+
+    function openPopover() {
+        popover.hidden = false;
+        bell.setAttribute('aria-expanded', 'true');
+    }
+
+    bell.addEventListener('click', function (event) {
+        event.stopPropagation();
+        if (popover.hidden) openPopover();
+        else closePopover();
+    });
+
+    if (closeButton) {
+        closeButton.addEventListener('click', function () {
+            closePopover();
+            bell.focus();
+        });
+    }
+
+    popover.addEventListener('click', function (event) {
+        event.stopPropagation();
+    });
+
+    document.addEventListener('click', function (event) {
+        if (!control.contains(event.target)) closePopover();
+    });
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') closePopover();
+    });
+
+    popover.querySelectorAll('.admin-notification-item').forEach(function (item) {
+        item.addEventListener('click', function () {
+            var id = item.getAttribute('data-notification-id');
+            var link = item.getAttribute('data-link') || '';
+
+            if (!id) {
+                if (link) window.location.href = link;
+                return;
+            }
+
+            fetch('/notification/read/' + id, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                }
+            }).finally(function () {
+                if (link) window.location.href = link;
+                else window.location.reload();
+            });
+        });
+    });
+
+    var markAll = document.getElementById('adminNotificationMarkAll');
+    if (markAll) {
+        markAll.addEventListener('click', function () {
+            fetch('/notifications/read-all', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                }
+            }).then(function (response) {
+                if (response.ok) window.location.reload();
+            });
+        });
+    }
+})();
+</script>
