@@ -219,8 +219,7 @@ body.nx-notifications-page .nx-notifications-page-status {
 body.nx-notifications-page .nx-notifications-selection-bar {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 14px;
+    justify-content: flex-start;
     padding: 10px 20px;
     border-bottom: 1px solid var(--nx-notify-page-border);
     background: #fbfdfc;
@@ -244,28 +243,6 @@ body.nx-notifications-page .nx-notification-select input {
     margin: 0;
     accent-color: var(--nx-notify-page-accent);
     cursor: pointer;
-}
-
-body.nx-notifications-page .nx-notifications-selected-delete {
-    min-height: 34px;
-    padding: 0 11px;
-    border: 1px solid #dc2626;
-    border-radius: 8px;
-    background: #dc2626;
-    color: #fff;
-    font-size: .67rem;
-    font-weight: 800;
-    cursor: pointer;
-}
-
-body.nx-notifications-page .nx-notifications-selected-delete:hover:not(:disabled) {
-    border-color: #b91c1c;
-    background: #b91c1c;
-}
-
-body.nx-notifications-page .nx-notifications-selected-delete:disabled {
-    opacity: .42;
-    cursor: not-allowed;
 }
 
 body.nx-notifications-page .nx-notification-history-row {
@@ -505,11 +482,16 @@ body.nx-notifications-page .nx-notifications-manage-copy p {
     line-height: 1.45;
 }
 
-body.nx-notifications-page .nx-notifications-delete-form {
+body.nx-notifications-page .nx-notifications-delete-controls {
     flex: 0 0 auto;
     display: flex;
     align-items: flex-end;
     gap: 9px;
+}
+
+body.nx-notifications-page .nx-notifications-delete-form {
+    display: flex;
+    align-items: flex-end;
 }
 
 body.nx-notifications-page .nx-notifications-date-field {
@@ -556,9 +538,14 @@ body.nx-notifications-page .nx-notifications-delete-button {
     white-space: nowrap;
 }
 
-body.nx-notifications-page .nx-notifications-delete-button:hover {
+body.nx-notifications-page .nx-notifications-delete-button:hover:not(:disabled) {
     border-color: #b91c1c;
     background: #b91c1c;
+}
+
+body.nx-notifications-page .nx-notifications-delete-button:disabled {
+    opacity: .42;
+    cursor: not-allowed;
 }
 
 @media (max-width: 900px) {
@@ -567,6 +554,7 @@ body.nx-notifications-page .nx-notifications-delete-button:hover {
         flex-direction: column;
     }
 
+    body.nx-notifications-page .nx-notifications-delete-controls,
     body.nx-notifications-page .nx-notifications-delete-form {
         width: 100%;
     }
@@ -608,16 +596,6 @@ body.nx-notifications-page .nx-notifications-delete-button:hover {
         border-bottom: 0;
     }
 
-    body.nx-notifications-page .nx-notifications-selection-bar {
-        align-items: stretch;
-        flex-direction: column;
-        padding: 10px 16px;
-    }
-
-    body.nx-notifications-page .nx-notifications-selected-delete {
-        width: 100%;
-    }
-
     body.nx-notifications-page .nx-notification-history-row {
         grid-template-columns: 20px 38px minmax(0, 1fr);
         padding: 14px 16px;
@@ -638,7 +616,7 @@ body.nx-notifications-page .nx-notifications-delete-button:hover {
         flex-wrap: wrap;
     }
 
-    body.nx-notifications-page .nx-notifications-delete-form {
+    body.nx-notifications-page .nx-notifications-delete-controls {
         align-items: stretch;
         flex-direction: column;
     }
@@ -706,7 +684,6 @@ body.nx-notifications-page .nx-notifications-delete-button:hover {
                             <input id="selectAllNotifications" type="checkbox" onchange="toggleAllNotifications(this)">
                             <span>Select all on this page</span>
                         </label>
-                        <button id="deleteSelectedNotificationsButton" class="nx-notifications-selected-delete" type="submit" disabled>Delete selected permanently</button>
                     </div>
 
                     <div class="nx-notification-history-list">
@@ -778,18 +755,20 @@ body.nx-notifications-page .nx-notifications-delete-button:hover {
         <section class="nx-notifications-manage" aria-labelledby="manage-notifications-heading">
             <div class="nx-notifications-manage-copy">
                 <span>Manage Notifications</span>
-                <h2 id="manage-notifications-heading">Delete notifications by date</h2>
-                <p>Choose a date to permanently delete only your notifications created on that day. This cannot be undone.</p>
+                <h2 id="manage-notifications-heading">Delete notifications permanently</h2>
+                <p>Select notifications above, or choose a date. The single delete button removes the selected notifications first; if none are selected, it deletes your notifications from the chosen date.</p>
             </div>
 
-            <form class="nx-notifications-delete-form" method="post" action="{{ url_for('notifications.delete_by_date') }}" onsubmit="return confirmNotificationDateDelete(this);">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <label class="nx-notifications-date-field">
-                    <span>Choose date</span>
-                    <input type="date" name="delete_date" max="{{ today_iso }}" required>
-                </label>
-                <button class="nx-notifications-delete-button" type="submit">Delete Permanently</button>
-            </form>
+            <div class="nx-notifications-delete-controls">
+                <form id="notification-date-delete-form" class="nx-notifications-delete-form" method="post" action="{{ url_for('notifications.delete_by_date') }}" onsubmit="return confirmNotificationDateDelete(this);">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <label class="nx-notifications-date-field">
+                        <span>Choose date</span>
+                        <input id="notificationDeleteDate" type="date" name="delete_date" max="{{ today_iso }}">
+                    </label>
+                </form>
+                <button id="deleteNotificationsButton" class="nx-notifications-delete-button" type="button" onclick="deleteNotificationsFromBottom()" disabled>Delete Permanently</button>
+            </div>
         </section>
     </div>
 </main>
@@ -811,23 +790,34 @@ function markAllNotificationsRead() {
     }).catch(function () {});
 }
 
+function getSelectedNotificationCount() {
+    return document.querySelectorAll('.nx-notification-checkbox:checked').length;
+}
+
+function updateDeleteNotificationsButton() {
+    var selectedCount = getSelectedNotificationCount();
+    var dateInput = document.getElementById('notificationDeleteDate');
+    var deleteButton = document.getElementById('deleteNotificationsButton');
+    if (!deleteButton) return;
+
+    var hasDate = !!(dateInput && dateInput.value);
+    deleteButton.disabled = selectedCount === 0 && !hasDate;
+    deleteButton.textContent = selectedCount
+        ? 'Delete Permanently (' + selectedCount + ')'
+        : 'Delete Permanently';
+}
+
 function updateSelectedNotifications() {
     var checkboxes = Array.from(document.querySelectorAll('.nx-notification-checkbox'));
     var selected = checkboxes.filter(function (checkbox) { return checkbox.checked; });
     var selectAll = document.getElementById('selectAllNotifications');
-    var deleteButton = document.getElementById('deleteSelectedNotificationsButton');
 
     if (selectAll) {
         selectAll.checked = checkboxes.length > 0 && selected.length === checkboxes.length;
         selectAll.indeterminate = selected.length > 0 && selected.length < checkboxes.length;
     }
 
-    if (deleteButton) {
-        deleteButton.disabled = selected.length === 0;
-        deleteButton.textContent = selected.length
-            ? 'Delete selected permanently (' + selected.length + ')'
-            : 'Delete selected permanently';
-    }
+    updateDeleteNotificationsButton();
 }
 
 function toggleAllNotifications(control) {
@@ -853,5 +843,29 @@ function confirmNotificationDateDelete(form) {
     );
 }
 
-document.addEventListener('DOMContentLoaded', updateSelectedNotifications);
+function deleteNotificationsFromBottom() {
+    var selectionForm = document.getElementById('notification-selection-form');
+    if (selectionForm && getSelectedNotificationCount() > 0) {
+        selectionForm.requestSubmit();
+        return;
+    }
+
+    var dateForm = document.getElementById('notification-date-delete-form');
+    var dateInput = document.getElementById('notificationDeleteDate');
+    if (dateForm && dateInput && dateInput.value) {
+        dateForm.requestSubmit();
+        return;
+    }
+
+    window.alert('Select at least one notification or choose a date first.');
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    var dateInput = document.getElementById('notificationDeleteDate');
+    if (dateInput) {
+        dateInput.addEventListener('input', updateDeleteNotificationsButton);
+        dateInput.addEventListener('change', updateDeleteNotificationsButton);
+    }
+    updateSelectedNotifications();
+});
 </script>
