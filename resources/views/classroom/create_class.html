@@ -94,6 +94,7 @@
             padding: 28px;
             display: flex;
             flex-direction: column;
+            cursor: pointer;
             transition: border-color .15s ease, transform .15s ease, box-shadow .15s ease;
         }
 
@@ -101,6 +102,12 @@
             border-color: #bfdbfe;
             transform: translateY(-2px);
             box-shadow: 0 12px 32px rgba(15, 23, 42, .09);
+        }
+
+        .create-space-choice-card:focus-visible {
+            outline: 3px solid rgba(37, 99, 235, .22);
+            outline-offset: 3px;
+            border-color: #2563eb;
         }
 
         .create-space-choice-icon {
@@ -566,17 +573,9 @@
 
     <main class="page-content nexora-app-main create-space-main" data-initial-view="{{ initial_view|default('choice') }}">
         <div class="create-space-shell">
-            <a href="{{ url_for('classroom.supervisor_classes') }}" class="create-space-back">← Back to My Classes</a>
-
-            <section id="create-space-choice" class="create-space-view" aria-labelledby="create-space-title">
-                <header class="create-space-header">
-                    <span class="create-space-eyebrow">Create a Space</span>
-                    <h1 id="create-space-title">What would you like to create?</h1>
-                    <p>Choose the type of space you want to manage in Nexora. Classroom keeps the current academic workflow, while Internship Classroom provides a dedicated OJT setup.</p>
-                </header>
-
+            <section id="create-space-choice" class="create-space-view">
                 <div class="create-space-choice-grid">
-                    <article class="create-space-choice-card">
+                    <article class="create-space-choice-card" role="button" tabindex="0" data-show-view="classroom" aria-label="Create Classroom">
                         <div class="create-space-choice-icon" aria-hidden="true">▦</div>
                         <span class="create-space-choice-label">Classroom</span>
                         <h2>Create Classroom</h2>
@@ -587,10 +586,9 @@
                             <li>Announcements and classroom stream</li>
                             <li>Reports and student enrollment</li>
                         </ul>
-                        <button type="button" class="create-space-choice-button" data-show-view="classroom">Create Classroom</button>
                     </article>
 
-                    <article class="create-space-choice-card">
+                    <article class="create-space-choice-card" role="button" tabindex="0" data-show-view="internship" aria-label="Create Internship Classroom">
                         <div class="create-space-choice-icon" aria-hidden="true">◇</div>
                         <span class="create-space-choice-label">Internship Classroom</span>
                         <h2>Create Internship Classroom</h2>
@@ -601,7 +599,6 @@
                             <li>Responsibilities and qualifications</li>
                             <li>Structured student-facing internship details</li>
                         </ul>
-                        <button type="button" class="create-space-choice-button" data-show-view="internship">Create Internship Classroom</button>
                     </article>
                 </div>
             </section>
@@ -868,6 +865,15 @@
             document.querySelectorAll('[data-show-view]').forEach(function (button) {
                 button.addEventListener('click', function () {
                     showView(button.getAttribute('data-show-view'));
+                });
+            });
+
+            document.querySelectorAll('.create-space-choice-card[data-show-view]').forEach(function (card) {
+                card.addEventListener('keydown', function (event) {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        showView(card.getAttribute('data-show-view'));
+                    }
                 });
             });
 
