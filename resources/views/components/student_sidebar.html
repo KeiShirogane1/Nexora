@@ -7,15 +7,6 @@
 
 <div class="nx-student-shell">
     <aside class="nx-sidebar" id="studentSidebar">
-        <button
-            type="button"
-            class="nx-collapse-toggle"
-            aria-label="Collapse student sidebar"
-            title="Collapse sidebar"
-        >
-            <span class="chevron">‹</span>
-        </button>
-
         <a
             class="nx-brand"
             href="{{ url_for('student.student_dashboard') }}"
@@ -106,25 +97,14 @@
             <p>Nexora Coding<br>Empowering Future<br>Developers</p>
         </div>
     </aside>
+
+    <div class="nx-sidebar-backdrop" aria-hidden="true"></div>
 </div>
 
 {% include 'components/student_topbar.html' %}
 
 <script>
 (function () {
-    function getStudentSidebarElements() {
-        return {
-            shell: document.querySelector('.nx-student-shell'),
-            sidebar: document.getElementById('studentSidebar')
-        };
-    }
-
-    function updateCollapseButton(button, isCollapsed) {
-        if (!button) return;
-        button.setAttribute('aria-label', isCollapsed ? 'Expand student sidebar' : 'Collapse student sidebar');
-        button.setAttribute('title', isCollapsed ? 'Expand sidebar' : 'Collapse sidebar');
-    }
-
     function applyCanonicalStudentHeading() {
         var headings = document.querySelectorAll(
             'body.student-page .student-tasks-heading h1,' +
@@ -142,18 +122,6 @@
             heading.style.setProperty('letter-spacing', '-0.03em', 'important');
         });
     }
-
-    window.toggleStudentSidebar = function () {
-        var elements = getStudentSidebarElements();
-        if (!elements.shell || !elements.sidebar) return;
-
-        var isCollapsed = elements.sidebar.classList.toggle('nx-collapsed');
-        elements.shell.classList.toggle('nx-sidebar-collapsed', isCollapsed);
-        updateCollapseButton(elements.sidebar.querySelector('.nx-collapse-toggle'), isCollapsed);
-    };
-
-    var collapseButton = document.querySelector('.nx-collapse-toggle');
-    if (collapseButton) collapseButton.addEventListener('click', window.toggleStudentSidebar);
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', applyCanonicalStudentHeading);
