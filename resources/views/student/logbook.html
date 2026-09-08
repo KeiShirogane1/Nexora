@@ -14,21 +14,14 @@
         body.student-logbook-page .student-logbook-page-content {
             padding-top: 102px !important;
         }
-
-        body.student-logbook-page .student-logbook-page-heading h1 {
-            font-size: 2.5rem !important;
-            line-height: 1.05 !important;
-            font-weight: 800 !important;
-            letter-spacing: -0.035em !important;
-        }
     </style>
 </head>
 <body class="student-page student-logbook-page">
     {% include 'components/student_sidebar.html' %}
     <main class="student-tasks-main student-logbook-main">
         <div class="student-tasks-content student-logbook-page-content">
-            <section class="student-logbook-page-heading">
-                <div><h1>Logbook</h1><p>Track your daily activities, hours, and learnings.</p></div>
+            <section class="student-logbook-page-heading student-section-heading" aria-labelledby="logbook-heading">
+                <div><span class="student-section-eyebrow">Student Portal</span><h1 id="logbook-heading">Logbook</h1><p>Track your daily activities, hours, and learnings.</p></div>
                 <div class="student-logbook-actions"><a class="student-logbook-button student-logbook-button-outline" href="#attendance-history">▣ Calendar View</a>{% if attendance %}<a class="student-logbook-button student-logbook-button-primary" href="#new-log-entry">＋ New Log Entry</a>{% else %}<span class="student-logbook-button student-logbook-button-primary" style="opacity:.45;cursor:not-allowed;pointer-events:none" title="Clock in first to add log entries">＋ New Log Entry</span>{% endif %}</div>
             </section>
             {% set total_hours = total_hours_all|default(0) %}
