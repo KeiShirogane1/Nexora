@@ -219,3 +219,33 @@ def delete_notification(notification_id, user_id=None):
             return True
     finally:
         conn.close()
+
+
+def delete_notifications_by_date(user_id, target_date):
+    """Permanently delete one user's notifications created on target_date."""
+    if not user_id or target_date is None:
+        return 0
+
+    day_start = datetime.combine(target_date, datetime.min.time())
+    day_end = day_start + timedelta(days=1)
+
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            DELETE FROM notifications
+            WHERE user_id = ? AND created_at >= ? AND created_at < ?
+            """,
+            (user_id, day_start, day_end),
+        )
+        conn.commit()
+        try:
+            return max(0, int(cursor.rowcount))
+        except Exception:
+            return 0
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
