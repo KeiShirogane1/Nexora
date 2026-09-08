@@ -1,49 +1,870 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="UTF-8">
-        <title>Create Class - Nexora</title>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">
-    </head>
-    <body class="analytics-aesthetic">
-        {% include 'components/supervisor_sidebar.html' %}
-        <div class="page-content nexora-app-main">
-            <div class="nexora-page">
-                <div class="nexora-page" style="max-width:720px; margin:0 auto;">
-                    <a href="{{ url_for('classroom.supervisor_classes') }}" class="btn btn-light btn-sm mb-3">← Back to My Classes</a>
-                    <div class="card shadow-sm">
-                        <div class="card-header bg-white">
-                            <h4 class="mb-0">Create Class</h4>
-                            <small class="text-muted">Organize interns by class and section.</small>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create a Space - Nexora</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">
+    <style>
+        body.supervisor-create-space-page {
+            min-height: 100vh;
+            margin: 0;
+            background: #f1f5f9 !important;
+            color: #0f172a;
+        }
+
+        body.supervisor-create-space-page .create-space-main {
+            min-height: 100vh;
+            padding: 32px 32px 56px !important;
+            background: #f1f5f9;
+        }
+
+        .create-space-shell {
+            width: 100%;
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+
+        .create-space-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            margin-bottom: 20px;
+            color: #2563eb;
+            font-size: .84rem;
+            font-weight: 750;
+            text-decoration: none;
+        }
+
+        .create-space-back:hover {
+            color: #1d4ed8;
+            text-decoration: underline;
+        }
+
+        .create-space-header {
+            margin-bottom: 26px;
+        }
+
+        .create-space-eyebrow {
+            display: inline-block;
+            margin-bottom: 8px;
+            color: #2563eb;
+            font-size: .7rem;
+            font-weight: 800;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+        }
+
+        .create-space-header h1 {
+            margin: 0 0 8px;
+            color: #0f172a;
+            font-size: 2rem;
+            line-height: 1.15;
+            font-weight: 800;
+            letter-spacing: -.025em;
+        }
+
+        .create-space-header p {
+            max-width: 720px;
+            margin: 0;
+            color: #64748b;
+            font-size: .95rem;
+            line-height: 1.6;
+        }
+
+        .create-space-choice-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 22px;
+            align-items: stretch;
+        }
+
+        .create-space-choice-card,
+        .create-space-form-card {
+            border: 1px solid #e8eef7;
+            border-radius: 18px;
+            background: #fff;
+            box-shadow: 0 8px 28px rgba(15, 23, 42, .07);
+        }
+
+        .create-space-choice-card {
+            min-height: 470px;
+            padding: 28px;
+            display: flex;
+            flex-direction: column;
+            transition: border-color .15s ease, transform .15s ease, box-shadow .15s ease;
+        }
+
+        .create-space-choice-card:hover {
+            border-color: #bfdbfe;
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(15, 23, 42, .09);
+        }
+
+        .create-space-choice-icon {
+            width: 52px;
+            height: 52px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            border-radius: 15px;
+            background: #eff6ff;
+            color: #2563eb;
+            font-size: 1.45rem;
+            font-weight: 800;
+        }
+
+        .create-space-choice-label {
+            margin-bottom: 8px;
+            color: #2563eb;
+            font-size: .68rem;
+            font-weight: 800;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+        }
+
+        .create-space-choice-card h2,
+        .create-space-section-title h2 {
+            margin: 0;
+            color: #0f172a;
+            font-weight: 800;
+        }
+
+        .create-space-choice-card h2 {
+            font-size: 1.35rem;
+        }
+
+        .create-space-choice-card > p {
+            margin: 10px 0 18px;
+            color: #64748b;
+            font-size: .9rem;
+            line-height: 1.6;
+        }
+
+        .create-space-feature-list {
+            display: grid;
+            gap: 9px;
+            margin: 0 0 24px;
+            padding: 0;
+            list-style: none;
+            color: #475569;
+            font-size: .86rem;
+        }
+
+        .create-space-feature-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 9px;
+        }
+
+        .create-space-feature-list li::before {
+            content: "✓";
+            flex: 0 0 auto;
+            color: #2563eb;
+            font-weight: 900;
+        }
+
+        .create-space-choice-button,
+        .create-space-primary-button,
+        .create-space-secondary-button,
+        .create-space-add-button {
+            border-radius: 11px;
+            font-weight: 750;
+            text-decoration: none;
+            transition: background .15s ease, border-color .15s ease, transform .15s ease, box-shadow .15s ease;
+        }
+
+        .create-space-choice-button,
+        .create-space-primary-button {
+            border: 1px solid #2563eb;
+            background: #2563eb;
+            color: #fff;
+        }
+
+        .create-space-choice-button {
+            width: 100%;
+            min-height: 48px;
+            margin-top: auto;
+            padding: 11px 16px;
+        }
+
+        .create-space-choice-button:hover,
+        .create-space-primary-button:hover:not(:disabled) {
+            background: #1d4ed8;
+            border-color: #1d4ed8;
+            transform: translateY(-1px);
+            box-shadow: 0 8px 18px rgba(37, 99, 235, .2);
+        }
+
+        .create-space-form-card {
+            overflow: hidden;
+        }
+
+        .create-space-form-head {
+            padding: 26px 28px 22px;
+            border-bottom: 1px solid #eef2f7;
+        }
+
+        .create-space-form-head h1 {
+            margin: 0 0 7px;
+            font-size: 1.55rem;
+            font-weight: 800;
+            letter-spacing: -.02em;
+        }
+
+        .create-space-form-head p {
+            max-width: 760px;
+            margin: 0;
+            color: #64748b;
+            font-size: .9rem;
+            line-height: 1.55;
+        }
+
+        .create-space-form-body {
+            padding: 28px;
+        }
+
+        .create-space-section + .create-space-section {
+            margin-top: 30px;
+            padding-top: 28px;
+            border-top: 1px solid #eef2f7;
+        }
+
+        .create-space-section-title {
+            margin-bottom: 18px;
+        }
+
+        .create-space-section-title h2 {
+            font-size: 1rem;
+        }
+
+        .create-space-section-title p {
+            margin: 5px 0 0;
+            color: #64748b;
+            font-size: .8rem;
+            line-height: 1.5;
+        }
+
+        .create-space-fields {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .create-space-field.is-full {
+            grid-column: 1 / -1;
+        }
+
+        .create-space-field label,
+        .create-space-option-label {
+            display: block;
+            margin-bottom: 7px;
+            color: #334155;
+            font-size: .82rem;
+            font-weight: 750;
+        }
+
+        .create-space-required {
+            color: #dc2626;
+        }
+
+        .create-space-field input,
+        .create-space-field textarea,
+        .create-space-field select,
+        .create-space-repeat-row input {
+            width: 100%;
+            box-sizing: border-box;
+            border: 1px solid #dbe3ee;
+            border-radius: 11px;
+            background: #fff;
+            color: #0f172a;
+            font: inherit;
+            font-size: .88rem;
+            outline: none;
+            transition: border-color .15s ease, box-shadow .15s ease;
+        }
+
+        .create-space-field input,
+        .create-space-field select,
+        .create-space-repeat-row input {
+            min-height: 46px;
+            padding: 10px 12px;
+        }
+
+        .create-space-field textarea {
+            min-height: 110px;
+            padding: 12px;
+            resize: vertical;
+        }
+
+        .create-space-field input:focus,
+        .create-space-field textarea:focus,
+        .create-space-field select:focus,
+        .create-space-repeat-row input:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, .1);
+        }
+
+        .create-space-field small {
+            display: block;
+            margin-top: 6px;
+            color: #94a3b8;
+            font-size: .72rem;
+        }
+
+        .create-space-error {
+            margin-top: 6px;
+            color: #dc2626;
+            font-size: .75rem;
+            font-weight: 650;
+        }
+
+        .create-space-option-row {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 9px;
+        }
+
+        .create-space-option-row.is-two {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .create-space-option {
+            position: relative;
+            display: block;
+            cursor: pointer;
+        }
+
+        .create-space-option input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .create-space-option span {
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 10px;
+            border: 1px solid #dbe3ee;
+            border-radius: 10px;
+            color: #475569;
+            font-size: .78rem;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .create-space-option input:checked + span {
+            border-color: #2563eb;
+            background: #eff6ff;
+            color: #1d4ed8;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, .08);
+        }
+
+        .create-space-benefits {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px 18px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            color: #475569;
+            font-size: .82rem;
+        }
+
+        .create-space-benefits li {
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+        }
+
+        .create-space-benefits li::before {
+            content: "✓";
+            color: #16a34a;
+            font-weight: 900;
+        }
+
+        .create-space-stat-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+
+        .create-space-stat-card {
+            padding: 18px;
+            border: 1px solid #dbeafe;
+            border-radius: 14px;
+            background: #f8fbff;
+        }
+
+        .create-space-stat-card span {
+            display: block;
+            margin-bottom: 7px;
+            color: #64748b;
+            font-size: .68rem;
+            font-weight: 800;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+        }
+
+        .create-space-stat-card strong {
+            color: #0f172a;
+            font-size: 1.1rem;
+        }
+
+        .create-space-repeat-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .create-space-repeat-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 40px;
+            gap: 8px;
+        }
+
+        .create-space-remove-button {
+            width: 40px;
+            min-height: 42px;
+            border: 1px solid #fecaca;
+            border-radius: 10px;
+            background: #fff;
+            color: #dc2626;
+            font-weight: 800;
+        }
+
+        .create-space-add-button {
+            min-height: 40px;
+            margin-top: 10px;
+            padding: 8px 13px;
+            border: 1px solid #bfdbfe;
+            background: #eff6ff;
+            color: #1d4ed8;
+            font-size: .78rem;
+        }
+
+        .create-space-add-button:hover {
+            border-color: #93c5fd;
+            background: #dbeafe;
+        }
+
+        .create-space-notice {
+            margin-top: 26px;
+            padding: 15px 17px;
+            border: 1px solid #fde68a;
+            border-radius: 12px;
+            background: #fffbeb;
+            color: #854d0e;
+            font-size: .78rem;
+            line-height: 1.5;
+        }
+
+        .create-space-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 28px;
+            padding-top: 22px;
+            border-top: 1px solid #eef2f7;
+        }
+
+        .create-space-primary-button,
+        .create-space-secondary-button {
+            min-height: 44px;
+            padding: 9px 17px;
+            font-size: .84rem;
+        }
+
+        .create-space-secondary-button {
+            border: 1px solid #dbe3ee;
+            background: #fff;
+            color: #475569;
+        }
+
+        .create-space-secondary-button:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+            color: #0f172a;
+        }
+
+        .create-space-primary-button:disabled {
+            border-color: #cbd5e1;
+            background: #cbd5e1;
+            color: #f8fafc;
+            cursor: not-allowed;
+        }
+
+        .create-space-view[hidden] {
+            display: none !important;
+        }
+
+        @media (max-width: 1024px) {
+            body.supervisor-create-space-page .create-space-main {
+                padding: 28px 24px 48px !important;
+            }
+
+            .create-space-choice-card {
+                min-height: 450px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body.supervisor-create-space-page .create-space-main {
+                padding: 22px 16px 40px !important;
+            }
+
+            .create-space-header h1 {
+                font-size: 1.65rem;
+            }
+
+            .create-space-choice-grid,
+            .create-space-fields,
+            .create-space-benefits,
+            .create-space-stat-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .create-space-choice-card {
+                min-height: 0;
+                padding: 22px;
+            }
+
+            .create-space-form-head,
+            .create-space-form-body {
+                padding: 22px;
+            }
+
+            .create-space-field.is-full {
+                grid-column: auto;
+            }
+
+            .create-space-footer {
+                flex-direction: column-reverse;
+            }
+
+            .create-space-primary-button,
+            .create-space-secondary-button {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 520px) {
+            .create-space-option-row,
+            .create-space-option-row.is-two {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body class="supervisor-create-space-page">
+    {% include 'components/supervisor_sidebar.html' %}
+
+    <main class="page-content nexora-app-main create-space-main" data-initial-view="{% if errors or form %}classroom{% else %}choice{% endif %}">
+        <div class="create-space-shell">
+            <a href="{{ url_for('classroom.supervisor_classes') }}" class="create-space-back">← Back to My Classes</a>
+
+            <section id="create-space-choice" class="create-space-view" aria-labelledby="create-space-title">
+                <header class="create-space-header">
+                    <span class="create-space-eyebrow">Create a Space</span>
+                    <h1 id="create-space-title">What would you like to create?</h1>
+                    <p>Choose the type of space you want to manage in Nexora. Classroom keeps the current academic workflow, while Internship Classroom prepares a dedicated OJT setup.</p>
+                </header>
+
+                <div class="create-space-choice-grid">
+                    <article class="create-space-choice-card">
+                        <div class="create-space-choice-icon" aria-hidden="true">▦</div>
+                        <span class="create-space-choice-label">Classroom</span>
+                        <h2>Create Classroom</h2>
+                        <p>For classes, sections, activities, announcements, grades, student work, and academic monitoring.</p>
+                        <ul class="create-space-feature-list">
+                            <li>Classwork and student submissions</li>
+                            <li>Gradebook and performance insights</li>
+                            <li>Announcements and classroom stream</li>
+                            <li>Reports and student enrollment</li>
+                        </ul>
+                        <button type="button" class="create-space-choice-button" data-show-view="classroom">Create Classroom</button>
+                    </article>
+
+                    <article class="create-space-choice-card">
+                        <div class="create-space-choice-icon" aria-hidden="true">◇</div>
+                        <span class="create-space-choice-label">Internship Classroom</span>
+                        <h2>Create Internship Classroom</h2>
+                        <p>For supervised internship placements with company details, required OJT hours, work arrangements, responsibilities, and eligibility.</p>
+                        <ul class="create-space-feature-list">
+                            <li>Company and placement information</li>
+                            <li>Required hours and internship schedule</li>
+                            <li>Responsibilities and qualifications</li>
+                            <li>Structured student-facing internship details</li>
+                        </ul>
+                        <button type="button" class="create-space-choice-button" data-show-view="internship">Create Internship Classroom</button>
+                    </article>
+                </div>
+            </section>
+
+            <section id="create-space-classroom" class="create-space-view" hidden aria-labelledby="create-classroom-title">
+                <div class="create-space-form-card">
+                    <header class="create-space-form-head">
+                        <span class="create-space-eyebrow">Create Classroom</span>
+                        <h1 id="create-classroom-title">Set up your classroom</h1>
+                        <p>Create a space for teaching, activities, student work, announcements, academic monitoring, and reports.</p>
+                    </header>
+
+                    <form method="POST" novalidate class="create-space-form-body">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                        <section class="create-space-section">
+                            <div class="create-space-section-title">
+                                <h2>Classroom Details</h2>
+                                <p>These are the same fields supported by the current classroom backend.</p>
+                            </div>
+
+                            <div class="create-space-fields">
+                                <div class="create-space-field">
+                                    <label for="class_name">Classroom Name <span class="create-space-required">*</span></label>
+                                    <input type="text" id="class_name" name="class_name" maxlength="100" placeholder="Example: Web Development 3A" value="{{ form.class_name if form.class_name else '' }}" required>
+                                    <small>Use a clear class or subject name.</small>
+                                    {% if errors and errors.class_name %}<div class="create-space-error">{{ errors.class_name }}</div>{% endif %}
+                                </div>
+
+                                <div class="create-space-field">
+                                    <label for="section">Section <span class="create-space-required">*</span></label>
+                                    <input type="text" id="section" name="section" maxlength="100" placeholder="Example: BSIT 3A" value="{{ form.section if form.section else '' }}" required>
+                                    <small>Enter the section or group this classroom belongs to.</small>
+                                    {% if errors and errors.section %}<div class="create-space-error">{{ errors.section }}</div>{% endif %}
+                                </div>
+
+                                <div class="create-space-field is-full">
+                                    <label for="description">Description</label>
+                                    <textarea id="description" name="description" maxlength="500" placeholder="Example: Classroom for BSIT 3A students covering web development activities and project submissions.">{{ form.description if form.description else '' }}</textarea>
+                                    <small>Optional. Maximum 500 characters.</small>
+                                    {% if errors and errors.description %}<div class="create-space-error">{{ errors.description }}</div>{% endif %}
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="create-space-section">
+                            <div class="create-space-section-title">
+                                <h2>What you'll get</h2>
+                                <p>Nexora automatically connects the classroom to the existing classroom workflow.</p>
+                            </div>
+                            <ul class="create-space-benefits">
+                                <li>Automatically generated class code</li>
+                                <li>Student enrollment</li>
+                                <li>Stream and announcements</li>
+                                <li>Classwork</li>
+                                <li>Gradebook</li>
+                                <li>Performance Insights</li>
+                                <li>Reports</li>
+                            </ul>
+                        </section>
+
+                        <div class="create-space-footer">
+                            <button type="button" class="create-space-secondary-button" data-show-view="choice">Cancel</button>
+                            <button type="submit" class="create-space-primary-button">Create Classroom</button>
                         </div>
-                        <div class="card-body">
-                            <form method="POST" novalidate>
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <div class="mb-3">
-                                    <label for="class_name" class="form-label">Class name <span class="text-danger">*</span></label>
-                                    <input type="text" id="class_name" name="class_name" class="form-control" placeholder="e.g., BSIT 3A - Internship 2026" value="{{ form.class_name if form.class_name else '' }}" required>
-                                    {% if errors and errors.class_name %}<div class="text-danger small mt-1">{{ errors.class_name }}</div>{% endif %}
+                    </form>
+                </div>
+            </section>
+
+            <section id="create-space-internship" class="create-space-view" hidden aria-labelledby="create-internship-title">
+                <div class="create-space-form-card">
+                    <header class="create-space-form-head">
+                        <span class="create-space-eyebrow">Create Internship Classroom</span>
+                        <h1 id="create-internship-title">Set up a supervised internship placement</h1>
+                        <p>Provide enough information so students clearly understand the company, work arrangement, requirements, expected responsibilities, and eligibility.</p>
+                    </header>
+
+                    <div class="create-space-form-body">
+                        <section class="create-space-section">
+                            <div class="create-space-section-title">
+                                <h2>Basic Internship Details</h2>
+                                <p>Identify the placement and how the internship is arranged.</p>
+                            </div>
+
+                            <div class="create-space-fields">
+                                <div class="create-space-field">
+                                    <label for="internship_title">Internship Title <span class="create-space-required">*</span></label>
+                                    <input type="text" id="internship_title" placeholder="Example: Visual Data Collection Intern">
                                 </div>
-                                <div class="mb-3">
-                                    <label for="section" class="form-label">Section <span class="text-danger">*</span></label>
-                                    <input type="text" id="section" name="section" class="form-control" placeholder="e.g., BSIT 3A" value="{{ form.section if form.section else '' }}" required>
-                                    {% if errors and errors.section %}<div class="text-danger small mt-1">{{ errors.section }}</div>{% endif %}
+                                <div class="create-space-field">
+                                    <label for="company_name">Company / Organization <span class="create-space-required">*</span></label>
+                                    <input type="text" id="company_name" placeholder="Example: GIG Rewards">
                                 </div>
-                                <div class="mb-3">
-                                    <label for="description" class="form-label">Description</label>
-                                    <textarea id="description" name="description" class="form-control" rows="3" placeholder="Optional description for this class">{{ form.description if form.description else '' }}</textarea>
+                                <div class="create-space-field">
+                                    <label for="internship_section">Section <span class="create-space-required">*</span></label>
+                                    <input type="text" id="internship_section" placeholder="Example: BSIT 3A">
                                 </div>
-                                <div class="d-flex gap-2 justify-content-end">
-                                    <a href="{{ url_for('classroom.supervisor_classes') }}" class="btn btn-secondary">Cancel</a>
-                                    <button type="submit" class="btn btn-primary">Create Class</button>
+                                <div class="create-space-field">
+                                    <label for="industry">Category / Industry</label>
+                                    <input type="text" id="industry" placeholder="Example: Telecom / Tech">
                                 </div>
-                            </form>
+                                <div class="create-space-field">
+                                    <span class="create-space-option-label">Work Arrangement</span>
+                                    <div class="create-space-option-row">
+                                        <label class="create-space-option"><input type="radio" name="work_arrangement_ui" checked><span>On-site</span></label>
+                                        <label class="create-space-option"><input type="radio" name="work_arrangement_ui"><span>Hybrid</span></label>
+                                        <label class="create-space-option"><input type="radio" name="work_arrangement_ui"><span>Remote</span></label>
+                                    </div>
+                                </div>
+                                <div class="create-space-field">
+                                    <span class="create-space-option-label">Compensation</span>
+                                    <div class="create-space-option-row is-two">
+                                        <label class="create-space-option"><input type="radio" name="compensation_ui" checked><span>Paid</span></label>
+                                        <label class="create-space-option"><input type="radio" name="compensation_ui"><span>Unpaid</span></label>
+                                    </div>
+                                </div>
+                                <div class="create-space-field is-full">
+                                    <label for="location">Location</label>
+                                    <input type="text" id="location" placeholder="Example: Makati City">
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="create-space-section">
+                            <div class="create-space-section-title">
+                                <h2>Internship Schedule</h2>
+                                <p>Set the timeline and required OJT hours for the placement.</p>
+                            </div>
+
+                            <div class="create-space-stat-grid" aria-label="Internship schedule summary">
+                                <div class="create-space-stat-card"><span>Duration</span><strong>Set start and end dates</strong></div>
+                                <div class="create-space-stat-card"><span>Required Hours</span><strong>Example: 500 Hours</strong></div>
+                            </div>
+
+                            <div class="create-space-fields">
+                                <div class="create-space-field">
+                                    <label for="start_date">Start Date</label>
+                                    <input type="date" id="start_date">
+                                </div>
+                                <div class="create-space-field">
+                                    <label for="end_date">End Date</label>
+                                    <input type="date" id="end_date">
+                                </div>
+                                <div class="create-space-field">
+                                    <label for="deadline">Application / Enrollment Deadline</label>
+                                    <input type="date" id="deadline">
+                                </div>
+                                <div class="create-space-field">
+                                    <label for="required_hours">Required Internship Hours <span class="create-space-required">*</span></label>
+                                    <input type="number" id="required_hours" min="1" step="1" placeholder="Example: 500">
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="create-space-section">
+                            <div class="create-space-section-title">
+                                <h2>About the Company</h2>
+                                <p>Add context about the organization hosting the internship.</p>
+                            </div>
+                            <div class="create-space-fields">
+                                <div class="create-space-field is-full">
+                                    <label for="company_website">Company Website</label>
+                                    <input type="url" id="company_website" placeholder="https://example.com">
+                                </div>
+                                <div class="create-space-field is-full">
+                                    <label for="company_description">Company Description</label>
+                                    <textarea id="company_description" placeholder="Describe the company, its industry, and the environment students will work in."></textarea>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="create-space-section">
+                            <div class="create-space-section-title">
+                                <h2>About the Internship</h2>
+                                <p>Explain what students will work on, what they will learn, and how the internship will operate.</p>
+                            </div>
+                            <div class="create-space-field">
+                                <label for="internship_description">Internship Description <span class="create-space-required">*</span></label>
+                                <textarea id="internship_description" placeholder="Describe the internship experience, expected work, supervision, and learning outcomes."></textarea>
+                            </div>
+                        </section>
+
+                        <section class="create-space-section">
+                            <div class="create-space-section-title">
+                                <h2>Responsibilities</h2>
+                                <p>Add clear, individual responsibilities instead of placing everything in one description.</p>
+                            </div>
+                            <div id="responsibility-list" class="create-space-repeat-list">
+                                <div class="create-space-repeat-row"><input type="text" placeholder="Example: Record and submit assigned data collection tasks."><button type="button" class="create-space-remove-button" aria-label="Remove responsibility">×</button></div>
+                                <div class="create-space-repeat-row"><input type="text" placeholder="Example: Follow technical capture guidelines."><button type="button" class="create-space-remove-button" aria-label="Remove responsibility">×</button></div>
+                            </div>
+                            <button type="button" class="create-space-add-button" data-add-row="responsibility-list" data-placeholder="Add another responsibility">+ Add Responsibility</button>
+                        </section>
+
+                        <section class="create-space-section">
+                            <div class="create-space-section-title">
+                                <h2>Eligibility / Qualifications</h2>
+                                <p>Add the requirements students must meet before joining this internship classroom.</p>
+                            </div>
+                            <div id="qualification-list" class="create-space-repeat-list">
+                                <div class="create-space-repeat-row"><input type="text" placeholder="Example: Currently enrolled in a degree program requiring OJT/practicum hours."><button type="button" class="create-space-remove-button" aria-label="Remove qualification">×</button></div>
+                                <div class="create-space-repeat-row"><input type="text" placeholder="Example: Access to a computer and reliable internet."><button type="button" class="create-space-remove-button" aria-label="Remove qualification">×</button></div>
+                            </div>
+                            <button type="button" class="create-space-add-button" data-add-row="qualification-list" data-placeholder="Add another qualification">+ Add Qualification</button>
+                        </section>
+
+                        <div class="create-space-notice" role="note">
+                            Internship Classroom details are UI-only in this phase. Nexora's existing internship records belong to individual students, so this form is intentionally not submitted or saved until classroom-level internship persistence is approved.
+                        </div>
+
+                        <div class="create-space-footer">
+                            <button type="button" class="create-space-secondary-button" data-show-view="choice">Cancel</button>
+                            <button type="button" class="create-space-primary-button" disabled aria-disabled="true" title="Internship Classroom backend storage is not enabled yet">Create Internship Classroom</button>
                         </div>
                     </div>
                 </div>
-            </div>
+            </section>
         </div>
-    </body>
+    </main>
+
+    <script>
+        (function () {
+            const root = document.querySelector('.create-space-main');
+            const views = {
+                choice: document.getElementById('create-space-choice'),
+                classroom: document.getElementById('create-space-classroom'),
+                internship: document.getElementById('create-space-internship')
+            };
+
+            function showView(name) {
+                Object.keys(views).forEach(function (key) {
+                    if (views[key]) views[key].hidden = key !== name;
+                });
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+
+            document.querySelectorAll('[data-show-view]').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    showView(button.getAttribute('data-show-view'));
+                });
+            });
+
+            document.querySelectorAll('[data-add-row]').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    const list = document.getElementById(button.getAttribute('data-add-row'));
+                    if (!list) return;
+                    const row = document.createElement('div');
+                    row.className = 'create-space-repeat-row';
+                    row.innerHTML = '<input type="text" placeholder="' + button.getAttribute('data-placeholder') + '"><button type="button" class="create-space-remove-button" aria-label="Remove item">×</button>';
+                    list.appendChild(row);
+                });
+            });
+
+            document.addEventListener('click', function (event) {
+                const removeButton = event.target.closest('.create-space-remove-button');
+                if (!removeButton) return;
+                const list = removeButton.closest('.create-space-repeat-list');
+                const row = removeButton.closest('.create-space-repeat-row');
+                if (list && row && list.children.length > 1) row.remove();
+            });
+
+            showView(root && root.dataset.initialView === 'classroom' ? 'classroom' : 'choice');
+        })();
+    </script>
+</body>
 </html>
