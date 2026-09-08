@@ -8,122 +8,259 @@
         <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">
         <style>
+            body.supervisor-class-page {
+                margin: 0;
+                background: #f4f8fc;
+                color: #10213d;
+            }
+
+            body.supervisor-class-page .supervisor-class-main {
+                min-height: 100vh;
+                padding: 96px 0 48px !important;
+                background:
+                    radial-gradient(circle at 78% 8%, rgba(225, 238, 255, 0.72), transparent 30rem),
+                    linear-gradient(180deg, #f7faff 0%, #f1f6fc 100%);
+            }
+
             .nexora-class-page {
                 width: 100%;
-                max-width: 1400px;
+                max-width: 1540px;
                 margin: 0 auto;
-                padding: 28px 32px 48px;
+                padding: 0 34px 48px;
                 box-sizing: border-box;
             }
-            .class-hero {
-                background: #fff;
-                border: 1px solid #e5e7eb;
-                border-radius: 18px;
-                overflow: hidden;
-                box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
-                margin-bottom: 20px;
-            }
-            .class-hero-banner {
-                height: 88px;
-                background: linear-gradient(135deg, #2563eb, #60a5fa);
-            }
-            .class-hero-body {
-                padding: 22px 26px 24px;
-            }
-            .class-hero-row {
+
+            .supervisor-class-breadcrumb {
                 display: flex;
-                justify-content: space-between;
-                align-items: flex-start;
-                gap: 24px;
-            }
-            .class-title {
-                margin: 0 0 5px;
-                font-size: 30px;
-                line-height: 1.15;
-                font-weight: 800;
-                color: #172554;
-            }
-            .class-subtitle {
-                margin: 0 0 14px;
-                color: #64748b;
-                font-size: 15px;
-            }
-            .class-code-row {
-                display: flex;
-                flex-wrap: wrap;
                 align-items: center;
                 gap: 8px;
+                margin: 0 0 24px;
+                color: #718198;
+                font-size: 13px;
             }
-            .class-code {
-                display: inline-flex;
+
+            .supervisor-class-breadcrumb a {
+                color: #2563eb;
+                font-weight: 800;
+                text-decoration: none;
+            }
+
+            .supervisor-class-breadcrumb a:hover {
+                text-decoration: underline;
+            }
+
+            .class-hero {
+                overflow: hidden;
+                margin: 0;
+                border: 1px solid #dfe7f1;
+                border-radius: 20px;
+                background: #fff;
+                box-shadow: 0 8px 26px rgba(30, 64, 175, 0.055);
+            }
+
+            .class-hero-banner {
+                height: 138px;
+                background: linear-gradient(135deg, #eef5ff 0%, #f8fbff 100%);
+                border-bottom: 1px solid #edf2f8;
+            }
+
+            .class-hero-body {
+                padding: 30px 34px 32px;
+            }
+
+            .class-hero-row {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) minmax(390px, auto);
                 align-items: center;
-                padding: 7px 11px;
-                border: 1px solid #dbe3ef;
-                border-radius: 9px;
-                background: #f8fafc;
-                font-weight: 700;
-                color: #334155;
+                gap: 34px;
             }
-            .class-actions {
+
+            .supervisor-class-eyebrow {
+                display: block;
+                margin-bottom: 8px;
+                color: #2563eb;
+                font-size: 11px;
+                font-weight: 800;
+                letter-spacing: 0.13em;
+                text-transform: uppercase;
+            }
+
+            .class-title {
+                margin: 0;
+                color: #10213d;
+                font-size: 31px;
+                line-height: 1.12;
+                font-weight: 800;
+                letter-spacing: -0.035em;
+            }
+
+            .class-subtitle {
+                margin: 9px 0 0;
+                color: #687991;
+                font-size: 14px;
+                line-height: 1.55;
+            }
+
+            .supervisor-class-controls {
+                display: grid;
+                gap: 10px;
+                justify-items: stretch;
+            }
+
+            .supervisor-class-code-panel {
                 display: flex;
-                flex-wrap: wrap;
-                justify-content: flex-end;
+                min-height: 92px;
                 align-items: center;
-                gap: 9px;
+                justify-content: flex-end;
+                gap: 10px;
+                padding: 16px 18px;
+                border: 1px solid #dce5ef;
+                border-radius: 16px;
+                background: #fbfcfe;
+                box-sizing: border-box;
             }
-            .class-action-btn {
-                min-height: 42px;
-                padding: 9px 16px;
-                border-radius: 10px;
-                font-weight: 700;
+
+            .supervisor-class-code-label {
+                color: #708096;
+                font-size: 10px;
+                font-weight: 800;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
                 white-space: nowrap;
             }
-            .class-action-primary {
-                background: #2563eb;
-                border: 1px solid #2563eb;
-                color: #fff;
-                text-decoration: none;
+
+            .class-code {
+                color: #10213d;
+                font-size: 20px;
+                line-height: 1;
+                font-weight: 800;
+                letter-spacing: 0.08em;
+                white-space: nowrap;
             }
-            .class-action-primary:hover {
-                background: #1d4ed8;
-                color: #fff;
-            }
-            .class-action-secondary {
-                background: #fff;
-                border: 1px solid #cbd5e1;
-                color: #1e293b;
-            }
-            .class-action-secondary:hover {
-                background: #f8fafc;
-            }
-            .class-tabs {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 6px;
-                margin: 0 0 20px;
-                padding: 5px;
-                background: #fff;
-                border: 1px solid #e5e7eb;
-                border-radius: 12px;
-                box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
-            }
-            .class-tabs .profile-tab-button {
-                border: 0;
-                border-radius: 8px;
-                padding: 9px 14px;
-                color: #475569;
-                background: transparent;
-                font-weight: 600;
-            }
-            .class-tabs .profile-tab-button.active {
-                background: #2563eb;
-                color: #fff;
-            }
-            .class-tabs a.profile-tab-button {
-                text-decoration: none;
+
+            .supervisor-class-code-panel button,
+            .supervisor-class-management button,
+            .supervisor-class-management a {
+                min-height: 38px;
                 display: inline-flex;
                 align-items: center;
+                justify-content: center;
+                gap: 6px;
+                padding: 0 13px;
+                border-radius: 9px;
+                font-family: inherit;
+                font-size: 11px;
+                font-weight: 800;
+                line-height: 1;
+                text-decoration: none;
+                white-space: nowrap;
             }
+
+            .supervisor-class-code-panel button {
+                border: 1px solid #d6e0eb;
+                background: #fff;
+                color: #10213d;
+            }
+
+            .supervisor-class-code-panel button:hover {
+                border-color: #2563eb;
+                color: #2563eb;
+            }
+
+            .supervisor-class-management {
+                display: flex;
+                align-items: center;
+                justify-content: flex-end;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .supervisor-class-management form {
+                margin: 0;
+            }
+
+            .class-action-primary {
+                border: 1px solid #2563eb;
+                background: #2563eb;
+                color: #fff !important;
+                box-shadow: 0 6px 16px rgba(37, 99, 235, 0.16);
+            }
+
+            .class-action-primary:hover {
+                border-color: #1d4ed8;
+                background: #1d4ed8;
+                color: #fff !important;
+            }
+
+            .class-action-secondary {
+                border: 1px solid #d6e0eb;
+                background: #fff;
+                color: #24364f;
+            }
+
+            .class-action-secondary:hover {
+                border-color: #b7c8dc;
+                background: #f8fbff;
+                color: #1d4ed8;
+            }
+
+            .supervisor-regenerate-button {
+                border: 1px solid #f0c768 !important;
+                color: #b77900 !important;
+                background: #fffdf7 !important;
+            }
+
+            .supervisor-regenerate-button:hover {
+                border-color: #dfa51d !important;
+                background: #fff8e5 !important;
+                color: #976300 !important;
+            }
+
+            .class-tabs {
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                margin: 22px 0 20px;
+                padding: 0 5px;
+                border-bottom: 1px solid #dce5ef;
+                background: transparent;
+                overflow-x: auto;
+            }
+
+            .class-tabs .profile-tab-button {
+                appearance: none;
+                display: inline-flex;
+                flex: 0 0 auto;
+                align-items: center;
+                justify-content: center;
+                border: 0;
+                border-bottom: 2px solid transparent;
+                border-radius: 0;
+                padding: 12px 16px;
+                background: transparent;
+                color: #64748b;
+                font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+                font-size: 13px;
+                line-height: 1.2;
+                font-weight: 800;
+                letter-spacing: -0.035em;
+                text-decoration: none;
+                white-space: nowrap;
+                box-shadow: none;
+                cursor: pointer;
+            }
+
+            .class-tabs .profile-tab-button:hover {
+                color: #2563eb;
+                text-decoration: none;
+            }
+
+            .class-tabs .profile-tab-button.active {
+                border-bottom-color: #2563eb;
+                background: transparent;
+                color: #2563eb;
+            }
+
             .class-card {
                 background: #fff;
                 border: 1px solid #e5e7eb;
@@ -132,6 +269,7 @@
                 margin-bottom: 18px;
                 overflow: hidden;
             }
+
             .class-card-header {
                 padding: 17px 20px;
                 border-bottom: 1px solid #eef2f7;
@@ -140,14 +278,17 @@
                 align-items: center;
                 gap: 14px;
             }
+
             .class-card-body {
                 padding: 20px;
             }
+
             .class-info-grid {
                 display: grid;
                 grid-template-columns: repeat(3, minmax(0, 1fr));
                 gap: 18px 34px;
             }
+
             .class-info-item strong {
                 display: block;
                 color: #64748b;
@@ -155,15 +296,18 @@
                 margin-bottom: 5px;
                 font-weight: 700;
             }
+
             .class-info-item span {
                 color: #1e293b;
                 font-size: 15px;
             }
+
             .empty-classwork {
                 text-align: center;
                 padding: 44px 20px;
                 color: #64748b;
             }
+
             .nexora-class-modal {
                 display: none !important;
                 position: fixed !important;
@@ -174,113 +318,141 @@
                 padding: 24px !important;
                 background: rgba(15, 23, 42, 0.48) !important;
             }
+
             .nexora-class-modal.open {
                 display: flex !important;
             }
+
             .nexora-class-modal .nexora-modal {
                 width: min(520px, 100%);
                 max-height: calc(100vh - 48px);
                 overflow: auto;
             }
-            @media (max-width: 900px) {
-                .nexora-class-page {
-                    padding: 20px 18px 36px;
-                }
+
+            @media (max-width: 1050px) {
                 .class-hero-row {
-                    flex-direction: column;
+                    grid-template-columns: 1fr;
                 }
-                .class-actions {
-                    width: 100%;
+
+                .supervisor-class-code-panel,
+                .supervisor-class-management {
                     justify-content: flex-start;
                 }
+            }
+
+            @media (max-width: 900px) {
+                body.supervisor-class-page .supervisor-class-main {
+                    padding-top: 88px !important;
+                }
+
+                .nexora-class-page {
+                    padding: 0 18px 36px;
+                }
+
                 .class-info-grid {
                     grid-template-columns: repeat(2, minmax(0, 1fr));
                 }
             }
+
             @media (max-width: 600px) {
                 .nexora-class-page {
-                    padding: 16px 12px 28px;
+                    padding: 0 12px 28px;
                 }
+
                 .class-hero-banner {
-                    height: 62px;
+                    height: 92px;
                 }
+
                 .class-hero-body {
-                    padding: 18px;
+                    padding: 20px;
                 }
+
                 .class-title {
-                    font-size: 25px;
+                    font-size: 27px;
                 }
-                .class-actions {
-                    display: grid;
-                    grid-template-columns: 1fr 1fr;
-                    width: 100%;
+
+                .supervisor-class-code-panel {
+                    align-items: flex-start;
+                    justify-content: flex-start;
+                    flex-wrap: wrap;
                 }
-                .class-action-btn {
-                    width: 100%;
+
+                .supervisor-class-management {
+                    justify-content: flex-start;
                 }
+
                 .class-info-grid {
                     grid-template-columns: 1fr;
-                }
-                .class-tabs {
-                    overflow-x: auto;
-                    flex-wrap: nowrap;
-                }
-                .class-tabs .profile-tab-button {
-                    flex: 0 0 auto;
                 }
             }
         </style>
     </head>
-    <body class="analytics-aesthetic">
+    <body class="analytics-aesthetic supervisor-class-page">
         {% include 'components/supervisor_sidebar.html' %}
-        <main class="page-content nexora-app-main">
+        {% include 'components/supervisor_topbar.html' %}
+
+        <main class="page-content nexora-app-main supervisor-class-main">
             <div class="nexora-class-page">
+                <div class="supervisor-class-breadcrumb">
+                    <a href="{{ url_for('classroom.supervisor_classes') }}">My Classes</a>
+                    <span>›</span>
+                    <span>{{ classroom.name }}</span>
+                </div>
+
                 <section class="class-hero">
-                    <div class="class-hero-banner">
-                    </div>
+                    <div class="class-hero-banner"></div>
                     <div class="class-hero-body">
                         <div class="class-hero-row">
                             <div>
+                                <span class="supervisor-class-eyebrow">{{ classroom.section }} · Supervisor</span>
                                 <h1 class="class-title">{{ classroom.name }}</h1>
-                                <p class="class-subtitle">{{ classroom.section }}{% if classroom.description %} • {{ classroom.description }}{% endif %}
-                                </p>
-                                <div class="class-code-row">
-                                    <span class="badge {% if classroom.status == 'Active' %}bg-success{% else %}bg-secondary{% endif %}">{{ classroom.status }}</span>
-                                    <span class="class-code" id="classCodeBadge">{{ classroom.code }}</span>
-                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="copyClassCode()">Copy code</button>
-                                    <form method="POST" action="{{ url_for('classroom.regenerate_code', class_id=classroom.id) }}" class="d-inline" onsubmit="return confirm('Regenerate class code? Old code will stop working.')">
+                                {% if classroom.description %}
+                                    <p class="class-subtitle">{{ classroom.description }}</p>
+                                {% endif %}
+                                {% if classroom.archived %}
+                                    <div class="alert alert-warning mt-3 mb-0">This class is archived. New announcements and assignments are disabled.</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="supervisor-class-controls">
+                                <div class="supervisor-class-code-panel">
+                                    <span class="supervisor-class-code-label">Class code</span>
+                                    <strong class="class-code" id="classCodeBadge">{{ classroom.code }}</strong>
+                                    <button type="button" onclick="copyClassCode()">Copy</button>
+                                    <button type="button" onclick="openClassInfo()">Class Info</button>
+                                </div>
+
+                                <div class="supervisor-class-management">
+                                    <form method="POST" action="{{ url_for('classroom.regenerate_code', class_id=classroom.id) }}" onsubmit="return confirm('Regenerate class code? Old code will stop working.')">
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <button type="submit" class="btn btn-sm btn-outline-warning">Regenerate</button>
+                                        <button type="submit" class="supervisor-regenerate-button">Regenerate</button>
+                                    </form>
+                                    <a href="{{ url_for('classwork.manage_classwork', class_id=classroom.id) }}" class="class-action-primary">Assign Task</a>
+                                    <form method="POST" action="{{ url_for('classroom.archive_class', class_id=classroom.id) }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="class-action-secondary">
+                                            {% if classroom.archived %}Unarchive{% else %}Archive{% endif %}
+                                        </button>
                                     </form>
                                 </div>
                             </div>
-                            <div class="class-actions">
-                                <button type="button" class="class-action-btn class-action-secondary" onclick="openClassInfo()">ⓘ&nbsp; Class Info</button>
-                                <a href="{{ url_for('classwork.manage_classwork', class_id=classroom.id) }}" class="class-action-btn class-action-primary">👥&nbsp; Assign Task</a>
-                                <form method="POST" action="{{ url_for('classroom.archive_class', class_id=classroom.id) }}" class="d-inline">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button type="submit" class="class-action-btn class-action-secondary">
-                                        {% if classroom.archived %}Unarchive{% else %}Archive{% endif %}
-                                    </button>
-                                </form>
-                            </div>
                         </div>
-                        {% if classroom.archived %}
-                            <div class="alert alert-warning mt-3 mb-0">This class is archived. New announcements and assignments are disabled.</div>
-                        {% endif %}
                     </div>
                 </section>
+
                 {% with messages=get_flashed_messages(with_categories=true) %}{% if messages %}{% for category,message in messages %}
-                    <div class="alert alert-{{ 'danger' if category=='danger' else 'success' if category=='success' else 'warning' if category=='warning' else 'info' }}">{{ message }}</div>
+                    <div class="alert alert-{{ 'danger' if category=='danger' else 'success' if category=='success' else 'warning' if category=='warning' else 'info' }} mt-3">{{ message }}</div>
                 {% endfor %}{% endif %}{% endwith %}
+
                 <nav class="class-tabs" aria-label="Class navigation">
                     <button class="profile-tab-button active" onclick="openClassTab('stream',this)">Stream</button>
                     <button class="profile-tab-button" onclick="openClassTab('classwork',this)">Classwork</button>
-                    <button class="profile-tab-button" onclick="openClassTab('people',this)">People</button>
                     <a href="{{ url_for('classwork_gradebook.supervisor_gradebook',class_id=classroom.id) }}" class="profile-tab-button">Gradebook</a>
                     <a href="{{ url_for('classwork_ml_insights.supervisor_insights',class_id=classroom.id) }}" class="profile-tab-button">Performance Insights</a>
                     <a href="{{ url_for('performance_reports.supervisor_reports',class_id=classroom.id) }}" class="profile-tab-button">Reports</a>
+                    <button class="profile-tab-button" onclick="openClassTab('people',this)">People</button>
                 </nav>
+
                 <section id="stream" class="profile-tab active">
                     <div class="class-card">
                         <div class="class-card-body">
@@ -357,6 +529,7 @@
                         </div>
                     </div>
                 </section>
+
                 <section id="classwork" class="profile-tab">
                     <div class="class-card">
                         <div class="class-card-header">
@@ -391,6 +564,7 @@
                         </div>
                     </div>
                 </section>
+
                 <section id="people" class="profile-tab">
                     <div class="class-card">
                         <div class="class-card-header">
@@ -428,6 +602,7 @@
                 </section>
             </div>
         </main>
+
         <div id="classInfoModal" class="nexora-class-modal" onclick="if(event.target===this)closeClassInfo()" aria-hidden="true">
             <div class="nexora-modal" role="dialog" aria-modal="true" aria-labelledby="classInfoTitle">
                 <div class="nexora-modal-header">
@@ -474,6 +649,7 @@
                 </div>
             </div>
         </div>
+
         <script>
             function copyClassCode() {
                 const code = (
