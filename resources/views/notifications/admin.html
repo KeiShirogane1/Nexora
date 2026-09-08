@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Notifications - Nexora</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body class="nexora-admin-body admin-dashboard-page nx-notifications-page notification-role-admin">
+    {% include 'components/admin_sidebar.html' %}
+
+    <header class="admin-global-topbar" aria-label="Admin portal header">
+        <div class="admin-topbar-left">
+            <label class="admin-search" aria-label="Search">
+                <span aria-hidden="true">⌕</span>
+                <input type="search" placeholder="Search anything...">
+            </label>
+        </div>
+        <div class="admin-topbar-right">
+            {% include 'components/admin_notification_bell.html' %}
+            <div class="admin-topbar-user">
+                <img src="{{ url_for('static', filename='images/default_profile.png') }}" alt="Administrator profile">
+                <span><strong>Administrator</strong><small>Admin</small></span>
+            </div>
+        </div>
+    </header>
+
+    {% set notification_role = 'admin' %}
+    {% include 'notifications/_notification_page.html' %}
+</body>
+</html>
