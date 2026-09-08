@@ -1,0 +1,98 @@
+name: One-time CSS selector repair
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: contains(github.event.head_commit.message, '[css-selector-repair]')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Repair pseudo-selector spacing
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          css_dir = Path('resources/assets/css')
+          files = sorted(css_dir.glob('*.css'))
+          expected = {
+              'admin.css',
+              'modals.css',
+              'sidebars.css',
+              'student.css',
+              'style.css',
+              'supervisor.css',
+          }
+          if {p.name for p in files} != expected:
+              raise SystemExit('Unexpected CSS file set')
+
+          pseudo_names = (
+              'active', 'after', 'any-link', 'before', 'checked', 'default',
+              'defined', 'disabled', 'empty', 'enabled', 'first-child',
+              'first-of-type', 'focus', 'focus-visible', 'focus-within', 'has',
+              'hover', 'in-range', 'indeterminate', 'invalid', 'is', 'lang',
+              'last-child', 'last-of-type', 'link', 'not', 'nth-child',
+              'nth-last-child', 'nth-last-of-type', 'nth-of-type', 'only-child',
+              'only-of-type', 'optional', 'out-of-range', 'placeholder-shown',
+              'read-only', 'read-write', 'required', 'root', 'target', 'valid',
+              'visited', 'where', '-webkit-details-marker', '-moz-focus-inner',
+          )
+          pseudo_pattern = '|'.join(re.escape(name) for name in pseudo_names)
+          broken_pseudo = re.compile(r':\s+(?=(?:' + pseudo_pattern + r')(?:\b|\())')
+
+          for path in files:
+              lines = path.read_text(encoding='utf-8').splitlines()
+              repaired = []
+              for line in lines:
+                  stripped = line.rstrip()
+                  # Only rule/at-rule header lines may be touched. Declarations are
+                  # deliberately excluded so values such as "property: value" stay intact.
+                  if stripped.lstrip().startswith('@') or not stripped.endswith('{'):
+                      repaired.append(stripped)
+                      continue
+
+                  prefix_len = len(stripped) - len(stripped.lstrip())
+                  prefix = stripped[:prefix_len]
+                  header = stripped[prefix_len:]
+                  header = header.replace(': :', '::')
+                  header = broken_pseudo.sub(':', header)
+                  repaired.append(prefix + header)
+
+              text = '\n'.join(repaired) + '\n'
+              path.write_text(text, encoding='utf-8', newline='\n')
+
+          # Validation: no formatted selector header may still contain a known
+          # pseudo-selector separated from its colon by whitespace.
+          for path in files:
+              for number, line in enumerate(path.read_text(encoding='utf-8').splitlines(), 1):
+                  stripped = line.strip()
+                  if not stripped.endswith('{') or stripped.startswith('@'):
+                      continue
+                  if ': :' in stripped or broken_pseudo.search(stripped):
+                      raise SystemExit(f'Broken pseudo selector remains: {path}:{number}: {line}')
+
+          print('Pseudo-selector repair validated for all six CSS files')
+          PY
+
+      - name: Commit repaired CSS and remove temporary workflow
+        shell: bash
+        run: |
+          git config user.name "Kei Shiro"
+          git config user.email "143948907+KeiShirogane1@users.noreply.github.com"
+          git rm .github/workflows/temporary-css-selector-repair.yml
+          git add resources/assets/css/*.css
+          git diff --cached --check
+          git commit -m "Repair CSS pseudo-selector spacing"
+          git push origin HEAD:main
