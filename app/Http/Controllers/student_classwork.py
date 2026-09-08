@@ -34,8 +34,11 @@ def _value(row, key, index=0, default=None):
 
 def _get_classroom(conn, class_id):
     return conn.execute(
-        """SELECT id, name, section, supervisor_id, archived, description
-           FROM classrooms WHERE id = ?""",
+        """SELECT c.id, c.name, c.section, c.supervisor_id, c.archived,
+                  c.description, c.code, u.username AS supervisor_name
+           FROM classrooms c
+           JOIN users u ON u.id = c.supervisor_id
+           WHERE c.id = ?""",
         (class_id,),
     ).fetchone()
 
@@ -147,12 +150,16 @@ def index(class_id):
             )
             assignments.append(item)
 
+        archived = bool(_value(classroom, "archived", 4, 0))
         classroom_data = {
             "id": _value(classroom, "id", 0),
             "name": _value(classroom, "name", 1),
             "section": _value(classroom, "section", 2),
-            "archived": bool(_value(classroom, "archived", 4, 0)),
+            "archived": archived,
             "description": _value(classroom, "description", 5),
+            "code": _value(classroom, "code", 6),
+            "supervisor": _value(classroom, "supervisor_name", 7),
+            "status": "Archived" if archived else "Active",
         }
     finally:
         conn.close()
