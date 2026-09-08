@@ -1,6 +1,11 @@
 from flask import Blueprint, session, jsonify, request, render_template
 from app.Http.Middleware.security import login_required
-from app.Services.notification_service import get_user_notifications, get_unread_count, mark_notification_read, mark_all_read
+from app.Services.notification_service import (
+    get_user_notifications,
+    get_unread_count,
+    mark_notification_read,
+    mark_all_read,
+)
 from app.Models.db import get_db_connection
 
 notifications_bp = Blueprint("notifications", __name__)
@@ -13,21 +18,38 @@ def notification_list():
     page = request.args.get("page", 1, type=int)
     per_page = 20
     offset = (page - 1) * per_page
-    
+
     conn = get_db_connection()
     cursor = conn.cursor()
-    
+
     cursor.execute("SELECT COUNT(*) FROM notifications WHERE user_id = ?", (user_id,))
     total_count = cursor.fetchone()[0]
     total_pages = max(1, (total_count + per_page - 1) // per_page)
     page = max(1, min(page, total_pages))
     offset = (page - 1) * per_page
-    
+
     conn.close()
-    
+
     notifications = get_user_notifications(user_id, limit=per_page, offset=offset)
     unread_count = get_unread_count(user_id)
-    return render_template("notifications/index.html", notifications=notifications, unread_count=unread_count, active_page="notifications", page=page, total_pages=total_pages, total_count=total_count)
+
+    role = session.get("role", "student")
+    template_by_role = {
+        "student": "notifications/student.html",
+        "supervisor": "notifications/supervisor.html",
+        "admin": "notifications/admin.html",
+    }
+    template_name = template_by_role.get(role, "notifications/student.html")
+
+    return render_template(
+        template_name,
+        notifications=notifications,
+        unread_count=unread_count,
+        active_page="notifications",
+        page=page,
+        total_pages=total_pages,
+        total_count=total_count,
+    )
 
 
 @notifications_bp.route("/notification/read/<int:notification_id>", methods=["POST"])
