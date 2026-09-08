@@ -14,6 +14,10 @@
             padding-top: 102px !important;
         }
 
+        body.notification-role-admin .student-notifications-content {
+            padding-top: 32px !important;
+        }
+
         body.student-notifications-page .student-notifications-card {
             margin-bottom: 0;
         }
@@ -33,21 +37,30 @@
         }
 
         @media (max-width: 760px) {
-            body.student-notifications-page .student-notifications-content {
-                padding-top: 86px !important;
+            body.student-notifications-page .student-notifications-content,
+            body.notification-role-admin .student-notifications-content {
+                padding-top: 28px !important;
             }
         }
     </style>
 </head>
 
-<body class="student-page student-notifications-page">
-    {% include 'components/student_sidebar.html' %}
+{% set portal_role = session.get('role', 'student') %}
+<body class="student-page student-notifications-page notification-role-{{ portal_role }}">
+    {% if portal_role == 'admin' %}
+        {% include 'components/admin_sidebar.html' %}
+    {% elif portal_role == 'supervisor' %}
+        {% include 'components/supervisor_sidebar.html' %}
+        {% include 'components/supervisor_topbar.html' %}
+    {% else %}
+        {% include 'components/student_sidebar.html' %}
+    {% endif %}
 
     <main class="student-tasks-main student-notifications-main">
         <div class="student-tasks-content student-notifications-content">
             <section class="student-section-heading" aria-labelledby="notifications-heading">
                 <div>
-                    <span class="student-section-eyebrow">Student Portal</span>
+                    <span class="student-section-eyebrow">{{ portal_role|replace('_', ' ')|title }} Portal</span>
                     <h1 id="notifications-heading">Notifications</h1>
                     <p>Stay up to date with your internship activity, tasks, grades, and feedback.</p>
                 </div>
