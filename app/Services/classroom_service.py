@@ -79,12 +79,14 @@ def ensure_classroom_schema():
                     company_name TEXT NOT NULL,
                     industry TEXT,
                     work_arrangement TEXT NOT NULL DEFAULT 'On-site',
-                    compensation TEXT NOT NULL DEFAULT 'Unpaid',
+                    schedule_type TEXT NOT NULL DEFAULT 'fixed_dates',
+                    hours_mode TEXT NOT NULL DEFAULT 'specified',
+                    compensation TEXT NOT NULL DEFAULT 'Not Specified',
                     location TEXT,
                     start_date TEXT,
                     end_date TEXT,
                     enrollment_deadline TEXT,
-                    required_hours INTEGER NOT NULL,
+                    required_hours INTEGER NOT NULL DEFAULT 0,
                     company_website TEXT,
                     company_description TEXT,
                     internship_description TEXT NOT NULL,
@@ -184,12 +186,14 @@ def ensure_classroom_schema():
                     company_name TEXT NOT NULL,
                     industry TEXT,
                     work_arrangement TEXT NOT NULL DEFAULT 'On-site',
-                    compensation TEXT NOT NULL DEFAULT 'Unpaid',
+                    schedule_type TEXT NOT NULL DEFAULT 'fixed_dates',
+                    hours_mode TEXT NOT NULL DEFAULT 'specified',
+                    compensation TEXT NOT NULL DEFAULT 'Not Specified',
                     location TEXT,
                     start_date TEXT,
                     end_date TEXT,
                     enrollment_deadline TEXT,
-                    required_hours INTEGER NOT NULL,
+                    required_hours INTEGER NOT NULL DEFAULT 0,
                     company_website TEXT,
                     company_description TEXT,
                     internship_description TEXT NOT NULL,
@@ -221,11 +225,28 @@ def ensure_classroom_schema():
             conn.execute(
                 "ALTER TABLE classrooms ADD COLUMN IF NOT EXISTS classroom_type TEXT NOT NULL DEFAULT 'classroom'"
             )
+            conn.execute(
+                "ALTER TABLE classroom_internship_details ADD COLUMN IF NOT EXISTS schedule_type TEXT NOT NULL DEFAULT 'fixed_dates'"
+            )
+            conn.execute(
+                "ALTER TABLE classroom_internship_details ADD COLUMN IF NOT EXISTS hours_mode TEXT NOT NULL DEFAULT 'specified'"
+            )
         else:
             classroom_columns = [row[1] for row in conn.execute("PRAGMA table_info(classrooms)").fetchall()]
             if "classroom_type" not in classroom_columns:
                 conn.execute(
                     "ALTER TABLE classrooms ADD COLUMN classroom_type TEXT NOT NULL DEFAULT 'classroom'"
+                )
+            internship_columns = [
+                row[1] for row in conn.execute("PRAGMA table_info(classroom_internship_details)").fetchall()
+            ]
+            if "schedule_type" not in internship_columns:
+                conn.execute(
+                    "ALTER TABLE classroom_internship_details ADD COLUMN schedule_type TEXT NOT NULL DEFAULT 'fixed_dates'"
+                )
+            if "hours_mode" not in internship_columns:
+                conn.execute(
+                    "ALTER TABLE classroom_internship_details ADD COLUMN hours_mode TEXT NOT NULL DEFAULT 'specified'"
                 )
 
         indexes = [
