@@ -18,6 +18,7 @@ def ensure_classroom_schema():
                     section TEXT NOT NULL,
                     description TEXT,
                     code TEXT UNIQUE NOT NULL,
+                    classroom_type TEXT NOT NULL DEFAULT 'classroom',
                     archived INTEGER DEFAULT 0,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )""",
@@ -71,6 +72,37 @@ def ensure_classroom_schema():
                     group_mode INTEGER DEFAULT 0,
                     max_group_size INTEGER DEFAULT 1
                 )""",
+                """CREATE TABLE IF NOT EXISTS classroom_internship_details (
+                    id SERIAL PRIMARY KEY,
+                    classroom_id INTEGER UNIQUE NOT NULL REFERENCES classrooms(id) ON DELETE CASCADE,
+                    internship_title TEXT NOT NULL,
+                    company_name TEXT NOT NULL,
+                    industry TEXT,
+                    work_arrangement TEXT NOT NULL DEFAULT 'On-site',
+                    compensation TEXT NOT NULL DEFAULT 'Unpaid',
+                    location TEXT,
+                    start_date TEXT,
+                    end_date TEXT,
+                    enrollment_deadline TEXT,
+                    required_hours INTEGER NOT NULL,
+                    company_website TEXT,
+                    company_description TEXT,
+                    internship_description TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )""",
+                """CREATE TABLE IF NOT EXISTS classroom_internship_responsibilities (
+                    id SERIAL PRIMARY KEY,
+                    classroom_id INTEGER NOT NULL REFERENCES classrooms(id) ON DELETE CASCADE,
+                    responsibility TEXT NOT NULL,
+                    sort_order INTEGER NOT NULL DEFAULT 0
+                )""",
+                """CREATE TABLE IF NOT EXISTS classroom_internship_qualifications (
+                    id SERIAL PRIMARY KEY,
+                    classroom_id INTEGER NOT NULL REFERENCES classrooms(id) ON DELETE CASCADE,
+                    qualification TEXT NOT NULL,
+                    sort_order INTEGER NOT NULL DEFAULT 0
+                )""",
             ]
         else:
             statements = [
@@ -81,6 +113,7 @@ def ensure_classroom_schema():
                     section TEXT NOT NULL,
                     description TEXT,
                     code TEXT UNIQUE NOT NULL,
+                    classroom_type TEXT NOT NULL DEFAULT 'classroom',
                     archived INTEGER DEFAULT 0,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY(supervisor_id) REFERENCES users(id)
@@ -144,16 +177,67 @@ def ensure_classroom_schema():
                     max_group_size INTEGER DEFAULT 1,
                     FOREIGN KEY(assignment_id) REFERENCES classroom_assignments(id) ON DELETE CASCADE
                 )""",
+                """CREATE TABLE IF NOT EXISTS classroom_internship_details (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    classroom_id INTEGER UNIQUE NOT NULL,
+                    internship_title TEXT NOT NULL,
+                    company_name TEXT NOT NULL,
+                    industry TEXT,
+                    work_arrangement TEXT NOT NULL DEFAULT 'On-site',
+                    compensation TEXT NOT NULL DEFAULT 'Unpaid',
+                    location TEXT,
+                    start_date TEXT,
+                    end_date TEXT,
+                    enrollment_deadline TEXT,
+                    required_hours INTEGER NOT NULL,
+                    company_website TEXT,
+                    company_description TEXT,
+                    internship_description TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY(classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE
+                )""",
+                """CREATE TABLE IF NOT EXISTS classroom_internship_responsibilities (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    classroom_id INTEGER NOT NULL,
+                    responsibility TEXT NOT NULL,
+                    sort_order INTEGER NOT NULL DEFAULT 0,
+                    FOREIGN KEY(classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE
+                )""",
+                """CREATE TABLE IF NOT EXISTS classroom_internship_qualifications (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    classroom_id INTEGER NOT NULL,
+                    qualification TEXT NOT NULL,
+                    sort_order INTEGER NOT NULL DEFAULT 0,
+                    FOREIGN KEY(classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE
+                )""",
             ]
         for statement in statements:
             conn.execute(statement)
+
+        # Existing installations created before Internship Classroom support need
+        # the discriminator added without rebuilding the classrooms table.
+        if using_postgres():
+            conn.execute(
+                "ALTER TABLE classrooms ADD COLUMN IF NOT EXISTS classroom_type TEXT NOT NULL DEFAULT 'classroom'"
+            )
+        else:
+            classroom_columns = [row[1] for row in conn.execute("PRAGMA table_info(classrooms)").fetchall()]
+            if "classroom_type" not in classroom_columns:
+                conn.execute(
+                    "ALTER TABLE classrooms ADD COLUMN classroom_type TEXT NOT NULL DEFAULT 'classroom'"
+                )
+
         indexes = [
             "CREATE INDEX IF NOT EXISTS idx_classrooms_supervisor ON classrooms(supervisor_id)",
+            "CREATE INDEX IF NOT EXISTS idx_classrooms_type ON classrooms(classroom_type)",
             "CREATE INDEX IF NOT EXISTS idx_classroom_students_class ON classroom_students(classroom_id)",
             "CREATE INDEX IF NOT EXISTS idx_classroom_students_student ON classroom_students(student_id)",
             "CREATE INDEX IF NOT EXISTS idx_classroom_posts_class ON classroom_posts(classroom_id, created_at DESC)",
             "CREATE INDEX IF NOT EXISTS idx_classroom_assignments_class ON classroom_assignments(classroom_id, due_at)",
             "CREATE INDEX IF NOT EXISTS idx_classroom_submissions_assignment ON classroom_submissions(assignment_id)",
+            "CREATE INDEX IF NOT EXISTS idx_classroom_internship_responsibilities_class ON classroom_internship_responsibilities(classroom_id, sort_order)",
+            "CREATE INDEX IF NOT EXISTS idx_classroom_internship_qualifications_class ON classroom_internship_qualifications(classroom_id, sort_order)",
         ]
         for statement in indexes:
             conn.execute(statement)

@@ -456,10 +456,10 @@
         .create-space-notice {
             margin-top: 26px;
             padding: 15px 17px;
-            border: 1px solid #fde68a;
+            border: 1px solid #dbeafe;
             border-radius: 12px;
-            background: #fffbeb;
-            color: #854d0e;
+            background: #f8fbff;
+            color: #475569;
             font-size: .78rem;
             line-height: 1.5;
         }
@@ -564,7 +564,7 @@
 <body class="supervisor-create-space-page">
     {% include 'components/supervisor_sidebar.html' %}
 
-    <main class="page-content nexora-app-main create-space-main" data-initial-view="{% if errors or form %}classroom{% else %}choice{% endif %}">
+    <main class="page-content nexora-app-main create-space-main" data-initial-view="{{ initial_view|default('choice') }}">
         <div class="create-space-shell">
             <a href="{{ url_for('classroom.supervisor_classes') }}" class="create-space-back">← Back to My Classes</a>
 
@@ -572,7 +572,7 @@
                 <header class="create-space-header">
                     <span class="create-space-eyebrow">Create a Space</span>
                     <h1 id="create-space-title">What would you like to create?</h1>
-                    <p>Choose the type of space you want to manage in Nexora. Classroom keeps the current academic workflow, while Internship Classroom prepares a dedicated OJT setup.</p>
+                    <p>Choose the type of space you want to manage in Nexora. Classroom keeps the current academic workflow, while Internship Classroom provides a dedicated OJT setup.</p>
                 </header>
 
                 <div class="create-space-choice-grid">
@@ -616,31 +616,32 @@
 
                     <form method="POST" novalidate class="create-space-form-body">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="form_type" value="classroom">
 
                         <section class="create-space-section">
                             <div class="create-space-section-title">
                                 <h2>Classroom Details</h2>
-                                <p>These are the same fields supported by the current classroom backend.</p>
+                                <p>These are the same fields supported by the existing classroom workflow.</p>
                             </div>
 
                             <div class="create-space-fields">
                                 <div class="create-space-field">
                                     <label for="class_name">Classroom Name <span class="create-space-required">*</span></label>
-                                    <input type="text" id="class_name" name="class_name" maxlength="100" placeholder="Example: Web Development 3A" value="{{ form.class_name if form.class_name else '' }}" required>
+                                    <input type="text" id="class_name" name="class_name" maxlength="100" placeholder="Example: Web Development 3A" value="{{ form.get('class_name', '') }}" required>
                                     <small>Use a clear class or subject name.</small>
                                     {% if errors and errors.class_name %}<div class="create-space-error">{{ errors.class_name }}</div>{% endif %}
                                 </div>
 
                                 <div class="create-space-field">
                                     <label for="section">Section <span class="create-space-required">*</span></label>
-                                    <input type="text" id="section" name="section" maxlength="100" placeholder="Example: BSIT 3A" value="{{ form.section if form.section else '' }}" required>
+                                    <input type="text" id="section" name="section" maxlength="100" placeholder="Example: BSIT 3A" value="{{ form.get('section', '') }}" required>
                                     <small>Enter the section or group this classroom belongs to.</small>
                                     {% if errors and errors.section %}<div class="create-space-error">{{ errors.section }}</div>{% endif %}
                                 </div>
 
                                 <div class="create-space-field is-full">
                                     <label for="description">Description</label>
-                                    <textarea id="description" name="description" maxlength="500" placeholder="Example: Classroom for BSIT 3A students covering web development activities and project submissions.">{{ form.description if form.description else '' }}</textarea>
+                                    <textarea id="description" name="description" maxlength="500" placeholder="Example: Classroom for BSIT 3A students covering web development activities and project submissions.">{{ form.get('description', '') }}</textarea>
                                     <small>Optional. Maximum 500 characters.</small>
                                     {% if errors and errors.description %}<div class="create-space-error">{{ errors.description }}</div>{% endif %}
                                 </div>
@@ -679,7 +680,14 @@
                         <p>Provide enough information so students clearly understand the company, work arrangement, requirements, expected responsibilities, and eligibility.</p>
                     </header>
 
-                    <div class="create-space-form-body">
+                    <form method="POST" novalidate class="create-space-form-body">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="form_type" value="internship">
+                        {% set selected_arrangement = form.get('work_arrangement', 'On-site') %}
+                        {% set selected_compensation = form.get('compensation', 'Unpaid') %}
+                        {% set responsibility_items = responsibilities if responsibilities else ['', ''] %}
+                        {% set qualification_items = qualifications if qualifications else ['', ''] %}
+
                         <section class="create-space-section">
                             <div class="create-space-section-title">
                                 <h2>Basic Internship Details</h2>
@@ -689,38 +697,45 @@
                             <div class="create-space-fields">
                                 <div class="create-space-field">
                                     <label for="internship_title">Internship Title <span class="create-space-required">*</span></label>
-                                    <input type="text" id="internship_title" placeholder="Example: Visual Data Collection Intern">
+                                    <input type="text" id="internship_title" name="internship_title" maxlength="150" placeholder="Example: Visual Data Collection Intern" value="{{ form.get('internship_title', '') }}" required>
+                                    {% if errors and errors.internship_title %}<div class="create-space-error">{{ errors.internship_title }}</div>{% endif %}
                                 </div>
                                 <div class="create-space-field">
                                     <label for="company_name">Company / Organization <span class="create-space-required">*</span></label>
-                                    <input type="text" id="company_name" placeholder="Example: GIG Rewards">
+                                    <input type="text" id="company_name" name="company_name" maxlength="150" placeholder="Example: GIG Rewards" value="{{ form.get('company_name', '') }}" required>
+                                    {% if errors and errors.company_name %}<div class="create-space-error">{{ errors.company_name }}</div>{% endif %}
                                 </div>
                                 <div class="create-space-field">
                                     <label for="internship_section">Section <span class="create-space-required">*</span></label>
-                                    <input type="text" id="internship_section" placeholder="Example: BSIT 3A">
+                                    <input type="text" id="internship_section" name="internship_section" maxlength="100" placeholder="Example: BSIT 3A" value="{{ form.get('internship_section', '') }}" required>
+                                    {% if errors and errors.internship_section %}<div class="create-space-error">{{ errors.internship_section }}</div>{% endif %}
                                 </div>
                                 <div class="create-space-field">
                                     <label for="industry">Category / Industry</label>
-                                    <input type="text" id="industry" placeholder="Example: Telecom / Tech">
+                                    <input type="text" id="industry" name="industry" maxlength="100" placeholder="Example: Telecom / Tech" value="{{ form.get('industry', '') }}">
+                                    {% if errors and errors.industry %}<div class="create-space-error">{{ errors.industry }}</div>{% endif %}
                                 </div>
                                 <div class="create-space-field">
                                     <span class="create-space-option-label">Work Arrangement</span>
                                     <div class="create-space-option-row">
-                                        <label class="create-space-option"><input type="radio" name="work_arrangement_ui" checked><span>On-site</span></label>
-                                        <label class="create-space-option"><input type="radio" name="work_arrangement_ui"><span>Hybrid</span></label>
-                                        <label class="create-space-option"><input type="radio" name="work_arrangement_ui"><span>Remote</span></label>
+                                        <label class="create-space-option"><input type="radio" name="work_arrangement" value="On-site" {% if selected_arrangement == 'On-site' %}checked{% endif %}><span>On-site</span></label>
+                                        <label class="create-space-option"><input type="radio" name="work_arrangement" value="Hybrid" {% if selected_arrangement == 'Hybrid' %}checked{% endif %}><span>Hybrid</span></label>
+                                        <label class="create-space-option"><input type="radio" name="work_arrangement" value="Remote" {% if selected_arrangement == 'Remote' %}checked{% endif %}><span>Remote</span></label>
                                     </div>
+                                    {% if errors and errors.work_arrangement %}<div class="create-space-error">{{ errors.work_arrangement }}</div>{% endif %}
                                 </div>
                                 <div class="create-space-field">
                                     <span class="create-space-option-label">Compensation</span>
                                     <div class="create-space-option-row is-two">
-                                        <label class="create-space-option"><input type="radio" name="compensation_ui" checked><span>Paid</span></label>
-                                        <label class="create-space-option"><input type="radio" name="compensation_ui"><span>Unpaid</span></label>
+                                        <label class="create-space-option"><input type="radio" name="compensation" value="Paid" {% if selected_compensation == 'Paid' %}checked{% endif %}><span>Paid</span></label>
+                                        <label class="create-space-option"><input type="radio" name="compensation" value="Unpaid" {% if selected_compensation == 'Unpaid' %}checked{% endif %}><span>Unpaid</span></label>
                                     </div>
+                                    {% if errors and errors.compensation %}<div class="create-space-error">{{ errors.compensation }}</div>{% endif %}
                                 </div>
                                 <div class="create-space-field is-full">
                                     <label for="location">Location</label>
-                                    <input type="text" id="location" placeholder="Example: Makati City">
+                                    <input type="text" id="location" name="location" maxlength="200" placeholder="Example: Makati City" value="{{ form.get('location', '') }}">
+                                    {% if errors and errors.location %}<div class="create-space-error">{{ errors.location }}</div>{% endif %}
                                 </div>
                             </div>
                         </section>
@@ -739,19 +754,23 @@
                             <div class="create-space-fields">
                                 <div class="create-space-field">
                                     <label for="start_date">Start Date</label>
-                                    <input type="date" id="start_date">
+                                    <input type="date" id="start_date" name="start_date" value="{{ form.get('start_date', '') }}">
+                                    {% if errors and errors.start_date %}<div class="create-space-error">{{ errors.start_date }}</div>{% endif %}
                                 </div>
                                 <div class="create-space-field">
                                     <label for="end_date">End Date</label>
-                                    <input type="date" id="end_date">
+                                    <input type="date" id="end_date" name="end_date" value="{{ form.get('end_date', '') }}">
+                                    {% if errors and errors.end_date %}<div class="create-space-error">{{ errors.end_date }}</div>{% endif %}
                                 </div>
                                 <div class="create-space-field">
                                     <label for="deadline">Application / Enrollment Deadline</label>
-                                    <input type="date" id="deadline">
+                                    <input type="date" id="deadline" name="deadline" value="{{ form.get('deadline', '') }}">
+                                    {% if errors and errors.deadline %}<div class="create-space-error">{{ errors.deadline }}</div>{% endif %}
                                 </div>
                                 <div class="create-space-field">
                                     <label for="required_hours">Required Internship Hours <span class="create-space-required">*</span></label>
-                                    <input type="number" id="required_hours" min="1" step="1" placeholder="Example: 500">
+                                    <input type="number" id="required_hours" name="required_hours" min="1" max="10000" step="1" placeholder="Example: 500" value="{{ form.get('required_hours', '') }}" required>
+                                    {% if errors and errors.required_hours %}<div class="create-space-error">{{ errors.required_hours }}</div>{% endif %}
                                 </div>
                             </div>
                         </section>
@@ -764,11 +783,13 @@
                             <div class="create-space-fields">
                                 <div class="create-space-field is-full">
                                     <label for="company_website">Company Website</label>
-                                    <input type="url" id="company_website" placeholder="https://example.com">
+                                    <input type="url" id="company_website" name="company_website" maxlength="500" placeholder="https://example.com" value="{{ form.get('company_website', '') }}">
+                                    {% if errors and errors.company_website %}<div class="create-space-error">{{ errors.company_website }}</div>{% endif %}
                                 </div>
                                 <div class="create-space-field is-full">
                                     <label for="company_description">Company Description</label>
-                                    <textarea id="company_description" placeholder="Describe the company, its industry, and the environment students will work in."></textarea>
+                                    <textarea id="company_description" name="company_description" maxlength="5000" placeholder="Describe the company, its industry, and the environment students will work in.">{{ form.get('company_description', '') }}</textarea>
+                                    {% if errors and errors.company_description %}<div class="create-space-error">{{ errors.company_description }}</div>{% endif %}
                                 </div>
                             </div>
                         </section>
@@ -780,7 +801,8 @@
                             </div>
                             <div class="create-space-field">
                                 <label for="internship_description">Internship Description <span class="create-space-required">*</span></label>
-                                <textarea id="internship_description" placeholder="Describe the internship experience, expected work, supervision, and learning outcomes."></textarea>
+                                <textarea id="internship_description" name="internship_description" maxlength="10000" placeholder="Describe the internship experience, expected work, supervision, and learning outcomes." required>{{ form.get('internship_description', '') }}</textarea>
+                                {% if errors and errors.internship_description %}<div class="create-space-error">{{ errors.internship_description }}</div>{% endif %}
                             </div>
                         </section>
 
@@ -790,10 +812,12 @@
                                 <p>Add clear, individual responsibilities instead of placing everything in one description.</p>
                             </div>
                             <div id="responsibility-list" class="create-space-repeat-list">
-                                <div class="create-space-repeat-row"><input type="text" placeholder="Example: Record and submit assigned data collection tasks."><button type="button" class="create-space-remove-button" aria-label="Remove responsibility">×</button></div>
-                                <div class="create-space-repeat-row"><input type="text" placeholder="Example: Follow technical capture guidelines."><button type="button" class="create-space-remove-button" aria-label="Remove responsibility">×</button></div>
+                                {% for item in responsibility_items %}
+                                    <div class="create-space-repeat-row"><input type="text" name="responsibilities[]" maxlength="500" value="{{ item }}" placeholder="Example: Record and submit assigned data collection tasks."><button type="button" class="create-space-remove-button" aria-label="Remove responsibility">×</button></div>
+                                {% endfor %}
                             </div>
-                            <button type="button" class="create-space-add-button" data-add-row="responsibility-list" data-placeholder="Add another responsibility">+ Add Responsibility</button>
+                            {% if errors and errors.responsibilities %}<div class="create-space-error">{{ errors.responsibilities }}</div>{% endif %}
+                            <button type="button" class="create-space-add-button" data-add-row="responsibility-list" data-input-name="responsibilities[]" data-placeholder="Add another responsibility">+ Add Responsibility</button>
                         </section>
 
                         <section class="create-space-section">
@@ -802,21 +826,23 @@
                                 <p>Add the requirements students must meet before joining this internship classroom.</p>
                             </div>
                             <div id="qualification-list" class="create-space-repeat-list">
-                                <div class="create-space-repeat-row"><input type="text" placeholder="Example: Currently enrolled in a degree program requiring OJT/practicum hours."><button type="button" class="create-space-remove-button" aria-label="Remove qualification">×</button></div>
-                                <div class="create-space-repeat-row"><input type="text" placeholder="Example: Access to a computer and reliable internet."><button type="button" class="create-space-remove-button" aria-label="Remove qualification">×</button></div>
+                                {% for item in qualification_items %}
+                                    <div class="create-space-repeat-row"><input type="text" name="qualifications[]" maxlength="500" value="{{ item }}" placeholder="Example: Currently enrolled in a degree program requiring OJT/practicum hours."><button type="button" class="create-space-remove-button" aria-label="Remove qualification">×</button></div>
+                                {% endfor %}
                             </div>
-                            <button type="button" class="create-space-add-button" data-add-row="qualification-list" data-placeholder="Add another qualification">+ Add Qualification</button>
+                            {% if errors and errors.qualifications %}<div class="create-space-error">{{ errors.qualifications }}</div>{% endif %}
+                            <button type="button" class="create-space-add-button" data-add-row="qualification-list" data-input-name="qualifications[]" data-placeholder="Add another qualification">+ Add Qualification</button>
                         </section>
 
                         <div class="create-space-notice" role="note">
-                            Internship Classroom details are UI-only in this phase. Nexora's existing internship records belong to individual students, so this form is intentionally not submitted or saved until classroom-level internship persistence is approved.
+                            Internship Classroom information is stored separately from each student's existing internship record. Creating this classroom will not overwrite or reassign any student's current internship.
                         </div>
 
                         <div class="create-space-footer">
                             <button type="button" class="create-space-secondary-button" data-show-view="choice">Cancel</button>
-                            <button type="button" class="create-space-primary-button" disabled aria-disabled="true" title="Internship Classroom backend storage is not enabled yet">Create Internship Classroom</button>
+                            <button type="submit" class="create-space-primary-button">Create Internship Classroom</button>
                         </div>
-                    </div>
+                    </form>
                 </div>
             </section>
         </div>
@@ -832,6 +858,7 @@
             };
 
             function showView(name) {
+                if (!views[name]) name = 'choice';
                 Object.keys(views).forEach(function (key) {
                     if (views[key]) views[key].hidden = key !== name;
                 });
@@ -847,10 +874,12 @@
             document.querySelectorAll('[data-add-row]').forEach(function (button) {
                 button.addEventListener('click', function () {
                     const list = document.getElementById(button.getAttribute('data-add-row'));
-                    if (!list) return;
+                    if (!list || list.children.length >= 20) return;
                     const row = document.createElement('div');
+                    const inputName = button.getAttribute('data-input-name') || '';
+                    const placeholder = button.getAttribute('data-placeholder') || '';
                     row.className = 'create-space-repeat-row';
-                    row.innerHTML = '<input type="text" placeholder="' + button.getAttribute('data-placeholder') + '"><button type="button" class="create-space-remove-button" aria-label="Remove item">×</button>';
+                    row.innerHTML = '<input type="text" name="' + inputName + '" maxlength="500" placeholder="' + placeholder + '"><button type="button" class="create-space-remove-button" aria-label="Remove item">×</button>';
                     list.appendChild(row);
                 });
             });
@@ -863,7 +892,7 @@
                 if (list && row && list.children.length > 1) row.remove();
             });
 
-            showView(root && root.dataset.initialView === 'classroom' ? 'classroom' : 'choice');
+            showView(root ? root.dataset.initialView : 'choice');
         })();
     </script>
 </body>

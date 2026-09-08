@@ -106,6 +106,180 @@ def supervisor_classes():
 @role_required("supervisor")
 def create_class():
     if request.method == "POST":
+        form_type = (request.form.get("form_type") or "classroom").strip().lower()
+
+        if form_type == "internship":
+            internship_title = (request.form.get("internship_title") or "").strip()
+            company_name = (request.form.get("company_name") or "").strip()
+            section = (request.form.get("internship_section") or "").strip()
+            industry = (request.form.get("industry") or "").strip()
+            work_arrangement = (request.form.get("work_arrangement") or "On-site").strip()
+            compensation = (request.form.get("compensation") or "Unpaid").strip()
+            location = (request.form.get("location") or "").strip()
+            start_date = (request.form.get("start_date") or "").strip() or None
+            end_date = (request.form.get("end_date") or "").strip() or None
+            deadline = (request.form.get("deadline") or "").strip() or None
+            required_hours_raw = (request.form.get("required_hours") or "").strip()
+            company_website = (request.form.get("company_website") or "").strip()
+            company_description = (request.form.get("company_description") or "").strip()
+            internship_description = (request.form.get("internship_description") or "").strip()
+            responsibilities = [
+                item.strip() for item in request.form.getlist("responsibilities[]") if item.strip()
+            ]
+            qualifications = [
+                item.strip() for item in request.form.getlist("qualifications[]") if item.strip()
+            ]
+
+            errors = {}
+            if not internship_title or len(internship_title) < 3 or len(internship_title) > 150:
+                errors["internship_title"] = "Internship title is required (3-150 chars)."
+            if not company_name or len(company_name) < 2 or len(company_name) > 150:
+                errors["company_name"] = "Company / organization is required (2-150 chars)."
+            if not section or len(section) > 100:
+                errors["internship_section"] = "Section is required (1-100 chars)."
+            if len(industry) > 100:
+                errors["industry"] = "Category / industry max 100 chars."
+            if work_arrangement not in {"On-site", "Hybrid", "Remote"}:
+                errors["work_arrangement"] = "Choose a valid work arrangement."
+            if compensation not in {"Paid", "Unpaid"}:
+                errors["compensation"] = "Choose a valid compensation option."
+            if len(location) > 200:
+                errors["location"] = "Location max 200 chars."
+
+            for field_name, value in (("start_date", start_date), ("end_date", end_date), ("deadline", deadline)):
+                if value:
+                    try:
+                        datetime.strptime(value, "%Y-%m-%d")
+                    except ValueError:
+                        errors[field_name] = "Enter a valid date."
+            if start_date and end_date:
+                try:
+                    if datetime.strptime(end_date, "%Y-%m-%d") < datetime.strptime(start_date, "%Y-%m-%d"):
+                        errors["end_date"] = "End date cannot be before the start date."
+                except ValueError:
+                    pass
+
+            required_hours = None
+            try:
+                required_hours = int(required_hours_raw)
+                if required_hours < 1 or required_hours > 10000:
+                    raise ValueError()
+            except (TypeError, ValueError):
+                errors["required_hours"] = "Required hours must be between 1 and 10,000."
+
+            if company_website:
+                if len(company_website) > 500:
+                    errors["company_website"] = "Company website max 500 chars."
+                elif not company_website.lower().startswith(("http://", "https://")):
+                    errors["company_website"] = "Company website must start with http:// or https://."
+            if len(company_description) > 5000:
+                errors["company_description"] = "Company description max 5000 chars."
+            if not internship_description or len(internship_description) < 10 or len(internship_description) > 10000:
+                errors["internship_description"] = "Internship description is required (10-10,000 chars)."
+            if not responsibilities:
+                errors["responsibilities"] = "Add at least one responsibility."
+            elif len(responsibilities) > 20 or any(len(item) > 500 for item in responsibilities):
+                errors["responsibilities"] = "Use up to 20 responsibilities, max 500 chars each."
+            if not qualifications:
+                errors["qualifications"] = "Add at least one qualification."
+            elif len(qualifications) > 20 or any(len(item) > 500 for item in qualifications):
+                errors["qualifications"] = "Use up to 20 qualifications, max 500 chars each."
+
+            if errors:
+                return render_template(
+                    "classroom/create_class.html",
+                    errors=errors,
+                    form=request.form,
+                    responsibilities=responsibilities or [""],
+                    qualifications=qualifications or [""],
+                    initial_view="internship",
+                    active_page="classes",
+                )
+
+            conn = get_db_connection()
+            cursor = None
+            try:
+                cursor = conn.cursor()
+                code = _generate_code(cursor)
+                parent_description = f"Internship classroom for {company_name}"
+                cursor.execute("""
+                    INSERT INTO classrooms
+                    (supervisor_id, name, section, description, code, classroom_type, archived)
+                    VALUES (?, ?, ?, ?, ?, 'internship', 0)
+                """, (session["user_id"], internship_title, section, parent_description, code))
+                cursor.execute("SELECT id FROM classrooms WHERE code = ?", (code,))
+                classroom_row = cursor.fetchone()
+                if not classroom_row:
+                    raise RuntimeError("Failed to resolve newly created classroom.")
+                try:
+                    classroom_id = classroom_row["id"]
+                except Exception:
+                    classroom_id = classroom_row[0]
+
+                cursor.execute("""
+                    INSERT INTO classroom_internship_details (
+                        classroom_id, internship_title, company_name, industry,
+                        work_arrangement, compensation, location, start_date,
+                        end_date, enrollment_deadline, required_hours,
+                        company_website, company_description, internship_description
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    classroom_id,
+                    internship_title,
+                    company_name,
+                    industry or None,
+                    work_arrangement,
+                    compensation,
+                    location or None,
+                    start_date,
+                    end_date,
+                    deadline,
+                    required_hours,
+                    company_website or None,
+                    company_description or None,
+                    internship_description,
+                ))
+
+                for sort_order, item in enumerate(responsibilities):
+                    cursor.execute(
+                        "INSERT INTO classroom_internship_responsibilities (classroom_id, responsibility, sort_order) VALUES (?, ?, ?)",
+                        (classroom_id, item, sort_order),
+                    )
+                for sort_order, item in enumerate(qualifications):
+                    cursor.execute(
+                        "INSERT INTO classroom_internship_qualifications (classroom_id, qualification, sort_order) VALUES (?, ?, ?)",
+                        (classroom_id, item, sort_order),
+                    )
+
+                conn.commit()
+                flash(
+                    f"Internship Classroom '{internship_title}' created with code {code}.",
+                    "success",
+                )
+            except Exception as e:
+                try:
+                    conn.rollback()
+                except:
+                    pass
+                flash(f"Failed to create internship classroom: {e}", "danger")
+                return render_template(
+                    "classroom/create_class.html",
+                    errors={},
+                    form=request.form,
+                    responsibilities=responsibilities or [""],
+                    qualifications=qualifications or [""],
+                    initial_view="internship",
+                    active_page="classes",
+                )
+            finally:
+                try:
+                    if cursor:
+                        cursor.close()
+                except:
+                    pass
+                conn.close()
+            return redirect(url_for("classroom.supervisor_classes"))
+
         class_name = (request.form.get("class_name") or "").strip()
         section = (request.form.get("section") or "").strip()
         description = (request.form.get("description") or "").strip()
@@ -117,14 +291,22 @@ def create_class():
         if len(description) > 500:
             errors["description"] = "Description max 500 chars."
         if errors:
-            return render_template("classroom/create_class.html", errors=errors, form=request.form, active_page="classes")
+            return render_template(
+                "classroom/create_class.html",
+                errors=errors,
+                form=request.form,
+                initial_view="classroom",
+                active_page="classes",
+            )
         conn = get_db_connection()
+        cursor = None
         try:
             cursor = conn.cursor()
             code = _generate_code(cursor)
             cursor.execute("""
-                INSERT INTO classrooms (supervisor_id, name, section, description, code, archived)
-                VALUES (?, ?, ?, ?, ?, 0)
+                INSERT INTO classrooms
+                (supervisor_id, name, section, description, code, classroom_type, archived)
+                VALUES (?, ?, ?, ?, ?, 'classroom', 0)
             """, (session["user_id"], class_name, section, description, code))
             conn.commit()
             flash(f"Class '{class_name}' created with code {code}.", "success")
@@ -134,15 +316,30 @@ def create_class():
             except:
                 pass
             flash(f"Failed to create class: {e}", "danger")
-            return render_template("classroom/create_class.html", errors={}, form=request.form, active_page="classes")
+            return render_template(
+                "classroom/create_class.html",
+                errors={},
+                form=request.form,
+                initial_view="classroom",
+                active_page="classes",
+            )
         finally:
             try:
-                cursor.close()
+                if cursor:
+                    cursor.close()
             except:
                 pass
             conn.close()
         return redirect(url_for("classroom.supervisor_classes"))
-    return render_template("classroom/create_class.html", errors={}, form={}, active_page="classes")
+    return render_template(
+        "classroom/create_class.html",
+        errors={},
+        form={},
+        responsibilities=["", ""],
+        qualifications=["", ""],
+        initial_view="choice",
+        active_page="classes",
+    )
 
 # Supervisor: Class detail
 @classroom.route("/supervisor/classes/<int:class_id>")
@@ -170,11 +367,9 @@ def supervisor_class(class_id):
             "created_at": c["created_at"] if "created_at" in c.keys() else c[7],
             "status": "Archived" if (c["archived"] if "archived" in c.keys() else c[6]) else "Active",
         }
-        # student count
         cnt = conn.execute("SELECT COUNT(*) FROM classroom_students WHERE classroom_id = ?", (class_id,)).fetchone()
         student_count = cnt[0] if cnt else 0
         classroom_data["student_count"] = student_count
-        # posts
         posts = conn.execute("SELECT id, title, body, post_type, created_at FROM classroom_posts WHERE classroom_id = ? ORDER BY created_at DESC", (class_id,)).fetchall()
         announcements = []
         for p in posts:
@@ -183,7 +378,6 @@ def supervisor_class(class_id):
                 "title": p["title"] if "title" in p.keys() else p[1],
                 "body": p["body"] if "body" in p.keys() else p[2],
             })
-        # assignments
         assigns = conn.execute("SELECT id, title, description, due_at, points, created_at FROM classroom_assignments WHERE classroom_id = ? ORDER BY created_at DESC", (class_id,)).fetchall()
         assignments = []
         for a in assigns:
@@ -192,7 +386,6 @@ def supervisor_class(class_id):
                 "title": a["title"] if "title" in a.keys() else a[1],
                 "description": a["description"] if "description" in a.keys() else a[2],
             })
-        # students
         studs = conn.execute("""
             SELECT u.id, u.username, u.email
             FROM classroom_students cs
@@ -234,7 +427,6 @@ def create_post(class_id):
             return redirect(url_for("classroom.supervisor_class", class_id=class_id))
         conn.execute("INSERT INTO classroom_posts (classroom_id, author_id, title, body, post_type) VALUES (?, ?, ?, ?, 'announcement')", (class_id, sid, title, body))
         conn.commit()
-        # notify all enrolled students
         try:
             studs = conn.execute("SELECT student_id FROM classroom_students WHERE classroom_id = ?", (class_id,)).fetchall()
             cname_row = conn.execute("SELECT name FROM classrooms WHERE id = ?", (class_id,)).fetchone()
@@ -292,7 +484,6 @@ def create_assignment(class_id):
                 return redirect(url_for("classroom.supervisor_class", class_id=class_id))
         conn.execute("INSERT INTO classroom_assignments (classroom_id, author_id, title, description, due_at, points) VALUES (?, ?, ?, ?, ?, ?)", (class_id, sid, title, description, due_at, points))
         conn.commit()
-        # notify students
         try:
             studs = conn.execute("SELECT student_id FROM classroom_students WHERE classroom_id = ?", (class_id,)).fetchall()
             aid_row = conn.execute("SELECT id FROM classroom_assignments WHERE classroom_id=? ORDER BY id DESC LIMIT 1", (class_id,)).fetchone()
@@ -391,11 +582,8 @@ def join_class():
             return render_template("classroom/join_class.html", errors=errors, form=request.form, active_page="classes")
         conn = get_db_connection()
         try:
-            # normalize: allow with or without dash
-            # try exact then without dash variants
             c = conn.execute("SELECT id, supervisor_id, archived FROM classrooms WHERE UPPER(code) = UPPER(?)", (code,)).fetchone()
             if not c:
-                # try without dash
                 c2 = conn.execute("SELECT id, supervisor_id, archived FROM classrooms WHERE REPLACE(UPPER(code), '-', '') = REPLACE(UPPER(?), '-', '')", (code,)).fetchone()
                 c = c2
             if not c:
@@ -406,20 +594,16 @@ def join_class():
             if arch:
                 errors["class_code"] = "Cannot join archived class."
                 return render_template("classroom/join_class.html", errors=errors, form=request.form, active_page="classes")
-            # check duplicate
             exists = conn.execute("SELECT 1 FROM classroom_students WHERE classroom_id = ? AND student_id = ?", (cid, session["user_id"])).fetchone()
             if exists:
                 flash("You are already enrolled in this class.", "info")
                 return redirect(url_for("classroom.student_classes"))
             conn.execute("INSERT INTO classroom_students (classroom_id, student_id) VALUES (?, ?)", (cid, session["user_id"]))
             conn.commit()
-            # notification to supervisor
             try:
                 sup_id = c["supervisor_id"] if "supervisor_id" in c.keys() else c[1]
-                # fetch student username
                 u = conn.execute("SELECT username FROM users WHERE id = ?", (session["user_id"],)).fetchone()
                 sname = (u["username"] if u and "username" in u.keys() else (u[0] if u else "Student"))
-                # fetch class name
                 cn = conn.execute("SELECT name FROM classrooms WHERE id = ?", (cid,)).fetchone()
                 cname = (cn["name"] if cn and "name" in cn.keys() else "Class")
                 create_notification(int(sup_id), "New Class Enrollment", f"{sname} joined your class {cname} ({code}).", "classroom", link_url=f"/supervisor/classes/{cid}")
@@ -432,7 +616,6 @@ def join_class():
                 conn.rollback()
             except:
                 pass
-            # check duplicate unique violation
             if "UNIQUE" in str(e) or "unique" in str(e).lower():
                 flash("You are already enrolled in this class.", "info")
                 return redirect(url_for("classroom.student_classes"))
@@ -478,7 +661,6 @@ def student_class(class_id):
         assigns = conn.execute("SELECT id, title, description, due_at, points FROM classroom_assignments WHERE classroom_id = ? ORDER BY created_at DESC", (class_id,)).fetchall()
         assignments = []
         for a in assigns:
-            # check submission status
             sub = conn.execute("SELECT status, grade FROM classroom_submissions WHERE assignment_id = ? AND student_id = ?", (a["id"] if "id" in a.keys() else a[0], stu)).fetchone()
             status = (sub["status"] if sub and "status" in sub.keys() else (sub[0] if sub else "Pending")) if sub else "Pending"
             assignments.append({
@@ -488,7 +670,6 @@ def student_class(class_id):
                 "due": a["due_at"] if "due_at" in a.keys() else a[3],
                 "status": status,
             })
-        # classmates + supervisor for People tab
         classmates_rows = conn.execute("""
             SELECT u.id, u.username, u.email
             FROM classroom_students cs
@@ -550,7 +731,6 @@ def student_assignment_detail(class_id, assignment_id):
                 "grade": sub["grade"] if "grade" in sub.keys() else sub[6],
                 "feedback": sub["feedback"] if "feedback" in sub.keys() else sub[7],
             }
-        # due handling
         due_str = assignment["due_at"]
         past_due = False
         if due_str:
@@ -570,7 +750,6 @@ def student_submit_assignment(class_id, assignment_id):
     a = _get_classroom_assignment(class_id, assignment_id)
     if not a:
         return "Assignment not found", 404
-    # deadline check
     due_str = a["due_at"] if "due_at" in a.keys() else a[4]
     if due_str:
         dt = _parse_due(due_str)
@@ -596,14 +775,12 @@ def student_submit_assignment(class_id, assignment_id):
         if size > MAX_FILE_SIZE:
             flash("File too large (max 5MB).", "danger")
             return redirect(url_for("classroom.student_assignment_detail", class_id=class_id, assignment_id=assignment_id))
-        # secure path
         safe_name = f"{stu}_{class_id}_{assignment_id}_{raw_name}"
         base = current_app.config.get("UPLOAD_FOLDER", "") or os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "storage", "uploads")
         filepath = os.path.join(str(base), safe_name)
         if not _is_safe_path_classroom(str(base), filepath):
             flash("Invalid file path.", "danger")
             return redirect(url_for("classroom.student_assignment_detail", class_id=class_id, assignment_id=assignment_id))
-        # ensure directory exists
         os.makedirs(os.path.dirname(filepath), exist_ok=True)
         file.save(filepath)
         filename = safe_name
@@ -617,14 +794,12 @@ def student_submit_assignment(class_id, assignment_id):
     try:
         existing = conn.execute("SELECT id, filepath FROM classroom_submissions WHERE assignment_id = ? AND student_id = ?", (assignment_id, stu)).fetchone()
         if existing:
-            # resubmission: update, remove old file if new file provided
             old_path = existing["filepath"] if "filepath" in existing.keys() else existing[1]
             if filename and old_path and os.path.exists(old_path) and old_path != filepath:
                 try:
                     os.remove(old_path)
                 except:
                     pass
-            # keep filename/filepath if not new file
             if not filename:
                 filename = existing["filename"] if "filename" in existing.keys() else None
                 filepath = existing["filepath"] if "filepath" in existing.keys() else None
@@ -632,7 +807,6 @@ def student_submit_assignment(class_id, assignment_id):
         else:
             conn.execute("INSERT INTO classroom_submissions (assignment_id, student_id, content, filename, filepath, status) VALUES (?, ?, ?, ?, ?, 'submitted')", (assignment_id, stu, content, filename, filepath))
         conn.commit()
-        # notify supervisor
         try:
             c = conn.execute("SELECT supervisor_id, name FROM classrooms WHERE id = ?", (class_id,)).fetchone()
             sup_id = (c["supervisor_id"] if c and "supervisor_id" in c.keys() else None)
@@ -674,11 +848,9 @@ def supervisor_assignment_detail(class_id, assignment_id):
             "due_at": a["due_at"] if "due_at" in a.keys() else a[4],
             "points": a["points"] if "points" in a.keys() else a[5],
         }
-        # enrolled count
         enrolled = conn.execute("SELECT COUNT(*) FROM classroom_students WHERE classroom_id = ?", (class_id,)).fetchone()[0]
         submitted = conn.execute("SELECT COUNT(*) FROM classroom_submissions WHERE assignment_id = ?", (assignment_id,)).fetchone()[0]
         missing = max(0, enrolled - submitted)
-        # submissions list
         subs = conn.execute("""
             SELECT cs.id, cs.student_id, cs.content, cs.filename, cs.filepath, cs.submitted_at, cs.status, cs.grade, cs.feedback, u.username, u.email
             FROM classroom_submissions cs
@@ -860,7 +1032,6 @@ def regenerate_code(class_id):
         new_code = _generate_code(cursor)
         cursor.execute("UPDATE classrooms SET code = ? WHERE id = ?", (new_code, class_id))
         conn.commit()
-        # notify enrolled students
         try:
             studs = conn.execute("SELECT student_id FROM classroom_students WHERE classroom_id = ?", (class_id,)).fetchall()
             cname_row = conn.execute("SELECT name FROM classrooms WHERE id = ?", (class_id,)).fetchone()
@@ -895,19 +1066,16 @@ def remove_student(class_id, student_id):
     sid = session["user_id"]
     if not _is_supervisor_owner(sid, class_id):
         return "Forbidden", 403
-    # prevent removing supervisor themselves
     if int(student_id) == int(sid):
         flash("Cannot remove yourself.", "danger")
         return redirect(url_for("classroom.supervisor_class", class_id=class_id))
     conn = get_db_connection()
     try:
-        # verify membership
         exists = conn.execute("SELECT 1 FROM classroom_students WHERE classroom_id = ? AND student_id = ?", (class_id, student_id)).fetchone()
         if not exists:
             flash("Student not enrolled in this class.", "warning")
             return redirect(url_for("classroom.supervisor_class", class_id=class_id))
         conn.execute("DELETE FROM classroom_students WHERE classroom_id = ? AND student_id = ?", (class_id, student_id))
-        # also delete their submissions for this classroom's assignments (preserve history? spec says safely remove - keep submissions? we keep but orphan? We'll keep submissions)
         conn.commit()
         try:
             cname_row = conn.execute("SELECT name FROM classrooms WHERE id = ?", (class_id,)).fetchone()
