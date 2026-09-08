@@ -6,9 +6,8 @@
         </label>
     </div>
     <div class="supervisor-topbar-right">
-        <a class="supervisor-topbar-notification" href="{{ url_for('notifications.notification_list') }}" aria-label="Notifications">
-            ♧{% if unread_count|default(0) > 0 %}<span class="supervisor-topbar-notification-badge">{{ unread_count }}</span>{% endif %}
-        </a>
+        {% include 'components/supervisor_notification_bell.html' %}
+
         <a class="supervisor-topbar-user" href="{{ url_for('supervisor.supervisor_profile') }}">
             {% if sidebar_profile and sidebar_profile.profile_picture %}
                 <img src="{{ url_for('profile_picture', filename=sidebar_profile.profile_picture) }}" alt="Supervisor profile">
