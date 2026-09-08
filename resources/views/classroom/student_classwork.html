@@ -9,16 +9,9 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
     <style>
-        /* Match the canonical Student Tasks page spacing below the fixed topbar. */
+        /* Keep Classwork content below the fixed Student topbar. */
         body.student-classwork-page .student-tasks-content {
             padding-top: 102px !important;
-        }
-
-        body.student-classwork-page .student-tasks-heading h1 {
-            font-size: 2.5rem !important;
-            line-height: 1.05 !important;
-            font-weight: 800 !important;
-            letter-spacing: -0.035em !important;
         }
     </style>
 </head>
@@ -45,11 +38,11 @@
                 <span>Classwork</span>
             </nav>
 
-            <section class="student-tasks-heading" aria-labelledby="classwork-heading">
+            <section class="student-tasks-heading student-section-heading" aria-labelledby="classwork-heading">
                 <div>
-                    <span class="student-classwork-eyebrow">{{ classroom.section }}</span>
+                    <span class="student-section-eyebrow">Student Portal</span>
                     <h1 id="classwork-heading">Classwork</h1>
-                    <p>Assignments, quizzes, documents, projects, and other activities from your supervisor.</p>
+                    <p>{{ classroom.section }} · Assignments, quizzes, documents, projects, and other activities from your supervisor.</p>
                 </div>
                 <a href="{{ url_for('student_gradebook.gradebook', class_id=classroom.id) }}" class="student-tasks-primary-button">View Gradebook</a>
             </section>
