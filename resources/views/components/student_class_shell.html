@@ -105,27 +105,28 @@
 
     .class-eyebrow {
         display: block;
+        margin-bottom: 8px;
+        color: var(--nx-green-dark);
         font-size: 11px;
         font-weight: 800;
         letter-spacing: 0.13em;
-        color: var(--nx-green-dark);
-        margin-bottom: 8px;
         text-transform: uppercase;
     }
 
     .class-hero h1 {
         margin: 0;
         font-size: 31px;
-        letter-spacing: -0.03em;
         line-height: 1.15;
+        font-weight: 800;
+        letter-spacing: -0.03em;
     }
 
     .class-description {
+        max-width: 680px;
         margin: 9px 0 0;
         color: var(--nx-muted);
         font-size: 14px;
         line-height: 1.6;
-        max-width: 680px;
     }
 
     .class-code {
@@ -138,18 +139,19 @@
 
     .class-code span {
         display: block;
-        font-size: 10px;
-        text-transform: uppercase;
-        letter-spacing: 0.09em;
         color: var(--nx-muted);
+        font-size: 10px;
         font-weight: 800;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
     }
 
     .class-code strong {
         display: block;
-        font-size: 20px;
-        letter-spacing: 0.08em;
         margin: 5px 0 11px;
+        font-size: 20px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
     }
 
     .class-code-actions {
@@ -159,12 +161,13 @@
 
     .class-code button {
         border: 1px solid var(--nx-line);
-        background: #fff;
         border-radius: 9px;
+        background: #fff;
         padding: 7px 10px;
+        color: var(--nx-ink);
+        font-family: inherit;
         font-size: 11px;
         font-weight: 800;
-        color: var(--nx-ink);
         cursor: pointer;
     }
 
@@ -176,28 +179,28 @@
     .class-tabs {
         display: flex;
         gap: 4px;
-        border-bottom: 1px solid var(--nx-line);
         margin: 22px 0 20px;
         padding: 0 5px;
+        border-bottom: 1px solid var(--nx-line);
         overflow-x: auto;
     }
 
     .class-tab {
         appearance: none;
         border: 0;
+        border-bottom: 2px solid transparent;
         border-radius: 0;
         background: transparent;
-        color: var(--nx-muted);
         padding: 12px 16px;
+        color: var(--nx-muted);
         font-family: inherit;
         font-size: 13px;
         line-height: 1.2;
         font-weight: 800;
         white-space: nowrap;
         text-decoration: none;
-        border-bottom: 2px solid transparent;
-        cursor: pointer;
         box-shadow: none;
+        cursor: pointer;
     }
 
     .class-tab:hover {
@@ -218,17 +221,16 @@
 
     .modal-actions button {
         border: 1px solid var(--nx-line);
-        background: #fff;
         border-radius: 9px;
+        background: #fff;
         padding: 8px 12px;
-        font-weight: 800;
         font-size: 12px;
+        font-weight: 800;
         cursor: pointer;
     }
 
     .class-info-list {
         display: grid;
-        gap: 0;
     }
 
     .class-info-row {
@@ -247,8 +249,8 @@
     .class-info-row b {
         color: var(--nx-muted);
         font-size: 11px;
-        text-transform: uppercase;
         letter-spacing: 0.06em;
+        text-transform: uppercase;
     }
 
     .class-info-row span {
@@ -299,6 +301,9 @@
 </style>
 
 {% set current_class_tab = class_active_tab|default('stream') %}
+{% set class_code = classroom.code|default('', true) %}
+{% set class_description = classroom.description|default('', true) %}
+{% set class_status = classroom.status|default('Active', true) %}
 
 <div class="class-top">
     <div class="class-top-tools">
@@ -340,14 +345,14 @@
                     {{ classroom.section }}{% if classroom.supervisor %} · {{ classroom.supervisor }}{% endif %}
                 </span>
                 <h1>{{ classroom.name }}</h1>
-                <p class="class-description">{{ classroom.description or 'Your internship classroom.' }}</p>
+                <p class="class-description">{{ class_description or 'Your internship classroom.' }}</p>
             </div>
 
             <div class="class-code">
                 <span>Class code</span>
-                <strong>{{ classroom.code }}</strong>
+                <strong>{{ class_code or '—' }}</strong>
                 <div class="class-code-actions">
-                    <button type="button" onclick="copyStudentCode()">Copy</button>
+                    <button type="button" onclick="copyStudentCode()"{% if not class_code %} disabled{% endif %}>Copy</button>
                     <button type="button" onclick="document.getElementById('studentInfoModal').classList.add('open')">Class Info</button>
                 </div>
             </div>
@@ -386,8 +391,8 @@
                 <div class="class-info-row"><b>Class</b><span>{{ classroom.name }}</span></div>
                 <div class="class-info-row"><b>Section</b><span>{{ classroom.section }}</span></div>
                 <div class="class-info-row"><b>Teacher</b><span>{{ classroom.supervisor }}</span></div>
-                <div class="class-info-row"><b>Code</b><span>{{ classroom.code }}</span></div>
-                <div class="class-info-row"><b>Status</b><span>{{ classroom.status|default('Active') }}</span></div>
+                <div class="class-info-row"><b>Code</b><span>{{ class_code or '—' }}</span></div>
+                <div class="class-info-row"><b>Status</b><span>{{ class_status }}</span></div>
             </div>
             <div class="modal-actions">
                 <button type="button" onclick="document.getElementById('studentInfoModal').classList.remove('open')">Close</button>
@@ -398,7 +403,9 @@
 
 <script>
     function copyStudentCode() {
-        const code = {{ classroom.code|tojson }};
+        const code = {{ class_code|tojson }};
+        if (!code) return;
+
         const done = () => window.showToast && showToast('Class code copied.');
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(code).then(done).catch(() => fallbackCopy(code));
