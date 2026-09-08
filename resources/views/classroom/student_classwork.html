@@ -1,81 +1,183 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Classwork - {{ classroom.name }} - Nexora</title>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
-    </head>
-    <body class="student-page student-classwork-page">
-        {% include 'components/student_sidebar.html' %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classwork - {{ classroom.name }} - Nexora</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
+    <style>
+        /* Match the canonical Student Tasks page spacing below the fixed topbar. */
+        body.student-classwork-page .student-tasks-content {
+            padding-top: 102px !important;
+        }
 
-        <main class="student-main-content nexora-app-main">
-            <div class="nexora-page student-classwork-shell">
-                <a href="{{ url_for('classroom.student_class', class_id=classroom.id) }}" class="student-classwork-back">← Back to {{ classroom.name }}</a>
+        body.student-classwork-page .student-tasks-heading h1 {
+            font-size: 2.5rem !important;
+            line-height: 1.05 !important;
+            font-weight: 800 !important;
+            letter-spacing: -0.035em !important;
+        }
+    </style>
+</head>
+<body class="student-page student-tasks-page student-classwork-page">
+    {% include 'components/student_sidebar.html' %}
 
-                <header class="student-classwork-header">
-                    <div>
-                        <span class="student-classwork-eyebrow">{{ classroom.section }}</span>
-                        <h1>Classwork</h1>
-                        <p>Assignments, quizzes, documents, projects, and other activities from your supervisor.</p>
+    {% set counts = namespace(submitted=0, pending=0, group=0) %}
+    {% for item in assignments %}
+        {% if item.submission %}
+            {% set counts.submitted = counts.submitted + 1 %}
+        {% else %}
+            {% set counts.pending = counts.pending + 1 %}
+        {% endif %}
+        {% if item.group_mode %}
+            {% set counts.group = counts.group + 1 %}
+        {% endif %}
+    {% endfor %}
+
+    <main class="student-tasks-main">
+        <div class="student-tasks-content">
+            <nav class="classes-breadcrumb" aria-label="Classwork breadcrumb">
+                <a href="{{ url_for('classroom.student_class', class_id=classroom.id) }}">← Back to {{ classroom.name }}</a>
+                <span aria-hidden="true">/</span>
+                <span>Classwork</span>
+            </nav>
+
+            <section class="student-tasks-heading" aria-labelledby="classwork-heading">
+                <div>
+                    <span class="student-classwork-eyebrow">{{ classroom.section }}</span>
+                    <h1 id="classwork-heading">Classwork</h1>
+                    <p>Assignments, quizzes, documents, projects, and other activities from your supervisor.</p>
+                </div>
+                <a href="{{ url_for('student_gradebook.gradebook', class_id=classroom.id) }}" class="student-tasks-primary-button">View Gradebook</a>
+            </section>
+
+            <section class="student-tasks-stats" aria-label="Classwork summary">
+                <article class="student-tasks-stat">
+                    <span class="student-tasks-stat-icon" aria-hidden="true">▤</span>
+                    <div class="student-tasks-stat-copy">
+                        <span>Total Activities</span>
+                        <strong>{{ assignments|length }}</strong>
+                        <small>Published classwork</small>
                     </div>
-                    <div class="student-classwork-header-actions">
-                        <a href="{{ url_for('student_gradebook.gradebook', class_id=classroom.id) }}" class="btn btn-outline-primary">View Gradebook</a>
-                        <a href="{{ url_for('classwork_ml_insights.student_insights', class_id=classroom.id) }}" class="btn btn-outline-primary">Performance Insights</a>
-                        <a href="{{ url_for('classwork_ml_insights.student_insights', class_id=classroom.id) }}" class="btn btn-primary">ML Insights</a>
-                        <div class="student-classwork-summary">
-                            <strong>{{ assignments|length }}</strong>
-                            <span>activities</span>
-                        </div>
+                </article>
+                <article class="student-tasks-stat">
+                    <span class="student-tasks-stat-icon" aria-hidden="true">⌛</span>
+                    <div class="student-tasks-stat-copy">
+                        <span>Pending</span>
+                        <strong>{{ counts.pending }}</strong>
+                        <small>Awaiting submission</small>
                     </div>
-                </header>
+                </article>
+                <article class="student-tasks-stat">
+                    <span class="student-tasks-stat-icon" aria-hidden="true">✓</span>
+                    <div class="student-tasks-stat-copy">
+                        <span>Submitted</span>
+                        <strong>{{ counts.submitted }}</strong>
+                        <small>Completed activities</small>
+                    </div>
+                </article>
+                <article class="student-tasks-stat">
+                    <span class="student-tasks-stat-icon" aria-hidden="true">◇</span>
+                    <div class="student-tasks-stat-copy">
+                        <span>Group Activities</span>
+                        <strong>{{ counts.group }}</strong>
+                        <small>Collaborative work</small>
+                    </div>
+                </article>
+            </section>
 
-                {% if assignments %}
-                    <section class="student-classwork-list" aria-label="Classwork activities">
+            <section class="student-tasks-grid">
+                <section class="student-tasks-list-card" aria-label="Classwork activities">
+                    <div class="student-tasks-tabs">
+                        <span class="student-tasks-tab is-active">All Activities</span>
+                    </div>
+
+                    {% if assignments %}
                         {% for item in assignments %}
-                            <a href="{{ url_for('student_classwork.detail', class_id=classroom.id, assignment_id=item.id) }}" class="student-classwork-card">
-                                <div class="student-classwork-card-top">
+                            <a href="{{ url_for('student_classwork.detail', class_id=classroom.id, assignment_id=item.id) }}" class="student-task-row text-decoration-none">
+                                <div class="student-task-title">
+                                    <span class="student-task-icon" aria-hidden="true">{% if item.submission %}✓{% else %}▤{% endif %}</span>
                                     <div>
-                                        <span class="student-classwork-type">{{ item.activity_label }}</span>
-                                        <h2>{{ item.title }}</h2>
+                                        <strong>{{ item.title }}</strong>
+                                        <span>
+                                            {{ item.activity_label }} · {{ item.points }} pts{% if item.group_mode %} · Group activity{% endif %}
+                                        </span>
                                     </div>
-                                    {% if item.submission %}
-                                        <span class="student-classwork-status is-complete">{{ item.submission.status|capitalize }}</span>
-                                    {% else %}
-                                        <span class="student-classwork-status">Not submitted</span>
-                                    {% endif %}
                                 </div>
 
-                                {% if item.description %}
-                                    <p class="student-classwork-description">{{ item.description[:180] }}{% if item.description|length > 180 %}…{% endif %}</p>
-                                {% endif %}
+                                <span class="student-task-priority {% if item.submission %}is-low{% endif %}">
+                                    {% if item.submission %}{{ item.submission.status|capitalize }}{% else %}Pending{% endif %}
+                                </span>
 
-                                <div class="student-classwork-meta">
-                                    <span>Score: {{ item.points }} pts</span>
-                                    {% if item.due_at %}<span>Due: {{ item.due_at }}</span>{% else %}<span>No due date</span>{% endif %}
-                                    {% if item.group_mode %}<span>Group · max {{ item.max_group_size }}</span>{% endif %}
+                                <div class="student-task-due">
+                                    <strong>{% if item.due_at %}Due {{ item.due_at }}{% else %}No deadline{% endif %}</strong>
+                                    <span>{% if item.group_mode %}Group · max {{ item.max_group_size }}{% else %}Individual activity{% endif %}</span>
                                 </div>
 
-                                <div class="student-classwork-resources">
-                                    {% if item.external_url %}<span>🔗 {{ item.resource_label or 'External activity' }}</span>{% endif %}
-                                    {% if item.resource_filename %}<span>📎 {{ item.resource_filename }}</span>{% endif %}
-                                    {% if item.allow_file_upload %}<span>📤 File submission</span>{% endif %}
+                                <div class="student-task-progress {% if item.submission %}is-complete{% endif %}" aria-label="{% if item.submission %}100{% else %}0{% endif %} percent complete">
+                                    <span>{% if item.submission %}100%{% else %}0%{% endif %}</span>
                                 </div>
 
-                                <div class="student-classwork-card-footer">Open activity <span aria-hidden="true">→</span></div>
+                                <span class="student-task-menu" aria-hidden="true">›</span>
                             </a>
                         {% endfor %}
+                    {% else %}
+                        <div class="student-tasks-empty">
+                            <strong>No classwork yet</strong>
+                            <span>Your supervisor has not published any activities for this class.</span>
+                        </div>
+                    {% endif %}
+                </section>
+
+                <aside class="student-tasks-side" aria-label="Classwork information">
+                    <section class="student-tasks-side-card">
+                        <h2>Class Overview</h2>
+                        <div class="student-task-deadline">
+                            <span class="student-task-deadline-icon" aria-hidden="true">▣</span>
+                            <div>
+                                <strong>{{ classroom.name }}</strong>
+                                <span>{{ classroom.section }}</span>
+                            </div>
+                            <em>{{ assignments|length }} items</em>
+                        </div>
+                        <div class="student-task-deadline">
+                            <span class="student-task-deadline-icon" aria-hidden="true">✓</span>
+                            <div>
+                                <strong>Submitted</strong>
+                                <span>Completed classwork</span>
+                            </div>
+                            <em>{{ counts.submitted }}</em>
+                        </div>
+                        <div class="student-task-deadline">
+                            <span class="student-task-deadline-icon" aria-hidden="true">⌛</span>
+                            <div>
+                                <strong>Pending</strong>
+                                <span>Still to complete</span>
+                            </div>
+                            <em>{{ counts.pending }}</em>
+                        </div>
                     </section>
-                {% else %}
-                    <section class="student-classwork-empty">
-                        <div class="student-classwork-empty-icon" aria-hidden="true">📝</div>
-                        <h2>No classwork yet</h2>
-                        <p>Your supervisor has not published any activities for this class.</p>
+
+                    <section class="student-tasks-side-card">
+                        <h2>Quick Access</h2>
+                        <a class="student-tasks-view-all" href="{{ url_for('classwork_ml_insights.student_insights', class_id=classroom.id) }}">Performance Insights</a>
+                        <a class="student-tasks-view-all" href="{{ url_for('classwork_ml_insights.student_insights', class_id=classroom.id) }}">ML Insights</a>
+                        <a class="student-tasks-view-all" href="{{ url_for('classroom.student_class', class_id=classroom.id) }}">Back to Class</a>
                     </section>
-                {% endif %}
-            </div>
-        </main>
-    </body>
+
+                    <section class="student-tasks-side-card student-tasks-tip">
+                        <span class="student-tasks-tip-icon" aria-hidden="true">💡</span>
+                        <div>
+                            <strong>Classwork Tip</strong>
+                            <span>Open each activity to review instructions, resources, deadlines, and submission requirements before you begin.</span>
+                        </div>
+                    </section>
+                </aside>
+            </section>
+        </div>
+    </main>
+</body>
 </html>
