@@ -9,35 +9,704 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
     <style>
-        /* Keep Logbook's canonical heading below the fixed student topbar,
-           matching the repaired Tasks page vertical rhythm. */
         body.student-logbook-page .student-logbook-page-content {
-            padding-top: 102px !important;
+            padding-top: 86px !important;
+        }
+
+        .student-logbook-compact {
+            display: grid;
+            gap: 18px;
+            width: 100%;
+        }
+
+        .student-logbook-page-heading {
+            margin-bottom: 0 !important;
+        }
+
+        .student-logbook-compact-summary {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            overflow: hidden;
+            border: 1px solid #e2ebe6;
+            border-radius: 16px;
+            background: #fff;
+            box-shadow: 0 6px 22px rgba(15, 45, 35, 0.045);
+        }
+
+        .student-logbook-compact-stat {
+            min-width: 0;
+            padding: 17px 20px;
+            border-right: 1px solid #edf2ef;
+        }
+
+        .student-logbook-compact-stat:last-child {
+            border-right: 0;
+        }
+
+        .student-logbook-compact-stat strong {
+            display: block;
+            margin-bottom: 3px;
+            color: #082f2b;
+            font-size: 1.45rem;
+            line-height: 1.1;
+            font-weight: 800;
+            letter-spacing: -0.035em;
+        }
+
+        .student-logbook-compact-stat span {
+            display: block;
+            color: #2f453f;
+            font-size: 0.76rem;
+            font-weight: 800;
+        }
+
+        .student-logbook-compact-stat small {
+            display: block;
+            margin-top: 3px;
+            color: #7a8984;
+            font-size: 0.68rem;
+        }
+
+        .student-logbook-compact-status {
+            display: inline-flex !important;
+            width: fit-content;
+            align-items: center;
+            gap: 6px;
+            color: #07865f !important;
+        }
+
+        .student-logbook-compact-status::before {
+            content: "";
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: currentColor;
+            box-shadow: 0 0 0 4px rgba(15, 174, 95, 0.1);
+        }
+
+        .student-logbook-compact-card {
+            border: 1px solid #e2ebe6;
+            border-radius: 16px;
+            background: #fff;
+            box-shadow: 0 6px 22px rgba(15, 45, 35, 0.04);
+        }
+
+        .student-logbook-session {
+            padding: 20px;
+        }
+
+        .student-logbook-session-head,
+        .student-logbook-entries-head,
+        .student-logbook-bottom-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .student-logbook-session-head {
+            margin-bottom: 15px;
+        }
+
+        .student-logbook-section-kicker {
+            display: block;
+            margin-bottom: 3px;
+            color: #07865f;
+            font-size: 0.65rem;
+            font-weight: 800;
+            letter-spacing: 0.11em;
+            text-transform: uppercase;
+        }
+
+        .student-logbook-session h2,
+        .student-logbook-entries-head h2,
+        .student-logbook-bottom-card h3 {
+            margin: 0;
+            color: #082f2b;
+            font-weight: 800;
+            letter-spacing: -0.035em;
+        }
+
+        .student-logbook-session h2,
+        .student-logbook-entries-head h2 {
+            font-size: 1.12rem;
+        }
+
+        .student-logbook-session-state {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 7px 10px;
+            border-radius: 999px;
+            background: #eaf8f3;
+            color: #07865f;
+            font-size: 0.72rem;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .student-logbook-session-state::before {
+            content: "";
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .student-logbook-session-state.is-idle {
+            background: #f3f5f4;
+            color: #6d7d78;
+        }
+
+        .student-logbook-session-form {
+            display: grid;
+            gap: 11px;
+        }
+
+        .student-logbook-session-form label {
+            color: #203a33;
+            font-size: 0.78rem;
+            font-weight: 800;
+        }
+
+        .student-logbook-session-form textarea {
+            width: 100%;
+            min-height: 92px;
+            resize: vertical;
+            padding: 13px 14px;
+            border: 1px solid #dce7e1;
+            border-radius: 12px;
+            outline: 0;
+            background: #fbfdfc;
+            color: #172b25;
+            font: inherit;
+            font-size: 0.84rem;
+            line-height: 1.5;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .student-logbook-session-form textarea:focus {
+            border-color: #12a879;
+            box-shadow: 0 0 0 3px rgba(18, 168, 121, 0.1);
+            background: #fff;
+        }
+
+        .student-logbook-session-footer {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .student-logbook-idle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            padding: 14px 0 2px;
+        }
+
+        .student-logbook-idle-copy strong,
+        .student-logbook-idle-copy span {
+            display: block;
+        }
+
+        .student-logbook-idle-copy strong {
+            color: #183a31;
+            font-size: 0.86rem;
+        }
+
+        .student-logbook-idle-copy span {
+            margin-top: 3px;
+            color: #74837e;
+            font-size: 0.76rem;
+        }
+
+        .student-logbook-entries {
+            overflow: hidden;
+        }
+
+        .student-logbook-entries-head {
+            padding: 17px 19px;
+            border-bottom: 1px solid #edf2ef;
+        }
+
+        .student-logbook-entries-count {
+            color: #83908c;
+            font-size: 0.72rem;
+            font-weight: 700;
+        }
+
+        .student-logbook-compact-toolbar {
+            display: grid;
+            grid-template-columns: auto auto minmax(220px, 1fr);
+            gap: 10px;
+            padding: 13px 19px;
+            border-bottom: 1px solid #edf2ef;
+            background: #fbfdfc;
+        }
+
+        .student-logbook-compact-filter,
+        .student-logbook-compact-search {
+            min-height: 38px;
+            border: 1px solid #dfe9e4;
+            border-radius: 10px;
+            background: #fff;
+        }
+
+        .student-logbook-compact-filter {
+            display: inline-flex;
+            align-items: center;
+            padding: 0 12px;
+            color: #42554f;
+            font-size: 0.74rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .student-logbook-compact-search {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 12px;
+            color: #82908b;
+        }
+
+        .student-logbook-compact-search input {
+            width: 100%;
+            min-width: 0;
+            border: 0;
+            outline: 0;
+            background: transparent;
+            color: #243b34;
+            font: inherit;
+            font-size: 0.76rem;
+        }
+
+        .student-logbook-compact-empty {
+            display: grid;
+            justify-items: center;
+            padding: 42px 22px;
+            text-align: center;
+        }
+
+        .student-logbook-compact-empty-icon {
+            display: grid;
+            place-items: center;
+            width: 42px;
+            height: 42px;
+            margin-bottom: 10px;
+            border-radius: 12px;
+            background: #eaf8f3;
+            color: #07865f;
+            font-size: 1.15rem;
+            font-weight: 800;
+        }
+
+        .student-logbook-compact-empty strong {
+            color: #173b31;
+            font-size: 0.86rem;
+        }
+
+        .student-logbook-compact-empty span {
+            max-width: 420px;
+            margin-top: 4px;
+            color: #7a8984;
+            font-size: 0.74rem;
+            line-height: 1.5;
+        }
+
+        .student-logbook-compact-table-wrap {
+            overflow-x: auto;
+        }
+
+        .student-logbook-bottom-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .student-logbook-bottom-card {
+            padding: 17px 18px;
+        }
+
+        .student-logbook-bottom-card h3 {
+            font-size: 0.9rem;
+        }
+
+        .student-logbook-week-values {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+            margin-top: 13px;
+        }
+
+        .student-logbook-week-value {
+            min-width: 0;
+        }
+
+        .student-logbook-week-value strong,
+        .student-logbook-week-value span {
+            display: block;
+        }
+
+        .student-logbook-week-value strong {
+            color: #173b31;
+            font-size: 0.84rem;
+            font-weight: 800;
+        }
+
+        .student-logbook-week-value span {
+            margin-top: 2px;
+            color: #82908b;
+            font-size: 0.66rem;
+        }
+
+        .student-logbook-recent-list {
+            display: grid;
+            gap: 9px;
+            margin-top: 13px;
+        }
+
+        .student-logbook-recent-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 9px;
+            color: #40534d;
+            font-size: 0.74rem;
+        }
+
+        .student-logbook-recent-dot {
+            flex: 0 0 auto;
+            width: 8px;
+            height: 8px;
+            margin-top: 4px;
+            border-radius: 50%;
+            background: #12a879;
+        }
+
+        .student-logbook-recent-item strong,
+        .student-logbook-recent-item span {
+            display: block;
+        }
+
+        .student-logbook-recent-item strong {
+            color: #263f37;
+            font-size: 0.74rem;
+        }
+
+        .student-logbook-recent-item span {
+            margin-top: 2px;
+            color: #82908b;
+            font-size: 0.68rem;
+        }
+
+        .student-logbook-hidden-history {
+            display: none;
+        }
+
+        @media (max-width: 1000px) {
+            .student-logbook-compact-summary {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .student-logbook-compact-stat:nth-child(2) {
+                border-right: 0;
+            }
+
+            .student-logbook-compact-stat:nth-child(-n + 2) {
+                border-bottom: 1px solid #edf2ef;
+            }
+
+            .student-logbook-week-values {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 760px) {
+            body.student-logbook-page .student-logbook-page-content {
+                padding-top: 76px !important;
+            }
+
+            .student-logbook-compact-toolbar,
+            .student-logbook-bottom-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .student-logbook-idle {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 520px) {
+            .student-logbook-compact-summary {
+                grid-template-columns: 1fr;
+            }
+
+            .student-logbook-compact-stat,
+            .student-logbook-compact-stat:nth-child(2) {
+                border-right: 0;
+                border-bottom: 1px solid #edf2ef;
+            }
+
+            .student-logbook-compact-stat:last-child {
+                border-bottom: 0;
+            }
+
+            .student-logbook-session-head {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .student-logbook-week-values {
+                grid-template-columns: 1fr 1fr;
+            }
         }
     </style>
 </head>
 <body class="student-page student-logbook-page">
     {% include 'components/student_sidebar.html' %}
+
     <main class="student-tasks-main student-logbook-main">
         <div class="student-tasks-content student-logbook-page-content">
-            <section class="student-logbook-page-heading student-section-heading" aria-labelledby="logbook-heading">
-                <div><span class="student-section-eyebrow">Student Portal</span><h1 id="logbook-heading">Logbook</h1><p>Track your daily activities, hours, and learnings.</p></div>
-                <div class="student-logbook-actions"><a class="student-logbook-button student-logbook-button-outline" href="#attendance-history">▣ Calendar View</a>{% if attendance %}<a class="student-logbook-button student-logbook-button-primary" href="#new-log-entry">＋ New Log Entry</a>{% else %}<span class="student-logbook-button student-logbook-button-primary" style="opacity:.45;cursor:not-allowed;pointer-events:none" title="Clock in first to add log entries">＋ New Log Entry</span>{% endif %}</div>
-            </section>
             {% set total_hours = total_hours_all|default(0) %}
-            <section class="student-logbook-stats" aria-label="Logbook summary">
-                <article class="student-logbook-stat"><span class="student-logbook-stat-icon">◷</span><div class="student-logbook-stat-copy"><span>Total Hours</span><strong>{{ '%.1f'|format(total_hours) }} hrs</strong><small>Recorded sessions</small></div></article>
-                <article class="student-logbook-stat"><span class="student-logbook-stat-icon">✓</span><div class="student-logbook-stat-copy"><span>Completed Logs</span><strong>{{ logs|length }}</strong><small>Log entries</small></div></article>
-                <article class="student-logbook-stat"><span class="student-logbook-stat-icon">□</span><div class="student-logbook-stat-copy"><span>Days Logged</span><strong>{{ history|length }}</strong><small>Attendance records</small></div></article>
-                <article class="student-logbook-stat"><span class="student-logbook-stat-icon">◎</span><div class="student-logbook-stat-copy"><span>Today's Status</span><strong>{% if attendance %}Active{% else %}Ready{% endif %}</strong><small>{% if attendance %}Session in progress{% else %}Clock in to begin{% endif %}</small></div></article>
-            </section>
-            <section class="student-logbook-layout"><div>
-                <div class="student-logbook-filter-row"><div class="student-logbook-filter">May 1 - May 31, 2025 <span>⌄</span></div><div class="student-logbook-filter">All Status <span>⌄</span></div><div class="student-logbook-filter">All Activities <span>⌄</span></div><label class="student-logbook-filter-search"><span>⌕</span><input type="search" placeholder="Search logs..."></label></div>
-                <section class="student-logbook-content-card" aria-labelledby="log-entries-heading"><div class="student-logbook-card-heading"><h2 id="log-entries-heading">Log Entries</h2><span>{{ logs|length }} entries</span></div>
-                {% if attendance %}<form class="student-logbook-new-entry" id="new-log-entry" method="POST" action="/student/log/add"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><h3>New Log Entry</h3><textarea name="content" placeholder="What did you accomplish?" required></textarea><div class="student-logbook-new-entry-footer"><button class="student-logbook-button student-logbook-button-primary" type="submit">Add Log</button></div></form>{% else %}<div id="new-log-entry" class="student-logbook-new-entry" style="text-align:center;padding:28px 22px;opacity:.7"><span style="font-size:1.5rem">◎</span><p style="margin:8px 0 0;font-size:.85rem;color:var(--nx-ink-muted,#6b7280)">Clock in first to start adding log entries.</p><form method="POST" action="/student/clock-in" style="margin-top:12px"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="student-logbook-button student-logbook-button-primary" type="submit">Clock In</button></form></div>{% endif %}
-                {% if logs %}<div class="table-responsive"><table class="student-logbook-table"><thead><tr><th>Date</th><th>Activity / Task</th><th>Hours</th><th>Type</th><th>Status</th><th>Actions</th></tr></thead><tbody>{% for log in logs %}<tr><td><div class="student-logbook-entry-date"><strong>{{ log[2].strftime('%d') if log[2] and log[2].strftime is defined else '—' }}</strong><span>{{ log[2].strftime('%b') if log[2] and log[2].strftime is defined else 'Log' }}</span></div></td><td><div class="student-logbook-entry-copy"><strong>{{ log[1] }}</strong><span>Daily internship activity recorded in the Nexora logbook.</span></div></td><td><span class="student-logbook-hours">—</span></td><td><span class="student-logbook-pill student-logbook-pill-type">Daily Log</span></td><td><span class="student-logbook-pill student-logbook-pill-status">✓ Recorded</span></td><td><div class="student-logbook-entry-actions"><a class="student-logbook-icon-button" href="/student/log/{{ log[0] }}/edit">✎</a>{% if attendance %}<form method="POST" action="/student/log/{{ log[0] }}/delete" onsubmit="return confirm('Delete this log entry? This action cannot be undone.')"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="student-logbook-icon-button" type="submit">×</button></form>{% endif %}</div></td></tr>{% endfor %}</tbody></table></div>{% else %}<div class="student-logbook-empty">No log entries yet. Start your session and record your first activity.</div>{% endif %}</section>
-            </div><aside><section class="student-logbook-side-card" id="attendance-history"><h3>This Week Summary</h3><div class="student-logbook-summary-list"><div class="student-logbook-summary-row"><span>◷ Hours Logged</span><strong>{{ '%.1f'|format(total_hours) }} hrs</strong></div><div class="student-logbook-summary-row"><span>▣ Logs Created</span><strong>{{ logs|length }}</strong></div><div class="student-logbook-summary-row"><span>⌛ Current Status</span><strong>{% if attendance %}Active{% else %}Not started{% endif %}</strong></div><div class="student-logbook-summary-row"><span>✓ Attendance</span><strong>{% if history %}Recorded{% else %}No records{% endif %}</strong></div></div></section><section class="student-logbook-side-card"><h3>Recent Activity</h3>{% if logs %}{% for log in logs[:3] %}<div class="student-logbook-achievement"><span>✓</span><div><strong>Log Recorded</strong><span>{{ log[1]|truncate(58, True) }}</span></div></div>{% endfor %}{% else %}<div class="student-logbook-achievement"><span>○</span><div><strong>No recent activity</strong><span>Your recent log entries will appear here.</span></div></div>{% endif %}</section><section class="student-logbook-side-card student-logbook-help"><div class="student-logbook-help-copy"><strong>Need Help?</strong><span>Learn how to make effective log entries.</span><a href="#log-entries-heading">View Guidelines</a></div><span>▣</span></section></aside></section>
-            <section class="student-logbook-content-card d-none">{% if history %}<table><tbody>{% for session in history %}<tr><td>{{ session[1] }}</td><td>{{ session[2] if session[2] else '—' }}</td><td>{{ session[3] if session[3] else '—' }}</td><td>{{ session[4] }}</td><td><a href="/student/session/{{ session[0] }}">View Logs</a></td></tr>{% endfor %}</tbody></table>{% if total_pages > 1 %}<div class="student-logbook-pagination" style="margin-top:16px"><span>Page {{ page }} of {{ total_pages }}</span><div class="student-tasks-page-buttons">{% if page > 1 %}<a class="student-tasks-page-button" href="?page={{ page - 1 }}">‹</a>{% else %}<span class="student-tasks-page-button" style="opacity:.4">‹</span>{% endif %}{% for p in range(1, total_pages + 1) %}<a class="student-tasks-page-button {% if p == page %}is-active{% endif %}" href="?page={{ p }}">{{ p }}</a>{% endfor %}{% if page < total_pages %}<a class="student-tasks-page-button" href="?page={{ page + 1 }}">›</a>{% else %}<span class="student-tasks-page-button" style="opacity:.4">›</span>{% endif %}</div></div>{% endif %}{% endif %}</section>
+
+            <div class="student-logbook-compact">
+                <section class="student-logbook-page-heading student-section-heading" aria-labelledby="logbook-heading">
+                    <div>
+                        <span class="student-section-eyebrow">Student Portal</span>
+                        <h1 id="logbook-heading">Logbook</h1>
+                        <p>Track your internship hours and daily activities.</p>
+                    </div>
+                    <div class="student-logbook-actions">
+                        <a class="student-logbook-button student-logbook-button-outline" href="#attendance-history">▣ Calendar View</a>
+                        {% if attendance %}
+                            <a class="student-logbook-button student-logbook-button-primary" href="#new-log-entry">＋ New Entry</a>
+                        {% else %}
+                            <a class="student-logbook-button student-logbook-button-primary" href="#new-log-entry">＋ New Entry</a>
+                        {% endif %}
+                    </div>
+                </section>
+
+                <section class="student-logbook-compact-summary" aria-label="Logbook summary">
+                    <article class="student-logbook-compact-stat">
+                        <strong>{{ '%.1f'|format(total_hours) }} hrs</strong>
+                        <span>Total Hours</span>
+                        <small>Recorded sessions</small>
+                    </article>
+                    <article class="student-logbook-compact-stat">
+                        <strong>{{ history|length }}</strong>
+                        <span>Days Logged</span>
+                        <small>Attendance records</small>
+                    </article>
+                    <article class="student-logbook-compact-stat">
+                        <strong>{{ logs|length }}</strong>
+                        <span>Log Entries</span>
+                        <small>Activities recorded</small>
+                    </article>
+                    <article class="student-logbook-compact-stat">
+                        <strong>{% if attendance %}Active{% else %}Ready{% endif %}</strong>
+                        <span class="student-logbook-compact-status">Today</span>
+                        <small>{% if attendance %}Session in progress{% else %}Clock in to begin{% endif %}</small>
+                    </article>
+                </section>
+
+                <section class="student-logbook-compact-card student-logbook-session" id="new-log-entry" aria-labelledby="today-session-heading">
+                    <div class="student-logbook-session-head">
+                        <div>
+                            <span class="student-logbook-section-kicker">Today</span>
+                            <h2 id="today-session-heading">Today's Session</h2>
+                        </div>
+                        <span class="student-logbook-session-state{% if not attendance %} is-idle{% endif %}">
+                            {% if attendance %}Active session{% else %}No active session{% endif %}
+                        </span>
+                    </div>
+
+                    {% if attendance %}
+                        <form class="student-logbook-session-form" method="POST" action="/student/log/add">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <label for="student-logbook-entry-content">What did you accomplish?</label>
+                            <textarea id="student-logbook-entry-content" name="content" placeholder="Write your activity, learning, or task for today..." required></textarea>
+                            <div class="student-logbook-session-footer">
+                                <button class="student-logbook-button student-logbook-button-primary" type="submit">Add Log</button>
+                            </div>
+                        </form>
+                    {% else %}
+                        <div class="student-logbook-idle">
+                            <div class="student-logbook-idle-copy">
+                                <strong>Clock in before adding activities.</strong>
+                                <span>Your daily log entries are attached to an active attendance session.</span>
+                            </div>
+                            <form method="POST" action="/student/clock-in">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button class="student-logbook-button student-logbook-button-primary" type="submit">Clock In</button>
+                            </form>
+                        </div>
+                    {% endif %}
+                </section>
+
+                <section class="student-logbook-compact-card student-logbook-entries" aria-labelledby="log-entries-heading">
+                    <div class="student-logbook-entries-head">
+                        <h2 id="log-entries-heading">Log Entries</h2>
+                        <span class="student-logbook-entries-count">{{ logs|length }} entries</span>
+                    </div>
+
+                    <div class="student-logbook-compact-toolbar" aria-label="Log entry tools">
+                        <div class="student-logbook-compact-filter">May 1 - May 31, 2025</div>
+                        <div class="student-logbook-compact-filter">All Status</div>
+                        <label class="student-logbook-compact-search">
+                            <span>⌕</span>
+                            <input type="search" placeholder="Search logs..." aria-label="Search logs">
+                        </label>
+                    </div>
+
+                    {% if logs %}
+                        <div class="student-logbook-compact-table-wrap">
+                            <table class="student-logbook-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Activity / Task</th>
+                                        <th>Hours</th>
+                                        <th>Type</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for log in logs %}
+                                        <tr>
+                                            <td>
+                                                <div class="student-logbook-entry-date">
+                                                    <strong>{{ log[2].strftime('%d') if log[2] and log[2].strftime is defined else '—' }}</strong>
+                                                    <span>{{ log[2].strftime('%b') if log[2] and log[2].strftime is defined else 'Log' }}</span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="student-logbook-entry-copy">
+                                                    <strong>{{ log[1] }}</strong>
+                                                    <span>Daily internship activity recorded in the Nexora logbook.</span>
+                                                </div>
+                                            </td>
+                                            <td><span class="student-logbook-hours">—</span></td>
+                                            <td><span class="student-logbook-pill student-logbook-pill-type">Daily Log</span></td>
+                                            <td><span class="student-logbook-pill student-logbook-pill-status">✓ Recorded</span></td>
+                                            <td>
+                                                <div class="student-logbook-entry-actions">
+                                                    <a class="student-logbook-icon-button" href="/student/log/{{ log[0] }}/edit" aria-label="Edit log entry">✎</a>
+                                                    {% if attendance %}
+                                                        <form method="POST" action="/student/log/{{ log[0] }}/delete" onsubmit="return confirm('Delete this log entry? This action cannot be undone.')">
+                                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                            <button class="student-logbook-icon-button" type="submit" aria-label="Delete log entry">×</button>
+                                                        </form>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="student-logbook-compact-empty">
+                            <span class="student-logbook-compact-empty-icon">▤</span>
+                            <strong>No log entries yet</strong>
+                            <span>{% if attendance %}Add your first activity during today's active session.{% else %}Clock in, then add your first activity for the day.{% endif %}</span>
+                        </div>
+                    {% endif %}
+                </section>
+
+                <section class="student-logbook-bottom-grid" id="attendance-history">
+                    <article class="student-logbook-compact-card student-logbook-bottom-card">
+                        <div class="student-logbook-bottom-head">
+                            <h3>This Week</h3>
+                        </div>
+                        <div class="student-logbook-week-values">
+                            <div class="student-logbook-week-value">
+                                <strong>{{ '%.1f'|format(total_hours) }} hrs</strong>
+                                <span>Hours logged</span>
+                            </div>
+                            <div class="student-logbook-week-value">
+                                <strong>{{ history|length }}</strong>
+                                <span>Attendance days</span>
+                            </div>
+                            <div class="student-logbook-week-value">
+                                <strong>{{ logs|length }}</strong>
+                                <span>Logs created</span>
+                            </div>
+                            <div class="student-logbook-week-value">
+                                <strong>{% if attendance %}Active{% else %}Not started{% endif %}</strong>
+                                <span>Current status</span>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="student-logbook-compact-card student-logbook-bottom-card">
+                        <div class="student-logbook-bottom-head">
+                            <h3>Recent Activity</h3>
+                        </div>
+                        <div class="student-logbook-recent-list">
+                            {% if logs %}
+                                {% for log in logs[:3] %}
+                                    <div class="student-logbook-recent-item">
+                                        <span class="student-logbook-recent-dot"></span>
+                                        <div>
+                                            <strong>Log recorded</strong>
+                                            <span>{{ log[1]|truncate(62, True) }}</span>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="student-logbook-recent-item">
+                                    <span class="student-logbook-recent-dot"></span>
+                                    <div>
+                                        <strong>No recent activity</strong>
+                                        <span>Your latest log entries will appear here.</span>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </article>
+                </section>
+
+                <section class="student-logbook-hidden-history" aria-hidden="true">
+                    {% if history %}
+                        <table>
+                            <tbody>
+                                {% for session in history %}
+                                    <tr>
+                                        <td>{{ session[1] }}</td>
+                                        <td>{{ session[2] if session[2] else '—' }}</td>
+                                        <td>{{ session[3] if session[3] else '—' }}</td>
+                                        <td>{{ session[4] }}</td>
+                                        <td><a href="/student/session/{{ session[0] }}">View Logs</a></td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+
+                        {% if total_pages > 1 %}
+                            <div class="student-logbook-pagination">
+                                <span>Page {{ page }} of {{ total_pages }}</span>
+                                <div class="student-tasks-page-buttons">
+                                    {% if page > 1 %}
+                                        <a class="student-tasks-page-button" href="?page={{ page - 1 }}">‹</a>
+                                    {% else %}
+                                        <span class="student-tasks-page-button">‹</span>
+                                    {% endif %}
+                                    {% for p in range(1, total_pages + 1) %}
+                                        <a class="student-tasks-page-button {% if p == page %}is-active{% endif %}" href="?page={{ p }}">{{ p }}</a>
+                                    {% endfor %}
+                                    {% if page < total_pages %}
+                                        <a class="student-tasks-page-button" href="?page={{ page + 1 }}">›</a>
+                                    {% else %}
+                                        <span class="student-tasks-page-button">›</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                </section>
+            </div>
         </div>
     </main>
 </body>
