@@ -1,0 +1,503 @@
+{# Shared notification history design. Student is the visual reference. #}
+{% set role = notification_role|default('student') %}
+
+<style>
+body.nx-notifications-page {
+    --nx-notify-page-accent: #0a8f46;
+    --nx-notify-page-accent-dark: #08783b;
+    --nx-notify-page-soft: #e7f7ed;
+    --nx-notify-page-bg: #f7faf8;
+    --nx-notify-page-ink: #10261d;
+    --nx-notify-page-muted: #718078;
+    --nx-notify-page-border: #e3eae5;
+    --nx-notify-page-unread: #fbfefc;
+    margin: 0;
+    background: var(--nx-notify-page-bg) !important;
+}
+
+body.notification-role-supervisor {
+    --nx-notify-page-accent: #2563eb;
+    --nx-notify-page-accent-dark: #1d4ed8;
+    --nx-notify-page-soft: #eff6ff;
+    --nx-notify-page-bg: #f4f7fb;
+    --nx-notify-page-ink: #17233b;
+    --nx-notify-page-muted: #64748b;
+    --nx-notify-page-border: #e4eaf2;
+    --nx-notify-page-unread: #f7faff;
+}
+
+body.notification-role-admin {
+    --nx-notify-page-accent: #f45125;
+    --nx-notify-page-accent-dark: #d9431c;
+    --nx-notify-page-soft: #fff1eb;
+    --nx-notify-page-bg: #f7faf8;
+    --nx-notify-page-ink: #173028;
+    --nx-notify-page-muted: #6f817b;
+    --nx-notify-page-border: #e2ebe7;
+    --nx-notify-page-unread: #fffaf8;
+}
+
+body.nx-notifications-page .nx-notifications-main {
+    min-height: 100vh !important;
+    padding: 98px 32px 42px !important;
+    box-sizing: border-box !important;
+    background: var(--nx-notify-page-bg) !important;
+}
+
+body.nx-notifications-page .nx-notifications-wrap {
+    width: 100% !important;
+    max-width: 1440px !important;
+    margin: 0 auto !important;
+}
+
+body.nx-notifications-page .nx-notifications-heading {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    margin: 0 0 24px;
+}
+
+body.nx-notifications-page .nx-notifications-eyebrow {
+    display: block;
+    margin: 0 0 8px;
+    color: var(--nx-notify-page-accent);
+    font-size: .72rem;
+    font-weight: 900;
+    letter-spacing: .11em;
+    text-transform: uppercase;
+}
+
+body.nx-notifications-page .nx-notifications-heading h1 {
+    margin: 0;
+    color: var(--nx-notify-page-ink) !important;
+    font-size: clamp(2rem, 2.6vw, 2.5rem);
+    line-height: 1.06;
+    font-weight: 800;
+    letter-spacing: -.04em;
+}
+
+body.nx-notifications-page .nx-notifications-heading p {
+    max-width: 760px;
+    margin: 7px 0 0;
+    color: var(--nx-notify-page-muted);
+    font-size: .9rem;
+    line-height: 1.5;
+}
+
+body.nx-notifications-page .nx-notifications-action {
+    flex: 0 0 auto;
+    min-height: 40px;
+    padding: 0 14px;
+    border: 1px solid var(--nx-notify-page-accent);
+    border-radius: 9px;
+    background: var(--nx-notify-page-accent);
+    color: #fff;
+    font-size: .76rem;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+body.nx-notifications-page .nx-notifications-action:hover {
+    border-color: var(--nx-notify-page-accent-dark);
+    background: var(--nx-notify-page-accent-dark);
+}
+
+body.nx-notifications-page .nx-notifications-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    margin: 0 0 18px;
+}
+
+body.nx-notifications-page .nx-notifications-stat {
+    min-width: 0;
+    min-height: 108px;
+    padding: 18px 18px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border: 1px solid var(--nx-notify-page-border);
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 6px 20px rgba(20, 52, 38, .035);
+}
+
+body.nx-notifications-page .nx-notifications-stat-icon {
+    width: 48px;
+    height: 48px;
+    flex: 0 0 48px;
+    display: grid;
+    place-items: center;
+    border-radius: 14px;
+    background: var(--nx-notify-page-soft);
+    color: var(--nx-notify-page-accent);
+    font-size: 18px;
+    font-weight: 900;
+}
+
+body.nx-notifications-page .nx-notifications-stat:nth-child(2) .nx-notifications-stat-icon {
+    background: #fff4df;
+    color: #d98200;
+}
+
+body.nx-notifications-page .nx-notifications-stat-copy span,
+body.nx-notifications-page .nx-notifications-stat-copy strong,
+body.nx-notifications-page .nx-notifications-stat-copy small {
+    display: block;
+}
+
+body.nx-notifications-page .nx-notifications-stat-copy span {
+    color: #52625a;
+    font-size: .72rem;
+    font-weight: 700;
+}
+
+body.nx-notifications-page .nx-notifications-stat-copy strong {
+    margin-top: 3px;
+    color: var(--nx-notify-page-ink);
+    font-size: 1.55rem;
+    line-height: 1;
+    font-weight: 800;
+}
+
+body.nx-notifications-page .nx-notifications-stat-copy small {
+    margin-top: 5px;
+    color: var(--nx-notify-page-muted);
+    font-size: .68rem;
+}
+
+body.nx-notifications-page .nx-notifications-card {
+    overflow: hidden;
+    border: 1px solid var(--nx-notify-page-border);
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 6px 20px rgba(20, 52, 38, .035);
+}
+
+body.nx-notifications-page .nx-notifications-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 20px 22px;
+    border-bottom: 1px solid var(--nx-notify-page-border);
+}
+
+body.nx-notifications-page .nx-notifications-card-header h2 {
+    margin: 0;
+    color: var(--nx-notify-page-ink);
+    font-size: 1.1rem;
+    font-weight: 800;
+}
+
+body.nx-notifications-page .nx-notifications-card-header p {
+    margin: 5px 0 0;
+    color: var(--nx-notify-page-muted);
+    font-size: .78rem;
+}
+
+body.nx-notifications-page .nx-notifications-card-header > span {
+    color: #7c8983;
+    font-size: .7rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+body.nx-notifications-page .nx-notification-history-row {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 16px;
+    min-width: 0;
+    padding: 18px 22px;
+    border-bottom: 1px solid #edf1ee;
+    background: #fff;
+}
+
+body.nx-notifications-page .nx-notification-history-row:last-child {
+    border-bottom: 0;
+}
+
+body.nx-notifications-page .nx-notification-history-row.is-unread {
+    background: var(--nx-notify-page-unread);
+    box-shadow: inset 3px 0 0 var(--nx-notify-page-accent);
+}
+
+body.nx-notifications-page .nx-notification-history-icon {
+    width: 42px;
+    height: 42px;
+    display: grid;
+    place-items: center;
+    border-radius: 12px;
+    background: var(--nx-notify-page-soft);
+    color: var(--nx-notify-page-accent);
+    font-size: 17px;
+    font-weight: 900;
+}
+
+body.nx-notifications-page .nx-notification-history-copy {
+    min-width: 0;
+}
+
+body.nx-notifications-page .nx-notification-history-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+body.nx-notifications-page .nx-notification-history-title strong {
+    overflow: hidden;
+    color: var(--nx-notify-page-ink);
+    font-size: .88rem;
+    font-weight: 800;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+body.nx-notifications-page .nx-notification-history-title span {
+    padding: 3px 7px;
+    border-radius: 999px;
+    background: var(--nx-notify-page-soft);
+    color: var(--nx-notify-page-accent-dark);
+    font-size: .58rem;
+    font-weight: 900;
+    letter-spacing: .04em;
+}
+
+body.nx-notifications-page .nx-notification-history-copy p {
+    margin: 5px 0 4px;
+    color: #68776f;
+    font-size: .78rem;
+    line-height: 1.45;
+}
+
+body.notification-role-supervisor .nx-notification-history-copy p {
+    color: #64748b;
+}
+
+body.nx-notifications-page .nx-notification-history-copy small {
+    color: #9aa49f;
+    font-size: .66rem;
+}
+
+body.nx-notifications-page .nx-notification-history-open {
+    color: var(--nx-notify-page-accent);
+    text-decoration: none;
+    font-size: .74rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+body.nx-notifications-page .nx-notification-history-open:hover {
+    color: var(--nx-notify-page-accent-dark);
+}
+
+body.nx-notifications-page .nx-notifications-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 230px;
+    padding: 34px 22px;
+    text-align: center;
+}
+
+body.nx-notifications-page .nx-notifications-empty-icon {
+    width: 50px;
+    height: 50px;
+    display: grid;
+    place-items: center;
+    margin-bottom: 12px;
+    border-radius: 14px;
+    background: var(--nx-notify-page-soft);
+    color: var(--nx-notify-page-accent);
+    font-size: 21px;
+}
+
+body.nx-notifications-page .nx-notifications-empty strong {
+    color: var(--nx-notify-page-ink);
+    font-size: .95rem;
+    font-weight: 800;
+}
+
+body.nx-notifications-page .nx-notifications-empty span {
+    max-width: 420px;
+    margin-top: 6px;
+    color: var(--nx-notify-page-muted);
+    font-size: .76rem;
+    line-height: 1.5;
+}
+
+body.nx-notifications-page .nx-notifications-pagination {
+    min-height: 64px;
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    border-top: 1px solid var(--nx-notify-page-border);
+}
+
+body.nx-notifications-page .nx-notifications-pagination > span {
+    color: var(--nx-notify-page-muted);
+    font-size: .7rem;
+    font-weight: 700;
+}
+
+body.nx-notifications-page .nx-notifications-page-buttons {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+body.nx-notifications-page .nx-notifications-page-button {
+    min-width: 32px;
+    height: 32px;
+    padding: 0 9px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--nx-notify-page-border);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--nx-notify-page-ink);
+    text-decoration: none;
+    font-size: .7rem;
+    font-weight: 800;
+}
+
+body.nx-notifications-page .nx-notifications-page-button.is-active {
+    border-color: var(--nx-notify-page-accent);
+    background: var(--nx-notify-page-accent);
+    color: #fff;
+}
+
+body.nx-notifications-page .nx-notifications-page-button[aria-disabled="true"] {
+    opacity: .45;
+}
+
+@media (max-width: 900px) {
+    body.nx-notifications-page .nx-notifications-stats {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 760px) {
+    body.nx-notifications-page .nx-notifications-main {
+        padding: 28px 18px 32px !important;
+    }
+
+    body.nx-notifications-page .nx-notifications-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    body.nx-notifications-page .nx-notifications-action {
+        width: 100%;
+    }
+
+    body.nx-notifications-page .nx-notification-history-row {
+        grid-template-columns: 40px minmax(0, 1fr);
+    }
+
+    body.nx-notifications-page .nx-notification-history-open {
+        grid-column: 2;
+        justify-self: start;
+    }
+}
+</style>
+
+<main class="nexora-app-main nx-notifications-main">
+    <div class="nx-notifications-wrap">
+        <section class="nx-notifications-heading" aria-labelledby="notifications-heading">
+            <div>
+                <span class="nx-notifications-eyebrow">{{ role|title }} Portal</span>
+                <h1 id="notifications-heading">Notifications</h1>
+                <p>Stay up to date with your internship activity, tasks, grades, and feedback.</p>
+            </div>
+
+            {% if unread_count %}
+                <button class="nx-notifications-action" type="button" onclick="markAllNotificationsRead()">✓ Mark all as read</button>
+            {% endif %}
+        </section>
+
+        <section class="nx-notifications-stats" aria-label="Notification summary">
+            <article class="nx-notifications-stat">
+                <span class="nx-notifications-stat-icon" aria-hidden="true">♧</span>
+                <div class="nx-notifications-stat-copy"><span>Total Notifications</span><strong>{{ total_count|default(0) }}</strong><small>All updates</small></div>
+            </article>
+            <article class="nx-notifications-stat">
+                <span class="nx-notifications-stat-icon" aria-hidden="true">●</span>
+                <div class="nx-notifications-stat-copy"><span>Unread</span><strong>{{ unread_count|default(0) }}</strong><small>Need your attention</small></div>
+            </article>
+            <article class="nx-notifications-stat">
+                <span class="nx-notifications-stat-icon" aria-hidden="true">✓</span>
+                <div class="nx-notifications-stat-copy"><span>Read</span><strong>{{ (total_count|default(0)) - (unread_count|default(0)) }}</strong><small>Already reviewed</small></div>
+            </article>
+        </section>
+
+        <section class="nx-notifications-card" aria-label="Notification history">
+            <div class="nx-notifications-card-header">
+                <div><h2>Recent Updates</h2><p>Your latest internship and classroom activity.</p></div>
+                <span>{{ total_count|default(0) }} total</span>
+            </div>
+
+            {% if notifications %}
+                <div class="nx-notification-history-list">
+                    {% for notif in notifications %}
+                        <article class="nx-notification-history-row {% if notif['is_read'] == 0 %}is-unread{% endif %}">
+                            <div class="nx-notification-history-icon" aria-hidden="true">
+                                {% if notif['notification_type'] == 'success' %}✓{% elif notif['notification_type'] in ['error', 'warning'] %}!{% elif notif['notification_type'] == 'task' %}✓{% elif notif['notification_type'] == 'feedback' %}✦{% else %}i{% endif %}
+                            </div>
+                            <div class="nx-notification-history-copy">
+                                <div class="nx-notification-history-title">
+                                    <strong>{{ notif['title'] }}</strong>
+                                    {% if notif['is_read'] == 0 %}<span>NEW</span>{% endif %}
+                                </div>
+                                <p>{{ notif['message'] }}</p>
+                                <small>{{ notif['created_at'] }}</small>
+                            </div>
+                            {% if notif['link_url'] %}<a class="nx-notification-history-open" href="{{ notif['link_url'] }}" onclick="markOne({{ notif['id'] }})">Open →</a>{% endif %}
+                        </article>
+                    {% endfor %}
+                </div>
+
+                {% if total_pages > 1 %}
+                    <div class="nx-notifications-pagination">
+                        <span>Page {{ page }} of {{ total_pages }}</span>
+                        <div class="nx-notifications-page-buttons" aria-label="Notification pages">
+                            {% if page > 1 %}<a class="nx-notifications-page-button" href="?page={{ page - 1 }}">‹</a>{% else %}<span class="nx-notifications-page-button" aria-disabled="true">‹</span>{% endif %}
+                            {% for p in range(1, total_pages + 1) %}<a class="nx-notifications-page-button {% if p == page %}is-active{% endif %}" href="?page={{ p }}">{{ p }}</a>{% endfor %}
+                            {% if page < total_pages %}<a class="nx-notifications-page-button" href="?page={{ page + 1 }}">›</a>{% else %}<span class="nx-notifications-page-button" aria-disabled="true">›</span>{% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="nx-notifications-empty">
+                    <div class="nx-notifications-empty-icon" aria-hidden="true">♧</div>
+                    <strong>No notifications yet</strong>
+                    <span>New updates, grades, assignments, and feedback will appear here.</span>
+                </div>
+            {% endif %}
+        </section>
+    </div>
+</main>
+
+<script>
+function markOne(id) {
+    fetch('/notification/read/' + id, {
+        method: 'POST',
+        headers: {'X-CSRFToken': '{{ csrf_token() }}'}
+    }).catch(function () {});
+}
+
+function markAllNotificationsRead() {
+    fetch('/notifications/read-all', {
+        method: 'POST',
+        headers: {'X-CSRFToken': '{{ csrf_token() }}'}
+    }).then(function (response) {
+        if (response.ok) window.location.reload();
+    }).catch(function () {});
+}
+</script>
