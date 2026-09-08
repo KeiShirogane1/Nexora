@@ -1,0 +1,117 @@
+name: Normalize student class shell data
+
+on:
+  push:
+    paths:
+      - .github/workflows/normalize-student-class-shell.yml
+
+permissions:
+  contents: write
+
+jobs:
+  normalize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Patch student class shell data
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          ml = Path('app/Http/Controllers/classwork_ml_insights.py')
+          text = ml.read_text()
+          old_query = '''            """SELECT c.id, c.name, c.section, c.supervisor_id, c.archived,
+                      u.username AS supervisor_name
+               FROM classrooms c
+               JOIN users u ON u.id = c.supervisor_id
+               JOIN classroom_students cs ON cs.classroom_id = c.id
+               WHERE c.id = ? AND cs.student_id = ?""",'''
+          new_query = '''            """SELECT c.id, c.name, c.section, c.supervisor_id, c.archived,
+                      c.description, c.code, u.username AS supervisor_name
+               FROM classrooms c
+               JOIN users u ON u.id = c.supervisor_id
+               JOIN classroom_students cs ON cs.classroom_id = c.id
+               WHERE c.id = ? AND cs.student_id = ?""",'''
+          if old_query not in text:
+              raise SystemExit('ML student classroom query not found')
+          text = text.replace(old_query, new_query, 1)
+
+          old_data = '''        classroom_data = {
+            "id": _value(classroom, "id", 0),
+            "name": _value(classroom, "name", 1),
+            "section": _value(classroom, "section", 2),
+            "supervisor": _value(classroom, "supervisor_name", 5),
+            "archived": bool(_value(classroom, "archived", 4, 0)),
+        }'''
+          new_data = '''        archived = bool(_value(classroom, "archived", 4, 0))
+        classroom_data = {
+            "id": _value(classroom, "id", 0),
+            "name": _value(classroom, "name", 1),
+            "section": _value(classroom, "section", 2),
+            "supervisor": _value(classroom, "supervisor_name", 7),
+            "archived": archived,
+            "description": _value(classroom, "description", 5),
+            "code": _value(classroom, "code", 6),
+            "status": "Archived" if archived else "Active",
+        }'''
+          if old_data not in text:
+              raise SystemExit('ML student classroom data block not found')
+          text = text.replace(old_data, new_data, 1)
+          ml.write_text(text)
+
+          reports = Path('app/Http/Controllers/performance_reports.py')
+          text = reports.read_text()
+          old_query = '''            """SELECT c.id, c.name, c.section, c.code, c.supervisor_id, u.username AS sup_name
+               FROM classrooms c
+               JOIN users u ON u.id=c.supervisor_id
+               JOIN classroom_students cs ON cs.classroom_id=c.id
+               WHERE c.id=? AND cs.student_id=?""",'''
+          new_query = '''            """SELECT c.id, c.name, c.section, c.code, c.supervisor_id,
+                      c.description, c.archived, u.username AS sup_name
+               FROM classrooms c
+               JOIN users u ON u.id=c.supervisor_id
+               JOIN classroom_students cs ON cs.classroom_id=c.id
+               WHERE c.id=? AND cs.student_id=?""",'''
+          if old_query not in text:
+              raise SystemExit('Report student classroom query not found')
+          text = text.replace(old_query, new_query, 1)
+
+          old_data = '''        classroom_data = {
+            "id": _value(classroom, "id", 0),
+            "name": _value(classroom, "name", 1),
+            "section": _value(classroom, "section", 2),
+            "code": _value(classroom, "code", 3),
+            "supervisor": _value(classroom, "sup_name", 5, ""),
+        }'''
+          new_data = '''        archived = bool(_value(classroom, "archived", 6, 0))
+        classroom_data = {
+            "id": _value(classroom, "id", 0),
+            "name": _value(classroom, "name", 1),
+            "section": _value(classroom, "section", 2),
+            "code": _value(classroom, "code", 3),
+            "supervisor": _value(classroom, "sup_name", 7, ""),
+            "description": _value(classroom, "description", 5),
+            "archived": archived,
+            "status": "Archived" if archived else "Active",
+        }'''
+          if old_data not in text:
+              raise SystemExit('Report student classroom data block not found')
+          text = text.replace(old_data, new_data, 1)
+          reports.write_text(text)
+          PY
+
+      - name: Validate Python syntax
+        run: |
+          python -m py_compile app/Http/Controllers/classwork_ml_insights.py app/Http/Controllers/performance_reports.py
+
+      - name: Commit normalized data and remove workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/normalize-student-class-shell.yml
+          git add app/Http/Controllers/classwork_ml_insights.py app/Http/Controllers/performance_reports.py
+          git commit -m "Share class shell data across student class pages"
+          git push
