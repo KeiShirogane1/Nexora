@@ -1,29 +1,27 @@
 {#
     Shared Student Sidebar
-    Used by every Student-facing page.
+    Uses the global role sidebar design from sidebars.css.
 #}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/student-sidebar.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/student-sidebar-collapse-fix.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/sidebars.css') }}">
 
-<div class="nx-student-shell">
-    <aside class="nx-sidebar" id="studentSidebar">
+<div class="nx-role-sidebar-shell nx-role-student">
+    <aside class="nx-role-sidebar" id="studentSidebar" aria-label="Student navigation">
         <a
-            class="nx-brand"
+            class="nx-role-brand"
             href="{{ url_for('student.student_dashboard') }}"
             aria-label="Nexora Student Dashboard"
         >
-            <span class="nx-logo">N</span>
-            <span>
+            <span class="nx-role-logo">N</span>
+            <span class="nx-role-brand-copy">
                 <strong>NEXORA</strong>
                 <small>CODING</small>
             </span>
         </a>
 
         <a
-            class="nx-profile"
+            class="nx-role-profile"
             href="{{ url_for('student.student_profile') }}"
             aria-label="Open student profile"
-            data-label="Profile"
         >
             {% if sidebar_profile and sidebar_profile.profile_picture %}
                 <img
@@ -44,7 +42,7 @@
                 >
             {% endif %}
 
-            <span>
+            <span class="nx-role-profile-copy">
                 <strong>
                     {% if sidebar_profile and sidebar_profile.first_name %}
                         {{ sidebar_profile.first_name }} {{ sidebar_profile.last_name or '' }}
@@ -59,46 +57,50 @@
             </span>
         </a>
 
-        <div class="nx-rule"></div>
-        <div class="nx-label">Menu</div>
+        <div class="nx-role-rule"></div>
+        <div class="nx-role-section-label">Menu</div>
 
-        <nav class="nx-nav" aria-label="Student menu">
-            <a href="{{ url_for('student.student_dashboard') }}" data-label="Dashboard" aria-label="Dashboard" class="{% if request.path == '/student/dashboard' %}active{% endif %}">
-                <span class="ico">▦</span><span>Dashboard</span>
+        <nav class="nx-role-nav" aria-label="Student menu">
+            <a href="{{ url_for('student.student_dashboard') }}" aria-label="Dashboard" class="{% if request.path == '/student/dashboard' %}active{% endif %}">
+                <span class="nx-role-icon">▦</span><span class="nx-role-nav-text">Dashboard</span>
             </a>
-            <a href="{{ url_for('classroom.student_classes') }}" data-label="My Classes" aria-label="My Classes" class="{% if request.path.startswith('/student/classes') %}active{% endif %}">
-                <span class="ico">♙</span><span>My Classes</span>
+            <a href="{{ url_for('classroom.student_classes') }}" aria-label="My Classes" class="{% if request.path.startswith('/student/classes') %}active{% endif %}">
+                <span class="nx-role-icon">♙</span><span class="nx-role-nav-text">My Classes</span>
             </a>
-            <a href="{{ url_for('student.logbook') }}" data-label="Logbook" aria-label="Logbook" class="{% if request.path == '/student/logbook' %}active{% endif %}">
-                <span class="ico">▤</span><span>Logbook</span>
+            <a href="{{ url_for('student.logbook') }}" aria-label="Logbook" class="{% if request.path == '/student/logbook' %}active{% endif %}">
+                <span class="nx-role-icon">▤</span><span class="nx-role-nav-text">Logbook</span>
             </a>
-            <a href="{{ url_for('student.tasks') }}" data-label="Tasks" aria-label="Tasks" class="{% if request.path == '/student/tasks' %}active{% endif %}">
-                <span class="ico">☑</span><span>Tasks</span>
+            <a href="{{ url_for('student.tasks') }}" aria-label="Tasks" class="{% if request.path == '/student/tasks' %}active{% endif %}">
+                <span class="nx-role-icon">☑</span><span class="nx-role-nav-text">Tasks</span>
             </a>
-            <a href="{{ url_for('student.documents') }}" data-label="Documents" aria-label="Documents" class="{% if request.path == '/student/documents' %}active{% endif %}">
-                <span class="ico">▧</span><span>Documents</span>
+            <a href="{{ url_for('student.documents') }}" aria-label="Documents" class="{% if request.path == '/student/documents' %}active{% endif %}">
+                <span class="nx-role-icon">▧</span><span class="nx-role-nav-text">Documents</span>
             </a>
-            <a href="{{ url_for('notifications.notification_list') }}" data-label="Notifications" aria-label="Notifications" class="{% if request.path == '/notifications' %}active{% endif %}{% if unread_count|default(0) > 0 %} notification-unread{% endif %}">
-                <span class="ico">♧</span><span>Notifications</span>
-                {% if unread_count|default(0) > 0 %}<span class="nx-badge">{{ unread_count }}</span>{% endif %}
+            <a href="{{ url_for('notifications.notification_list') }}" aria-label="Notifications" class="{% if request.path == '/notifications' %}active{% endif %}">
+                <span class="nx-role-icon">♧</span><span class="nx-role-nav-text">Notifications</span>
+                {% if unread_count|default(0) > 0 %}<span class="nx-role-badge">{{ unread_count }}</span>{% endif %}
             </a>
         </nav>
 
-        <div class="nx-divider"></div>
-        <div class="nx-label">Account</div>
+        <div class="nx-role-divider"></div>
+        <div class="nx-role-section-label">Account</div>
 
-        <nav class="nx-nav" aria-label="Student account">
-            <a href="{{ url_for('student.student_profile') }}" data-label="Profile" aria-label="Profile"><span class="ico">◎</span><span>Profile</span></a>
-            <a href="javascript:void(0)" data-label="Logout" aria-label="Logout" onclick="openLogoutModal(); return false;"><span class="ico">↪</span><span>Logout</span></a>
+        <nav class="nx-role-nav nx-role-account-nav" aria-label="Student account">
+            <a href="{{ url_for('student.student_profile') }}" aria-label="Profile"><span class="nx-role-icon">◎</span><span class="nx-role-nav-text">Profile</span></a>
+            <a href="javascript:void(0)" aria-label="Logout" onclick="openLogoutModal(); return false;"><span class="nx-role-icon">↪</span><span class="nx-role-nav-text">Logout</span></a>
         </nav>
 
-        <div class="nx-footer">
-            <span class="cap">◆</span>
-            <p>Nexora Coding<br>Empowering Future<br>Developers</p>
+        <div class="nx-role-footer">
+            <span class="nx-role-footer-mark">◆</span>
+            <span class="nx-role-footer-copy">
+                <strong>Nexora Coding</strong>
+                <span>Empowering Future</span>
+                <span>Developers</span>
+            </span>
         </div>
     </aside>
 
-    <div class="nx-sidebar-backdrop" aria-hidden="true"></div>
+    <div class="nx-role-sidebar-backdrop" aria-hidden="true"></div>
 </div>
 
 {% include 'components/student_topbar.html' %}
