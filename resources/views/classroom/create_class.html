@@ -101,6 +101,9 @@
             display: flex;
             flex-direction: column;
             cursor: pointer;
+            border-color: #93c5fd;
+            background: linear-gradient(145deg, #dbeafe 0%, #bfdbfe 100%);
+            box-shadow: 0 14px 34px rgba(37, 99, 235, .12);
             will-change: transform;
             transition:
                 border-color .22s ease,
@@ -110,11 +113,11 @@
         }
 
         .create-space-choice-card:hover {
-            border-color: #93c5fd;
-            background: #fff;
+            border-color: #60a5fa;
+            background: linear-gradient(145deg, #bfdbfe 0%, #93c5fd 100%);
             transform: translateY(-8px) scale(1.01);
             box-shadow:
-                0 22px 48px rgba(37, 99, 235, .15),
+                0 24px 50px rgba(37, 99, 235, .20),
                 0 8px 18px rgba(15, 23, 42, .06);
         }
 
@@ -132,7 +135,7 @@
             justify-content: center;
             margin-bottom: 20px;
             border-radius: 15px;
-            background: #eff6ff;
+            background: rgba(255, 255, 255, .72);
             color: #2563eb;
             font-size: 1.45rem;
             font-weight: 800;
@@ -143,14 +146,14 @@
         }
 
         .create-space-choice-card:hover .create-space-choice-icon {
-            background: #dbeafe;
+            background: rgba(255, 255, 255, .92);
             transform: translateY(-3px) scale(1.08);
             box-shadow: 0 8px 18px rgba(37, 99, 235, .15);
         }
 
         .create-space-choice-label {
             margin-bottom: 8px;
-            color: #2563eb;
+            color: #1d4ed8;
             font-size: .68rem;
             font-weight: 800;
             letter-spacing: .12em;
@@ -170,12 +173,12 @@
         }
 
         .create-space-choice-card:hover h2 {
-            color: #1d4ed8;
+            color: #1e3a8a;
         }
 
         .create-space-choice-card > p {
             margin: 10px 0 18px;
-            color: #64748b;
+            color: #475569;
             font-size: .9rem;
             line-height: 1.6;
         }
@@ -186,7 +189,7 @@
             margin: 0 0 24px;
             padding: 0;
             list-style: none;
-            color: #475569;
+            color: #334155;
             font-size: .86rem;
         }
 
@@ -199,7 +202,7 @@
         .create-space-feature-list li::before {
             content: "✓";
             flex: 0 0 auto;
-            color: #2563eb;
+            color: #1d4ed8;
             font-weight: 900;
         }
 
@@ -621,10 +624,10 @@
                         <div class="create-space-choice-icon" aria-hidden="true">◇</div>
                         <span class="create-space-choice-label">Internship Classroom</span>
                         <h2>Create Internship Classroom</h2>
-                        <p>For supervised internship placements with company details, required OJT hours, work arrangements, responsibilities, and eligibility.</p>
+                        <p>For supervised internship placements with company details, work arrangements, flexible scheduling, responsibilities, and eligibility.</p>
                         <ul class="create-space-feature-list">
                             <li>Company and placement information</li>
-                            <li>Required hours and internship schedule</li>
+                            <li>Flexible schedule and OJT hour options</li>
                             <li>Responsibilities and qualifications</li>
                             <li>Structured student-facing internship details</li>
                         </ul>
@@ -703,14 +706,15 @@
                     <header class="create-space-form-head">
                         <span class="create-space-eyebrow">Create Internship Classroom</span>
                         <h1 id="create-internship-title">Set up a supervised internship placement</h1>
-                        <p>Provide enough information so students clearly understand the company, work arrangement, requirements, expected responsibilities, and eligibility.</p>
+                        <p>Provide enough information so students clearly understand the company, work arrangement, schedule, requirements, expected responsibilities, and eligibility.</p>
                     </header>
 
-                    <form method="POST" novalidate class="create-space-form-body">
+                    <form method="POST" action="{{ url_for('internship_classroom.create_internship_classroom') }}" novalidate class="create-space-form-body">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <input type="hidden" name="form_type" value="internship">
                         {% set selected_arrangement = form.get('work_arrangement', 'On-site') %}
-                        {% set selected_compensation = form.get('compensation', 'Unpaid') %}
+                        {% set selected_schedule_type = form.get('schedule_type', 'fixed_dates') %}
+                        {% set selected_hours_mode = form.get('hours_mode', 'specified') %}
                         {% set responsibility_items = responsibilities if responsibilities else ['', ''] %}
                         {% set qualification_items = qualifications if qualifications else ['', ''] %}
 
@@ -751,14 +755,6 @@
                                     {% if errors and errors.work_arrangement %}<div class="create-space-error">{{ errors.work_arrangement }}</div>{% endif %}
                                 </div>
                                 <div class="create-space-field">
-                                    <span class="create-space-option-label">Compensation</span>
-                                    <div class="create-space-option-row is-two">
-                                        <label class="create-space-option"><input type="radio" name="compensation" value="Paid" {% if selected_compensation == 'Paid' %}checked{% endif %}><span>Paid</span></label>
-                                        <label class="create-space-option"><input type="radio" name="compensation" value="Unpaid" {% if selected_compensation == 'Unpaid' %}checked{% endif %}><span>Unpaid</span></label>
-                                    </div>
-                                    {% if errors and errors.compensation %}<div class="create-space-error">{{ errors.compensation }}</div>{% endif %}
-                                </div>
-                                <div class="create-space-field is-full">
                                     <label for="location">Location</label>
                                     <input type="text" id="location" name="location" maxlength="200" placeholder="Example: Makati City" value="{{ form.get('location', '') }}">
                                     {% if errors and errors.location %}<div class="create-space-error">{{ errors.location }}</div>{% endif %}
@@ -769,33 +765,52 @@
                         <section class="create-space-section">
                             <div class="create-space-section-title">
                                 <h2>Internship Schedule</h2>
-                                <p>Set the timeline and required OJT hours for the placement.</p>
-                            </div>
-
-                            <div class="create-space-stat-grid" aria-label="Internship schedule summary">
-                                <div class="create-space-stat-card"><span>Duration</span><strong>Set start and end dates</strong></div>
-                                <div class="create-space-stat-card"><span>Required Hours</span><strong>Example: 500 Hours</strong></div>
+                                <p>Choose how specific the internship timeline and OJT hour requirement should be.</p>
                             </div>
 
                             <div class="create-space-fields">
-                                <div class="create-space-field">
+                                <div class="create-space-field is-full">
+                                    <span class="create-space-option-label">Schedule Type</span>
+                                    <div class="create-space-option-row">
+                                        <label class="create-space-option"><input type="radio" name="schedule_type" value="fixed_dates" {% if selected_schedule_type == 'fixed_dates' %}checked{% endif %}><span>Fixed Dates</span></label>
+                                        <label class="create-space-option"><input type="radio" name="schedule_type" value="flexible" {% if selected_schedule_type == 'flexible' %}checked{% endif %}><span>Flexible</span></label>
+                                        <label class="create-space-option"><input type="radio" name="schedule_type" value="not_specified" {% if selected_schedule_type == 'not_specified' %}checked{% endif %}><span>Not Specified</span></label>
+                                    </div>
+                                    <small>Fixed dates require both dates. Flexible dates are optional. Not Specified hides the date fields.</small>
+                                    {% if errors and errors.schedule_type %}<div class="create-space-error">{{ errors.schedule_type }}</div>{% endif %}
+                                </div>
+
+                                <div class="create-space-field" data-schedule-date-field>
                                     <label for="start_date">Start Date</label>
                                     <input type="date" id="start_date" name="start_date" value="{{ form.get('start_date', '') }}">
                                     {% if errors and errors.start_date %}<div class="create-space-error">{{ errors.start_date }}</div>{% endif %}
                                 </div>
-                                <div class="create-space-field">
+                                <div class="create-space-field" data-schedule-date-field>
                                     <label for="end_date">End Date</label>
                                     <input type="date" id="end_date" name="end_date" value="{{ form.get('end_date', '') }}">
                                     {% if errors and errors.end_date %}<div class="create-space-error">{{ errors.end_date }}</div>{% endif %}
                                 </div>
-                                <div class="create-space-field">
+
+                                <div class="create-space-field is-full">
                                     <label for="deadline">Application / Enrollment Deadline</label>
                                     <input type="date" id="deadline" name="deadline" value="{{ form.get('deadline', '') }}">
+                                    <small>Optional. Leave blank if there is no enrollment deadline yet.</small>
                                     {% if errors and errors.deadline %}<div class="create-space-error">{{ errors.deadline }}</div>{% endif %}
                                 </div>
-                                <div class="create-space-field">
-                                    <label for="required_hours">Required Internship Hours <span class="create-space-required">*</span></label>
-                                    <input type="number" id="required_hours" name="required_hours" min="1" max="10000" step="1" placeholder="Example: 500" value="{{ form.get('required_hours', '') }}" required>
+
+                                <div class="create-space-field is-full">
+                                    <span class="create-space-option-label">OJT Hours</span>
+                                    <div class="create-space-option-row is-two">
+                                        <label class="create-space-option"><input type="radio" name="hours_mode" value="specified" {% if selected_hours_mode == 'specified' %}checked{% endif %}><span>Specify Hours</span></label>
+                                        <label class="create-space-option"><input type="radio" name="hours_mode" value="not_specified" {% if selected_hours_mode == 'not_specified' %}checked{% endif %}><span>Not Specified</span></label>
+                                    </div>
+                                    {% if errors and errors.hours_mode %}<div class="create-space-error">{{ errors.hours_mode }}</div>{% endif %}
+                                </div>
+
+                                <div class="create-space-field is-full" data-hours-field>
+                                    <label for="required_hours">Required Internship Hours</label>
+                                    <input type="number" id="required_hours" name="required_hours" min="1" max="10000" step="1" placeholder="Example: 500" value="{{ form.get('required_hours', '') }}">
+                                    <small>Only required when Specify Hours is selected.</small>
                                     {% if errors and errors.required_hours %}<div class="create-space-error">{{ errors.required_hours }}</div>{% endif %}
                                 </div>
                             </div>
@@ -891,6 +906,36 @@
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
 
+            function syncInternshipOptions() {
+                const scheduleType = document.querySelector('input[name="schedule_type"]:checked');
+                const scheduleValue = scheduleType ? scheduleType.value : 'fixed_dates';
+                const showDates = scheduleValue !== 'not_specified';
+                const datesRequired = scheduleValue === 'fixed_dates';
+
+                document.querySelectorAll('[data-schedule-date-field]').forEach(function (field) {
+                    const input = field.querySelector('input');
+                    field.hidden = !showDates;
+                    if (input) {
+                        input.disabled = !showDates;
+                        input.required = showDates && datesRequired;
+                        if (!showDates) input.value = '';
+                    }
+                });
+
+                const hoursMode = document.querySelector('input[name="hours_mode"]:checked');
+                const showHours = !hoursMode || hoursMode.value === 'specified';
+                const hoursField = document.querySelector('[data-hours-field]');
+                if (hoursField) {
+                    const hoursInput = hoursField.querySelector('input[name="required_hours"]');
+                    hoursField.hidden = !showHours;
+                    if (hoursInput) {
+                        hoursInput.disabled = !showHours;
+                        hoursInput.required = showHours;
+                        if (!showHours) hoursInput.value = '';
+                    }
+                }
+            }
+
             document.querySelectorAll('[data-show-view]').forEach(function (button) {
                 button.addEventListener('click', function () {
                     showView(button.getAttribute('data-show-view'));
@@ -904,6 +949,10 @@
                         showView(card.getAttribute('data-show-view'));
                     }
                 });
+            });
+
+            document.querySelectorAll('input[name="schedule_type"], input[name="hours_mode"]').forEach(function (input) {
+                input.addEventListener('change', syncInternshipOptions);
             });
 
             document.querySelectorAll('[data-add-row]').forEach(function (button) {
@@ -928,6 +977,7 @@
             });
 
             showView(root ? root.dataset.initialView : 'choice');
+            syncInternshipOptions();
         })();
     </script>
 </body>
