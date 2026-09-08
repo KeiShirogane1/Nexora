@@ -1,9 +1,9 @@
 /* =========================================================
    Nexora Coding — Global Role Sidebars
-   One sidebar system shared by Student, Supervisor, and Admin.
-   Desktop: permanent 76px icon rail; hover/focus expands to 262px
-   over the page with a blurred backdrop. Role modifiers only set
-   palette variables — geometry and interaction stay identical.
+   Shared by Student, Supervisor, and Admin.
+   Desktop/tablet: 76px icon rail; hover/focus expands to 262px
+   over the page with a blurred backdrop. The page always reserves
+   only the 76px rail so legacy 220px/262px offsets cannot create gaps.
    ========================================================= */
 
 .nx-role-sidebar-shell {
@@ -13,9 +13,9 @@
     --nx-sidebar-icon: #8ee9ad;
     --nx-sidebar-logo: #55d67e;
     --nx-sidebar-profile-link: #5ee58a;
-    --nx-sidebar-footer-bg: rgba(20, 133, 91, 0.42);
-    --nx-sidebar-shadow: rgba(0, 54, 44, 0.16);
-    --nx-sidebar-backdrop: rgba(7, 24, 18, 0.22);
+    --nx-sidebar-footer-bg: rgba(20, 133, 91, .42);
+    --nx-sidebar-shadow: rgba(0, 54, 44, .16);
+    --nx-sidebar-backdrop: rgba(7, 24, 18, .22);
 }
 
 .nx-role-sidebar-shell.nx-role-supervisor {
@@ -25,9 +25,9 @@
     --nx-sidebar-icon: #93c5fd;
     --nx-sidebar-logo: #60a5fa;
     --nx-sidebar-profile-link: #93c5fd;
-    --nx-sidebar-footer-bg: rgba(30, 64, 175, 0.34);
-    --nx-sidebar-shadow: rgba(15, 23, 42, 0.20);
-    --nx-sidebar-backdrop: rgba(8, 18, 38, 0.24);
+    --nx-sidebar-footer-bg: rgba(30, 64, 175, .34);
+    --nx-sidebar-shadow: rgba(15, 23, 42, .20);
+    --nx-sidebar-backdrop: rgba(8, 18, 38, .24);
 }
 
 .nx-role-sidebar-shell.nx-role-admin {
@@ -37,9 +37,9 @@
     --nx-sidebar-icon: #ff9a7b;
     --nx-sidebar-logo: #ff6840;
     --nx-sidebar-profile-link: #ff8562;
-    --nx-sidebar-footer-bg: rgba(126, 20, 17, 0.58);
-    --nx-sidebar-shadow: rgba(70, 8, 8, 0.18);
-    --nx-sidebar-backdrop: rgba(38, 8, 8, 0.24);
+    --nx-sidebar-footer-bg: rgba(126, 20, 17, .58);
+    --nx-sidebar-shadow: rgba(70, 8, 8, .18);
+    --nx-sidebar-backdrop: rgba(38, 8, 8, .24);
 }
 
 .nx-role-sidebar,
@@ -59,7 +59,7 @@
     display: flex !important;
     flex-direction: column !important;
     overflow: visible !important;
-    background: linear-gradient(180deg, var(--nx-sidebar-bg-start) 0%, var(--nx-sidebar-bg-end) 100%) !important;
+    background: linear-gradient(180deg, var(--nx-sidebar-bg-start), var(--nx-sidebar-bg-end)) !important;
     border: 0 !important;
     border-radius: 0 !important;
     box-shadow: 6px 0 20px var(--nx-sidebar-shadow) !important;
@@ -72,7 +72,6 @@
     position: fixed;
     inset: 0;
     z-index: 1200;
-    display: block;
     pointer-events: none;
     opacity: 0;
     visibility: hidden;
@@ -96,8 +95,7 @@
     pointer-events: auto;
 }
 
-/* Brand --------------------------------------------------- */
-
+/* Brand */
 .nx-role-brand {
     width: 56px !important;
     min-width: 56px !important;
@@ -138,7 +136,6 @@
     font-size: 19px !important;
     font-weight: 900 !important;
     letter-spacing: -.45px !important;
-    line-height: 1 !important;
 }
 
 .nx-role-brand-copy small {
@@ -148,12 +145,10 @@
     font-size: 10px !important;
     font-weight: 800 !important;
     letter-spacing: 3px !important;
-    line-height: 1 !important;
     white-space: nowrap !important;
 }
 
-/* Profile ------------------------------------------------- */
-
+/* Profile */
 .nx-role-profile {
     position: relative !important;
     width: 52px !important;
@@ -165,7 +160,6 @@
     align-items: center !important;
     justify-content: center !important;
     gap: 0 !important;
-    overflow: visible !important;
     color: #fff !important;
     text-decoration: none !important;
 }
@@ -178,7 +172,7 @@
     flex: 0 0 46px !important;
     object-fit: cover !important;
     background: #fff !important;
-    border: 3px solid rgba(255, 255, 255, .92) !important;
+    border: 3px solid rgba(255,255,255,.92) !important;
     border-radius: 50% !important;
 }
 
@@ -205,9 +199,8 @@
 
 .nx-role-profile-copy span {
     margin-top: 3px !important;
-    color: rgba(255, 255, 255, .72) !important;
+    color: rgba(255,255,255,.72) !important;
     font-size: 10px !important;
-    line-height: 1.2 !important;
 }
 
 .nx-role-profile-copy em {
@@ -216,11 +209,9 @@
     font-size: 9px !important;
     font-style: normal !important;
     font-weight: 800 !important;
-    line-height: 1.2 !important;
 }
 
-/* Navigation ---------------------------------------------- */
-
+/* Navigation */
 .nx-role-rule,
 .nx-role-divider,
 .nx-role-section-label,
@@ -232,21 +223,15 @@
 .nx-role-divider {
     flex: 0 0 auto;
     height: 1px !important;
-    background: rgba(255, 255, 255, .15) !important;
+    background: rgba(255,255,255,.15) !important;
 }
 
-.nx-role-rule {
-    margin: 0 0 14px !important;
-}
-
-.nx-role-divider {
-    margin: 12px 0 10px !important;
-}
+.nx-role-rule { margin: 0 0 14px !important; }
+.nx-role-divider { margin: 12px 0 10px !important; }
 
 .nx-role-section-label {
-    flex: 0 0 auto;
     padding: 0 9px 8px !important;
-    color: rgba(255, 255, 255, .58) !important;
+    color: rgba(255,255,255,.58) !important;
     font-size: 9px !important;
     font-weight: 800 !important;
     letter-spacing: .08em !important;
@@ -259,15 +244,12 @@
     width: 56px !important;
     margin: 0 auto !important;
     display: flex !important;
-    flex: 0 0 auto;
     flex-direction: column !important;
     align-items: center !important;
     gap: 6px !important;
 }
 
-.nx-role-account-nav {
-    margin-top: 8px !important;
-}
+.nx-role-account-nav { margin-top: 8px !important; }
 
 .nx-role-nav > a,
 .nx-role-nav-parent {
@@ -284,11 +266,10 @@
     align-items: center !important;
     justify-content: center !important;
     gap: 0 !important;
-    overflow: visible !important;
     border: 0 !important;
     border-radius: 11px !important;
     background: transparent !important;
-    color: rgba(255, 255, 255, .90) !important;
+    color: rgba(255,255,255,.9) !important;
     text-decoration: none !important;
     white-space: nowrap !important;
     cursor: pointer !important;
@@ -303,7 +284,7 @@
 .nx-role-nav > a:focus-visible,
 .nx-role-nav-parent:hover,
 .nx-role-nav-parent:focus-visible {
-    background: rgba(255, 255, 255, .10) !important;
+    background: rgba(255,255,255,.1) !important;
     color: #fff !important;
     outline: none !important;
 }
@@ -313,7 +294,7 @@
 .nx-role-nav-parent.active-parent {
     background: var(--nx-sidebar-accent) !important;
     color: #fff !important;
-    box-shadow: 0 5px 14px rgba(0, 0, 0, .14) !important;
+    box-shadow: 0 5px 14px rgba(0,0,0,.14) !important;
 }
 
 .nx-role-icon {
@@ -329,7 +310,6 @@
     font-size: 19px !important;
     font-weight: 700 !important;
     line-height: 1 !important;
-    text-align: center !important;
 }
 
 .nx-role-nav > a.active .nx-role-icon,
@@ -348,9 +328,7 @@
     margin: 0 auto !important;
 }
 
-.nx-role-submenu {
-    display: none !important;
-}
+.nx-role-submenu { display: none !important; }
 
 .nx-role-badge {
     position: absolute !important;
@@ -359,7 +337,6 @@
     z-index: 2 !important;
     min-width: 16px !important;
     height: 16px !important;
-    margin: 0 !important;
     padding: 0 4px !important;
     display: grid !important;
     place-items: center !important;
@@ -369,14 +346,11 @@
     border-radius: 999px !important;
     font-size: 7px !important;
     font-weight: 800 !important;
-    line-height: 1 !important;
 }
 
-/* Footer -------------------------------------------------- */
-
+/* Footer */
 .nx-role-footer {
     position: relative !important;
-    z-index: 0 !important;
     flex: 0 0 102px !important;
     height: 102px !important;
     min-height: 102px !important;
@@ -386,14 +360,12 @@
     gap: 11px !important;
     background: var(--nx-sidebar-footer-bg) !important;
     border-radius: 0 18px 0 0 !important;
-    color: rgba(255, 255, 255, .86) !important;
+    color: rgba(255,255,255,.86) !important;
 }
 
 .nx-role-footer-mark {
-    flex: 0 0 auto;
     color: var(--nx-sidebar-logo) !important;
     font-size: 22px !important;
-    line-height: 1 !important;
 }
 
 .nx-role-footer-copy {
@@ -404,11 +376,6 @@
     line-height: 1.5;
 }
 
-.nx-role-footer-copy strong,
-.nx-role-footer-copy span {
-    display: block;
-}
-
 .nx-role-footer-copy strong {
     color: #fff !important;
     font-size: 9px !important;
@@ -416,12 +383,11 @@
 }
 
 .nx-role-footer-copy span {
-    color: rgba(255, 255, 255, .86) !important;
+    color: rgba(255,255,255,.86) !important;
     font-size: 9px !important;
 }
 
-/* Expanded presentation ---------------------------------- */
-
+/* Expanded state */
 .nx-role-sidebar:hover .nx-role-brand,
 .nx-role-sidebar:focus-within .nx-role-brand {
     width: auto !important;
@@ -487,11 +453,6 @@
     gap: 4px !important;
 }
 
-.nx-role-sidebar:hover .nx-role-account-nav,
-.nx-role-sidebar:focus-within .nx-role-account-nav {
-    margin-top: 0 !important;
-}
-
 .nx-role-sidebar:hover .nx-role-nav > a,
 .nx-role-sidebar:focus-within .nx-role-nav > a,
 .nx-role-sidebar:hover .nx-role-nav-parent,
@@ -526,7 +487,6 @@
 .nx-role-sidebar:hover .nx-role-nav-text,
 .nx-role-sidebar:focus-within .nx-role-nav-text {
     display: inline !important;
-    min-width: 0 !important;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -537,10 +497,9 @@
     width: 14px;
     margin-left: auto;
     display: inline !important;
-    color: rgba(255, 255, 255, .72) !important;
+    color: rgba(255,255,255,.72) !important;
     font-size: 15px !important;
     text-align: center;
-    transition: transform .15s ease;
 }
 
 .nx-role-sidebar:hover .nx-role-nav-group,
@@ -557,11 +516,6 @@
     gap: 3px !important;
 }
 
-.nx-role-sidebar:hover .nx-role-nav-group.open > .nx-role-nav-parent .nx-role-nav-arrow,
-.nx-role-sidebar:focus-within .nx-role-nav-group.open > .nx-role-nav-parent .nx-role-nav-arrow {
-    transform: rotate(90deg);
-}
-
 .nx-role-sidebar:hover .nx-role-submenu a,
 .nx-role-sidebar:focus-within .nx-role-submenu a {
     min-height: 32px !important;
@@ -570,7 +524,7 @@
     align-items: center !important;
     gap: 9px !important;
     border-radius: 7px !important;
-    color: rgba(255, 255, 255, .82) !important;
+    color: rgba(255,255,255,.82) !important;
     text-decoration: none !important;
     font-size: 10px !important;
     font-weight: 650 !important;
@@ -580,7 +534,7 @@
 .nx-role-sidebar:focus-within .nx-role-submenu a:focus-visible,
 .nx-role-sidebar:hover .nx-role-submenu a.active,
 .nx-role-sidebar:focus-within .nx-role-submenu a.active {
-    background: rgba(255, 255, 255, .09) !important;
+    background: rgba(255,255,255,.09) !important;
     color: #fff !important;
 }
 
@@ -602,7 +556,6 @@
     padding: 0 5px !important;
     border: 0 !important;
     font-size: 8px !important;
-    line-height: 19px !important;
 }
 
 .nx-role-sidebar:hover .nx-role-footer,
@@ -610,41 +563,64 @@
     display: flex !important;
 }
 
-/* Portal layout: pages always reserve only the 76px rail. */
-
+/* =========================================================
+   GLOBAL PORTAL LAYOUT OWNERSHIP
+   Force all legacy role widths to the real 76px rail.
+   ========================================================= */
 @media (min-width: 761px) {
-    .nx-role-sidebar-shell ~ .student-global-topbar {
-        left: 76px !important;
-        width: calc(100% - 76px) !important;
+    body:has(.nx-role-sidebar-shell) {
+        --nexora-sidebar-width: 76px !important;
+        --nexora-sidebar-collapsed: 76px !important;
+        margin: 0 !important;
+        padding-left: 0 !important;
     }
 
-    .nx-role-sidebar-shell ~ .admin-global-topbar {
+    body:has(.nx-role-sidebar-shell) > main,
+    body:has(.nx-role-sidebar-shell) > .page-content,
+    body:has(.nx-role-sidebar-shell) .nx-main,
+    body:has(.nx-role-sidebar-shell) .student-main-content,
+    body:has(.nx-role-sidebar-shell) .classes-main,
+    body:has(.nx-role-sidebar-shell) .join-main,
+    body:has(.nx-role-sidebar-shell) .class-main,
+    body:has(.nx-role-sidebar-shell) .assignment-main,
+    body:has(.nx-role-sidebar-shell) .nx-classwork-main,
+    body:has(.nx-role-sidebar-shell) .student-logbook-main,
+    body:has(.nx-role-sidebar-shell) .student-tasks-main,
+    body:has(.nx-role-sidebar-shell) .admin-main,
+    body:has(.nx-role-sidebar-shell) .nexora-app-main,
+    body:has(.nx-role-sidebar-shell) .supervisor-classes-main {
         margin-left: 76px !important;
         width: calc(100% - 76px) !important;
+        max-width: none !important;
+        box-sizing: border-box !important;
     }
 
-    .nx-role-sidebar-shell ~ .page-content .supervisor-topbar,
-    .nx-role-sidebar-shell ~ .supervisor-topbar {
+    body:has(.nx-role-sidebar-shell) .student-global-topbar {
+        left: 76px !important;
+        right: 0 !important;
+        width: calc(100% - 76px) !important;
+        margin-left: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    body:has(.nx-role-sidebar-shell) .admin-global-topbar {
+        left: auto !important;
+        right: auto !important;
+        width: calc(100% - 76px) !important;
+        margin-left: 76px !important;
+        box-sizing: border-box !important;
+    }
+
+    body:has(.nx-role-sidebar-shell) .supervisor-topbar {
         left: 76px !important;
         right: 0 !important;
         width: auto !important;
+        margin-left: 0 !important;
+        box-sizing: border-box !important;
     }
 
-    .nx-role-sidebar-shell ~ .nx-main,
-    .nx-role-sidebar-shell ~ .student-main-content,
-    .nx-role-sidebar-shell ~ .classes-main,
-    .nx-role-sidebar-shell ~ .join-main,
-    .nx-role-sidebar-shell ~ .class-main,
-    .nx-role-sidebar-shell ~ .assignment-main,
-    .nx-role-sidebar-shell ~ .nx-classwork-main,
-    .nx-role-sidebar-shell ~ .student-logbook-main,
-    .nx-role-sidebar-shell ~ .student-tasks-main,
-    .nx-role-sidebar-shell ~ .admin-main,
-    .nx-role-sidebar-shell ~ .page-content,
-    .nx-role-sidebar-shell ~ .nexora-app-main {
-        margin-left: 76px !important;
-        width: calc(100% - 76px) !important;
-        box-sizing: border-box !important;
+    body:has(.nx-role-sidebar-shell) .supervisor-create-bar {
+        left: 108px !important;
     }
 
     .student-tasks-menu-button,
@@ -658,9 +634,15 @@
     }
 }
 
-/* Mobile keeps the shared sidebar readable and non-hover dependent. */
-
+/* Mobile: remove desktop rail reservation completely. */
 @media (max-width: 760px) {
+    body:has(.nx-role-sidebar-shell) {
+        --nexora-sidebar-width: 0px !important;
+        --nexora-sidebar-collapsed: 0px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
     .nx-role-sidebar {
         position: relative !important;
         inset: auto !important;
@@ -668,70 +650,49 @@
         height: auto !important;
         min-height: 0 !important;
         margin: 0 !important;
-        padding: 18px 18px 12px !important;
+        padding: 18px !important;
         box-shadow: none !important;
     }
 
-    .nx-role-sidebar-backdrop {
-        display: none !important;
+    .nx-role-sidebar-backdrop { display: none !important; }
+
+    .nx-role-brand,
+    .nx-role-profile,
+    .nx-role-nav,
+    .nx-role-nav-group {
+        width: 100% !important;
+        max-width: none !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
     }
 
     .nx-role-brand {
-        width: auto !important;
-        min-width: 0 !important;
         height: 38px !important;
-        margin: 0 !important;
-        padding: 0 6px !important;
         justify-content: flex-start !important;
         gap: 10px !important;
-        overflow: visible !important;
     }
 
-    .nx-role-logo {
-        width: 38px !important;
-        min-width: 38px !important;
-        height: 38px !important;
-        flex: 0 0 38px !important;
-    }
-
-    .nx-role-brand-copy {
-        display: flex !important;
-    }
+    .nx-role-brand-copy { display: flex !important; }
 
     .nx-role-profile {
-        width: auto !important;
-        min-width: 0 !important;
         height: auto !important;
-        margin: 20px 4px !important;
+        margin: 22px 0 !important;
         justify-content: flex-start !important;
         gap: 12px !important;
     }
 
-    .nx-role-profile img {
-        width: 50px !important;
-        min-width: 50px !important;
-        height: 50px !important;
-        flex-basis: 50px !important;
-    }
+    .nx-role-profile-copy { display: block !important; }
 
-    .nx-role-profile-copy,
     .nx-role-rule,
     .nx-role-divider,
-    .nx-role-section-label {
-        display: block !important;
-    }
+    .nx-role-section-label,
+    .nx-role-footer { display: block !important; }
+
+    .nx-role-footer { display: flex !important; margin: 18px -18px -18px !important; }
 
     .nx-role-nav {
-        width: 100% !important;
-        margin: 0 !important;
-        display: grid !important;
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
         align-items: stretch !important;
-        gap: 6px !important;
-    }
-
-    .nx-role-account-nav {
-        margin-top: 0 !important;
+        gap: 4px !important;
     }
 
     .nx-role-nav > a,
@@ -743,10 +704,9 @@
         min-height: 42px !important;
         max-height: none !important;
         margin: 0 !important;
-        padding: 0 12px !important;
+        padding: 0 13px !important;
         justify-content: flex-start !important;
-        gap: 10px !important;
-        border-radius: 8px !important;
+        gap: 13px !important;
         font-size: 12px !important;
     }
 
@@ -754,30 +714,19 @@
         width: 20px !important;
         min-width: 20px !important;
         height: 20px !important;
-        flex: 0 0 20px !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
+        flex-basis: 20px !important;
         font-size: 17px !important;
     }
 
     .nx-role-nav-text,
-    .nx-role-nav-arrow {
-        display: inline !important;
-    }
+    .nx-role-nav-arrow { display: inline !important; }
 
-    .nx-role-nav-arrow {
-        margin-left: auto !important;
-    }
+    .nx-role-nav-arrow { margin-left: auto !important; }
 
-    .nx-role-nav-group {
-        width: 100% !important;
-        margin: 0 !important;
-    }
+    .nx-role-nav-group { width: 100% !important; }
 
     .nx-role-nav-group.open > .nx-role-submenu {
-        grid-column: 1 / -1;
-        margin: 4px 0 4px 14px !important;
+        margin: 3px 0 5px 17px !important;
         display: flex !important;
         flex-direction: column !important;
         gap: 3px !important;
@@ -788,68 +737,40 @@
         padding: 0 10px !important;
         display: flex !important;
         align-items: center !important;
-        gap: 8px !important;
-        border-radius: 7px !important;
-        color: rgba(255, 255, 255, .86) !important;
+        gap: 9px !important;
+        color: rgba(255,255,255,.84) !important;
         text-decoration: none !important;
-        font-size: 10px !important;
-        font-weight: 650 !important;
     }
 
-    .nx-role-badge {
-        position: static !important;
-        min-width: 19px !important;
-        height: 19px !important;
-        margin-left: auto !important;
-        padding: 0 5px !important;
-        border: 0 !important;
-        font-size: 8px !important;
+    body:has(.nx-role-sidebar-shell) > main,
+    body:has(.nx-role-sidebar-shell) > .page-content,
+    body:has(.nx-role-sidebar-shell) .nx-main,
+    body:has(.nx-role-sidebar-shell) .student-main-content,
+    body:has(.nx-role-sidebar-shell) .classes-main,
+    body:has(.nx-role-sidebar-shell) .join-main,
+    body:has(.nx-role-sidebar-shell) .class-main,
+    body:has(.nx-role-sidebar-shell) .assignment-main,
+    body:has(.nx-role-sidebar-shell) .nx-classwork-main,
+    body:has(.nx-role-sidebar-shell) .student-logbook-main,
+    body:has(.nx-role-sidebar-shell) .student-tasks-main,
+    body:has(.nx-role-sidebar-shell) .admin-main,
+    body:has(.nx-role-sidebar-shell) .nexora-app-main,
+    body:has(.nx-role-sidebar-shell) .supervisor-classes-main {
+        margin-left: 0 !important;
+        width: 100% !important;
     }
 
-    .nx-role-footer {
-        display: none !important;
-    }
-
-    .nx-role-sidebar-shell ~ .student-global-topbar,
-    .nx-role-sidebar-shell ~ .admin-global-topbar,
-    .nx-role-sidebar-shell ~ .supervisor-topbar,
-    .nx-role-sidebar-shell ~ .page-content .supervisor-topbar {
+    body:has(.nx-role-sidebar-shell) .student-global-topbar,
+    body:has(.nx-role-sidebar-shell) .admin-global-topbar,
+    body:has(.nx-role-sidebar-shell) .supervisor-topbar {
         left: 0 !important;
         right: 0 !important;
         width: 100% !important;
         margin-left: 0 !important;
     }
 
-    .nx-role-sidebar-shell ~ .nx-main,
-    .nx-role-sidebar-shell ~ .student-main-content,
-    .nx-role-sidebar-shell ~ .classes-main,
-    .nx-role-sidebar-shell ~ .join-main,
-    .nx-role-sidebar-shell ~ .class-main,
-    .nx-role-sidebar-shell ~ .assignment-main,
-    .nx-role-sidebar-shell ~ .nx-classwork-main,
-    .nx-role-sidebar-shell ~ .student-logbook-main,
-    .nx-role-sidebar-shell ~ .student-tasks-main,
-    .nx-role-sidebar-shell ~ .admin-main,
-    .nx-role-sidebar-shell ~ .page-content,
-    .nx-role-sidebar-shell ~ .nexora-app-main {
-        margin-left: 0 !important;
-        width: 100% !important;
-    }
-
-    .student-tasks-menu-button,
-    .supervisor-menu-button,
-    .admin-topbar-menu,
-    .sidebar-toggle,
-    .sidebar-collapse-btn,
-    .sidebar-collapse-control,
-    .nx-collapse-toggle {
-        display: none !important;
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .nx-role-sidebar,
-    .nx-role-sidebar-backdrop {
-        transition: none !important;
+    body:has(.nx-role-sidebar-shell) .supervisor-create-bar {
+        left: 16px !important;
+        right: 16px !important;
     }
 }
