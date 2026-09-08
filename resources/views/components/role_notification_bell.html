@@ -1,0 +1,544 @@
+{#
+    Shared role notification bell/popover.
+    Visual reference: Student notification design.
+    Wrappers set notification_role to student, supervisor, or admin.
+    No separate CSS file is required; this component is self-contained.
+#}
+{% set role = notification_role|default('student') %}
+
+<style>
+.nx-notification-menu {
+    --nx-notify-accent: #0a8f46;
+    --nx-notify-accent-dark: #08783b;
+    --nx-notify-soft: #e7f7ed;
+    --nx-notify-ink: #10382a;
+    --nx-notify-border: #dfe8e2;
+    --nx-notify-unread: #f3fbf6;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
+    overflow: visible;
+    margin: 0;
+}
+
+.nx-notification-menu.nx-notification-supervisor {
+    --nx-notify-accent: #2563eb;
+    --nx-notify-accent-dark: #1d4ed8;
+    --nx-notify-soft: #eff6ff;
+    --nx-notify-ink: #17233b;
+    --nx-notify-border: #dbe5f3;
+    --nx-notify-unread: #f4f8ff;
+}
+
+.nx-notification-menu.nx-notification-admin {
+    --nx-notify-accent: #f45125;
+    --nx-notify-accent-dark: #d9431c;
+    --nx-notify-soft: #fff1eb;
+    --nx-notify-ink: #3a1b12;
+    --nx-notify-border: #efdfd9;
+    --nx-notify-unread: #fff8f5;
+}
+
+.nx-notification-menu > summary {
+    list-style: none;
+}
+
+.nx-notification-menu > summary::-webkit-details-marker {
+    display: none;
+}
+
+.nx-notification-trigger {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--nx-notify-ink);
+    cursor: pointer;
+    user-select: none;
+    transition: background .15s ease, color .15s ease, transform .15s ease;
+}
+
+.nx-notification-trigger:hover,
+.nx-notification-menu[open] > .nx-notification-trigger {
+    background: var(--nx-notify-soft);
+    color: var(--nx-notify-accent);
+}
+
+.nx-notification-trigger:active {
+    transform: scale(.96);
+}
+
+.nx-notification-trigger:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--nx-notify-accent) 35%, transparent);
+    outline-offset: 2px;
+}
+
+.nx-notification-trigger svg {
+    display: block;
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+}
+
+.nx-notification-badge {
+    position: absolute;
+    top: 1px;
+    right: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 17px;
+    height: 17px;
+    padding: 0 4px;
+    border: 2px solid #fff;
+    border-radius: 999px;
+    background: #ef4444;
+    color: #fff;
+    font-size: 8px;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.nx-notification-popover {
+    position: absolute;
+    top: calc(100% + 12px);
+    right: 0;
+    z-index: 2200;
+    width: min(390px, calc(100vw - 32px));
+    max-height: min(610px, calc(100vh - 90px));
+    overflow: hidden;
+    border: 1px solid var(--nx-notify-border);
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 24px 60px rgba(10,42,30,.16), 0 6px 20px rgba(10,42,30,.08);
+}
+
+.nx-notification-popover::before {
+    content: "";
+    position: absolute;
+    top: -7px;
+    right: 12px;
+    width: 14px;
+    height: 14px;
+    border-top: 1px solid var(--nx-notify-border);
+    border-left: 1px solid var(--nx-notify-border);
+    background: #fff;
+    transform: rotate(45deg);
+}
+
+.nx-notification-header {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 18px 18px 16px;
+    border-bottom: 1px solid #edf2ef;
+}
+
+.nx-notification-eyebrow {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--nx-notify-accent);
+    font-size: .64rem;
+    font-weight: 800;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+}
+
+.nx-notification-header h2 {
+    margin: 0;
+    color: var(--nx-notify-ink);
+    font-size: 1.06rem;
+    font-weight: 800;
+    letter-spacing: -.02em;
+}
+
+.nx-notification-header p {
+    margin: 4px 0 0;
+    color: #7d8b84;
+    font-size: .68rem;
+    line-height: 1.45;
+}
+
+.nx-notification-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #65766d;
+    font-size: 1.2rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.nx-notification-close:hover {
+    background: #f2f7f4;
+    color: var(--nx-notify-ink);
+}
+
+.nx-notification-body {
+    max-height: 410px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.nx-notification-item {
+    position: relative;
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 11px;
+    width: 100%;
+    min-height: 76px;
+    padding: 13px 16px;
+    border: 0;
+    border-bottom: 1px solid #edf2ef;
+    background: #fff;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.nx-notification-item:hover {
+    background: #f8fbf9;
+}
+
+.nx-notification-item.is-unread {
+    background: var(--nx-notify-unread);
+}
+
+.nx-notification-item-icon {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 11px;
+    font-size: .78rem;
+    font-weight: 900;
+}
+
+.nx-notification-item-icon.is-info { background: #e7f1ff; color: #2e7ac5; }
+.nx-notification-item-icon.is-success { background: #e4f6ea; color: #0a8f46; }
+.nx-notification-item-icon.is-warning { background: #fff2d8; color: #b86d00; }
+.nx-notification-item-icon.is-error { background: #fde8eb; color: #d93f4f; }
+
+.nx-notification-item-copy {
+    display: grid;
+    min-width: 0;
+    gap: 3px;
+}
+
+.nx-notification-item-copy strong {
+    overflow: hidden;
+    color: var(--nx-notify-ink);
+    font-size: .76rem;
+    font-weight: 800;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.nx-notification-item-copy > span {
+    display: -webkit-box;
+    overflow: hidden;
+    color: #687970;
+    font-size: .67rem;
+    line-height: 1.45;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+.nx-notification-item-copy small {
+    margin-top: 2px;
+    color: #9aa59f;
+    font-size: .59rem;
+}
+
+.nx-notification-unread-dot {
+    width: 8px;
+    height: 8px;
+    margin-top: 5px;
+    border-radius: 50%;
+    background: var(--nx-notify-accent);
+}
+
+.nx-notification-empty {
+    display: grid;
+    place-items: center;
+    padding: 38px 24px;
+    text-align: center;
+}
+
+.nx-notification-empty-icon {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 12px;
+    border-radius: 15px;
+    background: var(--nx-notify-soft);
+    color: var(--nx-notify-accent);
+    font-size: 1.15rem;
+    font-weight: 900;
+}
+
+.nx-notification-empty strong {
+    color: var(--nx-notify-ink);
+    font-size: .82rem;
+    font-weight: 800;
+}
+
+.nx-notification-empty p {
+    max-width: 245px;
+    margin: 6px 0 0;
+    color: #819087;
+    font-size: .68rem;
+    line-height: 1.5;
+}
+
+.nx-notification-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 58px;
+    padding: 10px 14px;
+    border-top: 1px solid #edf2ef;
+    background: #fbfdfb;
+}
+
+.nx-notification-mark-all,
+.nx-notification-read-status {
+    flex: 0 0 auto;
+    border: 0;
+    background: transparent;
+    color: #718078;
+    font-size: .64rem;
+    font-weight: 700;
+}
+
+.nx-notification-mark-all {
+    padding: 7px 4px;
+    cursor: pointer;
+}
+
+.nx-notification-mark-all:hover {
+    color: var(--nx-notify-accent);
+}
+
+.nx-notification-view-all {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 36px;
+    padding: 0 12px;
+    border: 1px solid var(--nx-notify-accent);
+    border-radius: 9px;
+    background: var(--nx-notify-accent);
+    color: #fff;
+    font-size: .68rem;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.nx-notification-view-all:hover {
+    border-color: var(--nx-notify-accent-dark);
+    background: var(--nx-notify-accent-dark);
+    color: #fff;
+}
+
+@media (max-width: 760px) {
+    .nx-notification-popover {
+        right: -70px;
+        width: min(360px, calc(100vw - 24px));
+        max-height: calc(100vh - 82px);
+    }
+
+    .nx-notification-popover::before { right: 82px; }
+}
+
+@media (max-width: 430px) {
+    .nx-notification-footer {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .nx-notification-mark-all,
+    .nx-notification-read-status,
+    .nx-notification-view-all {
+        width: 100%;
+        text-align: center;
+    }
+}
+</style>
+
+<details class="nx-notification-menu nx-notification-{{ role }}">
+    <summary class="nx-notification-trigger" aria-label="Open notifications" title="Notifications">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+        </svg>
+        {% if unread_count|default(0) > 0 %}<span class="nx-notification-badge">{{ unread_count }}</span>{% endif %}
+    </summary>
+
+    <section class="nx-notification-popover" role="dialog" aria-label="Recent notifications">
+        <div class="nx-notification-header">
+            <div>
+                <span class="nx-notification-eyebrow">{{ role|title }} Notifications</span>
+                <h2>Recent Updates</h2>
+                <p>Latest notifications from the last 7 days.</p>
+            </div>
+            <button type="button" class="nx-notification-close" aria-label="Close notifications" onclick="closeNexoraNotifications(this)">×</button>
+        </div>
+
+        <div class="nx-notification-body">
+            {% if recent_notifications|default([]) %}
+                {% for notif in recent_notifications[:5] %}
+                    <button type="button" class="nx-notification-item {% if notif['is_read'] == 0 %}is-unread{% endif %}" data-notification-id="{{ notif['id'] }}" data-link="{{ (notif['link_url'] or '')|e }}" onclick="openNexoraNotification(this)">
+                        <span class="nx-notification-item-icon {% if notif['notification_type'] == 'warning' %}is-warning{% elif notif['notification_type'] == 'error' %}is-error{% elif notif['notification_type'] in ['success', 'task', 'classroom'] %}is-success{% else %}is-info{% endif %}" aria-hidden="true">
+                            {% if notif['notification_type'] == 'warning' %}!{% elif notif['notification_type'] == 'error' %}×{% elif notif['notification_type'] in ['success', 'task', 'classroom'] %}✓{% else %}i{% endif %}
+                        </span>
+                        <span class="nx-notification-item-copy">
+                            <strong>{{ notif['title'] }}</strong>
+                            <span>{{ notif['message'] }}</span>
+                            <small>{{ notif['created_at'] }}</small>
+                        </span>
+                        {% if notif['is_read'] == 0 %}<span class="nx-notification-unread-dot" aria-label="Unread"></span>{% endif %}
+                    </button>
+                {% endfor %}
+            {% else %}
+                <div class="nx-notification-empty">
+                    <span class="nx-notification-empty-icon" aria-hidden="true">✓</span>
+                    <strong>You're all caught up</strong>
+                    <p>No notifications were received in the last 7 days.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="nx-notification-footer">
+            {% if unread_count|default(0) > 0 %}
+                <button type="button" class="nx-notification-mark-all" onclick="markAllNexoraNotificationsRead(event)">Mark all as read</button>
+            {% else %}
+                <span class="nx-notification-read-status">All caught up</span>
+            {% endif %}
+            <a href="{{ url_for('notifications.notification_list') }}" class="nx-notification-view-all">View All Notifications <span aria-hidden="true">→</span></a>
+        </div>
+    </section>
+</details>
+
+<script>
+(function () {
+    function closeDetails(details) {
+        if (details) details.removeAttribute('open');
+    }
+
+    function updateBadgeCount(badge) {
+        if (!badge) return;
+        var nextCount = Math.max(0, (parseInt(badge.textContent, 10) || 0) - 1);
+        if (nextCount === 0) badge.remove();
+        else badge.textContent = nextCount;
+    }
+
+    function decrementBadges() {
+        document.querySelectorAll('.nx-notification-badge, .nx-role-badge').forEach(updateBadgeCount);
+    }
+
+    window.closeNexoraNotifications = function (button) {
+        closeDetails(button ? button.closest('.nx-notification-menu') : null);
+    };
+
+    window.openNexoraNotification = function (item) {
+        if (!item) return;
+        var notificationId = item.getAttribute('data-notification-id');
+        var linkUrl = item.getAttribute('data-link') || '';
+        var isUnread = item.classList.contains('is-unread');
+
+        if (!notificationId) {
+            if (linkUrl) window.location.href = linkUrl;
+            return;
+        }
+
+        fetch('/notification/read/' + notificationId, {
+            method: 'POST',
+            headers: {'X-CSRFToken': '{{ csrf_token() }}'}
+        }).then(function (response) {
+            if (!response.ok) throw new Error('Unable to mark notification as read.');
+            if (isUnread) {
+                document.querySelectorAll('.nx-notification-item[data-notification-id="' + notificationId + '"]').forEach(function (candidate) {
+                    candidate.classList.remove('is-unread');
+                    var dot = candidate.querySelector('.nx-notification-unread-dot');
+                    if (dot) dot.remove();
+                });
+                decrementBadges();
+            }
+            if (linkUrl) window.location.href = linkUrl;
+        }).catch(function () {
+            if (linkUrl) window.location.href = linkUrl;
+        });
+    };
+
+    window.markAllNexoraNotificationsRead = function (event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+
+        fetch('/notifications/read-all', {
+            method: 'POST',
+            headers: {'X-CSRFToken': '{{ csrf_token() }}'}
+        }).then(function (response) {
+            if (!response.ok) throw new Error('Unable to mark notifications as read.');
+            return response.json();
+        }).then(function (data) {
+            if (!data.ok) return;
+            document.querySelectorAll('.nx-notification-item.is-unread').forEach(function (item) {
+                item.classList.remove('is-unread');
+                var dot = item.querySelector('.nx-notification-unread-dot');
+                if (dot) dot.remove();
+            });
+            document.querySelectorAll('.nx-notification-badge, .nx-role-badge').forEach(function (badge) { badge.remove(); });
+            document.querySelectorAll('.nx-notification-mark-all').forEach(function (button) {
+                var status = document.createElement('span');
+                status.className = 'nx-notification-read-status';
+                status.textContent = 'All caught up';
+                button.replaceWith(status);
+            });
+        }).catch(function () {});
+    };
+
+    if (!window.__nexoraNotificationHandlersBound) {
+        document.addEventListener('click', function (event) {
+            var clickedMenu = event.target.closest('.nx-notification-menu');
+            var clickedSummary = event.target.closest('.nx-notification-trigger');
+
+            if (clickedSummary && clickedMenu) {
+                document.querySelectorAll('.nx-notification-menu[open]').forEach(function (menu) {
+                    if (menu !== clickedMenu) closeDetails(menu);
+                });
+                return;
+            }
+
+            if (!clickedMenu) document.querySelectorAll('.nx-notification-menu[open]').forEach(closeDetails);
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') document.querySelectorAll('.nx-notification-menu[open]').forEach(closeDetails);
+        });
+
+        window.__nexoraNotificationHandlersBound = true;
+    }
+})();
+</script>
