@@ -29,10 +29,11 @@
         <main class="student-main-content nexora-app-main">
             <div class="nexora-page student-report-shell">
                 <a href="{{ url_for('classroom.student_class', class_id=classroom.id) }}" class="student-report-back">← Back to {{ classroom.name }}</a>
-                <header style="display:flex; align-items:end; justify-content:space-between; gap:16px; margin-bottom:18px;">
+                <header class="student-section-heading" aria-labelledby="report-heading">
                     <div>
-                        <h1 style="margin:0; font-size:1.7rem; font-weight:800;">Performance Report</h1>
-                        <p class="text-muted mb-1">{{ classroom.section }} · Supervisor: {{ classroom.supervisor }} · {{ report.student.username }}</p>
+                        <span class="student-section-eyebrow">Student Portal</span>
+                        <h1 id="report-heading">Performance Report</h1>
+                        <p>{{ classroom.section }} · Supervisor: {{ classroom.supervisor }} · {{ report.student.username }}</p>
                     </div>
                     <div><span class="student-report-label {% if report.performance_label == 'Excellent' %}is-excellent{% elif report.performance_label == 'Very Satisfactory' %}is-very-satisfactory{% elif report.performance_label == 'Satisfactory' %}is-satisfactory{% elif report.performance_label == 'Fair' %}is-fair{% else %}is-needs-improvement{% endif %}">{{ report.performance_label }}</span></div>
                 </header>
