@@ -13,7 +13,6 @@
             .student-insights-back { display:inline-flex; align-items:center; gap:6px; margin-bottom:18px; color:#2563eb; text-decoration:none; font-weight:700; font-size:.9rem; }
             .student-insights-back:hover { color:#1d4ed8; text-decoration:underline; }
             .student-insights-header { display:flex; align-items:flex-end; justify-content:space-between; gap:24px; margin-bottom:24px; }
-            .student-insights-eyebrow { display:block; margin-bottom:7px; color:#64748b; font-size:.72rem; font-weight:800; letter-spacing:.09em; text-transform:uppercase; }
             .student-insights-header h1 { margin:0; color:#0f172a; font-size:2rem; font-weight:800; letter-spacing:-.025em; }
             .student-insights-header p { margin:7px 0 0; color:#64748b; max-width:720px; }
             .student-insights-summary-card { min-width:132px; padding:12px 16px; border:1px solid #e8eef7; border-radius:14px; background:#fff; text-align:center; box-shadow:0 6px 20px rgba(15,23,42,.05); }
@@ -43,11 +42,11 @@
         <main class="student-main-content nexora-app-main">
             <div class="nexora-page student-insights-shell">
                 <a href="{{ url_for('classroom.student_class', class_id=classroom.id) }}" class="student-insights-back">← Back to {{ classroom.name }}</a>
-                <header class="student-insights-header">
+                <header class="student-insights-header student-section-heading" aria-labelledby="insights-heading">
                     <div>
-                        <span class="student-insights-eyebrow">{{ classroom.section }} · Teacher: {{ classroom.supervisor }}</span>
-                        <h1>Performance Insights</h1>
-                        <p>Your gradebook-to-ML performance summary — normalized scores, completion, and feedback ML analysis when available.</p>
+                        <span class="student-section-eyebrow">Student Portal</span>
+                        <h1 id="insights-heading">Performance Insights</h1>
+                        <p>{{ classroom.section }} · {{ classroom.supervisor }} · Your gradebook-to-ML performance summary — normalized scores, completion, and feedback ML analysis when available.</p>
                         <div style="margin-top:10px;">
                             <span class="student-insights-label {% if numeric_performance_label == 'Excellent' %}is-excellent{% elif numeric_performance_label == 'Very Satisfactory' %}is-very-satisfactory{% elif numeric_performance_label == 'Satisfactory' %}is-satisfactory{% elif numeric_performance_label == 'Fair' %}is-fair{% else %}is-needs-improvement{% endif %}">{{ numeric_performance_label }}</span>
                             <small class="text-muted" style="margin-left:8px;">Numeric performance label</small>
