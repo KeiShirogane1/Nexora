@@ -5,6 +5,7 @@ from flask import Blueprint, flash, jsonify, redirect, render_template, request,
 from app.Http.Middleware.security import login_required
 from app.Models.db import get_db_connection
 from app.Services.notification_service import (
+    delete_notification,
     delete_notifications_by_date,
     get_unread_count,
     get_user_notifications,
@@ -102,6 +103,48 @@ def read_all_notifications():
     user_id = session.get("user_id")
     count = mark_all_read(user_id)
     return jsonify({"ok": True, "updated": count})
+
+
+@notifications_bp.route("/notifications/delete-selected", methods=["POST"])
+@login_required
+def delete_selected_notifications():
+    user_id = session.get("user_id")
+    requested_page = request.form.get("page", 1, type=int) or 1
+    raw_ids = request.form.getlist("notification_ids")
+
+    notification_ids = []
+    seen_ids = set()
+    for raw_id in raw_ids:
+        try:
+            notification_id = int(raw_id)
+        except (TypeError, ValueError):
+            continue
+        if notification_id > 0 and notification_id not in seen_ids:
+            notification_ids.append(notification_id)
+            seen_ids.add(notification_id)
+
+    if not notification_ids:
+        flash("Select at least one notification to delete.", "error")
+        return redirect(url_for("notifications.notification_list", page=max(1, requested_page)))
+
+    if len(notification_ids) > NOTIFICATIONS_PER_PAGE:
+        flash("You can delete up to 15 selected notifications at a time.", "error")
+        return redirect(url_for("notifications.notification_list", page=max(1, requested_page)))
+
+    deleted_count = 0
+    for notification_id in notification_ids:
+        if delete_notification(notification_id, user_id=user_id):
+            deleted_count += 1
+
+    if deleted_count:
+        flash(
+            f"Permanently deleted {deleted_count} selected notification{'s' if deleted_count != 1 else ''}.",
+            "success",
+        )
+    else:
+        flash("No selected notifications were deleted.", "info")
+
+    return redirect(url_for("notifications.notification_list", page=max(1, requested_page)))
 
 
 @notifications_bp.route("/notifications/delete-by-date", methods=["POST"])
