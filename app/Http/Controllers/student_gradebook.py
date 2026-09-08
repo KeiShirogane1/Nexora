@@ -21,7 +21,14 @@ def _value(row, key, index=0, default=None):
 
 
 def _activity_label(activity_type):
-    return {"assignment":"Assignment","google_form":"Google Form / Quiz","google_doc":"Google Docs / Sheets","file_reference":"File / Reference","project":"Project","group_project":"Group Project"}.get(activity_type or "assignment", "Assignment")
+    return {
+        "assignment": "Assignment",
+        "google_form": "Google Form / Quiz",
+        "google_doc": "Google Docs / Sheets",
+        "file_reference": "File / Reference",
+        "project": "Project",
+        "group_project": "Group Project",
+    }.get(activity_type or "assignment", "Assignment")
 
 
 @student_gradebook.route("/student/classes/<int:class_id>/gradebook")
@@ -30,48 +37,110 @@ def gradebook(class_id):
     student_id = session["user_id"]
     conn = get_db_connection()
     try:
-        classroom = conn.execute("""SELECT c.id, c.name, c.section, c.supervisor_id, c.archived, u.username AS supervisor_name
-            FROM classrooms c JOIN users u ON u.id=c.supervisor_id JOIN classroom_students cs ON cs.classroom_id=c.id
-            WHERE c.id=? AND cs.student_id=?""", (class_id, student_id)).fetchone()
+        classroom = conn.execute(
+            """SELECT c.id, c.name, c.section, c.supervisor_id, c.archived,
+                      c.description, c.code, u.username AS supervisor_name
+               FROM classrooms c
+               JOIN users u ON u.id = c.supervisor_id
+               JOIN classroom_students cs ON cs.classroom_id = c.id
+               WHERE c.id = ? AND cs.student_id = ?""",
+            (class_id, student_id),
+        ).fetchone()
         if not classroom:
             abort(404)
 
-        # Read normalized scores first, then fall back to the grade saved on the latest
-        # classwork submission. This keeps older/manual grades visible after migration.
-        assignments = conn.execute("""SELECT a.id, a.title, a.points, a.due_at, a.created_at, m.activity_type,
-               s.score AS normalized_score, s.max_score AS normalized_max_score, s.percentage AS normalized_percentage,
-               s.grading_method AS normalized_method,
-               (SELECT cs.grade FROM classwork_submissions cs WHERE cs.assignment_id=a.id AND cs.student_id=? AND cs.grade IS NOT NULL ORDER BY cs.attempt_no DESC, cs.id DESC LIMIT 1) AS submission_grade,
-               (SELECT cs.status FROM classwork_submissions cs WHERE cs.assignment_id=a.id AND cs.student_id=? ORDER BY cs.attempt_no DESC, cs.id DESC LIMIT 1) AS submission_status
-            FROM classroom_assignments a
-            LEFT JOIN classroom_assignment_meta m ON m.assignment_id=a.id
-            LEFT JOIN classwork_scores s ON s.assignment_id=a.id AND s.student_id=?
-            WHERE a.classroom_id=? ORDER BY a.created_at ASC, a.id ASC""", (student_id, student_id, student_id, class_id)).fetchall()
+        assignments = conn.execute(
+            """SELECT a.id, a.title, a.points, a.due_at, a.created_at, m.activity_type,
+                      s.score AS normalized_score, s.max_score AS normalized_max_score,
+                      s.percentage AS normalized_percentage,
+                      s.grading_method AS normalized_method,
+                      (SELECT cs.grade FROM classwork_submissions cs
+                       WHERE cs.assignment_id = a.id AND cs.student_id = ? AND cs.grade IS NOT NULL
+                       ORDER BY cs.attempt_no DESC, cs.id DESC LIMIT 1) AS submission_grade,
+                      (SELECT cs.status FROM classwork_submissions cs
+                       WHERE cs.assignment_id = a.id AND cs.student_id = ?
+                       ORDER BY cs.attempt_no DESC, cs.id DESC LIMIT 1) AS submission_status
+               FROM classroom_assignments a
+               LEFT JOIN classroom_assignment_meta m ON m.assignment_id = a.id
+               LEFT JOIN classwork_scores s ON s.assignment_id = a.id AND s.student_id = ?
+               WHERE a.classroom_id = ?
+               ORDER BY a.created_at ASC, a.id ASC""",
+            (student_id, student_id, student_id, class_id),
+        ).fetchall()
 
-        grade_records=[]
-        activities=[]
+        grade_records = []
+        activities = []
         for assignment in assignments:
-            aid=int(_value(assignment,"id",0)); points=float(_value(assignment,"points",2,0) or 0)
-            score=_value(assignment,"normalized_score",6)
-            max_score=_value(assignment,"normalized_max_score",7)
-            percentage=_value(assignment,"normalized_percentage",8)
-            method=_value(assignment,"normalized_method",9)
-            submission_grade=_value(assignment,"submission_grade",10)
-            submission_status=_value(assignment,"submission_status",11)
-            if score is None and submission_grade is not None:
-                score=float(submission_grade); max_score=points; percentage=(score/max_score*100) if max_score else 0; method=method or "manual"
-            if score is not None:
-                score=float(score); max_score=float(max_score or points or 0)
-                if percentage is None: percentage=(score/max_score*100) if max_score else 0
-                grade_records.append({"score":score,"max_score":max_score})
-                graded=True; score_display=f"{score:g} / {max_score:g}"; percentage_display=f"{float(percentage):.1f}%"; grading_method=method or "manual"
-            else:
-                graded=False; score_display="—"; percentage_display="—"; grading_method=None
-            activities.append({"id":aid,"title":_value(assignment,"title",1,"Activity"),"activity_label":_activity_label(_value(assignment,"activity_type",5)),"due_at":_value(assignment,"due_at",3),"points":points,"graded":graded,"score_display":score_display,"percentage_display":percentage_display,"grading_method":grading_method,"submission_status":submission_status})
+            aid = int(_value(assignment, "id", 0))
+            points = float(_value(assignment, "points", 2, 0) or 0)
+            score = _value(assignment, "normalized_score", 6)
+            max_score = _value(assignment, "normalized_max_score", 7)
+            percentage = _value(assignment, "normalized_percentage", 8)
+            method = _value(assignment, "normalized_method", 9)
+            submission_grade = _value(assignment, "submission_grade", 10)
+            submission_status = _value(assignment, "submission_status", 11)
 
-        summary=calculate_overall(grade_records)
-        classroom_data={"id":_value(classroom,"id",0),"name":_value(classroom,"name",1),"section":_value(classroom,"section",2),"supervisor":_value(classroom,"supervisor_name",5),"archived":bool(_value(classroom,"archived",4,0))}
+            if score is None and submission_grade is not None:
+                score = float(submission_grade)
+                max_score = points
+                percentage = (score / max_score * 100) if max_score else 0
+                method = method or "manual"
+
+            if score is not None:
+                score = float(score)
+                max_score = float(max_score or points or 0)
+                if percentage is None:
+                    percentage = (score / max_score * 100) if max_score else 0
+                grade_records.append({"score": score, "max_score": max_score})
+                graded = True
+                score_display = f"{score:g} / {max_score:g}"
+                percentage_display = f"{float(percentage):.1f}%"
+                grading_method = method or "manual"
+            else:
+                graded = False
+                score_display = "—"
+                percentage_display = "—"
+                grading_method = None
+
+            activities.append(
+                {
+                    "id": aid,
+                    "title": _value(assignment, "title", 1, "Activity"),
+                    "activity_label": _activity_label(_value(assignment, "activity_type", 5)),
+                    "due_at": _value(assignment, "due_at", 3),
+                    "points": points,
+                    "graded": graded,
+                    "score_display": score_display,
+                    "percentage_display": percentage_display,
+                    "grading_method": grading_method,
+                    "submission_status": submission_status,
+                }
+            )
+
+        summary = calculate_overall(grade_records)
+        archived = bool(_value(classroom, "archived", 4, 0))
+        classroom_data = {
+            "id": _value(classroom, "id", 0),
+            "name": _value(classroom, "name", 1),
+            "section": _value(classroom, "section", 2),
+            "supervisor": _value(classroom, "supervisor_name", 7),
+            "archived": archived,
+            "description": _value(classroom, "description", 5),
+            "code": _value(classroom, "code", 6),
+            "status": "Archived" if archived else "Active",
+        }
     finally:
         conn.close()
 
-    return render_template("classroom/student_gradebook.html", classroom=classroom_data, activities=activities, graded_count=summary["graded_count"], total_count=len(activities), earned=summary["earned"], possible=summary["possible"], overall=summary["overall"], overall_display=f"{summary['overall']:.1f}%" if summary["overall"] is not None else "—", active_page="classes")
+    return render_template(
+        "classroom/student_gradebook.html",
+        classroom=classroom_data,
+        activities=activities,
+        graded_count=summary["graded_count"],
+        total_count=len(activities),
+        earned=summary["earned"],
+        possible=summary["possible"],
+        overall=summary["overall"],
+        overall_display=f"{summary['overall']:.1f}%" if summary["overall"] is not None else "—",
+        active_page="classes",
+    )
