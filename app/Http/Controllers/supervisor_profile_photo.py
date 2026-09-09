@@ -10,6 +10,16 @@ from app.Services.supervisor_profile_service import get_or_create_supervisor_pro
 supervisor_profile_photo = Blueprint("supervisor_profile_photo", __name__)
 
 
+def _row_to_dict(row):
+    if not row:
+        return {}
+    if hasattr(row, "items"):
+        return dict(row.items())
+    if hasattr(row, "keys"):
+        return {key: row[key] for key in row.keys()}
+    return {}
+
+
 def _profile_payload(form):
     return {
         "first_name": (form.get("first_name") or "").strip(),
@@ -34,11 +44,8 @@ def _profile_payload(form):
 
 
 def _profile_is_complete(profile):
-    if not profile:
-        return False
-    try:
-        data = dict(profile.items())
-    except Exception:
+    data = _row_to_dict(profile)
+    if not data:
         return False
     return all(
         str(data.get(field) or "").strip()
@@ -103,7 +110,7 @@ def _setup_errors(payload):
 def _render_supervisor_setup(user_id, profile_data=None, errors=None):
     if profile_data is None:
         profile = get_or_create_supervisor_profile(user_id)
-        profile_data = dict(profile.items()) if profile and hasattr(profile, "items") else {}
+        profile_data = _row_to_dict(profile)
     return render_template(
         "supervisor/profile_setup.html",
         profile=profile_data,
@@ -132,8 +139,8 @@ def _render_supervisor_profile(user_id, errors=None):
     if not user:
         return redirect(url_for("auth.login"))
     profile = get_or_create_supervisor_profile(user_id)
-    profile_data = dict(profile.items()) if hasattr(profile, "items") else {}
-    user_data = dict(user.items()) if hasattr(user, "items") else {}
+    profile_data = _row_to_dict(profile)
+    user_data = _row_to_dict(user)
     return render_template("supervisor/profile.html", supervisor=user_data, profile=profile_data, errors=errors or {}, active_page="profile", **_profile_stats(user_id))
 
 
@@ -200,8 +207,8 @@ def _supervisor_profile_page():
             if errors:
                 user = conn.execute("SELECT id, username, email, role, status, profile_picture FROM users WHERE id = ?", (user_id,)).fetchone()
                 profile = conn.execute("SELECT * FROM supervisor_profiles WHERE user_id = ?", (user_id,)).fetchone()
-                user_data = dict(user.items()) if user and hasattr(user, "items") else {}
-                profile_data = dict(profile.items()) if profile and hasattr(profile, "items") else payload
+                user_data = _row_to_dict(user)
+                profile_data = _row_to_dict(profile) or dict(payload)
                 for key, value in payload.items():
                     profile_data[key] = value
                 return render_template("supervisor/profile.html", supervisor=user_data, profile=profile_data, errors=errors, active_page="profile", **_profile_stats(user_id))
@@ -262,7 +269,7 @@ def supervisor_profile_setup():
                     errors["employee_id"] = "Employee ID already exists."
 
             if errors:
-                profile_data = dict(profile.items()) if profile and hasattr(profile, "items") else {}
+                profile_data = _row_to_dict(profile)
                 profile_data.update(payload)
                 return _render_supervisor_setup(user_id, profile_data=profile_data, errors=errors)
 
