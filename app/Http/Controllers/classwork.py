@@ -13,12 +13,12 @@ from app.Services.notification_service import create_notification
 classwork = Blueprint("classwork", __name__)
 
 ACTIVITY_TYPES = {
-    "assignment": "Assignment",
-    "google_form": "Google Form / Quiz",
-    "google_doc": "Google Docs / Sheets",
-    "file_reference": "File / Reference Material",
+    "assignment": "Task",
+    "google_form": "Form / Assessment",
+    "google_doc": "Online Work",
+    "file_reference": "Resource",
     "project": "Project",
-    "group_project": "Group Project",
+    "group_project": "Team Task",
 }
 
 ALLOWED_RESOURCE_EXT = {
@@ -90,7 +90,11 @@ def manage_classwork(class_id):
     conn = get_db_connection()
     try:
         classroom = conn.execute(
-            "SELECT id, name, section, description, code, archived FROM classrooms WHERE id = ?",
+            """SELECT c.id, c.name, c.section, c.description, c.code, c.archived,
+                      COALESCE(cid.company_name, '') AS company_name
+               FROM classrooms c
+               LEFT JOIN classroom_internship_details cid ON cid.classroom_id = c.id
+               WHERE c.id = ?""",
             (class_id,),
         ).fetchone()
         if not classroom:
@@ -98,7 +102,7 @@ def manage_classwork(class_id):
 
         if request.method == "POST":
             if classroom["archived"] if "archived" in classroom.keys() else classroom[5]:
-                flash("Archived classes cannot receive new classwork.", "warning")
+                flash("Archived Intern Classrooms cannot receive new work.", "warning")
                 return redirect(url_for("classwork.manage_classwork", class_id=class_id))
 
             title = (request.form.get("title") or "").strip()
@@ -113,7 +117,7 @@ def manage_classwork(class_id):
             max_group_size_raw = (request.form.get("max_group_size") or "1").strip()
 
             if activity_type not in ACTIVITY_TYPES:
-                flash("Choose a valid classwork type.", "danger")
+                flash("Choose a valid work type.", "danger")
                 return redirect(url_for("classwork.manage_classwork", class_id=class_id))
             if len(title) < 3 or len(title) > 200:
                 flash("Title is required and must be 3-200 characters.", "danger")
@@ -160,7 +164,7 @@ def manage_classwork(class_id):
                 ).fetchone()
                 assignment_id = assignment_row["id"] if "id" in assignment_row.keys() else assignment_row[0]
                 if not assignment_id:
-                    raise RuntimeError("Could not determine the new classwork ID.")
+                    raise RuntimeError("Could not determine the new work ID.")
 
                 resource_filename, resource_filepath = _save_resource(upload, class_id, assignment_id)
 
@@ -193,22 +197,22 @@ def manage_classwork(class_id):
                         student_id = student["student_id"] if "student_id" in student.keys() else student[0]
                         create_notification(
                             int(student_id),
-                            "New Classwork",
+                            "New Work",
                             f"New {ACTIVITY_TYPES[activity_type].lower()}: {title}",
                             "classroom",
                             link_url=f"/student/classes/{class_id}/assignments/{assignment_id}",
                         )
                 except Exception as notify_error:
-                    print("classwork notification failed:", notify_error)
+                    print("work notification failed:", notify_error)
 
-                flash("Classwork created successfully.", "success")
+                flash("Work created successfully.", "success")
                 return redirect(url_for("classwork.manage_classwork", class_id=class_id))
             except Exception as error:
                 try:
                     conn.rollback()
                 except Exception:
                     pass
-                flash(f"Unable to create classwork: {error}", "danger")
+                flash(f"Unable to create work: {error}", "danger")
 
         assignments = conn.execute(
             """SELECT a.id, a.title, a.description, a.due_at, a.points, a.created_at,
@@ -249,6 +253,7 @@ def manage_classwork(class_id):
             "description": classroom["description"] if "description" in classroom.keys() else classroom[3],
             "code": classroom["code"] if "code" in classroom.keys() else classroom[4],
             "archived": classroom["archived"] if "archived" in classroom.keys() else classroom[5],
+            "company_name": classroom["company_name"] if "company_name" in classroom.keys() else classroom[6],
         }
     finally:
         conn.close()
