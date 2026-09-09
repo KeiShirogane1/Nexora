@@ -836,7 +836,9 @@
                             <div>
                                 <span class="supervisor-class-eyebrow">{{ classroom.section }} · Supervisor</span>
                                 <h1 class="class-title">{{ classroom.name }}</h1>
-                                {% if classroom.description %}
+                                {% if classroom.company_name %}
+                                    <p class="class-subtitle">{{ classroom.company_name }} · Intern Classroom</p>
+                                {% elif classroom.description %}
                                     <p class="class-subtitle">{{ classroom.description }}</p>
                                 {% endif %}
                                 {% if classroom.archived %}
@@ -944,43 +946,49 @@
                         </div>
                     </div>
                     <div class="class-card">
+                        <div class="class-card-header">
+                            <div>
+                                <h6 class="mb-1">Intern Classroom Details</h6>
+                                <div class="small text-muted">Real saved classroom and internship information.</div>
+                            </div>
+                        </div>
                         <div class="class-card-body">
                             <div class="class-info-grid">
+                                <div class="class-info-item">
+                                    <strong>Company</strong>
+                                    <span>{{ classroom.company_name or '—' }}</span>
+                                </div>
+                                <div class="class-info-item">
+                                    <strong>Section</strong>
+                                    <span>{{ classroom.section or '—' }}</span>
+                                </div>
                                 <div class="class-info-item">
                                     <strong>Class Code</strong>
                                     <span>{{ classroom.code }}</span>
                                 </div>
                                 <div class="class-info-item">
-                                    <strong>Description</strong>
-                                    <span>{{ classroom.description or '—' }}</span>
-                                </div>
-                                <div class="class-info-item">
-                                    <strong>Internal Notes</strong>
-                                    <span>{{ classroom.internal_notes or '—' }}</span>
-                                </div>
-                                <div class="class-info-item">
-                                    <strong>Program</strong>
-                                    <span>{{ classroom.program or classroom.section or '—' }}</span>
+                                    <strong>Required Hours</strong>
+                                    <span>{% if classroom.hours_mode == 'specified' and classroom.required_hours %}{{ classroom.required_hours }} hours{% else %}Not specified{% endif %}</span>
                                 </div>
                                 <div class="class-info-item">
                                     <strong>Created</strong>
                                     <span>{{ classroom.created_at or '—' }}</span>
                                 </div>
                                 <div class="class-info-item">
-                                    <strong>Updated</strong>
-                                    <span>{{ classroom.updated_at or classroom.created_at or '—' }}</span>
-                                </div>
-                                <div class="class-info-item">
-                                    <strong>Max Interns</strong>
-                                    <span>{{ classroom.max_students or classroom.max_interns or '—' }}</span>
+                                    <strong>Current Interns</strong>
+                                    <span>{{ classroom.student_count }}</span>
                                 </div>
                                 <div class="class-info-item">
                                     <strong>Status</strong>
                                     <span class="badge {% if classroom.status == 'Active' %}bg-success{% else %}bg-secondary{% endif %}">{{ classroom.status }}</span>
                                 </div>
                                 <div class="class-info-item">
-                                    <strong>Current Interns</strong>
-                                    <span>{{ classroom.student_count }}</span>
+                                    <strong>Work Items</strong>
+                                    <span>{{ assignments|length }}</span>
+                                </div>
+                                <div class="class-info-item">
+                                    <strong>Announcements</strong>
+                                    <span>{{ announcements|length }}</span>
                                 </div>
                             </div>
                         </div>
@@ -1113,25 +1121,29 @@
         <div id="classInfoModal" class="nexora-class-modal" onclick="if(event.target===this)closeClassInfo()" aria-hidden="true">
             <div class="nexora-modal" role="dialog" aria-modal="true" aria-labelledby="classInfoTitle">
                 <div class="nexora-modal-header">
-                    <h2 id="classInfoTitle">Class Information</h2>
-                    <p>Details for this Intern Classroom</p>
+                    <h2 id="classInfoTitle">Intern Classroom Information</h2>
+                    <p>Saved details and current classroom activity</p>
                     <button type="button" class="nexora-modal-close" onclick="closeClassInfo()">×</button>
                 </div>
                 <div class="nexora-modal-body" style="gap:10px">
                     <div class="d-flex justify-content-between">
-                        <strong>Class name</strong>
+                        <strong>Intern Classroom</strong>
                         <span>{{ classroom.name }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <strong>Company</strong>
+                        <span>{{ classroom.company_name or '—' }}</span>
                     </div>
                     <div class="d-flex justify-content-between">
                         <strong>Section</strong>
                         <span>{{ classroom.section }}</span>
                     </div>
                     <div class="d-flex justify-content-between">
-                        <strong>Supervisor</strong>
-                        <span>Supervisor (you)</span>
+                        <strong>Required hours</strong>
+                        <span>{% if classroom.hours_mode == 'specified' and classroom.required_hours %}{{ classroom.required_hours }} hours{% else %}Not specified{% endif %}</span>
                     </div>
                     <div class="d-flex justify-content-between">
-                        <strong>Code</strong>
+                        <strong>Class code</strong>
                         <span>{{ classroom.code }}</span>
                     </div>
                     <div class="d-flex justify-content-between">
@@ -1139,7 +1151,7 @@
                         <span>{{ classroom.student_count }}</span>
                     </div>
                     <div class="d-flex justify-content-between">
-                        <strong>Work Items</strong>
+                        <strong>Work items</strong>
                         <span>{{ assignments|length }}</span>
                     </div>
                     <div class="d-flex justify-content-between">
