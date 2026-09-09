@@ -30,9 +30,33 @@
                                         <p class="supervisor-class-section">{{ c.section }}</p>
                                         <p class="supervisor-class-supervisor">Supervisor: {{ c.supervisor }}</p>
                                     </div>
-                                    <span class="supervisor-status {% if c.status == 'Active' %}is-active{% endif %}">
-                                        <span class="supervisor-status-dot"></span>{{ c.status }}
-                                    </span>
+                                    <div class="d-flex align-items-start gap-2">
+                                        <span class="supervisor-status {% if c.status == 'Active' %}is-active{% endif %}">
+                                            <span class="supervisor-status-dot"></span>{{ c.status }}
+                                        </span>
+                                        <div class="dropdown position-relative">
+                                            <button
+                                                type="button"
+                                                class="btn btn-light border btn-sm px-2"
+                                                aria-label="Manage {{ c.name }}"
+                                                aria-expanded="false"
+                                                onclick="toggleClassMenu(event, 'class-menu-{{ c.id }}', this)">
+                                                ⋮
+                                            </button>
+                                            <div class="dropdown-menu dropdown-menu-end shadow-sm" id="class-menu-{{ c.id }}">
+                                                <a class="dropdown-item" href="{{ url_for('internship_classroom.edit_intern_classroom', class_id=c.id) }}">Edit Intern Class</a>
+                                                <form method="POST" action="{{ url_for('classroom.archive_class', class_id=c.id) }}" class="m-0">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                    <button type="submit" class="dropdown-item">{% if c.archived %}Unarchive Class{% else %}Archive Class{% endif %}</button>
+                                                </form>
+                                                <div class="dropdown-divider"></div>
+                                                <form method="POST" action="{{ url_for('internship_classroom.delete_classroom', class_id=c.id) }}" class="m-0" onsubmit="return confirm('Permanently delete {{ c.name|e }}? This removes enrolled members, classroom activities, submissions, and related classroom data. This cannot be undone.')">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                    <button type="submit" class="dropdown-item text-danger">Delete Class</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div class="supervisor-class-meta">
@@ -78,6 +102,29 @@
         </main>
 
         <script>
+            function toggleClassMenu(event, menuId, button) {
+                event.stopPropagation();
+                document.querySelectorAll('.supervisor-class-card .dropdown-menu.show').forEach((menu) => {
+                    if (menu.id !== menuId) menu.classList.remove('show');
+                });
+                const menu = document.getElementById(menuId);
+                if (!menu) return;
+                const opening = !menu.classList.contains('show');
+                menu.classList.toggle('show', opening);
+                if (button) button.setAttribute('aria-expanded', opening ? 'true' : 'false');
+            }
+
+            document.addEventListener('click', function () {
+                document.querySelectorAll('.supervisor-class-card .dropdown-menu.show').forEach((menu) => menu.classList.remove('show'));
+                document.querySelectorAll('.supervisor-class-card [aria-expanded="true"]').forEach((button) => button.setAttribute('aria-expanded', 'false'));
+            });
+
+            document.querySelectorAll('.supervisor-class-card .dropdown-menu').forEach((menu) => {
+                menu.addEventListener('click', function (event) {
+                    event.stopPropagation();
+                });
+            });
+
             function copyClassCode(button) {
                 const code = button.dataset.code || "";
                 if (!code) return;
