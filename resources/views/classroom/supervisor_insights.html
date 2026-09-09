@@ -263,6 +263,71 @@
                 line-height: 1.55;
             }
 
+            .supervisor-insights-individual-tools {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                flex-wrap: wrap;
+                margin-bottom: 14px;
+            }
+
+            .supervisor-insights-search {
+                flex: 1 1 260px;
+                min-height: 40px;
+                padding: 0 13px;
+                border: 1px solid #dbe5f0;
+                border-radius: 10px;
+                background: #fff;
+                color: #0f172a;
+                font: inherit;
+                font-size: 0.78rem;
+                outline: none;
+            }
+
+            .supervisor-insights-search:focus {
+                border-color: #60a5fa;
+                box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            }
+
+            .supervisor-insights-filters {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                flex-wrap: wrap;
+            }
+
+            .supervisor-insights-filter {
+                min-height: 36px;
+                padding: 0 11px;
+                border: 1px solid #dbe5f0;
+                border-radius: 9px;
+                background: #fff;
+                color: #64748b;
+                font: inherit;
+                font-size: 0.7rem;
+                font-weight: 800;
+                cursor: pointer;
+            }
+
+            .supervisor-insights-filter:hover {
+                border-color: #93c5fd;
+                color: #2563eb;
+            }
+
+            .supervisor-insights-filter.active {
+                border-color: #2563eb;
+                background: #eff6ff;
+                color: #1d4ed8;
+            }
+
+            .supervisor-insights-shown-count {
+                margin-left: auto;
+                color: #64748b;
+                font-size: 0.72rem;
+                font-weight: 800;
+                white-space: nowrap;
+            }
+
             .supervisor-insights-list {
                 overflow: hidden;
                 border: 1px solid #e5ebf2;
@@ -426,17 +491,31 @@
                 line-height: 1.5;
             }
 
-            .supervisor-insights-empty {
+            .supervisor-insights-empty,
+            .supervisor-insights-filter-empty {
                 padding: 48px 24px;
                 text-align: center;
                 color: #64748b;
             }
 
-            .supervisor-insights-empty h2 {
+            .supervisor-insights-empty h2,
+            .supervisor-insights-filter-empty h3 {
                 margin: 0 0 7px;
                 color: #0f172a;
                 font-size: 1.05rem;
                 font-weight: 800;
+            }
+
+            .supervisor-insights-filter-empty {
+                padding: 28px 20px;
+                border: 1px dashed #dbe5f0;
+                border-radius: 12px;
+                background: #f8fafc;
+            }
+
+            .supervisor-insights-filter-empty p {
+                margin: 0;
+                font-size: 0.78rem;
             }
 
             .supervisor-insights-footnote {
@@ -460,6 +539,11 @@
 
                 .supervisor-insights-heading h1 {
                     font-size: 1.65rem;
+                }
+
+                .supervisor-insights-shown-count {
+                    width: 100%;
+                    margin-left: 0;
                 }
 
                 .supervisor-insights-list-head {
@@ -513,6 +597,18 @@
                 .supervisor-insights-chart-value {
                     grid-column: 2;
                     grid-row: 1;
+                }
+
+                .supervisor-insights-individual-tools,
+                .supervisor-insights-filters {
+                    align-items: stretch;
+                    flex-direction: column;
+                }
+
+                .supervisor-insights-search,
+                .supervisor-insights-filter {
+                    width: 100%;
+                    flex-basis: auto;
                 }
 
                 .supervisor-insights-detail-grid {
@@ -678,7 +774,7 @@
                         <div class="supervisor-insights-panel-heading">
                             <div>
                                 <h2>Individual Intern Insights</h2>
-                                <p>Select an intern to review the performance evidence already available in Nexora.</p>
+                                <p>Search or filter interns, then open only the performance evidence you need.</p>
                             </div>
                             <span class="text-muted small"><strong>{{ insights|length }}</strong> intern{{ '' if insights|length == 1 else 's' }}</span>
                         </div>
@@ -689,7 +785,23 @@
                                 <p>Interns will appear here after they join this Intern Classroom.</p>
                             </div>
                         {% else %}
-                            <div class="supervisor-insights-list">
+                            <div class="supervisor-insights-individual-tools">
+                                <input
+                                    id="individualInsightsSearch"
+                                    class="supervisor-insights-search"
+                                    type="search"
+                                    placeholder="Search intern name, student number, or email"
+                                    aria-label="Search individual intern insights">
+                                <div class="supervisor-insights-filters" role="group" aria-label="Filter individual intern insights">
+                                    <button type="button" class="supervisor-insights-filter active" data-intern-filter="all" aria-pressed="true">All</button>
+                                    <button type="button" class="supervisor-insights-filter" data-intern-filter="with-data" aria-pressed="false">With Data</button>
+                                    <button type="button" class="supervisor-insights-filter" data-intern-filter="needs-attention" aria-pressed="false">Needs Attention</button>
+                                    <button type="button" class="supervisor-insights-filter" data-intern-filter="no-data" aria-pressed="false">No Data</button>
+                                </div>
+                                <span class="supervisor-insights-shown-count" id="individualInsightsShownCount">{{ insights|length }} shown</span>
+                            </div>
+
+                            <div class="supervisor-insights-list" id="individualInsightsList">
                                 <div class="supervisor-insights-list-head" aria-hidden="true">
                                     <span>Intern</span>
                                     <span>Performance</span>
@@ -698,7 +810,12 @@
                                 </div>
 
                                 {% for intern in insights %}
-                                    <article class="supervisor-insights-row">
+                                    <article
+                                        class="supervisor-insights-row"
+                                        data-intern-row
+                                        data-search="{{ (intern.name ~ ' ' ~ (intern.student_number or '') ~ ' ' ~ (intern.email or ''))|lower|e }}"
+                                        data-has-data="{{ 'true' if intern.average_percentage is not none else 'false' }}"
+                                        data-needs-attention="{{ 'true' if intern.numeric_performance_label in ['Fair', 'Needs Improvement'] else 'false' }}">
                                         <div class="supervisor-insights-row-main">
                                             <div class="supervisor-insights-person">
                                                 <strong>{{ intern.name }}</strong>
@@ -768,6 +885,11 @@
                                     </article>
                                 {% endfor %}
                             </div>
+
+                            <div class="supervisor-insights-filter-empty" id="individualInsightsNoResults" hidden>
+                                <h3>No matching interns</h3>
+                                <p>Try a different search or select another performance filter.</p>
+                            </div>
                         {% endif %}
                     </div>
                 </section>
@@ -807,6 +929,68 @@
                 button.setAttribute('aria-expanded', opening ? 'true' : 'false');
                 button.textContent = opening ? 'Hide' : 'View';
             }
+
+            const individualInsightsSearch = document.getElementById('individualInsightsSearch');
+            const individualFilterButtons = document.querySelectorAll('[data-intern-filter]');
+            const individualRows = Array.from(document.querySelectorAll('[data-intern-row]'));
+            const individualShownCount = document.getElementById('individualInsightsShownCount');
+            const individualNoResults = document.getElementById('individualInsightsNoResults');
+            let activeInternFilter = 'all';
+
+            function resetHiddenInternDetails(row) {
+                const details = row.querySelector('.supervisor-insights-row-details');
+                const button = row.querySelector('.supervisor-insights-view-button');
+                if (details) details.classList.remove('open');
+                if (button) {
+                    button.setAttribute('aria-expanded', 'false');
+                    button.textContent = 'View';
+                }
+            }
+
+            function applyIndividualInsightFilters() {
+                const query = (individualInsightsSearch?.value || '').trim().toLowerCase();
+                let visibleCount = 0;
+
+                individualRows.forEach((row) => {
+                    const searchable = row.dataset.search || '';
+                    const hasData = row.dataset.hasData === 'true';
+                    const needsAttention = row.dataset.needsAttention === 'true';
+                    const matchesSearch = !query || searchable.includes(query);
+                    let matchesFilter = true;
+
+                    if (activeInternFilter === 'with-data') matchesFilter = hasData;
+                    if (activeInternFilter === 'needs-attention') matchesFilter = needsAttention;
+                    if (activeInternFilter === 'no-data') matchesFilter = !hasData;
+
+                    const visible = matchesSearch && matchesFilter;
+                    row.hidden = !visible;
+                    if (visible) {
+                        visibleCount += 1;
+                    } else {
+                        resetHiddenInternDetails(row);
+                    }
+                });
+
+                if (individualShownCount) {
+                    individualShownCount.textContent = `${visibleCount} shown`;
+                }
+                if (individualNoResults) {
+                    individualNoResults.hidden = visibleCount !== 0;
+                }
+            }
+
+            individualInsightsSearch?.addEventListener('input', applyIndividualInsightFilters);
+            individualFilterButtons.forEach((button) => {
+                button.addEventListener('click', () => {
+                    activeInternFilter = button.dataset.internFilter || 'all';
+                    individualFilterButtons.forEach((item) => {
+                        const active = item === button;
+                        item.classList.toggle('active', active);
+                        item.setAttribute('aria-pressed', active ? 'true' : 'false');
+                    });
+                    applyIndividualInsightFilters();
+                });
+            });
         </script>
     </body>
 </html>
