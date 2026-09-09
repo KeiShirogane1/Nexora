@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>My Classes - Nexora</title>
+        <title>My Intern Classrooms - Nexora</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">
@@ -135,12 +135,12 @@
             <div class="nexora-page supervisor-classes-page-inner">
                 <header class="supervisor-classes-header">
                     <div>
-                        <h1>My Classes</h1>
-                        <p>Manage your internship classrooms. Create and organize by section.</p>
+                        <h1>My Intern Classrooms</h1>
+                        <p>Manage your internship cohorts by company and section.</p>
                     </div>
                 </header>
 
-                <section class="supervisor-classes-list" aria-label="Your classes">
+                <section class="supervisor-classes-list" aria-label="Your Intern Classrooms">
                     {% if classes and classes|length > 0 %}
                         {% for c in classes %}
                             {% set active_banner_theme = classroom_banner_theme(c.id) %}
@@ -166,7 +166,7 @@
                                                     ⋮
                                                 </button>
                                                 <div class="dropdown-menu dropdown-menu-end shadow-sm" id="class-menu-{{ c.id }}">
-                                                    <a class="dropdown-item" href="{{ url_for('internship_classroom.edit_intern_classroom', class_id=c.id) }}">Edit Intern Class</a>
+                                                    <a class="dropdown-item" href="{{ url_for('internship_classroom.edit_intern_classroom', class_id=c.id) }}">Edit Intern Classroom</a>
                                                     <button type="button" class="dropdown-item" onclick="toggleCardBannerColorChoices(event, 'class-banner-colors-{{ c.id }}')">Change Banner Color</button>
                                                     <div class="class-banner-color-panel" id="class-banner-colors-{{ c.id }}" hidden>
                                                         <span class="class-banner-color-label">Banner color</span>
@@ -189,12 +189,12 @@
                                                     </div>
                                                     <form method="POST" action="{{ url_for('classroom.archive_class', class_id=c.id) }}" class="m-0">
                                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                        <button type="submit" class="dropdown-item">{% if c.archived %}Unarchive Class{% else %}Archive Class{% endif %}</button>
+                                                        <button type="submit" class="dropdown-item">{% if c.archived %}Unarchive Intern Classroom{% else %}Archive Intern Classroom{% endif %}</button>
                                                     </form>
                                                     <div class="dropdown-divider"></div>
-                                                    <form method="POST" action="{{ url_for('internship_classroom.delete_classroom', class_id=c.id) }}" class="m-0" onsubmit="return confirm('Permanently delete this class? This removes enrolled members, classroom activities, submissions, and related classroom data. This cannot be undone.')">
+                                                    <form method="POST" action="{{ url_for('internship_classroom.delete_classroom', class_id=c.id) }}" class="m-0" onsubmit="return confirm('Permanently delete this Intern Classroom? This removes enrolled interns, classroom activities, submissions, and related classroom data. This cannot be undone.')">
                                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                        <button type="submit" class="dropdown-item text-danger">Delete Class</button>
+                                                        <button type="submit" class="dropdown-item text-danger">Delete Intern Classroom</button>
                                                     </form>
                                                 </div>
                                             </div>
@@ -205,7 +205,7 @@
                                 <div class="supervisor-class-meta">
                                     <div class="supervisor-meta-item">
                                         <span class="supervisor-meta-icon" aria-hidden="true">👥</span>
-                                        <span>{{ c.student_count }} students</span>
+                                        <span>{{ c.student_count }} interns</span>
                                     </div>
 
                                     <div class="supervisor-code-row">
@@ -216,29 +216,29 @@
                                             class="supervisor-copy-btn"
                                             data-code="{{ c.code }}"
                                             onclick="copyClassCode(this)"
-                                            aria-label="Copy class code {{ c.code }}">
+                                            aria-label="Copy Intern Classroom code {{ c.code }}">
                                             <span aria-hidden="true">▣</span> Copy
                                         </button>
                                     </div>
                                 </div>
 
                                 <a href="{{ url_for('classroom.supervisor_class', class_id=c.id) }}" class="supervisor-open-class-btn">
-                                    Open Class
+                                    Open Intern Classroom
                                 </a>
                             </article>
                         {% endfor %}
                     {% else %}
                         <article class="supervisor-empty-card">
                             <div class="supervisor-empty-icon" aria-hidden="true">🏫</div>
-                            <h2>No classes yet</h2>
-                            <p>Create your first classroom to organize interns by section.</p>
+                            <h2>No Intern Classrooms yet</h2>
+                            <p>Create your first Intern Classroom to organize interns by company and section.</p>
                         </article>
                     {% endif %}
                 </section>
 
                 <div class="supervisor-create-bar">
                     <a href="{{ url_for('classroom.create_class') }}" class="supervisor-create-class-btn">
-                        + Create Class
+                        + Create Intern Classroom
                     </a>
                 </div>
             </div>
