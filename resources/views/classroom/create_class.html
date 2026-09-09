@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create a Space - Nexora</title>
+    <title>Create Intern Classroom - Nexora</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">
@@ -11,108 +11,12 @@
 <body class="supervisor-create-space-page">
     {% include 'components/supervisor_sidebar.html' %}
 
-    <main class="page-content nexora-app-main create-space-main" data-initial-view="{{ initial_view|default('choice') }}">
+    <main class="page-content nexora-app-main create-space-main">
         <div class="create-space-shell">
-            <section id="create-space-choice" class="create-space-view">
-                <div class="create-space-choice-grid">
-                    <article class="create-space-choice-card" role="button" tabindex="0" data-show-view="classroom" aria-label="Create Classroom">
-                        <div class="create-space-choice-icon" aria-hidden="true">▦</div>
-                        <span class="create-space-choice-label">Classroom</span>
-                        <h2>Create Classroom</h2>
-                        <p>For classes, sections, activities, announcements, grades, student work, and academic monitoring.</p>
-                        <ul class="create-space-feature-list">
-                            <li>Classwork and student submissions</li>
-                            <li>Gradebook and performance insights</li>
-                            <li>Announcements and classroom stream</li>
-                            <li>Reports and student enrollment</li>
-                        </ul>
-                    </article>
-
-                    <article class="create-space-choice-card" role="button" tabindex="0" data-show-view="internship" aria-label="Create Internship Classroom">
-                        <div class="create-space-choice-icon" aria-hidden="true">◇</div>
-                        <span class="create-space-choice-label">Internship Classroom</span>
-                        <h2>Create Internship Classroom</h2>
-                        <p>For supervised internship placements with company details, work arrangements, flexible scheduling, responsibilities, and eligibility.</p>
-                        <ul class="create-space-feature-list">
-                            <li>Company and placement information</li>
-                            <li>Flexible schedule and OJT hour options</li>
-                            <li>Responsibilities and qualifications</li>
-                            <li>Structured student-facing internship details</li>
-                        </ul>
-                    </article>
-                </div>
-            </section>
-
-            <section id="create-space-classroom" class="create-space-view" hidden aria-labelledby="create-classroom-title">
+            <section id="create-space-internship" class="create-space-view" aria-labelledby="create-internship-title">
                 <div class="create-space-form-card">
                     <header class="create-space-form-head">
-                        <span class="create-space-eyebrow">Create Classroom</span>
-                        <h1 id="create-classroom-title">Set up your classroom</h1>
-                        <p>Create a space for teaching, activities, student work, announcements, academic monitoring, and reports.</p>
-                    </header>
-
-                    <form method="POST" novalidate class="create-space-form-body">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <input type="hidden" name="form_type" value="classroom">
-
-                        <section class="create-space-section">
-                            <div class="create-space-section-title">
-                                <h2>Classroom Details</h2>
-                                <p>These are the same fields supported by the existing classroom workflow.</p>
-                            </div>
-
-                            <div class="create-space-fields">
-                                <div class="create-space-field">
-                                    <label for="class_name">Classroom Name <span class="create-space-required">*</span></label>
-                                    <input type="text" id="class_name" name="class_name" maxlength="100" placeholder="Example: Web Development 3A" value="{{ form.get('class_name', '') }}" required>
-                                    <small>Use a clear class or subject name.</small>
-                                    {% if errors and errors.class_name %}<div class="create-space-error">{{ errors.class_name }}</div>{% endif %}
-                                </div>
-
-                                <div class="create-space-field">
-                                    <label for="section">Section <span class="create-space-required">*</span></label>
-                                    <input type="text" id="section" name="section" maxlength="100" placeholder="Example: BSIT 3A" value="{{ form.get('section', '') }}" required>
-                                    <small>Enter the section or group this classroom belongs to.</small>
-                                    {% if errors and errors.section %}<div class="create-space-error">{{ errors.section }}</div>{% endif %}
-                                </div>
-
-                                <div class="create-space-field is-full">
-                                    <label for="description">Description</label>
-                                    <textarea id="description" name="description" maxlength="500" placeholder="Example: Classroom for BSIT 3A students covering web development activities and project submissions.">{{ form.get('description', '') }}</textarea>
-                                    <small>Optional. Maximum 500 characters.</small>
-                                    {% if errors and errors.description %}<div class="create-space-error">{{ errors.description }}</div>{% endif %}
-                                </div>
-                            </div>
-                        </section>
-
-                        <section class="create-space-section">
-                            <div class="create-space-section-title">
-                                <h2>What you'll get</h2>
-                                <p>Nexora automatically connects the classroom to the existing classroom workflow.</p>
-                            </div>
-                            <ul class="create-space-benefits">
-                                <li>Automatically generated class code</li>
-                                <li>Student enrollment</li>
-                                <li>Stream and announcements</li>
-                                <li>Classwork</li>
-                                <li>Gradebook</li>
-                                <li>Performance Insights</li>
-                                <li>Reports</li>
-                            </ul>
-                        </section>
-
-                        <div class="create-space-footer">
-                            <button type="button" class="create-space-secondary-button" data-show-view="choice">Cancel</button>
-                            <button type="submit" class="create-space-primary-button">Create Classroom</button>
-                        </div>
-                    </form>
-                </div>
-            </section>
-
-            <section id="create-space-internship" class="create-space-view" hidden aria-labelledby="create-internship-title">
-                <div class="create-space-form-card">
-                    <header class="create-space-form-head">
-                        <span class="create-space-eyebrow">Create Internship Classroom</span>
+                        <span class="create-space-eyebrow">Create Intern Classroom</span>
                         <h1 id="create-internship-title">Set up a supervised internship placement</h1>
                         <p>Provide enough information so students clearly understand the company, work arrangement, schedule, requirements, expected responsibilities, and eligibility.</p>
                     </header>
@@ -284,12 +188,12 @@
                         </section>
 
                         <div class="create-space-notice" role="note">
-                            Internship Classroom information is stored separately from each student's existing internship record. Creating this classroom will not overwrite or reassign any student's current internship.
+                            Intern Classroom information is stored separately from each student's existing internship record. Creating this classroom will not overwrite or reassign any student's current internship.
                         </div>
 
                         <div class="create-space-footer">
-                            <button type="button" class="create-space-secondary-button" data-show-view="choice">Cancel</button>
-                            <button type="submit" class="create-space-primary-button">Create Internship Classroom</button>
+                            <button type="button" class="create-space-secondary-button" onclick="window.location.href='{{ url_for('classroom.supervisor_classes') }}'">Cancel</button>
+                            <button type="submit" class="create-space-primary-button">Create Intern Classroom</button>
                         </div>
                     </form>
                 </div>
@@ -299,21 +203,6 @@
 
     <script>
         (function () {
-            const root = document.querySelector('.create-space-main');
-            const views = {
-                choice: document.getElementById('create-space-choice'),
-                classroom: document.getElementById('create-space-classroom'),
-                internship: document.getElementById('create-space-internship')
-            };
-
-            function showView(name) {
-                if (!views[name]) name = 'choice';
-                Object.keys(views).forEach(function (key) {
-                    if (views[key]) views[key].hidden = key !== name;
-                });
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
-
             function syncInternshipOptions() {
                 const scheduleType = document.querySelector('input[name="schedule_type"]:checked');
                 const scheduleValue = scheduleType ? scheduleType.value : 'fixed_dates';
@@ -344,21 +233,6 @@
                 }
             }
 
-            document.querySelectorAll('[data-show-view]').forEach(function (button) {
-                button.addEventListener('click', function () {
-                    showView(button.getAttribute('data-show-view'));
-                });
-            });
-
-            document.querySelectorAll('.create-space-choice-card[data-show-view]').forEach(function (card) {
-                card.addEventListener('keydown', function (event) {
-                    if (event.key === 'Enter' || event.key === ' ') {
-                        event.preventDefault();
-                        showView(card.getAttribute('data-show-view'));
-                    }
-                });
-            });
-
             document.querySelectorAll('input[name="schedule_type"], input[name="hours_mode"]').forEach(function (input) {
                 input.addEventListener('change', syncInternshipOptions);
             });
@@ -384,7 +258,6 @@
                 if (list && row && list.children.length > 1) row.remove();
             });
 
-            showView(root ? root.dataset.initialView : 'choice');
             syncInternshipOptions();
         })();
     </script>
