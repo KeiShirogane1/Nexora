@@ -535,7 +535,7 @@
                                     <p class="class-subtitle">{{ classroom.description }}</p>
                                 {% endif %}
                                 {% if classroom.archived %}
-                                    <div class="alert alert-warning mt-3 mb-0">This class is archived. New announcements and assignments are disabled.</div>
+                                    <div class="alert alert-warning mt-3 mb-0">This Intern Classroom is archived. New announcements and work are disabled.</div>
                                 {% endif %}
                             </div>
 
@@ -599,21 +599,20 @@
 
                 <nav class="class-tabs" aria-label="Class navigation">
                     <button class="profile-tab-button active" onclick="openClassTab('stream',this)">Stream</button>
-                    <button class="profile-tab-button" onclick="openClassTab('classwork',this)">Classwork</button>
-                    <a href="{{ url_for('classwork_gradebook.supervisor_gradebook',class_id=classroom.id) }}" class="profile-tab-button">Gradebook</a>
+                    <button class="profile-tab-button" onclick="openClassTab('classwork',this)">Work</button>
                     <a href="{{ url_for('classwork_ml_insights.supervisor_insights',class_id=classroom.id) }}" class="profile-tab-button">Performance Insights</a>
                     <a href="{{ url_for('performance_reports.supervisor_reports',class_id=classroom.id) }}" class="profile-tab-button">Reports</a>
-                    <button class="profile-tab-button" onclick="openClassTab('people',this)">People</button>
+                    <button class="profile-tab-button" onclick="openClassTab('people',this)">Interns</button>
                 </nav>
 
                 <section id="stream" class="profile-tab active">
                     <div class="class-card">
                         <div class="class-card-body">
-                            <h5 class="mb-3">Class Announcement</h5>
+                            <h5 class="mb-3">Intern Classroom Announcement</h5>
                             <form method="POST" action="{{ url_for('classroom.create_post',class_id=classroom.id) }}">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <input type="text" name="title" class="form-control mb-2" placeholder="Title (optional)" maxlength="200" {% if classroom.archived %}disabled{% endif %}>
-                                <textarea name="body" class="form-control mb-3" rows="3" placeholder="Announce something to your class..." required maxlength="5000" {% if classroom.archived %}disabled{% endif %}>
+                                <textarea name="body" class="form-control mb-3" rows="3" placeholder="Announce something to your interns..." required maxlength="5000" {% if classroom.archived %}disabled{% endif %}>
                                 </textarea>
                                 <div class="text-end">
                                     <button type="submit" class="btn btn-primary" {% if classroom.archived %}disabled{% endif %}>Post</button>
@@ -687,12 +686,12 @@
                     <div class="class-card">
                         <div class="class-card-header">
                             <div>
-                                <h6 class="mb-1">Classwork</h6>
-                                <div class="small text-muted">Assignments, quizzes, Google activities, files, and projects.</div>
+                                <h6 class="mb-1">Work</h6>
+                                <div class="small text-muted">Tasks, online activities, files, and projects for your interns.</div>
                             </div>
                             <div class="d-flex align-items-center gap-2">
                                 <span class="badge bg-primary">{{ assignments|length }} activities</span>
-                                <a href="{{ url_for('classwork.manage_classwork',class_id=classroom.id) }}" class="btn btn-primary btn-sm">+ Create Classwork</a>
+                                <a href="{{ url_for('classwork.manage_classwork',class_id=classroom.id) }}" class="btn btn-primary btn-sm">+ Create Work</a>
                             </div>
                         </div>
                         <div class="class-card-body">
@@ -709,9 +708,9 @@
                             {% endfor %}{% else %}
                                 <div class="empty-classwork">
                                     <div style="font-size:34px">📝</div>
-                                    <h6>No classwork yet</h6>
-                                    <p>Create your first student activity using the Classwork Studio.</p>
-                                    <a href="{{ url_for('classwork.manage_classwork',class_id=classroom.id) }}" class="btn btn-primary">Create Classwork</a>
+                                    <h6>No work yet</h6>
+                                    <p>Create your first intern activity using the Work Studio.</p>
+                                    <a href="{{ url_for('classwork.manage_classwork',class_id=classroom.id) }}" class="btn btn-primary">Create Work</a>
                                 </div>
                             {% endif %}
                         </div>
@@ -721,16 +720,16 @@
                 <section id="people" class="profile-tab">
                     <div class="class-card">
                         <div class="class-card-header">
-                            <h6 class="mb-0">People</h6>
-                            <span class="badge bg-primary">{{ classroom.student_count }} students</span>
+                            <h6 class="mb-0">Interns</h6>
+                            <span class="badge bg-primary">{{ classroom.student_count }} interns</span>
                         </div>
                         <div class="class-card-body">
-                            <h6>Teacher</h6>
+                            <h6>Supervisor</h6>
                             <div class="d-flex align-items-center gap-2 border-bottom pb-3 mb-3">
                                 <span class="avatar-sm bg-primary text-white">S</span>
                                 <span>Supervisor (you)</span>
                             </div>
-                            <h6>Classmates / Students</h6>
+                            <h6>Interns</h6>
                             {% if students and students|length>0 %}{% for s in students %}
                                 <div class="d-flex justify-content-between align-items-center border-bottom py-3">
                                     <div>
@@ -745,7 +744,7 @@
                                     </form>
                                 </div>
                             {% endfor %}{% else %}
-                                <p class="text-muted mb-0">No students enrolled yet.</p>
+                                <p class="text-muted mb-0">No interns enrolled yet.</p>
                                 <p class="small text-muted mt-2">Share class code <strong id="peopleCode">{{ classroom.code }}</strong>
                                     <button class="btn btn-sm btn-outline-primary ms-2" onclick="copyClassCode()">Copy</button>
                                 </p>
@@ -760,7 +759,7 @@
             <div class="nexora-modal" role="dialog" aria-modal="true" aria-labelledby="classInfoTitle">
                 <div class="nexora-modal-header">
                     <h2 id="classInfoTitle">Class Information</h2>
-                    <p>Details for this classroom</p>
+                    <p>Details for this Intern Classroom</p>
                     <button type="button" class="nexora-modal-close" onclick="closeClassInfo()">×</button>
                 </div>
                 <div class="nexora-modal-body" style="gap:10px">
@@ -781,11 +780,11 @@
                         <span>{{ classroom.code }}</span>
                     </div>
                     <div class="d-flex justify-content-between">
-                        <strong>Students</strong>
+                        <strong>Interns</strong>
                         <span>{{ classroom.student_count }}</span>
                     </div>
                     <div class="d-flex justify-content-between">
-                        <strong>Assignments</strong>
+                        <strong>Work Items</strong>
                         <span>{{ assignments|length }}</span>
                     </div>
                     <div class="d-flex justify-content-between">
