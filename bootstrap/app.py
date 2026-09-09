@@ -105,6 +105,9 @@ def inject_notifications():
     if user["role"]=="student":
      p=conn.execute("SELECT first_name,last_name,profile_picture FROM student_profiles WHERE user_id=?",(uid,)).fetchone()
      if p:sidebar.update({"first_name":p["first_name"],"last_name":p["last_name"],"profile_picture":p["profile_picture"]})
+    elif user["role"]=="supervisor":
+     p=conn.execute("SELECT first_name,last_name FROM supervisor_profiles WHERE user_id=?",(uid,)).fetchone()
+     if p:sidebar.update({"first_name":p["first_name"],"last_name":p["last_name"]})
   finally:conn.close()
   return {"notifications":get_user_notifications(uid,limit=20),"recent_notifications":get_recent_notifications(uid,days=7,limit=10),"unread_count":get_unread_count(uid),"sidebar_profile":sidebar}
  except Exception as exc:print("inject_notifications failed:",exc);return {"notifications":[],"recent_notifications":[],"unread_count":0,"sidebar_profile":sidebar}

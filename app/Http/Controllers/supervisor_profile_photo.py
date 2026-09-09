@@ -1,5 +1,6 @@
 import os
 import re
+from uuid import uuid4
 from flask import Blueprint, current_app, jsonify, request, session, redirect, render_template, flash, url_for
 from werkzeug.utils import secure_filename
 from app.Http.Middleware.security import role_required
@@ -322,7 +323,7 @@ def update_photo():
     file.seek(0)
     if size > 2 * 1024 * 1024:
         return jsonify({"ok": False, "error": "Image too large (max 2MB)"}), 400
-    filename = f"supervisor_{session['user_id']}_profile.jpg"
+    filename = f"supervisor_{session['user_id']}_{uuid4().hex[:10]}.jpg"
     path = os.path.join(current_app.config["PROFILE_UPLOAD_FOLDER"], filename)
     file.save(path)
     conn = get_db_connection()
