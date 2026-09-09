@@ -426,6 +426,18 @@
                 font-size: 15px;
             }
 
+            .class-info-item a {
+                color: #2563eb;
+                font-size: 15px;
+                font-weight: 700;
+                text-decoration: none;
+                overflow-wrap: anywhere;
+            }
+
+            .class-info-item a:hover {
+                text-decoration: underline;
+            }
+
             .empty-classwork {
                 text-align: center;
                 padding: 44px 20px;
@@ -949,7 +961,7 @@
                         <div class="class-card-header">
                             <div>
                                 <h6 class="mb-1">Intern Classroom Details</h6>
-                                <div class="small text-muted">Real saved classroom and internship information.</div>
+                                <div class="small text-muted">Saved internship setup and current classroom information.</div>
                             </div>
                         </div>
                         <div class="class-card-body">
@@ -957,6 +969,46 @@
                                 <div class="class-info-item">
                                     <strong>Company</strong>
                                     <span>{{ classroom.company_name or '—' }}</span>
+                                </div>
+                                <div class="class-info-item">
+                                    <strong>Industry</strong>
+                                    <span>{{ classroom.industry or '—' }}</span>
+                                </div>
+                                <div class="class-info-item">
+                                    <strong>Work Arrangement</strong>
+                                    <span>{{ classroom.work_arrangement or '—' }}</span>
+                                </div>
+                                <div class="class-info-item">
+                                    <strong>Location</strong>
+                                    <span>{{ classroom.location or '—' }}</span>
+                                </div>
+                                <div class="class-info-item">
+                                    <strong>Schedule</strong>
+                                    <span>
+                                        {% if classroom.schedule_type == 'fixed_dates' %}
+                                            {{ classroom.start_date or '—' }} to {{ classroom.end_date or '—' }}
+                                        {% elif classroom.schedule_type == 'flexible' %}
+                                            Flexible{% if classroom.start_date or classroom.end_date %} · {{ classroom.start_date or 'Open' }} to {{ classroom.end_date or 'Open' }}{% endif %}
+                                        {% else %}
+                                            Not specified
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <div class="class-info-item">
+                                    <strong>Enrollment Deadline</strong>
+                                    <span>{{ classroom.enrollment_deadline or 'Not specified' }}</span>
+                                </div>
+                                <div class="class-info-item">
+                                    <strong>Required Hours</strong>
+                                    <span>{% if classroom.hours_mode == 'specified' and classroom.required_hours %}{{ classroom.required_hours }} hours{% else %}Not specified{% endif %}</span>
+                                </div>
+                                <div class="class-info-item">
+                                    <strong>Company Website</strong>
+                                    {% if classroom.company_website %}
+                                        <a href="{{ classroom.company_website }}" target="_blank" rel="noopener noreferrer">Visit website</a>
+                                    {% else %}
+                                        <span>—</span>
+                                    {% endif %}
                                 </div>
                                 <div class="class-info-item">
                                     <strong>Section</strong>
@@ -967,28 +1019,12 @@
                                     <span>{{ classroom.code }}</span>
                                 </div>
                                 <div class="class-info-item">
-                                    <strong>Required Hours</strong>
-                                    <span>{% if classroom.hours_mode == 'specified' and classroom.required_hours %}{{ classroom.required_hours }} hours{% else %}Not specified{% endif %}</span>
-                                </div>
-                                <div class="class-info-item">
-                                    <strong>Created</strong>
-                                    <span>{{ classroom.created_at or '—' }}</span>
-                                </div>
-                                <div class="class-info-item">
                                     <strong>Current Interns</strong>
                                     <span>{{ classroom.student_count }}</span>
                                 </div>
                                 <div class="class-info-item">
                                     <strong>Status</strong>
                                     <span class="badge {% if classroom.status == 'Active' %}bg-success{% else %}bg-secondary{% endif %}">{{ classroom.status }}</span>
-                                </div>
-                                <div class="class-info-item">
-                                    <strong>Work Items</strong>
-                                    <span>{{ assignments|length }}</span>
-                                </div>
-                                <div class="class-info-item">
-                                    <strong>Announcements</strong>
-                                    <span>{{ announcements|length }}</span>
                                 </div>
                             </div>
                         </div>
@@ -1122,45 +1158,83 @@
             <div class="nexora-modal" role="dialog" aria-modal="true" aria-labelledby="classInfoTitle">
                 <div class="nexora-modal-header">
                     <h2 id="classInfoTitle">Intern Classroom Information</h2>
-                    <p>Saved details and current classroom activity</p>
+                    <p>Saved internship details and current classroom activity</p>
                     <button type="button" class="nexora-modal-close" onclick="closeClassInfo()">×</button>
                 </div>
                 <div class="nexora-modal-body" style="gap:10px">
-                    <div class="d-flex justify-content-between">
+                    <div class="d-flex justify-content-between gap-3">
                         <strong>Intern Classroom</strong>
-                        <span>{{ classroom.name }}</span>
+                        <span class="text-end">{{ classroom.name }}</span>
                     </div>
-                    <div class="d-flex justify-content-between">
+                    <div class="d-flex justify-content-between gap-3">
                         <strong>Company</strong>
-                        <span>{{ classroom.company_name or '—' }}</span>
+                        <span class="text-end">{{ classroom.company_name or '—' }}</span>
                     </div>
-                    <div class="d-flex justify-content-between">
-                        <strong>Section</strong>
-                        <span>{{ classroom.section }}</span>
+                    <div class="d-flex justify-content-between gap-3">
+                        <strong>Industry</strong>
+                        <span class="text-end">{{ classroom.industry or '—' }}</span>
                     </div>
-                    <div class="d-flex justify-content-between">
+                    <div class="d-flex justify-content-between gap-3">
+                        <strong>Work arrangement</strong>
+                        <span class="text-end">{{ classroom.work_arrangement or '—' }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between gap-3">
+                        <strong>Location</strong>
+                        <span class="text-end">{{ classroom.location or '—' }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between gap-3">
+                        <strong>Schedule</strong>
+                        <span class="text-end">
+                            {% if classroom.schedule_type == 'fixed_dates' %}
+                                {{ classroom.start_date or '—' }} to {{ classroom.end_date or '—' }}
+                            {% elif classroom.schedule_type == 'flexible' %}
+                                Flexible{% if classroom.start_date or classroom.end_date %} · {{ classroom.start_date or 'Open' }} to {{ classroom.end_date or 'Open' }}{% endif %}
+                            {% else %}
+                                Not specified
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="d-flex justify-content-between gap-3">
+                        <strong>Enrollment deadline</strong>
+                        <span class="text-end">{{ classroom.enrollment_deadline or 'Not specified' }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between gap-3">
                         <strong>Required hours</strong>
-                        <span>{% if classroom.hours_mode == 'specified' and classroom.required_hours %}{{ classroom.required_hours }} hours{% else %}Not specified{% endif %}</span>
+                        <span class="text-end">{% if classroom.hours_mode == 'specified' and classroom.required_hours %}{{ classroom.required_hours }} hours{% else %}Not specified{% endif %}</span>
                     </div>
-                    <div class="d-flex justify-content-between">
+                    <div class="d-flex justify-content-between gap-3">
+                        <strong>Company website</strong>
+                        <span class="text-end">
+                            {% if classroom.company_website %}
+                                <a href="{{ classroom.company_website }}" target="_blank" rel="noopener noreferrer">Visit website</a>
+                            {% else %}
+                                —
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="d-flex justify-content-between gap-3">
+                        <strong>Section</strong>
+                        <span class="text-end">{{ classroom.section }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between gap-3">
                         <strong>Class code</strong>
-                        <span>{{ classroom.code }}</span>
+                        <span class="text-end">{{ classroom.code }}</span>
                     </div>
-                    <div class="d-flex justify-content-between">
+                    <div class="d-flex justify-content-between gap-3">
                         <strong>Interns</strong>
-                        <span>{{ classroom.student_count }}</span>
+                        <span class="text-end">{{ classroom.student_count }}</span>
                     </div>
-                    <div class="d-flex justify-content-between">
+                    <div class="d-flex justify-content-between gap-3">
                         <strong>Work items</strong>
-                        <span>{{ assignments|length }}</span>
+                        <span class="text-end">{{ assignments|length }}</span>
                     </div>
-                    <div class="d-flex justify-content-between">
+                    <div class="d-flex justify-content-between gap-3">
                         <strong>Announcements</strong>
-                        <span>{{ announcements|length }}</span>
+                        <span class="text-end">{{ announcements|length }}</span>
                     </div>
-                    <div class="d-flex justify-content-between">
+                    <div class="d-flex justify-content-between gap-3">
                         <strong>Status</strong>
-                        <span>{{ classroom.status }}</span>
+                        <span class="text-end">{{ classroom.status }}</span>
                     </div>
                 </div>
                 <div class="nexora-modal-footer">
