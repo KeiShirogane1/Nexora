@@ -13,8 +13,9 @@
             .supervisor-report-content { max-width:1100px; margin:0 auto; }
             .supervisor-report-back { color:#2563eb; text-decoration:none; font-size:.86rem; font-weight:700; }
             .supervisor-report-heading { display:flex; align-items:flex-end; justify-content:space-between; gap:18px; margin:10px 0 18px; }
-            .supervisor-report-heading h1 { margin:0; font-size:1.7rem; font-weight:800; letter-spacing:-.025em; }
-            .supervisor-report-heading p { margin:4px 0 2px; color:#64748b; }
+            .supervisor-report-heading > * { min-width:0; }
+            .supervisor-report-heading h1 { margin:0; font-size:1.7rem; font-weight:800; letter-spacing:-.025em; overflow-wrap:anywhere; }
+            .supervisor-report-heading p { margin:4px 0 2px; color:#64748b; overflow-wrap:anywhere; }
             .supervisor-report-card { background:#fff; border:1px solid #e8eef7; border-radius:18px; box-shadow:0 8px 28px rgba(15,23,42,.07); padding:22px; margin-bottom:18px; }
             .supervisor-report-card h2 { margin:0 0 14px; color:#0f172a; font-size:1.05rem; font-weight:800; }
             .supervisor-report-label { display:inline-block; padding:6px 10px; border-radius:999px; font-size:.78rem; font-weight:800; }
@@ -27,14 +28,48 @@
             .supervisor-report-table { width:100%; border-collapse:collapse; }
             .supervisor-report-table th, .supervisor-report-table td { padding:12px 14px; border-bottom:1px solid #f1f5f9; text-align:left; font-size:.84rem; }
             .supervisor-report-table th { color:#64748b; font-size:.7rem; font-weight:800; text-transform:uppercase; letter-spacing:.05em; width:260px; }
+            .supervisor-report-table td { overflow-wrap:anywhere; }
+            .supervisor-report-recommendation { color:#334155; }
+            .supervisor-report-basis { color:#64748b; font-size:.82rem !important; }
             .supervisor-report-work-summary { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:14px; }
-            .supervisor-report-work-highlight { padding:12px; border:1px solid #e8eef7; border-radius:12px; background:#f8fafc; }
+            .supervisor-report-work-highlight { min-width:0; padding:12px; border:1px solid #e8eef7; border-radius:12px; background:#f8fafc; overflow-wrap:anywhere; }
             .supervisor-report-work-highlight small { color:#64748b; font-weight:700; }
             .supervisor-report-work-highlight div { margin-top:4px; }
+            .supervisor-report-footer-actions { display:flex; gap:8px; flex-wrap:wrap; }
+
             @media (max-width:760px) {
                 .supervisor-report-heading { align-items:flex-start; flex-direction:column; }
                 .supervisor-report-work-summary { grid-template-columns:1fr; }
                 .supervisor-report-table th { width:auto; }
+            }
+
+            @media (max-width:620px) {
+                .supervisor-report-card { padding:16px; border-radius:14px; }
+                .supervisor-report-card h2 { font-size:.98rem; }
+                .supervisor-report-card > .supervisor-report-table,
+                .supervisor-report-card > .supervisor-report-table tbody { display:block; width:100%; }
+                .supervisor-report-card > .supervisor-report-table tr {
+                    display:grid;
+                    grid-template-columns:1fr;
+                    gap:4px;
+                    padding:10px 0;
+                    border-bottom:1px solid #eef2f7;
+                }
+                .supervisor-report-card > .supervisor-report-table tr:last-child { border-bottom:0; }
+                .supervisor-report-card > .supervisor-report-table th,
+                .supervisor-report-card > .supervisor-report-table td {
+                    display:block;
+                    width:100%;
+                    padding:0;
+                    border:0;
+                }
+                .table-responsive .supervisor-report-table { min-width:520px; }
+                .supervisor-report-footer-actions .btn { flex:1 1 190px; }
+            }
+
+            @media (max-width:520px) {
+                .supervisor-report-heading h1 { font-size:1.5rem; }
+                .supervisor-report-footer-actions .btn { width:100%; flex-basis:100%; }
             }
         </style>
     </head>
@@ -106,7 +141,7 @@
                             <tbody>
                                 <tr>
                                     <th>Recommendation</th>
-                                    <td style="color:#334155;">{% if report.overall_percentage is none and not report.has_feedback %}No recommendation yet. Reviewed work or supervisor feedback is needed first.{% else %}{{ report.recommendation }}{% endif %}</td>
+                                    <td class="supervisor-report-recommendation">{% if report.overall_percentage is none and not report.has_feedback %}No recommendation yet. Reviewed work or supervisor feedback is needed first.{% else %}{{ report.recommendation }}{% endif %}</td>
                                 </tr>
                                 <tr>
                                     <th>Priority</th>
@@ -118,7 +153,7 @@
                                         {% endif %}
                                     </td>
                                 </tr>
-                                <tr><th>Evidence basis</th><td style="color:#64748b; font-size:.82rem;">{% if report.basis %}{{ report.basis|join(" · ") }}{% else %}—{% endif %}</td></tr>
+                                <tr><th>Evidence basis</th><td class="supervisor-report-basis">{% if report.basis %}{{ report.basis|join(" · ") }}{% else %}—{% endif %}</td></tr>
                             </tbody>
                         </table>
                     </section>
@@ -166,7 +201,7 @@
                         {% endif %}
                     </section>
 
-                    <div class="d-flex gap-2 flex-wrap">
+                    <div class="supervisor-report-footer-actions">
                         <a href="{{ url_for('performance_reports.supervisor_reports', class_id=classroom.id) }}" class="btn btn-outline-primary">Back to Reports</a>
                         <a href="{{ url_for('classroom.supervisor_class', class_id=classroom.id) }}" class="btn btn-light">Back to Intern Classroom</a>
                     </div>
