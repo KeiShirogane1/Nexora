@@ -92,7 +92,35 @@
 
     .class-cover {
         height: 110px;
-        background: linear-gradient(135deg, var(--nx-green-soft), #f8fbfa);
+        background: linear-gradient(135deg, #93c5fd 0%, #dbeafe 100%);
+    }
+
+    .class-cover--blue {
+        background: linear-gradient(135deg, #93c5fd 0%, #dbeafe 100%);
+    }
+
+    .class-cover--navy {
+        background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+    }
+
+    .class-cover--green {
+        background: linear-gradient(135deg, #6ee7b7 0%, #d1fae5 100%);
+    }
+
+    .class-cover--purple {
+        background: linear-gradient(135deg, #c4b5fd 0%, #ede9fe 100%);
+    }
+
+    .class-cover--orange {
+        background: linear-gradient(135deg, #fdba74 0%, #ffedd5 100%);
+    }
+
+    .class-cover--rose {
+        background: linear-gradient(135deg, #fda4af 0%, #ffe4e6 100%);
+    }
+
+    .class-cover--slate {
+        background: linear-gradient(135deg, #94a3b8 0%, #e2e8f0 100%);
     }
 
     .class-hero-body {
@@ -305,6 +333,7 @@
 {% set class_code = classroom.code|default('', true) %}
 {% set class_description = classroom.description|default('', true) %}
 {% set class_status = classroom.status|default('Active', true) %}
+{% set active_banner_theme = classroom_banner_theme(classroom.id) %}
 
 <div class="class-top">
     <div class="class-top-tools">
@@ -339,7 +368,7 @@
     </div>
 
     <section class="class-hero">
-        <div class="class-cover"></div>
+        <div class="class-cover class-cover--{{ active_banner_theme }}"></div>
         <div class="class-hero-body">
             <div>
                 <span class="class-eyebrow">
