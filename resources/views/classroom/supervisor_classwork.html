@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Classwork - {{ classroom.name }} - Nexora</title>
+        <title>Work - {{ classroom.name }} - Nexora</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">
@@ -15,11 +15,10 @@
                 <div class="supervisor-classwork-heading">
                     <div>
                         <a href="{{ url_for('classroom.supervisor_class', class_id=classroom.id) }}" class="supervisor-classwork-back">← Back to {{ classroom.name }}</a>
-                        <h1>Classwork</h1>
-                        <p>{{ classroom.section }} · Create assignments, online activities, resources, and projects for your students.</p>
+                        <h1>Work</h1>
+                        <p>{{ classroom.section }} · Create tasks, online activities, resources, and projects for your interns.</p>
                     </div>
                     <div class="d-flex align-items-center gap-2">
-                        <a href="{{ url_for('classwork_gradebook.supervisor_gradebook', class_id=classroom.id) }}" class="btn btn-outline-primary">Gradebook</a>
                         <a href="{{ url_for('classwork_ml_insights.supervisor_insights', class_id=classroom.id) }}" class="btn btn-outline-primary">Performance Insights</a>
                         <a href="{{ url_for('classwork_ml_insights.supervisor_insights', class_id=classroom.id) }}" class="btn btn-primary">ML Insights</a>
                         {% if classroom.archived %}<span class="supervisor-classwork-archived">Archived class</span>{% endif %}
@@ -37,8 +36,8 @@
                         <div class="supervisor-classwork-card-heading">
                             <div>
                                 <span class="supervisor-classwork-eyebrow">NEW ACTIVITY</span>
-                                <h2>Create classwork</h2>
-                                <p>Choose an activity, set how students complete it, then publish.</p>
+                                <h2>Create work</h2>
+                                <p>Choose an activity, set how interns complete it, then publish.</p>
                             </div>
                         </div>
 
@@ -56,7 +55,7 @@
                                                 {% if key == 'assignment' %}Written or practical individual task.
                                                 {% elif key == 'google_form' %}Google Forms quiz, test, or long test.
                                                 {% elif key == 'google_doc' %}Google Docs, Sheets, or external document activity.
-                                                {% elif key == 'file_reference' %}Reference material students should open or read.
+                                                {% elif key == 'file_reference' %}Reference material interns should open or read.
                                                 {% elif key == 'project' %}Individual project or major output.
                                                 {% else %}Collaborative group project or activity.
                                                 {% endif %}
@@ -69,11 +68,11 @@
                             <div class="row g-3">
                                 <div class="col-12">
                                     <label class="supervisor-form-label" for="title">Title</label>
-                                    <input id="title" name="title" class="form-control" maxlength="200" required placeholder="e.g. Handwritten Long Test">
+                                    <input id="title" name="title" class="form-control" maxlength="200" required placeholder="e.g. Weekly Progress Report">
                                 </div>
                                 <div class="col-12">
                                     <label class="supervisor-form-label" for="description">Instructions</label>
-                                    <textarea id="description" name="description" class="form-control" rows="5" maxlength="5000" placeholder="Explain what students need to do and what they should submit."></textarea>
+                                    <textarea id="description" name="description" class="form-control" rows="5" maxlength="5000" placeholder="Explain what interns need to do and what they should submit."></textarea>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="supervisor-form-label" for="due_at">Due date</label>
@@ -97,7 +96,7 @@
                                     </div>
                                     <div class="col-md-5">
                                         <label class="supervisor-form-label" for="resource_label">Link label</label>
-                                        <input id="resource_label" name="resource_label" class="form-control" maxlength="120" placeholder="Open quiz / Open document">
+                                        <input id="resource_label" name="resource_label" class="form-control" maxlength="120" placeholder="Open form / Open document">
                                     </div>
                                     <div class="col-md-7">
                                         <label class="supervisor-form-label" for="resource_file">Reference file</label>
@@ -110,7 +109,7 @@
                             <div class="supervisor-options-row">
                                 <label class="supervisor-check-option">
                                     <input type="checkbox" name="allow_file_upload" id="allow_file_upload">
-                                    <span><strong>Allow student submissions</strong><small>Students can upload photos, handwritten pages, PDFs, documents, or other allowed files.</small></span>
+                                    <span><strong>Allow intern submissions</strong><small>Interns can upload photos, PDFs, documents, or other allowed files.</small></span>
                                 </label>
                                 <label class="supervisor-check-option">
                                     <input type="checkbox" name="group_mode" id="group_mode">
@@ -124,7 +123,7 @@
 
                             <div class="supervisor-classwork-form-footer">
                                 <a href="{{ url_for('classroom.supervisor_class', class_id=classroom.id) }}" class="btn btn-light">Cancel</a>
-                                <button type="submit" class="btn btn-primary" {% if classroom.archived %}disabled{% endif %}>Create Classwork</button>
+                                <button type="submit" class="btn btn-primary" {% if classroom.archived %}disabled{% endif %}>Create Work</button>
                             </div>
                         </form>
                     </section>
@@ -132,7 +131,7 @@
                     <aside class="supervisor-classwork-list-card">
                         <div class="supervisor-classwork-card-heading">
                             <div>
-                                <span class="supervisor-classwork-eyebrow">CLASSWORK</span>
+                                <span class="supervisor-classwork-eyebrow">WORK</span>
                                 <h2>Activities</h2>
                             </div>
                             <span class="supervisor-classwork-count">{{ assignments|length }}</span>
@@ -153,7 +152,7 @@
                                         <div class="supervisor-classwork-item-meta">
                                             {% if item.due_at %}<span>Due {{ item.due_at }}</span>{% else %}<span>No due date</span>{% endif %}
                                             {% if item.group_mode %}<span>Group · max {{ item.max_group_size }}</span>{% endif %}
-                                            {% if item.allow_file_upload %}<span>Student submissions</span>{% endif %}
+                                            {% if item.allow_file_upload %}<span>Intern submissions</span>{% endif %}
                                         </div>
                                         <div class="supervisor-classwork-resource-links">
                                             {% if item.external_url %}<a href="{{ item.external_url }}" target="_blank" rel="noopener noreferrer">{{ item.resource_label or 'Open link' }} ↗</a>{% endif %}
@@ -169,8 +168,8 @@
                         {% else %}
                             <div class="supervisor-classwork-empty">
                                 <div>📝</div>
-                                <h3>No classwork yet</h3>
-                                <p>Create your first activity. Students will see it in their classwork area.</p>
+                                <h3>No work yet</h3>
+                                <p>Create your first activity. Interns will see it in their work area.</p>
                             </div>
                         {% endif %}
                     </aside>
