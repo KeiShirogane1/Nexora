@@ -404,15 +404,14 @@
             <a href="{{ url_for('classroom.student_class', class_id=classroom.id) }}" class="class-tab">Stream</a>
         {% endif %}
 
-        <a href="{{ url_for('student_classwork.index', class_id=classroom.id) }}" class="class-tab{% if current_class_tab == 'classwork' %} active{% endif %}"{% if current_class_tab == 'classwork' %} aria-current="page"{% endif %}>Classwork</a>
-        <a href="{{ url_for('student_gradebook.gradebook', class_id=classroom.id) }}" class="class-tab{% if current_class_tab == 'gradebook' %} active{% endif %}"{% if current_class_tab == 'gradebook' %} aria-current="page"{% endif %}>Gradebook</a>
+        <a href="{{ url_for('student_classwork.index', class_id=classroom.id) }}" class="class-tab{% if current_class_tab == 'classwork' %} active{% endif %}"{% if current_class_tab == 'classwork' %} aria-current="page"{% endif %}>Work</a>
         <a href="{{ url_for('classwork_ml_insights.student_insights', class_id=classroom.id) }}" class="class-tab{% if current_class_tab == 'insights' %} active{% endif %}"{% if current_class_tab == 'insights' %} aria-current="page"{% endif %}>ML Insights</a>
         <a href="{{ url_for('performance_reports.student_reports', class_id=classroom.id) }}" class="class-tab{% if current_class_tab == 'report' %} active{% endif %}"{% if current_class_tab == 'report' %} aria-current="page"{% endif %}>Report</a>
 
         {% if current_class_tab == 'stream' %}
-            <button type="button" class="class-tab" onclick="openClassTab('people', this)">People</button>
+            <button type="button" class="class-tab" onclick="openClassTab('people', this)">Interns</button>
         {% else %}
-            <a href="{{ url_for('classroom.student_class', class_id=classroom.id) }}#people" class="class-tab">People</a>
+            <a href="{{ url_for('classroom.student_class', class_id=classroom.id) }}#people" class="class-tab">Interns</a>
         {% endif %}
     </nav>
 </div>
@@ -421,14 +420,14 @@
     <div class="nexora-modal">
         <div class="nexora-modal-header">
             <h2>Class Information</h2>
-            <p>Classroom details</p>
+            <p>Intern classroom details</p>
             <button type="button" class="nexora-modal-close" onclick="document.getElementById('studentInfoModal').classList.remove('open')">×</button>
         </div>
         <div class="nexora-modal-body">
             <div class="class-info-list">
                 <div class="class-info-row"><b>Class</b><span>{{ classroom.name }}</span></div>
                 <div class="class-info-row"><b>Section</b><span>{{ classroom.section }}</span></div>
-                <div class="class-info-row"><b>Teacher</b><span>{{ classroom.supervisor }}</span></div>
+                <div class="class-info-row"><b>Supervisor</b><span>{{ classroom.supervisor }}</span></div>
                 <div class="class-info-row"><b>Code</b><span>{{ class_code or '—' }}</span></div>
                 <div class="class-info-row"><b>Status</b><span>{{ class_status }}</span></div>
             </div>
