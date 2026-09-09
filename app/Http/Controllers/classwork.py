@@ -90,14 +90,14 @@ def manage_classwork(class_id):
     conn = get_db_connection()
     try:
         classroom = conn.execute(
-            "SELECT id, name, section, archived FROM classrooms WHERE id = ?",
+            "SELECT id, name, section, description, code, archived FROM classrooms WHERE id = ?",
             (class_id,),
         ).fetchone()
         if not classroom:
             return "Class not found", 404
 
         if request.method == "POST":
-            if classroom["archived"] if "archived" in classroom.keys() else classroom[3]:
+            if classroom["archived"] if "archived" in classroom.keys() else classroom[5]:
                 flash("Archived classes cannot receive new classwork.", "warning")
                 return redirect(url_for("classwork.manage_classwork", class_id=class_id))
 
@@ -246,7 +246,9 @@ def manage_classwork(class_id):
             "id": classroom["id"] if "id" in classroom.keys() else classroom[0],
             "name": classroom["name"] if "name" in classroom.keys() else classroom[1],
             "section": classroom["section"] if "section" in classroom.keys() else classroom[2],
-            "archived": classroom["archived"] if "archived" in classroom.keys() else classroom[3],
+            "description": classroom["description"] if "description" in classroom.keys() else classroom[3],
+            "code": classroom["code"] if "code" in classroom.keys() else classroom[4],
+            "archived": classroom["archived"] if "archived" in classroom.keys() else classroom[5],
         }
     finally:
         conn.close()
