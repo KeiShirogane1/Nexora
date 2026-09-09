@@ -152,15 +152,21 @@
                 color: #64748b;
             }
 
-            .supervisor-insights-distribution {
+            .supervisor-insights-visuals {
+                display: grid;
+                grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+                gap: 18px;
                 margin-top: 18px;
+            }
+
+            .supervisor-insights-chart-card {
                 overflow: hidden;
                 border: 1px solid #e4ebf4;
                 border-radius: 14px;
                 background: #fff;
             }
 
-            .supervisor-insights-distribution-header {
+            .supervisor-insights-chart-header {
                 display: flex;
                 align-items: flex-start;
                 justify-content: space-between;
@@ -170,38 +176,81 @@
                 background: #f8fafc;
             }
 
-            .supervisor-insights-distribution-header strong {
+            .supervisor-insights-chart-header strong {
                 color: #10213d;
                 font-size: 0.84rem;
             }
 
-            .supervisor-insights-distribution-header span {
+            .supervisor-insights-chart-header span {
                 color: #64748b;
                 font-size: 0.72rem;
                 text-align: right;
             }
 
-            .supervisor-insights-distribution-row {
-                display: flex;
+            .supervisor-insights-chart-body {
+                padding: 12px 16px 15px;
+            }
+
+            .supervisor-insights-chart-row {
+                display: grid;
+                grid-template-columns: minmax(132px, 0.8fr) minmax(150px, 1.4fr) 54px;
                 align-items: center;
-                justify-content: space-between;
-                gap: 16px;
-                min-height: 48px;
-                padding: 9px 16px;
-                border-top: 1px solid #f1f5f9;
+                gap: 12px;
+                min-height: 42px;
             }
 
-            .supervisor-insights-distribution-row:first-of-type {
-                border-top: 0;
+            .supervisor-insights-chart-label {
+                color: #475569;
+                font-size: 0.72rem;
+                font-weight: 800;
             }
 
-            .supervisor-insights-distribution-count {
-                min-width: 32px;
+            .supervisor-insights-chart-value {
                 color: #10213d;
-                font-size: 0.82rem;
+                font-size: 0.78rem;
                 font-weight: 800;
                 text-align: right;
             }
+
+            .supervisor-insights-progress {
+                width: 100%;
+                height: 12px;
+                overflow: hidden;
+                border: 0;
+                border-radius: 999px;
+                appearance: none;
+                background: #e8eef6;
+            }
+
+            .supervisor-insights-progress::-webkit-progress-bar {
+                border-radius: 999px;
+                background: #e8eef6;
+            }
+
+            .supervisor-insights-progress::-webkit-progress-value {
+                border-radius: 999px;
+                background: #2563eb;
+            }
+
+            .supervisor-insights-progress::-moz-progress-bar {
+                border-radius: 999px;
+                background: #2563eb;
+            }
+
+            .supervisor-insights-progress.is-excellent::-webkit-progress-value { background: #16a34a; }
+            .supervisor-insights-progress.is-excellent::-moz-progress-bar { background: #16a34a; }
+            .supervisor-insights-progress.is-very-satisfactory::-webkit-progress-value { background: #2563eb; }
+            .supervisor-insights-progress.is-very-satisfactory::-moz-progress-bar { background: #2563eb; }
+            .supervisor-insights-progress.is-satisfactory::-webkit-progress-value { background: #d97706; }
+            .supervisor-insights-progress.is-satisfactory::-moz-progress-bar { background: #d97706; }
+            .supervisor-insights-progress.is-fair::-webkit-progress-value { background: #ea580c; }
+            .supervisor-insights-progress.is-fair::-moz-progress-bar { background: #ea580c; }
+            .supervisor-insights-progress.is-needs-improvement::-webkit-progress-value { background: #dc2626; }
+            .supervisor-insights-progress.is-needs-improvement::-moz-progress-bar { background: #dc2626; }
+            .supervisor-insights-progress.is-no-data::-webkit-progress-value { background: #94a3b8; }
+            .supervisor-insights-progress.is-no-data::-moz-progress-bar { background: #94a3b8; }
+            .supervisor-insights-progress.is-completion::-webkit-progress-value { background: #0f766e; }
+            .supervisor-insights-progress.is-completion::-moz-progress-bar { background: #0f766e; }
 
             .supervisor-insights-overall-note {
                 margin-top: 14px;
@@ -396,6 +445,12 @@
                 font-size: 0.76rem;
             }
 
+            @media (max-width: 1050px) {
+                .supervisor-insights-visuals {
+                    grid-template-columns: 1fr;
+                }
+            }
+
             @media (max-width: 900px) {
                 .supervisor-insights-heading,
                 .supervisor-insights-panel-heading {
@@ -436,12 +491,28 @@
                     flex-direction: column;
                 }
 
-                .supervisor-insights-distribution-header {
+                .supervisor-insights-chart-header {
                     flex-direction: column;
                 }
 
-                .supervisor-insights-distribution-header span {
+                .supervisor-insights-chart-header span {
                     text-align: left;
+                }
+
+                .supervisor-insights-chart-row {
+                    grid-template-columns: 1fr 48px;
+                    gap: 8px 10px;
+                    padding: 5px 0;
+                }
+
+                .supervisor-insights-chart-row .supervisor-insights-progress {
+                    grid-column: 1 / -1;
+                    grid-row: 2;
+                }
+
+                .supervisor-insights-chart-value {
+                    grid-column: 2;
+                    grid-row: 1;
                 }
 
                 .supervisor-insights-detail-grid {
@@ -497,6 +568,9 @@
                         {% set overall.no_data = overall.no_data + 1 %}
                     {% endif %}
                 {% endfor %}
+                {% set cohort_average = (overall.score_total / overall.with_data) if overall.with_data > 0 else none %}
+                {% set average_completion = (overall.completion_total / (insights|length)) if insights|length > 0 else none %}
+                {% set distribution_max = insights|length if insights|length > 0 else 1 %}
 
                 <section class="supervisor-insights-card">
                     <div class="supervisor-insights-view-tabs" role="tablist" aria-label="Performance insight views">
@@ -519,11 +593,11 @@
                             </div>
                             <div class="supervisor-insights-readiness-card">
                                 <span>Cohort average</span>
-                                <strong>{% if overall.with_data > 0 %}{{ "%.1f"|format(overall.score_total / overall.with_data) }}%{% else %}—{% endif %}</strong>
+                                <strong>{% if cohort_average is not none %}{{ "%.1f"|format(cohort_average) }}%{% else %}—{% endif %}</strong>
                             </div>
                             <div class="supervisor-insights-readiness-card">
                                 <span>Average completion</span>
-                                <strong>{% if insights|length > 0 %}{{ "%.1f"|format(overall.completion_total / (insights|length)) }}%{% else %}—{% endif %}</strong>
+                                <strong>{% if average_completion is not none %}{{ "%.1f"|format(average_completion) }}%{% else %}—{% endif %}</strong>
                             </div>
                             <div class="supervisor-insights-readiness-card is-attention">
                                 <span>Needs attention</span>
@@ -535,35 +609,64 @@
                             </div>
                         </div>
 
-                        <div class="supervisor-insights-distribution">
-                            <div class="supervisor-insights-distribution-header">
-                                <strong>Performance Distribution</strong>
-                                <span>Performance labels use only interns with reviewed numeric work.</span>
-                            </div>
-                            <div class="supervisor-insights-distribution-row">
-                                <span class="supervisor-insights-label is-excellent">Excellent</span>
-                                <span class="supervisor-insights-distribution-count">{{ overall.excellent }}</span>
-                            </div>
-                            <div class="supervisor-insights-distribution-row">
-                                <span class="supervisor-insights-label is-very-satisfactory">Very Satisfactory</span>
-                                <span class="supervisor-insights-distribution-count">{{ overall.very_satisfactory }}</span>
-                            </div>
-                            <div class="supervisor-insights-distribution-row">
-                                <span class="supervisor-insights-label is-satisfactory">Satisfactory</span>
-                                <span class="supervisor-insights-distribution-count">{{ overall.satisfactory }}</span>
-                            </div>
-                            <div class="supervisor-insights-distribution-row">
-                                <span class="supervisor-insights-label is-fair">Fair</span>
-                                <span class="supervisor-insights-distribution-count">{{ overall.fair }}</span>
-                            </div>
-                            <div class="supervisor-insights-distribution-row">
-                                <span class="supervisor-insights-label is-needs-improvement">Needs Improvement</span>
-                                <span class="supervisor-insights-distribution-count">{{ overall.needs_improvement }}</span>
-                            </div>
-                            <div class="supervisor-insights-distribution-row">
-                                <span class="supervisor-insights-label is-no-data">No Performance Data</span>
-                                <span class="supervisor-insights-distribution-count">{{ overall.no_data }}</span>
-                            </div>
+                        <div class="supervisor-insights-visuals">
+                            <section class="supervisor-insights-chart-card" aria-labelledby="performanceDistributionTitle">
+                                <div class="supervisor-insights-chart-header">
+                                    <strong id="performanceDistributionTitle">Performance Distribution</strong>
+                                    <span>Counts across enrolled interns</span>
+                                </div>
+                                <div class="supervisor-insights-chart-body">
+                                    <div class="supervisor-insights-chart-row">
+                                        <span class="supervisor-insights-chart-label">Excellent</span>
+                                        <progress class="supervisor-insights-progress is-excellent" value="{{ overall.excellent }}" max="{{ distribution_max }}">{{ overall.excellent }}</progress>
+                                        <span class="supervisor-insights-chart-value">{{ overall.excellent }}</span>
+                                    </div>
+                                    <div class="supervisor-insights-chart-row">
+                                        <span class="supervisor-insights-chart-label">Very Satisfactory</span>
+                                        <progress class="supervisor-insights-progress is-very-satisfactory" value="{{ overall.very_satisfactory }}" max="{{ distribution_max }}">{{ overall.very_satisfactory }}</progress>
+                                        <span class="supervisor-insights-chart-value">{{ overall.very_satisfactory }}</span>
+                                    </div>
+                                    <div class="supervisor-insights-chart-row">
+                                        <span class="supervisor-insights-chart-label">Satisfactory</span>
+                                        <progress class="supervisor-insights-progress is-satisfactory" value="{{ overall.satisfactory }}" max="{{ distribution_max }}">{{ overall.satisfactory }}</progress>
+                                        <span class="supervisor-insights-chart-value">{{ overall.satisfactory }}</span>
+                                    </div>
+                                    <div class="supervisor-insights-chart-row">
+                                        <span class="supervisor-insights-chart-label">Fair</span>
+                                        <progress class="supervisor-insights-progress is-fair" value="{{ overall.fair }}" max="{{ distribution_max }}">{{ overall.fair }}</progress>
+                                        <span class="supervisor-insights-chart-value">{{ overall.fair }}</span>
+                                    </div>
+                                    <div class="supervisor-insights-chart-row">
+                                        <span class="supervisor-insights-chart-label">Needs Improvement</span>
+                                        <progress class="supervisor-insights-progress is-needs-improvement" value="{{ overall.needs_improvement }}" max="{{ distribution_max }}">{{ overall.needs_improvement }}</progress>
+                                        <span class="supervisor-insights-chart-value">{{ overall.needs_improvement }}</span>
+                                    </div>
+                                    <div class="supervisor-insights-chart-row">
+                                        <span class="supervisor-insights-chart-label">No Performance Data</span>
+                                        <progress class="supervisor-insights-progress is-no-data" value="{{ overall.no_data }}" max="{{ distribution_max }}">{{ overall.no_data }}</progress>
+                                        <span class="supervisor-insights-chart-value">{{ overall.no_data }}</span>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <section class="supervisor-insights-chart-card" aria-labelledby="classroomProgressTitle">
+                                <div class="supervisor-insights-chart-header">
+                                    <strong id="classroomProgressTitle">Classroom Progress</strong>
+                                    <span>Average performance vs completion</span>
+                                </div>
+                                <div class="supervisor-insights-chart-body">
+                                    <div class="supervisor-insights-chart-row">
+                                        <span class="supervisor-insights-chart-label">Average Performance</span>
+                                        <progress class="supervisor-insights-progress" value="{{ cohort_average if cohort_average is not none else 0 }}" max="100">{{ cohort_average if cohort_average is not none else 0 }}</progress>
+                                        <span class="supervisor-insights-chart-value">{% if cohort_average is not none %}{{ "%.1f"|format(cohort_average) }}%{% else %}—{% endif %}</span>
+                                    </div>
+                                    <div class="supervisor-insights-chart-row">
+                                        <span class="supervisor-insights-chart-label">Average Completion</span>
+                                        <progress class="supervisor-insights-progress is-completion" value="{{ average_completion if average_completion is not none else 0 }}" max="100">{{ average_completion if average_completion is not none else 0 }}</progress>
+                                        <span class="supervisor-insights-chart-value">{% if average_completion is not none %}{{ "%.1f"|format(average_completion) }}%{% else %}—{% endif %}</span>
+                                    </div>
+                                </div>
+                            </section>
                         </div>
 
                         <div class="supervisor-insights-overall-note">
