@@ -453,17 +453,35 @@
                 font-size: 0.78rem;
             }
 
-            .supervisor-interns-total {
+            .supervisor-interns-summary {
+                display: flex;
+                align-items: center;
+                justify-content: flex-end;
+                gap: 8px;
+                flex-wrap: wrap;
+            }
+
+            .supervisor-interns-total,
+            .supervisor-interns-hours {
                 display: inline-flex;
                 align-items: center;
                 min-height: 30px;
                 padding: 0 10px;
                 border-radius: 999px;
-                background: #eff6ff;
-                color: #1d4ed8;
                 font-size: 0.72rem;
                 font-weight: 800;
                 white-space: nowrap;
+            }
+
+            .supervisor-interns-total {
+                background: #eff6ff;
+                color: #1d4ed8;
+            }
+
+            .supervisor-interns-hours {
+                border: 1px solid #e2e8f0;
+                background: #f8fafc;
+                color: #475569;
             }
 
             .supervisor-interns-supervisor {
@@ -532,8 +550,23 @@
             }
 
             .supervisor-intern-status {
+                background: #f1f5f9;
+                color: #64748b;
+            }
+
+            .supervisor-intern-status.is-active {
                 background: #dcfce7;
                 color: #166534;
+            }
+
+            .supervisor-intern-status.is-completed {
+                background: #dbeafe;
+                color: #1d4ed8;
+            }
+
+            .supervisor-intern-status.is-pending {
+                background: #fef3c7;
+                color: #92400e;
             }
 
             .supervisor-intern-status::before {
@@ -744,10 +777,15 @@
                     grid-template-columns: 1fr;
                 }
 
+                .supervisor-interns-header,
                 .supervisor-interns-supervisor,
                 .supervisor-interns-toolbar {
                     align-items: flex-start;
                     flex-direction: column;
+                }
+
+                .supervisor-interns-summary {
+                    justify-content: flex-start;
                 }
 
                 .supervisor-interns-search,
@@ -991,7 +1029,12 @@
                                 <h6>Intern Directory</h6>
                                 <p>Manage the interns currently enrolled in this Intern Classroom.</p>
                             </div>
-                            <span class="supervisor-interns-total">{{ classroom.student_count }} enrolled</span>
+                            <div class="supervisor-interns-summary">
+                                <span class="supervisor-interns-total">{{ classroom.student_count }} enrolled</span>
+                                {% if classroom.hours_mode == 'specified' and classroom.required_hours %}
+                                    <span class="supervisor-interns-hours">{{ classroom.required_hours }} required hrs</span>
+                                {% endif %}
+                            </div>
                         </div>
 
                         <div class="class-card-body">
@@ -1012,7 +1055,7 @@
                                         id="classInternSearch"
                                         class="supervisor-interns-search"
                                         type="search"
-                                        placeholder="Search intern name or email"
+                                        placeholder="Search name, email, student number, program, or status"
                                         aria-label="Search enrolled interns">
                                     <span class="supervisor-interns-shown" id="classInternShownCount">{{ students|length }} shown</span>
                                 </div>
@@ -1022,7 +1065,7 @@
                                         <article
                                             class="supervisor-intern-row"
                                             data-class-intern
-                                            data-search="{{ ((s.username if s.username is defined else s) ~ ' ' ~ (s.email if s.email is defined else ''))|lower|e }}">
+                                            data-search="{{ ((s.username if s.username is defined else s) ~ ' ' ~ (s.email if s.email is defined else '') ~ ' ' ~ (s.internship_status if s.internship_status is defined else ''))|lower|e }}">
                                             <div class="supervisor-intern-person">
                                                 <span class="supervisor-intern-avatar">{{ (s.username[0] if s.username is defined and s.username else 'I')|upper }}</span>
                                                 <div>
@@ -1033,7 +1076,8 @@
                                                 </div>
                                             </div>
 
-                                            <span class="supervisor-intern-status">Enrolled</span>
+                                            {% set roster_status = s.internship_status if s.internship_status is defined and s.internship_status else 'Enrolled' %}
+                                            <span class="supervisor-intern-status{% if roster_status == 'Active' %} is-active{% elif roster_status == 'Completed' %} is-completed{% elif roster_status == 'Pending' %} is-pending{% endif %}">{{ roster_status }}</span>
 
                                             <div class="supervisor-intern-actions">
                                                 <a class="btn btn-sm btn-outline-primary" href="{{ url_for('performance_reports.supervisor_student_report', class_id=classroom.id, student_id=s.id if s.id is defined else loop.index) }}">View Performance</a>
@@ -1048,7 +1092,7 @@
 
                                 <div class="supervisor-interns-filter-empty" id="classInternNoResults" hidden>
                                     <h6>No matching interns</h6>
-                                    <p>Try a different name or email.</p>
+                                    <p>Try a different name, profile detail, or internship status.</p>
                                 </div>
                             {% else %}
                                 <div class="supervisor-interns-empty">
