@@ -13,7 +13,6 @@
             .supervisor-reports-heading { display:flex; align-items:flex-end; justify-content:space-between; gap:24px; margin-bottom:22px; }
             .supervisor-reports-heading h1 { margin:8px 0 5px; font-size:2rem; font-weight:800; letter-spacing:-.025em; }
             .supervisor-reports-heading p { margin:0; color:#64748b; }
-            .supervisor-reports-back { color:#2563eb; text-decoration:none; font-size:.86rem; font-weight:700; }
             .supervisor-reports-actions { display:flex; gap:10px; flex-wrap:wrap; }
             .supervisor-reports-card { background:#fff; border:1px solid #e8eef7; border-radius:18px; box-shadow:0 8px 28px rgba(15,23,42,.07); overflow:hidden; }
             .supervisor-reports-toolbar { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:18px 20px; border-bottom:1px solid #eef2f7; }
@@ -37,9 +36,11 @@
         {% include 'components/supervisor_sidebar.html' %}
         <main class="page-content nexora-app-main">
             <div class="nexora-page supervisor-reports-shell">
+                {% set supervisor_class_active_tab = 'reports' %}
+                {% include 'components/supervisor_class_context.html' %}
+
                 <div class="supervisor-reports-heading">
                     <div>
-                        <a href="{{ url_for('classroom.supervisor_class', class_id=classroom.id) }}" class="supervisor-reports-back">← Back to {{ classroom.name }}</a>
                         <h1>Performance Reports</h1>
                         <p>{{ classroom.section }} · Thesis-ready reports from gradebook, ML evaluation and recommendations.</p>
                     </div>
