@@ -599,10 +599,10 @@
 
                 <nav class="class-tabs" aria-label="Class navigation">
                     <button class="profile-tab-button active" onclick="openClassTab('stream',this)">Stream</button>
-                    <button class="profile-tab-button" onclick="openClassTab('classwork',this)">Work</button>
+                    <a href="{{ url_for('classwork.manage_classwork',class_id=classroom.id) }}" class="profile-tab-button">Work</a>
                     <a href="{{ url_for('classwork_ml_insights.supervisor_insights',class_id=classroom.id) }}" class="profile-tab-button">Performance Insights</a>
                     <a href="{{ url_for('performance_reports.supervisor_reports',class_id=classroom.id) }}" class="profile-tab-button">Reports</a>
-                    <button class="profile-tab-button" onclick="openClassTab('people',this)">Interns</button>
+                    <button id="internsTabButton" class="profile-tab-button" onclick="openClassTab('people',this)">Interns</button>
                 </nav>
 
                 <section id="stream" class="profile-tab active">
@@ -876,6 +876,13 @@
                     .forEach((x) => x.classList.remove("active"));
                 if (btn) btn.classList.add("active");
             }
+            function openHashClassTab() {
+                if (window.location.hash === "#people") {
+                    openClassTab("people", document.getElementById("internsTabButton"));
+                }
+            }
+            window.addEventListener("hashchange", openHashClassTab);
+            openHashClassTab();
             document.addEventListener("keydown", (e) => {
                 if (e.key === "Escape") {
                     closeClassInfo();
