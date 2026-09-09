@@ -1,6 +1,46 @@
 from app.Models.db import get_db_connection, using_postgres
 
 
+class _ProfileRowAdapter:
+    """Give sqlite3.Row the same mapping helpers used by PostgreSQL HybridRow."""
+
+    def __init__(self, row):
+        self._row = row
+        self._keys = list(row.keys()) if hasattr(row, "keys") else []
+
+    def __getitem__(self, key):
+        return self._row[key]
+
+    def __iter__(self):
+        return iter(self._row)
+
+    def __len__(self):
+        return len(self._row)
+
+    def keys(self):
+        return self._row.keys()
+
+    def values(self):
+        return [self._row[key] for key in self._keys]
+
+    def items(self):
+        return [(key, self._row[key]) for key in self._keys]
+
+    def get(self, key, default=None):
+        try:
+            return self._row[key]
+        except (KeyError, IndexError, TypeError):
+            return default
+
+
+def _normalize_profile_row(row):
+    if row is None or hasattr(row, "items"):
+        return row
+    if hasattr(row, "keys"):
+        return _ProfileRowAdapter(row)
+    return row
+
+
 def ensure_supervisor_profile_schema():
     conn = get_db_connection()
     try:
@@ -70,9 +110,10 @@ def get_or_create_supervisor_profile(user_id):
     try:
         row = conn.execute("SELECT * FROM supervisor_profiles WHERE user_id = ?", (user_id,)).fetchone()
         if row:
-            return row
+            return _normalize_profile_row(row)
         conn.execute("INSERT INTO supervisor_profiles (user_id) VALUES (?)", (user_id,))
         conn.commit()
-        return conn.execute("SELECT * FROM supervisor_profiles WHERE user_id = ?", (user_id,)).fetchone()
+        row = conn.execute("SELECT * FROM supervisor_profiles WHERE user_id = ?", (user_id,)).fetchone()
+        return _normalize_profile_row(row)
     finally:
         conn.close()
