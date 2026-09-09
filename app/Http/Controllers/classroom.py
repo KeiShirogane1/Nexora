@@ -369,21 +369,37 @@ def supervisor_class(class_id):
         }
 
         internship_details = conn.execute(
-            """SELECT company_name, hours_mode, required_hours
+            """SELECT company_name, industry, work_arrangement, schedule_type,
+                      hours_mode, location, start_date, end_date,
+                      enrollment_deadline, required_hours, company_website
                FROM classroom_internship_details
                WHERE classroom_id = ?""",
             (class_id,),
         ).fetchone()
-        company_name = ""
-        hours_mode = "not_specified"
-        required_hours = 0
+        detail_values = {
+            "company_name": "",
+            "industry": "",
+            "work_arrangement": "",
+            "schedule_type": "not_specified",
+            "hours_mode": "not_specified",
+            "location": "",
+            "start_date": "",
+            "end_date": "",
+            "enrollment_deadline": "",
+            "required_hours": 0,
+            "company_website": "",
+        }
         if internship_details:
-            company_name = internship_details["company_name"] if "company_name" in internship_details.keys() else internship_details[0]
-            hours_mode = internship_details["hours_mode"] if "hours_mode" in internship_details.keys() else internship_details[1]
-            required_hours = internship_details["required_hours"] if "required_hours" in internship_details.keys() else internship_details[2]
-        classroom_data["company_name"] = company_name or ""
-        classroom_data["hours_mode"] = hours_mode or "not_specified"
-        classroom_data["required_hours"] = required_hours or 0
+            detail_keys = list(detail_values.keys())
+            for index, key in enumerate(detail_keys):
+                try:
+                    value = internship_details[key]
+                except Exception:
+                    value = internship_details[index]
+                if value is not None:
+                    detail_values[key] = value
+        classroom_data.update(detail_values)
+        company_name = classroom_data["company_name"]
 
         linked_internship_status = {}
         if company_name:
