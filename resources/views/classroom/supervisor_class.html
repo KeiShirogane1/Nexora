@@ -179,6 +179,30 @@
                 margin: 0;
             }
 
+            .supervisor-class-management .dropdown-menu {
+                min-width: 210px;
+            }
+
+            .supervisor-class-management .dropdown-item {
+                width: 100%;
+                justify-content: flex-start;
+                border: 0;
+                border-radius: 0;
+                background: transparent;
+                color: #24364f !important;
+                box-shadow: none;
+            }
+
+            .supervisor-class-management .dropdown-item:hover {
+                background: #f8fafc;
+                color: #1d4ed8 !important;
+            }
+
+            .supervisor-class-management .dropdown-item.text-danger,
+            .supervisor-class-management .dropdown-item.text-danger:hover {
+                color: #dc2626 !important;
+            }
+
             .class-action-primary {
                 border: 1px solid #2563eb;
                 background: #2563eb;
@@ -423,17 +447,26 @@
                                 </div>
 
                                 <div class="supervisor-class-management">
-                                    <form method="POST" action="{{ url_for('classroom.regenerate_code', class_id=classroom.id) }}" onsubmit="return confirm('Regenerate class code? Old code will stop working.')">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <button type="submit" class="supervisor-regenerate-button">Regenerate</button>
-                                    </form>
                                     <a href="{{ url_for('classwork.manage_classwork', class_id=classroom.id) }}" class="class-action-primary">Assign Task</a>
-                                    <form method="POST" action="{{ url_for('classroom.archive_class', class_id=classroom.id) }}">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <button type="submit" class="class-action-secondary">
-                                            {% if classroom.archived %}Unarchive{% else %}Archive{% endif %}
-                                        </button>
-                                    </form>
+                                    <div class="dropdown position-relative">
+                                        <button type="button" class="class-action-secondary" id="classManagementButton" aria-label="Class management options" aria-expanded="false" onclick="toggleClassActions(event)">⋮</button>
+                                        <div class="dropdown-menu dropdown-menu-end shadow-sm" id="classManagementMenu">
+                                            <a class="dropdown-item" href="{{ url_for('internship_classroom.edit_intern_classroom', class_id=classroom.id) }}">Edit Intern Class</a>
+                                            <form method="POST" action="{{ url_for('classroom.regenerate_code', class_id=classroom.id) }}" class="m-0" onsubmit="return confirm('Regenerate class code? Old code will stop working.')">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <button type="submit" class="dropdown-item">Regenerate Class Code</button>
+                                            </form>
+                                            <form method="POST" action="{{ url_for('classroom.archive_class', class_id=classroom.id) }}" class="m-0">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <button type="submit" class="dropdown-item">{% if classroom.archived %}Unarchive Class{% else %}Archive Class{% endif %}</button>
+                                            </form>
+                                            <div class="dropdown-divider"></div>
+                                            <form method="POST" action="{{ url_for('internship_classroom.delete_classroom', class_id=classroom.id) }}" class="m-0" onsubmit="return confirm('Permanently delete {{ classroom.name|e }}? This removes enrolled members, classroom activities, submissions, and related classroom data. This cannot be undone.')">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <button type="submit" class="dropdown-item text-danger">Delete Class</button>
+                                            </form>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -689,6 +722,23 @@
                     .getElementById("classInfoModal")
                     .setAttribute("aria-hidden", "true");
             }
+            function toggleClassActions(event) {
+                event.stopPropagation();
+                const menu = document.getElementById("classManagementMenu");
+                const button = document.getElementById("classManagementButton");
+                if (!menu) return;
+                const opening = !menu.classList.contains("show");
+                menu.classList.toggle("show", opening);
+                if (button) button.setAttribute("aria-expanded", opening ? "true" : "false");
+            }
+            function closeClassActions() {
+                const menu = document.getElementById("classManagementMenu");
+                const button = document.getElementById("classManagementButton");
+                if (menu) menu.classList.remove("show");
+                if (button) button.setAttribute("aria-expanded", "false");
+            }
+            document.getElementById("classManagementMenu")?.addEventListener("click", (event) => event.stopPropagation());
+            document.addEventListener("click", closeClassActions);
             function openClassTab(name, btn) {
                 document
                     .querySelectorAll(".profile-tab")
@@ -701,7 +751,10 @@
                 if (btn) btn.classList.add("active");
             }
             document.addEventListener("keydown", (e) => {
-                if (e.key === "Escape") closeClassInfo();
+                if (e.key === "Escape") {
+                    closeClassInfo();
+                    closeClassActions();
+                }
             });
         </script>
     </body>
