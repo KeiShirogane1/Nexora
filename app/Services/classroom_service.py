@@ -19,6 +19,7 @@ def ensure_classroom_schema():
                     description TEXT,
                     code TEXT UNIQUE NOT NULL,
                     classroom_type TEXT NOT NULL DEFAULT 'classroom',
+                    banner_theme TEXT NOT NULL DEFAULT 'blue',
                     archived INTEGER DEFAULT 0,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )""",
@@ -116,6 +117,7 @@ def ensure_classroom_schema():
                     description TEXT,
                     code TEXT UNIQUE NOT NULL,
                     classroom_type TEXT NOT NULL DEFAULT 'classroom',
+                    banner_theme TEXT NOT NULL DEFAULT 'blue',
                     archived INTEGER DEFAULT 0,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY(supervisor_id) REFERENCES users(id)
@@ -220,10 +222,13 @@ def ensure_classroom_schema():
             conn.execute(statement)
 
         # Existing installations created before Internship Classroom support need
-        # the discriminator added without rebuilding the classrooms table.
+        # the discriminator and banner preference added without rebuilding the table.
         if using_postgres():
             conn.execute(
                 "ALTER TABLE classrooms ADD COLUMN IF NOT EXISTS classroom_type TEXT NOT NULL DEFAULT 'classroom'"
+            )
+            conn.execute(
+                "ALTER TABLE classrooms ADD COLUMN IF NOT EXISTS banner_theme TEXT NOT NULL DEFAULT 'blue'"
             )
             conn.execute(
                 "ALTER TABLE classroom_internship_details ADD COLUMN IF NOT EXISTS schedule_type TEXT NOT NULL DEFAULT 'fixed_dates'"
@@ -236,6 +241,10 @@ def ensure_classroom_schema():
             if "classroom_type" not in classroom_columns:
                 conn.execute(
                     "ALTER TABLE classrooms ADD COLUMN classroom_type TEXT NOT NULL DEFAULT 'classroom'"
+                )
+            if "banner_theme" not in classroom_columns:
+                conn.execute(
+                    "ALTER TABLE classrooms ADD COLUMN banner_theme TEXT NOT NULL DEFAULT 'blue'"
                 )
             internship_columns = [
                 row[1] for row in conn.execute("PRAGMA table_info(classroom_internship_details)").fetchall()
