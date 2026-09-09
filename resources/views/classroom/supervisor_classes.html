@@ -150,7 +150,9 @@
                                         <div>
                                             <h2>{{ c.name }}</h2>
                                             <p class="supervisor-class-section">{{ c.section }}</p>
-                                            <p class="supervisor-class-supervisor">Supervisor: {{ c.supervisor }}</p>
+                                            <p class="supervisor-class-supervisor">
+                                                {% if c.company_name %}Company: {{ c.company_name }}{% else %}Intern Classroom{% endif %}
+                                            </p>
                                         </div>
                                         <div class="d-flex align-items-start gap-2">
                                             <span class="supervisor-status {% if c.status == 'Active' %}is-active{% endif %}">
@@ -207,6 +209,22 @@
                                         <span class="supervisor-meta-icon" aria-hidden="true">👥</span>
                                         <span>{{ c.student_count }} interns</span>
                                     </div>
+
+                                    {% if c.work_arrangement or c.location %}
+                                        <div class="supervisor-meta-item">
+                                            <span class="supervisor-meta-icon" aria-hidden="true">📍</span>
+                                            <span>
+                                                {% if c.work_arrangement %}{{ c.work_arrangement }}{% endif %}{% if c.work_arrangement and c.location %} · {% endif %}{% if c.location %}{{ c.location }}{% endif %}
+                                            </span>
+                                        </div>
+                                    {% endif %}
+
+                                    {% if c.hours_mode == 'specified' and c.required_hours %}
+                                        <div class="supervisor-meta-item">
+                                            <span class="supervisor-meta-icon" aria-hidden="true">⏱</span>
+                                            <span>{{ c.required_hours }} required hrs</span>
+                                        </div>
+                                    {% endif %}
 
                                     <div class="supervisor-code-row">
                                         <span class="supervisor-meta-icon supervisor-key-icon" aria-hidden="true">🔑</span>
