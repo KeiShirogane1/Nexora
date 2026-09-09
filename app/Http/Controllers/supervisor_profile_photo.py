@@ -32,6 +32,84 @@ def _profile_payload(form):
     }
 
 
+def _profile_is_complete(profile):
+    if not profile:
+        return False
+    try:
+        data = dict(profile.items())
+    except Exception:
+        return False
+    return all(
+        str(data.get(field) or "").strip()
+        for field in ("first_name", "last_name", "job_title", "department")
+    )
+
+
+def _setup_payload(form):
+    return {
+        "first_name": (form.get("first_name") or "").strip(),
+        "middle_name": (form.get("middle_name") or "").strip(),
+        "last_name": (form.get("last_name") or "").strip(),
+        "job_title": (form.get("job_title") or "").strip(),
+        "department": (form.get("department") or "").strip(),
+        "employee_id": (form.get("employee_id") or "").strip(),
+        "specialization": (form.get("specialization") or "").strip(),
+        "years_experience": (form.get("years_experience") or "0").strip(),
+        "phone_number": (form.get("phone_number") or "").strip(),
+        "office_location": (form.get("office_location") or "").strip(),
+        "office_hours": (form.get("office_hours") or "").strip(),
+    }
+
+
+def _setup_errors(payload):
+    errors = {}
+    required_limits = {
+        "first_name": ("First name is required.", 80),
+        "last_name": ("Last name is required.", 80),
+        "job_title": ("Position/title is required.", 120),
+        "department": ("Department is required.", 120),
+    }
+    for field, (message, limit) in required_limits.items():
+        if not payload[field]:
+            errors[field] = message
+        elif len(payload[field]) > limit:
+            errors[field] = f"Must be {limit} characters or fewer."
+
+    optional_limits = {
+        "middle_name": 80,
+        "employee_id": 80,
+        "specialization": 180,
+        "phone_number": 40,
+        "office_location": 180,
+        "office_hours": 180,
+    }
+    for field, limit in optional_limits.items():
+        if payload[field] and len(payload[field]) > limit:
+            errors[field] = f"Must be {limit} characters or fewer."
+
+    try:
+        years = int(payload["years_experience"] or 0)
+        if years < 0 or years > 60:
+            raise ValueError
+        payload["years_experience"] = years
+    except (TypeError, ValueError):
+        errors["years_experience"] = "Years of experience must be a whole number from 0 to 60."
+        payload["years_experience"] = 0
+
+    return errors
+
+
+def _render_supervisor_setup(user_id, profile_data=None, errors=None):
+    if profile_data is None:
+        profile = get_or_create_supervisor_profile(user_id)
+        profile_data = dict(profile.items()) if profile and hasattr(profile, "items") else {}
+    return render_template(
+        "supervisor/profile_setup.html",
+        profile=profile_data,
+        errors=errors or {},
+    )
+
+
 def _profile_stats(user_id):
     conn = get_db_connection()
     try:
@@ -60,6 +138,12 @@ def _render_supervisor_profile(user_id, errors=None):
 
 @supervisor_profile_photo.before_app_request
 def _supervisor_profile_page():
+    if session.get("user_id") is not None and session.get("role") == "supervisor":
+        if request.path.rstrip("/") == "/supervisor/dashboard":
+            profile = get_or_create_supervisor_profile(session["user_id"])
+            if not _profile_is_complete(profile):
+                return redirect(url_for("supervisor_profile_photo.supervisor_profile_setup"))
+
     if request.path.rstrip("/") != "/supervisor/profile":
         return None
     if session.get("user_id") is None or session.get("role") != "supervisor":
@@ -152,6 +236,75 @@ def _supervisor_profile_page():
         return redirect(url_for("supervisor.supervisor_profile"))
 
     return _render_supervisor_profile(user_id)
+
+
+@supervisor_profile_photo.route("/supervisor/profile/setup", methods=["GET", "POST"])
+@role_required("supervisor")
+def supervisor_profile_setup():
+    user_id = session["user_id"]
+    profile = get_or_create_supervisor_profile(user_id)
+
+    if request.method == "GET" and _profile_is_complete(profile):
+        return redirect(url_for("supervisor.supervisor_dashboard"))
+
+    if request.method == "POST":
+        payload = _setup_payload(request.form)
+        errors = _setup_errors(payload)
+        conn = get_db_connection()
+        try:
+            if payload["employee_id"] and not errors.get("employee_id"):
+                duplicate = conn.execute(
+                    "SELECT id FROM supervisor_profiles WHERE employee_id = ? AND user_id != ?",
+                    (payload["employee_id"], user_id),
+                ).fetchone()
+                if duplicate:
+                    errors["employee_id"] = "Employee ID already exists."
+
+            if errors:
+                profile_data = dict(profile.items()) if profile and hasattr(profile, "items") else {}
+                profile_data.update(payload)
+                return _render_supervisor_setup(user_id, profile_data=profile_data, errors=errors)
+
+            conn.execute(
+                """
+                UPDATE supervisor_profiles
+                SET first_name = ?, middle_name = ?, last_name = ?, job_title = ?,
+                    department = ?, employee_id = ?, specialization = ?, years_experience = ?,
+                    phone_number = ?, office_location = ?, office_hours = ?,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE user_id = ?
+                """,
+                (
+                    payload["first_name"],
+                    payload["middle_name"],
+                    payload["last_name"],
+                    payload["job_title"],
+                    payload["department"],
+                    payload["employee_id"] or None,
+                    payload["specialization"],
+                    payload["years_experience"],
+                    payload["phone_number"],
+                    payload["office_location"],
+                    payload["office_hours"],
+                    user_id,
+                ),
+            )
+            conn.commit()
+        except Exception:
+            try:
+                conn.rollback()
+            except Exception:
+                pass
+            current_app.logger.exception("Unable to complete supervisor profile setup")
+            flash("Unable to save your profile right now. Please try again.", "danger")
+            return _render_supervisor_setup(user_id)
+        finally:
+            conn.close()
+
+        flash("Supervisor profile setup complete.", "success")
+        return redirect(url_for("supervisor.supervisor_dashboard"))
+
+    return _render_supervisor_setup(user_id)
 
 
 @supervisor_profile_photo.route("/supervisor/profile/photo", methods=["POST"])

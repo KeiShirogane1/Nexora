@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Complete Supervisor Profile - Nexora</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">
+</head>
+{% set initial_step = 1 %}
+{% if errors.job_title or errors.department or errors.employee_id or errors.specialization or errors.years_experience %}
+    {% set initial_step = 2 %}
+{% elif errors.phone_number or errors.office_location or errors.office_hours %}
+    {% set initial_step = 3 %}
+{% endif %}
+<body class="general-page supervisor-create-space-page" data-initial-step="{{ initial_step }}">
+<form method="POST" action="{{ url_for('supervisor_profile_photo.supervisor_profile_setup') }}" class="create-space-form-card" id="supervisorSetupForm">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <header class="create-space-form-head">
+        <span class="create-space-eyebrow">Supervisor account setup</span>
+        <h1>Complete Your Supervisor Profile</h1>
+        <p>Tell students who you are before entering the Supervisor Dashboard. Required information can be updated later from your full profile.</p>
+    </header>
+
+    <div class="create-space-form-body">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="create-space-error" role="alert">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        <section class="create-space-view" data-setup-step="1">
+            <div class="create-space-section-title">
+                <span class="create-space-eyebrow">Step <span data-step-number>1</span> of 3</span>
+                <h2>Personal Information</h2>
+                <p>Enter the name students should see across Nexora.</p>
+            </div>
+            <div class="create-space-fields">
+                <div class="create-space-field">
+                    <label for="first_name">First Name <span class="create-space-required">*</span></label>
+                    <input id="first_name" name="first_name" value="{{ profile.first_name or '' }}" placeholder="e.g. Juan" maxlength="80" required autocomplete="given-name">
+                    {% if errors.first_name %}<span class="create-space-error">{{ errors.first_name }}</span>{% endif %}
+                </div>
+                <div class="create-space-field">
+                    <label for="last_name">Last Name <span class="create-space-required">*</span></label>
+                    <input id="last_name" name="last_name" value="{{ profile.last_name or '' }}" placeholder="e.g. Dela Cruz" maxlength="80" required autocomplete="family-name">
+                    {% if errors.last_name %}<span class="create-space-error">{{ errors.last_name }}</span>{% endif %}
+                </div>
+                <div class="create-space-field is-full">
+                    <label for="middle_name">Middle Name</label>
+                    <input id="middle_name" name="middle_name" value="{{ profile.middle_name or '' }}" placeholder="e.g. Santos" maxlength="80" autocomplete="additional-name">
+                    {% if errors.middle_name %}<span class="create-space-error">{{ errors.middle_name }}</span>{% endif %}
+                </div>
+            </div>
+            <div class="create-space-footer">
+                <button type="button" class="create-space-primary-button" data-next-step>Next</button>
+            </div>
+        </section>
+
+        <section class="create-space-view" data-setup-step="2" hidden>
+            <div class="create-space-section-title">
+                <span class="create-space-eyebrow">Step <span data-step-number>2</span> of 3</span>
+                <h2>Professional Information</h2>
+                <p>These details help students understand your role and expertise.</p>
+            </div>
+            <div class="create-space-fields">
+                <div class="create-space-field">
+                    <label for="job_title">Position / Title <span class="create-space-required">*</span></label>
+                    <input id="job_title" name="job_title" value="{{ profile.job_title or '' }}" placeholder="e.g. Faculty Supervisor" maxlength="120" required>
+                    {% if errors.job_title %}<span class="create-space-error">{{ errors.job_title }}</span>{% endif %}
+                </div>
+                <div class="create-space-field">
+                    <label for="department">Department <span class="create-space-required">*</span></label>
+                    <input id="department" name="department" value="{{ profile.department or '' }}" placeholder="e.g. Information Technology" maxlength="120" required>
+                    {% if errors.department %}<span class="create-space-error">{{ errors.department }}</span>{% endif %}
+                </div>
+                <div class="create-space-field">
+                    <label for="employee_id">Employee ID</label>
+                    <input id="employee_id" name="employee_id" value="{{ profile.employee_id or '' }}" placeholder="e.g. EMP-2026-001" maxlength="80">
+                    {% if errors.employee_id %}<span class="create-space-error">{{ errors.employee_id }}</span>{% endif %}
+                </div>
+                <div class="create-space-field">
+                    <label for="specialization">Specialization</label>
+                    <input id="specialization" name="specialization" value="{{ profile.specialization or '' }}" placeholder="e.g. Web Development, Database Systems" maxlength="180">
+                    {% if errors.specialization %}<span class="create-space-error">{{ errors.specialization }}</span>{% endif %}
+                </div>
+                <div class="create-space-field is-full">
+                    <label for="years_experience">Years of Experience</label>
+                    <input id="years_experience" type="number" name="years_experience" value="{{ profile.years_experience or 0 }}" placeholder="e.g. 5" min="0" max="60" step="1">
+                    {% if errors.years_experience %}<span class="create-space-error">{{ errors.years_experience }}</span>{% endif %}
+                </div>
+            </div>
+            <div class="create-space-footer">
+                <button type="button" class="create-space-secondary-button" data-previous-step>Back</button>
+                <button type="button" class="create-space-primary-button" data-next-step>Next</button>
+            </div>
+        </section>
+
+        <section class="create-space-view" data-setup-step="3" hidden>
+            <div class="create-space-section-title">
+                <span class="create-space-eyebrow">Step <span data-step-number>3</span> of 3</span>
+                <h2>Contact & Availability</h2>
+                <p>Optional details students can use when they need guidance.</p>
+            </div>
+            <div class="create-space-fields">
+                <div class="create-space-field">
+                    <label for="phone_number">Phone Number</label>
+                    <input id="phone_number" name="phone_number" value="{{ profile.phone_number or '' }}" placeholder="e.g. 09171234567" maxlength="40" autocomplete="tel">
+                    {% if errors.phone_number %}<span class="create-space-error">{{ errors.phone_number }}</span>{% endif %}
+                </div>
+                <div class="create-space-field">
+                    <label for="office_location">Office Location</label>
+                    <input id="office_location" name="office_location" value="{{ profile.office_location or '' }}" placeholder="e.g. IT Department, Room 305" maxlength="180">
+                    {% if errors.office_location %}<span class="create-space-error">{{ errors.office_location }}</span>{% endif %}
+                </div>
+                <div class="create-space-field is-full">
+                    <label for="office_hours">Office Hours</label>
+                    <input id="office_hours" name="office_hours" value="{{ profile.office_hours or '' }}" placeholder="e.g. Monday-Friday, 1:00 PM-4:00 PM" maxlength="180">
+                    {% if errors.office_hours %}<span class="create-space-error">{{ errors.office_hours }}</span>{% endif %}
+                    <small>You can add your profile photo, education, certifications, skills, and bio later from Supervisor Profile.</small>
+                </div>
+            </div>
+            <div class="create-space-footer">
+                <button type="button" class="create-space-secondary-button" data-previous-step>Back</button>
+                <button type="submit" class="create-space-primary-button">Complete Profile</button>
+            </div>
+        </section>
+    </div>
+</form>
+
+<script>
+(function () {
+    const form = document.getElementById('supervisorSetupForm');
+    const steps = Array.from(document.querySelectorAll('[data-setup-step]'));
+    const requestedStep = Number(document.body.dataset.initialStep || 1);
+    let currentStep = Math.min(Math.max(requestedStep - 1, 0), steps.length - 1);
+
+    function showStep(index) {
+        currentStep = Math.min(Math.max(index, 0), steps.length - 1);
+        steps.forEach((step, stepIndex) => {
+            step.hidden = stepIndex !== currentStep;
+        });
+        const firstField = steps[currentStep].querySelector('input:not([type="hidden"]), textarea, select');
+        if (firstField) firstField.focus({ preventScroll: true });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function validateCurrentStep() {
+        const fields = steps[currentStep].querySelectorAll('input, textarea, select');
+        for (const field of fields) {
+            if (!field.checkValidity()) {
+                field.reportValidity();
+                return false;
+            }
+        }
+        return true;
+    }
+
+    document.querySelectorAll('[data-next-step]').forEach(button => {
+        button.addEventListener('click', () => {
+            if (validateCurrentStep()) showStep(currentStep + 1);
+        });
+    });
+
+    document.querySelectorAll('[data-previous-step]').forEach(button => {
+        button.addEventListener('click', () => showStep(currentStep - 1));
+    });
+
+    form.addEventListener('submit', event => {
+        if (currentStep < steps.length - 1) {
+            event.preventDefault();
+            if (validateCurrentStep()) showStep(currentStep + 1);
+        }
+    });
+
+    showStep(currentStep);
+})();
+</script>
+</body>
+</html>
