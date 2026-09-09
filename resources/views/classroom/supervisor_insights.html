@@ -117,7 +117,7 @@
 
             .supervisor-insights-readiness {
                 display: grid;
-                grid-template-columns: repeat(3, minmax(0, 1fr));
+                grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
                 gap: 12px;
             }
 
@@ -142,6 +142,65 @@
                 font-size: 1.65rem;
                 line-height: 1;
                 font-weight: 800;
+            }
+
+            .supervisor-insights-readiness-card.is-attention strong {
+                color: #c2410c;
+            }
+
+            .supervisor-insights-readiness-card.is-no-data strong {
+                color: #64748b;
+            }
+
+            .supervisor-insights-distribution {
+                margin-top: 18px;
+                overflow: hidden;
+                border: 1px solid #e4ebf4;
+                border-radius: 14px;
+                background: #fff;
+            }
+
+            .supervisor-insights-distribution-header {
+                display: flex;
+                align-items: flex-start;
+                justify-content: space-between;
+                gap: 16px;
+                padding: 15px 16px;
+                border-bottom: 1px solid #eef2f7;
+                background: #f8fafc;
+            }
+
+            .supervisor-insights-distribution-header strong {
+                color: #10213d;
+                font-size: 0.84rem;
+            }
+
+            .supervisor-insights-distribution-header span {
+                color: #64748b;
+                font-size: 0.72rem;
+                text-align: right;
+            }
+
+            .supervisor-insights-distribution-row {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 16px;
+                min-height: 48px;
+                padding: 9px 16px;
+                border-top: 1px solid #f1f5f9;
+            }
+
+            .supervisor-insights-distribution-row:first-of-type {
+                border-top: 0;
+            }
+
+            .supervisor-insights-distribution-count {
+                min-width: 32px;
+                color: #10213d;
+                font-size: 0.82rem;
+                font-weight: 800;
+                text-align: right;
             }
 
             .supervisor-insights-overall-note {
@@ -348,10 +407,6 @@
                     font-size: 1.65rem;
                 }
 
-                .supervisor-insights-readiness {
-                    grid-template-columns: 1fr;
-                }
-
                 .supervisor-insights-list-head {
                     display: none;
                 }
@@ -379,6 +434,14 @@
                 .supervisor-insights-view-tabs {
                     align-items: stretch;
                     flex-direction: column;
+                }
+
+                .supervisor-insights-distribution-header {
+                    flex-direction: column;
+                }
+
+                .supervisor-insights-distribution-header span {
+                    text-align: left;
                 }
 
                 .supervisor-insights-detail-grid {
@@ -411,12 +474,27 @@
                     {% endfor %}
                 {% endwith %}
 
-                {% set readiness = namespace(with_data=0, without_data=0) %}
+                {% set overall = namespace(with_data=0, no_data=0, score_total=0.0, completion_total=0.0, excellent=0, very_satisfactory=0, satisfactory=0, fair=0, needs_improvement=0, needs_attention=0) %}
                 {% for intern in insights %}
+                    {% set overall.completion_total = overall.completion_total + (intern.completion_rate or 0) %}
                     {% if intern.average_percentage is not none %}
-                        {% set readiness.with_data = readiness.with_data + 1 %}
+                        {% set overall.with_data = overall.with_data + 1 %}
+                        {% set overall.score_total = overall.score_total + intern.average_percentage %}
+                        {% if intern.numeric_performance_label == 'Excellent' %}
+                            {% set overall.excellent = overall.excellent + 1 %}
+                        {% elif intern.numeric_performance_label == 'Very Satisfactory' %}
+                            {% set overall.very_satisfactory = overall.very_satisfactory + 1 %}
+                        {% elif intern.numeric_performance_label == 'Satisfactory' %}
+                            {% set overall.satisfactory = overall.satisfactory + 1 %}
+                        {% elif intern.numeric_performance_label == 'Fair' %}
+                            {% set overall.fair = overall.fair + 1 %}
+                            {% set overall.needs_attention = overall.needs_attention + 1 %}
+                        {% elif intern.numeric_performance_label == 'Needs Improvement' %}
+                            {% set overall.needs_improvement = overall.needs_improvement + 1 %}
+                            {% set overall.needs_attention = overall.needs_attention + 1 %}
+                        {% endif %}
                     {% else %}
-                        {% set readiness.without_data = readiness.without_data + 1 %}
+                        {% set overall.no_data = overall.no_data + 1 %}
                     {% endif %}
                 {% endfor %}
 
@@ -430,7 +508,7 @@
                         <div class="supervisor-insights-panel-heading">
                             <div>
                                 <h2>Overall Intern Classroom</h2>
-                                <p>Current evidence readiness for {{ classroom.name }}.</p>
+                                <p>Classroom-level performance summary for {{ classroom.name }}.</p>
                             </div>
                         </div>
 
@@ -440,17 +518,56 @@
                                 <strong>{{ insights|length }}</strong>
                             </div>
                             <div class="supervisor-insights-readiness-card">
-                                <span>With performance data</span>
-                                <strong>{{ readiness.with_data }}</strong>
+                                <span>Cohort average</span>
+                                <strong>{% if overall.with_data > 0 %}{{ "%.1f"|format(overall.score_total / overall.with_data) }}%{% else %}—{% endif %}</strong>
                             </div>
                             <div class="supervisor-insights-readiness-card">
-                                <span>Awaiting performance data</span>
-                                <strong>{{ readiness.without_data }}</strong>
+                                <span>Average completion</span>
+                                <strong>{% if insights|length > 0 %}{{ "%.1f"|format(overall.completion_total / (insights|length)) }}%{% else %}—{% endif %}</strong>
+                            </div>
+                            <div class="supervisor-insights-readiness-card is-attention">
+                                <span>Needs attention</span>
+                                <strong>{{ overall.needs_attention }}</strong>
+                            </div>
+                            <div class="supervisor-insights-readiness-card is-no-data">
+                                <span>No performance data</span>
+                                <strong>{{ overall.no_data }}</strong>
+                            </div>
+                        </div>
+
+                        <div class="supervisor-insights-distribution">
+                            <div class="supervisor-insights-distribution-header">
+                                <strong>Performance Distribution</strong>
+                                <span>Performance labels use only interns with reviewed numeric work.</span>
+                            </div>
+                            <div class="supervisor-insights-distribution-row">
+                                <span class="supervisor-insights-label is-excellent">Excellent</span>
+                                <span class="supervisor-insights-distribution-count">{{ overall.excellent }}</span>
+                            </div>
+                            <div class="supervisor-insights-distribution-row">
+                                <span class="supervisor-insights-label is-very-satisfactory">Very Satisfactory</span>
+                                <span class="supervisor-insights-distribution-count">{{ overall.very_satisfactory }}</span>
+                            </div>
+                            <div class="supervisor-insights-distribution-row">
+                                <span class="supervisor-insights-label is-satisfactory">Satisfactory</span>
+                                <span class="supervisor-insights-distribution-count">{{ overall.satisfactory }}</span>
+                            </div>
+                            <div class="supervisor-insights-distribution-row">
+                                <span class="supervisor-insights-label is-fair">Fair</span>
+                                <span class="supervisor-insights-distribution-count">{{ overall.fair }}</span>
+                            </div>
+                            <div class="supervisor-insights-distribution-row">
+                                <span class="supervisor-insights-label is-needs-improvement">Needs Improvement</span>
+                                <span class="supervisor-insights-distribution-count">{{ overall.needs_improvement }}</span>
+                            </div>
+                            <div class="supervisor-insights-distribution-row">
+                                <span class="supervisor-insights-label is-no-data">No Performance Data</span>
+                                <span class="supervisor-insights-distribution-count">{{ overall.no_data }}</span>
                             </div>
                         </div>
 
                         <div class="supervisor-insights-overall-note">
-                            Overall classroom averages, performance distribution, needs-attention counts, and graphs will use this same evidence set. Interns without reviewed numeric work are kept separate from performance labels so they are not presented as Satisfactory without evidence.
+                            Cohort average uses only interns with reviewed numeric work. Average completion includes all enrolled interns. Needs Attention counts interns whose current numeric performance label is Fair or Needs Improvement. Interns without numeric evidence remain separate under No Performance Data.
                         </div>
                     </div>
 
