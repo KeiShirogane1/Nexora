@@ -16,6 +16,7 @@
             .supervisor-reports-actions { display:flex; gap:10px; flex-wrap:wrap; }
             .supervisor-reports-card { background:#fff; border:1px solid #e8eef7; border-radius:18px; box-shadow:0 8px 28px rgba(15,23,42,.07); overflow:hidden; }
             .supervisor-reports-toolbar { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:18px 20px; border-bottom:1px solid #eef2f7; }
+            .supervisor-reports-toolbar > * { min-width:0; }
             .supervisor-reports-wrap { overflow:auto; max-width:100%; }
             .supervisor-reports-table { margin:0; min-width:max-content; width:100%; border-collapse:separate; border-spacing:0; }
             .supervisor-reports-table th, .supervisor-reports-table td { border-color:#eef2f7; vertical-align:middle; }
@@ -30,10 +31,62 @@
             .supervisor-reports-label.is-fair { background:#ffedd5; color:#9a3412; }
             .supervisor-reports-label.is-needs-improvement { background:#fee2e2; color:#991b1b; }
             .supervisor-reports-label.is-no-data { background:#f1f5f9; color:#64748b; }
+            .supervisor-reports-recommendation { max-width:380px; min-width:260px; color:#334155; overflow-wrap:anywhere; }
             .supervisor-reports-empty { padding:55px 24px; text-align:center; color:#64748b; }
-            @media (max-width: 760px) {
+            .supervisor-reports-empty h2 { margin:0 0 7px; color:#0f172a; font-size:1.05rem; font-weight:800; }
+            .supervisor-reports-empty p { margin:0; }
+
+            @media (max-width: 900px) {
                 .supervisor-reports-heading,
                 .supervisor-reports-toolbar { align-items:flex-start; flex-direction:column; }
+
+                .supervisor-reports-heading h1 { font-size:1.65rem; }
+                .supervisor-reports-actions { width:100%; }
+                .supervisor-reports-actions .btn { flex:1 1 170px; }
+                .supervisor-reports-wrap { overflow:visible; }
+                .supervisor-reports-table { display:block; min-width:0; width:100%; }
+                .supervisor-reports-table thead { display:none; }
+                .supervisor-reports-table tbody { display:grid; gap:12px; padding:14px; }
+                .supervisor-reports-table tbody tr { display:block; overflow:hidden; border:1px solid #e5ebf2; border-radius:14px; background:#fff; }
+                .supervisor-reports-table tbody td {
+                    display:grid;
+                    grid-template-columns:minmax(118px, .8fr) minmax(0, 1.2fr);
+                    align-items:start;
+                    gap:12px;
+                    min-width:0 !important;
+                    max-width:none !important;
+                    padding:10px 12px;
+                    border-top:1px solid #eef2f7;
+                    overflow-wrap:anywhere;
+                }
+                .supervisor-reports-table tbody td:first-child { border-top:0; }
+                .supervisor-reports-table tbody td::before {
+                    content:attr(data-label);
+                    color:#64748b;
+                    font-size:.66rem;
+                    font-weight:800;
+                    letter-spacing:.04em;
+                    text-transform:uppercase;
+                }
+                .supervisor-reports-student {
+                    position:static;
+                    left:auto;
+                    z-index:auto;
+                    min-width:0;
+                    background:#f8fafc;
+                    box-shadow:none;
+                }
+                .supervisor-reports-recommendation { min-width:0; max-width:none; }
+            }
+
+            @media (max-width: 520px) {
+                .supervisor-reports-actions .btn { width:100%; flex-basis:100%; }
+                .supervisor-reports-card { border-radius:14px; }
+                .supervisor-reports-toolbar { padding:15px 16px; }
+                .supervisor-reports-table tbody { padding:10px; }
+                .supervisor-reports-table tbody td { grid-template-columns:1fr; gap:4px; padding:10px 12px; }
+                .supervisor-reports-table tbody td:last-child .btn { width:100%; }
+                .supervisor-reports-empty { padding:38px 18px; }
             }
         </style>
     </head>
@@ -83,13 +136,13 @@
                                 <tbody>
                                     {% for r in reports %}
                                         <tr>
-                                            <td class="supervisor-reports-student">
+                                            <td class="supervisor-reports-student" data-label="Intern">
                                                 <strong>{{ r.student.username }}</strong>
                                                 {% if r.student.student_number %}<small class="text-muted d-block">{{ r.student.student_number }}</small>{% elif r.student.email %}<small class="text-muted d-block">{{ r.student.email }}</small>{% endif %}
                                             </td>
-                                            <td>{% if r.overall_percentage is not none %}{{ "%.1f"|format(r.overall_percentage) }}%{% else %}—{% endif %}</td>
-                                            <td>{{ "%.1f"|format(r.completion_rate) }}%</td>
-                                            <td>
+                                            <td data-label="Performance %">{% if r.overall_percentage is not none %}{{ "%.1f"|format(r.overall_percentage) }}%{% else %}—{% endif %}</td>
+                                            <td data-label="Completion">{{ "%.1f"|format(r.completion_rate) }}%</td>
+                                            <td data-label="Performance">
                                                 {% if r.overall_percentage is none %}
                                                     <span class="supervisor-reports-label is-no-data">No data yet</span>
                                                 {% else %}
@@ -97,10 +150,10 @@
                                                     <span class="supervisor-reports-label {% if lbl == 'Excellent' %}is-excellent{% elif lbl == 'Very Satisfactory' %}is-very-satisfactory{% elif lbl == 'Satisfactory' %}is-satisfactory{% elif lbl == 'Fair' %}is-fair{% else %}is-needs-improvement{% endif %}">{{ lbl }}</span>
                                                 {% endif %}
                                             </td>
-                                            <td>{{ r.competency or '—' }}</td>
-                                            <td style="max-width:380px; min-width:260px;"><span style="color:#334155;">{{ r.recommendation[:160] }}{% if r.recommendation|length > 160 %}…{% endif %}</span></td>
-                                            <td><span class="supervisor-reports-label {% if r.priority == 'low' %}is-satisfactory{% elif r.priority == 'medium' %}is-very-satisfactory{% elif r.priority == 'high' %}is-fair{% else %}is-needs-improvement{% endif %}">{{ r.priority }}</span></td>
-                                            <td><a class="btn btn-sm btn-outline-primary" href="{{ url_for('performance_reports.supervisor_student_report', class_id=classroom.id, student_id=r.student.id) }}">View</a></td>
+                                            <td data-label="Competency">{{ r.competency or '—' }}</td>
+                                            <td class="supervisor-reports-recommendation" data-label="Recommendation">{{ r.recommendation[:160] }}{% if r.recommendation|length > 160 %}…{% endif %}</td>
+                                            <td data-label="Priority"><span class="supervisor-reports-label {% if r.priority == 'low' %}is-satisfactory{% elif r.priority == 'medium' %}is-very-satisfactory{% elif r.priority == 'high' %}is-fair{% else %}is-needs-improvement{% endif %}">{{ r.priority }}</span></td>
+                                            <td data-label="Action"><a class="btn btn-sm btn-outline-primary" href="{{ url_for('performance_reports.supervisor_student_report', class_id=classroom.id, student_id=r.student.id) }}">View</a></td>
                                         </tr>
                                     {% endfor %}
                                 </tbody>
