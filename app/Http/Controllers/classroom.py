@@ -68,7 +68,7 @@ def _is_student_member(student_id, classroom_id):
     finally:
         conn.close()
 
-# Supervisor: My Classes
+# Supervisor: My Intern Classrooms
 @classroom.route("/supervisor/classes")
 @role_required("supervisor")
 def supervisor_classes():
@@ -78,9 +78,15 @@ def supervisor_classes():
         rows = conn.execute("""
             SELECT c.id, c.name, c.section, c.description, c.code, c.archived, c.created_at,
                    (SELECT COUNT(*) FROM classroom_students cs WHERE cs.classroom_id = c.id) AS student_count,
-                   u.username AS supervisor_name
+                   u.username AS supervisor_name,
+                   COALESCE(cid.company_name, '') AS company_name,
+                   COALESCE(cid.work_arrangement, '') AS work_arrangement,
+                   COALESCE(cid.location, '') AS location,
+                   COALESCE(cid.hours_mode, 'not_specified') AS hours_mode,
+                   COALESCE(cid.required_hours, 0) AS required_hours
             FROM classrooms c
             JOIN users u ON u.id = c.supervisor_id
+            LEFT JOIN classroom_internship_details cid ON cid.classroom_id = c.id
             WHERE c.supervisor_id = ?
             ORDER BY c.created_at DESC
         """, (sid,)).fetchall()
@@ -96,6 +102,11 @@ def supervisor_classes():
                 "status": "Archived" if (r["archived"] if "archived" in r.keys() else r[5]) else "Active",
                 "student_count": r["student_count"] if "student_count" in r.keys() else r[7],
                 "supervisor": r["supervisor_name"] if "supervisor_name" in r.keys() else r[8],
+                "company_name": r["company_name"] if "company_name" in r.keys() else r[9],
+                "work_arrangement": r["work_arrangement"] if "work_arrangement" in r.keys() else r[10],
+                "location": r["location"] if "location" in r.keys() else r[11],
+                "hours_mode": r["hours_mode"] if "hours_mode" in r.keys() else r[12],
+                "required_hours": r["required_hours"] if "required_hours" in r.keys() else r[13],
             })
     finally:
         conn.close()
