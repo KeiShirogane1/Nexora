@@ -14,7 +14,7 @@ internship_classroom = Blueprint("internship_classroom", __name__)
 _SCHEDULE_TYPES = {"fixed_dates", "flexible", "not_specified"}
 _HOURS_MODES = {"specified", "not_specified"}
 _WORK_ARRANGEMENTS = {"On-site", "Hybrid", "Remote"}
-_BANNER_THEMES = {"blue", "navy", "green", "purple", "orange", "rose", "slate"}
+_BANNER_THEMES = {"blue", "navy", "green", "teal", "purple", "orange", "amber", "rose", "slate"}
 
 
 def _valid_date(value):
@@ -475,9 +475,16 @@ def edit_intern_classroom(class_id):
 def update_classroom_banner_theme(class_id):
     supervisor_id = session["user_id"]
     banner_theme = (request.form.get("banner_theme") or "").strip().lower()
+    return_to = (request.form.get("return_to") or "").strip().lower()
+
+    def _redirect_after_update():
+        if return_to == "classes":
+            return redirect(url_for("classroom.supervisor_classes"))
+        return redirect(url_for("classroom.supervisor_class", class_id=class_id))
+
     if banner_theme not in _BANNER_THEMES:
         flash("Choose a valid banner color.", "danger")
-        return redirect(url_for("classroom.supervisor_class", class_id=class_id))
+        return _redirect_after_update()
 
     conn = get_db_connection()
     try:
@@ -506,7 +513,7 @@ def update_classroom_banner_theme(class_id):
     finally:
         conn.close()
 
-    return redirect(url_for("classroom.supervisor_class", class_id=class_id))
+    return _redirect_after_update()
 
 
 @internship_classroom.route("/supervisor/classes/<int:class_id>/delete", methods=["POST"])

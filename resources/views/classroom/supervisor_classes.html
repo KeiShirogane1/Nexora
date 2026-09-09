@@ -7,6 +7,126 @@
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">
+        <style>
+            .supervisor-class-card-banner {
+                margin: -22px -22px 0;
+                padding: 22px;
+                border-bottom: 1px solid rgba(148, 163, 184, 0.24);
+                border-radius: 17px 17px 0 0;
+            }
+
+            .supervisor-class-card-banner--blue {
+                background: linear-gradient(135deg, #93c5fd 0%, #dbeafe 100%);
+            }
+
+            .supervisor-class-card-banner--navy {
+                background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            }
+
+            .supervisor-class-card-banner--green {
+                background: linear-gradient(135deg, #6ee7b7 0%, #d1fae5 100%);
+            }
+
+            .supervisor-class-card-banner--teal {
+                background: linear-gradient(135deg, #5eead4 0%, #ccfbf1 100%);
+            }
+
+            .supervisor-class-card-banner--purple {
+                background: linear-gradient(135deg, #c4b5fd 0%, #ede9fe 100%);
+            }
+
+            .supervisor-class-card-banner--orange {
+                background: linear-gradient(135deg, #fdba74 0%, #ffedd5 100%);
+            }
+
+            .supervisor-class-card-banner--amber {
+                background: linear-gradient(135deg, #fcd34d 0%, #fef3c7 100%);
+            }
+
+            .supervisor-class-card-banner--rose {
+                background: linear-gradient(135deg, #fda4af 0%, #ffe4e6 100%);
+            }
+
+            .supervisor-class-card-banner--slate {
+                background: linear-gradient(135deg, #94a3b8 0%, #e2e8f0 100%);
+            }
+
+            .supervisor-class-card-banner--navy h2,
+            .supervisor-class-card-banner--navy .supervisor-class-section {
+                color: #fff;
+            }
+
+            .supervisor-class-card-banner--navy .supervisor-class-supervisor {
+                color: #dbeafe;
+            }
+
+            .supervisor-class-card .dropdown {
+                z-index: 20;
+            }
+
+            .supervisor-class-card .dropdown-menu {
+                min-width: 220px;
+                z-index: 40;
+            }
+
+            .supervisor-class-card .class-banner-color-panel {
+                padding: 9px 13px 12px;
+                border-top: 1px solid #eef2f7;
+                background: #fbfdff;
+            }
+
+            .supervisor-class-card .class-banner-color-panel[hidden] {
+                display: none !important;
+            }
+
+            .supervisor-class-card .class-banner-color-label {
+                display: block;
+                margin-bottom: 8px;
+                color: #708096;
+                font-size: 9px;
+                font-weight: 800;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+            }
+
+            .supervisor-class-card .class-banner-color-grid {
+                display: grid;
+                grid-template-columns: repeat(3, 28px);
+                gap: 10px;
+            }
+
+            .supervisor-class-card .class-banner-swatch {
+                width: 28px;
+                height: 28px;
+                min-height: 28px;
+                padding: 0;
+                border: 2px solid #fff;
+                border-radius: 999px;
+                box-shadow: 0 0 0 1px #cbd5e1;
+                cursor: pointer;
+            }
+
+            .supervisor-class-card .class-banner-swatch.is-selected {
+                box-shadow: 0 0 0 2px #2563eb;
+            }
+
+            .class-banner-swatch--blue { background: #60a5fa; }
+            .class-banner-swatch--navy { background: #1e3a8a; }
+            .class-banner-swatch--green { background: #34d399; }
+            .class-banner-swatch--teal { background: #14b8a6; }
+            .class-banner-swatch--purple { background: #a78bfa; }
+            .class-banner-swatch--orange { background: #fb923c; }
+            .class-banner-swatch--amber { background: #f59e0b; }
+            .class-banner-swatch--rose { background: #fb7185; }
+            .class-banner-swatch--slate { background: #64748b; }
+
+            @media (max-width: 480px) {
+                .supervisor-class-card-banner {
+                    margin: -18px -18px 0;
+                    padding: 18px;
+                }
+            }
+        </style>
     </head>
     <body class="supervisor-classes-page">
         {% include 'components/supervisor_sidebar.html' %}
@@ -23,37 +143,60 @@
                 <section class="supervisor-classes-list" aria-label="Your classes">
                     {% if classes and classes|length > 0 %}
                         {% for c in classes %}
+                            {% set active_banner_theme = classroom_banner_theme(c.id) %}
                             <article class="supervisor-class-card">
-                                <div class="supervisor-class-card-top">
-                                    <div>
-                                        <h2>{{ c.name }}</h2>
-                                        <p class="supervisor-class-section">{{ c.section }}</p>
-                                        <p class="supervisor-class-supervisor">Supervisor: {{ c.supervisor }}</p>
-                                    </div>
-                                    <div class="d-flex align-items-start gap-2">
-                                        <span class="supervisor-status {% if c.status == 'Active' %}is-active{% endif %}">
-                                            <span class="supervisor-status-dot"></span>{{ c.status }}
-                                        </span>
-                                        <div class="dropdown position-relative">
-                                            <button
-                                                type="button"
-                                                class="btn btn-light border btn-sm px-2"
-                                                aria-label="Manage {{ c.name }}"
-                                                aria-expanded="false"
-                                                onclick="toggleClassMenu(event, 'class-menu-{{ c.id }}', this)">
-                                                ⋮
-                                            </button>
-                                            <div class="dropdown-menu dropdown-menu-end shadow-sm" id="class-menu-{{ c.id }}">
-                                                <a class="dropdown-item" href="{{ url_for('internship_classroom.edit_intern_classroom', class_id=c.id) }}">Edit Intern Class</a>
-                                                <form method="POST" action="{{ url_for('classroom.archive_class', class_id=c.id) }}" class="m-0">
-                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                    <button type="submit" class="dropdown-item">{% if c.archived %}Unarchive Class{% else %}Archive Class{% endif %}</button>
-                                                </form>
-                                                <div class="dropdown-divider"></div>
-                                                <form method="POST" action="{{ url_for('internship_classroom.delete_classroom', class_id=c.id) }}" class="m-0" onsubmit="return confirm('Permanently delete this class? This removes enrolled members, classroom activities, submissions, and related classroom data. This cannot be undone.')">
-                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                    <button type="submit" class="dropdown-item text-danger">Delete Class</button>
-                                                </form>
+                                <div class="supervisor-class-card-banner supervisor-class-card-banner--{{ active_banner_theme }}">
+                                    <div class="supervisor-class-card-top">
+                                        <div>
+                                            <h2>{{ c.name }}</h2>
+                                            <p class="supervisor-class-section">{{ c.section }}</p>
+                                            <p class="supervisor-class-supervisor">Supervisor: {{ c.supervisor }}</p>
+                                        </div>
+                                        <div class="d-flex align-items-start gap-2">
+                                            <span class="supervisor-status {% if c.status == 'Active' %}is-active{% endif %}">
+                                                <span class="supervisor-status-dot"></span>{{ c.status }}
+                                            </span>
+                                            <div class="dropdown position-relative">
+                                                <button
+                                                    type="button"
+                                                    class="btn btn-light border btn-sm px-2"
+                                                    aria-label="Manage {{ c.name }}"
+                                                    aria-expanded="false"
+                                                    onclick="toggleClassMenu(event, 'class-menu-{{ c.id }}', this)">
+                                                    ⋮
+                                                </button>
+                                                <div class="dropdown-menu dropdown-menu-end shadow-sm" id="class-menu-{{ c.id }}">
+                                                    <a class="dropdown-item" href="{{ url_for('internship_classroom.edit_intern_classroom', class_id=c.id) }}">Edit Intern Class</a>
+                                                    <button type="button" class="dropdown-item" onclick="toggleCardBannerColorChoices(event, 'class-banner-colors-{{ c.id }}')">Change Banner Color</button>
+                                                    <div class="class-banner-color-panel" id="class-banner-colors-{{ c.id }}" hidden>
+                                                        <span class="class-banner-color-label">Banner color</span>
+                                                        <form method="POST" action="{{ url_for('internship_classroom.update_classroom_banner_theme', class_id=c.id) }}">
+                                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                            <input type="hidden" name="return_to" value="classes">
+                                                            <div class="class-banner-color-grid">
+                                                                {% for theme, label in [('blue','Blue'),('navy','Navy'),('green','Green'),('teal','Teal'),('purple','Purple'),('orange','Orange'),('amber','Amber'),('rose','Rose'),('slate','Slate')] %}
+                                                                    <button
+                                                                        type="submit"
+                                                                        name="banner_theme"
+                                                                        value="{{ theme }}"
+                                                                        class="class-banner-swatch class-banner-swatch--{{ theme }}{% if active_banner_theme == theme %} is-selected{% endif %}"
+                                                                        aria-label="Use {{ label }} banner"
+                                                                        title="{{ label }}">
+                                                                    </button>
+                                                                {% endfor %}
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                    <form method="POST" action="{{ url_for('classroom.archive_class', class_id=c.id) }}" class="m-0">
+                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                        <button type="submit" class="dropdown-item">{% if c.archived %}Unarchive Class{% else %}Archive Class{% endif %}</button>
+                                                    </form>
+                                                    <div class="dropdown-divider"></div>
+                                                    <form method="POST" action="{{ url_for('internship_classroom.delete_classroom', class_id=c.id) }}" class="m-0" onsubmit="return confirm('Permanently delete this class? This removes enrolled members, classroom activities, submissions, and related classroom data. This cannot be undone.')">
+                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                        <button type="submit" class="dropdown-item text-danger">Delete Class</button>
+                                                    </form>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -107,6 +250,9 @@
                 document.querySelectorAll('.supervisor-class-card .dropdown-menu.show').forEach((menu) => {
                     if (menu.id !== menuId) menu.classList.remove('show');
                 });
+                document.querySelectorAll('.supervisor-class-card .class-banner-color-panel').forEach((panel) => {
+                    if (!document.getElementById(menuId)?.contains(panel)) panel.hidden = true;
+                });
                 const menu = document.getElementById(menuId);
                 if (!menu) return;
                 const opening = !menu.classList.contains('show');
@@ -114,9 +260,16 @@
                 if (button) button.setAttribute('aria-expanded', opening ? 'true' : 'false');
             }
 
+            function toggleCardBannerColorChoices(event, panelId) {
+                event.stopPropagation();
+                const panel = document.getElementById(panelId);
+                if (panel) panel.hidden = !panel.hidden;
+            }
+
             document.addEventListener('click', function () {
                 document.querySelectorAll('.supervisor-class-card .dropdown-menu.show').forEach((menu) => menu.classList.remove('show'));
                 document.querySelectorAll('.supervisor-class-card [aria-expanded="true"]').forEach((button) => button.setAttribute('aria-expanded', 'false'));
+                document.querySelectorAll('.supervisor-class-card .class-banner-color-panel').forEach((panel) => panel.hidden = true);
             });
 
             document.querySelectorAll('.supervisor-class-card .dropdown-menu').forEach((menu) => {
