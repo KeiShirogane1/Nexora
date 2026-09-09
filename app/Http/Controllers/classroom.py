@@ -387,18 +387,39 @@ def supervisor_class(class_id):
                 "description": a["description"] if "description" in a.keys() else a[2],
             })
         studs = conn.execute("""
-            SELECT u.id, u.username, u.email
+            SELECT u.id, u.username, u.email,
+                   COALESCE(sp.student_id, '') AS student_number,
+                   COALESCE(sp.major_program, '') AS major_program,
+                   COALESCE(sp.grade_year, '') AS grade_year
             FROM classroom_students cs
             JOIN users u ON u.id = cs.student_id
+            LEFT JOIN student_profiles sp ON sp.user_id = u.id
             WHERE cs.classroom_id = ?
-            ORDER BY u.username
+            ORDER BY LOWER(u.username), LOWER(u.email), u.id
         """, (class_id,)).fetchall()
         students = []
         for s in studs:
+            email_address = s["email"] if "email" in s.keys() else s[2]
+            student_number = s["student_number"] if "student_number" in s.keys() else s[3]
+            major_program = s["major_program"] if "major_program" in s.keys() else s[4]
+            grade_year = s["grade_year"] if "grade_year" in s.keys() else s[5]
+            directory_meta = []
+            if email_address:
+                directory_meta.append(str(email_address))
+            if student_number:
+                directory_meta.append(f"Student No. {student_number}")
+            if major_program:
+                directory_meta.append(str(major_program))
+            if grade_year:
+                directory_meta.append(str(grade_year))
             students.append({
                 "id": s["id"] if "id" in s.keys() else s[0],
                 "username": s["username"] if "username" in s.keys() else s[1],
-                "email": s["email"] if "email" in s.keys() else s[2],
+                "email": " · ".join(directory_meta),
+                "email_address": email_address or "",
+                "student_number": student_number or "",
+                "major_program": major_program or "",
+                "grade_year": grade_year or "",
             })
     finally:
         conn.close()
