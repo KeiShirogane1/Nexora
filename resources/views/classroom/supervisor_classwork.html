@@ -18,13 +18,9 @@
                 <div class="supervisor-classwork-heading">
                     <div>
                         <h1>Work</h1>
-                        <p>{{ classroom.section }} · Create tasks, online activities, resources, and projects for your interns.</p>
+                        <p>{% if classroom.company_name %}{{ classroom.company_name }} · {% endif %}{{ classroom.section }} · Create and manage tasks, projects, resources, and other OJT work for your interns.</p>
                     </div>
-                    <div class="d-flex align-items-center gap-2">
-                        <a href="{{ url_for('classwork_ml_insights.supervisor_insights', class_id=classroom.id) }}" class="btn btn-outline-primary">Performance Insights</a>
-                        <a href="{{ url_for('classwork_ml_insights.supervisor_insights', class_id=classroom.id) }}" class="btn btn-primary">ML Insights</a>
-                        {% if classroom.archived %}<span class="supervisor-classwork-archived">Archived class</span>{% endif %}
-                    </div>
+                    {% if classroom.archived %}<span class="supervisor-classwork-archived">Archived Intern Classroom</span>{% endif %}
                 </div>
 
                 {% with messages = get_flashed_messages(with_categories=true) %}
@@ -37,16 +33,16 @@
                     <section class="supervisor-classwork-create-card">
                         <div class="supervisor-classwork-card-heading">
                             <div>
-                                <span class="supervisor-classwork-eyebrow">NEW ACTIVITY</span>
+                                <span class="supervisor-classwork-eyebrow">NEW WORK</span>
                                 <h2>Create work</h2>
-                                <p>Choose an activity, set how interns complete it, then publish.</p>
+                                <p>Choose a work type, set how interns complete it, then publish.</p>
                             </div>
                         </div>
 
                         <form method="POST" enctype="multipart/form-data" class="supervisor-classwork-form">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-                            <label class="supervisor-form-label">Activity type</label>
+                            <label class="supervisor-form-label">Work type</label>
                             <div class="supervisor-activity-types">
                                 {% for key, label in activity_types.items() %}
                                     <label class="supervisor-activity-option">
@@ -54,12 +50,12 @@
                                         <span>
                                             <strong>{{ label }}</strong>
                                             <small>
-                                                {% if key == 'assignment' %}Written or practical individual task.
-                                                {% elif key == 'google_form' %}Google Forms quiz, test, or long test.
-                                                {% elif key == 'google_doc' %}Google Docs, Sheets, or external document activity.
-                                                {% elif key == 'file_reference' %}Reference material interns should open or read.
-                                                {% elif key == 'project' %}Individual project or major output.
-                                                {% else %}Collaborative group project or activity.
+                                                {% if key == 'assignment' %}Individual task or day-to-day work responsibility.
+                                                {% elif key == 'google_form' %}Form, check-in, assessment, or structured response.
+                                                {% elif key == 'google_doc' %}Online document, sheet, or linked digital work.
+                                                {% elif key == 'file_reference' %}Guide, file, link, or reference interns should use.
+                                                {% elif key == 'project' %}Longer-term project or major deliverable.
+                                                {% else %}Collaborative work intended for a team.
                                                 {% endif %}
                                             </small>
                                         </span>
@@ -81,24 +77,24 @@
                                     <input id="due_at" name="due_at" type="datetime-local" class="form-control">
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="supervisor-form-label" for="points">Maximum score</label>
+                                    <label class="supervisor-form-label" for="points">Maximum work score</label>
                                     <input id="points" name="points" type="number" min="0" max="10000" value="100" class="form-control">
                                 </div>
                             </div>
 
                             <div class="supervisor-resource-box">
                                 <div>
-                                    <strong>External activity or resource</strong>
-                                    <p>Paste a Google Forms/Docs link or attach instructions/reference material.</p>
+                                    <strong>Link or resource</strong>
+                                    <p>Add a form, shared document, work link, instructions, or reference material.</p>
                                 </div>
                                 <div class="row g-3">
                                     <div class="col-12">
                                         <label class="supervisor-form-label" for="external_url">Link</label>
-                                        <input id="external_url" name="external_url" type="url" class="form-control" placeholder="https://docs.google.com/...">
+                                        <input id="external_url" name="external_url" type="url" class="form-control" placeholder="https://...">
                                     </div>
                                     <div class="col-md-5">
                                         <label class="supervisor-form-label" for="resource_label">Link label</label>
-                                        <input id="resource_label" name="resource_label" class="form-control" maxlength="120" placeholder="Open form / Open document">
+                                        <input id="resource_label" name="resource_label" class="form-control" maxlength="120" placeholder="Open resource / Open work">
                                     </div>
                                     <div class="col-md-7">
                                         <label class="supervisor-form-label" for="resource_file">Reference file</label>
@@ -115,10 +111,10 @@
                                 </label>
                                 <label class="supervisor-check-option">
                                     <input type="checkbox" name="group_mode" id="group_mode">
-                                    <span><strong>Group activity</strong><small>Use this activity as a group submission.</small></span>
+                                    <span><strong>Team submission</strong><small>Use this work item as a team submission.</small></span>
                                 </label>
                                 <label class="supervisor-group-size-field" for="max_group_size">
-                                    <span>Max group size</span>
+                                    <span>Max team size</span>
                                     <input id="max_group_size" name="max_group_size" type="number" min="1" max="100" value="1" class="form-control">
                                 </label>
                             </div>
@@ -134,7 +130,7 @@
                         <div class="supervisor-classwork-card-heading">
                             <div>
                                 <span class="supervisor-classwork-eyebrow">WORK</span>
-                                <h2>Activities</h2>
+                                <h2>Work items</h2>
                             </div>
                             <span class="supervisor-classwork-count">{{ assignments|length }}</span>
                         </div>
@@ -145,7 +141,7 @@
                                     <article class="supervisor-classwork-item">
                                         <div class="supervisor-classwork-item-top">
                                             <div>
-                                                <span class="supervisor-classwork-type">{{ activity_types.get(item.activity_type, 'Assignment') }}</span>
+                                                <span class="supervisor-classwork-type">{{ activity_types.get(item.activity_type, 'Task') }}</span>
                                                 <h3>{{ item.title }}</h3>
                                             </div>
                                             <span class="supervisor-classwork-points">{{ item.points }} pts</span>
@@ -153,7 +149,7 @@
                                         {% if item.description %}<p>{{ item.description[:150] }}{% if item.description|length > 150 %}…{% endif %}</p>{% endif %}
                                         <div class="supervisor-classwork-item-meta">
                                             {% if item.due_at %}<span>Due {{ item.due_at }}</span>{% else %}<span>No due date</span>{% endif %}
-                                            {% if item.group_mode %}<span>Group · max {{ item.max_group_size }}</span>{% endif %}
+                                            {% if item.group_mode %}<span>Team · max {{ item.max_group_size }}</span>{% endif %}
                                             {% if item.allow_file_upload %}<span>Intern submissions</span>{% endif %}
                                         </div>
                                         <div class="supervisor-classwork-resource-links">
@@ -161,7 +157,7 @@
                                             {% if item.resource_filepath %}<a href="{{ url_for('uploaded_file', filename=item.resource_filepath) }}" target="_blank" rel="noopener noreferrer">{{ item.resource_filename or 'Open file' }} ↗</a>{% endif %}
                                             <a href="{{ url_for('classwork_submissions.supervisor_submissions', class_id=classroom.id, assignment_id=item.id) }}" class="supervisor-view-submissions">View submissions</a>
                                             {% if item.activity_type == 'google_form' or item.external_url %}
-                                                <a href="{{ url_for('classwork_scores.import_scores', class_id=classroom.id, assignment_id=item.id) }}" class="supervisor-import-scores-link">Import scores</a>
+                                                <a href="{{ url_for('classwork_scores.import_scores', class_id=classroom.id, assignment_id=item.id) }}" class="supervisor-import-scores-link">Import results</a>
                                             {% endif %}
                                         </div>
                                     </article>
@@ -171,7 +167,7 @@
                             <div class="supervisor-classwork-empty">
                                 <div>📝</div>
                                 <h3>No work yet</h3>
-                                <p>Create your first activity. Interns will see it in their work area.</p>
+                                <p>Create your first work item. Interns will see it in their work area.</p>
                             </div>
                         {% endif %}
                     </aside>
