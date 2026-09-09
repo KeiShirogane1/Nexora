@@ -367,6 +367,52 @@ def supervisor_class(class_id):
             "created_at": c["created_at"] if "created_at" in c.keys() else c[7],
             "status": "Archived" if (c["archived"] if "archived" in c.keys() else c[6]) else "Active",
         }
+
+        internship_details = conn.execute(
+            """SELECT company_name, hours_mode, required_hours
+               FROM classroom_internship_details
+               WHERE classroom_id = ?""",
+            (class_id,),
+        ).fetchone()
+        company_name = ""
+        hours_mode = "not_specified"
+        required_hours = 0
+        if internship_details:
+            company_name = internship_details["company_name"] if "company_name" in internship_details.keys() else internship_details[0]
+            hours_mode = internship_details["hours_mode"] if "hours_mode" in internship_details.keys() else internship_details[1]
+            required_hours = internship_details["required_hours"] if "required_hours" in internship_details.keys() else internship_details[2]
+        classroom_data["company_name"] = company_name or ""
+        classroom_data["hours_mode"] = hours_mode or "not_specified"
+        classroom_data["required_hours"] = required_hours or 0
+
+        linked_internship_status = {}
+        if company_name:
+            linked_rows = conn.execute(
+                """SELECT id, student_id, status
+                   FROM internships
+                   WHERE supervisor_id = ?
+                     AND LOWER(TRIM(COALESCE(company_name, ''))) = LOWER(TRIM(?))
+                   ORDER BY student_id,
+                            CASE
+                                WHEN status = 'Active' THEN 0
+                                WHEN status = 'Completed' THEN 1
+                                WHEN status = 'Pending' THEN 2
+                                ELSE 3
+                            END,
+                            id DESC""",
+                (sid, company_name),
+            ).fetchall()
+            for row in linked_rows:
+                student_id = row["student_id"] if "student_id" in row.keys() else row[1]
+                try:
+                    student_id = int(student_id)
+                except (TypeError, ValueError):
+                    continue
+                if student_id in linked_internship_status:
+                    continue
+                status = row["status"] if "status" in row.keys() else row[2]
+                linked_internship_status[student_id] = str(status).strip() if status else "Linked"
+
         cnt = conn.execute("SELECT COUNT(*) FROM classroom_students WHERE classroom_id = ?", (class_id,)).fetchone()
         student_count = cnt[0] if cnt else 0
         classroom_data["student_count"] = student_count
@@ -399,10 +445,16 @@ def supervisor_class(class_id):
         """, (class_id,)).fetchall()
         students = []
         for s in studs:
+            student_user_id = s["id"] if "id" in s.keys() else s[0]
+            try:
+                student_user_id = int(student_user_id)
+            except (TypeError, ValueError):
+                pass
             email_address = s["email"] if "email" in s.keys() else s[2]
             student_number = s["student_number"] if "student_number" in s.keys() else s[3]
             major_program = s["major_program"] if "major_program" in s.keys() else s[4]
             grade_year = s["grade_year"] if "grade_year" in s.keys() else s[5]
+            internship_status = linked_internship_status.get(student_user_id)
             directory_meta = []
             if email_address:
                 directory_meta.append(str(email_address))
@@ -413,13 +465,15 @@ def supervisor_class(class_id):
             if grade_year:
                 directory_meta.append(str(grade_year))
             students.append({
-                "id": s["id"] if "id" in s.keys() else s[0],
+                "id": student_user_id,
                 "username": s["username"] if "username" in s.keys() else s[1],
                 "email": " · ".join(directory_meta),
                 "email_address": email_address or "",
                 "student_number": student_number or "",
                 "major_program": major_program or "",
                 "grade_year": grade_year or "",
+                "internship_status": internship_status or "Enrolled",
+                "has_linked_internship": bool(internship_status),
             })
     finally:
         conn.close()
@@ -767,7 +821,7 @@ def student_assignment_detail(class_id, assignment_id):
 def student_submit_assignment(class_id, assignment_id):
     stu = session["user_id"]
     if not _is_student_member(stu, class_id):
-        return "Forbidden — not enrolled", 403
+        return "Forbidden", 403
     a = _get_classroom_assignment(class_id, assignment_id)
     if not a:
         return "Assignment not found", 404
