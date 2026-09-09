@@ -14,6 +14,7 @@ internship_classroom = Blueprint("internship_classroom", __name__)
 _SCHEDULE_TYPES = {"fixed_dates", "flexible", "not_specified"}
 _HOURS_MODES = {"specified", "not_specified"}
 _WORK_ARRANGEMENTS = {"On-site", "Hybrid", "Remote"}
+_BANNER_THEMES = {"blue", "navy", "green", "purple", "orange", "rose", "slate"}
 
 
 def _valid_date(value):
@@ -38,6 +39,31 @@ def _row_value(row, key, index=0, default=None):
         return default if value is None else value
     except (IndexError, KeyError, TypeError):
         return default
+
+
+def _get_classroom_banner_theme(class_id):
+    try:
+        class_id = int(class_id)
+    except (TypeError, ValueError):
+        return "blue"
+
+    conn = get_db_connection()
+    try:
+        row = conn.execute(
+            "SELECT banner_theme FROM classrooms WHERE id = ?",
+            (class_id,),
+        ).fetchone()
+        theme = str(_row_value(row, "banner_theme", 0, "blue")).lower()
+        return theme if theme in _BANNER_THEMES else "blue"
+    except Exception:
+        return "blue"
+    finally:
+        conn.close()
+
+
+@internship_classroom.app_context_processor
+def inject_classroom_banner_theme():
+    return {"classroom_banner_theme": _get_classroom_banner_theme}
 
 
 def _render_form(errors, responsibilities, qualifications):
@@ -442,6 +468,45 @@ def edit_intern_classroom(class_id):
         return redirect(url_for("classroom.supervisor_class", class_id=class_id))
     finally:
         conn.close()
+
+
+@internship_classroom.route("/supervisor/classes/<int:class_id>/banner-theme", methods=["POST"])
+@role_required("supervisor")
+def update_classroom_banner_theme(class_id):
+    supervisor_id = session["user_id"]
+    banner_theme = (request.form.get("banner_theme") or "").strip().lower()
+    if banner_theme not in _BANNER_THEMES:
+        flash("Choose a valid banner color.", "danger")
+        return redirect(url_for("classroom.supervisor_class", class_id=class_id))
+
+    conn = get_db_connection()
+    try:
+        classroom = conn.execute(
+            "SELECT supervisor_id FROM classrooms WHERE id = ?",
+            (class_id,),
+        ).fetchone()
+        if not classroom:
+            return "Class not found", 404
+        if int(_row_value(classroom, "supervisor_id", 0, 0)) != int(supervisor_id):
+            return "Forbidden", 403
+
+        conn.execute(
+            "UPDATE classrooms SET banner_theme = ? WHERE id = ? AND supervisor_id = ?",
+            (banner_theme, class_id, supervisor_id),
+        )
+        conn.commit()
+        flash("Class banner color updated.", "success")
+    except Exception:
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+        current_app.logger.exception("Failed to update classroom banner color")
+        flash("Failed to update the class banner color. Please try again.", "danger")
+    finally:
+        conn.close()
+
+    return redirect(url_for("classroom.supervisor_class", class_id=class_id))
 
 
 @internship_classroom.route("/supervisor/classes/<int:class_id>/delete", methods=["POST"])
