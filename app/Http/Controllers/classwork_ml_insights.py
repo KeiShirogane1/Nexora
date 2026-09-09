@@ -76,7 +76,7 @@ def supervisor_insights(class_id):
     conn = get_db_connection()
     try:
         classroom = conn.execute(
-            """SELECT id, supervisor_id, name, section, archived
+            """SELECT id, supervisor_id, name, section, description, code, archived
                FROM classrooms WHERE id = ? AND supervisor_id = ?""",
             (class_id, supervisor_id),
         ).fetchone()
@@ -98,7 +98,9 @@ def supervisor_insights(class_id):
             "id": _value(classroom, "id", 0),
             "name": _value(classroom, "name", 2),
             "section": _value(classroom, "section", 3),
-            "archived": _value(classroom, "archived", 4),
+            "description": _value(classroom, "description", 4),
+            "code": _value(classroom, "code", 5),
+            "archived": _value(classroom, "archived", 6),
         }
     finally:
         conn.close()
