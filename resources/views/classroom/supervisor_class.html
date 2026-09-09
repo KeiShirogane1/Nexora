@@ -67,6 +67,34 @@
                 border-radius: 19px 19px 0 0;
             }
 
+            .class-hero-banner--blue {
+                background: linear-gradient(135deg, #93c5fd 0%, #dbeafe 100%);
+            }
+
+            .class-hero-banner--navy {
+                background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            }
+
+            .class-hero-banner--green {
+                background: linear-gradient(135deg, #6ee7b7 0%, #d1fae5 100%);
+            }
+
+            .class-hero-banner--purple {
+                background: linear-gradient(135deg, #c4b5fd 0%, #ede9fe 100%);
+            }
+
+            .class-hero-banner--orange {
+                background: linear-gradient(135deg, #fdba74 0%, #ffedd5 100%);
+            }
+
+            .class-hero-banner--rose {
+                background: linear-gradient(135deg, #fda4af 0%, #ffe4e6 100%);
+            }
+
+            .class-hero-banner--slate {
+                background: linear-gradient(135deg, #94a3b8 0%, #e2e8f0 100%);
+            }
+
             .class-hero-body {
                 padding: 30px 34px 32px;
             }
@@ -215,6 +243,55 @@
             .supervisor-class-management .dropdown-item.text-danger:hover {
                 color: #dc2626 !important;
             }
+
+            .class-banner-color-panel {
+                padding: 9px 13px 12px;
+                border-top: 1px solid #eef2f7;
+                background: #fbfdff;
+            }
+
+            .class-banner-color-panel[hidden] {
+                display: none !important;
+            }
+
+            .class-banner-color-label {
+                display: block;
+                margin-bottom: 8px;
+                color: #708096;
+                font-size: 9px;
+                font-weight: 800;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+            }
+
+            .class-banner-color-grid {
+                display: grid;
+                grid-template-columns: repeat(4, 28px);
+                gap: 10px;
+            }
+
+            .supervisor-class-management .class-banner-swatch {
+                width: 28px !important;
+                height: 28px !important;
+                min-height: 28px !important;
+                padding: 0 !important;
+                border: 2px solid #fff !important;
+                border-radius: 999px !important;
+                box-shadow: 0 0 0 1px #cbd5e1 !important;
+                cursor: pointer;
+            }
+
+            .supervisor-class-management .class-banner-swatch.is-selected {
+                box-shadow: 0 0 0 2px #2563eb !important;
+            }
+
+            .class-banner-swatch--blue { background: #60a5fa !important; }
+            .class-banner-swatch--navy { background: #1e3a8a !important; }
+            .class-banner-swatch--green { background: #34d399 !important; }
+            .class-banner-swatch--purple { background: #a78bfa !important; }
+            .class-banner-swatch--orange { background: #fb923c !important; }
+            .class-banner-swatch--rose { background: #fb7185 !important; }
+            .class-banner-swatch--slate { background: #64748b !important; }
 
             .class-action-primary {
                 border: 1px solid #2563eb;
@@ -436,8 +513,9 @@
                     <span>{{ classroom.name }}</span>
                 </div>
 
+                {% set active_banner_theme = classroom_banner_theme(classroom.id) %}
                 <section class="class-hero">
-                    <div class="class-hero-banner"></div>
+                    <div class="class-hero-banner class-hero-banner--{{ active_banner_theme }}"></div>
                     <div class="class-hero-body">
                         <div class="class-hero-row">
                             <div>
@@ -465,6 +543,25 @@
                                         <button type="button" class="class-action-secondary" id="classManagementButton" aria-label="Class management options" aria-expanded="false" onclick="toggleClassActions(event)">⋮</button>
                                         <div class="dropdown-menu dropdown-menu-end shadow-sm" id="classManagementMenu">
                                             <a class="dropdown-item" href="{{ url_for('internship_classroom.edit_intern_classroom', class_id=classroom.id) }}">Edit Intern Class</a>
+                                            <button type="button" class="dropdown-item" onclick="toggleBannerColorChoices(event)">Change Banner Color</button>
+                                            <div class="class-banner-color-panel" id="classBannerColorChoices" hidden>
+                                                <span class="class-banner-color-label">Banner color</span>
+                                                <form method="POST" action="{{ url_for('internship_classroom.update_classroom_banner_theme', class_id=classroom.id) }}">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                    <div class="class-banner-color-grid">
+                                                        {% for theme, label in [('blue','Blue'),('navy','Navy'),('green','Green'),('purple','Purple'),('orange','Orange'),('rose','Rose'),('slate','Slate')] %}
+                                                            <button
+                                                                type="submit"
+                                                                name="banner_theme"
+                                                                value="{{ theme }}"
+                                                                class="class-banner-swatch class-banner-swatch--{{ theme }}{% if active_banner_theme == theme %} is-selected{% endif %}"
+                                                                aria-label="Use {{ label }} banner"
+                                                                title="{{ label }}">
+                                                            </button>
+                                                        {% endfor %}
+                                                    </div>
+                                                </form>
+                                            </div>
                                             <form method="POST" action="{{ url_for('classroom.regenerate_code', class_id=classroom.id) }}" class="m-0" onsubmit="return confirm('Regenerate class code? Old code will stop working.')">
                                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                 <button type="submit" class="dropdown-item">Regenerate Class Code</button>
@@ -744,11 +841,18 @@
                 menu.classList.toggle("show", opening);
                 if (button) button.setAttribute("aria-expanded", opening ? "true" : "false");
             }
+            function toggleBannerColorChoices(event) {
+                event.stopPropagation();
+                const choices = document.getElementById("classBannerColorChoices");
+                if (choices) choices.hidden = !choices.hidden;
+            }
             function closeClassActions() {
                 const menu = document.getElementById("classManagementMenu");
                 const button = document.getElementById("classManagementButton");
+                const choices = document.getElementById("classBannerColorChoices");
                 if (menu) menu.classList.remove("show");
                 if (button) button.setAttribute("aria-expanded", "false");
+                if (choices) choices.hidden = true;
             }
             document.getElementById("classManagementMenu")?.addEventListener("click", (event) => event.stopPropagation());
             document.addEventListener("click", closeClassActions);
