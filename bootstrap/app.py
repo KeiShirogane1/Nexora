@@ -30,6 +30,7 @@ from app.Models.db import get_db_connection,using_postgres
 from app.Services.classroom_service import ensure_classroom_schema
 from app.Services.classwork_submission_service import ensure_classwork_submission_schema
 from app.Services.classwork_score_schema import ensure_classwork_score_schema
+from app.Services.attendance_service import ensure_attendance_schema
 from app.Services.notification_service import get_user_notifications,get_recent_notifications,get_unread_count
 app=Flask(__name__,template_folder=str(BASE_DIR/"resources"/"views"),static_folder=str(BASE_DIR/"resources"/"assets"),static_url_path="/static")
 _secret=os.environ.get("SECRET_KEY")
@@ -81,7 +82,7 @@ def repair_missing_student_profiles():
   sql=("INSERT INTO student_profiles (user_id,profile_completed) SELECT u.id,0 FROM users u WHERE u.role='student' AND NOT EXISTS (SELECT 1 FROM student_profiles sp WHERE sp.user_id=u.id) ON CONFLICT (user_id) DO NOTHING" if using_postgres() else "INSERT OR IGNORE INTO student_profiles (user_id,profile_completed) SELECT u.id,0 FROM users u WHERE u.role='student' AND NOT EXISTS (SELECT 1 FROM student_profiles sp WHERE sp.user_id=u.id)");cur.execute(sql);conn.commit()
  except Exception as exc:conn.rollback();print("student profile repair skipped:",exc)
  finally:cur.close();conn.close()
-initialize_database();ensure_classroom_schema();ensure_classwork_submission_schema();ensure_classwork_score_schema();ensure_session_schema();repair_missing_student_profiles()
+initialize_database();ensure_classroom_schema();ensure_classwork_submission_schema();ensure_classwork_score_schema();ensure_attendance_schema();ensure_session_schema();repair_missing_student_profiles()
 for bp in (auth,password,student,student_classwork,student_gradebook,student_classmates,supervisor,admin,classroom,internship_classroom,classwork,classwork_submissions,classwork_grading,classwork_scores,classwork_gradebook,classwork_gradebook_export,classwork_ml_insights,performance_reports,admin_reports_overview,admin_trash,supervisor_profile_photo,notifications_bp):app.register_blueprint(bp)
 from flask import request
 @app.before_request
