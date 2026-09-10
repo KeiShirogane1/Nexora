@@ -30,9 +30,10 @@ from app.Models.db import get_db_connection,using_postgres
 from app.Services.classroom_service import ensure_classroom_schema
 from app.Services.classwork_submission_service import ensure_classwork_submission_schema
 from app.Services.classwork_score_schema import ensure_classwork_score_schema
-from app.Services.attendance_service import ensure_attendance_schema
+from app.Services.attendance_service import ensure_attendance_schema,get_ojt_progress
 from app.Services.notification_service import get_user_notifications,get_recent_notifications,get_unread_count
 app=Flask(__name__,template_folder=str(BASE_DIR/"resources"/"views"),static_folder=str(BASE_DIR/"resources"/"assets"),static_url_path="/static")
+app.jinja_env.globals["get_ojt_progress"]=get_ojt_progress
 _secret=os.environ.get("SECRET_KEY")
 if not _secret:
  if os.environ.get("FLASK_ENV")=="production" or os.environ.get("NEXORA_ENV")=="production": raise RuntimeError("SECRET_KEY must be set in production")
