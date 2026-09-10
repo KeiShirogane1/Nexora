@@ -176,6 +176,7 @@ def manage_classwork(class_id):
             group_mode = 1 if request.form.get("group_mode") == "on" else 0
             max_group_size_raw = (request.form.get("max_group_size") or "1").strip()
             assignment_scope = (request.form.get("assignment_scope") or "classroom").strip().lower()
+            team_name = (request.form.get("team_name") or "").strip()
 
             if activity_type not in ACTIVITY_TYPES:
                 flash("Choose a valid work type.", "danger")
@@ -191,6 +192,9 @@ def manage_classwork(class_id):
                 return redirect(url_for("classwork.manage_classwork", class_id=class_id))
             if external_url and not _valid_external_url(external_url):
                 flash("Resource link must be a valid http:// or https:// URL.", "danger")
+                return redirect(url_for("classwork.manage_classwork", class_id=class_id))
+            if len(team_name) > 100:
+                flash("Team name must be 100 characters or fewer.", "danger")
                 return redirect(url_for("classwork.manage_classwork", class_id=class_id))
 
             selected_recipient_ids = []
@@ -221,6 +225,9 @@ def manage_classwork(class_id):
                     return redirect(url_for("classwork.manage_classwork", class_id=class_id))
                 group_mode = 1
                 max_group_size_raw = str(len(selected_recipient_ids))
+                team_name = team_name or None
+            else:
+                team_name = None
 
             try:
                 points = int(points_raw)
@@ -265,8 +272,8 @@ def manage_classwork(class_id):
                     """INSERT INTO classroom_assignment_meta
                        (assignment_id, activity_type, external_url, resource_label,
                         resource_filename, resource_filepath, allow_file_upload,
-                        group_mode, max_group_size)
-                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                        group_mode, max_group_size, team_name)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                     (
                         assignment_id,
                         activity_type,
@@ -277,6 +284,7 @@ def manage_classwork(class_id):
                         allow_file_upload,
                         group_mode,
                         max_group_size,
+                        team_name,
                     ),
                 )
 
@@ -295,7 +303,7 @@ def manage_classwork(class_id):
                     ]
                     notification_title = "New Team Task" if activity_type == "group_project" else "New Work"
                     notification_message = (
-                        f"Team task assigned: {title}"
+                        f"{team_name + ': ' if team_name else ''}Team task assigned: {title}"
                         if activity_type == "group_project"
                         else f"New {ACTIVITY_TYPES[activity_type].lower()}: {title}"
                     )
@@ -327,7 +335,7 @@ def manage_classwork(class_id):
             """SELECT a.id, a.title, a.description, a.due_at, a.points, a.created_at,
                       m.activity_type, m.external_url, m.resource_label,
                       m.resource_filename, m.resource_filepath,
-                      m.allow_file_upload, m.group_mode, m.max_group_size,
+                      m.allow_file_upload, m.group_mode, m.max_group_size, m.team_name,
                       (SELECT COUNT(*) FROM classroom_assignment_recipients ar
                        WHERE ar.assignment_id = a.id) AS recipient_count
                FROM classroom_assignments a
@@ -355,7 +363,8 @@ def manage_classwork(class_id):
                 "allow_file_upload": get("allow_file_upload", 11) or 0,
                 "group_mode": get("group_mode", 12) or 0,
                 "max_group_size": get("max_group_size", 13) or 1,
-                "recipient_count": get("recipient_count", 14) or 0,
+                "team_name": get("team_name", 14) or "",
+                "recipient_count": get("recipient_count", 15) or 0,
             })
 
         classroom_data = {
