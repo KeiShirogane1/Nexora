@@ -7,6 +7,451 @@
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">
+        <style>
+            body.supervisor-assigned-interns-page {
+                color: #0f172a;
+            }
+            .supervisor-assigned-interns-main {
+                min-height: 100vh;
+            }
+            .supervisor-assigned-interns-shell {
+                width: min(1320px, 100%);
+                margin: 0 auto;
+            }
+            .supervisor-assigned-header {
+                display: flex;
+                align-items: flex-end;
+                justify-content: space-between;
+                gap: 24px;
+                margin-bottom: 20px;
+            }
+            .supervisor-assigned-eyebrow {
+                display: block;
+                margin-bottom: 6px;
+                color: #2563eb;
+                font-size: .69rem;
+                font-weight: 800;
+                letter-spacing: .12em;
+            }
+            .supervisor-assigned-header h1 {
+                margin: 0 0 7px;
+                font-size: 2rem;
+                font-weight: 800;
+                letter-spacing: -.025em;
+            }
+            .supervisor-assigned-header p,
+            .supervisor-assigned-directory-head p {
+                margin: 0;
+                color: #64748b;
+                font-size: .9rem;
+                line-height: 1.55;
+            }
+            .supervisor-assigned-total {
+                flex: 0 0 auto;
+                padding: 8px 13px;
+                border-radius: 999px;
+                background: #eff6ff;
+                color: #1d4ed8;
+                font-size: .78rem;
+                font-weight: 800;
+            }
+            .supervisor-assigned-summary {
+                display: grid;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 14px;
+                margin-bottom: 18px;
+            }
+            .supervisor-assigned-stat {
+                min-width: 0;
+                padding: 17px 18px;
+                border: 1px solid #e2e8f0;
+                border-radius: 15px;
+                background: #fff;
+                box-shadow: 0 7px 22px rgba(15, 23, 42, .055);
+            }
+            .supervisor-assigned-stat.is-attention {
+                border-color: #fed7aa;
+                background: #fffaf5;
+            }
+            .supervisor-assigned-stat > span {
+                display: block;
+                color: #64748b;
+                font-size: .72rem;
+                font-weight: 750;
+            }
+            .supervisor-assigned-stat strong {
+                display: block;
+                margin: 5px 0 4px;
+                font-size: 1.55rem;
+                line-height: 1;
+                font-weight: 800;
+            }
+            .supervisor-assigned-stat small {
+                color: #94a3b8;
+                font-size: .69rem;
+                line-height: 1.4;
+            }
+            .supervisor-assigned-directory {
+                overflow: hidden;
+                border: 1px solid #e2e8f0;
+                border-radius: 18px;
+                background: #fff;
+                box-shadow: 0 8px 28px rgba(15, 23, 42, .065);
+            }
+            .supervisor-assigned-directory-head {
+                display: flex;
+                align-items: flex-end;
+                justify-content: space-between;
+                gap: 22px;
+                padding: 20px 22px;
+                border-bottom: 1px solid #edf2f7;
+            }
+            .supervisor-assigned-directory-head h2 {
+                margin: 0 0 5px;
+                font-size: 1.12rem;
+                font-weight: 800;
+            }
+            .supervisor-assigned-search-wrap {
+                width: min(360px, 100%);
+                flex: 0 0 auto;
+            }
+            .supervisor-assigned-search-wrap label {
+                display: block;
+                margin-bottom: 6px;
+                color: #475569;
+                font-size: .72rem;
+                font-weight: 750;
+            }
+            .supervisor-assigned-search {
+                width: 100%;
+                min-height: 42px;
+                padding: 9px 12px;
+                border: 1px solid #dbe3ee;
+                border-radius: 11px;
+                background: #f8fafc;
+                color: #0f172a;
+                font-size: .82rem;
+                outline: none;
+            }
+            .supervisor-assigned-search:focus {
+                border-color: #2563eb;
+                background: #fff;
+                box-shadow: 0 0 0 3px rgba(37, 99, 235, .1);
+            }
+            .supervisor-assigned-shown {
+                display: block;
+                margin-top: 5px;
+                color: #94a3b8;
+                font-size: .68rem;
+                text-align: right;
+            }
+            .supervisor-assigned-list {
+                display: grid;
+                gap: 12px;
+                padding: 16px;
+            }
+            .supervisor-assigned-intern-card {
+                overflow: hidden;
+                border: 1px solid #e7edf5;
+                border-radius: 15px;
+                background: #fff;
+            }
+            .supervisor-assigned-intern-card[hidden] {
+                display: none !important;
+            }
+            .supervisor-assigned-intern-head {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 18px;
+                padding: 15px 17px;
+                background: #fbfdff;
+                border-bottom: 1px solid #eef2f7;
+            }
+            .supervisor-assigned-person {
+                min-width: 0;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+            .supervisor-assigned-avatar {
+                width: 42px;
+                height: 42px;
+                flex: 0 0 42px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 12px;
+                background: #dbeafe;
+                color: #1d4ed8;
+                font-size: .94rem;
+                font-weight: 800;
+            }
+            .supervisor-assigned-person h3 {
+                margin: 0 0 2px;
+                font-size: .98rem;
+                font-weight: 800;
+            }
+            .supervisor-assigned-person p {
+                margin: 0;
+                color: #64748b;
+                font-size: .76rem;
+            }
+            .supervisor-assigned-identity-meta {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 4px 10px;
+                margin-top: 5px;
+                color: #94a3b8;
+                font-size: .69rem;
+            }
+            .supervisor-assigned-badges {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: flex-end;
+                gap: 6px;
+            }
+            .supervisor-assigned-badge,
+            .supervisor-assigned-status {
+                display: inline-flex;
+                align-items: center;
+                width: max-content;
+                padding: 5px 8px;
+                border-radius: 999px;
+                background: #eff6ff;
+                color: #1d4ed8;
+                font-size: .66rem;
+                font-weight: 800;
+                white-space: nowrap;
+            }
+            .supervisor-assigned-badge.is-active,
+            .supervisor-assigned-status.is-active {
+                background: #dcfce7;
+                color: #166534;
+            }
+            .supervisor-assigned-badge.is-muted {
+                background: #f1f5f9;
+                color: #64748b;
+            }
+            .supervisor-assigned-status.is-completed {
+                background: #ecfdf5;
+                color: #047857;
+            }
+            .supervisor-assigned-placement-list {
+                display: grid;
+                gap: 10px;
+                padding: 13px;
+            }
+            .supervisor-assigned-placement {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) auto;
+                align-items: stretch;
+                gap: 14px;
+                padding: 14px;
+                border: 1px solid #e8eef7;
+                border-radius: 13px;
+                background: #fff;
+            }
+            .supervisor-assigned-placement.is-archived {
+                background: #f8fafc;
+            }
+            .supervisor-assigned-placement-main {
+                min-width: 0;
+            }
+            .supervisor-assigned-placement-heading {
+                display: flex;
+                align-items: flex-start;
+                justify-content: space-between;
+                gap: 14px;
+            }
+            .supervisor-assigned-placement-company {
+                display: block;
+                margin-bottom: 3px;
+                color: #2563eb;
+                font-size: .68rem;
+                font-weight: 800;
+                letter-spacing: .04em;
+            }
+            .supervisor-assigned-placement h4 {
+                margin: 0 0 4px;
+                font-size: .9rem;
+                font-weight: 800;
+            }
+            .supervisor-assigned-placement-heading p {
+                margin: 0;
+                color: #64748b;
+                font-size: .7rem;
+                line-height: 1.45;
+            }
+            .supervisor-assigned-placement-metrics {
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 8px;
+                margin-top: 12px;
+            }
+            .supervisor-assigned-placement-metrics > div {
+                min-width: 0;
+                padding: 9px 10px;
+                border-radius: 10px;
+                background: #f8fafc;
+            }
+            .supervisor-assigned-placement-metrics span,
+            .supervisor-assigned-placement-metrics strong,
+            .supervisor-assigned-placement-metrics small {
+                display: block;
+            }
+            .supervisor-assigned-placement-metrics span {
+                color: #94a3b8;
+                font-size: .62rem;
+                font-weight: 750;
+                text-transform: uppercase;
+                letter-spacing: .05em;
+            }
+            .supervisor-assigned-placement-metrics strong {
+                margin-top: 3px;
+                color: #334155;
+                font-size: .74rem;
+                font-weight: 800;
+            }
+            .supervisor-assigned-placement-metrics small {
+                margin-top: 2px;
+                color: #94a3b8;
+                font-size: .62rem;
+                line-height: 1.35;
+            }
+            .supervisor-assigned-placement-actions {
+                min-width: 130px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                gap: 7px;
+            }
+            .supervisor-assigned-placement-actions .btn {
+                white-space: nowrap;
+            }
+            .supervisor-assigned-legacy-row {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 18px;
+                margin: 13px;
+                padding: 14px 15px;
+                border: 1px solid #fed7aa;
+                border-radius: 12px;
+                background: #fffaf5;
+            }
+            .supervisor-assigned-legacy-row strong {
+                display: block;
+                margin-bottom: 3px;
+                color: #9a3412;
+                font-size: .82rem;
+            }
+            .supervisor-assigned-legacy-row p {
+                margin: 0;
+                color: #78716c;
+                font-size: .7rem;
+                line-height: 1.5;
+            }
+            .supervisor-assigned-no-results,
+            .supervisor-assigned-empty {
+                padding: 42px 20px;
+                text-align: center;
+            }
+            .supervisor-assigned-no-results strong,
+            .supervisor-assigned-empty h3 {
+                display: block;
+                margin: 0 0 5px;
+                font-size: .95rem;
+                font-weight: 800;
+            }
+            .supervisor-assigned-no-results p,
+            .supervisor-assigned-empty p {
+                max-width: 560px;
+                margin: 0 auto;
+                color: #64748b;
+                font-size: .78rem;
+                line-height: 1.5;
+            }
+            .supervisor-assigned-empty .btn {
+                margin-top: 14px;
+            }
+            .supervisor-assigned-empty-icon {
+                width: 42px;
+                height: 42px;
+                margin: 0 auto 10px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 12px;
+                background: #dbeafe;
+                color: #1d4ed8;
+                font-size: .72rem;
+                font-weight: 900;
+            }
+            @media (max-width: 1100px) {
+                .supervisor-assigned-summary {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
+                .supervisor-assigned-placement {
+                    grid-template-columns: 1fr;
+                }
+                .supervisor-assigned-placement-actions {
+                    min-width: 0;
+                    flex-direction: row;
+                    justify-content: flex-end;
+                }
+            }
+            @media (max-width: 780px) {
+                .supervisor-assigned-header,
+                .supervisor-assigned-directory-head,
+                .supervisor-assigned-intern-head,
+                .supervisor-assigned-legacy-row {
+                    align-items: flex-start;
+                    flex-direction: column;
+                }
+                .supervisor-assigned-search-wrap {
+                    width: 100%;
+                }
+                .supervisor-assigned-shown {
+                    text-align: left;
+                }
+                .supervisor-assigned-badges {
+                    justify-content: flex-start;
+                }
+                .supervisor-assigned-placement-metrics {
+                    grid-template-columns: 1fr;
+                }
+                .supervisor-assigned-placement-actions {
+                    width: 100%;
+                    justify-content: stretch;
+                }
+                .supervisor-assigned-placement-actions .btn {
+                    flex: 1;
+                }
+            }
+            @media (max-width: 560px) {
+                .supervisor-assigned-summary {
+                    grid-template-columns: 1fr;
+                }
+                .supervisor-assigned-header h1 {
+                    font-size: 1.65rem;
+                }
+                .supervisor-assigned-directory-head,
+                .supervisor-assigned-list {
+                    padding-left: 14px;
+                    padding-right: 14px;
+                }
+                .supervisor-assigned-placement-heading,
+                .supervisor-assigned-placement-actions {
+                    align-items: flex-start;
+                    flex-direction: column;
+                }
+                .supervisor-assigned-placement-actions .btn,
+                .supervisor-assigned-legacy-row .btn {
+                    width: 100%;
+                }
+            }
+        </style>
     </head>
     <body class="work-page supervisor-assigned-interns-page">
         {% include 'components/supervisor_sidebar.html' %}
