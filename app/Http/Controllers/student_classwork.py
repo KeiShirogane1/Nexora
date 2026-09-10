@@ -101,7 +101,7 @@ def _assignment_row(conn, class_id, assignment_id):
                   a.points, a.created_at,
                   m.activity_type, m.external_url, m.resource_label,
                   m.resource_filename, m.resource_filepath,
-                  m.allow_file_upload, m.group_mode, m.max_group_size
+                  m.allow_file_upload, m.group_mode, m.max_group_size, m.team_name
            FROM classroom_assignments a
            LEFT JOIN classroom_assignment_meta m ON m.assignment_id = a.id
            WHERE a.id = ? AND a.classroom_id = ?""",
@@ -128,6 +128,7 @@ def _assignment_data(row):
         "allow_file_upload": bool(_value(row, "allow_file_upload", 12, 0)),
         "group_mode": bool(_value(row, "group_mode", 13, 0)),
         "max_group_size": _value(row, "max_group_size", 14, 1) or 1,
+        "team_name": _value(row, "team_name", 15, "") or "",
     }
 
 
@@ -176,7 +177,7 @@ def index(class_id):
                       a.points, a.created_at,
                       m.activity_type, m.external_url, m.resource_label,
                       m.resource_filename, m.resource_filepath,
-                      m.allow_file_upload, m.group_mode, m.max_group_size
+                      m.allow_file_upload, m.group_mode, m.max_group_size, m.team_name
                FROM classroom_assignments a
                LEFT JOIN classroom_assignment_meta m ON m.assignment_id = a.id
                WHERE a.classroom_id = ?
