@@ -7,6 +7,8 @@ from flask import Blueprint, abort, make_response, render_template, session
 
 from app.Http.Middleware.security import role_required
 from app.Models.db import get_db_connection
+from app.Services.intern_profile_service import get_supervisor_intern_profile
+from app.Services.ojt_evaluation_service import get_supervisor_evaluation_context
 from app.Services.performance_report_service import build_class_reports, build_student_report
 
 performance_reports = Blueprint("performance_reports", __name__)
@@ -73,7 +75,6 @@ def supervisor_student_report(class_id, student_id):
         ).fetchone()
         if not classroom:
             abort(404)
-        # Verify student belongs to class
         membership = conn.execute(
             "SELECT 1 FROM classroom_students WHERE classroom_id=? AND student_id=?",
             (class_id, student_id),
@@ -90,11 +91,30 @@ def supervisor_student_report(class_id, student_id):
         conn.close()
 
     report = build_student_report(student_id, class_id)
+    profile = get_supervisor_intern_profile(
+        supervisor_id=supervisor_id,
+        classroom_id=class_id,
+        student_id=student_id,
+    )
+    if not profile.get("ok"):
+        abort(int(profile.get("status_code") or 404))
+
+    evaluation_context = get_supervisor_evaluation_context(
+        supervisor_id=supervisor_id,
+        classroom_id=class_id,
+        student_id=student_id,
+    )
+    if not evaluation_context.get("ok"):
+        abort(int(evaluation_context.get("status_code") or 404))
 
     return render_template(
         "classroom/supervisor_student_report.html",
         classroom=classroom_data,
         report=report,
+        attendance_summary=profile.get("attendance_summary") or {},
+        daily_performance=profile.get("daily_performance") or {"history": [], "summary": {}},
+        logbook_summary=profile.get("logbook_summary") or {},
+        official_evaluation=evaluation_context.get("evaluation"),
         active_page="classes",
     )
 
@@ -151,7 +171,7 @@ def export_supervisor_reports(class_id):
                 r.get("priority") or reco.get("priority", "") or "",
             ]
         )
-    filename = f"reports-{str(cname).strip().replace(' ', '-')}.csv"
+    filename = f"work-reports-{str(cname).strip().replace(' ', '-')}.csv"
     response = make_response("\ufeff" + output.getvalue())
     response.headers["Content-Type"] = "text/csv; charset=utf-8"
     response.headers["Content-Disposition"] = f'attachment; filename="{filename}"'
