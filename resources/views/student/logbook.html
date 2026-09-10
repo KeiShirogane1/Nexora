@@ -14,7 +14,41 @@
         body.student-logbook-page .student-logbook-page-heading { padding-top: 0 !important; margin-top: 0 !important; margin-bottom: 0 !important; }
         body.student-logbook-page .student-logbook-page-heading::before,
         body.student-logbook-page .student-logbook-page-heading > div:first-child::before { display: none !important; content: none !important; }
+
         .student-logbook-compact { display: grid; gap: 14px; width: 100%; }
+        .student-logbook-compact-card { border: 1px solid #e2ebe6; border-radius: 16px; background: #fff; box-shadow: 0 6px 22px rgba(15,45,35,.04); }
+        .student-logbook-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
+        .student-logbook-actions form { margin: 0; }
+        .student-logbook-action-note { width: 100%; margin: 2px 0 0; color: #b42318; font-size: .7rem; font-weight: 700; text-align: right; }
+
+        .student-logbook-button {
+            min-height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            padding: 0 14px;
+            border: 1px solid transparent;
+            border-radius: 10px;
+            font: inherit;
+            font-size: .76rem;
+            font-weight: 800;
+            line-height: 1;
+            text-decoration: none;
+            cursor: pointer;
+            transition: transform .15s ease, box-shadow .15s ease, background .15s ease, border-color .15s ease;
+        }
+        .student-logbook-button:hover:not(:disabled) { transform: translateY(-1px); text-decoration: none; }
+        .student-logbook-button:disabled { opacity: .48; cursor: not-allowed; transform: none; box-shadow: none; }
+        .student-logbook-button-primary { border-color: #0f9f72; background: #0f9f72; color: #fff; box-shadow: 0 6px 15px rgba(15,159,114,.16); }
+        .student-logbook-button-primary:hover:not(:disabled) { background: #07865f; border-color: #07865f; color: #fff; }
+        .student-logbook-button-success { border-color: #15803d; background: #15803d; color: #fff; box-shadow: 0 6px 15px rgba(21,128,61,.16); }
+        .student-logbook-button-success:hover:not(:disabled) { border-color: #166534; background: #166534; color: #fff; }
+        .student-logbook-button-danger { border-color: #dc2626; background: #dc2626; color: #fff; box-shadow: 0 6px 15px rgba(220,38,38,.16); }
+        .student-logbook-button-danger:hover:not(:disabled) { border-color: #b91c1c; background: #b91c1c; color: #fff; }
+        .student-logbook-button-outline { border-color: #dce7e1; background: #fff; color: #365149; }
+        .student-logbook-button-outline:hover:not(:disabled) { border-color: #a8c9bd; color: #07865f; }
+
         .student-logbook-classroom-scope { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 14px 18px; }
         .student-logbook-classroom-scope-copy strong,
         .student-logbook-classroom-scope-copy span { display: block; }
@@ -24,35 +58,44 @@
         .student-logbook-classroom-form select,
         .student-logbook-session-form select { width: 100%; min-height: 40px; padding: 0 38px 0 12px; border: 1px solid #dfe9e4; border-radius: 10px; background: #fff; color: #243b34; font: inherit; font-size: .76rem; font-weight: 700; }
         .student-logbook-classroom-form select:disabled { background: #f5f7f6; color: #62736d; }
+
         .student-logbook-compact-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); overflow: hidden; border: 1px solid #e2ebe6; border-radius: 16px; background: #fff; box-shadow: 0 6px 22px rgba(15,45,35,.045); }
         .student-logbook-compact-stat { min-width: 0; padding: 17px 20px; border-right: 1px solid #edf2ef; }
         .student-logbook-compact-stat:last-child { border-right: 0; }
         .student-logbook-compact-stat strong { display: block; margin-bottom: 3px; color: #082f2b; font-size: 1.45rem; line-height: 1.1; font-weight: 800; letter-spacing: -.035em; }
         .student-logbook-compact-stat span { display: block; color: #2f453f; font-size: .76rem; font-weight: 800; }
         .student-logbook-compact-stat small { display: block; margin-top: 3px; color: #7a8984; font-size: .68rem; }
-        .student-logbook-compact-status { display: inline-flex !important; width: fit-content; align-items: center; gap: 6px; color: #07865f !important; }
-        .student-logbook-compact-status::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 4px rgba(15,174,95,.1); }
-        .student-logbook-compact-card { border: 1px solid #e2ebe6; border-radius: 16px; background: #fff; box-shadow: 0 6px 22px rgba(15,45,35,.04); }
+
         .student-logbook-session { padding: 20px; }
         .student-logbook-session-head,
         .student-logbook-entries-head,
+        .student-logbook-history-head,
         .student-logbook-bottom-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
         .student-logbook-session-head { margin-bottom: 15px; }
         .student-logbook-section-kicker { display: block; margin-bottom: 3px; color: #07865f; font-size: .65rem; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; }
         .student-logbook-session h2,
         .student-logbook-entries-head h2,
+        .student-logbook-history-head h2,
         .student-logbook-bottom-card h3 { margin: 0; color: #082f2b; font-weight: 800; letter-spacing: -.035em; }
         .student-logbook-session h2,
-        .student-logbook-entries-head h2 { font-size: 1.12rem; }
+        .student-logbook-entries-head h2,
+        .student-logbook-history-head h2 { font-size: 1.12rem; }
         .student-logbook-session-state { display: inline-flex; align-items: center; gap: 7px; padding: 7px 10px; border-radius: 999px; background: #eaf8f3; color: #07865f; font-size: .72rem; font-weight: 800; white-space: nowrap; }
         .student-logbook-session-state::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
         .student-logbook-session-state.is-idle { background: #f3f5f4; color: #6d7d78; }
-        .student-logbook-time-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 16px; }
+        .student-logbook-time-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
         .student-logbook-time-item { padding: 11px 12px; border: 1px solid #e4ece8; border-radius: 11px; background: #fbfdfc; }
         .student-logbook-time-item strong,
         .student-logbook-time-item span { display: block; }
         .student-logbook-time-item strong { color: #183a31; font-size: .82rem; font-weight: 800; }
         .student-logbook-time-item span { margin-top: 2px; color: #7b8985; font-size: .66rem; font-weight: 700; }
+        .student-logbook-session-reminder { display: flex; align-items: flex-start; gap: 9px; margin-top: 14px; padding: 11px 13px; border: 1px solid #fde2a7; border-radius: 11px; background: #fff9e8; color: #7c4a03; font-size: .73rem; line-height: 1.45; }
+        .student-logbook-session-reminder.is-ready { border-color: #ccebdd; background: #f0fbf6; color: #166534; }
+        .student-logbook-idle-copy strong,
+        .student-logbook-idle-copy span { display: block; }
+        .student-logbook-idle-copy strong { color: #183a31; font-size: .86rem; }
+        .student-logbook-idle-copy span { margin-top: 3px; color: #74837e; font-size: .76rem; }
+
         .student-logbook-session-form { display: grid; gap: 11px; }
         .student-logbook-field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
         .student-logbook-field { display: grid; gap: 6px; min-width: 0; }
@@ -64,17 +107,13 @@
         .student-logbook-photo-input { width: 100%; min-height: 44px; padding: 7px 9px; border: 1px solid #dce7e1; border-radius: 10px; background: #fbfdfc; color: #40534d; font-size: .74rem; }
         .student-logbook-photo-input::file-selector-button { margin-right: 10px; padding: 7px 10px; border: 0; border-radius: 8px; background: #eaf8f3; color: #07865f; font-weight: 800; cursor: pointer; }
         .student-logbook-form-help { margin: 0; color: #7a8984; font-size: .68rem; line-height: 1.45; }
-        .student-logbook-session-footer,
-        .student-logbook-clock-out { display: flex; justify-content: flex-end; gap: 8px; }
-        .student-logbook-clock-out { margin-top: 10px; }
-        .student-logbook-idle { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 14px 0 2px; }
-        .student-logbook-idle-copy strong,
-        .student-logbook-idle-copy span { display: block; }
-        .student-logbook-idle-copy strong { color: #183a31; font-size: .86rem; }
-        .student-logbook-idle-copy span { margin-top: 3px; color: #74837e; font-size: .76rem; }
-        .student-logbook-entries { overflow: hidden; }
-        .student-logbook-entries-head { padding: 17px 19px; border-bottom: 1px solid #edf2ef; }
-        .student-logbook-entries-count { color: #83908c; font-size: .72rem; font-weight: 700; }
+
+        .student-logbook-entries,
+        .student-logbook-history { overflow: hidden; }
+        .student-logbook-entries-head,
+        .student-logbook-history-head { padding: 17px 19px; border-bottom: 1px solid #edf2ef; }
+        .student-logbook-entries-count,
+        .student-logbook-history-count { color: #83908c; font-size: .72rem; font-weight: 700; }
         .student-logbook-compact-toolbar { display: grid; grid-template-columns: auto auto minmax(220px, 1fr); gap: 10px; padding: 13px 19px; border-bottom: 1px solid #edf2ef; background: #fbfdfc; }
         .student-logbook-compact-filter,
         .student-logbook-compact-search { min-height: 38px; border: 1px solid #dfe9e4; border-radius: 10px; background: #fff; }
@@ -85,16 +124,26 @@
         .student-logbook-entry-copy span { display: block; }
         .student-logbook-entry-copy span { margin-top: 3px; color: #7a8984; font-size: .68rem; line-height: 1.45; }
         .student-logbook-entry-meta { display: flex; flex-wrap: wrap; gap: 5px 10px; margin-top: 5px; color: #82908b; font-size: .66rem; }
+        .student-logbook-compact-table-wrap { overflow-x: auto; }
+        .student-logbook-history table { width: 100%; min-width: 720px; margin: 0; border-collapse: collapse; }
+        .student-logbook-history th { padding: 11px 14px; border-bottom: 1px solid #e5ede9; background: #f8fbf9; color: #657770; font-size: .66rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; white-space: nowrap; }
+        .student-logbook-history td { padding: 13px 14px; border-bottom: 1px solid #edf2ef; color: #314940; font-size: .76rem; vertical-align: middle; }
+        .student-logbook-history tbody tr:last-child td { border-bottom: 0; }
+        .student-logbook-history-day { color: #173b31; font-weight: 800; }
+        .student-logbook-history-status { display: inline-flex; align-items: center; gap: 6px; min-height: 27px; padding: 0 9px; border-radius: 999px; background: #eef7f3; color: #07865f; font-size: .68rem; font-weight: 800; }
+        .student-logbook-history-status.is-open { background: #fff7df; color: #9a6700; }
+        .student-logbook-history-link { color: #07865f; font-size: .72rem; font-weight: 800; text-decoration: none; }
+        .student-logbook-pagination { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 13px 18px; border-top: 1px solid #edf2ef; background: #fbfdfc; color: #74837e; font-size: .72rem; font-weight: 700; }
+
         .student-logbook-compact-empty { display: grid; justify-items: center; padding: 42px 22px; text-align: center; }
         .student-logbook-compact-empty-icon { display: grid; place-items: center; width: 42px; height: 42px; margin-bottom: 10px; border-radius: 12px; background: #eaf8f3; color: #07865f; font-size: 1.15rem; font-weight: 800; }
         .student-logbook-compact-empty strong { color: #173b31; font-size: .86rem; }
         .student-logbook-compact-empty span { max-width: 420px; margin-top: 4px; color: #7a8984; font-size: .74rem; line-height: 1.5; }
-        .student-logbook-compact-table-wrap { overflow-x: auto; }
+
         .student-logbook-bottom-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
         .student-logbook-bottom-card { padding: 17px 18px; }
         .student-logbook-bottom-card h3 { font-size: .9rem; }
         .student-logbook-week-values { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 13px; }
-        .student-logbook-week-value { min-width: 0; }
         .student-logbook-week-value strong,
         .student-logbook-week-value span { display: block; }
         .student-logbook-week-value strong { color: #173b31; font-size: .84rem; font-weight: 800; }
@@ -106,7 +155,12 @@
         .student-logbook-recent-item span { display: block; }
         .student-logbook-recent-item strong { color: #263f37; font-size: .74rem; }
         .student-logbook-recent-item span { margin-top: 2px; color: #82908b; font-size: .68rem; }
-        .student-logbook-hidden-history { display: none; }
+
+        .student-logbook-daily-modal .nexora-modal { max-width: 760px; }
+        .student-logbook-clock-modal .nexora-modal { max-width: 470px; }
+        .student-logbook-modal-warning { padding: 12px 14px; border: 1px solid #fde2a7; border-radius: 12px; background: #fff9e8; color: #7c4a03; font-size: .8rem; line-height: 1.5; }
+        .student-logbook-clock-modal .nexora-modal-footer form { margin: 0; }
+
         @media (max-width: 1000px) {
             .student-logbook-compact-summary,
             .student-logbook-time-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -116,13 +170,19 @@
         }
         @media (max-width: 760px) {
             body.student-logbook-page .student-logbook-page-content { padding-top: 78px !important; }
+            .student-logbook-page-heading { align-items: flex-start !important; }
+            .student-logbook-actions { width: 100%; justify-content: flex-start; }
+            .student-logbook-actions form { flex: 1 1 130px; }
+            .student-logbook-actions .student-logbook-button { flex: 1 1 130px; }
+            .student-logbook-actions form .student-logbook-button { width: 100%; }
+            .student-logbook-action-note { text-align: left; }
             .student-logbook-classroom-scope,
             .student-logbook-compact-toolbar,
             .student-logbook-bottom-grid,
             .student-logbook-field-grid { grid-template-columns: 1fr; }
             .student-logbook-classroom-scope { align-items: stretch; flex-direction: column; }
             .student-logbook-field.is-full { grid-column: auto; }
-            .student-logbook-idle { align-items: flex-start; flex-direction: column; }
+            .student-logbook-pagination { align-items: flex-start; flex-direction: column; }
         }
         @media (max-width: 520px) {
             .student-logbook-compact-summary,
@@ -155,13 +215,31 @@
                     <div>
                         <span class="student-section-eyebrow">Student Portal</span>
                         <h1 id="logbook-heading">Daily OJT Logbook</h1>
-                        <p>Document each internship day using your verified attendance and assigned Work.</p>
+                        <p>Document each internship day using verified attendance and assigned Work.</p>
                     </div>
-                    <div class="student-logbook-actions">
-                        <a class="student-logbook-button student-logbook-button-outline" href="#attendance-history">▣ Attendance History</a>
-                        <a class="student-logbook-button student-logbook-button-primary" href="#new-log-entry">＋ Daily Entry</a>
+                    <div class="student-logbook-actions" aria-label="Attendance actions">
+                        <button class="student-logbook-button student-logbook-button-primary" type="button" onclick="openLogbookModal('dailyEntryModal')" {% if not attendance %}disabled{% endif %}>＋ Daily Entry</button>
+
+                        {% if attendance %}
+                            <button class="student-logbook-button student-logbook-button-success" type="button" disabled>Clock In</button>
+                        {% else %}
+                            <form method="POST" action="/student/clock-in">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                {% if selected_classroom_id %}<input type="hidden" name="classroom_id" value="{{ selected_classroom_id }}">{% endif %}
+                                <button class="student-logbook-button student-logbook-button-success" type="submit" {% if requires_classroom_selection %}disabled{% endif %}>Clock In</button>
+                            </form>
+                        {% endif %}
+
+                        <button class="student-logbook-button student-logbook-button-danger" type="button" onclick="openLogbookModal('clockOutModal')" {% if not attendance or not current_daily %}disabled{% endif %}>Clock Out</button>
+                        {% if attendance and not current_daily %}<p class="student-logbook-action-note">Daily Entry is required before Clock Out.</p>{% endif %}
                     </div>
                 </section>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'danger' else 'success' if category == 'success' else 'warning' if category == 'warning' else 'info' }} mb-0" role="alert">{{ message }}</div>
+                    {% endfor %}
+                {% endwith %}
 
                 {% if classroom_options %}
                     <section class="student-logbook-compact-card student-logbook-classroom-scope" aria-label="Intern Classroom attendance scope">
@@ -209,11 +287,11 @@
                     </article>
                 </section>
 
-                <section class="student-logbook-compact-card student-logbook-session" id="new-log-entry" aria-labelledby="today-session-heading">
+                <section class="student-logbook-compact-card student-logbook-session" aria-labelledby="today-session-heading">
                     <div class="student-logbook-session-head">
                         <div>
                             <span class="student-logbook-section-kicker">{% if attendance %}Day {{ current_day_number }}{% else %}Attendance{% endif %}</span>
-                            <h2 id="today-session-heading">{% if attendance %}Today's Daily OJT Entry{% else %}Latest Session{% endif %}</h2>
+                            <h2 id="today-session-heading">Today's Attendance Session</h2>
                         </div>
                         <span class="student-logbook-session-state{% if not attendance %} is-idle{% endif %}">{% if attendance %}Active session{% elif session_snapshot %}{{ session_snapshot[4] }}{% else %}No attendance yet{% endif %}</span>
                     </div>
@@ -225,66 +303,22 @@
                             <div class="student-logbook-time-item"><strong>{% if attendance %}In progress{% elif session_snapshot[3] is not none %}{{ '%.2f'|format(session_snapshot[3]) }} hrs{% else %}—{% endif %}</strong><span>Session Hours</span></div>
                             <div class="student-logbook-time-item"><strong>{{ session_snapshot[4] }}</strong><span>Status</span></div>
                         </div>
+                    {% else %}
+                        <div class="student-logbook-idle-copy">
+                            {% if requires_classroom_selection %}
+                                <strong>Select an Intern Classroom before clocking in.</strong>
+                                <span>This keeps attendance and Daily OJT entries attached to the correct internship.</span>
+                            {% else %}
+                                <strong>Clock in to start your next OJT day.</strong>
+                                <span>Time In, Time Out, and rendered hours come directly from attendance.</span>
+                            {% endif %}
+                        </div>
                     {% endif %}
 
-                    {% if attendance %}
-                        <form class="student-logbook-session-form" method="POST" action="{{ url_for('daily_logbook.save_daily_entry') }}" enctype="multipart/form-data">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <input type="hidden" name="attendance_id" value="{{ attendance[0] }}">
-                            <div class="student-logbook-field-grid">
-                                <div class="student-logbook-field is-full">
-                                    <label for="daily-accomplishment">Daily accomplishment *</label>
-                                    <textarea id="daily-accomplishment" name="accomplishment" maxlength="5000" placeholder="What work, deliverables, or internship activities did you complete today?" required>{{ current_daily.accomplishment if current_daily else '' }}</textarea>
-                                </div>
-                                <div class="student-logbook-field">
-                                    <label for="daily-reflection">Learning / reflection</label>
-                                    <textarea id="daily-reflection" name="reflection" maxlength="5000" placeholder="What did you learn or improve today?">{{ current_daily.reflection if current_daily else '' }}</textarea>
-                                </div>
-                                <div class="student-logbook-field">
-                                    <label for="daily-challenges">Challenges / notes</label>
-                                    <textarea id="daily-challenges" name="challenges" maxlength="5000" placeholder="Record blockers, challenges, or important notes.">{{ current_daily.challenges if current_daily else '' }}</textarea>
-                                </div>
-                                <div class="student-logbook-field is-full">
-                                    <label for="daily-related-work">Related assigned Work <span class="student-logbook-form-help">(optional)</span></label>
-                                    <select id="daily-related-work" name="related_assignment_id">
-                                        <option value="">No related Work item</option>
-                                        {% for work in work_options %}
-                                            <option value="{{ work.id }}" {% if current_daily and current_daily.related_assignment_id == work.id %}selected{% endif %}>{{ work.title }}</option>
-                                        {% endfor %}
-                                    </select>
-                                    <p class="student-logbook-form-help">Only Work available to you in this Intern Classroom can be linked.</p>
-                                </div>
-                                <div class="student-logbook-field is-full">
-                                    <label for="daily-photos">Photo evidence <span class="student-logbook-form-help">(optional)</span></label>
-                                    <input class="student-logbook-photo-input" id="daily-photos" type="file" name="photos" accept="image/jpeg,image/png,image/webp" multiple>
-                                    <p class="student-logbook-form-help">Up to 5 photos per Daily OJT entry. JPG, PNG, or WebP only; 2 MB per photo. The existing 5 MB request limit still applies.</p>
-                                </div>
-                            </div>
-                            <div class="student-logbook-session-footer">
-                                <button class="student-logbook-button student-logbook-button-primary" type="submit">{% if current_daily %}Save Daily Entry Changes{% else %}Save Daily OJT Entry{% endif %}</button>
-                            </div>
-                        </form>
-                        <form class="student-logbook-clock-out" method="POST" action="/student/clock-out" onsubmit="return confirm('Clock out and close today\'s attendance session?')">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button class="student-logbook-button student-logbook-button-outline" type="submit">Clock Out</button>
-                        </form>
-                    {% else %}
-                        <div class="student-logbook-idle">
-                            <div class="student-logbook-idle-copy">
-                                {% if requires_classroom_selection %}
-                                    <strong>Select an Intern Classroom before clocking in.</strong>
-                                    <span>This keeps attendance and Daily OJT entries attached to the correct internship.</span>
-                                {% else %}
-                                    <strong>Clock in to start your next Daily OJT entry.</strong>
-                                    <span>Day number, Time In, Time Out, and rendered hours come from attendance.</span>
-                                {% endif %}
-                            </div>
-                            <form method="POST" action="/student/clock-in">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                {% if selected_classroom_id %}<input type="hidden" name="classroom_id" value="{{ selected_classroom_id }}">{% endif %}
-                                <button class="student-logbook-button student-logbook-button-primary" type="submit" {% if requires_classroom_selection %}disabled{% endif %}>Clock In</button>
-                            </form>
-                        </div>
+                    {% if attendance and not current_daily %}
+                        <div class="student-logbook-session-reminder"><strong>Required:</strong><span>Complete and save Today's Daily OJT Entry using the + Daily Entry button before Clock Out becomes available.</span></div>
+                    {% elif attendance and current_daily %}
+                        <div class="student-logbook-session-reminder is-ready"><strong>Daily Entry saved.</strong><span>You may reopen it to make changes while the attendance session is active, or Clock Out when your OJT day is complete.</span></div>
                     {% endif %}
                 </section>
 
@@ -338,12 +372,56 @@
                         <div class="student-logbook-compact-empty">
                             <span class="student-logbook-compact-empty-icon">▤</span>
                             <strong>No Daily OJT entries yet</strong>
-                            <span>{% if requires_classroom_selection %}Select an Intern Classroom to view its Daily OJT Logbook.{% elif attendance %}Complete the Daily OJT form above for this attendance session.{% else %}Clock in to start your first structured Daily OJT entry.{% endif %}</span>
+                            <span>{% if requires_classroom_selection %}Select an Intern Classroom to view its Daily OJT Logbook.{% elif attendance %}Use + Daily Entry to complete today's required record.{% else %}Clock in to start your first structured Daily OJT entry.{% endif %}</span>
                         </div>
                     {% endif %}
                 </section>
 
-                <section class="student-logbook-bottom-grid" id="attendance-history">
+                <section class="student-logbook-compact-card student-logbook-history" id="attendance-history" aria-labelledby="attendance-history-heading">
+                    <div class="student-logbook-history-head">
+                        <h2 id="attendance-history-heading">Attendance History</h2>
+                        <span class="student-logbook-history-count">10 sessions per page · {{ total_history|default(0) }} total</span>
+                    </div>
+                    {% if history %}
+                        <div class="student-logbook-compact-table-wrap">
+                            <table>
+                                <thead><tr><th>Day</th><th>Time In</th><th>Time Out</th><th>Hours</th><th>Status</th><th>Entry</th></tr></thead>
+                                <tbody>
+                                    {% for attendance_record in history %}
+                                        {% set history_day = total_history - (((page - 1) * 10) + loop.index0) %}
+                                        <tr>
+                                            <td class="student-logbook-history-day">Day {{ history_day if history_day > 0 else loop.index }}</td>
+                                            <td>{{ attendance_record[1] or '—' }}</td>
+                                            <td>{{ attendance_record[2] or '—' }}</td>
+                                            <td>{% if attendance_record[3] is not none %}{{ '%.2f'|format(attendance_record[3]) }} hrs{% else %}—{% endif %}</td>
+                                            <td><span class="student-logbook-history-status{% if attendance_record[4] == 'Open' %} is-open{% endif %}">{{ attendance_record[4] }}</span></td>
+                                            <td><a class="student-logbook-history-link" href="/student/session/{{ attendance_record[0] }}">View Day ↗</a></td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% if total_pages > 1 %}
+                            <div class="student-logbook-pagination">
+                                <span>Page {{ page }} of {{ total_pages }}</span>
+                                <div class="student-tasks-page-buttons">
+                                    {% set scope_prefix = 'classroom_id=' ~ selected_classroom_id ~ '&' if selected_classroom_id else '' %}
+                                    {% if page > 1 %}<a class="student-tasks-page-button" href="?{{ scope_prefix }}page={{ page - 1 }}">‹</a>{% else %}<span class="student-tasks-page-button">‹</span>{% endif %}
+                                    {% for p in range(1, total_pages + 1) %}<a class="student-tasks-page-button {% if p == page %}is-active{% endif %}" href="?{{ scope_prefix }}page={{ p }}">{{ p }}</a>{% endfor %}
+                                    {% if page < total_pages %}<a class="student-tasks-page-button" href="?{{ scope_prefix }}page={{ page + 1 }}">›</a>{% else %}<span class="student-tasks-page-button">›</span>{% endif %}
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="student-logbook-compact-empty">
+                            <span class="student-logbook-compact-empty-icon">◷</span>
+                            <strong>No attendance sessions yet</strong>
+                            <span>Clock In to create your first attendance-backed OJT day.</span>
+                        </div>
+                    {% endif %}
+                </section>
+
+                <section class="student-logbook-bottom-grid">
                     <article class="student-logbook-compact-card student-logbook-bottom-card">
                         <div class="student-logbook-bottom-head"><h3>OJT Activity</h3></div>
                         <div class="student-logbook-week-values">
@@ -368,25 +446,111 @@
                         </div>
                     </article>
                 </section>
-
-                <section class="student-logbook-hidden-history" aria-hidden="true">
-                    {% if history %}
-                        <table><tbody>{% for attendance_record in history %}<tr><td>{{ attendance_record[1] }}</td><td>{{ attendance_record[2] if attendance_record[2] else '—' }}</td><td>{{ attendance_record[3] if attendance_record[3] else '—' }}</td><td>{{ attendance_record[4] }}</td><td><a href="/student/session/{{ attendance_record[0] }}">View Logs</a></td></tr>{% endfor %}</tbody></table>
-                        {% if total_pages > 1 %}
-                            <div class="student-logbook-pagination">
-                                <span>Page {{ page }} of {{ total_pages }}</span>
-                                <div class="student-tasks-page-buttons">
-                                    {% set scope_prefix = 'classroom_id=' ~ selected_classroom_id ~ '&' if selected_classroom_id else '' %}
-                                    {% if page > 1 %}<a class="student-tasks-page-button" href="?{{ scope_prefix }}page={{ page - 1 }}">‹</a>{% else %}<span class="student-tasks-page-button">‹</span>{% endif %}
-                                    {% for p in range(1, total_pages + 1) %}<a class="student-tasks-page-button {% if p == page %}is-active{% endif %}" href="?{{ scope_prefix }}page={{ p }}">{{ p }}</a>{% endfor %}
-                                    {% if page < total_pages %}<a class="student-tasks-page-button" href="?{{ scope_prefix }}page={{ page + 1 }}">›</a>{% else %}<span class="student-tasks-page-button">›</span>{% endif %}
-                                </div>
-                            </div>
-                        {% endif %}
-                    {% endif %}
-                </section>
             </div>
         </div>
     </main>
+
+    {% if attendance %}
+        <div class="nexora-modal-overlay student-logbook-daily-modal" id="dailyEntryModal" aria-hidden="true" onclick="closeLogbookModalFromBackdrop(event, 'dailyEntryModal')">
+            <div class="nexora-modal" role="dialog" aria-modal="true" aria-labelledby="daily-entry-modal-title">
+                <form class="student-logbook-session-form" method="POST" action="{{ url_for('daily_logbook.save_daily_entry') }}" enctype="multipart/form-data">
+                    <div class="nexora-modal-header">
+                        <h2 id="daily-entry-modal-title">Today's Daily OJT Entry</h2>
+                        <p>Day {{ current_day_number }} · Complete this record before ending today's attendance session.</p>
+                        <button class="nexora-modal-close" type="button" aria-label="Close Daily Entry modal" onclick="closeLogbookModal('dailyEntryModal')">×</button>
+                    </div>
+                    <div class="nexora-modal-body">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="attendance_id" value="{{ attendance[0] }}">
+                        <div class="student-logbook-modal-warning"><strong>Required before Clock Out.</strong> Save your Daily OJT accomplishment for this attendance session. You can update it again while the session remains open.</div>
+                        <div class="student-logbook-field-grid">
+                            <div class="student-logbook-field is-full">
+                                <label for="daily-accomplishment">Daily accomplishment *</label>
+                                <textarea id="daily-accomplishment" name="accomplishment" maxlength="5000" placeholder="What work, deliverables, or internship activities did you complete today?" required>{{ current_daily.accomplishment if current_daily else '' }}</textarea>
+                            </div>
+                            <div class="student-logbook-field">
+                                <label for="daily-reflection">Learning / reflection</label>
+                                <textarea id="daily-reflection" name="reflection" maxlength="5000" placeholder="What did you learn or improve today?">{{ current_daily.reflection if current_daily else '' }}</textarea>
+                            </div>
+                            <div class="student-logbook-field">
+                                <label for="daily-challenges">Challenges / notes</label>
+                                <textarea id="daily-challenges" name="challenges" maxlength="5000" placeholder="Record blockers, challenges, or important notes.">{{ current_daily.challenges if current_daily else '' }}</textarea>
+                            </div>
+                            <div class="student-logbook-field is-full">
+                                <label for="daily-related-work">Related assigned Work <span class="student-logbook-form-help">(optional)</span></label>
+                                <select id="daily-related-work" name="related_assignment_id">
+                                    <option value="">No related Work item</option>
+                                    {% for work in work_options %}
+                                        <option value="{{ work.id }}" {% if current_daily and current_daily.related_assignment_id == work.id %}selected{% endif %}>{{ work.title }}</option>
+                                    {% endfor %}
+                                </select>
+                                <p class="student-logbook-form-help">Only Work available to you in this Intern Classroom can be linked.</p>
+                            </div>
+                            <div class="student-logbook-field is-full">
+                                <label for="daily-photos">Photo evidence <span class="student-logbook-form-help">(optional)</span></label>
+                                <input class="student-logbook-photo-input" id="daily-photos" type="file" name="photos" accept="image/jpeg,image/png,image/webp" multiple>
+                                <p class="student-logbook-form-help">Up to 5 photos. JPG, PNG, or WebP only; 2 MB per photo. The existing 5 MB request limit still applies.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="nexora-modal-footer">
+                        <button class="student-logbook-button student-logbook-button-outline" type="button" onclick="closeLogbookModal('dailyEntryModal')">Cancel</button>
+                        <button class="student-logbook-button student-logbook-button-primary" type="submit">{% if current_daily %}Save Daily Entry Changes{% else %}Save Daily OJT Entry{% endif %}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="nexora-modal-overlay student-logbook-clock-modal" id="clockOutModal" aria-hidden="true" onclick="closeLogbookModalFromBackdrop(event, 'clockOutModal')">
+            <div class="nexora-modal" role="dialog" aria-modal="true" aria-labelledby="clock-out-modal-title">
+                <div class="nexora-modal-header">
+                    <h2 id="clock-out-modal-title">Clock Out</h2>
+                    <p>Confirm the end of today's attendance session.</p>
+                    <button class="nexora-modal-close" type="button" aria-label="Close Clock Out modal" onclick="closeLogbookModal('clockOutModal')">×</button>
+                </div>
+                <div class="nexora-modal-body">
+                    <p class="mb-0">Clock out and close today's attendance session?</p>
+                    <div class="student-logbook-modal-warning">Your saved Daily OJT Entry will remain attached to this day. After Clock Out, the attendance session is completed and today's Daily OJT entry becomes read-only from this page.</div>
+                </div>
+                <div class="nexora-modal-footer">
+                    <button class="student-logbook-button student-logbook-button-outline" type="button" onclick="closeLogbookModal('clockOutModal')">Cancel</button>
+                    <form method="POST" action="/student/clock-out">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="student-logbook-button student-logbook-button-danger" type="submit">Clock Out</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <script>
+        function openLogbookModal(id) {
+            const modal = document.getElementById(id);
+            if (!modal) return;
+            modal.classList.add('open');
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+            const focusTarget = modal.querySelector('textarea, select, button:not(.nexora-modal-close)');
+            if (focusTarget) window.setTimeout(() => focusTarget.focus(), 50);
+        }
+
+        function closeLogbookModal(id) {
+            const modal = document.getElementById(id);
+            if (!modal) return;
+            modal.classList.remove('open');
+            modal.setAttribute('aria-hidden', 'true');
+            if (!document.querySelector('.nexora-modal-overlay.open')) document.body.style.overflow = '';
+        }
+
+        function closeLogbookModalFromBackdrop(event, id) {
+            if (event.target && event.target.id === id) closeLogbookModal(id);
+        }
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key !== 'Escape') return;
+            const modal = document.querySelector('.nexora-modal-overlay.open');
+            if (modal) closeLogbookModal(modal.id);
+        });
+    </script>
 </body>
 </html>
