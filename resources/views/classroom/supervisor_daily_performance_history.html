@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Performance - {{ classroom.name }} - Nexora</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">
+</head>
+<body class="supervisor-page">
+    {% include 'components/supervisor_sidebar.html' %}
+
+    <main class="page-content nexora-app-main">
+        <div class="nexora-page">
+            {% set supervisor_class_active_tab = 'daily_performance' %}
+            {% include 'components/supervisor_class_context.html' %}
+
+            <div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-4">
+                <div>
+                    <span class="text-primary fw-bold text-uppercase small">Daily OJT Performance</span>
+                    <h1 class="h3 fw-bold mb-1">Performance History</h1>
+                    <p class="text-muted mb-0">Day-by-day supervisor ratings only. Attendance hours, Work scores, and official evaluations are not mixed into this history.</p>
+                </div>
+                {% if roster %}
+                    <form method="GET" class="d-flex align-items-end gap-2">
+                        <div>
+                            <label class="form-label small fw-bold mb-1" for="performance-student">Intern</label>
+                            <select class="form-select" id="performance-student" name="student_id" onchange="this.form.submit()">
+                                {% for student in roster %}
+                                    <option value="{{ student.id }}" {% if selected_student and selected_student.id == student.id %}selected{% endif %}>{{ student.display_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <noscript><button class="btn btn-primary" type="submit">View</button></noscript>
+                    </form>
+                {% endif %}
+            </div>
+
+            {% if selected_student %}
+                <section class="card shadow-sm mb-4">
+                    <div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-3">
+                        <div>
+                            <div class="text-primary fw-bold">{{ selected_student.display_name }}</div>
+                            <div class="text-muted small">{{ selected_student.email or selected_student.username or 'Enrolled intern' }}</div>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2">
+                            <span class="badge rounded-pill text-bg-light">{{ summary.rated_days }} rated day{% if summary.rated_days != 1 %}s{% endif %}</span>
+                            <span class="badge rounded-pill text-bg-light">{{ summary.closed_days }} completed day{% if summary.closed_days != 1 %}s{% endif %}</span>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-6 col-xl-3">
+                        <article class="card h-100 shadow-sm">
+                            <div class="card-body">
+                                <div class="text-muted small">Average Rating</div>
+                                <div class="fs-4 fw-bold">{% if summary.average_star is not none %}{{ '%.1f'|format(summary.average_star) }} ★{% else %}—{% endif %}</div>
+                                <div class="text-muted small">{% if summary.average_percentage is not none %}{{ '%.1f'|format(summary.average_percentage) }}% average{% else %}No ratings yet{% endif %}</div>
+                            </div>
+                        </article>
+                    </div>
+                    <div class="col-6 col-xl-3">
+                        <article class="card h-100 shadow-sm">
+                            <div class="card-body">
+                                <div class="text-muted small">Latest Rating</div>
+                                <div class="fs-4 fw-bold text-primary">{% if summary.latest_star is not none %}{{ '%.1f'|format(summary.latest_star) }} ★{% else %}—{% endif %}</div>
+                                <div class="text-muted small">{% if summary.latest_percentage is not none %}{{ '%.1f'|format(summary.latest_percentage) }}%{% else %}No rating yet{% endif %}</div>
+                            </div>
+                        </article>
+                    </div>
+                    <div class="col-6 col-xl-3">
+                        <article class="card h-100 shadow-sm">
+                            <div class="card-body">
+                                <div class="text-muted small">Highest Percentage</div>
+                                <div class="fs-4 fw-bold text-success">{% if summary.highest_percentage is not none %}{{ '%.1f'|format(summary.highest_percentage) }}%{% else %}—{% endif %}</div>
+                                <div class="text-muted small">Supervisor-entered daily ratings</div>
+                            </div>
+                        </article>
+                    </div>
+                    <div class="col-6 col-xl-3">
+                        <article class="card h-100 shadow-sm">
+                            <div class="card-body">
+                                <div class="text-muted small">Latest Trend</div>
+                                {% if summary.latest_trend_direction == 'up' %}
+                                    <div class="fs-4 fw-bold text-success">↑ {{ '%+.1f'|format(summary.latest_trend_delta) }} pts</div>
+                                {% elif summary.latest_trend_direction == 'down' %}
+                                    <div class="fs-4 fw-bold text-danger">↓ {{ '%+.1f'|format(summary.latest_trend_delta) }} pts</div>
+                                {% elif summary.latest_trend_direction == 'same' %}
+                                    <div class="fs-4 fw-bold text-secondary">→ 0.0 pts</div>
+                                {% elif summary.latest_percentage is not none %}
+                                    <div class="fs-4 fw-bold text-secondary">Baseline</div>
+                                {% else %}
+                                    <div class="fs-4 fw-bold">—</div>
+                                {% endif %}
+                                <div class="text-muted small">Compared with previous rated day</div>
+                            </div>
+                        </article>
+                    </div>
+                </div>
+
+                <section class="card shadow-sm">
+                    <div class="card-header bg-white d-flex flex-wrap align-items-start justify-content-between gap-3 py-3">
+                        <div>
+                            <h2 class="h6 fw-bold mb-1">Day-by-Day Rating History</h2>
+                            <p class="text-muted small mb-0">Trend compares each rated day with the previous rated day. Unrated completed days stay visible as gaps.</p>
+                        </div>
+                        <span class="badge text-bg-light">{{ history|length }} completed day{% if history|length != 1 %}s{% endif %}</span>
+                    </div>
+                    {% if history %}
+                        <div class="table-responsive">
+                            <table class="table align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th scope="col">Day</th>
+                                        <th scope="col">Date</th>
+                                        <th scope="col">Stars</th>
+                                        <th scope="col">Percentage</th>
+                                        <th scope="col">Trend</th>
+                                        <th scope="col">Supervisor Comment</th>
+                                        <th scope="col" class="text-end">Entry</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in history|reverse %}
+                                        <tr>
+                                            <td><strong>Day {{ item.day_number }}</strong></td>
+                                            <td>{{ item.date }}</td>
+                                            {% if item.is_rated %}
+                                                <td><span class="fw-bold text-primary">{{ '%.1f'|format(item.star_rating) }} ★</span></td>
+                                                <td><strong>{{ '%.1f'|format(item.percentage) }}%</strong></td>
+                                                <td>
+                                                    {% if item.trend_direction == 'up' %}
+                                                        <span class="badge text-bg-success">↑ {{ '%+.1f'|format(item.trend_delta) }} pts</span>
+                                                    {% elif item.trend_direction == 'down' %}
+                                                        <span class="badge text-bg-danger">↓ {{ '%+.1f'|format(item.trend_delta) }} pts</span>
+                                                    {% elif item.trend_direction == 'same' %}
+                                                        <span class="badge text-bg-secondary">→ 0.0 pts</span>
+                                                    {% else %}
+                                                        <span class="badge text-bg-light">Baseline</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td class="text-body-secondary">{{ item.comment or 'No performance comment.' }}</td>
+                                            {% else %}
+                                                <td><span class="text-muted">—</span></td>
+                                                <td><span class="badge text-bg-light">Not rated</span></td>
+                                                <td><span class="text-muted">—</span></td>
+                                                <td class="text-muted">No daily performance rating entered.</td>
+                                            {% endif %}
+                                            <td class="text-end">
+                                                {% if item.log_id %}
+                                                    <a class="btn btn-sm btn-outline-primary" href="{{ url_for('logbook_review.supervisor_logbook', class_id=classroom.id, log_id=item.log_id) }}">Open Day</a>
+                                                {% else %}
+                                                    <span class="text-muted small">No Daily OJT entry</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="card-body text-center text-muted py-5">
+                            <strong class="d-block mb-1">No completed OJT days yet</strong>
+                            <span class="small">Daily performance history starts after an intern clocks out and the attendance day is completed.</span>
+                        </div>
+                    {% endif %}
+                </section>
+            {% else %}
+                <section class="card shadow-sm">
+                    <div class="card-body text-center text-muted py-5">
+                        <strong class="d-block mb-1">No interns enrolled yet</strong>
+                        <span class="small">Daily performance history will become available after interns join this Intern Classroom.</span>
+                    </div>
+                </section>
+            {% endif %}
+        </div>
+    </main>
+</body>
+</html>
