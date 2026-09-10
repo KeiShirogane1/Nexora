@@ -58,6 +58,65 @@ def _classroom_dict(row):
     }
 
 
+def _can_use_legacy_attendance(conn, student_id, classroom_id):
+    """Use unscoped legacy attendance only when the classroom relationship is unambiguous."""
+    rows = conn.execute(
+        """
+        SELECT c.id
+        FROM classroom_students cs
+        JOIN classrooms c ON c.id = cs.classroom_id
+        WHERE cs.student_id = ?
+          AND COALESCE(c.classroom_type, 'classroom') = 'internship'
+        ORDER BY c.id
+        """,
+        (student_id,),
+    ).fetchall()
+    classroom_ids = [int(_row_value(row, "id", 0, 0)) for row in rows]
+    return len(classroom_ids) == 1 and classroom_ids[0] == int(classroom_id)
+
+
+def _attendance_history_rows(conn, supervisor_id, classroom_id, student_id):
+    base_select = """
+        SELECT a.id AS attendance_id, a.clock_in, a.status,
+               l.id AS log_id,
+               dpr.star_rating, dpr.percentage, dpr.comment,
+               dpr.rated_at, dpr.updated_at
+        FROM attendance a
+        LEFT JOIN logs l
+               ON l.attendance_id = a.id
+              AND l.student_id = a.student_id
+              AND l.entry_type = 'daily'
+        LEFT JOIN daily_performance_ratings dpr
+               ON dpr.attendance_id = a.id
+              AND dpr.supervisor_id = ?
+    """
+
+    scoped_rows = conn.execute(
+        base_select
+        + """
+        WHERE a.classroom_id = ?
+          AND a.student_id = ?
+        ORDER BY a.clock_in ASC, a.id ASC
+        """,
+        (supervisor_id, classroom_id, student_id),
+    ).fetchall()
+    if scoped_rows:
+        return scoped_rows
+
+    if not _can_use_legacy_attendance(conn, student_id, classroom_id):
+        return []
+
+    return conn.execute(
+        base_select
+        + """
+        WHERE a.classroom_id IS NULL
+          AND a.student_id = ?
+        ORDER BY a.clock_in ASC, a.id ASC
+        """,
+        (supervisor_id, student_id),
+    ).fetchall()
+
+
 def get_supervisor_daily_performance_history(supervisor_id, classroom_id, student_id=None):
     """Return one owned classroom roster and one intern's manual daily rating history."""
     try:
@@ -133,26 +192,12 @@ def get_supervisor_daily_performance_history(supervisor_id, classroom_id, studen
         }
 
         if selected_student:
-            attendance_rows = conn.execute(
-                """
-                SELECT a.id AS attendance_id, a.clock_in, a.status,
-                       l.id AS log_id,
-                       dpr.star_rating, dpr.percentage, dpr.comment,
-                       dpr.rated_at, dpr.updated_at
-                FROM attendance a
-                LEFT JOIN logs l
-                       ON l.attendance_id = a.id
-                      AND l.student_id = a.student_id
-                      AND l.entry_type = 'daily'
-                LEFT JOIN daily_performance_ratings dpr
-                       ON dpr.attendance_id = a.id
-                      AND dpr.supervisor_id = ?
-                WHERE a.classroom_id = ?
-                  AND a.student_id = ?
-                ORDER BY a.clock_in ASC, a.id ASC
-                """,
-                (supervisor_id, classroom_id, selected_student["id"]),
-            ).fetchall()
+            attendance_rows = _attendance_history_rows(
+                conn,
+                supervisor_id,
+                classroom_id,
+                selected_student["id"],
+            )
 
             previous_rated_percentage = None
             rated_stars = []
