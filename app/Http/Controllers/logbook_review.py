@@ -13,6 +13,7 @@ from app.Services.notification_service import create_notification
 from app.Services.performance_rating_service import (
     get_daily_performance_rating_for_student,
     get_daily_performance_rating_for_supervisor,
+    save_bulk_daily_performance_ratings,
     save_daily_performance_rating,
 )
 
@@ -138,6 +139,62 @@ def rate_daily_performance(class_id, log_id):
         flash(result.get("error") or "Unable to save the daily performance rating.", "danger")
 
     return redirect(url_for("logbook_review.supervisor_logbook", class_id=class_id, log_id=log_id))
+
+
+@logbook_review.route(
+    "/supervisor/classes/<int:class_id>/logbook/ratings/bulk",
+    methods=["POST"],
+)
+@role_required("supervisor")
+def bulk_rate_daily_performance(class_id):
+    try:
+        result = save_bulk_daily_performance_ratings(
+            supervisor_id=session["user_id"],
+            classroom_id=class_id,
+            log_ids=request.form.getlist("log_ids"),
+            star_rating=request.form.get("star_rating"),
+            comment=request.form.get("rating_comment"),
+        )
+    except Exception as exc:
+        print("bulk daily performance rating failed:", exc)
+        result = {"ok": False, "error": "Unable to save the bulk daily performance rating."}
+
+    if result.get("ok"):
+        flash(
+            f"Daily performance saved for {result['count']} entr{'y' if result['count'] == 1 else 'ies'}: "
+            f"{result['star_rating']:.1f} stars · {result['percentage']:.1f}%.",
+            "success",
+        )
+        for recipient in result.get("recipients", []):
+            try:
+                create_notification(
+                    int(recipient["student_id"]),
+                    "Daily Performance Rating",
+                    f"Your daily performance was rated {result['star_rating']:.1f} stars ({result['percentage']:.1f}%).",
+                    "feedback",
+                    link_url=url_for(
+                        "logbook_review.student_review",
+                        log_id=int(recipient["log_id"]),
+                    ),
+                )
+            except Exception as exc:
+                print("bulk daily performance notification failed:", exc)
+    else:
+        flash(result.get("error") or "Unable to save the bulk daily performance rating.", "danger")
+
+    selected_log_id = None
+    recipients = result.get("recipients") or []
+    if recipients:
+        selected_log_id = int(recipients[0]["log_id"])
+    if selected_log_id:
+        return redirect(
+            url_for(
+                "logbook_review.supervisor_logbook",
+                class_id=class_id,
+                log_id=selected_log_id,
+            )
+        )
+    return redirect(url_for("logbook_review.supervisor_logbook", class_id=class_id))
 
 
 @logbook_review.route("/supervisor/classes/<int:class_id>/logbook/photo/<int:photo_id>")
