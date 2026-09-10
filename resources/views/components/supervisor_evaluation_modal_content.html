@@ -1,0 +1,183 @@
+{% set evaluation_theme = classroom_banner_theme(classroom.id) %}
+<div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
+    <div class="modal-header border-0 align-items-start gap-3 px-4 py-3 supervisor-class-context-banner--{{ evaluation_theme }}{% if evaluation_theme == 'navy' %} text-white{% endif %}">
+        <div class="d-flex align-items-center gap-3 min-w-0">
+            <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-white border text-primary fw-bold px-3 py-2" aria-hidden="true">{{ (selected_student.display_name[0] if selected_student and selected_student.display_name else 'I')|upper }}</span>
+            <div class="min-w-0">
+                <h2 class="h5 fw-bold mb-1">{{ selected_student.display_name if selected_student else 'Official OJT Evaluation' }}</h2>
+                <p class="small mb-0 {% if evaluation_theme == 'navy' %}text-white-50{% else %}text-secondary{% endif %}">
+                    {% if selected_student and selected_student.student_number %}{{ selected_student.student_number }} · {% endif %}
+                    {{ selected_student.major_program if selected_student and selected_student.major_program else 'Program not specified' }}
+                    {% if selected_student and selected_student.grade_year %} · {{ selected_student.grade_year }}{% endif %}
+                    · {{ classroom.name }}
+                </p>
+            </div>
+        </div>
+        <div class="d-flex align-items-center gap-2 ms-auto">
+            {% if evaluation and evaluation.status == 'submitted' %}
+                <span class="badge rounded-pill text-bg-success px-3 py-2">Submitted</span>
+            {% elif evaluation %}
+                <span class="badge rounded-pill text-bg-warning px-3 py-2">Draft</span>
+            {% else %}
+                <span class="badge rounded-pill text-bg-light border text-secondary px-3 py-2">Not Started</span>
+            {% endif %}
+            <button type="button" class="btn-close" aria-label="Close evaluation" data-evaluation-modal-close></button>
+        </div>
+    </div>
+
+    <div class="modal-body p-4">
+        <div class="alert alert-primary mb-4" role="note">
+            <strong>Separate official record.</strong> Enter only criteria from the official school/company evaluation form. Attendance, Daily Performance, Work, Logbook, and ML insights do not populate or change this evaluation.
+        </div>
+
+        {% if evaluation and evaluation.status == 'submitted' %}
+            <section class="card border shadow-sm mb-3">
+                <div class="card-header bg-white d-flex flex-wrap align-items-start justify-content-between gap-3 py-3">
+                    <div>
+                        <h3 class="h6 fw-bold mb-1">Submitted Official Evaluation</h3>
+                        <p class="text-muted small mb-0">Read-only until you deliberately reopen it as a draft.</p>
+                    </div>
+                    <form method="POST" action="{{ url_for('ojt_evaluation.supervisor_evaluations', class_id=classroom.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="student_id" value="{{ selected_student.id }}">
+                        <input type="hidden" name="return_to" value="directory">
+                        <button type="submit" name="action" value="reopen" class="btn btn-sm btn-outline-primary" onclick="return confirm('Reopen this submitted Official OJT Evaluation as a draft?');">Reopen as Draft</button>
+                    </form>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <div class="text-muted small">Overall Score</div>
+                            <div class="fs-4 fw-bold">{% if evaluation.overall_score is not none %}{{ evaluation.overall_score }}{% else %}—{% endif %}</div>
+                            <div class="text-muted small">Stored on the official form scale</div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-muted small">Criteria</div>
+                            <div class="fs-4 fw-bold">{{ evaluation_items|length }}</div>
+                            <div class="text-muted small">Supervisor-entered rubric items</div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-muted small">Submitted At</div>
+                            <div class="fw-bold">{{ evaluation.submitted_at or '—' }}</div>
+                        </div>
+                    </div>
+                    {% if evaluation_items %}
+                        <div class="table-responsive mb-4">
+                            <table class="table align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr><th>Criterion</th><th>Rating</th><th>Maximum</th><th>Weight</th><th>Comments</th></tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in evaluation_items %}
+                                        <tr>
+                                            <td class="fw-bold">{{ item.criterion_name }}</td>
+                                            <td>{{ item.rating_value }}</td>
+                                            <td>{{ item.max_value }}</td>
+                                            <td>{% if item.weight is not none %}{{ item.weight }}{% else %}—{% endif %}</td>
+                                            <td>{{ item.comments or '—' }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endif %}
+                    <div>
+                        <div class="text-muted small fw-bold text-uppercase mb-1">Overall Remarks</div>
+                        <p class="mb-0">{{ evaluation.remarks or 'No overall remarks provided.' }}</p>
+                    </div>
+                </div>
+            </section>
+            <div class="d-flex justify-content-end">
+                <button type="button" class="btn btn-secondary" data-evaluation-modal-close>Close</button>
+            </div>
+        {% else %}
+            <form method="POST" action="{{ url_for('ojt_evaluation.supervisor_evaluations', class_id=classroom.id) }}" data-evaluation-modal-form>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="student_id" value="{{ selected_student.id }}">
+                <input type="hidden" name="return_to" value="directory">
+
+                <section class="card border shadow-sm mb-3">
+                    <div class="card-header bg-white d-flex flex-wrap align-items-start justify-content-between gap-3 py-3">
+                        <div>
+                            <h3 class="h6 fw-bold mb-1">Official Rubric Criteria</h3>
+                            <p class="text-muted small mb-0">Use the exact criteria and scoring scale from the official evaluation form.</p>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-primary" data-evaluation-add-criterion>+ Add Criterion</button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="ps-3">Criterion</th>
+                                        <th>Rating</th>
+                                        <th>Maximum</th>
+                                        <th>Weight <span class="text-muted fw-normal">(optional)</span></th>
+                                        <th>Comments <span class="text-muted fw-normal">(optional)</span></th>
+                                        <th class="pe-3"><span class="visually-hidden">Remove</span></th>
+                                    </tr>
+                                </thead>
+                                <tbody data-evaluation-criteria-body>
+                                    {% if evaluation_items %}
+                                        {% for item in evaluation_items %}
+                                            <tr data-evaluation-row>
+                                                <td class="ps-3"><input class="form-control" type="text" name="criterion_name" maxlength="200" value="{{ item.criterion_name }}" required></td>
+                                                <td><input class="form-control" type="number" name="rating_value" min="0" step="any" value="{{ item.rating_value }}" required></td>
+                                                <td><input class="form-control" type="number" name="max_value" min="0.0001" step="any" value="{{ item.max_value }}" required></td>
+                                                <td><input class="form-control" type="number" name="weight" min="0" step="any" value="{% if item.weight is not none %}{{ item.weight }}{% endif %}"></td>
+                                                <td><input class="form-control" type="text" name="item_comments" maxlength="2000" value="{{ item.comments }}"></td>
+                                                <td class="pe-3"><button type="button" class="btn btn-sm btn-outline-danger" data-evaluation-remove-row>Remove</button></td>
+                                            </tr>
+                                        {% endfor %}
+                                    {% else %}
+                                        <tr data-evaluation-row>
+                                            <td class="ps-3"><input class="form-control" type="text" name="criterion_name" maxlength="200" required></td>
+                                            <td><input class="form-control" type="number" name="rating_value" min="0" step="any" required></td>
+                                            <td><input class="form-control" type="number" name="max_value" min="0.0001" step="any" required></td>
+                                            <td><input class="form-control" type="number" name="weight" min="0" step="any"></td>
+                                            <td><input class="form-control" type="text" name="item_comments" maxlength="2000"></td>
+                                            <td class="pe-3"><button type="button" class="btn btn-sm btn-outline-danger" data-evaluation-remove-row>Remove</button></td>
+                                        </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="card border shadow-sm mb-3">
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-lg-4">
+                                <label class="form-label fw-bold" for="evaluationModalOverallScore">Overall Score <span class="text-muted fw-normal">(optional)</span></label>
+                                <input id="evaluationModalOverallScore" class="form-control" type="number" name="overall_score" min="0" step="any" value="{% if evaluation and evaluation.overall_score is not none %}{{ evaluation.overall_score }}{% endif %}" placeholder="Use the official form scale">
+                                <div class="form-text">Nexora does not calculate or convert the official score.</div>
+                            </div>
+                            <div class="col-lg-8">
+                                <label class="form-label fw-bold" for="evaluationModalRemarks">Overall Remarks <span class="text-muted fw-normal">(optional)</span></label>
+                                <textarea id="evaluationModalRemarks" class="form-control" name="remarks" rows="4" maxlength="5000">{{ evaluation.remarks if evaluation else '' }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="d-flex flex-wrap justify-content-end gap-2">
+                    <button type="button" class="btn btn-secondary" data-evaluation-modal-close>Cancel</button>
+                    <button type="submit" name="action" value="save_draft" class="btn btn-outline-primary">Save Draft</button>
+                    <button type="submit" name="action" value="submit" class="btn btn-primary" onclick="return confirm('Submit this as the Official OJT Evaluation? It will become read-only until you deliberately reopen it.');">Submit Official Evaluation</button>
+                </div>
+            </form>
+
+            <template data-evaluation-criterion-template>
+                <tr data-evaluation-row>
+                    <td class="ps-3"><input class="form-control" type="text" name="criterion_name" maxlength="200" required></td>
+                    <td><input class="form-control" type="number" name="rating_value" min="0" step="any" required></td>
+                    <td><input class="form-control" type="number" name="max_value" min="0.0001" step="any" required></td>
+                    <td><input class="form-control" type="number" name="weight" min="0" step="any"></td>
+                    <td><input class="form-control" type="text" name="item_comments" maxlength="2000"></td>
+                    <td class="pe-3"><button type="button" class="btn btn-sm btn-outline-danger" data-evaluation-remove-row>Remove</button></td>
+                </tr>
+            </template>
+        {% endif %}
+    </div>
+</div>
