@@ -1,30 +1,30 @@
 {% set evaluation_theme = classroom_banner_theme(classroom.id) %}
-<div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
-    <div class="modal-header border-0 align-items-start gap-3 px-4 py-3 supervisor-class-context-banner--{{ evaluation_theme }}{% if evaluation_theme == 'navy' %} text-white{% endif %}">
+<div class="modal-content col-12 col-lg-10 col-xl-9 mx-auto border-0 rounded-4 shadow-lg overflow-hidden">
+    <div class="modal-header border-0 align-items-center gap-3 px-3 py-2 supervisor-class-context-banner--{{ evaluation_theme }}{% if evaluation_theme == 'navy' %} text-white{% endif %}">
         <div class="min-w-0">
             <span class="small fw-bold text-uppercase">Bulk Official OJT Evaluation</span>
-            <h2 class="h5 fw-bold mb-1 mt-1">{{ selected_students|length }} selected interns</h2>
+            <h2 class="h6 fw-bold mb-1 mt-1">{{ selected_students|length }} selected interns</h2>
             <p class="small mb-0 {% if evaluation_theme == 'navy' %}text-white-50{% else %}text-secondary{% endif %}">
                 {{ classroom.name }}{% if classroom.section %} · {{ classroom.section }}{% endif %}{% if classroom.company_name %} · {{ classroom.company_name }}{% endif %}
             </p>
         </div>
-        <button type="button" class="btn-close ms-auto" aria-label="Close bulk evaluation" data-evaluation-modal-close></button>
+        <button type="button" class="btn btn-sm btn-light border rounded-circle px-2 py-1 lh-1 ms-auto" aria-label="Close bulk evaluation" data-evaluation-modal-close>&times;</button>
     </div>
 
-    <div class="modal-body p-4">
-        <div class="alert alert-primary mb-3" role="note">
+    <div class="modal-body p-3">
+        <div class="alert alert-primary small py-2 px-3 mb-2" role="note">
             <strong>Same evaluation for every selected intern.</strong> The rubric, ratings, score, and remarks entered here will be saved as separate Official OJT Evaluation records for all selected interns.
         </div>
-        <div class="alert alert-warning mb-4" role="note">
+        <div class="alert alert-warning small py-2 px-3 mb-3" role="note">
             Existing drafts for selected interns will be replaced by these shared values. Submitted evaluations are protected and cannot be included in a bulk save.
         </div>
 
-        <section class="card border shadow-sm mb-3">
-            <div class="card-header bg-white py-3">
+        <section class="card border mb-3">
+            <div class="card-header bg-white px-3 py-2">
                 <h3 class="h6 fw-bold mb-1">Selected interns</h3>
                 <p class="text-muted small mb-0">All selected interns belong to this Intern Classroom.</p>
             </div>
-            <div class="card-body">
+            <div class="card-body p-3">
                 <div class="d-flex flex-wrap gap-2">
                     {% for student in selected_students %}
                         <span class="badge rounded-pill text-bg-light border text-dark px-3 py-2">
@@ -41,8 +41,8 @@
                 <input type="hidden" name="student_id" value="{{ student.id }}">
             {% endfor %}
 
-            <section class="card border shadow-sm mb-3">
-                <div class="card-header bg-white d-flex flex-wrap align-items-start justify-content-between gap-3 py-3">
+            <section class="card border mb-3">
+                <div class="card-header bg-white d-flex flex-wrap align-items-start justify-content-between gap-2 px-3 py-2">
                     <div>
                         <h3 class="h6 fw-bold mb-1">Official Rubric Criteria</h3>
                         <p class="text-muted small mb-0">Use the exact criteria and scoring scale from the official school/company evaluation form.</p>
@@ -51,24 +51,24 @@
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table align-middle mb-0">
+                        <table class="table table-sm align-middle mb-0">
                             <thead class="table-light">
                                 <tr>
-                                    <th class="ps-3">Criterion</th>
+                                    <th class="ps-3 w-25">Criterion</th>
                                     <th>Rating</th>
                                     <th>Maximum</th>
                                     <th>Weight <span class="text-muted fw-normal">(optional)</span></th>
-                                    <th>Comments <span class="text-muted fw-normal">(optional)</span></th>
+                                    <th class="w-25">Comments <span class="text-muted fw-normal">(optional)</span></th>
                                     <th class="pe-3"><span class="visually-hidden">Remove</span></th>
                                 </tr>
                             </thead>
                             <tbody data-evaluation-criteria-body>
                                 <tr data-evaluation-row>
-                                    <td class="ps-3"><input class="form-control" type="text" name="criterion_name" maxlength="200" required></td>
-                                    <td><input class="form-control" type="number" name="rating_value" min="0" step="any" required></td>
-                                    <td><input class="form-control" type="number" name="max_value" min="0.0001" step="any" required></td>
-                                    <td><input class="form-control" type="number" name="weight" min="0" step="any"></td>
-                                    <td><input class="form-control" type="text" name="item_comments" maxlength="2000"></td>
+                                    <td class="ps-3"><input class="form-control form-control-sm" type="text" name="criterion_name" maxlength="200" required></td>
+                                    <td><input class="form-control form-control-sm" type="number" name="rating_value" min="0" step="any" required></td>
+                                    <td><input class="form-control form-control-sm" type="number" name="max_value" min="0.0001" step="any" required></td>
+                                    <td><input class="form-control form-control-sm" type="number" name="weight" min="0" step="any"></td>
+                                    <td><input class="form-control form-control-sm" type="text" name="item_comments" maxlength="2000"></td>
                                     <td class="pe-3"><button type="button" class="btn btn-sm btn-outline-danger" data-evaluation-remove-row>Remove</button></td>
                                 </tr>
                             </tbody>
@@ -77,36 +77,36 @@
                 </div>
             </section>
 
-            <section class="card border shadow-sm mb-3">
-                <div class="card-body">
+            <section class="card border mb-3">
+                <div class="card-body p-3">
                     <div class="row g-3">
-                        <div class="col-lg-4">
-                            <label class="form-label fw-bold" for="bulkEvaluationOverallScore">Overall Score <span class="text-muted fw-normal">(optional)</span></label>
-                            <input id="bulkEvaluationOverallScore" class="form-control" type="number" name="overall_score" min="0" step="any" placeholder="Use the official form scale">
-                            <div class="form-text">Nexora does not calculate or convert the official score.</div>
+                        <div class="col-lg-3">
+                            <label class="form-label small fw-bold" for="bulkEvaluationOverallScore">Overall Score <span class="text-muted fw-normal">(optional)</span></label>
+                            <input id="bulkEvaluationOverallScore" class="form-control form-control-sm" type="number" name="overall_score" min="0" step="any" placeholder="Official scale">
+                            <div class="form-text small">Nexora does not calculate or convert the official score.</div>
                         </div>
-                        <div class="col-lg-8">
-                            <label class="form-label fw-bold" for="bulkEvaluationRemarks">Overall Remarks <span class="text-muted fw-normal">(optional)</span></label>
-                            <textarea id="bulkEvaluationRemarks" class="form-control" name="remarks" rows="4" maxlength="5000"></textarea>
+                        <div class="col-lg-9">
+                            <label class="form-label small fw-bold" for="bulkEvaluationRemarks">Overall Remarks <span class="text-muted fw-normal">(optional)</span></label>
+                            <textarea id="bulkEvaluationRemarks" class="form-control form-control-sm" name="remarks" rows="3" maxlength="5000"></textarea>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <div class="d-flex flex-wrap justify-content-end gap-2">
-                <button type="button" class="btn btn-secondary" data-evaluation-modal-close>Cancel</button>
-                <button type="submit" name="action" value="save_draft" class="btn btn-outline-primary">Save Draft for {{ selected_students|length }}</button>
-                <button type="submit" name="action" value="submit" class="btn btn-primary" onclick="return confirm('Submit the same Official OJT Evaluation for all selected interns? Each evaluation will become read-only until deliberately reopened.');">Submit {{ selected_students|length }} Evaluations</button>
+            <div class="position-sticky bottom-0 d-flex flex-wrap justify-content-end gap-2 border-top bg-white pt-3 pb-1">
+                <button type="button" class="btn btn-sm btn-secondary" data-evaluation-modal-close>Cancel</button>
+                <button type="submit" name="action" value="save_draft" class="btn btn-sm btn-outline-primary">Save Draft for {{ selected_students|length }}</button>
+                <button type="submit" name="action" value="submit" class="btn btn-sm btn-primary" onclick="return confirm('Submit the same Official OJT Evaluation for all selected interns? Each evaluation will become read-only until deliberately reopened.');">Submit {{ selected_students|length }} Evaluations</button>
             </div>
         </form>
 
         <template data-evaluation-criterion-template>
             <tr data-evaluation-row>
-                <td class="ps-3"><input class="form-control" type="text" name="criterion_name" maxlength="200" required></td>
-                <td><input class="form-control" type="number" name="rating_value" min="0" step="any" required></td>
-                <td><input class="form-control" type="number" name="max_value" min="0.0001" step="any" required></td>
-                <td><input class="form-control" type="number" name="weight" min="0" step="any"></td>
-                <td><input class="form-control" type="text" name="item_comments" maxlength="2000"></td>
+                <td class="ps-3"><input class="form-control form-control-sm" type="text" name="criterion_name" maxlength="200" required></td>
+                <td><input class="form-control form-control-sm" type="number" name="rating_value" min="0" step="any" required></td>
+                <td><input class="form-control form-control-sm" type="number" name="max_value" min="0.0001" step="any" required></td>
+                <td><input class="form-control form-control-sm" type="number" name="weight" min="0" step="any"></td>
+                <td><input class="form-control form-control-sm" type="text" name="item_comments" maxlength="2000"></td>
                 <td class="pe-3"><button type="button" class="btn btn-sm btn-outline-danger" data-evaluation-remove-row>Remove</button></td>
             </tr>
         </template>
