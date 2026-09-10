@@ -73,6 +73,13 @@ def ensure_classroom_schema():
                     group_mode INTEGER DEFAULT 0,
                     max_group_size INTEGER DEFAULT 1
                 )""",
+                """CREATE TABLE IF NOT EXISTS classroom_assignment_recipients (
+                    id SERIAL PRIMARY KEY,
+                    assignment_id INTEGER NOT NULL REFERENCES classroom_assignments(id) ON DELETE CASCADE,
+                    student_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(assignment_id, student_id)
+                )""",
                 """CREATE TABLE IF NOT EXISTS classroom_internship_details (
                     id SERIAL PRIMARY KEY,
                     classroom_id INTEGER UNIQUE NOT NULL REFERENCES classrooms(id) ON DELETE CASCADE,
@@ -181,6 +188,15 @@ def ensure_classroom_schema():
                     max_group_size INTEGER DEFAULT 1,
                     FOREIGN KEY(assignment_id) REFERENCES classroom_assignments(id) ON DELETE CASCADE
                 )""",
+                """CREATE TABLE IF NOT EXISTS classroom_assignment_recipients (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    assignment_id INTEGER NOT NULL,
+                    student_id INTEGER NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(assignment_id, student_id),
+                    FOREIGN KEY(assignment_id) REFERENCES classroom_assignments(id) ON DELETE CASCADE,
+                    FOREIGN KEY(student_id) REFERENCES users(id) ON DELETE CASCADE
+                )""",
                 """CREATE TABLE IF NOT EXISTS classroom_internship_details (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     classroom_id INTEGER UNIQUE NOT NULL,
@@ -265,6 +281,8 @@ def ensure_classroom_schema():
             "CREATE INDEX IF NOT EXISTS idx_classroom_students_student ON classroom_students(student_id)",
             "CREATE INDEX IF NOT EXISTS idx_classroom_posts_class ON classroom_posts(classroom_id, created_at DESC)",
             "CREATE INDEX IF NOT EXISTS idx_classroom_assignments_class ON classroom_assignments(classroom_id, due_at)",
+            "CREATE INDEX IF NOT EXISTS idx_classroom_assignment_recipients_assignment ON classroom_assignment_recipients(assignment_id)",
+            "CREATE INDEX IF NOT EXISTS idx_classroom_assignment_recipients_student ON classroom_assignment_recipients(student_id)",
             "CREATE INDEX IF NOT EXISTS idx_classroom_submissions_assignment ON classroom_submissions(assignment_id)",
             "CREATE INDEX IF NOT EXISTS idx_classroom_internship_responsibilities_class ON classroom_internship_responsibilities(classroom_id, sort_order)",
             "CREATE INDEX IF NOT EXISTS idx_classroom_internship_qualifications_class ON classroom_internship_qualifications(classroom_id, sort_order)",
