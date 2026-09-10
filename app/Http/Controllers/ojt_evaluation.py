@@ -139,6 +139,20 @@ def _build_items_from_form():
     return items
 
 
+def _evaluation_redirect(class_id, student_id=None, return_to_directory=False):
+    if return_to_directory:
+        return redirect(url_for("ojt_evaluation.supervisor_evaluation_directory"))
+    if student_id:
+        return redirect(
+            url_for(
+                "ojt_evaluation.supervisor_evaluations",
+                class_id=class_id,
+                student_id=student_id,
+            )
+        )
+    return redirect(url_for("ojt_evaluation.supervisor_evaluations", class_id=class_id))
+
+
 @ojt_evaluation.route("/supervisor/evaluations")
 @role_required("supervisor")
 def supervisor_evaluation_directory():
@@ -157,10 +171,11 @@ def supervisor_evaluations(class_id):
     supervisor_id = session["user_id"]
 
     if request.method == "POST":
+        return_to_directory = (request.form.get("return_to") or "").strip().lower() == "directory"
         student_id = request.form.get("student_id", type=int)
         if not student_id:
             flash("Choose an intern before saving an Official OJT Evaluation.", "danger")
-            return redirect(url_for("ojt_evaluation.supervisor_evaluations", class_id=class_id))
+            return _evaluation_redirect(class_id, return_to_directory=return_to_directory)
 
         action = (request.form.get("action") or "").strip().lower()
         if action == "reopen":
@@ -173,23 +188,19 @@ def supervisor_evaluations(class_id):
                 flash("Official OJT Evaluation reopened as a draft.", "success")
             else:
                 flash(result.get("error") or "Unable to reopen evaluation.", "danger")
-            return redirect(
-                url_for(
-                    "ojt_evaluation.supervisor_evaluations",
-                    class_id=class_id,
-                    student_id=student_id,
-                )
+            return _evaluation_redirect(
+                class_id,
+                student_id=student_id,
+                return_to_directory=return_to_directory,
             )
 
         status = "submitted" if action == "submit" else "draft" if action == "save_draft" else None
         if not status:
             flash("Invalid Official OJT Evaluation action.", "danger")
-            return redirect(
-                url_for(
-                    "ojt_evaluation.supervisor_evaluations",
-                    class_id=class_id,
-                    student_id=student_id,
-                )
+            return _evaluation_redirect(
+                class_id,
+                student_id=student_id,
+                return_to_directory=return_to_directory,
             )
 
         result = save_supervisor_ojt_evaluation(
@@ -209,12 +220,10 @@ def supervisor_evaluations(class_id):
         else:
             flash(result.get("error") or "Unable to save Official OJT Evaluation.", "danger")
 
-        return redirect(
-            url_for(
-                "ojt_evaluation.supervisor_evaluations",
-                class_id=class_id,
-                student_id=student_id,
-            )
+        return _evaluation_redirect(
+            class_id,
+            student_id=student_id,
+            return_to_directory=return_to_directory,
         )
 
     requested_student_id = request.args.get("student_id", type=int)
@@ -226,12 +235,24 @@ def supervisor_evaluations(class_id):
     if not context.get("ok"):
         abort(int(context.get("status_code") or 404))
 
+    template_context = {
+        "classroom": context["classroom"],
+        "students": context["students"],
+        "selected_student": context["selected_student"],
+        "evaluation": context["evaluation"],
+        "evaluation_items": context["items"],
+        "active_page": "evaluations",
+    }
+
+    if (request.args.get("modal") or "").strip() == "1":
+        if not context["selected_student"]:
+            abort(404)
+        return render_template(
+            "components/supervisor_evaluation_modal_content.html",
+            **template_context,
+        )
+
     return render_template(
         "classroom/supervisor_ojt_evaluation.html",
-        classroom=context["classroom"],
-        students=context["students"],
-        selected_student=context["selected_student"],
-        evaluation=context["evaluation"],
-        evaluation_items=context["items"],
-        active_page="evaluations",
+        **template_context,
     )
