@@ -264,8 +264,9 @@ def supervisor_file(class_id, assignment_id, submission_id, file_id):
         row = conn.execute(
             """SELECT f.relative_path, f.original_filename
                FROM classwork_submission_files f
-               WHERE f.id = ? AND f.submission_id = ?""",
-            (file_id, submission_id),
+               JOIN classwork_submissions s ON s.id = f.submission_id
+               WHERE f.id = ? AND f.submission_id = ? AND s.assignment_id = ?""",
+            (file_id, submission_id, assignment_id),
         ).fetchone()
         if not row:
             abort(404)
