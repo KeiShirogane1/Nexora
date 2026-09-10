@@ -62,7 +62,7 @@ def review_daily_log(class_id, log_id):
                 int(result["student_id"]),
                 "Daily OJT Logbook Review",
                 f"Your Daily OJT entry was marked {result['status_label']}.",
-                "logbook",
+                "feedback",
                 link_url=url_for("logbook_review.student_review", log_id=log_id),
             )
         except Exception as exc:
@@ -124,7 +124,7 @@ def student_revise(log_id):
                 int(result["supervisor_id"]),
                 "Daily OJT Revision Submitted",
                 "An intern revised a Daily OJT entry that you returned for changes.",
-                "logbook",
+                "feedback",
                 link_url=url_for(
                     "logbook_review.supervisor_logbook",
                     class_id=int(result["classroom_id"]),
