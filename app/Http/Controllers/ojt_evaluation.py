@@ -3,6 +3,7 @@ from flask import Blueprint, abort, flash, redirect, render_template, request, s
 from app.Http.Middleware.security import role_required
 from app.Models.db import get_db_connection
 from app.Services.assigned_interns_service import get_supervisor_assigned_interns
+from app.Services.ojt_evaluation_bulk_service import save_supervisor_ojt_evaluations_bulk
 from app.Services.ojt_evaluation_service import (
     get_supervisor_evaluation_context,
     reopen_supervisor_ojt_evaluation,
@@ -153,6 +154,61 @@ def _evaluation_redirect(class_id, student_id=None, return_to_directory=False):
     return redirect(url_for("ojt_evaluation.supervisor_evaluations", class_id=class_id))
 
 
+def _build_bulk_evaluation_context(supervisor_id, class_id, raw_student_ids):
+    try:
+        class_id = int(class_id)
+        student_ids = []
+        seen = set()
+        for raw_student_id in raw_student_ids or []:
+            student_id = int(raw_student_id)
+            if student_id > 0 and student_id not in seen:
+                student_ids.append(student_id)
+                seen.add(student_id)
+    except (TypeError, ValueError):
+        return {"ok": False, "status_code": 400}
+
+    if len(student_ids) < 2:
+        return {"ok": False, "status_code": 400}
+
+    directory = _build_evaluation_directory(supervisor_id)
+    classroom_group = next(
+        (
+            classroom
+            for classroom in directory.get("classrooms", [])
+            if int(classroom.get("class_id") or 0) == class_id
+        ),
+        None,
+    )
+    if not classroom_group:
+        return {"ok": False, "status_code": 404}
+
+    students_by_id = {
+        int(student.get("id") or 0): student
+        for student in classroom_group.get("interns", [])
+    }
+    selected_students = []
+    for student_id in student_ids:
+        student = students_by_id.get(student_id)
+        if not student:
+            return {"ok": False, "status_code": 404}
+        if not student.get("evaluation_selectable"):
+            return {"ok": False, "status_code": 409}
+        selected_students.append(student)
+
+    return {
+        "ok": True,
+        "status_code": 200,
+        "classroom": {
+            "id": class_id,
+            "name": classroom_group.get("classroom_name") or "Intern Classroom",
+            "section": classroom_group.get("section") or "",
+            "company_name": classroom_group.get("company_name") or "",
+            "archived": bool(classroom_group.get("archived")),
+        },
+        "selected_students": selected_students,
+    }
+
+
 @ojt_evaluation.route("/supervisor/evaluations")
 @role_required("supervisor")
 def supervisor_evaluation_directory():
@@ -161,6 +217,60 @@ def supervisor_evaluation_directory():
         "supervisor/evaluations.html",
         classrooms=context["classrooms"],
         summary=context["summary"],
+        active_page="evaluations",
+    )
+
+
+@ojt_evaluation.route(
+    "/supervisor/classes/<int:class_id>/evaluations/bulk",
+    methods=["GET", "POST"],
+)
+@role_required("supervisor")
+def supervisor_bulk_evaluations(class_id):
+    supervisor_id = session["user_id"]
+
+    if request.method == "POST":
+        action = (request.form.get("action") or "").strip().lower()
+        status = "submitted" if action == "submit" else "draft" if action == "save_draft" else None
+        if not status:
+            flash("Invalid bulk Official OJT Evaluation action.", "danger")
+            return redirect(url_for("ojt_evaluation.supervisor_evaluation_directory"))
+
+        student_ids = request.form.getlist("student_id")
+        result = save_supervisor_ojt_evaluations_bulk(
+            supervisor_id=supervisor_id,
+            classroom_id=class_id,
+            student_ids=student_ids,
+            status=status,
+            items=_build_items_from_form(),
+            overall_score=request.form.get("overall_score"),
+            remarks=request.form.get("remarks"),
+        )
+        if result.get("ok"):
+            count = int(result.get("saved_count") or 0)
+            if status == "submitted":
+                flash(f"Submitted {count} Official OJT Evaluations.", "success")
+            else:
+                flash(f"Saved drafts for {count} selected interns.", "success")
+        else:
+            flash(result.get("error") or "Unable to save the selected evaluations.", "danger")
+        return redirect(url_for("ojt_evaluation.supervisor_evaluation_directory"))
+
+    context = _build_bulk_evaluation_context(
+        supervisor_id,
+        class_id,
+        request.args.getlist("student_id"),
+    )
+    if not context.get("ok"):
+        abort(int(context.get("status_code") or 400))
+
+    if (request.args.get("modal") or "").strip() != "1":
+        return redirect(url_for("ojt_evaluation.supervisor_evaluation_directory"))
+
+    return render_template(
+        "components/supervisor_bulk_evaluation_modal_content.html",
+        classroom=context["classroom"],
+        selected_students=context["selected_students"],
         active_page="evaluations",
     )
 
