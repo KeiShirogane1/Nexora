@@ -189,9 +189,9 @@
                                                             </div>
                                                         </form>
                                                     </div>
-                                                    <form method="POST" action="{{ url_for('classroom.archive_class', class_id=c.id) }}" class="m-0">
+                                                    <form method="POST" action="{{ url_for('classroom.archive_class', class_id=c.id) }}" class="m-0"{% if not c.archived %} onsubmit="return confirm('Complete and archive this Intern Classroom? Historical data will be preserved, while new announcements, work, and enrollment will be disabled until it is restored.')"{% endif %}>
                                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                        <button type="submit" class="dropdown-item">{% if c.archived %}Unarchive Intern Classroom{% else %}Archive Intern Classroom{% endif %}</button>
+                                                        <button type="submit" class="dropdown-item">{% if c.archived %}Restore Intern Classroom{% else %}Complete &amp; Archive{% endif %}</button>
                                                     </form>
                                                     <div class="dropdown-divider"></div>
                                                     <form method="POST" action="{{ url_for('internship_classroom.delete_classroom', class_id=c.id) }}" class="m-0" onsubmit="return confirm('Permanently delete this Intern Classroom? This removes enrolled interns, classroom activities, submissions, and related classroom data. This cannot be undone.')">
