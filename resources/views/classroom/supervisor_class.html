@@ -858,7 +858,7 @@
                                     <p class="class-subtitle">{{ classroom.description }}</p>
                                 {% endif %}
                                 {% if classroom.archived %}
-                                    <div class="alert alert-warning mt-3 mb-0">This Intern Classroom is archived. New announcements and work are disabled.</div>
+                                    <div class="alert alert-warning mt-3 mb-0">This Intern Classroom is completed and archived. Historical records remain available; new announcements, work, and enrollment are disabled until it is restored.</div>
                                 {% endif %}
                             </div>
 
@@ -899,9 +899,9 @@
                                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                 <button type="submit" class="dropdown-item">Regenerate Class Code</button>
                                             </form>
-                                            <form method="POST" action="{{ url_for('classroom.archive_class', class_id=classroom.id) }}" class="m-0">
+                                            <form method="POST" action="{{ url_for('classroom.archive_class', class_id=classroom.id) }}" class="m-0"{% if not classroom.archived %} onsubmit="return confirm('Complete and archive this Intern Classroom? Historical data will be preserved, while new announcements, work, and enrollment will be disabled until it is restored.')"{% endif %}>
                                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                <button type="submit" class="dropdown-item">{% if classroom.archived %}Unarchive Class{% else %}Archive Class{% endif %}</button>
+                                                <button type="submit" class="dropdown-item">{% if classroom.archived %}Restore Intern Classroom{% else %}Complete &amp; Archive{% endif %}</button>
                                             </form>
                                             <div class="dropdown-divider"></div>
                                             <form method="POST" action="{{ url_for('internship_classroom.delete_classroom', class_id=classroom.id) }}" class="m-0" onsubmit="return confirm('Permanently delete {{ classroom.name|e }}? This removes enrolled members, classroom activities, submissions, and related classroom data. This cannot be undone.')">
