@@ -10,6 +10,11 @@ from app.Services.logbook_review_service import (
     save_supervisor_review,
 )
 from app.Services.notification_service import create_notification
+from app.Services.performance_rating_service import (
+    get_daily_performance_rating_for_student,
+    get_daily_performance_rating_for_supervisor,
+    save_daily_performance_rating,
+)
 
 
 logbook_review = Blueprint("logbook_review", __name__)
@@ -26,13 +31,24 @@ def supervisor_logbook(class_id):
     )
     if not context.get("ok"):
         abort(int(context.get("status_code") or 404))
+
+    selected_entry = context["selected_entry"]
+    daily_rating = None
+    if selected_entry:
+        daily_rating = get_daily_performance_rating_for_supervisor(
+            supervisor_id=session["user_id"],
+            classroom_id=class_id,
+            attendance_id=selected_entry["attendance_id"],
+        )
+
     return render_template(
         "classroom/supervisor_logbook_review.html",
         classroom=context["classroom"],
         entries=context["entries"],
-        selected_entry=context["selected_entry"],
+        selected_entry=selected_entry,
         selected_photos=context["selected_photos"],
         summary=context["summary"],
+        daily_rating=daily_rating,
         active_page="classes",
     )
 
@@ -73,6 +89,57 @@ def review_daily_log(class_id, log_id):
     return redirect(url_for("logbook_review.supervisor_logbook", class_id=class_id, log_id=log_id))
 
 
+@logbook_review.route(
+    "/supervisor/classes/<int:class_id>/logbook/<int:log_id>/rating",
+    methods=["POST"],
+)
+@role_required("supervisor")
+def rate_daily_performance(class_id, log_id):
+    context = get_supervisor_logbook_context(
+        supervisor_id=session["user_id"],
+        classroom_id=class_id,
+        selected_log_id=log_id,
+    )
+    if not context.get("ok"):
+        abort(int(context.get("status_code") or 404))
+
+    entry = context.get("selected_entry")
+    if not entry:
+        abort(404)
+
+    try:
+        result = save_daily_performance_rating(
+            supervisor_id=session["user_id"],
+            classroom_id=class_id,
+            attendance_id=entry["attendance_id"],
+            star_rating=request.form.get("star_rating"),
+            comment=request.form.get("rating_comment"),
+        )
+    except Exception as exc:
+        print("daily performance rating failed:", exc)
+        result = {"ok": False, "error": "Unable to save the daily performance rating."}
+
+    if result.get("ok"):
+        flash(
+            f"Daily performance saved: {result['star_rating']:.1f} stars · {result['percentage']:.1f}%.",
+            "success",
+        )
+        try:
+            create_notification(
+                int(result["student_id"]),
+                "Daily Performance Rating",
+                f"Your daily performance was rated {result['star_rating']:.1f} stars ({result['percentage']:.1f}%).",
+                "feedback",
+                link_url=url_for("logbook_review.student_review", log_id=log_id),
+            )
+        except Exception as exc:
+            print("daily performance rating notification failed:", exc)
+    else:
+        flash(result.get("error") or "Unable to save the daily performance rating.", "danger")
+
+    return redirect(url_for("logbook_review.supervisor_logbook", class_id=class_id, log_id=log_id))
+
+
 @logbook_review.route("/supervisor/classes/<int:class_id>/logbook/photo/<int:photo_id>")
 @role_required("supervisor")
 def supervisor_photo(class_id, photo_id):
@@ -98,6 +165,10 @@ def student_review(log_id):
         "student/logbook_review.html",
         entry=entry,
         photos=get_logbook_photos(session["user_id"], log_id),
+        daily_rating=get_daily_performance_rating_for_student(
+            session["user_id"],
+            entry["attendance_id"],
+        ),
         active_page="logbook",
     )
 
