@@ -90,15 +90,14 @@ def seed_one(conn, supervisor_id, index):
     classroom_id = ensure_classroom(conn, supervisor_id, index, classroom_type)
 
     conn.execute(
-        "INSERT OR IGNORE INTO student_assignments (student_id, supervisor_id) VALUES (?, ?)",
+        "INSERT INTO student_assignments (student_id, supervisor_id) VALUES (?, ?) ON CONFLICT DO NOTHING",
         (student_id, supervisor_id),
     )
     conn.execute(
-        "INSERT OR IGNORE INTO classroom_students (classroom_id, student_id) VALUES (?, ?)",
+        "INSERT INTO classroom_students (classroom_id, student_id) VALUES (?, ?) ON CONFLICT DO NOTHING",
         (classroom_id, student_id),
     )
 
-    # One ordinary task per demo student.
     task_title = f"Demo Task {index}"
     task = conn.execute("SELECT id FROM tasks WHERE student_id = ? AND task_title = ? LIMIT 1", (student_id, task_title)).fetchone()
     if task:
@@ -111,13 +110,13 @@ def seed_one(conn, supervisor_id, index):
             VALUES (?, ?, ?, ?, ?, ?, 1, 1, 'Completed')""",
             (student_id, supervisor_id, task_title, f"Complete demo activity {index}.", datetime.now() - timedelta(days=7), datetime.now() - timedelta(days=1)),
         )
-        task_id = row_id(conn, "tasks", "task_title", task_title)
+        task = conn.execute("SELECT id FROM tasks WHERE student_id = ? AND task_title = ? LIMIT 1", (student_id, task_title)).fetchone()
+        task_id = task[0]
     conn.execute(
-        "INSERT OR IGNORE INTO task_submissions (task_id, filename, filepath, remarks) VALUES (?, ?, ?, ?)",
+        "INSERT INTO task_submissions (task_id, filename, filepath, remarks) VALUES (?, ?, ?, ?) ON CONFLICT DO NOTHING",
         (task_id, f"demo_submission_{index}.txt", f"seed/demo_submission_{index}.txt", "Demo seed submission."),
     )
 
-    # One classwork assignment, submission, and normalized score.
     assignment_title = f"Demo Classwork {index}"
     assignment = conn.execute("SELECT id FROM classroom_assignments WHERE classroom_id = ? AND title = ? LIMIT 1", (classroom_id, assignment_title)).fetchone()
     if assignment:
@@ -127,18 +126,18 @@ def seed_one(conn, supervisor_id, index):
             "INSERT INTO classroom_assignments (classroom_id, author_id, title, description, due_at, points) VALUES (?, ?, ?, ?, ?, 100)",
             (classroom_id, supervisor_id, assignment_title, f"Demo graded activity {index}.", datetime.now() - timedelta(days=2)),
         )
-        assignment_id = row_id(conn, "classroom_assignments", "title", assignment_title)
+        assignment = conn.execute("SELECT id FROM classroom_assignments WHERE classroom_id = ? AND title = ? LIMIT 1", (classroom_id, assignment_title)).fetchone()
+        assignment_id = assignment[0]
     conn.execute(
-        "INSERT OR IGNORE INTO classroom_submissions (assignment_id, student_id, content, filename, filepath, status, grade, feedback) VALUES (?, ?, ?, ?, ?, 'graded', ?, ?)",
+        "INSERT INTO classroom_submissions (assignment_id, student_id, content, filename, filepath, status, grade, feedback) VALUES (?, ?, ?, ?, ?, 'graded', ?, ?) ON CONFLICT DO NOTHING",
         (assignment_id, student_id, f"Demo answer {index}", f"demo_answer_{index}.txt", f"seed/demo_answer_{index}.txt", str(78 + index * 3), "Demo grading feedback."),
     )
     score = min(100, 78 + index * 3)
     conn.execute(
-        "INSERT OR IGNORE INTO classwork_scores (assignment_id, student_id, score, max_score, percentage, grading_method) VALUES (?, ?, ?, 100, ?, 'seeded')",
+        "INSERT INTO classwork_scores (assignment_id, student_id, score, max_score, percentage, grading_method) VALUES (?, ?, ?, 100, ?, 'seeded') ON CONFLICT DO NOTHING",
         (assignment_id, student_id, score, score),
     )
 
-    # One completed attendance day + log + daily performance rating.
     day = datetime.now() - timedelta(days=10 - index)
     attendance = conn.execute(
         "SELECT id FROM attendance WHERE student_id = ? AND date(clock_in) = date(?) LIMIT 1",
@@ -153,30 +152,32 @@ def seed_one(conn, supervisor_id, index):
             "INSERT INTO attendance (student_id, classroom_id, clock_in, clock_out, hours_rendered, status) VALUES (?, ?, ?, ?, 8.0, 'Completed')",
             (student_id, classroom_id, clock_in, clock_out),
         )
-        attendance_id = row_id(conn, "attendance", "student_id", student_id)
+        attendance = conn.execute(
+            "SELECT id FROM attendance WHERE student_id = ? AND date(clock_in) = date(?) LIMIT 1",
+            (student_id, day),
+        ).fetchone()
+        attendance_id = attendance[0]
     conn.execute(
-        "INSERT OR IGNORE INTO logs (attendance_id, student_id, content, created_at) VALUES (?, ?, ?, ?)",
+        "INSERT INTO logs (attendance_id, student_id, content, created_at) VALUES (?, ?, ?, ?) ON CONFLICT DO NOTHING",
         (attendance_id, student_id, f"Completed demo OJT/classroom activity {index}.", day.replace(hour=17, minute=5)),
     )
     rating = min(5.0, 3.0 + index * 0.3)
     percentage = min(100.0, 80.0 + index * 3.0)
     conn.execute(
-        "INSERT OR IGNORE INTO daily_performance_ratings (attendance_id, supervisor_id, star_rating, percentage, comment) VALUES (?, ?, ?, ?, ?)",
+        "INSERT INTO daily_performance_ratings (attendance_id, supervisor_id, star_rating, percentage, comment) VALUES (?, ?, ?, ?, ?) ON CONFLICT DO NOTHING",
         (attendance_id, supervisor_id, rating, percentage, f"Demo performance rating {index}."),
     )
 
-    # Core feedback/insight data.
     conn.execute(
-        "INSERT OR IGNORE INTO feedback (student_id, supervisor_id, comment, performance_label, ml_prediction, ml_sentiment, ml_competency, ml_recommendation, ml_svm_prediction, ml_confidence) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO feedback (student_id, supervisor_id, comment, performance_label, ml_prediction, ml_sentiment, ml_competency, ml_recommendation, ml_svm_prediction, ml_confidence) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING",
         (student_id, supervisor_id, f"Demo feedback for student {index}.", "Good", "Good", "positive", "Technical Skills", "Continue improving practical skills.", "Good", 0.80 + index * 0.03),
     )
 
     conn.execute(
-        "INSERT OR IGNORE INTO notifications (user_id, title, message, notification_type, is_read, link_url) VALUES (?, ?, ?, 'info', 0, '/student/dashboard')",
+        "INSERT INTO notifications (user_id, title, message, notification_type, is_read, link_url) VALUES (?, ?, ?, 'info', 0, '/student/dashboard') ON CONFLICT DO NOTHING",
         (student_id, "Demo notification", f"Demo dataset {index} is ready."),
     )
 
-    # Internship-specific records use the existing dedicated tables only.
     if classroom_type == "internship":
         detail = conn.execute("SELECT id FROM classroom_internship_details WHERE classroom_id = ? LIMIT 1", (classroom_id,)).fetchone()
         if not detail:
@@ -187,10 +188,16 @@ def seed_one(conn, supervisor_id, index):
                  enrollment_deadline, required_hours, company_website, company_description,
                  internship_description)
                 VALUES (?, ?, ?, ?, 'Hybrid', 'fixed_dates', 'specified', 'Paid', ?, ?, ?, ?, 486, ?, ?, ?)""",
-                (classroom_id, f"Software Development Internship {index}", f"Demo Company {index}", "Technology", f"Quezon City, NCR", str(day.date()), str((day + timedelta(days=60)).date()), str((day - timedelta(days=2)).date()), f"https://example.com/demo{index}", f"Demo company profile {index}.", f"Demo internship opportunity {index}."),
+                (classroom_id, f"Software Development Internship {index}", f"Demo Company {index}", "Technology", "Quezon City, NCR", str(day.date()), str((day + timedelta(days=60)).date()), str((day - timedelta(days=2)).date()), f"https://example.com/demo{index}", f"Demo company profile {index}.", f"Demo internship opportunity {index}."),
             )
-        conn.execute("INSERT OR IGNORE INTO classroom_internship_responsibilities (classroom_id, responsibility, sort_order) VALUES (?, ?, ?)", (classroom_id, f"Build and test assigned features for dataset {index}.", 0))
-        conn.execute("INSERT OR IGNORE INTO classroom_internship_qualifications (classroom_id, qualification, sort_order) VALUES (?, ?, ?)", (classroom_id, "Basic software development knowledge.", 0))
+        conn.execute(
+            "INSERT INTO classroom_internship_responsibilities (classroom_id, responsibility, sort_order) VALUES (?, ?, ?) ON CONFLICT DO NOTHING",
+            (classroom_id, f"Build and test assigned features for dataset {index}.", 0),
+        )
+        conn.execute(
+            "INSERT INTO classroom_internship_qualifications (classroom_id, qualification, sort_order) VALUES (?, ?, ?) ON CONFLICT DO NOTHING",
+            (classroom_id, "Basic software development knowledge.", 0),
+        )
 
     return student_id, classroom_id
 
