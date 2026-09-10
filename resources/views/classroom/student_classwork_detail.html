@@ -59,22 +59,22 @@
 
     <main class="nx-classwork-main">
         <div class="nx-classwork-top">
-            <div class="nx-search"><span>⌕</span><input type="search" placeholder="Search classwork..." aria-label="Search classwork"></div>
+            <div class="nx-search"><span>⌕</span><input type="search" placeholder="Search work..." aria-label="Search work"></div>
             <a href="{{ url_for('notifications.notification_list') }}" class="nx-top-link" aria-label="Notifications">♢</a>
         </div>
 
         <div class="nx-page">
             <div class="nx-breadcrumb">
-                <a href="{{ url_for('student_classwork.index', class_id=classroom.id) }}">Classwork</a><span>›</span><span>Activity Details</span>
+                <a href="{{ url_for('student_classwork.index', class_id=classroom.id) }}">Work</a><span>›</span><span>Work Details</span>
             </div>
 
             <div class="nx-heading-row">
                 <div>
-                    <span class="nx-eyebrow">Classwork</span>
-                    <h1>Activity Details</h1>
+                    <span class="nx-eyebrow">Work</span>
+                    <h1>Work Details</h1>
                     <p>{{ classroom.name }} · {{ classroom.section }}</p>
                 </div>
-                <a href="{{ url_for('student_classwork.index', class_id=classroom.id) }}" class="nx-back">← Back to Classwork</a>
+                <a href="{{ url_for('student_classwork.index', class_id=classroom.id) }}" class="nx-back">← Back to Work</a>
             </div>
 
             <div class="nx-grid">
@@ -91,8 +91,9 @@
 
                         <div class="nx-meta">
                             {% if assignment.due_at %}<span>Due {{ assignment.due_at }}</span>{% else %}<span>No due date</span>{% endif %}
-                            {% if assignment.group_mode %}<span>Group activity · max {{ assignment.max_group_size }}</span>{% endif %}
-                            {% if assignment.allow_file_upload %}<span>File submission enabled</span>{% endif %}
+                            {% if assignment.group_mode %}<span>{{ assignment.team_name or 'Team' }} · {{ assignment.team_members|length }} members</span>{% endif %}
+                            {% if assignment.submission_mode == 'shared' %}<span>Shared team submission</span>{% elif assignment.group_mode %}<span>Individual submissions</span>{% endif %}
+                            {% if assignment.allow_file_upload %}<span>Submission enabled</span>{% endif %}
                         </div>
 
                         {% if past_due %}<div class="alert alert-warning nx-alert">The deadline has passed. Your supervisor may still allow a submission.</div>{% endif %}
@@ -102,12 +103,19 @@
                             <div class="nx-instructions">{{ assignment.description or 'No additional instructions were provided.' }}</div>
                         </section>
 
+                        {% if assignment.team_members %}
+                        <section class="nx-section">
+                            <h3>{{ assignment.team_name or 'Team Members' }}</h3>
+                            <div class="nx-instructions">{% for member in assignment.team_members %}{{ member.username }}{% if member.email %} · {{ member.email }}{% endif %}{% if not loop.last %}\n{% endif %}{% endfor %}</div>
+                        </section>
+                        {% endif %}
+
                         {% if assignment.external_url or assignment.resource_filepath %}
                         <section class="nx-section">
                             <h3>Resources</h3>
                             {% if assignment.external_url %}
                             <a href="{{ assignment.external_url }}" target="_blank" rel="noopener noreferrer" class="nx-resource">
-                                <span class="nx-resource-icon">↗</span><span class="nx-resource-main"><strong>{{ assignment.resource_label or 'Open external activity' }}</strong><small>Opens in a new tab</small></span><span>›</span>
+                                <span class="nx-resource-icon">↗</span><span class="nx-resource-main"><strong>{{ assignment.resource_label or 'Open work link' }}</strong><small>Opens in a new tab</small></span><span>›</span>
                             </a>
                             {% endif %}
                             {% if assignment.resource_filepath %}
@@ -121,7 +129,11 @@
 
                     <section class="nx-card nx-submit-card nx-card-pad">
                         <div class="nx-submit-heading">
-                            <div><span class="nx-eyebrow">Your Work</span><h2>Submission</h2><p>Submit your completed work for this activity.</p></div>
+                            {% if assignment.submission_mode == 'shared' %}
+                                <div><span class="nx-eyebrow">Team Work</span><h2>Shared Team Submission</h2><p>Any selected team member can submit. The latest attempt is shared with the whole team.</p></div>
+                            {% else %}
+                                <div><span class="nx-eyebrow">Your Work</span><h2>Submission</h2><p>Submit your completed work for supervisor review.</p></div>
+                            {% endif %}
                             {% if submission %}<span class="nx-pill complete">{{ submission.status|replace('_', ' ')|capitalize }}</span>{% else %}<span class="nx-pill">Not submitted</span>{% endif %}
                         </div>
 
@@ -131,46 +143,50 @@
                             {% if submission.grade is not none %}<div class="nx-summary-item"><span>Grade</span><strong>{{ submission.grade }} / {{ assignment.points }}</strong></div>{% endif %}
                             {% if submission.submitted_at %}<div class="nx-summary-item"><span>Submitted</span><strong>{{ submission.submitted_at }}</strong></div>{% endif %}
                         </div>
+                        {% if assignment.submission_mode == 'shared' and submission.submitted_by_username %}<div class="nx-feedback"><span>Submitted by</span><p>{{ submission.submitted_by_username }}</p></div>{% endif %}
                         {% if submission.feedback %}<div class="nx-feedback"><span>Supervisor feedback</span><p>{{ submission.feedback }}</p></div>{% endif %}
-                        {% if submission.content %}<div class="nx-feedback"><span>Your written response</span><p>{{ submission.content }}</p></div>{% endif %}
+                        {% if submission.content %}<div class="nx-feedback"><span>{% if assignment.submission_mode == 'shared' %}Team written response{% else %}Your written response{% endif %}</span><p>{{ submission.content }}</p></div>{% endif %}
                         {% if submission.files %}<div class="nx-feedback"><span>Submitted files</span>{% for file in submission.files %}<p class="nx-previous-file"><a href="{{ url_for('classwork_submissions.student_file', class_id=classroom.id, assignment_id=assignment.id, file_id=file.id) }}">📎 {{ file.filename }}</a></p>{% endfor %}</div>{% endif %}
+                        {% if submission.source == 'legacy' and submission.filename %}<div class="nx-feedback"><span>Previous file</span><p class="nx-previous-file"><a href="{{ url_for('classroom.download_own_submission', class_id=classroom.id, assignment_id=assignment.id) }}">📎 Open previous submission</a></p></div>{% endif %}
                         <div style="height:1px;background:var(--nx-line);margin:21px 0"></div>
-                        <h3 style="font-size:14px;font-weight:750;margin:0 0 15px">Submit a new attempt</h3>
+                        <h3 style="font-size:14px;font-weight:750;margin:0 0 15px">{% if assignment.submission_mode == 'shared' %}Submit a new team attempt{% else %}Submit a new attempt{% endif %}</h3>
                         {% else %}
-                        <p style="font-size:13px;color:var(--nx-muted);line-height:1.6;margin:0 0 20px">Upload your completed work below. Handwritten papers, drawings, photos, PDFs, and supported documents can be submitted as one attempt.</p>
+                        <p style="font-size:13px;color:var(--nx-muted);line-height:1.6;margin:0 0 20px">{% if assignment.submission_mode == 'shared' %}Your team has not submitted yet. Any selected member can send the shared team output below.{% else %}Upload the completed work below. Photos, PDFs, documents, spreadsheets, presentations, text files, and ZIP files are supported.{% endif %}</p>
                         {% endif %}
 
                         {% if classroom.archived %}
-                            <div class="alert alert-secondary mb-0" style="font-size:12px;border-radius:10px">This class is archived, so new submissions are unavailable.</div>
+                            <div class="alert alert-secondary mb-0" style="font-size:12px;border-radius:10px">This Intern Classroom is archived, so new submissions are unavailable.</div>
                         {% elif assignment.allow_file_upload %}
                         <form method="POST" action="{{ submit_url }}" enctype="multipart/form-data" class="nx-form">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <div><label for="content">Written response <span style="color:var(--nx-muted);font-weight:500">(optional)</span></label><textarea id="content" name="content" maxlength="10000" placeholder="Add an explanation or response if required..."></textarea></div>
-                            <div><label for="files">Upload your work</label><input id="files" type="file" name="files" multiple accept=".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip"><small class="nx-help">Up to 10 files. Maximum 5 MB per request. Use multiple photos for handwritten papers with several pages.</small></div>
-                            <button type="submit" class="nx-submit-btn">{% if submission %}Submit New Attempt{% else %}Submit Work{% endif %}</button>
+                            <div><label for="files">Upload work</label><input id="files" type="file" name="files" multiple accept=".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip"><small class="nx-help">Up to 10 files. Maximum 5 MB per request.</small></div>
+                            <button type="submit" class="nx-submit-btn">{% if assignment.submission_mode == 'shared' %}{% if submission %}Submit New Team Attempt{% else %}Submit Team Work{% endif %}{% else %}{% if submission %}Submit New Attempt{% else %}Submit Work{% endif %}{% endif %}</button>
                         </form>
                         {% else %}
-                            <div class="alert alert-info mb-0" style="font-size:12px;border-radius:10px">This activity does not currently accept file uploads.</div>
+                            <div class="alert alert-info mb-0" style="font-size:12px;border-radius:10px">This work item does not currently accept file or written submissions.</div>
                         {% endif %}
                     </section>
                 </div>
 
                 <aside>
                     <section class="nx-card nx-card-pad nx-status-card">
-                        <h3>Activity Status</h3>
+                        <h3>Work Status</h3>
                         {% if submission %}<div class="nx-status">{{ submission.status|replace('_', ' ')|capitalize }}</div>{% else %}<div class="nx-status pending">Not submitted</div>{% endif %}
                         <ul class="nx-side-list">
                             <li><span>Points</span><strong>{{ assignment.points }}</strong></li>
                             <li><span>Due date</span><strong>{% if assignment.due_at %}{{ assignment.due_at }}{% else %}None{% endif %}</strong></li>
-                            {% if assignment.group_mode %}<li><span>Group size</span><strong>Up to {{ assignment.max_group_size }}</strong></li>{% endif %}
-                            <li><span>File uploads</span><strong>{% if assignment.allow_file_upload %}Allowed{% else %}Not allowed{% endif %}</strong></li>
+                            {% if assignment.group_mode %}<li><span>Team</span><strong>{{ assignment.team_name or 'Team' }}</strong></li>{% endif %}
+                            {% if assignment.group_mode %}<li><span>Members</span><strong>{{ assignment.team_members|length }}</strong></li>{% endif %}
+                            {% if assignment.group_mode %}<li><span>Submission</span><strong>{% if assignment.submission_mode == 'shared' %}Shared{% else %}Individual{% endif %}</strong></li>{% endif %}
+                            <li><span>Uploads</span><strong>{% if assignment.allow_file_upload %}Allowed{% else %}Not allowed{% endif %}</strong></li>
                         </ul>
                     </section>
 
                     {% if submission %}
                     <section class="nx-card nx-card-pad nx-side-card" style="margin-top:20px">
                         <h3>Submission History</h3>
-                        <p style="font-size:12px;line-height:1.6;color:var(--nx-muted);margin:11px 0 0">Your latest attempt is shown above. You can submit another attempt when submissions are available.</p>
+                        <p style="font-size:12px;line-height:1.6;color:var(--nx-muted);margin:11px 0 0">{% if assignment.submission_mode == 'shared' %}The latest team attempt is shown above. Any selected member can submit another team attempt while submissions remain available.{% else %}Your latest attempt is shown above. You can submit another attempt when submissions are available.{% endif %}</p>
                     </section>
                     {% endif %}
                 </aside>
