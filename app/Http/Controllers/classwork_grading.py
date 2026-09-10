@@ -4,6 +4,7 @@ from flask import Blueprint, abort, current_app, flash, redirect, render_templat
 
 from app.Http.Middleware.security import role_required
 from app.Models.db import get_db_connection
+from app.Services.notification_service import create_notification
 
 classwork_grading = Blueprint("classwork_grading", __name__)
 
@@ -202,6 +203,32 @@ def grade(class_id, assignment_id, submission_id):
                 (assignment_id, student_id, float(grade_value), max_score, percentage),
             )
         conn.commit()
+
+        try:
+            title = _value(assignment, "title", 2, "Work") or "Work"
+            team_name = _value(assignment, "team_name", 7, "") or ""
+            notification_title = "Team Work Reviewed" if is_team_submission and shared_mode else "Work Reviewed"
+            notification_message = (
+                f"{team_name + ': ' if team_name else ''}{title} was reviewed. "
+                f"Team score: {stored_grade} / {points:g}."
+                if is_team_submission and shared_mode else
+                f"{title} was reviewed. Score: {stored_grade} / {points:g}."
+            )
+            for student_id in target_student_ids:
+                create_notification(
+                    int(student_id),
+                    notification_title,
+                    notification_message,
+                    "classroom",
+                    link_url=url_for(
+                        "student_classwork.detail",
+                        class_id=class_id,
+                        assignment_id=assignment_id,
+                    ),
+                )
+        except Exception as notify_error:
+            print("work grade notification failed:", notify_error)
+
         flash(
             "Team grade saved for all selected members."
             if is_team_submission and shared_mode else
@@ -237,14 +264,54 @@ def return_for_revision(class_id, assignment_id, submission_id):
         if not submission:
             abort(404)
         reason = (request.form.get("feedback") or "").strip()
+        submitted_by_id = int(_value(submission, "student_id", 2))
+        is_team_submission = bool(_value(submission, "is_team_submission", 9, 0))
+        shared_mode = (_value(assignment, "submission_mode", 8, "individual") or "individual") == "shared"
+        if is_team_submission and shared_mode:
+            team_rows = _team_members(conn, assignment_id)
+            target_student_ids = [int(_value(row, "id", 0)) for row in team_rows]
+            if not target_student_ids:
+                target_student_ids = [submitted_by_id]
+        else:
+            target_student_ids = [submitted_by_id]
+
         conn.execute(
             "UPDATE classwork_submissions SET status = 'resubmission_required', feedback = ? WHERE id = ? AND assignment_id = ?",
             (reason or None, submission_id, assignment_id),
         )
         conn.commit()
+
+        try:
+            title = _value(assignment, "title", 2, "Work") or "Work"
+            team_name = _value(assignment, "team_name", 7, "") or ""
+            notification_title = (
+                "Team Work Revision Requested"
+                if is_team_submission and shared_mode else
+                "Work Revision Requested"
+            )
+            notification_message = (
+                f"A revision was requested for {team_name + ': ' if team_name else ''}{title}."
+                if is_team_submission and shared_mode else
+                f"A revision was requested for {title}."
+            )
+            for student_id in target_student_ids:
+                create_notification(
+                    int(student_id),
+                    notification_title,
+                    notification_message,
+                    "classroom",
+                    link_url=url_for(
+                        "student_classwork.detail",
+                        class_id=class_id,
+                        assignment_id=assignment_id,
+                    ),
+                )
+        except Exception as notify_error:
+            print("work revision notification failed:", notify_error)
+
         flash(
             "Team submission returned for revision."
-            if bool(_value(submission, "is_team_submission", 9, 0)) else
+            if is_team_submission else
             "Submission returned to the intern for revision.",
             "success",
         )
