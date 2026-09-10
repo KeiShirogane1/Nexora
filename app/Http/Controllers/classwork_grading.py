@@ -25,9 +25,11 @@ def _value(row, key, index=0, default=None):
 def _assignment(conn, class_id, assignment_id, supervisor_id):
     return conn.execute(
         """SELECT a.id, a.classroom_id, a.title, a.description, a.due_at, a.points,
-                  c.name AS classroom_name
+                  c.name AS classroom_name, m.team_name,
+                  COALESCE(m.submission_mode, 'individual') AS submission_mode
            FROM classroom_assignments a
            JOIN classrooms c ON c.id = a.classroom_id
+           LEFT JOIN classroom_assignment_meta m ON m.assignment_id = a.id
            WHERE a.id = ? AND a.classroom_id = ? AND c.supervisor_id = ?""",
         (assignment_id, class_id, supervisor_id),
     ).fetchone()
@@ -37,6 +39,7 @@ def _submission(conn, assignment_id, submission_id):
     return conn.execute(
         """SELECT s.id, s.assignment_id, s.student_id, s.attempt_no, s.content,
                   s.status, s.submitted_at, s.grade, s.feedback,
+                  COALESCE(s.is_team_submission, 0) AS is_team_submission,
                   u.username, u.email
            FROM classwork_submissions s
            JOIN users u ON u.id = s.student_id
@@ -54,6 +57,17 @@ def _files(conn, submission_id):
     ).fetchall()
 
 
+def _team_members(conn, assignment_id):
+    return conn.execute(
+        """SELECT u.id, u.username, u.email
+           FROM classroom_assignment_recipients ar
+           JOIN users u ON u.id = ar.student_id
+           WHERE ar.assignment_id = ?
+           ORDER BY LOWER(u.username), LOWER(u.email), u.id""",
+        (assignment_id,),
+    ).fetchall()
+
+
 def _students_with_submissions(conn, class_id, assignment_id):
     return conn.execute(
         """SELECT u.id AS student_id, u.username, u.email,
@@ -62,13 +76,26 @@ def _students_with_submissions(conn, class_id, assignment_id):
            JOIN users u ON u.id = cs.student_id
            LEFT JOIN classwork_submissions s
              ON s.student_id = u.id AND s.assignment_id = ?
+            AND COALESCE(s.is_team_submission, 0) = 0
             AND s.attempt_no = (
                 SELECT MAX(s2.attempt_no) FROM classwork_submissions s2
                 WHERE s2.assignment_id = ? AND s2.student_id = u.id
+                  AND COALESCE(s2.is_team_submission, 0) = 0
             )
            WHERE cs.classroom_id = ?
+             AND (
+                 NOT EXISTS (
+                     SELECT 1 FROM classroom_assignment_recipients all_recipients
+                     WHERE all_recipients.assignment_id = ?
+                 )
+                 OR EXISTS (
+                     SELECT 1 FROM classroom_assignment_recipients assigned_recipient
+                     WHERE assigned_recipient.assignment_id = ?
+                       AND assigned_recipient.student_id = u.id
+                 )
+             )
            ORDER BY LOWER(u.username), LOWER(u.email)""",
-        (assignment_id, assignment_id, class_id),
+        (assignment_id, assignment_id, class_id, assignment_id, assignment_id),
     ).fetchall()
 
 
@@ -91,11 +118,15 @@ def review(class_id, assignment_id, submission_id):
         if not member:
             abort(404)
         files = _files(conn, submission_id)
+        is_team_submission = bool(_value(submission, "is_team_submission", 9, 0))
+        team_members = _team_members(conn, assignment_id) if is_team_submission else []
         return render_template(
             "classroom/supervisor_classwork_review.html",
             assignment=assignment,
             submission=submission,
             files=files,
+            team_members=team_members,
+            is_team_submission=is_team_submission,
             active_page="classes",
         )
     finally:
@@ -143,26 +174,42 @@ def grade(class_id, assignment_id, submission_id):
             "UPDATE classwork_submissions SET grade = ?, feedback = ?, status = 'graded' WHERE id = ? AND assignment_id = ?",
             (stored_grade, feedback or None, submission_id, assignment_id),
         )
-        # --- Phase 6A: normalize into classwork_scores ---
-        student_id = int(_value(submission, "student_id", 2))
+
+        submitted_by_id = int(_value(submission, "student_id", 2))
+        is_team_submission = bool(_value(submission, "is_team_submission", 9, 0))
+        shared_mode = (_value(assignment, "submission_mode", 8, "individual") or "individual") == "shared"
+        if is_team_submission and shared_mode:
+            team_rows = _team_members(conn, assignment_id)
+            target_student_ids = [int(_value(row, "id", 0)) for row in team_rows]
+            if not target_student_ids:
+                target_student_ids = [submitted_by_id]
+        else:
+            target_student_ids = [submitted_by_id]
+
         max_score = float(points)
         percentage = (float(grade_value) / max_score * 100) if max_score else 0
-        conn.execute(
-            """INSERT INTO classwork_scores
-               (assignment_id, student_id, score, max_score, percentage, grading_method)
-               VALUES (?, ?, ?, ?, ?, 'manual')
-               ON CONFLICT(assignment_id, student_id) DO UPDATE SET
-                   score = excluded.score,
-                   max_score = excluded.max_score,
-                   percentage = excluded.percentage,
-                   grading_method = 'manual',
-                   imported_at = CURRENT_TIMESTAMP""",
-            (assignment_id, student_id, float(grade_value), max_score, percentage),
-        )
+        for student_id in target_student_ids:
+            conn.execute(
+                """INSERT INTO classwork_scores
+                   (assignment_id, student_id, score, max_score, percentage, grading_method)
+                   VALUES (?, ?, ?, ?, ?, 'manual')
+                   ON CONFLICT(assignment_id, student_id) DO UPDATE SET
+                       score = excluded.score,
+                       max_score = excluded.max_score,
+                       percentage = excluded.percentage,
+                       grading_method = 'manual',
+                       imported_at = CURRENT_TIMESTAMP""",
+                (assignment_id, student_id, float(grade_value), max_score, percentage),
+            )
         conn.commit()
-        flash("Grade saved successfully.", "success")
+        flash(
+            "Team grade saved for all selected members."
+            if is_team_submission and shared_mode else
+            "Grade saved successfully.",
+            "success",
+        )
 
-        if action == "next":
+        if action == "next" and not is_team_submission:
             rows = _students_with_submissions(conn, class_id, assignment_id)
             ids = [int(_value(r, "submission_id", 3)) for r in rows if _value(r, "submission_id", 3) is not None]
             try:
@@ -195,7 +242,12 @@ def return_for_revision(class_id, assignment_id, submission_id):
             (reason or None, submission_id, assignment_id),
         )
         conn.commit()
-        flash("Submission returned to the student for revision.", "success")
+        flash(
+            "Team submission returned for revision."
+            if bool(_value(submission, "is_team_submission", 9, 0)) else
+            "Submission returned to the intern for revision.",
+            "success",
+        )
         return redirect(url_for("classwork_grading.review", class_id=class_id, assignment_id=assignment_id, submission_id=submission_id))
     finally:
         conn.close()
