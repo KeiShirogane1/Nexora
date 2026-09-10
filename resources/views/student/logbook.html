@@ -61,6 +61,8 @@
         .student-logbook-session-form textarea { width: 100%; min-height: 88px; resize: vertical; padding: 13px 14px; border: 1px solid #dce7e1; border-radius: 12px; outline: 0; background: #fbfdfc; color: #172b25; font: inherit; font-size: .84rem; line-height: 1.5; transition: border-color .15s ease, box-shadow .15s ease; }
         .student-logbook-session-form textarea:focus,
         .student-logbook-session-form select:focus { border-color: #12a879; box-shadow: 0 0 0 3px rgba(18,168,121,.1); background: #fff; outline: 0; }
+        .student-logbook-photo-input { width: 100%; min-height: 44px; padding: 7px 9px; border: 1px solid #dce7e1; border-radius: 10px; background: #fbfdfc; color: #40534d; font-size: .74rem; }
+        .student-logbook-photo-input::file-selector-button { margin-right: 10px; padding: 7px 10px; border: 0; border-radius: 8px; background: #eaf8f3; color: #07865f; font-weight: 800; cursor: pointer; }
         .student-logbook-form-help { margin: 0; color: #7a8984; font-size: .68rem; line-height: 1.45; }
         .student-logbook-session-footer,
         .student-logbook-clock-out { display: flex; justify-content: flex-end; gap: 8px; }
@@ -226,7 +228,7 @@
                     {% endif %}
 
                     {% if attendance %}
-                        <form class="student-logbook-session-form" method="POST" action="{{ url_for('daily_logbook.save_daily_entry') }}">
+                        <form class="student-logbook-session-form" method="POST" action="{{ url_for('daily_logbook.save_daily_entry') }}" enctype="multipart/form-data">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <input type="hidden" name="attendance_id" value="{{ attendance[0] }}">
                             <div class="student-logbook-field-grid">
@@ -251,6 +253,11 @@
                                         {% endfor %}
                                     </select>
                                     <p class="student-logbook-form-help">Only Work available to you in this Intern Classroom can be linked.</p>
+                                </div>
+                                <div class="student-logbook-field is-full">
+                                    <label for="daily-photos">Photo evidence <span class="student-logbook-form-help">(optional)</span></label>
+                                    <input class="student-logbook-photo-input" id="daily-photos" type="file" name="photos" accept="image/jpeg,image/png,image/webp" multiple>
+                                    <p class="student-logbook-form-help">Up to 5 photos per Daily OJT entry. JPG, PNG, or WebP only; 2 MB per photo. The existing 5 MB request limit still applies.</p>
                                 </div>
                             </div>
                             <div class="student-logbook-session-footer">
