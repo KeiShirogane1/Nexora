@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gradebook - {{ classroom.name }} - Nexora</title>
+    <title>Work Scores - {{ classroom.name }} - Nexora</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
@@ -19,12 +19,12 @@
             <header class="gradebook-hero student-section-heading" aria-labelledby="gradebook-heading">
                 <div>
                     <span class="student-section-eyebrow">Student Portal</span>
-                    <h1 id="gradebook-heading">Gradebook</h1>
-                    <p>{{ classroom.section }} · {{ classroom.supervisor }} · Track every graded activity and your current performance.</p>
+                    <h1 id="gradebook-heading">Work Scores</h1>
+                    <p>{{ classroom.section }} · {{ classroom.supervisor }} · Track scored Work items and your Work-only performance.</p>
                 </div>
                 <div class="gradebook-current">
                     <strong>{{ overall_display }}</strong>
-                    <span>Current grade</span>
+                    <span>Current Work average</span>
                 </div>
             </header>
 
@@ -36,32 +36,32 @@
 
             <section class="gradebook-stats">
                 <div>
-                    <span>Graded</span>
+                    <span>Scored</span>
                     <strong>{{ graded_count }}</strong>
-                    <small>of {{ total_count }} activities</small>
+                    <small>of {{ total_count }} Work items</small>
                 </div>
                 <div>
                     <span>Points earned</span>
                     <strong>{{ earned|round(1) }}</strong>
-                    <small>graded work</small>
+                    <small>scored Work</small>
                 </div>
                 <div>
                     <span>Points possible</span>
                     <strong>{{ possible|round(1) }}</strong>
-                    <small>graded work</small>
+                    <small>scored Work</small>
                 </div>
                 <div>
                     <span>Completion</span>
                     <strong>{% if total_count %}{{ ((graded_count / total_count) * 100)|round(0)|int }}%{% else %}0%{% endif %}</strong>
-                    <small>graded activities</small>
+                    <small>scored Work items</small>
                 </div>
             </section>
 
             <section class="gradebook-card">
                 <div class="gradebook-card-header">
                     <div>
-                        <h2>Activity Scores</h2>
-                        <p>Ungraded activities are shown as pending and are not counted as zero.</p>
+                        <h2>Work Item Scores</h2>
+                        <p>Unscored Work items are shown as pending and are not counted as zero.</p>
                     </div>
                 </div>
 
@@ -70,7 +70,7 @@
                         <table class="gradebook-table">
                             <thead>
                                 <tr>
-                                    <th>Activity</th>
+                                    <th>Work Item</th>
                                     <th>Type</th>
                                     <th>Due</th>
                                     <th>Score</th>
@@ -92,7 +92,7 @@
                                             {% elif item.submission_status %}
                                                 <span class="grade-status">{{ item.submission_status|replace('_', ' ')|title }}</span>
                                             {% else %}
-                                                <span class="grade-status">Not graded</span>
+                                                <span class="grade-status">Not scored</span>
                                             {% endif %}
                                         </td>
                                     </tr>
@@ -103,8 +103,8 @@
                 {% else %}
                     <div class="student-classwork-empty">
                         <div class="student-classwork-empty-icon">📊</div>
-                        <h2>No activities yet</h2>
-                        <p>Your supervisor has not added classwork for this class.</p>
+                        <h2>No Work items yet</h2>
+                        <p>Your supervisor has not added Work to this Intern Classroom.</p>
                     </div>
                 {% endif %}
             </section>
