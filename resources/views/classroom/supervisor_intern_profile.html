@@ -73,8 +73,8 @@
                 </div>
             </section>
 
-            <div class="row g-3 mb-4">
-                <div class="col-6 col-xl-3">
+            <div class="row row-cols-2 row-cols-xl-5 g-3 mb-4">
+                <div class="col">
                     <article class="card h-100 shadow-sm">
                         <div class="card-body">
                             <div class="text-muted small">OJT Hours</div>
@@ -87,7 +87,7 @@
                         </div>
                     </article>
                 </div>
-                <div class="col-6 col-xl-3">
+                <div class="col">
                     <article class="card h-100 shadow-sm">
                         <div class="card-body">
                             <div class="text-muted small">Daily Performance</div>
@@ -100,7 +100,7 @@
                         </div>
                     </article>
                 </div>
-                <div class="col-6 col-xl-3">
+                <div class="col">
                     <article class="card h-100 shadow-sm">
                         <div class="card-body">
                             <div class="text-muted small">Daily Logbook</div>
@@ -109,7 +109,7 @@
                         </div>
                     </article>
                 </div>
-                <div class="col-6 col-xl-3">
+                <div class="col">
                     <article class="card h-100 shadow-sm">
                         <div class="card-body">
                             <div class="text-muted small">Assigned Work</div>
@@ -117,6 +117,22 @@
                             <div class="text-muted small">
                                 {{ work_summary.graded_count }} graded{% if work_summary.average_percentage is not none %} · {{ '%.1f'|format(work_summary.average_percentage) }}% avg{% endif %}
                             </div>
+                        </div>
+                    </article>
+                </div>
+                <div class="col">
+                    <article class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <div class="text-muted small">Official Evaluation</div>
+                            {% if official_evaluation %}
+                                <div class="fs-5 fw-bold text-capitalize">{{ official_evaluation.status }}</div>
+                                <div class="text-muted small">
+                                    {% if official_evaluation.overall_score is not none %}Manual overall score: {{ '%g'|format(official_evaluation.overall_score) }}{% else %}No manual overall score{% endif %}
+                                </div>
+                            {% else %}
+                                <div class="fs-5 fw-bold">Not started</div>
+                                <div class="text-muted small">No official evaluation saved</div>
+                            {% endif %}
                         </div>
                     </article>
                 </div>
@@ -271,10 +287,37 @@
                         </div>
                     </section>
 
+                    <section class="card shadow-sm mb-4">
+                        <div class="card-header bg-white d-flex flex-wrap align-items-start justify-content-between gap-3 py-3">
+                            <div>
+                                <h2 class="h6 fw-bold mb-1">Official OJT Evaluation</h2>
+                                <p class="text-muted small mb-0">Formal supervisor-entered evaluation only. Attendance, Daily Performance, Work, Logbook, and ML outputs do not generate this score.</p>
+                            </div>
+                            <a class="btn btn-sm btn-outline-primary" href="{{ url_for('ojt_evaluation.supervisor_evaluations', class_id=classroom.id, student_id=student.id) }}">Open Evaluation</a>
+                        </div>
+                        <div class="card-body">
+                            {% if official_evaluation %}
+                                <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                                    <span class="badge {% if official_evaluation.status == 'submitted' %}text-bg-success{% else %}text-bg-warning{% endif %} text-capitalize">{{ official_evaluation.status }}</span>
+                                    {% if official_evaluation.overall_score is not none %}
+                                        <strong>Manual overall score: {{ '%g'|format(official_evaluation.overall_score) }}</strong>
+                                    {% endif %}
+                                </div>
+                                {% if official_evaluation.remarks %}
+                                    <p class="mb-0 small">{{ official_evaluation.remarks }}</p>
+                                {% else %}
+                                    <p class="text-muted small mb-0">No overall remarks saved.</p>
+                                {% endif %}
+                            {% else %}
+                                <p class="text-muted small mb-0">No Official OJT Evaluation has been started for this intern.</p>
+                            {% endif %}
+                        </div>
+                    </section>
+
                     <section class="card shadow-sm">
                         <div class="card-body">
                             <h2 class="h6 fw-bold mb-2">Separate Performance Dimensions</h2>
-                            <p class="text-muted small mb-0">Attendance and rendered hours track completion. Daily Performance records the supervisor's manual day rating. Work shows task scoring. Logbook records evidence and review status. Nexora does not combine these into an official OJT evaluation on this page.</p>
+                            <p class="text-muted small mb-0">Attendance and OJT Hours track time and completion. Daily Performance records manual day ratings. Work tracks task scoring and Work-based analytics. Logbook records evidence and review status. Official Evaluation is the separate formal supervisor-entered evaluation. Nexora does not combine these five dimensions into a sixth overall OJT grade.</p>
                         </div>
                     </section>
                 </div>
