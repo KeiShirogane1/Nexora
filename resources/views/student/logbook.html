@@ -9,561 +9,127 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
     <style>
-        body.student-logbook-page > .student-global-topbar {
-            display: flex !important;
-        }
-
-        body.student-logbook-page .student-logbook-page-content {
-            padding-top: 92px !important;
-        }
-
-        body.student-logbook-page .student-logbook-page-heading {
-            padding-top: 0 !important;
-            margin-top: 0 !important;
-            margin-bottom: 0 !important;
-        }
-
+        body.student-logbook-page > .student-global-topbar { display: flex !important; }
+        body.student-logbook-page .student-logbook-page-content { padding-top: 92px !important; }
+        body.student-logbook-page .student-logbook-page-heading { padding-top: 0 !important; margin-top: 0 !important; margin-bottom: 0 !important; }
         body.student-logbook-page .student-logbook-page-heading::before,
-        body.student-logbook-page .student-logbook-page-heading > div:first-child::before {
-            display: none !important;
-            content: none !important;
-        }
-
-        .student-logbook-compact {
-            display: grid;
-            gap: 14px;
-            width: 100%;
-        }
-
-        .student-logbook-classroom-scope {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 18px;
-            padding: 14px 18px;
-        }
-
+        body.student-logbook-page .student-logbook-page-heading > div:first-child::before { display: none !important; content: none !important; }
+        .student-logbook-compact { display: grid; gap: 14px; width: 100%; }
+        .student-logbook-classroom-scope { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 14px 18px; }
         .student-logbook-classroom-scope-copy strong,
-        .student-logbook-classroom-scope-copy span {
-            display: block;
-        }
-
-        .student-logbook-classroom-scope-copy strong {
-            color: #173b31;
-            font-size: 0.82rem;
-            font-weight: 800;
-        }
-
-        .student-logbook-classroom-scope-copy span {
-            margin-top: 2px;
-            color: #7a8984;
-            font-size: 0.7rem;
-        }
-
-        .student-logbook-classroom-form {
-            min-width: min(360px, 100%);
-        }
-
-        .student-logbook-classroom-form select {
-            width: 100%;
-            min-height: 40px;
-            padding: 0 38px 0 12px;
-            border: 1px solid #dfe9e4;
-            border-radius: 10px;
-            background: #fff;
-            color: #243b34;
-            font: inherit;
-            font-size: 0.76rem;
-            font-weight: 700;
-        }
-
-        .student-logbook-classroom-form select:disabled {
-            background: #f5f7f6;
-            color: #62736d;
-        }
-
-        .student-logbook-compact-summary {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            overflow: hidden;
-            border: 1px solid #e2ebe6;
-            border-radius: 16px;
-            background: #fff;
-            box-shadow: 0 6px 22px rgba(15, 45, 35, 0.045);
-        }
-
-        .student-logbook-compact-stat {
-            min-width: 0;
-            padding: 17px 20px;
-            border-right: 1px solid #edf2ef;
-        }
-
-        .student-logbook-compact-stat:last-child {
-            border-right: 0;
-        }
-
-        .student-logbook-compact-stat strong {
-            display: block;
-            margin-bottom: 3px;
-            color: #082f2b;
-            font-size: 1.45rem;
-            line-height: 1.1;
-            font-weight: 800;
-            letter-spacing: -0.035em;
-        }
-
-        .student-logbook-compact-stat span {
-            display: block;
-            color: #2f453f;
-            font-size: 0.76rem;
-            font-weight: 800;
-        }
-
-        .student-logbook-compact-stat small {
-            display: block;
-            margin-top: 3px;
-            color: #7a8984;
-            font-size: 0.68rem;
-        }
-
-        .student-logbook-compact-status {
-            display: inline-flex !important;
-            width: fit-content;
-            align-items: center;
-            gap: 6px;
-            color: #07865f !important;
-        }
-
-        .student-logbook-compact-status::before {
-            content: "";
-            width: 7px;
-            height: 7px;
-            border-radius: 50%;
-            background: currentColor;
-            box-shadow: 0 0 0 4px rgba(15, 174, 95, 0.1);
-        }
-
-        .student-logbook-compact-card {
-            border: 1px solid #e2ebe6;
-            border-radius: 16px;
-            background: #fff;
-            box-shadow: 0 6px 22px rgba(15, 45, 35, 0.04);
-        }
-
-        .student-logbook-session {
-            padding: 20px;
-        }
-
+        .student-logbook-classroom-scope-copy span { display: block; }
+        .student-logbook-classroom-scope-copy strong { color: #173b31; font-size: .82rem; font-weight: 800; }
+        .student-logbook-classroom-scope-copy span { margin-top: 2px; color: #7a8984; font-size: .7rem; }
+        .student-logbook-classroom-form { min-width: min(360px, 100%); }
+        .student-logbook-classroom-form select,
+        .student-logbook-session-form select { width: 100%; min-height: 40px; padding: 0 38px 0 12px; border: 1px solid #dfe9e4; border-radius: 10px; background: #fff; color: #243b34; font: inherit; font-size: .76rem; font-weight: 700; }
+        .student-logbook-classroom-form select:disabled { background: #f5f7f6; color: #62736d; }
+        .student-logbook-compact-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); overflow: hidden; border: 1px solid #e2ebe6; border-radius: 16px; background: #fff; box-shadow: 0 6px 22px rgba(15,45,35,.045); }
+        .student-logbook-compact-stat { min-width: 0; padding: 17px 20px; border-right: 1px solid #edf2ef; }
+        .student-logbook-compact-stat:last-child { border-right: 0; }
+        .student-logbook-compact-stat strong { display: block; margin-bottom: 3px; color: #082f2b; font-size: 1.45rem; line-height: 1.1; font-weight: 800; letter-spacing: -.035em; }
+        .student-logbook-compact-stat span { display: block; color: #2f453f; font-size: .76rem; font-weight: 800; }
+        .student-logbook-compact-stat small { display: block; margin-top: 3px; color: #7a8984; font-size: .68rem; }
+        .student-logbook-compact-status { display: inline-flex !important; width: fit-content; align-items: center; gap: 6px; color: #07865f !important; }
+        .student-logbook-compact-status::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 4px rgba(15,174,95,.1); }
+        .student-logbook-compact-card { border: 1px solid #e2ebe6; border-radius: 16px; background: #fff; box-shadow: 0 6px 22px rgba(15,45,35,.04); }
+        .student-logbook-session { padding: 20px; }
         .student-logbook-session-head,
         .student-logbook-entries-head,
-        .student-logbook-bottom-head {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-        }
-
-        .student-logbook-session-head {
-            margin-bottom: 15px;
-        }
-
-        .student-logbook-section-kicker {
-            display: block;
-            margin-bottom: 3px;
-            color: #07865f;
-            font-size: 0.65rem;
-            font-weight: 800;
-            letter-spacing: 0.11em;
-            text-transform: uppercase;
-        }
-
+        .student-logbook-bottom-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+        .student-logbook-session-head { margin-bottom: 15px; }
+        .student-logbook-section-kicker { display: block; margin-bottom: 3px; color: #07865f; font-size: .65rem; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; }
         .student-logbook-session h2,
         .student-logbook-entries-head h2,
-        .student-logbook-bottom-card h3 {
-            margin: 0;
-            color: #082f2b;
-            font-weight: 800;
-            letter-spacing: -0.035em;
-        }
-
+        .student-logbook-bottom-card h3 { margin: 0; color: #082f2b; font-weight: 800; letter-spacing: -.035em; }
         .student-logbook-session h2,
-        .student-logbook-entries-head h2 {
-            font-size: 1.12rem;
-        }
-
-        .student-logbook-session-state {
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            padding: 7px 10px;
-            border-radius: 999px;
-            background: #eaf8f3;
-            color: #07865f;
-            font-size: 0.72rem;
-            font-weight: 800;
-            white-space: nowrap;
-        }
-
-        .student-logbook-session-state::before {
-            content: "";
-            width: 7px;
-            height: 7px;
-            border-radius: 50%;
-            background: currentColor;
-        }
-
-        .student-logbook-session-state.is-idle {
-            background: #f3f5f4;
-            color: #6d7d78;
-        }
-
-        .student-logbook-time-grid {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 10px;
-            margin-bottom: 16px;
-        }
-
-        .student-logbook-time-item {
-            padding: 11px 12px;
-            border: 1px solid #e4ece8;
-            border-radius: 11px;
-            background: #fbfdfc;
-        }
-
+        .student-logbook-entries-head h2 { font-size: 1.12rem; }
+        .student-logbook-session-state { display: inline-flex; align-items: center; gap: 7px; padding: 7px 10px; border-radius: 999px; background: #eaf8f3; color: #07865f; font-size: .72rem; font-weight: 800; white-space: nowrap; }
+        .student-logbook-session-state::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+        .student-logbook-session-state.is-idle { background: #f3f5f4; color: #6d7d78; }
+        .student-logbook-time-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 16px; }
+        .student-logbook-time-item { padding: 11px 12px; border: 1px solid #e4ece8; border-radius: 11px; background: #fbfdfc; }
         .student-logbook-time-item strong,
-        .student-logbook-time-item span {
-            display: block;
-        }
-
-        .student-logbook-time-item strong {
-            color: #183a31;
-            font-size: 0.82rem;
-            font-weight: 800;
-        }
-
-        .student-logbook-time-item span {
-            margin-top: 2px;
-            color: #7b8985;
-            font-size: 0.66rem;
-            font-weight: 700;
-        }
-
-        .student-logbook-session-form {
-            display: grid;
-            gap: 11px;
-        }
-
-        .student-logbook-session-form label {
-            color: #203a33;
-            font-size: 0.78rem;
-            font-weight: 800;
-        }
-
-        .student-logbook-session-form textarea {
-            width: 100%;
-            min-height: 92px;
-            resize: vertical;
-            padding: 13px 14px;
-            border: 1px solid #dce7e1;
-            border-radius: 12px;
-            outline: 0;
-            background: #fbfdfc;
-            color: #172b25;
-            font: inherit;
-            font-size: 0.84rem;
-            line-height: 1.5;
-            transition: border-color 0.15s ease, box-shadow 0.15s ease;
-        }
-
-        .student-logbook-session-form textarea:focus {
-            border-color: #12a879;
-            box-shadow: 0 0 0 3px rgba(18, 168, 121, 0.1);
-            background: #fff;
-        }
-
+        .student-logbook-time-item span { display: block; }
+        .student-logbook-time-item strong { color: #183a31; font-size: .82rem; font-weight: 800; }
+        .student-logbook-time-item span { margin-top: 2px; color: #7b8985; font-size: .66rem; font-weight: 700; }
+        .student-logbook-session-form { display: grid; gap: 11px; }
+        .student-logbook-field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+        .student-logbook-field { display: grid; gap: 6px; min-width: 0; }
+        .student-logbook-field.is-full { grid-column: 1 / -1; }
+        .student-logbook-session-form label { color: #203a33; font-size: .78rem; font-weight: 800; }
+        .student-logbook-session-form textarea { width: 100%; min-height: 88px; resize: vertical; padding: 13px 14px; border: 1px solid #dce7e1; border-radius: 12px; outline: 0; background: #fbfdfc; color: #172b25; font: inherit; font-size: .84rem; line-height: 1.5; transition: border-color .15s ease, box-shadow .15s ease; }
+        .student-logbook-session-form textarea:focus,
+        .student-logbook-session-form select:focus { border-color: #12a879; box-shadow: 0 0 0 3px rgba(18,168,121,.1); background: #fff; outline: 0; }
+        .student-logbook-form-help { margin: 0; color: #7a8984; font-size: .68rem; line-height: 1.45; }
         .student-logbook-session-footer,
-        .student-logbook-clock-out {
-            display: flex;
-            justify-content: flex-end;
-        }
-
-        .student-logbook-clock-out {
-            margin-top: 10px;
-        }
-
-        .student-logbook-idle {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 18px;
-            padding: 14px 0 2px;
-        }
-
+        .student-logbook-clock-out { display: flex; justify-content: flex-end; gap: 8px; }
+        .student-logbook-clock-out { margin-top: 10px; }
+        .student-logbook-idle { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 14px 0 2px; }
         .student-logbook-idle-copy strong,
-        .student-logbook-idle-copy span {
-            display: block;
-        }
-
-        .student-logbook-idle-copy strong {
-            color: #183a31;
-            font-size: 0.86rem;
-        }
-
-        .student-logbook-idle-copy span {
-            margin-top: 3px;
-            color: #74837e;
-            font-size: 0.76rem;
-        }
-
-        .student-logbook-entries {
-            overflow: hidden;
-        }
-
-        .student-logbook-entries-head {
-            padding: 17px 19px;
-            border-bottom: 1px solid #edf2ef;
-        }
-
-        .student-logbook-entries-count {
-            color: #83908c;
-            font-size: 0.72rem;
-            font-weight: 700;
-        }
-
-        .student-logbook-compact-toolbar {
-            display: grid;
-            grid-template-columns: auto auto minmax(220px, 1fr);
-            gap: 10px;
-            padding: 13px 19px;
-            border-bottom: 1px solid #edf2ef;
-            background: #fbfdfc;
-        }
-
+        .student-logbook-idle-copy span { display: block; }
+        .student-logbook-idle-copy strong { color: #183a31; font-size: .86rem; }
+        .student-logbook-idle-copy span { margin-top: 3px; color: #74837e; font-size: .76rem; }
+        .student-logbook-entries { overflow: hidden; }
+        .student-logbook-entries-head { padding: 17px 19px; border-bottom: 1px solid #edf2ef; }
+        .student-logbook-entries-count { color: #83908c; font-size: .72rem; font-weight: 700; }
+        .student-logbook-compact-toolbar { display: grid; grid-template-columns: auto auto minmax(220px, 1fr); gap: 10px; padding: 13px 19px; border-bottom: 1px solid #edf2ef; background: #fbfdfc; }
         .student-logbook-compact-filter,
-        .student-logbook-compact-search {
-            min-height: 38px;
-            border: 1px solid #dfe9e4;
-            border-radius: 10px;
-            background: #fff;
-        }
-
-        .student-logbook-compact-filter {
-            display: inline-flex;
-            align-items: center;
-            padding: 0 12px;
-            color: #42554f;
-            font-size: 0.74rem;
-            font-weight: 700;
-            white-space: nowrap;
-        }
-
-        .student-logbook-compact-search {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 0 12px;
-            color: #82908b;
-        }
-
-        .student-logbook-compact-search input {
-            width: 100%;
-            min-width: 0;
-            border: 0;
-            outline: 0;
-            background: transparent;
-            color: #243b34;
-            font: inherit;
-            font-size: 0.76rem;
-        }
-
-        .student-logbook-compact-empty {
-            display: grid;
-            justify-items: center;
-            padding: 42px 22px;
-            text-align: center;
-        }
-
-        .student-logbook-compact-empty-icon {
-            display: grid;
-            place-items: center;
-            width: 42px;
-            height: 42px;
-            margin-bottom: 10px;
-            border-radius: 12px;
-            background: #eaf8f3;
-            color: #07865f;
-            font-size: 1.15rem;
-            font-weight: 800;
-        }
-
-        .student-logbook-compact-empty strong {
-            color: #173b31;
-            font-size: 0.86rem;
-        }
-
-        .student-logbook-compact-empty span {
-            max-width: 420px;
-            margin-top: 4px;
-            color: #7a8984;
-            font-size: 0.74rem;
-            line-height: 1.5;
-        }
-
-        .student-logbook-compact-table-wrap {
-            overflow-x: auto;
-        }
-
-        .student-logbook-bottom-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 14px;
-        }
-
-        .student-logbook-bottom-card {
-            padding: 17px 18px;
-        }
-
-        .student-logbook-bottom-card h3 {
-            font-size: 0.9rem;
-        }
-
-        .student-logbook-week-values {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 10px;
-            margin-top: 13px;
-        }
-
-        .student-logbook-week-value {
-            min-width: 0;
-        }
-
+        .student-logbook-compact-search { min-height: 38px; border: 1px solid #dfe9e4; border-radius: 10px; background: #fff; }
+        .student-logbook-compact-filter { display: inline-flex; align-items: center; padding: 0 12px; color: #42554f; font-size: .74rem; font-weight: 700; white-space: nowrap; }
+        .student-logbook-compact-search { display: flex; align-items: center; gap: 8px; padding: 0 12px; color: #82908b; }
+        .student-logbook-compact-search input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: #243b34; font: inherit; font-size: .76rem; }
+        .student-logbook-entry-copy strong,
+        .student-logbook-entry-copy span { display: block; }
+        .student-logbook-entry-copy span { margin-top: 3px; color: #7a8984; font-size: .68rem; line-height: 1.45; }
+        .student-logbook-entry-meta { display: flex; flex-wrap: wrap; gap: 5px 10px; margin-top: 5px; color: #82908b; font-size: .66rem; }
+        .student-logbook-compact-empty { display: grid; justify-items: center; padding: 42px 22px; text-align: center; }
+        .student-logbook-compact-empty-icon { display: grid; place-items: center; width: 42px; height: 42px; margin-bottom: 10px; border-radius: 12px; background: #eaf8f3; color: #07865f; font-size: 1.15rem; font-weight: 800; }
+        .student-logbook-compact-empty strong { color: #173b31; font-size: .86rem; }
+        .student-logbook-compact-empty span { max-width: 420px; margin-top: 4px; color: #7a8984; font-size: .74rem; line-height: 1.5; }
+        .student-logbook-compact-table-wrap { overflow-x: auto; }
+        .student-logbook-bottom-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+        .student-logbook-bottom-card { padding: 17px 18px; }
+        .student-logbook-bottom-card h3 { font-size: .9rem; }
+        .student-logbook-week-values { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 13px; }
+        .student-logbook-week-value { min-width: 0; }
         .student-logbook-week-value strong,
-        .student-logbook-week-value span {
-            display: block;
-        }
-
-        .student-logbook-week-value strong {
-            color: #173b31;
-            font-size: 0.84rem;
-            font-weight: 800;
-        }
-
-        .student-logbook-week-value span {
-            margin-top: 2px;
-            color: #82908b;
-            font-size: 0.66rem;
-        }
-
-        .student-logbook-recent-list {
-            display: grid;
-            gap: 9px;
-            margin-top: 13px;
-        }
-
-        .student-logbook-recent-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 9px;
-            color: #40534d;
-            font-size: 0.74rem;
-        }
-
-        .student-logbook-recent-dot {
-            flex: 0 0 auto;
-            width: 8px;
-            height: 8px;
-            margin-top: 4px;
-            border-radius: 50%;
-            background: #12a879;
-        }
-
+        .student-logbook-week-value span { display: block; }
+        .student-logbook-week-value strong { color: #173b31; font-size: .84rem; font-weight: 800; }
+        .student-logbook-week-value span { margin-top: 2px; color: #82908b; font-size: .66rem; }
+        .student-logbook-recent-list { display: grid; gap: 9px; margin-top: 13px; }
+        .student-logbook-recent-item { display: flex; align-items: flex-start; gap: 9px; color: #40534d; font-size: .74rem; }
+        .student-logbook-recent-dot { flex: 0 0 auto; width: 8px; height: 8px; margin-top: 4px; border-radius: 50%; background: #12a879; }
         .student-logbook-recent-item strong,
-        .student-logbook-recent-item span {
-            display: block;
-        }
-
-        .student-logbook-recent-item strong {
-            color: #263f37;
-            font-size: 0.74rem;
-        }
-
-        .student-logbook-recent-item span {
-            margin-top: 2px;
-            color: #82908b;
-            font-size: 0.68rem;
-        }
-
-        .student-logbook-hidden-history {
-            display: none;
-        }
-
+        .student-logbook-recent-item span { display: block; }
+        .student-logbook-recent-item strong { color: #263f37; font-size: .74rem; }
+        .student-logbook-recent-item span { margin-top: 2px; color: #82908b; font-size: .68rem; }
+        .student-logbook-hidden-history { display: none; }
         @media (max-width: 1000px) {
             .student-logbook-compact-summary,
-            .student-logbook-time-grid {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-
-            .student-logbook-compact-stat:nth-child(2) {
-                border-right: 0;
-            }
-
-            .student-logbook-compact-stat:nth-child(-n + 2) {
-                border-bottom: 1px solid #edf2ef;
-            }
-
-            .student-logbook-week-values {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
+            .student-logbook-time-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .student-logbook-compact-stat:nth-child(2) { border-right: 0; }
+            .student-logbook-compact-stat:nth-child(-n + 2) { border-bottom: 1px solid #edf2ef; }
+            .student-logbook-week-values { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         }
-
         @media (max-width: 760px) {
-            body.student-logbook-page .student-logbook-page-content {
-                padding-top: 78px !important;
-            }
-
+            body.student-logbook-page .student-logbook-page-content { padding-top: 78px !important; }
             .student-logbook-classroom-scope,
             .student-logbook-compact-toolbar,
-            .student-logbook-bottom-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .student-logbook-classroom-scope {
-                align-items: stretch;
-                flex-direction: column;
-            }
-
-            .student-logbook-idle {
-                align-items: flex-start;
-                flex-direction: column;
-            }
+            .student-logbook-bottom-grid,
+            .student-logbook-field-grid { grid-template-columns: 1fr; }
+            .student-logbook-classroom-scope { align-items: stretch; flex-direction: column; }
+            .student-logbook-field.is-full { grid-column: auto; }
+            .student-logbook-idle { align-items: flex-start; flex-direction: column; }
         }
-
         @media (max-width: 520px) {
             .student-logbook-compact-summary,
-            .student-logbook-time-grid {
-                grid-template-columns: 1fr;
-            }
-
+            .student-logbook-time-grid { grid-template-columns: 1fr; }
             .student-logbook-compact-stat,
-            .student-logbook-compact-stat:nth-child(2) {
-                border-right: 0;
-                border-bottom: 1px solid #edf2ef;
-            }
-
-            .student-logbook-compact-stat:last-child {
-                border-bottom: 0;
-            }
-
-            .student-logbook-session-head {
-                align-items: flex-start;
-                flex-direction: column;
-            }
-
-            .student-logbook-week-values {
-                grid-template-columns: 1fr 1fr;
-            }
+            .student-logbook-compact-stat:nth-child(2) { border-right: 0; border-bottom: 1px solid #edf2ef; }
+            .student-logbook-compact-stat:last-child { border-bottom: 0; }
+            .student-logbook-session-head { align-items: flex-start; flex-direction: column; }
+            .student-logbook-week-values { grid-template-columns: 1fr 1fr; }
         }
     </style>
 </head>
@@ -575,17 +141,23 @@
             {% set total_hours = total_hours_all|default(0) %}
             {% set ojt_progress = get_ojt_progress(session.get('user_id'), selected_classroom_id) if selected_classroom_id else none %}
             {% set session_snapshot = attendance if attendance else (history[0] if history else none) %}
+            {% set current_attendance_id = attendance[0] if attendance else none %}
+            {% set daily_context = get_daily_logbook_context(session.get('user_id'), selected_classroom_id, current_attendance_id) %}
+            {% set daily_entries = daily_context.entries %}
+            {% set current_daily = daily_context.current_entry %}
+            {% set work_options = daily_context.work_options %}
+            {% set current_day_number = current_daily.day_number if current_daily else total_history|default(0) %}
 
             <div class="student-logbook-compact">
                 <section class="student-logbook-page-heading student-section-heading" aria-labelledby="logbook-heading">
                     <div>
                         <span class="student-section-eyebrow">Student Portal</span>
-                        <h1 id="logbook-heading">Logbook</h1>
-                        <p>Track your internship hours and daily activities.</p>
+                        <h1 id="logbook-heading">Daily OJT Logbook</h1>
+                        <p>Document each internship day using your verified attendance and assigned Work.</p>
                     </div>
                     <div class="student-logbook-actions">
-                        <a class="student-logbook-button student-logbook-button-outline" href="#attendance-history">▣ Calendar View</a>
-                        <a class="student-logbook-button student-logbook-button-primary" href="#new-log-entry">＋ New Entry</a>
+                        <a class="student-logbook-button student-logbook-button-outline" href="#attendance-history">▣ Attendance History</a>
+                        <a class="student-logbook-button student-logbook-button-primary" href="#new-log-entry">＋ Daily Entry</a>
                     </div>
                 </section>
 
@@ -596,20 +168,16 @@
                             {% if attendance %}
                                 <span>This active attendance session is locked to its Intern Classroom until you clock out.</span>
                             {% elif requires_classroom_selection %}
-                                <span>Choose which internship this attendance and its rendered hours belong to.</span>
+                                <span>Choose which internship this attendance and Daily OJT Logbook belong to.</span>
                             {% else %}
-                                <span>Attendance history and rendered hours are isolated per Intern Classroom.</span>
+                                <span>Attendance, hours, and Daily OJT entries stay isolated per Intern Classroom.</span>
                             {% endif %}
                         </div>
                         <form class="student-logbook-classroom-form" method="GET" action="/student/logbook">
                             <select name="classroom_id" aria-label="Select Intern Classroom" onchange="this.form.submit()" {% if attendance %}disabled{% endif %}>
-                                {% if requires_classroom_selection %}
-                                    <option value="" selected>Select an Intern Classroom</option>
-                                {% endif %}
+                                {% if requires_classroom_selection %}<option value="" selected>Select an Intern Classroom</option>{% endif %}
                                 {% for item in classroom_options %}
-                                    <option value="{{ item.id }}" {% if selected_classroom_id == item.id %}selected{% endif %}>
-                                        {{ item.company_name or item.name }}{% if item.section %} · {{ item.section }}{% endif %}
-                                    </option>
+                                    <option value="{{ item.id }}" {% if selected_classroom_id == item.id %}selected{% endif %}>{{ item.company_name or item.name }}{% if item.section %} · {{ item.section }}{% endif %}</option>
                                 {% endfor %}
                             </select>
                         </form>
@@ -623,29 +191,17 @@
                         <small>{% if selected_classroom %}{{ selected_classroom.company_name or selected_classroom.name }}{% else %}Completed attendance only{% endif %}</small>
                     </article>
                     <article class="student-logbook-compact-stat">
-                        {% if ojt_progress and ojt_progress.required_hours is not none %}
-                            <strong>{{ '%.1f'|format(ojt_progress.required_hours) }} hrs</strong>
-                        {% else %}
-                            <strong>—</strong>
-                        {% endif %}
+                        <strong>{% if ojt_progress and ojt_progress.required_hours is not none %}{{ '%.1f'|format(ojt_progress.required_hours) }} hrs{% else %}—{% endif %}</strong>
                         <span>Required Hours</span>
                         <small>{% if ojt_progress and ojt_progress.required_hours is not none %}Configured internship target{% else %}Not configured for this internship{% endif %}</small>
                     </article>
                     <article class="student-logbook-compact-stat">
-                        {% if ojt_progress and ojt_progress.remaining_hours is not none %}
-                            <strong>{{ '%.1f'|format(ojt_progress.remaining_hours) }} hrs</strong>
-                        {% else %}
-                            <strong>—</strong>
-                        {% endif %}
+                        <strong>{% if ojt_progress and ojt_progress.remaining_hours is not none %}{{ '%.1f'|format(ojt_progress.remaining_hours) }} hrs{% else %}—{% endif %}</strong>
                         <span>Remaining Hours</span>
                         <small>{% if ojt_progress and ojt_progress.is_complete %}Required hours completed{% elif ojt_progress and ojt_progress.remaining_hours is not none %}Until internship target{% else %}Requires a configured target{% endif %}</small>
                     </article>
                     <article class="student-logbook-compact-stat">
-                        {% if ojt_progress and ojt_progress.progress_percent is not none %}
-                            <strong>{{ '%.1f'|format(ojt_progress.progress_percent) }}%</strong>
-                        {% else %}
-                            <strong>—</strong>
-                        {% endif %}
+                        <strong>{% if ojt_progress and ojt_progress.progress_percent is not none %}{{ '%.1f'|format(ojt_progress.progress_percent) }}%{% else %}—{% endif %}</strong>
                         <span>OJT Progress</span>
                         <small>{% if ojt_progress and ojt_progress.is_complete %}Complete{% elif ojt_progress and ojt_progress.progress_percent is not none %}Based on rendered hours{% else %}No required-hours target{% endif %}</small>
                     </article>
@@ -654,42 +210,51 @@
                 <section class="student-logbook-compact-card student-logbook-session" id="new-log-entry" aria-labelledby="today-session-heading">
                     <div class="student-logbook-session-head">
                         <div>
-                            <span class="student-logbook-section-kicker">Attendance</span>
-                            <h2 id="today-session-heading">{% if attendance %}Current Session{% else %}Latest Session{% endif %}</h2>
+                            <span class="student-logbook-section-kicker">{% if attendance %}Day {{ current_day_number }}{% else %}Attendance{% endif %}</span>
+                            <h2 id="today-session-heading">{% if attendance %}Today's Daily OJT Entry{% else %}Latest Session{% endif %}</h2>
                         </div>
-                        <span class="student-logbook-session-state{% if not attendance %} is-idle{% endif %}">
-                            {% if attendance %}Active session{% elif session_snapshot %}{{ session_snapshot[4] }}{% else %}No attendance yet{% endif %}
-                        </span>
+                        <span class="student-logbook-session-state{% if not attendance %} is-idle{% endif %}">{% if attendance %}Active session{% elif session_snapshot %}{{ session_snapshot[4] }}{% else %}No attendance yet{% endif %}</span>
                     </div>
 
                     {% if session_snapshot %}
                         <div class="student-logbook-time-grid" aria-label="Attendance time details">
-                            <div class="student-logbook-time-item">
-                                <strong>{{ session_snapshot[1] or '—' }}</strong>
-                                <span>Time In</span>
-                            </div>
-                            <div class="student-logbook-time-item">
-                                <strong>{% if attendance %}In progress{% else %}{{ session_snapshot[2] or '—' }}{% endif %}</strong>
-                                <span>Time Out</span>
-                            </div>
-                            <div class="student-logbook-time-item">
-                                <strong>{% if attendance %}In progress{% elif session_snapshot[3] is not none %}{{ '%.2f'|format(session_snapshot[3]) }} hrs{% else %}—{% endif %}</strong>
-                                <span>Session Hours</span>
-                            </div>
-                            <div class="student-logbook-time-item">
-                                <strong>{{ session_snapshot[4] }}</strong>
-                                <span>Status</span>
-                            </div>
+                            <div class="student-logbook-time-item"><strong>{{ session_snapshot[1] or '—' }}</strong><span>Time In</span></div>
+                            <div class="student-logbook-time-item"><strong>{% if attendance %}In progress{% else %}{{ session_snapshot[2] or '—' }}{% endif %}</strong><span>Time Out</span></div>
+                            <div class="student-logbook-time-item"><strong>{% if attendance %}In progress{% elif session_snapshot[3] is not none %}{{ '%.2f'|format(session_snapshot[3]) }} hrs{% else %}—{% endif %}</strong><span>Session Hours</span></div>
+                            <div class="student-logbook-time-item"><strong>{{ session_snapshot[4] }}</strong><span>Status</span></div>
                         </div>
                     {% endif %}
 
                     {% if attendance %}
-                        <form class="student-logbook-session-form" method="POST" action="/student/log/add">
+                        <form class="student-logbook-session-form" method="POST" action="{{ url_for('daily_logbook.save_daily_entry') }}">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <label for="student-logbook-entry-content">What did you accomplish?</label>
-                            <textarea id="student-logbook-entry-content" name="content" placeholder="Write your activity, learning, or task for today..." required></textarea>
+                            <input type="hidden" name="attendance_id" value="{{ attendance[0] }}">
+                            <div class="student-logbook-field-grid">
+                                <div class="student-logbook-field is-full">
+                                    <label for="daily-accomplishment">Daily accomplishment *</label>
+                                    <textarea id="daily-accomplishment" name="accomplishment" maxlength="5000" placeholder="What work, deliverables, or internship activities did you complete today?" required>{{ current_daily.accomplishment if current_daily else '' }}</textarea>
+                                </div>
+                                <div class="student-logbook-field">
+                                    <label for="daily-reflection">Learning / reflection</label>
+                                    <textarea id="daily-reflection" name="reflection" maxlength="5000" placeholder="What did you learn or improve today?">{{ current_daily.reflection if current_daily else '' }}</textarea>
+                                </div>
+                                <div class="student-logbook-field">
+                                    <label for="daily-challenges">Challenges / notes</label>
+                                    <textarea id="daily-challenges" name="challenges" maxlength="5000" placeholder="Record blockers, challenges, or important notes.">{{ current_daily.challenges if current_daily else '' }}</textarea>
+                                </div>
+                                <div class="student-logbook-field is-full">
+                                    <label for="daily-related-work">Related assigned Work <span class="student-logbook-form-help">(optional)</span></label>
+                                    <select id="daily-related-work" name="related_assignment_id">
+                                        <option value="">No related Work item</option>
+                                        {% for work in work_options %}
+                                            <option value="{{ work.id }}" {% if current_daily and current_daily.related_assignment_id == work.id %}selected{% endif %}>{{ work.title }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <p class="student-logbook-form-help">Only Work available to you in this Intern Classroom can be linked.</p>
+                                </div>
+                            </div>
                             <div class="student-logbook-session-footer">
-                                <button class="student-logbook-button student-logbook-button-primary" type="submit">Add Log</button>
+                                <button class="student-logbook-button student-logbook-button-primary" type="submit">{% if current_daily %}Save Daily Entry Changes{% else %}Save Daily OJT Entry{% endif %}</button>
                             </div>
                         </form>
                         <form class="student-logbook-clock-out" method="POST" action="/student/clock-out" onsubmit="return confirm('Clock out and close today\'s attendance session?')">
@@ -701,17 +266,15 @@
                             <div class="student-logbook-idle-copy">
                                 {% if requires_classroom_selection %}
                                     <strong>Select an Intern Classroom before clocking in.</strong>
-                                    <span>This keeps attendance and rendered hours attached to the correct internship.</span>
+                                    <span>This keeps attendance and Daily OJT entries attached to the correct internship.</span>
                                 {% else %}
-                                    <strong>Clock in to begin a new attendance session.</strong>
-                                    <span>Time In and Time Out will be recorded against the selected Intern Classroom.</span>
+                                    <strong>Clock in to start your next Daily OJT entry.</strong>
+                                    <span>Day number, Time In, Time Out, and rendered hours come from attendance.</span>
                                 {% endif %}
                             </div>
                             <form method="POST" action="/student/clock-in">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                {% if selected_classroom_id %}
-                                    <input type="hidden" name="classroom_id" value="{{ selected_classroom_id }}">
-                                {% endif %}
+                                {% if selected_classroom_id %}<input type="hidden" name="classroom_id" value="{{ selected_classroom_id }}">{% endif %}
                                 <button class="student-logbook-button student-logbook-button-primary" type="submit" {% if requires_classroom_selection %}disabled{% endif %}>Clock In</button>
                             </form>
                         </div>
@@ -720,57 +283,41 @@
 
                 <section class="student-logbook-compact-card student-logbook-entries" aria-labelledby="log-entries-heading">
                     <div class="student-logbook-entries-head">
-                        <h2 id="log-entries-heading">Log Entries</h2>
-                        <span class="student-logbook-entries-count">{{ logs|length }} entries</span>
+                        <h2 id="log-entries-heading">Daily OJT Entries</h2>
+                        <span class="student-logbook-entries-count">{{ daily_entries|length }} entries</span>
                     </div>
-
                     <div class="student-logbook-compact-toolbar" aria-label="Log entry tools">
-                        <div class="student-logbook-compact-filter">{% if selected_classroom %}{{ selected_classroom.company_name or selected_classroom.name }}{% else %}Current session{% endif %}</div>
-                        <div class="student-logbook-compact-filter">Attendance-linked logs</div>
-                        <label class="student-logbook-compact-search">
-                            <span>⌕</span>
-                            <input type="search" placeholder="Search logs..." aria-label="Search logs">
-                        </label>
+                        <div class="student-logbook-compact-filter">{% if selected_classroom %}{{ selected_classroom.company_name or selected_classroom.name }}{% else %}Legacy attendance{% endif %}</div>
+                        <div class="student-logbook-compact-filter">Attendance-linked daily records</div>
+                        <label class="student-logbook-compact-search"><span>⌕</span><input type="search" placeholder="Search logs..." aria-label="Search logs"></label>
                     </div>
 
-                    {% if logs %}
+                    {% if daily_entries %}
                         <div class="student-logbook-compact-table-wrap">
                             <table class="student-logbook-table">
-                                <thead>
-                                    <tr>
-                                        <th>Date</th>
-                                        <th>Activity / Task</th>
-                                        <th>Hours</th>
-                                        <th>Type</th>
-                                        <th>Status</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
+                                <thead><tr><th>Day</th><th>Date</th><th>Daily OJT Entry</th><th>Hours</th><th>Status</th><th>Actions</th></tr></thead>
                                 <tbody>
-                                    {% for log in logs %}
+                                    {% for entry in daily_entries %}
                                         <tr>
-                                            <td>
-                                                <div class="student-logbook-entry-date">
-                                                    <strong>{{ log[2].strftime('%d') if log[2] and log[2].strftime is defined else '—' }}</strong>
-                                                    <span>{{ log[2].strftime('%b') if log[2] and log[2].strftime is defined else 'Log' }}</span>
-                                                </div>
-                                            </td>
+                                            <td><strong>Day {{ entry.day_number or '—' }}</strong></td>
+                                            <td><div class="student-logbook-entry-date"><strong>{{ entry.date }}</strong><span>{{ entry.time_in or '—' }}{% if entry.time_out %} - {{ entry.time_out }}{% endif %}</span></div></td>
                                             <td>
                                                 <div class="student-logbook-entry-copy">
-                                                    <strong>{{ log[1] }}</strong>
-                                                    <span>Daily internship activity recorded in the Nexora logbook.</span>
+                                                    <strong>{{ entry.accomplishment }}</strong>
+                                                    {% if entry.reflection %}<span>Learning: {{ entry.reflection|truncate(90, True) }}</span>{% endif %}
+                                                    {% if entry.challenges %}<span>Notes: {{ entry.challenges|truncate(90, True) }}</span>{% endif %}
+                                                    <div class="student-logbook-entry-meta"><span>{% if entry.related_work_title %}Related Work: {{ entry.related_work_title }}{% else %}No related Work{% endif %}</span></div>
                                                 </div>
                                             </td>
-                                            <td><span class="student-logbook-hours">—</span></td>
-                                            <td><span class="student-logbook-pill student-logbook-pill-type">Daily Log</span></td>
-                                            <td><span class="student-logbook-pill student-logbook-pill-status">✓ Recorded</span></td>
+                                            <td><span class="student-logbook-hours">{% if entry.status == 'Open' %}In progress{% elif entry.hours_rendered is not none %}{{ '%.2f'|format(entry.hours_rendered) }} hrs{% else %}—{% endif %}</span></td>
+                                            <td><span class="student-logbook-pill student-logbook-pill-status">{% if entry.status == 'Open' %}Active{% else %}✓ Recorded{% endif %}</span></td>
                                             <td>
                                                 <div class="student-logbook-entry-actions">
-                                                    <a class="student-logbook-icon-button" href="/student/log/{{ log[0] }}/edit" aria-label="Edit log entry">✎</a>
-                                                    {% if attendance %}
-                                                        <form method="POST" action="/student/log/{{ log[0] }}/delete" onsubmit="return confirm('Delete this log entry? This action cannot be undone.')">
+                                                    <a class="student-logbook-icon-button" href="/student/session/{{ entry.attendance_id }}" aria-label="View Daily OJT entry">↗</a>
+                                                    {% if attendance and entry.attendance_id == attendance[0] %}
+                                                        <form method="POST" action="/student/log/{{ entry.id }}/delete" onsubmit="return confirm('Delete this Daily OJT entry?')">
                                                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                            <button class="student-logbook-icon-button" type="submit" aria-label="Delete log entry">×</button>
+                                                            <button class="student-logbook-icon-button" type="submit" aria-label="Delete Daily OJT entry">×</button>
                                                         </form>
                                                     {% endif %}
                                                 </div>
@@ -783,68 +330,33 @@
                     {% else %}
                         <div class="student-logbook-compact-empty">
                             <span class="student-logbook-compact-empty-icon">▤</span>
-                            <strong>No log entries yet</strong>
-                            <span>{% if requires_classroom_selection %}Select an Intern Classroom to view its attendance history.{% elif attendance %}Add your first activity during the active session.{% else %}Clock in, then add your first activity for the day.{% endif %}</span>
+                            <strong>No Daily OJT entries yet</strong>
+                            <span>{% if requires_classroom_selection %}Select an Intern Classroom to view its Daily OJT Logbook.{% elif attendance %}Complete the Daily OJT form above for this attendance session.{% else %}Clock in to start your first structured Daily OJT entry.{% endif %}</span>
                         </div>
                     {% endif %}
                 </section>
 
                 <section class="student-logbook-bottom-grid" id="attendance-history">
                     <article class="student-logbook-compact-card student-logbook-bottom-card">
-                        <div class="student-logbook-bottom-head">
-                            <h3>OJT Activity</h3>
-                        </div>
+                        <div class="student-logbook-bottom-head"><h3>OJT Activity</h3></div>
                         <div class="student-logbook-week-values">
-                            <div class="student-logbook-week-value">
-                                <strong>{{ total_history|default(history|length) }}</strong>
-                                <span>Attendance sessions</span>
-                            </div>
-                            <div class="student-logbook-week-value">
-                                <strong>{{ logs|length }}</strong>
-                                <span>Current-session logs</span>
-                            </div>
-                            <div class="student-logbook-week-value">
-                                <strong>{% if ojt_progress and ojt_progress.is_complete %}Complete{% elif attendance %}Active{% elif requires_classroom_selection %}Select classroom{% else %}Ready{% endif %}</strong>
-                                <span>Current status</span>
-                            </div>
-                            <div class="student-logbook-week-value">
-                                <strong>{{ '%.1f'|format(ojt_progress.rendered_hours if ojt_progress else total_hours) }} hrs</strong>
-                                <span>Completed hours</span>
-                            </div>
+                            <div class="student-logbook-week-value"><strong>{{ total_history|default(history|length) }}</strong><span>Attendance sessions</span></div>
+                            <div class="student-logbook-week-value"><strong>{{ daily_entries|length }}</strong><span>Daily entries</span></div>
+                            <div class="student-logbook-week-value"><strong>{% if ojt_progress and ojt_progress.is_complete %}Complete{% elif attendance %}Active{% elif requires_classroom_selection %}Select classroom{% else %}Ready{% endif %}</strong><span>Current status</span></div>
+                            <div class="student-logbook-week-value"><strong>{{ '%.1f'|format(ojt_progress.rendered_hours if ojt_progress else total_hours) }} hrs</strong><span>Completed hours</span></div>
                         </div>
                     </article>
-
                     <article class="student-logbook-compact-card student-logbook-bottom-card">
-                        <div class="student-logbook-bottom-head">
-                            <h3>Recent Activity</h3>
-                        </div>
+                        <div class="student-logbook-bottom-head"><h3>Recent Daily Entries</h3></div>
                         <div class="student-logbook-recent-list">
-                            {% if logs %}
-                                {% for log in logs[:3] %}
-                                    <div class="student-logbook-recent-item">
-                                        <span class="student-logbook-recent-dot"></span>
-                                        <div>
-                                            <strong>Log recorded</strong>
-                                            <span>{{ log[1]|truncate(62, True) }}</span>
-                                        </div>
-                                    </div>
+                            {% if daily_entries %}
+                                {% for entry in daily_entries[:3] %}
+                                    <div class="student-logbook-recent-item"><span class="student-logbook-recent-dot"></span><div><strong>Day {{ entry.day_number or '—' }} · {{ entry.date }}</strong><span>{{ entry.accomplishment|truncate(62, True) }}</span></div></div>
                                 {% endfor %}
                             {% elif session_snapshot %}
-                                <div class="student-logbook-recent-item">
-                                    <span class="student-logbook-recent-dot"></span>
-                                    <div>
-                                        <strong>Attendance recorded</strong>
-                                        <span>Time In {{ session_snapshot[1] or '—' }}{% if session_snapshot[2] %} · Time Out {{ session_snapshot[2] }}{% endif %}</span>
-                                    </div>
-                                </div>
+                                <div class="student-logbook-recent-item"><span class="student-logbook-recent-dot"></span><div><strong>Attendance recorded</strong><span>Time In {{ session_snapshot[1] or '—' }}{% if session_snapshot[2] %} · Time Out {{ session_snapshot[2] }}{% endif %}</span></div></div>
                             {% else %}
-                                <div class="student-logbook-recent-item">
-                                    <span class="student-logbook-recent-dot"></span>
-                                    <div>
-                                        <strong>No recent activity</strong>
-                                        <span>Your latest attendance and log entries will appear here.</span>
-                                    </div>
-                                </div>
+                                <div class="student-logbook-recent-item"><span class="student-logbook-recent-dot"></span><div><strong>No recent activity</strong><span>Your latest attendance and Daily OJT entries will appear here.</span></div></div>
                             {% endif %}
                         </div>
                     </article>
@@ -852,38 +364,15 @@
 
                 <section class="student-logbook-hidden-history" aria-hidden="true">
                     {% if history %}
-                        <table>
-                            <tbody>
-                                {% for session in history %}
-                                    <tr>
-                                        <td>{{ session[1] }}</td>
-                                        <td>{{ session[2] if session[2] else '—' }}</td>
-                                        <td>{{ session[3] if session[3] else '—' }}</td>
-                                        <td>{{ session[4] }}</td>
-                                        <td><a href="/student/session/{{ session[0] }}">View Logs</a></td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-
+                        <table><tbody>{% for attendance_record in history %}<tr><td>{{ attendance_record[1] }}</td><td>{{ attendance_record[2] if attendance_record[2] else '—' }}</td><td>{{ attendance_record[3] if attendance_record[3] else '—' }}</td><td>{{ attendance_record[4] }}</td><td><a href="/student/session/{{ attendance_record[0] }}">View Logs</a></td></tr>{% endfor %}</tbody></table>
                         {% if total_pages > 1 %}
                             <div class="student-logbook-pagination">
                                 <span>Page {{ page }} of {{ total_pages }}</span>
                                 <div class="student-tasks-page-buttons">
                                     {% set scope_prefix = 'classroom_id=' ~ selected_classroom_id ~ '&' if selected_classroom_id else '' %}
-                                    {% if page > 1 %}
-                                        <a class="student-tasks-page-button" href="?{{ scope_prefix }}page={{ page - 1 }}">‹</a>
-                                    {% else %}
-                                        <span class="student-tasks-page-button">‹</span>
-                                    {% endif %}
-                                    {% for p in range(1, total_pages + 1) %}
-                                        <a class="student-tasks-page-button {% if p == page %}is-active{% endif %}" href="?{{ scope_prefix }}page={{ p }}">{{ p }}</a>
-                                    {% endfor %}
-                                    {% if page < total_pages %}
-                                        <a class="student-tasks-page-button" href="?{{ scope_prefix }}page={{ page + 1 }}">›</a>
-                                    {% else %}
-                                        <span class="student-tasks-page-button">›</span>
-                                    {% endif %}
+                                    {% if page > 1 %}<a class="student-tasks-page-button" href="?{{ scope_prefix }}page={{ page - 1 }}">‹</a>{% else %}<span class="student-tasks-page-button">‹</span>{% endif %}
+                                    {% for p in range(1, total_pages + 1) %}<a class="student-tasks-page-button {% if p == page %}is-active{% endif %}" href="?{{ scope_prefix }}page={{ p }}">{{ p }}</a>{% endfor %}
+                                    {% if page < total_pages %}<a class="student-tasks-page-button" href="?{{ scope_prefix }}page={{ page + 1 }}">›</a>{% else %}<span class="student-tasks-page-button">›</span>{% endif %}
                                 </div>
                             </div>
                         {% endif %}
