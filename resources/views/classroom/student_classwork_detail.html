@@ -7,173 +7,155 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
     <style>
-        :root {
-            --nx-green:#12a879; --nx-green-dark:#07865f; --nx-green-soft:#eaf8f3;
-            --nx-ink:#142033; --nx-muted:#697486; --nx-line:#e6eaf0; --nx-bg:#f7f9fb;
-        }
-        *{box-sizing:border-box}
-        body.student-page{background:var(--nx-bg);color:var(--nx-ink)}
-        .nx-classwork-main{margin-left:262px;min-height:100vh;padding:0 34px 42px}
-        .nx-classwork-top{height:76px;display:flex;align-items:center;justify-content:flex-end;gap:22px}
-        .nx-search{width:min(360px,35vw);height:42px;background:#fff;border:1px solid var(--nx-line);border-radius:12px;display:flex;align-items:center;padding:0 14px;color:var(--nx-muted)}
-        .nx-search span{font-size:17px;margin-right:9px}.nx-search input{border:0;outline:0;width:100%;font-size:13px;color:var(--nx-ink);background:transparent}
-        .nx-top-link{color:var(--nx-muted);text-decoration:none;font-size:20px;position:relative}.nx-top-link:hover{color:var(--nx-green-dark)}
-        .nx-page{max-width:1180px;margin:0 auto}
-        .nx-breadcrumb{display:flex;align-items:center;gap:8px;margin:7px 0 22px;font-size:13px;color:var(--nx-muted)}
-        .nx-breadcrumb a{color:var(--nx-muted);text-decoration:none}.nx-breadcrumb a:hover{color:var(--nx-green-dark)}
-        .nx-eyebrow{display:block;color:var(--nx-green-dark);font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;margin-bottom:7px}
-        .nx-heading-row{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;margin-bottom:25px}
-        .nx-heading-row h1{font-size:30px;line-height:1.15;margin:0 0 7px;font-weight:750;letter-spacing:-.02em}
-        .nx-heading-row p{margin:0;color:var(--nx-muted);font-size:14px}
-        .nx-back{display:inline-flex;align-items:center;gap:8px;padding:10px 15px;border:1px solid var(--nx-line);border-radius:10px;background:#fff;color:var(--nx-ink);font-size:13px;font-weight:650;text-decoration:none;white-space:nowrap}
-        .nx-back:hover{border-color:#cdd5df;color:var(--nx-green-dark)}
-        .nx-grid{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:20px;align-items:start}
-        .nx-card{background:#fff;border:1px solid var(--nx-line);border-radius:16px;box-shadow:0 5px 18px rgba(20,32,51,.035)}
-        .nx-card-pad{padding:24px}
-        .nx-activity-card{overflow:hidden}
-        .nx-activity-header{padding:26px 28px 22px;border-bottom:1px solid var(--nx-line);display:flex;justify-content:space-between;gap:20px}
-        .nx-type{display:inline-flex;align-items:center;padding:6px 10px;border-radius:7px;background:var(--nx-green-soft);color:var(--nx-green-dark);font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
-        .nx-activity-header h2{font-size:24px;line-height:1.25;margin:13px 0 7px;font-weight:750}
-        .nx-class-name{font-size:13px;color:var(--nx-muted);margin:0}
-        .nx-points{text-align:right;min-width:75px}.nx-points strong{display:block;font-size:22px;line-height:1.1}.nx-points span{font-size:11px;color:var(--nx-muted)}
-        .nx-meta{display:flex;flex-wrap:wrap;gap:9px;padding:15px 28px;border-bottom:1px solid var(--nx-line);background:#fbfcfd}
-        .nx-meta span{font-size:12px;color:var(--nx-muted);background:#fff;border:1px solid var(--nx-line);padding:7px 10px;border-radius:8px}
-        .nx-section{padding:25px 28px}.nx-section+.nx-section{border-top:1px solid var(--nx-line)}
-        .nx-section h3{font-size:15px;margin:0 0 14px;font-weight:750}.nx-instructions{font-size:14px;line-height:1.75;color:#3c4657;white-space:pre-wrap}
-        .nx-resource{display:flex;align-items:center;gap:12px;padding:13px 14px;border:1px solid var(--nx-line);border-radius:11px;text-decoration:none;color:var(--nx-ink);margin-top:9px}
-        .nx-resource:hover{border-color:#b9ddcf;background:#fbfefc}.nx-resource-icon{width:36px;height:36px;border-radius:9px;background:var(--nx-green-soft);display:grid;place-items:center;font-size:17px}.nx-resource-main{flex:1}.nx-resource strong{display:block;font-size:13px}.nx-resource small{display:block;color:var(--nx-muted);font-size:11px;margin-top:2px}
-        .nx-status-card h3,.nx-side-card h3{font-size:14px;font-weight:750;margin:0}.nx-status{margin:18px 0;padding:10px 12px;border-radius:9px;background:var(--nx-green-soft);color:var(--nx-green-dark);font-size:12px;font-weight:750}.nx-status.pending{background:#f4f6f8;color:var(--nx-muted)}
-        .nx-side-list{margin:0;padding:0;list-style:none}.nx-side-list li{display:flex;justify-content:space-between;gap:15px;padding:11px 0;border-bottom:1px solid var(--nx-line);font-size:12px}.nx-side-list li:last-child{border-bottom:0;padding-bottom:0}.nx-side-list span{color:var(--nx-muted)}.nx-side-list strong{text-align:right;font-weight:700}
-        .nx-submit-card{margin-top:20px}.nx-submit-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:15px;margin-bottom:20px}.nx-submit-heading h2{font-size:19px;margin:0 0 4px;font-weight:750}.nx-submit-heading p{margin:0;color:var(--nx-muted);font-size:12px}.nx-pill{padding:6px 9px;border-radius:7px;background:#f4f6f8;color:var(--nx-muted);font-size:10px;font-weight:800;white-space:nowrap;text-transform:uppercase}.nx-pill.complete{background:var(--nx-green-soft);color:var(--nx-green-dark)}
-        .nx-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}.nx-summary-item{padding:13px;border:1px solid var(--nx-line);border-radius:10px}.nx-summary-item span{display:block;color:var(--nx-muted);font-size:10px;text-transform:uppercase;letter-spacing:.06em}.nx-summary-item strong{display:block;margin-top:5px;font-size:13px}.nx-feedback{margin-top:14px;padding:14px;border-radius:10px;background:#fafbfc;border:1px solid var(--nx-line)}.nx-feedback span{font-size:10px;color:var(--nx-muted);font-weight:750;text-transform:uppercase;letter-spacing:.06em}.nx-feedback p{margin:7px 0 0;font-size:13px;line-height:1.6;white-space:pre-wrap}
-        .nx-form{display:grid;gap:17px}.nx-form label{font-size:12px;font-weight:700;margin-bottom:7px}.nx-form textarea,.nx-form input[type=file]{border:1px solid var(--nx-line);border-radius:10px;font-size:13px;padding:11px 12px}.nx-form textarea{resize:vertical;min-height:125px}.nx-form textarea:focus,.nx-form input[type=file]:focus{border-color:#9ddbc6;box-shadow:0 0 0 3px rgba(18,168,121,.08);outline:0}.nx-help{display:block;color:var(--nx-muted);font-size:11px;line-height:1.5;margin-top:7px}.nx-submit-btn{border:0;border-radius:10px;background:var(--nx-green);color:#fff;padding:11px 17px;font-size:13px;font-weight:750;width:max-content}.nx-submit-btn:hover{background:var(--nx-green-dark)}
-        .nx-alert{border-radius:10px!important;border:0!important;font-size:12px!important;margin:20px 28px 0!important;padding:12px 14px!important}
-        .nx-previous-file{font-size:12px;margin:7px 0 0}.nx-previous-file a{color:var(--nx-green-dark);text-decoration:none}.nx-previous-file a:hover{text-decoration:underline}
-        @media(max-width:900px){.nx-classwork-main{margin-left:0;padding:0 18px 30px}.nx-grid{grid-template-columns:1fr}.nx-heading-row{align-items:flex-start}.nx-search{width:250px}}
-        @media(max-width:640px){.nx-classwork-top{height:64px}.nx-search{display:none}.nx-heading-row{display:block}.nx-back{margin-top:16px}.nx-activity-header{padding:20px}.nx-meta,.nx-section{padding-left:20px;padding-right:20px}.nx-summary{grid-template-columns:1fr}.nx-heading-row h1{font-size:25px}}
+        .student-work-detail-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin:0 0 22px}
+        .student-work-detail-heading h1{margin:6px 0 5px;font-size:2rem;font-weight:800;letter-spacing:-.025em}
+        .student-work-detail-heading p{margin:0;color:#64748b}
+        .student-work-detail-back{display:inline-flex;align-items:center;padding:10px 14px;border:1px solid #dfe7ef;border-radius:10px;background:#fff;color:#07865f;font-size:13px;font-weight:800;text-decoration:none;white-space:nowrap}
+        .student-work-detail-grid{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:20px;align-items:start;padding-bottom:42px}
+        .student-work-card{overflow:hidden;border:1px solid #e6eaf0;border-radius:18px;background:#fff;box-shadow:0 8px 28px rgba(15,23,42,.06)}
+        .student-work-card+.student-work-card{margin-top:18px}
+        .student-work-card-pad{padding:22px}
+        .student-work-activity-head{display:flex;justify-content:space-between;gap:20px;padding:24px 26px 20px;border-bottom:1px solid #e6eaf0}
+        .student-work-type{display:inline-flex;padding:6px 10px;border-radius:8px;background:#eaf8f3;color:#07865f;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+        .student-work-activity-head h2{margin:12px 0 6px;font-size:1.45rem;font-weight:800;letter-spacing:-.02em}
+        .student-work-activity-head p{margin:0;color:#64748b;font-size:13px}
+        .student-work-points{text-align:right;min-width:80px}.student-work-points strong{display:block;font-size:1.45rem}.student-work-points span{color:#64748b;font-size:11px}
+        .student-work-meta{display:flex;flex-wrap:wrap;gap:8px;padding:14px 26px;border-bottom:1px solid #e6eaf0;background:#f8fafc}
+        .student-work-meta span{padding:7px 10px;border:1px solid #e6eaf0;border-radius:9px;background:#fff;color:#64748b;font-size:12px}
+        .student-work-section{padding:23px 26px}.student-work-section+.student-work-section{border-top:1px solid #e6eaf0}
+        .student-work-section h3,.student-work-side h3{margin:0 0 12px;font-size:14px;font-weight:800}.student-work-copy{color:#334155;font-size:14px;line-height:1.7;white-space:pre-wrap}
+        .student-work-resource{display:flex;align-items:center;gap:12px;margin-top:9px;padding:13px 14px;border:1px solid #e6eaf0;border-radius:11px;color:#142033;text-decoration:none}.student-work-resource:hover{border-color:#9ddbc6;background:#fbfefc}
+        .student-work-resource-icon{display:grid;place-items:center;width:36px;height:36px;border-radius:9px;background:#eaf8f3}.student-work-resource-main{flex:1}.student-work-resource strong{display:block;font-size:13px}.student-work-resource small{display:block;margin-top:2px;color:#64748b;font-size:11px}
+        .student-work-submit-head{display:flex;justify-content:space-between;gap:14px;margin-bottom:18px}.student-work-submit-head h2{margin:4px 0;font-size:1.12rem;font-weight:800}.student-work-submit-head p{margin:0;color:#64748b;font-size:12px}
+        .student-work-pill{display:inline-flex;height:max-content;padding:6px 9px;border-radius:8px;background:#f1f5f9;color:#64748b;font-size:10px;font-weight:800;text-transform:uppercase}.student-work-pill.is-complete{background:#eaf8f3;color:#07865f}
+        .student-work-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:16px}.student-work-summary div{padding:12px;border:1px solid #e6eaf0;border-radius:10px}.student-work-summary span{display:block;color:#64748b;font-size:10px;font-weight:700;text-transform:uppercase}.student-work-summary strong{display:block;margin-top:4px;font-size:13px}
+        .student-work-feedback{margin-top:12px;padding:13px;border:1px solid #e6eaf0;border-radius:10px;background:#f8fafc}.student-work-feedback span{display:block;color:#64748b;font-size:10px;font-weight:800;text-transform:uppercase}.student-work-feedback p{margin:6px 0 0;font-size:13px;line-height:1.6;white-space:pre-wrap}.student-work-feedback a{color:#07865f;text-decoration:none}
+        .student-work-divider{height:1px;margin:20px 0;background:#e6eaf0}.student-work-new-attempt{margin:0 0 14px;font-size:14px;font-weight:800}.student-work-intro{margin:0 0 18px;color:#64748b;font-size:13px;line-height:1.6}
+        .student-work-form{display:grid;gap:16px}.student-work-form label{display:block;margin-bottom:7px;font-size:12px;font-weight:800}.student-work-form textarea,.student-work-form input[type=file]{width:100%;padding:11px 12px;border:1px solid #dfe7ef;border-radius:10px;font-size:13px}.student-work-form textarea{min-height:125px;resize:vertical}.student-work-help{display:block;margin-top:6px;color:#64748b;font-size:11px}.student-work-submit-btn{width:max-content;padding:11px 17px;border:0;border-radius:10px;background:#12a879;color:#fff;font-size:13px;font-weight:800}.student-work-submit-btn:hover{background:#07865f}
+        .student-work-status{margin:16px 0;padding:10px 12px;border-radius:9px;background:#eaf8f3;color:#07865f;font-size:12px;font-weight:800}.student-work-status.is-pending{background:#f1f5f9;color:#64748b}
+        .student-work-side-list{margin:0;padding:0;list-style:none}.student-work-side-list li{display:flex;justify-content:space-between;gap:14px;padding:10px 0;border-bottom:1px solid #e6eaf0;font-size:12px}.student-work-side-list li:last-child{border-bottom:0}.student-work-side-list span{color:#64748b}.student-work-side-list strong{text-align:right}
+        .student-work-side-card+.student-work-side-card{margin-top:18px}.student-work-history{margin:0;color:#64748b;font-size:12px;line-height:1.6}
+        .student-work-alert{margin:18px 26px 0!important;border:0!important;border-radius:10px!important;font-size:12px!important}
+        @media(max-width:900px){.student-work-detail-grid{grid-template-columns:1fr}.student-work-detail-heading{align-items:flex-start;flex-direction:column}}
+        @media(max-width:620px){.student-work-detail-heading h1{font-size:1.6rem}.student-work-activity-head{padding:20px}.student-work-meta,.student-work-section{padding-left:20px;padding-right:20px}.student-work-summary{grid-template-columns:1fr}.student-work-detail-back{width:100%;justify-content:center}}
     </style>
 </head>
-<body class="student-page student-classwork-page">
+<body class="student-page nx-class-page student-classwork-page">
     {% include 'components/student_sidebar.html' %}
 
-    <main class="nx-classwork-main">
-        <div class="nx-classwork-top">
-            <div class="nx-search"><span>⌕</span><input type="search" placeholder="Search work..." aria-label="Search work"></div>
-            <a href="{{ url_for('notifications.notification_list') }}" class="nx-top-link" aria-label="Notifications">♢</a>
-        </div>
+    <main class="class-main">
+        {% set class_active_tab = 'classwork' %}
+        {% include 'components/student_class_shell.html' %}
 
-        <div class="nx-page">
-            <div class="nx-breadcrumb">
-                <a href="{{ url_for('student_classwork.index', class_id=classroom.id) }}">Work</a><span>›</span><span>Work Details</span>
-            </div>
-
-            <div class="nx-heading-row">
+        <div class="class-wrap">
+            <header class="student-work-detail-heading">
                 <div>
-                    <span class="nx-eyebrow">Work</span>
+                    <span class="student-section-eyebrow">Intern Portal · Work</span>
                     <h1>Work Details</h1>
-                    <p>{{ classroom.name }} · {{ classroom.section }}</p>
+                    <p>Review instructions, resources, submission status, and supervisor feedback.</p>
                 </div>
-                <a href="{{ url_for('student_classwork.index', class_id=classroom.id) }}" class="nx-back">← Back to Work</a>
-            </div>
+                <a href="{{ url_for('student_classwork.index', class_id=classroom.id) }}" class="student-work-detail-back">← Back to Work</a>
+            </header>
 
-            <div class="nx-grid">
+            <div class="student-work-detail-grid">
                 <div>
-                    <article class="nx-card nx-activity-card">
-                        <header class="nx-activity-header">
+                    <article class="student-work-card">
+                        <header class="student-work-activity-head">
                             <div>
-                                <span class="nx-type">{{ assignment.activity_label }}</span>
+                                <span class="student-work-type">{{ assignment.activity_label }}</span>
                                 <h2>{{ assignment.title }}</h2>
-                                <p class="nx-class-name">{{ classroom.name }} · {{ classroom.section }}</p>
+                                <p>{{ classroom.name }} · {{ classroom.section }}</p>
                             </div>
-                            <div class="nx-points"><strong>{{ assignment.points }}</strong><span>points</span></div>
+                            <div class="student-work-points"><strong>{{ assignment.points }}</strong><span>points</span></div>
                         </header>
 
-                        <div class="nx-meta">
+                        <div class="student-work-meta">
                             {% if assignment.due_at %}<span>Due {{ assignment.due_at }}</span>{% else %}<span>No due date</span>{% endif %}
                             {% if assignment.group_mode %}<span>{{ assignment.team_name or 'Team' }} · {{ assignment.team_members|length }} members</span>{% endif %}
                             {% if assignment.submission_mode == 'shared' %}<span>Shared team submission</span>{% elif assignment.group_mode %}<span>Individual submissions</span>{% endif %}
                             {% if assignment.allow_file_upload %}<span>Submission enabled</span>{% endif %}
                         </div>
 
-                        {% if past_due %}<div class="alert alert-warning nx-alert">The deadline has passed. Your supervisor may still allow a submission.</div>{% endif %}
+                        {% if past_due %}<div class="alert alert-warning student-work-alert">The deadline has passed. Your supervisor may still allow a submission.</div>{% endif %}
 
-                        <section class="nx-section">
+                        <section class="student-work-section">
                             <h3>Instructions</h3>
-                            <div class="nx-instructions">{{ assignment.description or 'No additional instructions were provided.' }}</div>
+                            <div class="student-work-copy">{{ assignment.description or 'No additional instructions were provided.' }}</div>
                         </section>
 
                         {% if assignment.team_members %}
-                        <section class="nx-section">
-                            <h3>{{ assignment.team_name or 'Team Members' }}</h3>
-                            <div class="nx-instructions">{% for member in assignment.team_members %}{{ member.username }}{% if member.email %} · {{ member.email }}{% endif %}{% if not loop.last %}<br>{% endif %}{% endfor %}</div>
-                        </section>
+                            <section class="student-work-section">
+                                <h3>{{ assignment.team_name or 'Team Members' }}</h3>
+                                <div class="student-work-copy">{% for member in assignment.team_members %}{{ member.username }}{% if member.email %} · {{ member.email }}{% endif %}{% if not loop.last %}<br>{% endif %}{% endfor %}</div>
+                            </section>
                         {% endif %}
 
                         {% if assignment.external_url or assignment.resource_filepath %}
-                        <section class="nx-section">
-                            <h3>Resources</h3>
-                            {% if assignment.external_url %}
-                            <a href="{{ assignment.external_url }}" target="_blank" rel="noopener noreferrer" class="nx-resource">
-                                <span class="nx-resource-icon">↗</span><span class="nx-resource-main"><strong>{{ assignment.resource_label or 'Open work link' }}</strong><small>Opens in a new tab</small></span><span>›</span>
-                            </a>
-                            {% endif %}
-                            {% if assignment.resource_filepath %}
-                            <a href="{{ url_for('uploaded_file', filename=assignment.resource_filepath) }}" target="_blank" rel="noopener noreferrer" class="nx-resource">
-                                <span class="nx-resource-icon">⌕</span><span class="nx-resource-main"><strong>{{ assignment.resource_filename or 'Open attached file' }}</strong><small>Reference material</small></span><span>›</span>
-                            </a>
-                            {% endif %}
-                        </section>
+                            <section class="student-work-section">
+                                <h3>Resources</h3>
+                                {% if assignment.external_url %}
+                                    <a href="{{ assignment.external_url }}" target="_blank" rel="noopener noreferrer" class="student-work-resource">
+                                        <span class="student-work-resource-icon">↗</span><span class="student-work-resource-main"><strong>{{ assignment.resource_label or 'Open work link' }}</strong><small>Opens in a new tab</small></span><span>›</span>
+                                    </a>
+                                {% endif %}
+                                {% if assignment.resource_filepath %}
+                                    <a href="{{ url_for('uploaded_file', filename=assignment.resource_filepath) }}" target="_blank" rel="noopener noreferrer" class="student-work-resource">
+                                        <span class="student-work-resource-icon">⌕</span><span class="student-work-resource-main"><strong>{{ assignment.resource_filename or 'Open attached file' }}</strong><small>Reference material</small></span><span>›</span>
+                                    </a>
+                                {% endif %}
+                            </section>
                         {% endif %}
                     </article>
 
-                    <section class="nx-card nx-submit-card nx-card-pad">
-                        <div class="nx-submit-heading">
+                    <section class="student-work-card student-work-card-pad">
+                        <div class="student-work-submit-head">
                             {% if assignment.submission_mode == 'shared' %}
-                                <div><span class="nx-eyebrow">Team Work</span><h2>Shared Team Submission</h2><p>Any selected team member can submit. The latest attempt is shared with the whole team.</p></div>
+                                <div><span class="student-section-eyebrow">Team Work</span><h2>Shared Team Submission</h2><p>Any selected team member can submit. The latest attempt is shared with the whole team.</p></div>
                             {% else %}
-                                <div><span class="nx-eyebrow">Your Work</span><h2>Submission</h2><p>Submit your completed work for supervisor review.</p></div>
+                                <div><span class="student-section-eyebrow">Your Work</span><h2>Submission</h2><p>Submit your completed work for supervisor review.</p></div>
                             {% endif %}
-                            {% if submission %}<span class="nx-pill complete">{{ submission.status|replace('_', ' ')|capitalize }}</span>{% else %}<span class="nx-pill">Not submitted</span>{% endif %}
+                            {% if submission %}<span class="student-work-pill is-complete">{{ submission.status|replace('_',' ')|capitalize }}</span>{% else %}<span class="student-work-pill">Not submitted</span>{% endif %}
                         </div>
 
                         {% if submission %}
-                        <div class="nx-summary">
-                            <div class="nx-summary-item"><span>Attempt</span><strong>{{ submission.attempt_no }}</strong></div>
-                            {% if submission.grade is not none %}<div class="nx-summary-item"><span>Grade</span><strong>{{ submission.grade }} / {{ assignment.points }}</strong></div>{% endif %}
-                            {% if submission.submitted_at %}<div class="nx-summary-item"><span>Submitted</span><strong>{{ submission.submitted_at }}</strong></div>{% endif %}
-                        </div>
-                        {% if assignment.submission_mode == 'shared' and submission.submitted_by_username %}<div class="nx-feedback"><span>Submitted by</span><p>{{ submission.submitted_by_username }}</p></div>{% endif %}
-                        {% if submission.feedback %}<div class="nx-feedback"><span>Supervisor feedback</span><p>{{ submission.feedback }}</p></div>{% endif %}
-                        {% if submission.content %}<div class="nx-feedback"><span>{% if assignment.submission_mode == 'shared' %}Team written response{% else %}Your written response{% endif %}</span><p>{{ submission.content }}</p></div>{% endif %}
-                        {% if submission.files %}<div class="nx-feedback"><span>Submitted files</span>{% for file in submission.files %}<p class="nx-previous-file"><a href="{{ url_for('classwork_submissions.student_file', class_id=classroom.id, assignment_id=assignment.id, file_id=file.id) }}">📎 {{ file.filename }}</a></p>{% endfor %}</div>{% endif %}
-                        {% if submission.source == 'legacy' and submission.filename %}<div class="nx-feedback"><span>Previous file</span><p class="nx-previous-file"><a href="{{ url_for('classroom.download_own_submission', class_id=classroom.id, assignment_id=assignment.id) }}">📎 Open previous submission</a></p></div>{% endif %}
-                        <div style="height:1px;background:var(--nx-line);margin:21px 0"></div>
-                        <h3 style="font-size:14px;font-weight:750;margin:0 0 15px">{% if assignment.submission_mode == 'shared' %}Submit a new team attempt{% else %}Submit a new attempt{% endif %}</h3>
+                            <div class="student-work-summary">
+                                <div><span>Attempt</span><strong>{{ submission.attempt_no }}</strong></div>
+                                {% if submission.grade is not none %}<div><span>Grade</span><strong>{{ submission.grade }} / {{ assignment.points }}</strong></div>{% endif %}
+                                {% if submission.submitted_at %}<div><span>Submitted</span><strong>{{ submission.submitted_at }}</strong></div>{% endif %}
+                            </div>
+                            {% if assignment.submission_mode == 'shared' and submission.submitted_by_username %}<div class="student-work-feedback"><span>Submitted by</span><p>{{ submission.submitted_by_username }}</p></div>{% endif %}
+                            {% if submission.feedback %}<div class="student-work-feedback"><span>Supervisor feedback</span><p>{{ submission.feedback }}</p></div>{% endif %}
+                            {% if submission.content %}<div class="student-work-feedback"><span>{% if assignment.submission_mode == 'shared' %}Team written response{% else %}Your written response{% endif %}</span><p>{{ submission.content }}</p></div>{% endif %}
+                            {% if submission.files %}<div class="student-work-feedback"><span>Submitted files</span>{% for file in submission.files %}<p><a href="{{ url_for('classwork_submissions.student_file', class_id=classroom.id, assignment_id=assignment.id, file_id=file.id) }}">📎 {{ file.filename }}</a></p>{% endfor %}</div>{% endif %}
+                            {% if submission.source == 'legacy' and submission.filename %}<div class="student-work-feedback"><span>Previous file</span><p><a href="{{ url_for('classroom.download_own_submission', class_id=classroom.id, assignment_id=assignment.id) }}">📎 Open previous submission</a></p></div>{% endif %}
+                            <div class="student-work-divider"></div>
+                            <h3 class="student-work-new-attempt">{% if assignment.submission_mode == 'shared' %}Submit a new team attempt{% else %}Submit a new attempt{% endif %}</h3>
                         {% else %}
-                        <p style="font-size:13px;color:var(--nx-muted);line-height:1.6;margin:0 0 20px">{% if assignment.submission_mode == 'shared' %}Your team has not submitted yet. Any selected member can send the shared team output below.{% else %}Upload the completed work below. Photos, PDFs, documents, spreadsheets, presentations, text files, and ZIP files are supported.{% endif %}</p>
+                            <p class="student-work-intro">{% if assignment.submission_mode == 'shared' %}Your team has not submitted yet. Any selected member can send the shared team output below.{% else %}Upload the completed work below. Photos, PDFs, documents, spreadsheets, presentations, text files, and ZIP files are supported.{% endif %}</p>
                         {% endif %}
 
                         {% if classroom.archived %}
-                            <div class="alert alert-secondary mb-0" style="font-size:12px;border-radius:10px">This Intern Classroom is archived, so new submissions are unavailable.</div>
+                            <div class="alert alert-secondary mb-0">This Intern Classroom is archived, so new submissions are unavailable.</div>
                         {% elif assignment.allow_file_upload %}
-                        <form method="POST" action="{{ submit_url }}" enctype="multipart/form-data" class="nx-form">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <div><label for="content">Written response <span style="color:var(--nx-muted);font-weight:500">(optional)</span></label><textarea id="content" name="content" maxlength="10000" placeholder="Add an explanation or response if required..."></textarea></div>
-                            <div><label for="files">Upload work</label><input id="files" type="file" name="files" multiple accept=".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip"><small class="nx-help">Up to 10 files. Maximum 5 MB per request.</small></div>
-                            <button type="submit" class="nx-submit-btn">{% if assignment.submission_mode == 'shared' %}{% if submission %}Submit New Team Attempt{% else %}Submit Team Work{% endif %}{% else %}{% if submission %}Submit New Attempt{% else %}Submit Work{% endif %}{% endif %}</button>
-                        </form>
+                            <form method="POST" action="{{ submit_url }}" enctype="multipart/form-data" class="student-work-form">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <div><label for="content">Written response <span class="text-muted fw-normal">(optional)</span></label><textarea id="content" name="content" maxlength="10000" placeholder="Add an explanation or response if required..."></textarea></div>
+                                <div><label for="files">Upload work</label><input id="files" type="file" name="files" multiple accept=".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip"><small class="student-work-help">Up to 10 files. Maximum 5 MB per request.</small></div>
+                                <button type="submit" class="student-work-submit-btn">{% if assignment.submission_mode == 'shared' %}{% if submission %}Submit New Team Attempt{% else %}Submit Team Work{% endif %}{% else %}{% if submission %}Submit New Attempt{% else %}Submit Work{% endif %}{% endif %}</button>
+                            </form>
                         {% else %}
-                            <div class="alert alert-info mb-0" style="font-size:12px;border-radius:10px">This work item does not currently accept file or written submissions.</div>
+                            <div class="alert alert-info mb-0">This work item does not currently accept file or written submissions.</div>
                         {% endif %}
                     </section>
                 </div>
 
-                <aside>
-                    <section class="nx-card nx-card-pad nx-status-card">
+                <aside class="student-work-side">
+                    <section class="student-work-card student-work-card-pad student-work-side-card">
                         <h3>Work Status</h3>
-                        {% if submission %}<div class="nx-status">{{ submission.status|replace('_', ' ')|capitalize }}</div>{% else %}<div class="nx-status pending">Not submitted</div>{% endif %}
-                        <ul class="nx-side-list">
+                        {% if submission %}<div class="student-work-status">{{ submission.status|replace('_',' ')|capitalize }}</div>{% else %}<div class="student-work-status is-pending">Not submitted</div>{% endif %}
+                        <ul class="student-work-side-list">
                             <li><span>Points</span><strong>{{ assignment.points }}</strong></li>
                             <li><span>Due date</span><strong>{% if assignment.due_at %}{{ assignment.due_at }}{% else %}None{% endif %}</strong></li>
                             {% if assignment.group_mode %}<li><span>Team</span><strong>{{ assignment.team_name or 'Team' }}</strong></li>{% endif %}
@@ -184,10 +166,10 @@
                     </section>
 
                     {% if submission %}
-                    <section class="nx-card nx-card-pad nx-side-card" style="margin-top:20px">
-                        <h3>Submission History</h3>
-                        <p style="font-size:12px;line-height:1.6;color:var(--nx-muted);margin:11px 0 0">{% if assignment.submission_mode == 'shared' %}The latest team attempt is shown above. Any selected member can submit another team attempt while submissions remain available.{% else %}Your latest attempt is shown above. You can submit another attempt when submissions are available.{% endif %}</p>
-                    </section>
+                        <section class="student-work-card student-work-card-pad student-work-side-card">
+                            <h3>Submission History</h3>
+                            <p class="student-work-history">{% if assignment.submission_mode == 'shared' %}The latest team attempt is shown above. Any selected member can submit another team attempt while submissions remain available.{% else %}Your latest attempt is shown above. You can submit another attempt when submissions are available.{% endif %}</p>
+                        </section>
                     {% endif %}
                 </aside>
             </div>
