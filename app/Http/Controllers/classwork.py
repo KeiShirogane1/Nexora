@@ -3,7 +3,7 @@ import secrets
 from pathlib import Path
 from urllib.parse import urlparse
 
-from flask import Blueprint, current_app, flash, redirect, render_template, request, session, url_for
+from flask import Blueprint, abort, current_app, flash, redirect, render_template, request, session, url_for
 from werkzeug.utils import secure_filename
 
 from app.Http.Middleware.security import role_required
@@ -41,6 +41,43 @@ def _is_owner(supervisor_id, class_id):
         return int(owner_id) == int(supervisor_id)
     finally:
         conn.close()
+
+
+def _student_has_assignment_access(conn, assignment_id, student_id):
+    count_row = conn.execute(
+        "SELECT COUNT(*) FROM classroom_assignment_recipients WHERE assignment_id = ?",
+        (assignment_id,),
+    ).fetchone()
+    recipient_count = count_row[0] if count_row else 0
+    if not recipient_count:
+        return True
+    return conn.execute(
+        """SELECT 1 FROM classroom_assignment_recipients
+           WHERE assignment_id = ? AND student_id = ? LIMIT 1""",
+        (assignment_id, student_id),
+    ).fetchone() is not None
+
+
+@classwork.before_app_request
+def _protect_legacy_student_assignment_routes():
+    if request.endpoint not in {
+        "classroom.student_assignment_detail",
+        "classroom.student_submit_assignment",
+    }:
+        return None
+
+    student_id = session.get("user_id")
+    assignment_id = (request.view_args or {}).get("assignment_id")
+    if not student_id or assignment_id is None:
+        return None
+
+    conn = get_db_connection()
+    try:
+        if not _student_has_assignment_access(conn, assignment_id, student_id):
+            abort(403)
+    finally:
+        conn.close()
+    return None
 
 
 def _valid_external_url(value):
@@ -100,6 +137,29 @@ def manage_classwork(class_id):
         if not classroom:
             return "Class not found", 404
 
+        enrolled_rows = conn.execute(
+            """SELECT u.id, u.username, u.email
+               FROM classroom_students cs
+               JOIN users u ON u.id = cs.student_id
+               WHERE cs.classroom_id = ?
+               ORDER BY LOWER(u.username), LOWER(u.email), u.id""",
+            (class_id,),
+        ).fetchall()
+        enrolled_students = []
+        enrolled_ids = set()
+        for row in enrolled_rows:
+            student_id = row["id"] if "id" in row.keys() else row[0]
+            try:
+                student_id = int(student_id)
+            except (TypeError, ValueError):
+                continue
+            enrolled_ids.add(student_id)
+            enrolled_students.append({
+                "id": student_id,
+                "username": row["username"] if "username" in row.keys() else row[1],
+                "email": row["email"] if "email" in row.keys() else row[2],
+            })
+
         if request.method == "POST":
             if classroom["archived"] if "archived" in classroom.keys() else classroom[5]:
                 flash("Archived Intern Classrooms cannot receive new work.", "warning")
@@ -115,9 +175,13 @@ def manage_classwork(class_id):
             allow_file_upload = 1 if request.form.get("allow_file_upload") == "on" else 0
             group_mode = 1 if request.form.get("group_mode") == "on" else 0
             max_group_size_raw = (request.form.get("max_group_size") or "1").strip()
+            assignment_scope = (request.form.get("assignment_scope") or "classroom").strip().lower()
 
             if activity_type not in ACTIVITY_TYPES:
                 flash("Choose a valid work type.", "danger")
+                return redirect(url_for("classwork.manage_classwork", class_id=class_id))
+            if assignment_scope not in {"classroom", "selected"}:
+                flash("Choose who should receive this work.", "danger")
                 return redirect(url_for("classwork.manage_classwork", class_id=class_id))
             if len(title) < 3 or len(title) > 200:
                 flash("Title is required and must be 3-200 characters.", "danger")
@@ -128,6 +192,25 @@ def manage_classwork(class_id):
             if external_url and not _valid_external_url(external_url):
                 flash("Resource link must be a valid http:// or https:// URL.", "danger")
                 return redirect(url_for("classwork.manage_classwork", class_id=class_id))
+
+            selected_recipient_ids = []
+            if assignment_scope == "selected":
+                seen = set()
+                for raw_id in request.form.getlist("recipient_ids"):
+                    try:
+                        student_id = int(raw_id)
+                    except (TypeError, ValueError):
+                        flash("One or more selected interns are invalid.", "danger")
+                        return redirect(url_for("classwork.manage_classwork", class_id=class_id))
+                    if student_id not in enrolled_ids:
+                        flash("Work can only be assigned to interns enrolled in this Intern Classroom.", "danger")
+                        return redirect(url_for("classwork.manage_classwork", class_id=class_id))
+                    if student_id not in seen:
+                        seen.add(student_id)
+                        selected_recipient_ids.append(student_id)
+                if not selected_recipient_ids:
+                    flash("Select at least one intern for targeted work.", "danger")
+                    return redirect(url_for("classwork.manage_classwork", class_id=class_id))
 
             try:
                 points = int(points_raw)
@@ -186,21 +269,31 @@ def manage_classwork(class_id):
                         max_group_size,
                     ),
                 )
+
+                for student_id in selected_recipient_ids:
+                    conn.execute(
+                        """INSERT INTO classroom_assignment_recipients
+                           (assignment_id, student_id) VALUES (?, ?)""",
+                        (assignment_id, student_id),
+                    )
+
                 conn.commit()
 
                 try:
-                    students = conn.execute(
-                        "SELECT student_id FROM classroom_students WHERE classroom_id = ?",
-                        (class_id,),
-                    ).fetchall()
-                    for student in students:
-                        student_id = student["student_id"] if "student_id" in student.keys() else student[0]
+                    notification_ids = selected_recipient_ids if assignment_scope == "selected" else [
+                        student["id"] for student in enrolled_students
+                    ]
+                    for student_id in notification_ids:
                         create_notification(
                             int(student_id),
                             "New Work",
                             f"New {ACTIVITY_TYPES[activity_type].lower()}: {title}",
                             "classroom",
-                            link_url=f"/student/classes/{class_id}/assignments/{assignment_id}",
+                            link_url=url_for(
+                                "student_classwork.detail",
+                                class_id=class_id,
+                                assignment_id=assignment_id,
+                            ),
                         )
                 except Exception as notify_error:
                     print("work notification failed:", notify_error)
@@ -218,7 +311,9 @@ def manage_classwork(class_id):
             """SELECT a.id, a.title, a.description, a.due_at, a.points, a.created_at,
                       m.activity_type, m.external_url, m.resource_label,
                       m.resource_filename, m.resource_filepath,
-                      m.allow_file_upload, m.group_mode, m.max_group_size
+                      m.allow_file_upload, m.group_mode, m.max_group_size,
+                      (SELECT COUNT(*) FROM classroom_assignment_recipients ar
+                       WHERE ar.assignment_id = a.id) AS recipient_count
                FROM classroom_assignments a
                LEFT JOIN classroom_assignment_meta m ON m.assignment_id = a.id
                WHERE a.classroom_id = ?
@@ -244,6 +339,7 @@ def manage_classwork(class_id):
                 "allow_file_upload": get("allow_file_upload", 11) or 0,
                 "group_mode": get("group_mode", 12) or 0,
                 "max_group_size": get("max_group_size", 13) or 1,
+                "recipient_count": get("recipient_count", 14) or 0,
             })
 
         classroom_data = {
@@ -263,5 +359,6 @@ def manage_classwork(class_id):
         classroom=classroom_data,
         assignments=items,
         activity_types=ACTIVITY_TYPES,
+        enrolled_students=enrolled_students,
         active_page="classes",
     )
