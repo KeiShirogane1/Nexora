@@ -35,6 +35,53 @@
             width: 100%;
         }
 
+        .student-logbook-classroom-scope {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            padding: 14px 18px;
+        }
+
+        .student-logbook-classroom-scope-copy strong,
+        .student-logbook-classroom-scope-copy span {
+            display: block;
+        }
+
+        .student-logbook-classroom-scope-copy strong {
+            color: #173b31;
+            font-size: 0.82rem;
+            font-weight: 800;
+        }
+
+        .student-logbook-classroom-scope-copy span {
+            margin-top: 2px;
+            color: #7a8984;
+            font-size: 0.7rem;
+        }
+
+        .student-logbook-classroom-form {
+            min-width: min(360px, 100%);
+        }
+
+        .student-logbook-classroom-form select {
+            width: 100%;
+            min-height: 40px;
+            padding: 0 38px 0 12px;
+            border: 1px solid #dfe9e4;
+            border-radius: 10px;
+            background: #fff;
+            color: #243b34;
+            font: inherit;
+            font-size: 0.76rem;
+            font-weight: 700;
+        }
+
+        .student-logbook-classroom-form select:disabled {
+            background: #f5f7f6;
+            color: #62736d;
+        }
+
         .student-logbook-compact-summary {
             display: grid;
             grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -203,9 +250,14 @@
             background: #fff;
         }
 
-        .student-logbook-session-footer {
+        .student-logbook-session-footer,
+        .student-logbook-clock-out {
             display: flex;
             justify-content: flex-end;
+        }
+
+        .student-logbook-clock-out {
+            margin-top: 10px;
         }
 
         .student-logbook-idle {
@@ -438,9 +490,15 @@
                 padding-top: 78px !important;
             }
 
+            .student-logbook-classroom-scope,
             .student-logbook-compact-toolbar,
             .student-logbook-bottom-grid {
                 grid-template-columns: 1fr;
+            }
+
+            .student-logbook-classroom-scope {
+                align-items: stretch;
+                flex-direction: column;
             }
 
             .student-logbook-idle {
@@ -491,22 +549,45 @@
                     </div>
                     <div class="student-logbook-actions">
                         <a class="student-logbook-button student-logbook-button-outline" href="#attendance-history">▣ Calendar View</a>
-                        {% if attendance %}
-                            <a class="student-logbook-button student-logbook-button-primary" href="#new-log-entry">＋ New Entry</a>
-                        {% else %}
-                            <a class="student-logbook-button student-logbook-button-primary" href="#new-log-entry">＋ New Entry</a>
-                        {% endif %}
+                        <a class="student-logbook-button student-logbook-button-primary" href="#new-log-entry">＋ New Entry</a>
                     </div>
                 </section>
+
+                {% if classroom_options %}
+                    <section class="student-logbook-compact-card student-logbook-classroom-scope" aria-label="Intern Classroom attendance scope">
+                        <div class="student-logbook-classroom-scope-copy">
+                            <strong>Intern Classroom</strong>
+                            {% if attendance %}
+                                <span>This active attendance session is locked to its Intern Classroom until you clock out.</span>
+                            {% elif requires_classroom_selection %}
+                                <span>Choose which internship this attendance and its rendered hours belong to.</span>
+                            {% else %}
+                                <span>Attendance history and rendered hours are isolated per Intern Classroom.</span>
+                            {% endif %}
+                        </div>
+                        <form class="student-logbook-classroom-form" method="GET" action="/student/logbook">
+                            <select name="classroom_id" aria-label="Select Intern Classroom" onchange="this.form.submit()" {% if attendance %}disabled{% endif %}>
+                                {% if requires_classroom_selection %}
+                                    <option value="" selected>Select an Intern Classroom</option>
+                                {% endif %}
+                                {% for item in classroom_options %}
+                                    <option value="{{ item.id }}" {% if selected_classroom_id == item.id %}selected{% endif %}>
+                                        {{ item.company_name or item.name }}{% if item.section %} · {{ item.section }}{% endif %}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </form>
+                    </section>
+                {% endif %}
 
                 <section class="student-logbook-compact-summary" aria-label="Logbook summary">
                     <article class="student-logbook-compact-stat">
                         <strong>{{ '%.1f'|format(total_hours) }} hrs</strong>
                         <span>Total Hours</span>
-                        <small>Recorded sessions</small>
+                        <small>{% if selected_classroom %}{{ selected_classroom.company_name or selected_classroom.name }}{% else %}Recorded sessions{% endif %}</small>
                     </article>
                     <article class="student-logbook-compact-stat">
-                        <strong>{{ history|length }}</strong>
+                        <strong>{{ total_history|default(history|length) }}</strong>
                         <span>Days Logged</span>
                         <small>Attendance records</small>
                     </article>
@@ -516,9 +597,9 @@
                         <small>Activities recorded</small>
                     </article>
                     <article class="student-logbook-compact-stat">
-                        <strong>{% if attendance %}Active{% else %}Ready{% endif %}</strong>
+                        <strong>{% if attendance %}Active{% elif requires_classroom_selection %}Select{% else %}Ready{% endif %}</strong>
                         <span class="student-logbook-compact-status">Today</span>
-                        <small>{% if attendance %}Session in progress{% else %}Clock in to begin{% endif %}</small>
+                        <small>{% if attendance %}Session in progress{% elif requires_classroom_selection %}Choose Intern Classroom{% else %}Clock in to begin{% endif %}</small>
                     </article>
                 </section>
 
@@ -542,15 +623,27 @@
                                 <button class="student-logbook-button student-logbook-button-primary" type="submit">Add Log</button>
                             </div>
                         </form>
+                        <form class="student-logbook-clock-out" method="POST" action="/student/clock-out" onsubmit="return confirm('Clock out and close today\'s attendance session?')">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button class="student-logbook-button student-logbook-button-outline" type="submit">Clock Out</button>
+                        </form>
                     {% else %}
                         <div class="student-logbook-idle">
                             <div class="student-logbook-idle-copy">
-                                <strong>Clock in before adding activities.</strong>
-                                <span>Your daily log entries are attached to an active attendance session.</span>
+                                {% if requires_classroom_selection %}
+                                    <strong>Select an Intern Classroom before clocking in.</strong>
+                                    <span>This keeps attendance and rendered hours attached to the correct internship.</span>
+                                {% else %}
+                                    <strong>Clock in before adding activities.</strong>
+                                    <span>Your daily log entries are attached to an active attendance session.</span>
+                                {% endif %}
                             </div>
                             <form method="POST" action="/student/clock-in">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <button class="student-logbook-button student-logbook-button-primary" type="submit">Clock In</button>
+                                {% if selected_classroom_id %}
+                                    <input type="hidden" name="classroom_id" value="{{ selected_classroom_id }}">
+                                {% endif %}
+                                <button class="student-logbook-button student-logbook-button-primary" type="submit" {% if requires_classroom_selection %}disabled{% endif %}>Clock In</button>
                             </form>
                         </div>
                     {% endif %}
@@ -622,7 +715,7 @@
                         <div class="student-logbook-compact-empty">
                             <span class="student-logbook-compact-empty-icon">▤</span>
                             <strong>No log entries yet</strong>
-                            <span>{% if attendance %}Add your first activity during today's active session.{% else %}Clock in, then add your first activity for the day.{% endif %}</span>
+                            <span>{% if requires_classroom_selection %}Select an Intern Classroom to view its attendance history.{% elif attendance %}Add your first activity during today's active session.{% else %}Clock in, then add your first activity for the day.{% endif %}</span>
                         </div>
                     {% endif %}
                 </section>
@@ -638,7 +731,7 @@
                                 <span>Hours logged</span>
                             </div>
                             <div class="student-logbook-week-value">
-                                <strong>{{ history|length }}</strong>
+                                <strong>{{ total_history|default(history|length) }}</strong>
                                 <span>Attendance days</span>
                             </div>
                             <div class="student-logbook-week-value">
@@ -646,7 +739,7 @@
                                 <span>Logs created</span>
                             </div>
                             <div class="student-logbook-week-value">
-                                <strong>{% if attendance %}Active{% else %}Not started{% endif %}</strong>
+                                <strong>{% if attendance %}Active{% elif requires_classroom_selection %}Select classroom{% else %}Not started{% endif %}</strong>
                                 <span>Current status</span>
                             </div>
                         </div>
@@ -700,16 +793,17 @@
                             <div class="student-logbook-pagination">
                                 <span>Page {{ page }} of {{ total_pages }}</span>
                                 <div class="student-tasks-page-buttons">
+                                    {% set scope_prefix = 'classroom_id=' ~ selected_classroom_id ~ '&' if selected_classroom_id else '' %}
                                     {% if page > 1 %}
-                                        <a class="student-tasks-page-button" href="?page={{ page - 1 }}">‹</a>
+                                        <a class="student-tasks-page-button" href="?{{ scope_prefix }}page={{ page - 1 }}">‹</a>
                                     {% else %}
                                         <span class="student-tasks-page-button">‹</span>
                                     {% endif %}
                                     {% for p in range(1, total_pages + 1) %}
-                                        <a class="student-tasks-page-button {% if p == page %}is-active{% endif %}" href="?page={{ p }}">{{ p }}</a>
+                                        <a class="student-tasks-page-button {% if p == page %}is-active{% endif %}" href="?{{ scope_prefix }}page={{ p }}">{{ p }}</a>
                                     {% endfor %}
                                     {% if page < total_pages %}
-                                        <a class="student-tasks-page-button" href="?page={{ page + 1 }}">›</a>
+                                        <a class="student-tasks-page-button" href="?{{ scope_prefix }}page={{ page + 1 }}">›</a>
                                     {% else %}
                                         <span class="student-tasks-page-button">›</span>
                                     {% endif %}
