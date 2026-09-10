@@ -231,13 +231,13 @@
                 <div class="class-card">
                     <div class="class-heading">
                         <div>
-                            <h2>People</h2>
-                            <p>Everyone enrolled in this classroom.</p>
+                            <h2>Interns</h2>
+                            <p>Everyone enrolled in this Intern Classroom.</p>
                         </div>
-                        <span class="class-count">{{ classmates|length + 1 }} students</span>
+                        <span class="class-count">{{ classmates|length + 1 }} interns</span>
                     </div>
 
-                    <div class="people-group-title">Teacher</div>
+                    <div class="people-group-title">Supervisor</div>
                     <div class="person">
                         <div class="person-avatar">{{ classroom.supervisor[0]|upper if classroom.supervisor else 'S' }}</div>
                         <div class="person-info">
@@ -249,7 +249,7 @@
                         </div>
                     </div>
 
-                    <div class="people-group-title">Students</div>
+                    <div class="people-group-title">Interns</div>
                     <div class="person">
                         <div class="person-avatar">
                             {% if sidebar_profile and sidebar_profile.profile_picture %}
@@ -260,7 +260,7 @@
                         </div>
                         <div class="person-info">
                             <strong>{{ sidebar_profile.first_name ~ ' ' ~ sidebar_profile.last_name if sidebar_profile and sidebar_profile.first_name else (sidebar_profile.username if sidebar_profile else 'You') }}</strong>
-                            <small>You · Current student</small>
+                            <small>You · Current intern</small>
                         </div>
                         <div class="person-actions">
                             <a href="{{ url_for('student.student_profile') }}">Profile</a>
@@ -274,7 +274,7 @@
                             </div>
                             <div class="person-info">
                                 <strong>{{ c.username }}</strong>
-                                <small>{{ c.email or 'Classmate' }}</small>
+                                <small>{{ c.email or 'Fellow Intern' }}</small>
                             </div>
                             <div class="person-actions">
                                 <a href="{{ url_for('student_classmates.classmate_profile', class_id=classroom.id, student_id=c.id) }}">Profile</a>
@@ -284,8 +284,8 @@
                     {% else %}
                         <div class="empty-state">
                             <div class="empty-icon">👥</div>
-                            <h3>No other classmates yet</h3>
-                            <p>You are currently the only student enrolled in this class.</p>
+                            <h3>No other interns yet</h3>
+                            <p>You are currently the only intern enrolled in this Intern Classroom.</p>
                         </div>
                     {% endfor %}
                 </div>
@@ -308,7 +308,7 @@
 
         if (window.location.hash === '#people') {
             const peopleButton = Array.from(document.querySelectorAll('.class-tabs .class-tab'))
-                .find((tab) => tab.textContent.trim() === 'People');
+                .find((tab) => tab.textContent.trim() === 'Interns');
             openClassTab('people', peopleButton);
         }
     </script>
