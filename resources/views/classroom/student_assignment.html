@@ -93,7 +93,7 @@
 
         <div class="assignment-wrap">
             <div class="assignment-breadcrumb">
-                <a href="{{ url_for('classroom.student_class', class_id=classroom.id) }}">My Class</a><span>›</span><span>Assignment</span>
+                <a href="{{ url_for('classroom.student_class', class_id=classroom.id) }}">Intern Classroom</a><span>›</span><span>Work Item</span>
             </div>
 
             {% with messages = get_flashed_messages(with_categories=true) %}
@@ -108,18 +108,18 @@
 
             <header class="assignment-hero">
                 <div>
-                    <span class="assignment-eyebrow">ASSIGNMENT</span>
+                    <span class="assignment-eyebrow">WORK ITEM</span>
                     <h1>{{ assignment.title }}</h1>
                     <p class="assignment-subtitle">{{ classroom.name }}{% if classroom.section %} · {{ classroom.section }}{% endif %}</p>
                 </div>
-                <a href="{{ url_for('classroom.student_class', class_id=classroom.id) }}" class="assignment-back">← Back to Class</a>
+                <a href="{{ url_for('classroom.student_class', class_id=classroom.id) }}" class="assignment-back">← Back to Intern Classroom</a>
             </header>
 
             <div class="assignment-grid">
                 <div>
                     <section class="assignment-card">
                         <div class="assignment-card-heading">
-                            <h2>Assignment Details</h2>
+                            <h2>Work Item Details</h2>
                             {% if past_due %}<span class="assignment-pill is-danger">Deadline passed</span>{% else %}<span class="assignment-pill">Active</span>{% endif %}
                         </div>
                         <div class="assignment-description">{{ assignment.description or 'No description.' }}</div>
@@ -127,22 +127,22 @@
                             <div class="assignment-meta-item"><span>Points</span><strong>{{ assignment.points }} pts</strong></div>
                             <div class="assignment-meta-item"><span>Due date</span><strong>{% if assignment.due_at %}{{ assignment.due_at }}{% else %}No due date{% endif %}</strong></div>
                         </div>
-                        {% if past_due %}<div class="assignment-alert danger">The deadline has passed. Submission may still be accepted depending on your class policy.</div>{% endif %}
+                        {% if past_due %}<div class="assignment-alert danger">The deadline has passed. Submission may still be accepted depending on your Intern Classroom policy.</div>{% endif %}
                     </section>
 
                     <section class="assignment-card">
                         <div class="assignment-card-heading"><h2>Your Submission</h2>{% if submission %}<span class="submission-status {{ submission.status }}">{{ submission.status|replace('_',' ')|capitalize }}</span>{% else %}<span class="submission-status">Not submitted</span>{% endif %}</div>
                         {% if submission %}
                             <div class="submission-details">
-                                {% if submission.grade is not none %}<div class="submission-detail"><span>Grade</span><p>{{ submission.grade }} / {{ assignment.points }}</p></div>{% endif %}
+                                {% if submission.grade is not none %}<div class="submission-detail"><span>Score</span><p>{{ submission.grade }} / {{ assignment.points }}</p></div>{% endif %}
                                 {% if submission.feedback %}<div class="submission-detail"><span>Feedback</span><p>{{ submission.feedback }}</p></div>{% endif %}
                                 {% if submission.content %}<div class="submission-detail"><span>Text response</span><p>{{ submission.content }}</p></div>{% endif %}
                                 {% if submission.filename %}<div class="submission-detail"><span>File attachment</span><p><a href="{{ url_for('classroom.download_own_submission', class_id=classroom.id, assignment_id=assignment.id) }}">📎 {{ submission.filename }}</a></p></div>{% endif %}
                                 <div class="submission-detail"><span>Submitted</span><p>{{ submission.submitted_at }}</p></div>
                             </div>
-                            <h3>Resubmit your work</h3>
+                            <h3>Resubmit your Work</h3>
                         {% else %}
-                            <p class="assignment-note" style="margin-bottom:20px">No submission yet. Complete the work below and submit it when you're ready.</p>
+                            <p class="assignment-note" style="margin-bottom:20px">No submission yet. Complete the Work below and submit it when you're ready.</p>
                         {% endif %}
 
                         <form method="POST" action="{{ url_for('classroom.student_submit_assignment', class_id=classroom.id, assignment_id=assignment.id) }}" enctype="multipart/form-data">
@@ -156,16 +156,16 @@
                                 <input id="assignment-file" type="file" name="file">
                                 <small class="assignment-help">Allowed: PDF, DOCX, DOC, XLSX, XLS, PPTX, TXT, ZIP, PNG, JPG, JPEG, GIF. Maximum 5 MB.</small>
                             </div>
-                            <button type="submit" class="assignment-submit">{% if submission %}Resubmit Assignment{% else %}Submit Assignment{% endif %}</button>
+                            <button type="submit" class="assignment-submit">{% if submission %}Resubmit Work{% else %}Submit Work{% endif %}</button>
                         </form>
                     </section>
                 </div>
 
                 <aside>
                     <section class="assignment-card">
-                        <div class="assignment-card-heading"><h2>Assignment Summary</h2></div>
+                        <div class="assignment-card-heading"><h2>Work Item Summary</h2></div>
                         <div class="assignment-side-list">
-                            <div class="assignment-side-item"><span>Class</span><strong>{{ classroom.name }}</strong></div>
+                            <div class="assignment-side-item"><span>Intern Classroom</span><strong>{{ classroom.name }}</strong></div>
                             {% if classroom.section %}<div class="assignment-side-item"><span>Section</span><strong>{{ classroom.section }}</strong></div>{% endif %}
                             <div class="assignment-side-item"><span>Points</span><strong>{{ assignment.points }}</strong></div>
                             <div class="assignment-side-item"><span>Due</span><strong>{% if assignment.due_at %}{{ assignment.due_at }}{% else %}No due date{% endif %}</strong></div>
