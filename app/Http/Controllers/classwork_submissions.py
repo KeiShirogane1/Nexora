@@ -39,6 +39,21 @@ def _is_member(conn, class_id, student_id):
     ).fetchone() is not None
 
 
+def _is_assignment_recipient(conn, assignment_id, student_id):
+    count_row = conn.execute(
+        "SELECT COUNT(*) FROM classroom_assignment_recipients WHERE assignment_id = ?",
+        (assignment_id,),
+    ).fetchone()
+    recipient_count = count_row[0] if count_row else 0
+    if not recipient_count:
+        return True
+    return conn.execute(
+        """SELECT 1 FROM classroom_assignment_recipients
+           WHERE assignment_id = ? AND student_id = ? LIMIT 1""",
+        (assignment_id, student_id),
+    ).fetchone() is not None
+
+
 def _assignment(conn, class_id, assignment_id):
     return conn.execute(
         """SELECT a.id, a.classroom_id, a.title, a.description, a.due_at, a.points,
@@ -116,10 +131,12 @@ def submit(class_id, assignment_id):
         assignment = _assignment(conn, class_id, assignment_id)
         if not assignment:
             abort(404)
+        if not _is_assignment_recipient(conn, assignment_id, student_id):
+            abort(403)
 
         allow_upload = bool(_value(assignment, "allow_file_upload", 7, 0))
         if not allow_upload:
-            flash("This classwork does not accept file submissions.", "warning")
+            flash("This work item does not accept file submissions.", "warning")
             return redirect(url_for("student_classwork.detail", class_id=class_id, assignment_id=assignment_id))
 
         uploaded = [f for f in request.files.getlist("files") if f and f.filename]
@@ -201,6 +218,8 @@ def student_file(class_id, assignment_id, file_id):
     try:
         if not _is_member(conn, class_id, student_id):
             abort(403)
+        if not _is_assignment_recipient(conn, assignment_id, student_id):
+            abort(403)
         row = conn.execute(
             """SELECT f.relative_path, f.original_filename
                FROM classwork_submission_files f
@@ -243,8 +262,19 @@ def supervisor_submissions(class_id, assignment_id):
                 AND s.attempt_no = (SELECT MAX(s2.attempt_no) FROM classwork_submissions s2
                                     WHERE s2.assignment_id = ? AND s2.student_id = u.id)
                WHERE cs.classroom_id = ?
+                 AND (
+                     NOT EXISTS (
+                         SELECT 1 FROM classroom_assignment_recipients all_recipients
+                         WHERE all_recipients.assignment_id = ?
+                     )
+                     OR EXISTS (
+                         SELECT 1 FROM classroom_assignment_recipients assigned_recipient
+                         WHERE assigned_recipient.assignment_id = ?
+                           AND assigned_recipient.student_id = u.id
+                     )
+                 )
                ORDER BY LOWER(u.username), LOWER(u.email)""",
-            (assignment_id, assignment_id, class_id),
+            (assignment_id, assignment_id, class_id, assignment_id, assignment_id),
         ).fetchall()
         rows = []
         for row in students:
