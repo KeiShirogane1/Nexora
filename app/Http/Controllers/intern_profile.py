@@ -2,6 +2,7 @@ from flask import Blueprint, abort, render_template, session
 
 from app.Http.Middleware.security import role_required
 from app.Services.intern_profile_service import get_supervisor_intern_profile
+from app.Services.ojt_evaluation_service import get_supervisor_evaluation_context
 
 
 intern_profile = Blueprint("intern_profile", __name__)
@@ -18,6 +19,14 @@ def supervisor_intern_profile(class_id, student_id):
     if not context.get("ok"):
         abort(int(context.get("status_code") or 404))
 
+    evaluation_context = get_supervisor_evaluation_context(
+        supervisor_id=session["user_id"],
+        classroom_id=class_id,
+        student_id=student_id,
+    )
+    if not evaluation_context.get("ok"):
+        abort(int(evaluation_context.get("status_code") or 404))
+
     return render_template(
         "classroom/supervisor_intern_profile.html",
         classroom=context["classroom"],
@@ -29,5 +38,6 @@ def supervisor_intern_profile(class_id, student_id):
         logbook_summary=context["logbook_summary"],
         work_items=context["work_items"],
         work_summary=context["work_summary"],
+        official_evaluation=evaluation_context.get("evaluation"),
         active_page="classes",
     )
