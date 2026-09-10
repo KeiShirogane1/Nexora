@@ -91,6 +91,7 @@
                                             {{ item.activity_label }} · {{ item.points }} pts
                                             {% if item.team_members %}
                                                 · {{ item.team_name or 'Team' }}: {% for member in item.team_members %}{{ member.username }}{% if not loop.last %}, {% endif %}{% endfor %}
+                                                · {% if item.submission_mode == 'shared' %}Shared submission{% else %}Individual submissions{% endif %}
                                             {% elif item.group_mode %}
                                                 · Collaborative work
                                             {% endif %}
@@ -99,14 +100,14 @@
                                 </div>
 
                                 <span class="student-task-priority {% if item.submission %}is-low{% endif %}">
-                                    {% if item.submission %}{{ item.submission.status|capitalize }}{% else %}Pending{% endif %}
+                                    {% if item.submission %}{{ item.submission.status|replace('_',' ')|capitalize }}{% else %}Pending{% endif %}
                                 </span>
 
                                 <div class="student-task-due">
                                     <strong>{% if item.due_at %}Due {{ item.due_at }}{% else %}No deadline{% endif %}</strong>
                                     <span>
                                         {% if item.team_members %}
-                                            {{ item.team_name or 'Team' }} · {{ item.team_members|length }} members
+                                            {{ item.team_name or 'Team' }} · {{ item.team_members|length }} members · {% if item.submission_mode == 'shared' %}Shared{% else %}Individual{% endif %}
                                         {% elif item.group_mode %}
                                             Collaborative · max {{ item.max_group_size }}
                                         {% else %}
@@ -133,7 +134,7 @@
 
                 <aside class="student-tasks-side" aria-label="Work information">
                     <section class="student-tasks-side-card">
-                        <h2>Class Overview</h2>
+                        <h2>Intern Classroom Overview</h2>
                         <div class="student-task-deadline">
                             <span class="student-task-deadline-icon" aria-hidden="true">▣</span>
                             <div>
@@ -163,8 +164,7 @@
                     <section class="student-tasks-side-card">
                         <h2>Quick Access</h2>
                         <a class="student-tasks-view-all" href="{{ url_for('classwork_ml_insights.student_insights', class_id=classroom.id) }}">Performance Insights</a>
-                        <a class="student-tasks-view-all" href="{{ url_for('classwork_ml_insights.student_insights', class_id=classroom.id) }}">ML Insights</a>
-                        <a class="student-tasks-view-all" href="{{ url_for('classroom.student_class', class_id=classroom.id) }}">Back to Class</a>
+                        <a class="student-tasks-view-all" href="{{ url_for('classroom.student_class', class_id=classroom.id) }}">Back to Intern Classroom</a>
                     </section>
 
                     <section class="student-tasks-side-card student-tasks-tip">
