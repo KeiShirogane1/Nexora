@@ -1,98 +1,224 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
     <head>
         <meta charset="UTF-8">
-        <title>Supervisor Dashboard - Nexora</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Assigned Interns - Nexora</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">
-        <style>
-            /* Keep the page action area clear of the floating notification control. */
-            .supervisor-interns .interns-page-header {
-                position: relative;
-                padding-right: 110px;
-            }
-            .supervisor-interns .interns-count {
-                flex: 0 0 auto;
-                white-space: nowrap;
-            }
-            .supervisor-interns .interns-empty-card {
-                margin-top: 18px;
-            }
-            @media (max-width: 700px) {
-                .supervisor-interns .interns-page-header {
-                    padding-right: 0;
-                    align-items: flex-start !important;
-                    gap: 12px;
-                }
-                .supervisor-interns .interns-count {
-                    margin-top: 4px;
-                }
-            }
-        </style>
     </head>
-    <body class="work-page">
+    <body class="work-page supervisor-assigned-interns-page">
         {% include 'components/supervisor_sidebar.html' %}
-        <div class="page-content supervisor-interns nexora-app-main">
-            <div class="nexora-page">
-                <div class="d-flex justify-content-between align-items-center mb-4 interns-page-header">
-                    <div class="d-flex align-items-center gap-3">
-                        <div style="width:44px; height:44px; border-radius:12px; background:#e0e7ff; display:flex; align-items:center; justify-content:center; color:#2563eb; font-weight:700;">👥</div>
+
+        <main class="page-content nexora-app-main supervisor-assigned-interns-main">
+            <div class="supervisor-assigned-interns-shell">
+                <header class="supervisor-assigned-header">
+                    <div>
+                        <span class="supervisor-assigned-eyebrow">OJT SUPERVISION</span>
+                        <h1>Assigned Interns</h1>
+                        <p>View every intern under your supervision while keeping each Intern Classroom placement and its OJT evidence separate.</p>
+                    </div>
+                    <span class="supervisor-assigned-total">{{ summary.total_interns }} total</span>
+                </header>
+
+                <section class="supervisor-assigned-summary" aria-label="Assigned intern summary">
+                    <article class="supervisor-assigned-stat">
+                        <span>Total Interns</span>
+                        <strong>{{ summary.total_interns }}</strong>
+                        <small>Unique interns under your supervision</small>
+                    </article>
+                    <article class="supervisor-assigned-stat">
+                        <span>Active Classrooms</span>
+                        <strong>{{ summary.classroom_count }}</strong>
+                        <small>Intern Classrooms with enrolled interns</small>
+                    </article>
+                    <article class="supervisor-assigned-stat">
+                        <span>Placements</span>
+                        <strong>{{ summary.classroom_placements }}</strong>
+                        <small>Classroom-scoped OJT placements</small>
+                    </article>
+                    <article class="supervisor-assigned-stat{% if summary.legacy_only %} is-attention{% endif %}">
+                        <span>Legacy Only</span>
+                        <strong>{{ summary.legacy_only }}</strong>
+                        <small>Admin-assigned interns not yet in an Intern Classroom</small>
+                    </article>
+                </section>
+
+                <section class="supervisor-assigned-directory">
+                    <div class="supervisor-assigned-directory-head">
                         <div>
-                            <h2 class="mb-0" style="font-weight:800; letter-spacing:-0.02em;">Assigned Students</h2>
-                            <small class="text-muted">{{ students|length }} interns under supervision</small>
+                            <span class="supervisor-assigned-eyebrow">SUPERVISOR DIRECTORY</span>
+                            <h2>Intern Directory</h2>
+                            <p>Open classroom-scoped profiles and performance reports without combining evidence from different companies.</p>
+                        </div>
+                        <div class="supervisor-assigned-search-wrap">
+                            <label for="assignedInternSearch">Search interns</label>
+                            <input
+                                id="assignedInternSearch"
+                                class="supervisor-assigned-search"
+                                type="search"
+                                placeholder="Name, email, student no., or program"
+                                autocomplete="off">
+                            <span id="assignedInternShown" class="supervisor-assigned-shown">{{ interns|length }} shown</span>
                         </div>
                     </div>
-                    <span class="badge bg-primary interns-count" style="font-size:0.85rem; padding:8px 14px;">{{ students|length }} total</span>
-                </div>
-                {% if students %}
-                    <div class="card shadow-sm" style="border:1px solid #f1f5f9; border-radius:12px; overflow:hidden;">
-                        <div class="table-responsive">
-                            <table class="table table-hover nexora-table mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th scope="col">Student Name</th>
-                                        <th scope="col">Program</th>
-                                        <th scope="col">Internship</th>
-                                        <th scope="col" class="text-end">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for student in students %}
-                                        <tr>
-                                            <td>
-                                                <span class="avatar-sm me-2">{{ student[1][0]|upper }}</span>{{ student[1] }}</td>
-                                            <td>
-                                                {% if student[2] %}{{ student[2] }}{% if student[3] %} — {{ student[3] }}{% endif %}{% else %}
-                                                    <span class="text-muted-placeholder">—</span>
-                                                {% endif %}
-                                            </td>
-                                            <td>
-                                                {% if student[4] %}{{ student[4] }}{% if student[5] %} — {{ student[5] }}{% endif %}
-                                                    <span class="badge bg-success ms-1">{{ student[6] }}</span>
-                                                {% else %}
-                                                    <span class="text-muted-placeholder">Not Assigned</span>
-                                                {% endif %}
-                                            </td>
-                                            <td class="text-end">
-                                                <a href="/supervisor/student/{{ student[0] }}" class="btn btn-sm btn-primary">View</a>
-                                            </td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
+
+                    {% if interns %}
+                        <div class="supervisor-assigned-list" id="assignedInternList">
+                            {% for intern in interns %}
+                                <article
+                                    class="supervisor-assigned-intern-card"
+                                    data-assigned-intern
+                                    data-search="{{ (intern.display_name ~ ' ' ~ intern.username ~ ' ' ~ intern.email_address ~ ' ' ~ intern.student_number ~ ' ' ~ intern.major_program ~ ' ' ~ intern.grade_year)|lower|e }}">
+                                    <div class="supervisor-assigned-intern-head">
+                                        <div class="supervisor-assigned-person">
+                                            <span class="supervisor-assigned-avatar">{{ (intern.display_name[0] if intern.display_name else 'I')|upper }}</span>
+                                            <div>
+                                                <h3>{{ intern.display_name }}</h3>
+                                                <p>{{ intern.email_address or intern.username }}</p>
+                                                <div class="supervisor-assigned-identity-meta">
+                                                    {% if intern.student_number %}<span>Student No. {{ intern.student_number }}</span>{% endif %}
+                                                    {% if intern.major_program %}<span>{{ intern.major_program }}</span>{% endif %}
+                                                    {% if intern.grade_year %}<span>{{ intern.grade_year }}</span>{% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="supervisor-assigned-badges">
+                                            {% if intern.has_active_clock_in %}
+                                                <span class="supervisor-assigned-badge is-active">Clocked In</span>
+                                            {% endif %}
+                                            {% if intern.classroom_count %}
+                                                <span class="supervisor-assigned-badge">{{ intern.classroom_count }} classroom{% if intern.classroom_count != 1 %}s{% endif %}</span>
+                                            {% endif %}
+                                            {% if intern.legacy_assigned %}
+                                                <span class="supervisor-assigned-badge is-muted">Admin Assigned</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    {% if intern.placements %}
+                                        <div class="supervisor-assigned-placement-list">
+                                            {% for placement in intern.placements %}
+                                                <section class="supervisor-assigned-placement{% if placement.archived %} is-archived{% endif %}">
+                                                    <div class="supervisor-assigned-placement-main">
+                                                        <div class="supervisor-assigned-placement-heading">
+                                                            <div>
+                                                                <span class="supervisor-assigned-placement-company">{{ placement.company_name or placement.classroom_name }}</span>
+                                                                <h4>{{ placement.internship_title or placement.classroom_name }}</h4>
+                                                                <p>
+                                                                    {{ placement.classroom_name }}
+                                                                    {% if placement.section %} · {{ placement.section }}{% endif %}
+                                                                    {% if placement.work_arrangement %} · {{ placement.work_arrangement }}{% endif %}
+                                                                    {% if placement.location %} · {{ placement.location }}{% endif %}
+                                                                </p>
+                                                            </div>
+                                                            <span class="supervisor-assigned-status{% if placement.roster_status_key == 'active' %} is-active{% elif placement.roster_status_key == 'completed' %} is-completed{% endif %}">
+                                                                {{ placement.roster_status }}{% if placement.archived %} · Archived{% endif %}
+                                                            </span>
+                                                        </div>
+
+                                                        <div class="supervisor-assigned-placement-metrics">
+                                                            <div>
+                                                                <span>OJT Hours</span>
+                                                                {% if placement.required_hours is not none %}
+                                                                    <strong>{{ '%.2f'|format(placement.rendered_hours) }} / {{ '%.0f'|format(placement.required_hours) }} hrs</strong>
+                                                                    <small>{{ '%.1f'|format(placement.progress_percentage or 0) }}% complete</small>
+                                                                {% else %}
+                                                                    <strong>{{ '%.2f'|format(placement.rendered_hours) }} hrs</strong>
+                                                                    <small>Required hours not specified</small>
+                                                                {% endif %}
+                                                            </div>
+                                                            <div>
+                                                                <span>Daily Performance</span>
+                                                                {% if placement.daily_average_star is not none %}
+                                                                    <strong>{{ '%.1f'|format(placement.daily_average_star) }} ★ · {{ '%.1f'|format(placement.daily_average_percentage) }}%</strong>
+                                                                    <small>{{ placement.rated_days }} rated day{% if placement.rated_days != 1 %}s{% endif %}</small>
+                                                                {% else %}
+                                                                    <strong>No ratings yet</strong>
+                                                                    <small>Supervisor daily ratings will appear here</small>
+                                                                {% endif %}
+                                                            </div>
+                                                            <div>
+                                                                <span>Daily Logbook</span>
+                                                                <strong>{{ placement.logbook_count }} entr{% if placement.logbook_count == 1 %}y{% else %}ies{% endif %}</strong>
+                                                                <small>
+                                                                    {% if placement.revision_logbook_count %}
+                                                                        {{ placement.revision_logbook_count }} revision requested
+                                                                    {% elif placement.pending_logbook_count %}
+                                                                        {{ placement.pending_logbook_count }} pending review
+                                                                    {% else %}
+                                                                        No review action pending
+                                                                    {% endif %}
+                                                                </small>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="supervisor-assigned-placement-actions">
+                                                        <a href="{{ url_for('intern_profile.supervisor_intern_profile', class_id=placement.class_id, student_id=intern.id) }}" class="btn btn-sm btn-outline-primary">View Profile</a>
+                                                        <a href="{{ url_for('performance_reports.supervisor_student_report', class_id=placement.class_id, student_id=intern.id) }}" class="btn btn-sm btn-primary">View Performance</a>
+                                                    </div>
+                                                </section>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        <div class="supervisor-assigned-legacy-row">
+                                            <div>
+                                                <strong>No Intern Classroom placement yet</strong>
+                                                <p>This intern is still linked through the legacy admin assignment workflow. Classroom-scoped OJT hours, logbook reviews, and performance will appear after enrollment in one of your Intern Classrooms.</p>
+                                            </div>
+                                            <a href="{{ url_for('supervisor.view_student', student_id=intern.id) }}" class="btn btn-sm btn-outline-primary">View Legacy Record</a>
+                                        </div>
+                                    {% endif %}
+                                </article>
+                            {% endfor %}
                         </div>
-                    </div>
-                {% else %}
-                    <div class="card shadow-sm p-4 text-center interns-empty-card" style="border:1px solid #f1f5f9; border-radius:12px;">
-                        <div class="empty-state">
-                            <div class="icon">👥</div>
-                            <p class="text-muted mb-0">No assigned students yet.</p>
-                            <small class="text-muted">Students will appear here once assigned by admin.</small>
+
+                        <div class="supervisor-assigned-no-results" id="assignedInternNoResults" hidden>
+                            <strong>No matching interns</strong>
+                            <p>Try a different name, email, student number, or program.</p>
                         </div>
-                    </div>
-                {% endif %}
+                    {% else %}
+                        <div class="supervisor-assigned-empty">
+                            <div class="supervisor-assigned-empty-icon">IN</div>
+                            <h3>No assigned interns yet</h3>
+                            <p>Interns will appear here after they join one of your Intern Classrooms or are assigned to you by an administrator.</p>
+                            <a href="{{ url_for('classroom.supervisor_classes') }}" class="btn btn-primary">Open My Classes</a>
+                        </div>
+                    {% endif %}
+                </section>
             </div>
-        </div>
+        </main>
+
+        {% if interns %}
+            <script>
+                (() => {
+                    const input = document.getElementById('assignedInternSearch');
+                    const rows = Array.from(document.querySelectorAll('[data-assigned-intern]'));
+                    const shown = document.getElementById('assignedInternShown');
+                    const noResults = document.getElementById('assignedInternNoResults');
+
+                    if (!input || !rows.length) return;
+
+                    const applyFilter = () => {
+                        const query = input.value.trim().toLowerCase();
+                        let visible = 0;
+
+                        rows.forEach((row) => {
+                            const match = !query || (row.dataset.search || '').includes(query);
+                            row.hidden = !match;
+                            if (match) visible += 1;
+                        });
+
+                        if (shown) shown.textContent = `${visible} shown`;
+                        if (noResults) noResults.hidden = visible !== 0;
+                    };
+
+                    input.addEventListener('input', applyFilter);
+                })();
+            </script>
+        {% endif %}
     </body>
 </html>
