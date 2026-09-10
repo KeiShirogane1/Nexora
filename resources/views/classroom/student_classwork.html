@@ -18,7 +18,7 @@
         {% else %}
             {% set counts.pending = counts.pending + 1 %}
         {% endif %}
-        {% if item.group_mode %}
+        {% if item.activity_type == 'group_project' or item.group_mode %}
             {% set counts.group = counts.group + 1 %}
         {% endif %}
     {% endfor %}
@@ -67,7 +67,7 @@
                 <article class="student-tasks-stat">
                     <span class="student-tasks-stat-icon" aria-hidden="true">◇</span>
                     <div class="student-tasks-stat-copy">
-                        <span>Group Activities</span>
+                        <span>Team Tasks</span>
                         <strong>{{ counts.group }}</strong>
                         <small>Collaborative work</small>
                     </div>
@@ -88,7 +88,12 @@
                                     <div>
                                         <strong>{{ item.title }}</strong>
                                         <span>
-                                            {{ item.activity_label }} · {{ item.points }} pts{% if item.group_mode %} · Group activity{% endif %}
+                                            {{ item.activity_label }} · {{ item.points }} pts
+                                            {% if item.team_members %}
+                                                · Team: {% for member in item.team_members %}{{ member.username }}{% if not loop.last %}, {% endif %}{% endfor %}
+                                            {% elif item.group_mode %}
+                                                · Collaborative work
+                                            {% endif %}
                                         </span>
                                     </div>
                                 </div>
@@ -99,7 +104,15 @@
 
                                 <div class="student-task-due">
                                     <strong>{% if item.due_at %}Due {{ item.due_at }}{% else %}No deadline{% endif %}</strong>
-                                    <span>{% if item.group_mode %}Group · max {{ item.max_group_size }}{% else %}Individual activity{% endif %}</span>
+                                    <span>
+                                        {% if item.team_members %}
+                                            Team · {{ item.team_members|length }} members
+                                        {% elif item.group_mode %}
+                                            Collaborative · max {{ item.max_group_size }}
+                                        {% else %}
+                                            Individual activity
+                                        {% endif %}
+                                    </span>
                                 </div>
 
                                 <div class="student-task-progress {% if item.submission %}is-complete{% endif %}" aria-label="{% if item.submission %}100{% else %}0{% endif %} percent complete">
