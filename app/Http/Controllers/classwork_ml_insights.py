@@ -9,7 +9,9 @@ from app.Services.classwork_ml_service import (
     build_student_performance_features,
     classify_numeric_performance,
 )
+from app.Services.intern_profile_service import get_supervisor_intern_profile
 from app.Services.ml_recommendation_service import build_recommendation_from_features
+from app.Services.ojt_evaluation_service import get_supervisor_evaluation_context
 
 classwork_ml_insights = Blueprint("classwork_ml_insights", __name__)
 
@@ -183,6 +185,90 @@ def supervisor_insights(class_id):
         "classroom/supervisor_insights.html",
         classroom=classroom_data,
         insights=insights,
+        active_page="classes",
+    )
+
+
+# ------------------------------------------------------------------ #
+# Supervisor: one intern's separate evidence dimensions
+# ------------------------------------------------------------------ #
+@classwork_ml_insights.route("/supervisor/classes/<int:class_id>/insights/<int:student_id>")
+@role_required("supervisor")
+def supervisor_individual_insights(class_id, student_id):
+    supervisor_id = session["user_id"]
+    profile = get_supervisor_intern_profile(
+        supervisor_id=supervisor_id,
+        classroom_id=class_id,
+        student_id=student_id,
+    )
+    if not profile.get("ok"):
+        abort(int(profile.get("status_code") or 404))
+
+    evaluation_context = get_supervisor_evaluation_context(
+        supervisor_id=supervisor_id,
+        classroom_id=class_id,
+        student_id=student_id,
+    )
+    if not evaluation_context.get("ok"):
+        abort(int(evaluation_context.get("status_code") or 404))
+
+    feedback_text = _get_latest_feedback_text(student_id)
+    try:
+        analysis = build_student_ml_analysis(student_id, class_id, feedback_text=feedback_text)
+    except Exception:
+        features = build_student_performance_features(student_id, class_id)
+        analysis = {
+            "features": features,
+            "numeric_performance_label": classify_numeric_performance(features.get("average_percentage")),
+            "feedback_analysis": {
+                "performance_label": "Satisfactory",
+                "nb_prediction": "Satisfactory",
+                "svm_prediction": "Satisfactory",
+                "sentiment": "Neutral",
+                "competency": "Adequate Competency",
+                "recommendation": "Continue monitoring performance.",
+                "confidence": 0.0,
+                "is_empty": True,
+            },
+            "sentiment": "Neutral",
+            "competency": "Adequate Competency",
+            "confidence": 0.0,
+        }
+
+    features = analysis.get("features") or {}
+    feedback_analysis = analysis.get("feedback_analysis") or {}
+    try:
+        work_recommendation = build_recommendation_from_features(
+            features,
+            feedback_analysis,
+            performance_label=analysis.get("numeric_performance_label"),
+        )
+    except Exception:
+        work_recommendation = {
+            "performance_label": analysis.get("numeric_performance_label", "Satisfactory"),
+            "overall_percentage": features.get("average_percentage"),
+            "completion_rate": features.get("completion_rate", 0.0),
+            "recommendation": "",
+            "priority": "medium",
+            "basis": [],
+        }
+
+    return render_template(
+        "classroom/supervisor_individual_insights.html",
+        classroom=profile["classroom"],
+        student=profile["student"],
+        attendance_summary=profile["attendance_summary"],
+        daily_performance=profile["daily_performance"],
+        logbook_summary=profile["logbook_summary"],
+        work_summary=profile["work_summary"],
+        official_evaluation=evaluation_context.get("evaluation"),
+        work_features=features,
+        work_performance_label=analysis.get("numeric_performance_label") or "No Performance Data",
+        work_recommendation=work_recommendation,
+        sentiment=analysis.get("sentiment"),
+        competency=analysis.get("competency"),
+        confidence=analysis.get("confidence", 0.0),
+        has_feedback=not feedback_analysis.get("is_empty", True),
         active_page="classes",
     )
 
