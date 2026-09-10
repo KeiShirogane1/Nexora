@@ -589,6 +589,10 @@
                 background: currentColor;
             }
 
+            .supervisor-intern-roster-metrics {
+                min-width: 0;
+            }
+
             .supervisor-interns-toolbar {
                 display: flex;
                 align-items: center;
@@ -629,7 +633,7 @@
 
             .supervisor-intern-row {
                 display: grid;
-                grid-template-columns: minmax(260px, 1.4fr) minmax(110px, 0.45fr) auto;
+                grid-template-columns: minmax(260px, 1.3fr) minmax(230px, 0.8fr) auto;
                 align-items: center;
                 gap: 18px;
                 padding: 14px 20px;
@@ -747,7 +751,7 @@
                     grid-template-columns: minmax(0, 1fr) auto;
                 }
 
-                .supervisor-intern-row > .supervisor-intern-status {
+                .supervisor-intern-roster-metrics {
                     grid-column: 1;
                     justify-self: start;
                 }
@@ -810,7 +814,7 @@
                     gap: 10px;
                 }
 
-                .supervisor-intern-row > .supervisor-intern-status,
+                .supervisor-intern-roster-metrics,
                 .supervisor-intern-actions {
                     grid-column: 1;
                     grid-row: auto;
@@ -1070,8 +1074,8 @@
                     <div class="class-card supervisor-interns-card">
                         <div class="class-card-header supervisor-interns-header">
                             <div>
-                                <h6>Intern Directory</h6>
-                                <p>Manage the interns currently enrolled in this Intern Classroom.</p>
+                                <h6>Classroom Roster</h6>
+                                <p>Class-scoped OJT hours, Daily Performance, and Logbook status for enrolled interns.</p>
                             </div>
                             <div class="supervisor-interns-summary">
                                 <span class="supervisor-interns-total">{{ classroom.student_count }} enrolled</span>
@@ -1099,8 +1103,8 @@
                                         id="classInternSearch"
                                         class="supervisor-interns-search"
                                         type="search"
-                                        placeholder="Search name, email, student number, program, or status"
-                                        aria-label="Search enrolled interns">
+                                        placeholder="Search intern, email, student number, program, or roster status"
+                                        aria-label="Search classroom roster">
                                     <span class="supervisor-interns-shown" id="classInternShownCount">{{ students|length }} shown</span>
                                 </div>
 
@@ -1109,24 +1113,46 @@
                                         <article
                                             class="supervisor-intern-row"
                                             data-class-intern
-                                            data-search="{{ ((s.username if s.username is defined else s) ~ ' ' ~ (s.email if s.email is defined else '') ~ ' ' ~ (s.internship_status if s.internship_status is defined else ''))|lower|e }}">
+                                            data-search="{{ (s.display_name ~ ' ' ~ s.username ~ ' ' ~ s.email_address ~ ' ' ~ s.student_number ~ ' ' ~ s.major_program ~ ' ' ~ s.grade_year ~ ' ' ~ s.roster_status)|lower|e }}">
                                             <div class="supervisor-intern-person">
-                                                <span class="supervisor-intern-avatar">{{ (s.username[0] if s.username is defined and s.username else 'I')|upper }}</span>
+                                                <span class="supervisor-intern-avatar">{{ (s.display_name[0] if s.display_name else 'I')|upper }}</span>
                                                 <div>
-                                                    <strong>{{ s.username if s.username is defined else s }}</strong>
-                                                    {% if s.email is defined and s.email %}
-                                                        <small>{{ s.email }}</small>
-                                                    {% endif %}
+                                                    <strong>{{ s.display_name }}</strong>
+                                                    <small>{{ s.email_address or s.username }}</small>
+                                                    {% set identity_meta = [] %}
+                                                    {% if s.student_number %}{% set _ = identity_meta.append('Student No. ' ~ s.student_number) %}{% endif %}
+                                                    {% if s.major_program %}{% set _ = identity_meta.append(s.major_program) %}{% endif %}
+                                                    {% if s.grade_year %}{% set _ = identity_meta.append(s.grade_year) %}{% endif %}
+                                                    {% if identity_meta %}<small>{{ identity_meta|join(' · ') }}</small>{% endif %}
                                                 </div>
                                             </div>
 
-                                            {% set roster_status = s.internship_status if s.internship_status is defined and s.internship_status else 'Enrolled' %}
-                                            <span class="supervisor-intern-status{% if roster_status == 'Active' %} is-active{% elif roster_status == 'Completed' %} is-completed{% elif roster_status == 'Pending' %} is-pending{% endif %}">{{ roster_status }}</span>
+                                            <div class="supervisor-intern-roster-metrics d-flex flex-column align-items-start gap-1">
+                                                <span class="supervisor-intern-status{% if s.roster_status_key == 'active' %} is-active{% elif s.roster_status_key == 'completed' %} is-completed{% endif %}">{{ s.roster_status }}</span>
+                                                <small class="text-muted">
+                                                    {% if s.required_hours is not none %}
+                                                        {{ '%.2f'|format(s.rendered_hours) }} / {{ '%.0f'|format(s.required_hours) }} hrs · {{ '%.1f'|format(s.progress_percentage or 0) }}%
+                                                    {% else %}
+                                                        {{ '%.2f'|format(s.rendered_hours) }} rendered hrs
+                                                    {% endif %}
+                                                </small>
+                                                <small class="text-muted">
+                                                    {% if s.daily_average_star is not none %}
+                                                        Daily: {{ '%.1f'|format(s.daily_average_star) }} ★ · {{ '%.1f'|format(s.daily_average_percentage) }}% · {{ s.rated_days }} rated
+                                                    {% else %}
+                                                        Daily: no ratings yet
+                                                    {% endif %}
+                                                </small>
+                                                <small class="text-muted">
+                                                    Logbook: {{ s.logbook_count }} entr{% if s.logbook_count == 1 %}y{% else %}ies{% endif %}
+                                                    {% if s.revision_logbook_count %} · {{ s.revision_logbook_count }} revision requested{% elif s.pending_logbook_count %} · {{ s.pending_logbook_count }} pending review{% endif %}
+                                                </small>
+                                            </div>
 
                                             <div class="supervisor-intern-actions">
-                                                <a class="btn btn-sm btn-outline-primary" href="{{ url_for('intern_profile.supervisor_intern_profile', class_id=classroom.id, student_id=s.id if s.id is defined else loop.index) }}">View Profile</a>
-                                                <a class="btn btn-sm btn-outline-primary" href="{{ url_for('performance_reports.supervisor_student_report', class_id=classroom.id, student_id=s.id if s.id is defined else loop.index) }}">View Performance</a>
-                                                <form method="POST" action="{{ url_for('classroom.remove_student',class_id=classroom.id,student_id=s.id if s.id is defined else loop.index) }}" onsubmit="return confirm('Remove {{ s.username if s.username is defined else s }} from this Intern Classroom?')">
+                                                <a class="btn btn-sm btn-outline-primary" href="{{ url_for('intern_profile.supervisor_intern_profile', class_id=classroom.id, student_id=s.id) }}">View Profile</a>
+                                                <a class="btn btn-sm btn-outline-primary" href="{{ url_for('performance_reports.supervisor_student_report', class_id=classroom.id, student_id=s.id) }}">View Performance</a>
+                                                <form method="POST" action="{{ url_for('classroom.remove_student',class_id=classroom.id,student_id=s.id) }}" onsubmit="return confirm('Remove {{ s.display_name|e }} from this Intern Classroom?')">
                                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                     <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
                                                 </form>
@@ -1137,7 +1163,7 @@
 
                                 <div class="supervisor-interns-filter-empty" id="classInternNoResults" hidden>
                                     <h6>No matching interns</h6>
-                                    <p>Try a different name, profile detail, or internship status.</p>
+                                    <p>Try a different name, profile detail, or classroom roster status.</p>
                                 </div>
                             {% else %}
                                 <div class="supervisor-interns-empty">
