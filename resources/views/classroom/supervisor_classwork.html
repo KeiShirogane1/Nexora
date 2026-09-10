@@ -35,7 +35,7 @@
                             <div>
                                 <span class="supervisor-classwork-eyebrow">NEW WORK</span>
                                 <h2>Create work</h2>
-                                <p>Choose a work type, set how interns complete it, then publish.</p>
+                                <p>Choose a work type, assign the right interns, then publish.</p>
                             </div>
                         </div>
 
@@ -61,6 +61,44 @@
                                         </span>
                                     </label>
                                 {% endfor %}
+                            </div>
+
+                            <div class="supervisor-resource-box">
+                                <div>
+                                    <strong>Assign to</strong>
+                                    <p>Choose whether everyone or only selected interns should receive this work and its notification.</p>
+                                </div>
+                                <div class="d-grid gap-2">
+                                    <label class="supervisor-check-option">
+                                        <input type="radio" name="assignment_scope" value="classroom" checked>
+                                        <span><strong>Entire Intern Classroom</strong><small>Every enrolled intern can see and complete this work.</small></span>
+                                    </label>
+                                    <label class="supervisor-check-option">
+                                        <input type="radio" name="assignment_scope" value="selected">
+                                        <span><strong>Selected Interns</strong><small>Only the interns you select will see, receive, and be able to submit this work.</small></span>
+                                    </label>
+                                </div>
+
+                                <div id="recipient-picker" class="mt-3" hidden>
+                                    <label class="supervisor-form-label">Select interns</label>
+                                    {% if enrolled_students %}
+                                        <div class="row g-2">
+                                            {% for student in enrolled_students %}
+                                                <div class="col-md-6">
+                                                    <label class="supervisor-check-option h-100">
+                                                        <input type="checkbox" name="recipient_ids" value="{{ student.id }}" disabled>
+                                                        <span>
+                                                            <strong>{{ student.username }}</strong>
+                                                            <small>{{ student.email or 'Enrolled intern' }}</small>
+                                                        </span>
+                                                    </label>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        <p class="text-muted small mb-0">No interns are enrolled in this Intern Classroom yet.</p>
+                                    {% endif %}
+                                </div>
                             </div>
 
                             <div class="row g-3">
@@ -149,6 +187,7 @@
                                         {% if item.description %}<p>{{ item.description[:150] }}{% if item.description|length > 150 %}…{% endif %}</p>{% endif %}
                                         <div class="supervisor-classwork-item-meta">
                                             {% if item.due_at %}<span>Due {{ item.due_at }}</span>{% else %}<span>No due date</span>{% endif %}
+                                            {% if item.recipient_count %}<span>Selected · {{ item.recipient_count }} intern{% if item.recipient_count != 1 %}s{% endif %}</span>{% else %}<span>Entire classroom</span>{% endif %}
                                             {% if item.group_mode %}<span>Team · max {{ item.max_group_size }}</span>{% endif %}
                                             {% if item.allow_file_upload %}<span>Intern submissions</span>{% endif %}
                                         </div>
@@ -167,7 +206,7 @@
                             <div class="supervisor-classwork-empty">
                                 <div>📝</div>
                                 <h3>No work yet</h3>
-                                <p>Create your first work item. Interns will see it in their work area.</p>
+                                <p>Create your first work item. Assigned interns will see it in their work area.</p>
                             </div>
                         {% endif %}
                     </aside>
@@ -186,6 +225,24 @@
                 groupMode.addEventListener("change", syncGroupSize);
                 syncGroupSize();
             }
+
+            const assignmentScopeInputs = document.querySelectorAll('input[name="assignment_scope"]');
+            const recipientPicker = document.getElementById("recipient-picker");
+            const recipientCheckboxes = document.querySelectorAll('input[name="recipient_ids"]');
+
+            function syncRecipientPicker() {
+                const selectedScope = document.querySelector('input[name="assignment_scope"]:checked');
+                const useSelectedInterns = selectedScope && selectedScope.value === "selected";
+                if (recipientPicker) recipientPicker.hidden = !useSelectedInterns;
+                recipientCheckboxes.forEach((checkbox) => {
+                    checkbox.disabled = !useSelectedInterns;
+                });
+            }
+
+            assignmentScopeInputs.forEach((input) => {
+                input.addEventListener("change", syncRecipientPicker);
+            });
+            syncRecipientPicker();
         </script>
     </body>
 </html>
