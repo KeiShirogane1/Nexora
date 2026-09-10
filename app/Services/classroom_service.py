@@ -72,7 +72,8 @@ def ensure_classroom_schema():
                     allow_file_upload INTEGER DEFAULT 0,
                     group_mode INTEGER DEFAULT 0,
                     max_group_size INTEGER DEFAULT 1,
-                    team_name TEXT
+                    team_name TEXT,
+                    submission_mode TEXT NOT NULL DEFAULT 'individual'
                 )""",
                 """CREATE TABLE IF NOT EXISTS classroom_assignment_recipients (
                     id SERIAL PRIMARY KEY,
@@ -188,6 +189,7 @@ def ensure_classroom_schema():
                     group_mode INTEGER DEFAULT 0,
                     max_group_size INTEGER DEFAULT 1,
                     team_name TEXT,
+                    submission_mode TEXT NOT NULL DEFAULT 'individual',
                     FOREIGN KEY(assignment_id) REFERENCES classroom_assignments(id) ON DELETE CASCADE
                 )""",
                 """CREATE TABLE IF NOT EXISTS classroom_assignment_recipients (
@@ -257,6 +259,9 @@ def ensure_classroom_schema():
             conn.execute(
                 "ALTER TABLE classroom_assignment_meta ADD COLUMN IF NOT EXISTS team_name TEXT"
             )
+            conn.execute(
+                "ALTER TABLE classroom_assignment_meta ADD COLUMN IF NOT EXISTS submission_mode TEXT NOT NULL DEFAULT 'individual'"
+            )
         else:
             classroom_columns = [row[1] for row in conn.execute("PRAGMA table_info(classrooms)").fetchall()]
             if "classroom_type" not in classroom_columns:
@@ -284,6 +289,10 @@ def ensure_classroom_schema():
             if "team_name" not in assignment_meta_columns:
                 conn.execute(
                     "ALTER TABLE classroom_assignment_meta ADD COLUMN team_name TEXT"
+                )
+            if "submission_mode" not in assignment_meta_columns:
+                conn.execute(
+                    "ALTER TABLE classroom_assignment_meta ADD COLUMN submission_mode TEXT NOT NULL DEFAULT 'individual'"
                 )
 
         indexes = [
