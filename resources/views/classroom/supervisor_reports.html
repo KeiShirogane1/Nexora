@@ -100,17 +100,22 @@
                 <div class="supervisor-reports-heading">
                     <div>
                         <h1>Reports</h1>
-                        <p>{{ classroom.section }} · Work scoring, Work completion, feedback analysis, and recommendations. Attendance/OJT Hours, Daily Performance, Logbook, and Official Evaluation remain separate.</p>
+                        <p>{{ classroom.section }} · This roster is a Work/feedback overview. Open an intern report to review Attendance/OJT Hours, Daily Performance, Logbook, Work, and Official Evaluation as separate dimensions.</p>
                     </div>
                     <div class="supervisor-reports-actions">
-                        <a class="btn btn-outline-primary" href="{{ url_for('classwork_ml_insights.supervisor_insights', class_id=classroom.id) }}">Performance Insights</a>
-                        <a class="btn btn-primary" href="{{ url_for('performance_reports.export_supervisor_reports', class_id=classroom.id) }}">Export CSV</a>
+                        <a class="btn btn-outline-primary" href="{{ url_for('classwork_ml_insights.supervisor_cohort_insights', class_id=classroom.id) }}">Cohort Insights</a>
+                        <a class="btn btn-outline-primary" href="{{ url_for('needs_attention.supervisor_needs_attention', class_id=classroom.id) }}">Needs Attention</a>
+                        <a class="btn btn-primary" href="{{ url_for('performance_reports.export_supervisor_reports', class_id=classroom.id) }}">Export Work CSV</a>
                     </div>
+                </div>
+
+                <div class="alert alert-light border mb-3" role="note">
+                    The table and CSV below contain Work/feedback analytics only. They do not include or calculate an Official OJT Evaluation score. Individual reports show the other OJT evidence dimensions separately.
                 </div>
 
                 <section class="supervisor-reports-card">
                     <div class="supervisor-reports-toolbar">
-                        <div class="text-muted small"><strong>{{ reports|length }}</strong> intern{{ '' if reports|length==1 else 's' }} · Work Reports</div>
+                        <div class="text-muted small"><strong>{{ reports|length }}</strong> intern{{ '' if reports|length==1 else 's' }} · Work Report Overview</div>
                         <span class="text-muted small">Intern · Work Average % · Work Completion · Work Performance · Competency · Recommendation · Priority</span>
                     </div>
                     {% if not reports %}
@@ -153,7 +158,7 @@
                                             <td data-label="Competency">{{ r.competency or '—' }}</td>
                                             <td class="supervisor-reports-recommendation" data-label="Recommendation">{{ r.recommendation[:160] }}{% if r.recommendation|length > 160 %}…{% endif %}</td>
                                             <td data-label="Priority"><span class="supervisor-reports-label {% if r.priority == 'low' %}is-satisfactory{% elif r.priority == 'medium' %}is-very-satisfactory{% elif r.priority == 'high' %}is-fair{% else %}is-needs-improvement{% endif %}">{{ r.priority }}</span></td>
-                                            <td data-label="Action"><a class="btn btn-sm btn-outline-primary" href="{{ url_for('performance_reports.supervisor_student_report', class_id=classroom.id, student_id=r.student.id) }}">View</a></td>
+                                            <td data-label="Action"><a class="btn btn-sm btn-outline-primary" href="{{ url_for('performance_reports.supervisor_student_report', class_id=classroom.id, student_id=r.student.id) }}">Open Report</a></td>
                                         </tr>
                                     {% endfor %}
                                 </tbody>
