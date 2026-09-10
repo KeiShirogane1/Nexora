@@ -261,20 +261,15 @@ def supervisor_dashboard():
 @supervisor.route("/supervisor/interns")
 @role_required("supervisor")
 def view_interns():
-    conn = get_db_connection()
+    from app.Services.assigned_interns_service import get_supervisor_assigned_interns
 
-    students = conn.execute("""
-        SELECT DISTINCT users.id, users.username, sp.major_program, sp.grade_year, i.company_name, i.position, i.status as internship_status
-        FROM users
-        JOIN student_assignments sa ON users.id = sa.student_id
-        LEFT JOIN student_profiles sp ON sp.user_id = users.id
-        LEFT JOIN internships i ON i.student_id = users.id AND i.status = 'Active'
-        WHERE sa.supervisor_id = ?
-        ORDER BY users.username
-    """, (session["user_id"],)).fetchall()
-
-    conn.close()
-    return render_template("supervisor/interns.html", students=students, active_page="interns")
+    context = get_supervisor_assigned_interns(session["user_id"])
+    return render_template(
+        "supervisor/interns.html",
+        interns=context["interns"],
+        summary=context["summary"],
+        active_page="interns",
+    )
 
 
 #  View student profile 
