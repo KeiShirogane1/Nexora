@@ -16,50 +16,14 @@
         font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
+    body.nx-class-page > .student-global-topbar {
+        display: flex !important;
+    }
+
     .class-main {
-        margin-left: 262px;
+        margin-left: 76px;
         min-height: 100vh;
-        padding: 0 34px 40px;
-    }
-
-    .class-top {
-        height: 76px;
-        display: flex;
-        justify-content: flex-end;
-        align-items: center;
-    }
-
-    .class-top-tools {
-        display: flex;
-        align-items: center;
-        gap: 17px;
-    }
-
-    .class-search {
-        width: 260px;
-        height: 42px;
-        border: 1px solid var(--nx-line);
-        border-radius: 12px;
-        background: #fff;
-        padding: 0 14px;
-        outline: 0;
-        color: var(--nx-ink);
-    }
-
-    .class-profile {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        font-size: 13px;
-        font-weight: 800;
-    }
-
-    .class-profile img {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 1px solid var(--nx-line);
+        padding: 92px 34px 40px;
     }
 
     .class-wrap {
@@ -298,15 +262,7 @@
     @media (max-width: 900px) {
         .class-main {
             margin-left: 0;
-            padding: 0 18px 30px;
-        }
-
-        .class-top {
-            height: 64px;
-        }
-
-        .class-search {
-            width: 190px;
+            padding: 78px 18px 30px;
         }
 
         .class-hero-body {
@@ -319,10 +275,6 @@
     }
 
     @media (max-width: 600px) {
-        .class-search {
-            display: none;
-        }
-
         .class-hero h1 {
             font-size: 27px;
         }
@@ -342,31 +294,6 @@
 {% set class_description = classroom.description|default('', true) %}
 {% set class_status = classroom.status|default('Active', true) %}
 {% set active_banner_theme = classroom_banner_theme(classroom.id) %}
-
-<div class="class-top">
-    <div class="class-top-tools">
-        <input class="class-search" type="search" placeholder="Search..." aria-label="Search">
-        <a href="{{ url_for('notifications.notification_list') }}" aria-label="Notifications" style="font-size:20px;color:var(--nx-ink);text-decoration:none">♢</a>
-        <div class="class-profile">
-            {% if sidebar_profile and sidebar_profile.profile_picture %}
-                <img src="{{ url_for('profile_picture', filename=sidebar_profile.profile_picture) }}" alt="Profile">
-            {% elif profile is defined and profile and profile[5] %}
-                <img src="{{ url_for('profile_picture', filename=profile[5]) }}" alt="Profile">
-            {% else %}
-                <img src="{{ url_for('static', filename='images/default_profile.png') }}" alt="Profile">
-            {% endif %}
-            <span>
-                {% if sidebar_profile and sidebar_profile.first_name %}
-                    {{ sidebar_profile.first_name }}
-                {% elif profile is defined and profile %}
-                    {{ profile[0] }}
-                {% else %}
-                    Student
-                {% endif %}
-            </span>
-        </div>
-    </div>
-</div>
 
 <div class="class-wrap">
     <div class="class-breadcrumb">
