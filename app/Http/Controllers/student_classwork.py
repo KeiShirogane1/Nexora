@@ -67,6 +67,34 @@ def _has_assignment_access(conn, assignment_id, student_id):
     ).fetchone() is not None
 
 
+def _team_members(conn, class_id, assignment_id):
+    rows = conn.execute(
+        """SELECT u.id, u.username, u.email
+           FROM classroom_assignment_recipients ar
+           JOIN users u ON u.id = ar.student_id
+           WHERE ar.assignment_id = ?
+           ORDER BY LOWER(u.username), LOWER(u.email), u.id""",
+        (assignment_id,),
+    ).fetchall()
+    if not rows:
+        rows = conn.execute(
+            """SELECT u.id, u.username, u.email
+               FROM classroom_students cs
+               JOIN users u ON u.id = cs.student_id
+               WHERE cs.classroom_id = ?
+               ORDER BY LOWER(u.username), LOWER(u.email), u.id""",
+            (class_id,),
+        ).fetchall()
+    return [
+        {
+            "id": _value(row, "id", 0),
+            "username": _value(row, "username", 1),
+            "email": _value(row, "email", 2),
+        }
+        for row in rows
+    ]
+
+
 def _assignment_row(conn, class_id, assignment_id):
     return conn.execute(
         """SELECT a.id, a.classroom_id, a.title, a.description, a.due_at,
@@ -174,6 +202,11 @@ def index(class_id):
             item["submission"] = _submission_data(
                 _submission_for_student(conn, item["id"], student_id)
             )
+            item["team_members"] = (
+                _team_members(conn, class_id, item["id"])
+                if item["activity_type"] == "group_project" or item["group_mode"]
+                else []
+            )
             assignments.append(item)
 
         archived = bool(_value(classroom, "archived", 4, 0))
@@ -217,6 +250,11 @@ def detail(class_id, assignment_id):
             abort(403)
 
         assignment = _assignment_data(row)
+        assignment["team_members"] = (
+            _team_members(conn, class_id, assignment_id)
+            if assignment["activity_type"] == "group_project" or assignment["group_mode"]
+            else []
+        )
         submission = _submission_data(_submission_for_student(conn, assignment_id, student_id))
         past_due = False
         if assignment["due_at"]:
