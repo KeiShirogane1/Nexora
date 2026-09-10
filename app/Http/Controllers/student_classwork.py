@@ -8,12 +8,12 @@ from app.Models.db import get_db_connection
 student_classwork = Blueprint("student_classwork", __name__)
 
 ACTIVITY_LABELS = {
-    "assignment": "Assignment",
-    "google_form": "Google Form / Quiz",
-    "google_doc": "Google Docs / Sheets",
-    "file_reference": "File / Reference",
+    "assignment": "Task",
+    "google_form": "Form / Assessment",
+    "google_doc": "Online Work",
+    "file_reference": "Resource",
     "project": "Project",
-    "group_project": "Group Project",
+    "group_project": "Team Task",
 }
 
 
@@ -52,6 +52,21 @@ def _is_member(conn, class_id, student_id):
     return bool(row)
 
 
+def _has_assignment_access(conn, assignment_id, student_id):
+    count_row = conn.execute(
+        "SELECT COUNT(*) FROM classroom_assignment_recipients WHERE assignment_id = ?",
+        (assignment_id,),
+    ).fetchone()
+    recipient_count = count_row[0] if count_row else 0
+    if not recipient_count:
+        return True
+    return conn.execute(
+        """SELECT 1 FROM classroom_assignment_recipients
+           WHERE assignment_id = ? AND student_id = ? LIMIT 1""",
+        (assignment_id, student_id),
+    ).fetchone() is not None
+
+
 def _assignment_row(conn, class_id, assignment_id):
     return conn.execute(
         """SELECT a.id, a.classroom_id, a.title, a.description, a.due_at,
@@ -77,7 +92,7 @@ def _assignment_data(row):
         "points": _value(row, "points", 5, 100),
         "created_at": _value(row, "created_at", 6),
         "activity_type": activity_type,
-        "activity_label": ACTIVITY_LABELS.get(activity_type, "Assignment"),
+        "activity_label": ACTIVITY_LABELS.get(activity_type, "Task"),
         "external_url": _value(row, "external_url", 8),
         "resource_label": _value(row, "resource_label", 9),
         "resource_filename": _value(row, "resource_filename", 10),
@@ -137,9 +152,20 @@ def index(class_id):
                FROM classroom_assignments a
                LEFT JOIN classroom_assignment_meta m ON m.assignment_id = a.id
                WHERE a.classroom_id = ?
+                 AND (
+                     NOT EXISTS (
+                         SELECT 1 FROM classroom_assignment_recipients all_recipients
+                         WHERE all_recipients.assignment_id = a.id
+                     )
+                     OR EXISTS (
+                         SELECT 1 FROM classroom_assignment_recipients my_recipient
+                         WHERE my_recipient.assignment_id = a.id
+                           AND my_recipient.student_id = ?
+                     )
+                 )
                ORDER BY CASE WHEN a.due_at IS NULL THEN 1 ELSE 0 END,
                         a.due_at ASC, a.created_at DESC""",
-            (class_id,),
+            (class_id, student_id),
         ).fetchall()
 
         assignments = []
@@ -187,6 +213,8 @@ def detail(class_id, assignment_id):
         row = _assignment_row(conn, class_id, assignment_id)
         if not row:
             abort(404)
+        if not _has_assignment_access(conn, assignment_id, student_id):
+            abort(403)
 
         assignment = _assignment_data(row)
         submission = _submission_data(_submission_for_student(conn, assignment_id, student_id))
