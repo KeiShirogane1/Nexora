@@ -88,19 +88,107 @@
                             <h1>{{ report.student.username }}</h1>
                             <p>{{ report.student.email }}{% if report.student.student_number %} · {{ report.student.student_number }}{% endif %} · Intern Classroom: {{ classroom.name }} ({{ classroom.section }})</p>
                             {% if report.supervisor.username %}<small class="text-muted">Supervisor: {{ report.supervisor.username }}</small>{% endif %}
-                            <small class="text-muted d-block mt-1">This report summarizes Work scoring and feedback analysis only. Attendance/OJT Hours, Daily Performance, Logbook, and Official Evaluation remain separate evidence dimensions.</small>
+                            <small class="text-muted d-block mt-1">This report presents five separate OJT evidence dimensions. Nexora does not calculate a combined OJT grade from them.</small>
                         </div>
-                        <div>
-                            {% if report.overall_percentage is none %}
-                                <span class="supervisor-report-label is-no-data">No Work Performance Data</span>
-                            {% else %}
-                                <span class="supervisor-report-label {% if report.performance_label == 'Excellent' %}is-excellent{% elif report.performance_label == 'Very Satisfactory' %}is-very-satisfactory{% elif report.performance_label == 'Satisfactory' %}is-satisfactory{% elif report.performance_label == 'Fair' %}is-fair{% else %}is-needs-improvement{% endif %}">{{ report.performance_label }}</span>
-                            {% endif %}
+                        <div class="d-flex flex-wrap gap-2">
+                            <a class="btn btn-sm btn-outline-primary" href="{{ url_for('classwork_ml_insights.supervisor_individual_insights', class_id=classroom.id, student_id=report.student.id) }}">Individual Insights</a>
+                            <a class="btn btn-sm btn-outline-primary" href="{{ url_for('ojt_evaluation.supervisor_evaluations', class_id=classroom.id, student_id=report.student.id) }}">Official Evaluation</a>
                         </div>
                     </div>
 
                     <section class="supervisor-report-card">
+                        <h2>OJT EVIDENCE SNAPSHOT</h2>
+                        <p class="text-muted small mb-3">Each card is an independent evidence dimension. Work analytics and ML outputs do not create or replace the Official OJT Evaluation.</p>
+                        <div class="row row-cols-1 row-cols-md-2 row-cols-xl-5 g-3">
+                            <div class="col">
+                                <div class="border rounded-3 p-3 h-100">
+                                    <div class="text-muted small">Attendance & OJT Hours</div>
+                                    <div class="fs-5 fw-bold text-primary">{{ '%.2f'|format(attendance_summary.rendered_hours or 0) }}</div>
+                                    {% if attendance_summary.required_hours is not none %}
+                                        <div class="text-muted small">{{ '%.1f'|format(attendance_summary.progress_percentage or 0) }}% of {{ '%.0f'|format(attendance_summary.required_hours) }} required hours</div>
+                                    {% else %}
+                                        <div class="text-muted small">Required hours not specified</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="border rounded-3 p-3 h-100">
+                                    <div class="text-muted small">Daily Performance</div>
+                                    <div class="fs-5 fw-bold">{% if daily_performance.summary.average_percentage is not none %}{{ '%.1f'|format(daily_performance.summary.average_percentage) }}%{% else %}—{% endif %}</div>
+                                    <div class="text-muted small">{{ daily_performance.summary.rated_days or 0 }} rated of {{ daily_performance.summary.closed_days or 0 }} completed days</div>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="border rounded-3 p-3 h-100">
+                                    <div class="text-muted small">Daily Logbook</div>
+                                    <div class="fs-5 fw-bold">{{ logbook_summary.total or 0 }}</div>
+                                    <div class="text-muted small">{{ logbook_summary.approved or 0 }} approved · {{ logbook_summary.pending or 0 }} pending{% if logbook_summary.revision_requested %} · {{ logbook_summary.revision_requested }} revision{% endif %}</div>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="border rounded-3 p-3 h-100">
+                                    <div class="text-muted small">Work</div>
+                                    <div class="fs-5 fw-bold">{% if report.overall_percentage is not none %}{{ '%.1f'|format(report.overall_percentage) }}%{% else %}—{% endif %}</div>
+                                    <div class="text-muted small">{{ report.graded_count }} reviewed of {{ report.total_count }} assigned · {% if report.overall_percentage is not none %}{{ report.performance_label }}{% else %}No performance data{% endif %}</div>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="border rounded-3 p-3 h-100">
+                                    <div class="text-muted small">Official Evaluation</div>
+                                    {% if official_evaluation %}
+                                        <div class="fs-5 fw-bold text-capitalize">{{ official_evaluation.status }}</div>
+                                        <div class="text-muted small">{% if official_evaluation.overall_score is not none %}Manual overall score: {{ '%g'|format(official_evaluation.overall_score) }}{% else %}No manual overall score{% endif %}</div>
+                                    {% else %}
+                                        <div class="fs-5 fw-bold">Not started</div>
+                                        <div class="text-muted small">No official evaluation saved</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="supervisor-report-card">
+                        <h2>ATTENDANCE & OJT HOURS</h2>
+                        <table class="supervisor-report-table">
+                            <tbody>
+                                <tr><th>Completed attendance days</th><td>{{ attendance_summary.completed_days or 0 }}</td></tr>
+                                <tr><th>Open attendance sessions</th><td>{{ attendance_summary.open_sessions or 0 }}</td></tr>
+                                <tr><th>Rendered hours</th><td>{{ '%.2f'|format(attendance_summary.rendered_hours or 0) }}</td></tr>
+                                <tr><th>Required hours</th><td>{% if attendance_summary.required_hours is not none %}{{ '%.0f'|format(attendance_summary.required_hours) }}{% else %}Not specified{% endif %}</td></tr>
+                                <tr><th>OJT hours progress</th><td>{% if attendance_summary.progress_percentage is not none %}{{ '%.1f'|format(attendance_summary.progress_percentage) }}%{% else %}—{% endif %}</td></tr>
+                            </tbody>
+                        </table>
+                    </section>
+
+                    <section class="supervisor-report-card">
+                        <h2>DAILY PERFORMANCE</h2>
+                        <p class="text-muted small">Manual supervisor day ratings only; these are separate from Work scores.</p>
+                        <table class="supervisor-report-table">
+                            <tbody>
+                                <tr><th>Completed days</th><td>{{ daily_performance.summary.closed_days or 0 }}</td></tr>
+                                <tr><th>Rated days</th><td>{{ daily_performance.summary.rated_days or 0 }}</td></tr>
+                                <tr><th>Average day rating</th><td>{% if daily_performance.summary.average_star is not none %}{{ '%.1f'|format(daily_performance.summary.average_star) }} ★ · {{ '%.1f'|format(daily_performance.summary.average_percentage) }}%{% else %}—{% endif %}</td></tr>
+                                <tr><th>Latest rated day</th><td>{% if daily_performance.summary.latest_percentage is not none %}{{ '%.1f'|format(daily_performance.summary.latest_percentage) }}%{% else %}—{% endif %}</td></tr>
+                            </tbody>
+                        </table>
+                    </section>
+
+                    <section class="supervisor-report-card">
+                        <h2>DAILY LOGBOOK</h2>
+                        <table class="supervisor-report-table">
+                            <tbody>
+                                <tr><th>Total entries</th><td>{{ logbook_summary.total or 0 }}</td></tr>
+                                <tr><th>Approved</th><td>{{ logbook_summary.approved or 0 }}</td></tr>
+                                <tr><th>Pending</th><td>{{ logbook_summary.pending or 0 }}</td></tr>
+                                <tr><th>Revision requested</th><td>{{ logbook_summary.revision_requested or 0 }}</td></tr>
+                                <tr><th>Reviewed</th><td>{{ logbook_summary.reviewed or 0 }}</td></tr>
+                            </tbody>
+                        </table>
+                    </section>
+
+                    <section class="supervisor-report-card">
                         <h2>WORK PERFORMANCE SUMMARY</h2>
+                        <p class="text-muted small">This section uses Work/gradebook evidence only.</p>
                         {% if report.total_count == 0 %}
                             <div class="text-muted">No Work performance data yet — no work items have been assigned in this Intern Classroom.</div>
                         {% elif report.graded_count == 0 %}
@@ -118,7 +206,8 @@
                     </section>
 
                     <section class="supervisor-report-card">
-                        <h2>FEEDBACK ANALYSIS</h2>
+                        <h2>WORK FEEDBACK ANALYSIS</h2>
+                        <p class="text-muted small">Feedback and model outputs support the Work report only; they are not the Official OJT Evaluation.</p>
                         {% if not report.has_feedback %}
                             <div class="text-muted small">No supervisor feedback evidence is available yet. Feedback analysis will appear after feedback is recorded for this intern.</div>
                         {% else %}
@@ -137,7 +226,7 @@
                     </section>
 
                     <section class="supervisor-report-card">
-                        <h2>RECOMMENDATION</h2>
+                        <h2>WORK RECOMMENDATION</h2>
                         <table class="supervisor-report-table">
                             <tbody>
                                 <tr>
@@ -160,7 +249,7 @@
                     </section>
 
                     <section class="supervisor-report-card">
-                        <h2>WORK PERFORMANCE</h2>
+                        <h2>WORK ITEMS</h2>
                         {% if not report.assignments %}
                             <div class="text-muted">No work items are available yet.</div>
                         {% else %}
@@ -201,6 +290,26 @@
                             {% endif %}
                         {% endif %}
                     </section>
+
+                    <section class="supervisor-report-card">
+                        <h2>OFFICIAL OJT EVALUATION</h2>
+                        <p class="text-muted small">Manual supervisor-entered formal evaluation only. Attendance, Daily Performance, Work, Logbook, feedback analysis, and ML outputs do not generate this score.</p>
+                        {% if official_evaluation %}
+                            <table class="supervisor-report-table">
+                                <tbody>
+                                    <tr><th>Status</th><td class="text-capitalize">{{ official_evaluation.status }}</td></tr>
+                                    <tr><th>Manual overall score</th><td>{% if official_evaluation.overall_score is not none %}{{ '%g'|format(official_evaluation.overall_score) }}{% else %}—{% endif %}</td></tr>
+                                    <tr><th>Remarks</th><td>{{ official_evaluation.remarks or '—' }}</td></tr>
+                                </tbody>
+                            </table>
+                        {% else %}
+                            <div class="text-muted small">No Official OJT Evaluation has been started for this intern.</div>
+                        {% endif %}
+                    </section>
+
+                    <div class="alert alert-light border mb-3" role="note">
+                        <strong>Evidence boundary:</strong> Attendance/OJT Hours measure time and completion. Daily Performance contains manual day ratings. Daily Logbook contains submitted evidence and review state. Work contains task scores and Work-based analytics. Official Evaluation is the separate formal supervisor-entered evaluation. No sixth overall OJT grade is calculated in this report.
+                    </div>
 
                     <div class="supervisor-report-footer-actions">
                         <a href="{{ url_for('performance_reports.supervisor_reports', class_id=classroom.id) }}" class="btn btn-outline-primary">Back to Reports</a>
