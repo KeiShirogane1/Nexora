@@ -193,23 +193,23 @@
                 <div>
                     <span class="student-section-eyebrow">Student Portal</span>
                     <h1 id="insights-heading">Performance Insights</h1>
-                    <p>{{ classroom.section }} · {{ classroom.supervisor }} · Your gradebook-to-ML performance summary — normalized scores, completion, and feedback ML analysis when available.</p>
+                    <p>{{ classroom.section }} · {{ classroom.supervisor }} · Your Work/gradebook-to-ML summary — Work scores, completion, and feedback ML analysis when available. Attendance/OJT Hours, Daily Performance, Logbook, and Official Evaluation are separate and are not included in this classification.</p>
                     <div style="margin-top:10px;">
                         <span class="student-insights-label {% if numeric_performance_label == 'Excellent' %}is-excellent{% elif numeric_performance_label == 'Very Satisfactory' %}is-very-satisfactory{% elif numeric_performance_label == 'Satisfactory' %}is-satisfactory{% elif numeric_performance_label == 'Fair' %}is-fair{% else %}is-needs-improvement{% endif %}">{{ numeric_performance_label }}</span>
-                        <small class="text-muted" style="margin-left:8px;">Numeric performance label</small>
+                        <small class="text-muted" style="margin-left:8px;">Work performance label</small>
                     </div>
                 </div>
                 <div class="student-insights-summary-card">
                     <strong>{% if average_percentage is not none %}{{ "%.1f"|format(average_percentage) }}%{% else %}—{% endif %}</strong>
-                    <span>average percentage</span>
+                    <span>Work average</span>
                 </div>
             </header>
 
-            <section class="student-insights-grid" aria-label="Grade summary">
-                <div><strong>{% if average_percentage is not none %}{{ "%.1f"|format(average_percentage) }}%{% else %}—{% endif %}</strong><span>Average percentage</span></div>
-                <div><strong>{% if min_percentage is not none %}{{ "%.1f"|format(min_percentage) }}%{% else %}—{% endif %}</strong><span>Minimum percentage</span></div>
-                <div><strong>{% if max_percentage is not none %}{{ "%.1f"|format(max_percentage) }}%{% else %}—{% endif %}</strong><span>Maximum percentage</span></div>
-                <div><strong>{{ "%.1f"|format(completion_rate) }}%</strong><span>Completion rate</span></div>
+            <section class="student-insights-grid" aria-label="Work grade summary">
+                <div><strong>{% if average_percentage is not none %}{{ "%.1f"|format(average_percentage) }}%{% else %}—{% endif %}</strong><span>Work average</span></div>
+                <div><strong>{% if min_percentage is not none %}{{ "%.1f"|format(min_percentage) }}%{% else %}—{% endif %}</strong><span>Minimum Work score</span></div>
+                <div><strong>{% if max_percentage is not none %}{{ "%.1f"|format(max_percentage) }}%{% else %}—{% endif %}</strong><span>Maximum Work score</span></div>
+                <div><strong>{{ "%.1f"|format(completion_rate) }}%</strong><span>Work completion</span></div>
             </section>
 
             <section class="student-insights-grid" style="grid-template-columns:repeat(3,minmax(0,1fr));">
@@ -219,21 +219,21 @@
             </section>
 
             <section class="student-insights-card">
-                <h2>Performance Summary</h2>
+                <h2>Work Performance Summary</h2>
                 <table class="student-insights-table">
                     <tbody>
-                        <tr><th>Average percentage</th><td>{% if average_percentage is not none %}{{ "%.1f"|format(average_percentage) }}%{% else %}—{% endif %}</td></tr>
-                        <tr><th>Minimum percentage</th><td>{% if min_percentage is not none %}{{ "%.1f"|format(min_percentage) }}%{% else %}—{% endif %}</td></tr>
-                        <tr><th>Maximum percentage</th><td>{% if max_percentage is not none %}{{ "%.1f"|format(max_percentage) }}%{% else %}—{% endif %}</td></tr>
+                        <tr><th>Work average</th><td>{% if average_percentage is not none %}{{ "%.1f"|format(average_percentage) }}%{% else %}—{% endif %}</td></tr>
+                        <tr><th>Minimum Work score</th><td>{% if min_percentage is not none %}{{ "%.1f"|format(min_percentage) }}%{% else %}—{% endif %}</td></tr>
+                        <tr><th>Maximum Work score</th><td>{% if max_percentage is not none %}{{ "%.1f"|format(max_percentage) }}%{% else %}—{% endif %}</td></tr>
                         <tr><th>Graded assignments / total assignments</th><td>{{ graded_count }} / {{ total_count }}</td></tr>
-                        <tr><th>Completion rate</th><td>{{ "%.1f"|format(completion_rate) }}%</td></tr>
+                        <tr><th>Work completion</th><td>{{ "%.1f"|format(completion_rate) }}%</td></tr>
                         <tr><th>Manual grades count</th><td>{{ manual_count }}</td></tr>
                         <tr><th>Imported grades count</th><td>{{ imported_count }}</td></tr>
-                        <tr><th>Numeric performance label</th><td><span class="student-insights-label {% if numeric_performance_label == 'Excellent' %}is-excellent{% elif numeric_performance_label == 'Very Satisfactory' %}is-very-satisfactory{% elif numeric_performance_label == 'Satisfactory' %}is-satisfactory{% elif numeric_performance_label == 'Fair' %}is-fair{% else %}is-needs-improvement{% endif %}">{{ numeric_performance_label }}</span></td></tr>
+                        <tr><th>Work performance label</th><td><span class="student-insights-label {% if numeric_performance_label == 'Excellent' %}is-excellent{% elif numeric_performance_label == 'Very Satisfactory' %}is-very-satisfactory{% elif numeric_performance_label == 'Satisfactory' %}is-satisfactory{% elif numeric_performance_label == 'Fair' %}is-fair{% else %}is-needs-improvement{% endif %}">{{ numeric_performance_label }}</span></td></tr>
                     </tbody>
                 </table>
                 {% if graded_count == 0 %}
-                    <div class="text-muted small mt-3">No graded assignments yet. Your performance insights will appear after your supervisor grades or imports scores.</div>
+                    <div class="text-muted small mt-3">No graded assignments yet. Your Work performance insights will appear after your supervisor grades or imports scores.</div>
                 {% endif %}
             </section>
 
@@ -241,8 +241,8 @@
                 <h2>ML Recommendation</h2>
                 {% if ml_recommendation %}
                     <div style="display:grid;gap:8px;font-size:.84rem;">
-                        <div><strong>performance_label:</strong> {{ ml_recommendation.performance_label }}</div>
-                        <div><strong>overall_percentage:</strong> {% if ml_recommendation.overall_percentage is not none %}{{ "%.1f"|format(ml_recommendation.overall_percentage) }}%{% else %}—{% endif %} <span class="text-muted" style="margin-left:8px;">completion_rate: {{ "%.1f"|format(ml_recommendation.completion_rate) }}%</span></div>
+                        <div><strong>Work performance label:</strong> {{ ml_recommendation.performance_label }}</div>
+                        <div><strong>Work average:</strong> {% if ml_recommendation.overall_percentage is not none %}{{ "%.1f"|format(ml_recommendation.overall_percentage) }}%{% else %}—{% endif %} <span class="text-muted" style="margin-left:8px;">Work completion: {{ "%.1f"|format(ml_recommendation.completion_rate) }}%</span></div>
                         <div><strong>recommendation:</strong> <span style="color:#334155;">{{ ml_recommendation.recommendation }}</span></div>
                         <div><strong>priority:</strong> {{ ml_recommendation.priority }}</div>
                         {% if ml_recommendation.basis %}
@@ -265,7 +265,7 @@
                             <div><strong>confidence:</strong> {{ "%.2f"|format(confidence) }}</div>
                             <div><strong>Naive Bayes prediction:</strong> {{ feedback_analysis.nb_prediction }}</div>
                             <div><strong>SVM prediction:</strong> {{ feedback_analysis.svm_prediction }}</div>
-                            <div><strong>performance label:</strong> {{ feedback_analysis.performance_label }}</div>
+                            <div><strong>Work performance label:</strong> {{ feedback_analysis.performance_label }}</div>
                         </div>
                     </div>
                 {% else %}
@@ -275,7 +275,7 @@
                         <div style="margin-top:4px;"><strong>recommendation:</strong> {{ recommendation }}</div>
                         <div style="margin-top:6px;"><strong>confidence:</strong> {{ "%.2f"|format(confidence) }} · <strong>Naive Bayes prediction:</strong> {{ feedback_analysis.nb_prediction }} · <strong>SVM prediction:</strong> {{ feedback_analysis.svm_prediction }}</div>
                     </div>
-                    <div class="text-muted small mt-2">Feedback ML analysis appears when supervisor feedback data is available. Numeric performance label is always derived from your gradebook.</div>
+                    <div class="text-muted small mt-2">Feedback ML analysis appears when supervisor feedback data is available. The Work performance label is derived from your gradebook and does not create or replace an Official OJT Evaluation.</div>
                 {% endif %}
             </section>
         </div>
