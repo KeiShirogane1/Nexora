@@ -212,6 +212,16 @@ def manage_classwork(class_id):
                     flash("Select at least one intern for targeted work.", "danger")
                     return redirect(url_for("classwork.manage_classwork", class_id=class_id))
 
+            if activity_type == "group_project":
+                if assignment_scope != "selected":
+                    flash("Team Tasks must be assigned to selected interns.", "danger")
+                    return redirect(url_for("classwork.manage_classwork", class_id=class_id))
+                if len(selected_recipient_ids) < 2:
+                    flash("Select at least two interns for a Team Task.", "danger")
+                    return redirect(url_for("classwork.manage_classwork", class_id=class_id))
+                group_mode = 1
+                max_group_size_raw = str(len(selected_recipient_ids))
+
             try:
                 points = int(points_raw)
                 if points < 0 or points > 10000:
@@ -283,11 +293,17 @@ def manage_classwork(class_id):
                     notification_ids = selected_recipient_ids if assignment_scope == "selected" else [
                         student["id"] for student in enrolled_students
                     ]
+                    notification_title = "New Team Task" if activity_type == "group_project" else "New Work"
+                    notification_message = (
+                        f"Team task assigned: {title}"
+                        if activity_type == "group_project"
+                        else f"New {ACTIVITY_TYPES[activity_type].lower()}: {title}"
+                    )
                     for student_id in notification_ids:
                         create_notification(
                             int(student_id),
-                            "New Work",
-                            f"New {ACTIVITY_TYPES[activity_type].lower()}: {title}",
+                            notification_title,
+                            notification_message,
                             "classroom",
                             link_url=url_for(
                                 "student_classwork.detail",
