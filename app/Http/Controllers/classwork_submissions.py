@@ -8,6 +8,7 @@ from werkzeug.utils import secure_filename
 
 from app.Http.Middleware.security import role_required
 from app.Models.db import get_db_connection
+from app.Services.notification_service import create_notification
 
 classwork_submissions = Blueprint("classwork_submissions", __name__)
 
@@ -261,6 +262,59 @@ def submit(class_id, assignment_id):
             )
 
         conn.commit()
+
+        try:
+            title = _value(assignment, "title", 2, "Work") or "Work"
+            team_name = _value(assignment, "team_name", 10, "") or ""
+            supervisor_row = conn.execute(
+                "SELECT supervisor_id FROM classrooms WHERE id = ?",
+                (class_id,),
+            ).fetchone()
+            submitter_row = conn.execute(
+                "SELECT username FROM users WHERE id = ?",
+                (student_id,),
+            ).fetchone()
+            supervisor_id = _value(supervisor_row, "supervisor_id", 0)
+            submitter_name = _value(submitter_row, "username", 0, "An intern") or "An intern"
+
+            if supervisor_id:
+                create_notification(
+                    int(supervisor_id),
+                    "Team Work Submitted" if shared else "Work Submitted",
+                    (
+                        f"{submitter_name} submitted attempt {attempt_no} for "
+                        f"{team_name + ': ' if team_name else ''}{title}."
+                        if shared else
+                        f"{submitter_name} submitted attempt {attempt_no} for {title}."
+                    ),
+                    "classroom",
+                    link_url=url_for(
+                        "classwork_grading.review",
+                        class_id=class_id,
+                        assignment_id=assignment_id,
+                        submission_id=submission_id,
+                    ),
+                )
+
+            if shared:
+                for member in _team_members(conn, class_id, assignment_id):
+                    member_id = member.get("id")
+                    if member_id is None or int(member_id) == int(student_id):
+                        continue
+                    create_notification(
+                        int(member_id),
+                        "Team Work Submitted",
+                        f"{submitter_name} submitted attempt {attempt_no} for {team_name or 'your team'}: {title}.",
+                        "classroom",
+                        link_url=url_for(
+                            "student_classwork.detail",
+                            class_id=class_id,
+                            assignment_id=assignment_id,
+                        ),
+                    )
+        except Exception as notify_error:
+            print("work submission notification failed:", notify_error)
+
         flash(
             "Your team work was submitted successfully."
             if shared else
