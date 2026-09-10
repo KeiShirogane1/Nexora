@@ -1124,6 +1124,7 @@
                                             <span class="supervisor-intern-status{% if roster_status == 'Active' %} is-active{% elif roster_status == 'Completed' %} is-completed{% elif roster_status == 'Pending' %} is-pending{% endif %}">{{ roster_status }}</span>
 
                                             <div class="supervisor-intern-actions">
+                                                <a class="btn btn-sm btn-outline-primary" href="{{ url_for('intern_profile.supervisor_intern_profile', class_id=classroom.id, student_id=s.id if s.id is defined else loop.index) }}">View Profile</a>
                                                 <a class="btn btn-sm btn-outline-primary" href="{{ url_for('performance_reports.supervisor_student_report', class_id=classroom.id, student_id=s.id if s.id is defined else loop.index) }}">View Performance</a>
                                                 <form method="POST" action="{{ url_for('classroom.remove_student',class_id=classroom.id,student_id=s.id if s.id is defined else loop.index) }}" onsubmit="return confirm('Remove {{ s.username if s.username is defined else s }} from this Intern Classroom?')">
                                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
