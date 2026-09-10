@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Needs Attention - {{ classroom.name }} - Nexora</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">
+</head>
+<body class="supervisor-page">
+    {% include 'components/supervisor_sidebar.html' %}
+
+    <main class="page-content nexora-app-main">
+        <div class="nexora-page">
+            {% set supervisor_class_active_tab = 'needs_attention' %}
+            {% include 'components/supervisor_class_context.html' %}
+
+            <div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-4">
+                <div>
+                    <span class="text-primary fw-bold text-uppercase small">Needs Attention</span>
+                    <h1 class="h3 fw-bold mb-1">Review Queue</h1>
+                    <p class="text-muted mb-0">{{ classroom.section }} · Factual performance, evidence-gap, and workflow signals for this Intern Classroom.</p>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    <a class="btn btn-outline-primary" href="{{ url_for('classwork_ml_insights.supervisor_cohort_insights', class_id=classroom.id) }}">Cohort Insights</a>
+                    <a class="btn btn-primary" href="{{ url_for('classwork_ml_insights.supervisor_insights', class_id=classroom.id) }}">Performance Insights</a>
+                </div>
+            </div>
+
+            <div class="alert alert-primary border-0 shadow-sm mb-4" role="note">
+                Needs Attention is a review queue, not a risk score. Each item comes from one existing evidence dimension. Nexora does not combine these signals into an OJT grade and does not infer or change the Official OJT Evaluation.
+            </div>
+
+            <section class="row row-cols-1 row-cols-sm-2 row-cols-xl-4 g-3 mb-4" aria-label="Needs Attention summary">
+                <div class="col">
+                    <article class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <div class="text-muted small">Interns to review</div>
+                            <div class="fs-4 fw-bold text-primary">{{ review_items|length }}</div>
+                            <div class="text-muted small">of {{ total_interns }} enrolled interns</div>
+                        </div>
+                    </article>
+                </div>
+                <div class="col">
+                    <article class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <div class="text-muted small">Work performance signals</div>
+                            <div class="fs-4 fw-bold">{{ category_counts.performance }}</div>
+                            <div class="text-muted small">existing Fair / Needs Improvement Work classifications only</div>
+                        </div>
+                    </article>
+                </div>
+                <div class="col">
+                    <article class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <div class="text-muted small">Evidence gaps</div>
+                            <div class="fs-4 fw-bold">{{ category_counts.evidence_gap }}</div>
+                            <div class="text-muted small">missing review evidence that can be checked directly</div>
+                        </div>
+                    </article>
+                </div>
+                <div class="col">
+                    <article class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <div class="text-muted small">Workflow items</div>
+                            <div class="fs-4 fw-bold">{{ category_counts.workflow }}</div>
+                            <div class="text-muted small">revision requests or draft Official Evaluations</div>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <section class="card shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h2 class="h6 fw-bold mb-1">Intern Review Queue</h2>
+                    <p class="text-muted small mb-0">No ranking or hidden severity score is applied. Interns remain in roster order.</p>
+                </div>
+
+                {% if review_items %}
+                    <div class="list-group list-group-flush">
+                        {% for item in review_items %}
+                            <article class="list-group-item py-4">
+                                <div class="d-flex flex-wrap align-items-start justify-content-between gap-3">
+                                    <div>
+                                        <h3 class="h6 fw-bold mb-1">{{ item.name }}</h3>
+                                        <div class="text-muted small">
+                                            {{ item.student_number or item.email or 'Student record' }}
+                                            · {{ item.signals|length }} signal{% if item.signals|length != 1 %}s{% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <a class="btn btn-sm btn-outline-primary" href="{{ url_for('classwork_ml_insights.supervisor_individual_insights', class_id=classroom.id, student_id=item.id) }}">Individual Insights</a>
+                                        <a class="btn btn-sm btn-light" href="{{ url_for('intern_profile.supervisor_intern_profile', class_id=classroom.id, student_id=item.id) }}">Intern Profile</a>
+                                    </div>
+                                </div>
+
+                                <div class="row row-cols-1 row-cols-lg-2 g-3 mt-1">
+                                    {% for signal in item.signals %}
+                                        <div class="col">
+                                            <div class="border rounded-3 p-3 h-100">
+                                                <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                                                    {% if signal.category == 'performance' %}
+                                                        <span class="badge text-bg-danger">Work performance</span>
+                                                    {% elif signal.category == 'workflow' %}
+                                                        <span class="badge text-bg-warning">Workflow</span>
+                                                    {% else %}
+                                                        <span class="badge text-bg-secondary">Evidence gap</span>
+                                                    {% endif %}
+                                                    <span class="text-muted small fw-bold">{{ signal.dimension }}</span>
+                                                </div>
+                                                <div class="fw-bold mb-1">{{ signal.title }}</div>
+                                                <p class="text-muted small mb-0">{{ signal.detail }}</p>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </article>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="card-body py-5 text-center">
+                        <h2 class="h5 fw-bold">No current review signals</h2>
+                        <p class="text-muted mb-0">Nexora did not find any of the Phase 21 factual review conditions in the current classroom evidence.</p>
+                    </div>
+                {% endif %}
+            </section>
+
+            <div class="text-muted small mt-3">
+                Phase 21 signals are intentionally narrow: existing low Work classifications, missing manual Daily Performance ratings after completed OJT days, completed attendance with no Daily Logbook evidence, Logbook revision requests, assigned Work with no reviewed numeric result, and draft Official Evaluations.
+            </div>
+        </div>
+    </main>
+</body>
+</html>
