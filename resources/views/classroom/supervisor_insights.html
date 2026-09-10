@@ -134,7 +134,7 @@
                                             <div class="supervisor-insights-person"><strong>{{ intern.name }}</strong>{% if intern.student_number %}<small>{{ intern.student_number }}</small>{% elif intern.email %}<small>{{ intern.email }}</small>{% endif %}</div>
                                             <div>{% if intern.average_percentage is none %}<span class="supervisor-insights-label is-no-data">No data yet</span>{% else %}{% set label = intern.numeric_performance_label %}<span class="supervisor-insights-label {% if label == 'Excellent' %}is-excellent{% elif label == 'Very Satisfactory' %}is-very-satisfactory{% elif label == 'Satisfactory' %}is-satisfactory{% elif label == 'Fair' %}is-fair{% else %}is-needs-improvement{% endif %}">{{ label }}</span>{% endif %}</div>
                                             <div class="supervisor-insights-completion">{{ "%.1f"|format(intern.completion_rate) }}%</div>
-                                            <div><button type="button" class="supervisor-insights-view-button" aria-expanded="false" aria-controls="internInsightDetails{{ intern.id }}" onclick="toggleInternInsightDetails(this, 'internInsightDetails{{ intern.id }}')">View</button></div>
+                                            <div><button type="button" class="supervisor-insights-view-button" aria-haspopup="dialog" aria-controls="supervisorInternInsightModal" onclick="toggleInternInsightDetails(this, 'internInsightDetails{{ intern.id }}')">View</button></div>
                                         </div>
 
                                         <div class="supervisor-insights-row-details" id="internInsightDetails{{ intern.id }}">
@@ -166,6 +166,21 @@
             </div>
         </main>
 
+        <div id="supervisorInternInsightModal" class="nexora-class-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="supervisorInternInsightModalTitle">
+            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable w-100" role="document">
+                <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden bg-white">
+                    <div class="modal-header border-bottom bg-white px-3 py-2">
+                        <div>
+                            <h2 id="supervisorInternInsightModalTitle" class="h6 fw-bold mb-1">Individual Intern Insights</h2>
+                            <p class="small text-secondary mb-0">{{ classroom.name }} · Performance evidence</p>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-light border rounded-circle px-2 py-1 lh-1 ms-auto" aria-label="Close individual insight" data-intern-insight-modal-close>&times;</button>
+                    </div>
+                    <div id="supervisorInternInsightModalBody" class="modal-body bg-white p-3"></div>
+                </div>
+            </div>
+        </div>
+
         <script>
             const insightViewButtons = document.querySelectorAll('[data-insights-view]');
             const insightPanels = { overall: document.getElementById('overallInsightsPanel'), individual: document.getElementById('individualInsightsPanel') };
@@ -185,14 +200,38 @@
                 button.addEventListener('click', () => setInsightView(button.dataset.insightsView));
             });
 
+            const internInsightModal = document.getElementById('supervisorInternInsightModal');
+            const internInsightModalBody = document.getElementById('supervisorInternInsightModalBody');
+
+            function closeInternInsightModal() {
+                if (!internInsightModal || !internInsightModalBody) return;
+                internInsightModal.classList.remove('open');
+                internInsightModal.setAttribute('aria-hidden', 'true');
+                internInsightModalBody.innerHTML = '';
+                document.body.classList.remove('modal-open');
+            }
+
             function toggleInternInsightDetails(button, detailsId) {
                 const details = document.getElementById(detailsId);
-                if (!details) return;
-                const opening = !details.classList.contains('open');
-                details.classList.toggle('open', opening);
-                button.setAttribute('aria-expanded', opening ? 'true' : 'false');
-                button.textContent = opening ? 'Hide' : 'View';
+                const detailCard = details?.querySelector('.supervisor-insights-detail-card');
+                if (!internInsightModal || !internInsightModalBody || !detailCard) return;
+                internInsightModalBody.replaceChildren(detailCard.cloneNode(true));
+                internInsightModal.classList.add('open');
+                internInsightModal.setAttribute('aria-hidden', 'false');
+                document.body.classList.add('modal-open');
+                const closeButton = internInsightModal.querySelector('[data-intern-insight-modal-close]');
+                window.requestAnimationFrame(() => closeButton?.focus());
             }
+
+            document.querySelectorAll('[data-intern-insight-modal-close]').forEach((button) => {
+                button.addEventListener('click', closeInternInsightModal);
+            });
+            internInsightModal?.addEventListener('click', (event) => {
+                if (event.target === internInsightModal) closeInternInsightModal();
+            });
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && internInsightModal?.classList.contains('open')) closeInternInsightModal();
+            });
 
             const individualInsightsSearch = document.getElementById('individualInsightsSearch');
             const individualFilterButtons = document.querySelectorAll('[data-intern-filter]');
@@ -205,10 +244,7 @@
                 const details = row.querySelector('.supervisor-insights-row-details');
                 const button = row.querySelector('.supervisor-insights-view-button');
                 if (details) details.classList.remove('open');
-                if (button) {
-                    button.setAttribute('aria-expanded', 'false');
-                    button.textContent = 'View';
-                }
+                if (button) button.textContent = 'View';
             }
 
             function applyIndividualInsightFilters() {
@@ -262,7 +298,7 @@
                 if (selectedRow) {
                     const selectedButton = selectedRow.querySelector('.supervisor-insights-view-button');
                     const selectedDetails = selectedRow.querySelector('.supervisor-insights-row-details');
-                    if (selectedDetails && selectedButton && !selectedDetails.classList.contains('open')) {
+                    if (selectedDetails && selectedButton) {
                         toggleInternInsightDetails(selectedButton, selectedDetails.id);
                     }
                     window.requestAnimationFrame(() => selectedRow.scrollIntoView({ behavior: 'smooth', block: 'center' }));
