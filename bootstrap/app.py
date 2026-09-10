@@ -7,6 +7,7 @@ from app.Http.Controllers.auth import auth
 from app.Http.Controllers.password import password
 from app.Http.Controllers.student import student
 from app.Http.Controllers.daily_logbook import daily_logbook
+from app.Http.Controllers.logbook_review import logbook_review
 from app.Http.Controllers.supervisor import supervisor
 from app.Http.Controllers.admin import admin
 from app.Http.Controllers.classroom import classroom
@@ -34,6 +35,7 @@ from app.Services.classwork_score_schema import ensure_classwork_score_schema
 from app.Services.attendance_service import ensure_attendance_schema,get_ojt_progress
 from app.Services.logbook_service import ensure_logbook_schema,get_daily_logbook_context,get_session_daily_log
 from app.Services.logbook_photo_service import ensure_logbook_photo_schema,get_logbook_photos
+from app.Services.logbook_review_service import ensure_logbook_review_schema
 from app.Services.notification_service import get_user_notifications,get_recent_notifications,get_unread_count
 app=Flask(__name__,template_folder=str(BASE_DIR/"resources"/"views"),static_folder=str(BASE_DIR/"resources"/"assets"),static_url_path="/static")
 app.jinja_env.globals["get_ojt_progress"]=get_ojt_progress
@@ -89,8 +91,8 @@ def repair_missing_student_profiles():
   sql=("INSERT INTO student_profiles (user_id,profile_completed) SELECT u.id,0 FROM users u WHERE u.role='student' AND NOT EXISTS (SELECT 1 FROM student_profiles sp WHERE sp.user_id=u.id) ON CONFLICT (user_id) DO NOTHING" if using_postgres() else "INSERT OR IGNORE INTO student_profiles (user_id,profile_completed) SELECT u.id,0 FROM users u WHERE u.role='student' AND NOT EXISTS (SELECT 1 FROM student_profiles sp WHERE sp.user_id=u.id)");cur.execute(sql);conn.commit()
  except Exception as exc:conn.rollback();print("student profile repair skipped:",exc)
  finally:cur.close();conn.close()
-initialize_database();ensure_classroom_schema();ensure_classwork_submission_schema();ensure_classwork_score_schema();ensure_attendance_schema();ensure_logbook_schema();ensure_logbook_photo_schema();ensure_session_schema();repair_missing_student_profiles()
-for bp in (auth,password,student,daily_logbook,student_classwork,student_gradebook,student_classmates,supervisor,admin,classroom,internship_classroom,classwork,classwork_submissions,classwork_grading,classwork_scores,classwork_gradebook,classwork_gradebook_export,classwork_ml_insights,performance_reports,admin_reports_overview,admin_trash,supervisor_profile_photo,notifications_bp):app.register_blueprint(bp)
+initialize_database();ensure_classroom_schema();ensure_classwork_submission_schema();ensure_classwork_score_schema();ensure_attendance_schema();ensure_logbook_schema();ensure_logbook_photo_schema();ensure_logbook_review_schema();ensure_session_schema();repair_missing_student_profiles()
+for bp in (auth,password,student,daily_logbook,logbook_review,student_classwork,student_gradebook,student_classmates,supervisor,admin,classroom,internship_classroom,classwork,classwork_submissions,classwork_grading,classwork_scores,classwork_gradebook,classwork_gradebook_export,classwork_ml_insights,performance_reports,admin_reports_overview,admin_trash,supervisor_profile_photo,notifications_bp):app.register_blueprint(bp)
 from flask import request
 @app.before_request
 def enforce_single_supervisor_session():
