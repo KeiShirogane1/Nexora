@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Join Class - Nexora</title>
+  <title>Join Intern Classroom - Nexora</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
@@ -21,21 +21,21 @@
   {% include 'components/student_sidebar.html' %}
   <main class="join-main">
     <div class="join-wrap">
-      <nav class="join-breadcrumb" aria-label="Breadcrumb"><a href="{{ url_for('classroom.student_classes') }}">My Classes</a><span aria-hidden="true">›</span><span class="current">Join Class</span></nav>
+      <nav class="join-breadcrumb" aria-label="Breadcrumb"><a href="{{ url_for('classroom.student_classes') }}">Intern Classrooms</a><span aria-hidden="true">›</span><span class="current">Join Intern Classroom</span></nav>
       <section class="join-hero student-section-heading" aria-labelledby="join-class-heading">
-        <div><div class="join-eyebrow student-section-eyebrow">Student Portal</div><h1 id="join-class-heading">Join a Class</h1><p>Enter the class code provided by your supervisor to join your internship classroom.</p></div>
-        <a href="{{ url_for('classroom.student_classes') }}" class="back-link">← Back to My Classes</a>
+        <div><div class="join-eyebrow student-section-eyebrow">Student Portal</div><h1 id="join-class-heading">Join an Intern Classroom</h1><p>Enter the classroom code provided by your supervisor to join your internship workspace.</p></div>
+        <a href="{{ url_for('classroom.student_classes') }}" class="back-link">← Back to Intern Classrooms</a>
       </section>
       <section class="join-card">
-        <div class="join-card-head"><div class="join-symbol" aria-hidden="true">🔑</div><div><h2>Class access code</h2><p>Use the code shared by your supervisor.</p></div></div>
+        <div class="join-card-head"><div class="join-symbol" aria-hidden="true">🔑</div><div><h2>Intern Classroom access code</h2><p>Use the code shared by your supervisor.</p></div></div>
         <div class="join-card-body">
           <form method="POST" novalidate>
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <label for="class_code" class="form-label">Class code</label>
+            <label for="class_code" class="form-label">Classroom code</label>
             <input type="text" id="class_code" name="class_code" class="code-input{% if errors and errors.class_code %} is-invalid{% endif %}" placeholder="E.G. NEX-ABC123" value="{{ form.class_code if form.class_code else '' }}" maxlength="10" autocomplete="off" autocapitalize="characters" required>
             {% if errors and errors.class_code %}<div class="field-error">{{ errors.class_code }}</div>{% endif %}
-            <div class="field-help">Class codes are 6–10 characters. If you don't have a code, ask your supervisor or instructor.</div>
-            <div class="join-actions"><a href="{{ url_for('classroom.student_classes') }}" class="btn-secondary">Cancel</a><button type="submit" class="btn-primary-nx">Join Class</button></div>
+            <div class="field-help">Classroom codes are 6–10 characters. If you don't have a code, ask your supervisor.</div>
+            <div class="join-actions"><a href="{{ url_for('classroom.student_classes') }}" class="btn-secondary">Cancel</a><button type="submit" class="btn-primary-nx">Join Intern Classroom</button></div>
           </form>
         </div>
       </section>
