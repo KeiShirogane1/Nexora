@@ -17,6 +17,7 @@ def ensure_classwork_submission_schema():
                     submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     grade NUMERIC,
                     feedback TEXT,
+                    is_team_submission INTEGER NOT NULL DEFAULT 0,
                     UNIQUE(assignment_id, student_id, attempt_no)
                 )""",
                 """CREATE TABLE IF NOT EXISTS classwork_submission_files (
@@ -42,6 +43,7 @@ def ensure_classwork_submission_schema():
                     submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     grade NUMERIC,
                     feedback TEXT,
+                    is_team_submission INTEGER NOT NULL DEFAULT 0,
                     UNIQUE(assignment_id, student_id, attempt_no),
                     FOREIGN KEY(assignment_id) REFERENCES classroom_assignments(id) ON DELETE CASCADE,
                     FOREIGN KEY(student_id) REFERENCES users(id) ON DELETE CASCADE
@@ -60,8 +62,23 @@ def ensure_classwork_submission_schema():
             ]
         for statement in statements:
             conn.execute(statement)
+
+        if using_postgres():
+            conn.execute(
+                "ALTER TABLE classwork_submissions ADD COLUMN IF NOT EXISTS is_team_submission INTEGER NOT NULL DEFAULT 0"
+            )
+        else:
+            submission_columns = [
+                row[1] for row in conn.execute("PRAGMA table_info(classwork_submissions)").fetchall()
+            ]
+            if "is_team_submission" not in submission_columns:
+                conn.execute(
+                    "ALTER TABLE classwork_submissions ADD COLUMN is_team_submission INTEGER NOT NULL DEFAULT 0"
+                )
+
         indexes = [
             "CREATE INDEX IF NOT EXISTS idx_classwork_submissions_assignment ON classwork_submissions(assignment_id, student_id, attempt_no)",
+            "CREATE INDEX IF NOT EXISTS idx_classwork_submissions_team ON classwork_submissions(assignment_id, is_team_submission, attempt_no)",
             "CREATE INDEX IF NOT EXISTS idx_classwork_submission_files_submission ON classwork_submission_files(submission_id)",
         ]
         for statement in indexes:
