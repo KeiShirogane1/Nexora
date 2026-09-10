@@ -297,7 +297,7 @@
 
 <div class="class-wrap">
     <div class="class-breadcrumb">
-        <a href="{{ url_for('classroom.student_classes') }}">My Classes</a>
+        <a href="{{ url_for('classroom.student_classes') }}">Intern Classrooms</a>
         <span>›</span>
         <span>{{ classroom.name }}</span>
     </div>
@@ -314,17 +314,17 @@
             </div>
 
             <div class="class-code">
-                <span>Class code</span>
+                <span>Classroom code</span>
                 <strong>{{ class_code or '—' }}</strong>
                 <div class="class-code-actions">
                     <button type="button" onclick="copyStudentCode()"{% if not class_code %} disabled{% endif %}>Copy</button>
-                    <button type="button" onclick="document.getElementById('studentInfoModal').classList.add('open')">Class Info</button>
+                    <button type="button" onclick="document.getElementById('studentInfoModal').classList.add('open')">Classroom Info</button>
                 </div>
             </div>
         </div>
     </section>
 
-    <nav class="class-tabs" aria-label="Class navigation">
+    <nav class="class-tabs" aria-label="Intern Classroom navigation">
         {% if current_class_tab == 'stream' %}
             <button type="button" class="class-tab active" onclick="openClassTab('stream', this)">Stream</button>
         {% else %}
@@ -346,13 +346,13 @@
 <div id="studentInfoModal" class="nexora-modal-overlay" onclick="if(event.target===this)this.classList.remove('open')">
     <div class="nexora-modal">
         <div class="nexora-modal-header">
-            <h2>Class Information</h2>
-            <p>Intern classroom details</p>
+            <h2>Intern Classroom Information</h2>
+            <p>Internship workspace details</p>
             <button type="button" class="nexora-modal-close" onclick="document.getElementById('studentInfoModal').classList.remove('open')">×</button>
         </div>
         <div class="nexora-modal-body">
             <div class="class-info-list">
-                <div class="class-info-row"><b>Class</b><span>{{ classroom.name }}</span></div>
+                <div class="class-info-row"><b>Intern Classroom</b><span>{{ classroom.name }}</span></div>
                 <div class="class-info-row"><b>Section</b><span>{{ classroom.section }}</span></div>
                 <div class="class-info-row"><b>Supervisor</b><span>{{ classroom.supervisor }}</span></div>
                 <div class="class-info-row"><b>Code</b><span>{{ class_code or '—' }}</span></div>
@@ -370,7 +370,7 @@
         const code = {{ class_code|tojson }};
         if (!code) return;
 
-        const done = () => window.showToast && showToast('Class code copied.');
+        const done = () => window.showToast && showToast('Classroom code copied.');
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(code).then(done).catch(() => fallbackCopy(code));
         } else {
@@ -385,7 +385,7 @@
         ta.select();
         try {
             document.execCommand('copy');
-            if (window.showToast) showToast('Class code copied.');
+            if (window.showToast) showToast('Classroom code copied.');
         } finally {
             ta.remove();
         }
