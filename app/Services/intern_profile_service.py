@@ -179,6 +179,10 @@ def get_supervisor_intern_profile(supervisor_id, classroom_id, student_id):
             """,
             (classroom_id, student_id),
         ).fetchall()
+        attendance_day_number_by_id = {
+            int(_value(row, "id", 0, 0)): day_number
+            for day_number, row in enumerate(reversed(attendance_rows), start=1)
+        }
 
         attendance = []
         rendered_hours = 0.0
@@ -241,7 +245,8 @@ def get_supervisor_intern_profile(supervisor_id, classroom_id, student_id):
             "reviewed": 0,
             "in_progress": 0,
         }
-        for index, row in enumerate(reversed(log_rows), start=1):
+        for row in reversed(log_rows):
+            attendance_id = int(_value(row, "attendance_id", 1, 0))
             attendance_status = _value(row, "status", 3, "Open") or "Open"
             stored_review_status = _value(row, "review_status", 5, "") or ""
             status = "in_progress" if attendance_status == "Open" else (stored_review_status or "pending")
@@ -251,8 +256,8 @@ def get_supervisor_intern_profile(supervisor_id, classroom_id, student_id):
             logbook_entries.append(
                 {
                     "id": int(_value(row, "id", 0, 0)),
-                    "attendance_id": int(_value(row, "attendance_id", 1, 0)),
-                    "day_number": index,
+                    "attendance_id": attendance_id,
+                    "day_number": attendance_day_number_by_id.get(attendance_id),
                     "date": _format_date(_value(row, "clock_in", 2, None)),
                     "accomplishment": _value(row, "accomplishment", 4, "") or "",
                     "review_status": status,
