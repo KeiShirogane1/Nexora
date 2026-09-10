@@ -20,7 +20,7 @@
                 <div>
                     <span class="text-primary fw-bold text-uppercase small">Daily OJT Logbook</span>
                     <h1 class="h3 fw-bold mb-1">Supervisor Review</h1>
-                    <p class="text-muted mb-0">Review closed internship days, verify evidence, and return entries for revision when needed.</p>
+                    <p class="text-muted mb-0">Review closed internship days, verify evidence, rate daily performance, and return entries for revision when needed.</p>
                 </div>
             </div>
 
@@ -118,8 +118,42 @@
                             </div>
                         </section>
 
+                        <section class="card shadow-sm mb-4">
+                            <div class="card-header bg-white d-flex flex-wrap align-items-start justify-content-between gap-3 py-3">
+                                <div>
+                                    <h2 class="h6 fw-bold mb-1">Daily Performance Rating</h2>
+                                    <p class="text-muted small mb-0">Manual supervisor rating for this completed OJT day. Nexora only converts the selected stars to percentage.</p>
+                                </div>
+                                {% if daily_rating %}<span class="badge text-bg-primary">{{ '%.1f'|format(daily_rating.star_rating) }} ★ · {{ '%.1f'|format(daily_rating.percentage) }}%</span>{% endif %}
+                            </div>
+                            <div class="card-body">
+                                {% if selected_entry.can_review %}
+                                    <form method="POST" action="{{ url_for('logbook_review.rate_daily_performance', class_id=classroom.id, log_id=selected_entry.id) }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <div class="row g-3">
+                                            <div class="col-md-4">
+                                                <label class="form-label fw-bold" for="daily-star-rating">Stars *</label>
+                                                <input class="form-control" id="daily-star-rating" name="star_rating" type="number" min="1.0" max="5.0" step="0.1" value="{% if daily_rating %}{{ '%.1f'|format(daily_rating.star_rating) }}{% endif %}" placeholder="4.0" required>
+                                                <div class="form-text">1.0–5.0 stars, in 0.1 increments.</div>
+                                            </div>
+                                            <div class="col-md-8">
+                                                <label class="form-label fw-bold" for="daily-rating-comment">Performance comment <span class="text-muted fw-normal">(optional)</span></label>
+                                                <textarea class="form-control" id="daily-rating-comment" name="rating_comment" maxlength="2000" rows="3" placeholder="Brief note about the intern's performance for this day.">{{ daily_rating.comment if daily_rating else '' }}</textarea>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-3">
+                                            <div class="text-muted small">Examples: 4.0 ★ = 90.0% · 4.7 ★ = 96.0% · 5.0 ★ = 100.0%.</div>
+                                            <button class="btn btn-primary" type="submit">{% if daily_rating %}Update Daily Rating{% else %}Save Daily Rating{% endif %}</button>
+                                        </div>
+                                    </form>
+                                {% else %}
+                                    <div class="alert alert-secondary mb-0">This attendance session is still open. Daily performance can be rated after clock-out.</div>
+                                {% endif %}
+                            </div>
+                        </section>
+
                         <section class="card shadow-sm">
-                            <div class="card-header bg-white py-3"><h2 class="h6 fw-bold mb-1">Supervisor Review</h2><p class="text-muted small mb-0">Review status does not alter attendance, Time In/Out, or rendered hours.</p></div>
+                            <div class="card-header bg-white py-3"><h2 class="h6 fw-bold mb-1">Supervisor Review</h2><p class="text-muted small mb-0">Review status does not alter attendance, Time In/Out, rendered hours, or the separate daily performance rating.</p></div>
                             <div class="card-body">
                                 {% if selected_entry.can_review %}
                                     <form method="POST" action="{{ url_for('logbook_review.review_daily_log', class_id=classroom.id, log_id=selected_entry.id) }}">
