@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily OJT Review - Nexora</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
+</head>
+<body class="student-page">
+    {% include 'components/student_sidebar.html' %}
+
+    <main class="student-tasks-main">
+        <div class="student-tasks-content">
+            <div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-4">
+                <div>
+                    <span class="student-section-eyebrow">Daily OJT Logbook</span>
+                    <h1 class="h3 fw-bold mb-1">Day {{ entry.day_number or '—' }} Review</h1>
+                    <p class="text-muted mb-0">{{ entry.company_name or entry.classroom_name }}{% if entry.section %} · {{ entry.section }}{% endif %} · {{ entry.date }}</p>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    <a class="btn btn-outline-secondary" href="{{ url_for('student.logbook', classroom_id=entry.classroom_id) }}">Back to Logbook</a>
+                    <a class="btn btn-outline-primary" href="{{ url_for('student.view_session', attendance_id=entry.attendance_id) }}">View Session</a>
+                </div>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'danger' else 'success' if category == 'success' else 'warning' if category == 'warning' else 'info' }}" role="alert">{{ message }}</div>
+                {% endfor %}
+            {% endwith %}
+
+            {% set badge = 'warning' if entry.review_status == 'pending' else 'success' if entry.review_status == 'approved' else 'danger' if entry.review_status == 'revision_requested' else 'primary' if entry.review_status == 'reviewed' else 'secondary' %}
+            <div class="row g-4 align-items-start">
+                <div class="col-xl-8">
+                    <section class="card shadow-sm mb-4">
+                        <div class="card-header bg-white d-flex flex-wrap align-items-start justify-content-between gap-3 py-3">
+                            <div>
+                                <h2 class="h5 fw-bold mb-1">Daily OJT Entry</h2>
+                                <p class="text-muted small mb-0">Attendance-backed internship record</p>
+                            </div>
+                            <span class="badge text-bg-{{ badge }}">{{ entry.review_status_label }}</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-4"><div class="border rounded-3 p-3 h-100"><div class="text-muted small">Time In</div><div class="fw-bold">{{ entry.time_in or '—' }}</div></div></div>
+                                <div class="col-md-4"><div class="border rounded-3 p-3 h-100"><div class="text-muted small">Time Out</div><div class="fw-bold">{{ entry.time_out or '—' }}</div></div></div>
+                                <div class="col-md-4"><div class="border rounded-3 p-3 h-100"><div class="text-muted small">Hours Rendered</div><div class="fw-bold">{% if entry.hours_rendered is not none %}{{ '%.2f'|format(entry.hours_rendered) }} hrs{% else %}In progress{% endif %}</div></div></div>
+                            </div>
+
+                            {% if entry.can_revise %}
+                                <div class="alert alert-warning">Your supervisor requested changes. Update the Daily OJT text below and resubmit it for review. Attendance and saved photo evidence will not be changed.</div>
+                                <form method="POST" action="{{ url_for('logbook_review.student_revise', log_id=entry.id) }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold" for="revision-accomplishment">Daily accomplishment *</label>
+                                        <textarea class="form-control" id="revision-accomplishment" name="accomplishment" maxlength="5000" rows="5" required>{{ entry.accomplishment }}</textarea>
+                                    </div>
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold" for="revision-reflection">Learning / reflection</label>
+                                            <textarea class="form-control" id="revision-reflection" name="reflection" maxlength="5000" rows="5">{{ entry.reflection }}</textarea>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold" for="revision-challenges">Challenges / notes</label>
+                                            <textarea class="form-control" id="revision-challenges" name="challenges" maxlength="5000" rows="5">{{ entry.challenges }}</textarea>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-end mt-3">
+                                        <button class="btn btn-primary" type="submit">Submit Revision</button>
+                                    </div>
+                                </form>
+                            {% else %}
+                                <div class="mb-3"><div class="text-muted small fw-bold text-uppercase mb-1">Daily accomplishment</div><div class="border rounded-3 p-3 bg-light-subtle">{{ entry.accomplishment }}</div></div>
+                                <div class="mb-3"><div class="text-muted small fw-bold text-uppercase mb-1">Learning / reflection</div><div class="border rounded-3 p-3 bg-light-subtle">{{ entry.reflection or 'No reflection recorded.' }}</div></div>
+                                <div class="mb-3"><div class="text-muted small fw-bold text-uppercase mb-1">Challenges / notes</div><div class="border rounded-3 p-3 bg-light-subtle">{{ entry.challenges or 'No challenges or notes recorded.' }}</div></div>
+                            {% endif %}
+
+                            {% if entry.related_work_title %}<span class="badge rounded-pill text-bg-light">Related Work · {{ entry.related_work_title }}</span>{% endif %}
+                        </div>
+                    </section>
+
+                    <section class="card shadow-sm">
+                        <div class="card-header bg-white d-flex align-items-center justify-content-between gap-3 py-3"><div><h2 class="h6 fw-bold mb-1">Photo Evidence</h2><p class="text-muted small mb-0">Saved evidence remains read-only on the review page.</p></div><span class="badge text-bg-light">{{ photos|length }} / 5</span></div>
+                        <div class="card-body">
+                            {% if photos %}
+                                <div class="row g-3">
+                                    {% for photo in photos %}
+                                        <div class="col-6 col-md-4">
+                                            <a class="d-block border rounded-3 overflow-hidden" href="{{ url_for('daily_logbook.view_photo', photo_id=photo.id) }}" target="_blank" rel="noopener"><img class="img-fluid w-100" src="{{ url_for('daily_logbook.view_photo', photo_id=photo.id) }}" alt="{{ photo.original_filename }}"></a>
+                                            <div class="text-muted small text-truncate mt-1" title="{{ photo.original_filename }}">{{ photo.original_filename }}</div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="border rounded-3 p-3 text-muted small">No photo evidence was attached to this Daily OJT entry.</div>
+                            {% endif %}
+                        </div>
+                    </section>
+                </div>
+
+                <div class="col-xl-4">
+                    <section class="card shadow-sm mb-4">
+                        <div class="card-header bg-white py-3"><h2 class="h6 fw-bold mb-0">Supervisor Review</h2></div>
+                        <div class="card-body">
+                            <div class="mb-3"><div class="text-muted small">Status</div><div class="mt-1"><span class="badge text-bg-{{ badge }}">{{ entry.review_status_label }}</span></div></div>
+                            {% if entry.review_comments %}
+                                <div><div class="text-muted small fw-bold mb-1">Supervisor comment</div><div class="border rounded-3 p-3 bg-light-subtle">{{ entry.review_comments }}</div></div>
+                            {% elif entry.review_status == 'pending' %}
+                                <div class="text-muted small">Your supervisor has not reviewed this closed Daily OJT entry yet.</div>
+                            {% elif entry.review_status == 'in_progress' %}
+                                <div class="text-muted small">This attendance session is still active. Review begins after clock-out.</div>
+                            {% else %}
+                                <div class="text-muted small">No supervisor comment was added.</div>
+                            {% endif %}
+                        </div>
+                    </section>
+
+                    <section class="card shadow-sm">
+                        <div class="card-body">
+                            <h2 class="h6 fw-bold">Review Safety</h2>
+                            <p class="text-muted small mb-0">Supervisor review and text revisions do not change Time In, Time Out, rendered hours, or attendance status.</p>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
