@@ -62,10 +62,9 @@ def _student_view(student):
 def get_supervisor_assigned_interns(supervisor_id):
     """Return Supervisor classrooms with their enrolled interns.
 
-    The classroom-first collection powers the Assigned Interns directory while
-    the legacy intern-first collection remains available for compatibility with
-    existing callers. Classroom-scoped OJT evidence is never combined across
-    placements.
+    ``interns`` is intentionally classroom-first for the Assigned Interns page.
+    ``flat_interns`` retains the previous intern-first collection for any legacy
+    callers. Classroom-scoped OJT evidence is never combined across placements.
     """
     try:
         supervisor_id = int(supervisor_id)
@@ -73,6 +72,7 @@ def get_supervisor_assigned_interns(supervisor_id):
         return {
             "classrooms": [],
             "interns": [],
+            "flat_interns": [],
             "legacy_interns": [],
             "summary": {
                 "total_interns": 0,
@@ -229,8 +229,8 @@ def get_supervisor_assigned_interns(supervisor_id):
             "placements": [],
         }
 
-    interns = list(interns_by_id.values())
-    for intern in interns:
+    flat_interns = list(interns_by_id.values())
+    for intern in flat_interns:
         placements = intern.get("placements") or []
         intern["classroom_count"] = len(placements)
         intern["is_legacy_only"] = not placements and bool(intern.get("legacy_assigned"))
@@ -238,15 +238,34 @@ def get_supervisor_assigned_interns(supervisor_id):
             placement.get("roster_status_key") == "active" for placement in placements
         )
 
-    interns.sort(key=lambda item: (str(item.get("display_name") or "").lower(), item.get("id") or 0))
-    legacy_interns = [intern for intern in interns if intern.get("is_legacy_only")]
+    flat_interns.sort(key=lambda item: (str(item.get("display_name") or "").lower(), item.get("id") or 0))
+    legacy_interns = [intern for intern in flat_interns if intern.get("is_legacy_only")]
+
+    display_groups = list(classroom_groups)
+    if legacy_interns:
+        display_groups.append(
+            {
+                "class_id": None,
+                "classroom_name": "Legacy Assignments",
+                "section": "",
+                "archived": False,
+                "company_name": "Not yet enrolled in an Intern Classroom",
+                "internship_title": "",
+                "work_arrangement": "",
+                "location": "",
+                "intern_count": len(legacy_interns),
+                "is_legacy": True,
+                "interns": legacy_interns,
+            }
+        )
 
     return {
         "classrooms": classroom_groups,
-        "interns": interns,
+        "interns": display_groups,
+        "flat_interns": flat_interns,
         "legacy_interns": legacy_interns,
         "summary": {
-            "total_interns": len(interns),
+            "total_interns": len(flat_interns),
             "classroom_count": classrooms_with_interns,
             "classroom_placements": classroom_placements,
             "pending_reviews": pending_reviews,
