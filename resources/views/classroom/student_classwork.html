@@ -90,7 +90,7 @@
                                         <span>
                                             {{ item.activity_label }} · {{ item.points }} pts
                                             {% if item.team_members %}
-                                                · Team: {% for member in item.team_members %}{{ member.username }}{% if not loop.last %}, {% endif %}{% endfor %}
+                                                · {{ item.team_name or 'Team' }}: {% for member in item.team_members %}{{ member.username }}{% if not loop.last %}, {% endif %}{% endfor %}
                                             {% elif item.group_mode %}
                                                 · Collaborative work
                                             {% endif %}
@@ -106,7 +106,7 @@
                                     <strong>{% if item.due_at %}Due {{ item.due_at }}{% else %}No deadline{% endif %}</strong>
                                     <span>
                                         {% if item.team_members %}
-                                            Team · {{ item.team_members|length }} members
+                                            {{ item.team_name or 'Team' }} · {{ item.team_members|length }} members
                                         {% elif item.group_mode %}
                                             Collaborative · max {{ item.max_group_size }}
                                         {% else %}
