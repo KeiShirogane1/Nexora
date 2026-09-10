@@ -71,7 +71,8 @@ def ensure_classroom_schema():
                     resource_filepath TEXT,
                     allow_file_upload INTEGER DEFAULT 0,
                     group_mode INTEGER DEFAULT 0,
-                    max_group_size INTEGER DEFAULT 1
+                    max_group_size INTEGER DEFAULT 1,
+                    team_name TEXT
                 )""",
                 """CREATE TABLE IF NOT EXISTS classroom_assignment_recipients (
                     id SERIAL PRIMARY KEY,
@@ -186,6 +187,7 @@ def ensure_classroom_schema():
                     allow_file_upload INTEGER DEFAULT 0,
                     group_mode INTEGER DEFAULT 0,
                     max_group_size INTEGER DEFAULT 1,
+                    team_name TEXT,
                     FOREIGN KEY(assignment_id) REFERENCES classroom_assignments(id) ON DELETE CASCADE
                 )""",
                 """CREATE TABLE IF NOT EXISTS classroom_assignment_recipients (
@@ -238,7 +240,7 @@ def ensure_classroom_schema():
             conn.execute(statement)
 
         # Existing installations created before Internship Classroom support need
-        # the discriminator and banner preference added without rebuilding the table.
+        # additive columns added without rebuilding their tables.
         if using_postgres():
             conn.execute(
                 "ALTER TABLE classrooms ADD COLUMN IF NOT EXISTS classroom_type TEXT NOT NULL DEFAULT 'classroom'"
@@ -251,6 +253,9 @@ def ensure_classroom_schema():
             )
             conn.execute(
                 "ALTER TABLE classroom_internship_details ADD COLUMN IF NOT EXISTS hours_mode TEXT NOT NULL DEFAULT 'specified'"
+            )
+            conn.execute(
+                "ALTER TABLE classroom_assignment_meta ADD COLUMN IF NOT EXISTS team_name TEXT"
             )
         else:
             classroom_columns = [row[1] for row in conn.execute("PRAGMA table_info(classrooms)").fetchall()]
@@ -272,6 +277,13 @@ def ensure_classroom_schema():
             if "hours_mode" not in internship_columns:
                 conn.execute(
                     "ALTER TABLE classroom_internship_details ADD COLUMN hours_mode TEXT NOT NULL DEFAULT 'specified'"
+                )
+            assignment_meta_columns = [
+                row[1] for row in conn.execute("PRAGMA table_info(classroom_assignment_meta)").fetchall()
+            ]
+            if "team_name" not in assignment_meta_columns:
+                conn.execute(
+                    "ALTER TABLE classroom_assignment_meta ADD COLUMN team_name TEXT"
                 )
 
         indexes = [
