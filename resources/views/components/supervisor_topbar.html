@@ -226,3 +226,28 @@
         </a>
     </div>
 </header>
+
+{% if classroom is defined and classroom.id is defined %}
+<script>
+    /* Stream still owns its in-page Stream/Interns panels; complete its navigation
+       with the same routes and ordering used by supervisor_class_context.html. */
+    document.addEventListener('DOMContentLoaded', function () {
+        if (!document.body.classList.contains('supervisor-class-page')) return;
+        const tabs = document.querySelector('.class-tabs');
+        if (!tabs) return;
+
+        tabs.innerHTML = `
+            <button class="profile-tab-button active" type="button" onclick="openClassTab('stream',this)">Stream</button>
+            <a href="{{ url_for('classwork.manage_classwork', class_id=classroom.id) }}" class="profile-tab-button">Work</a>
+            <a href="{{ url_for('logbook_review.supervisor_logbook', class_id=classroom.id) }}" class="profile-tab-button">Logbook</a>
+            <a href="{{ url_for('daily_performance_history.supervisor_history', class_id=classroom.id) }}" class="profile-tab-button">Daily Performance</a>
+            <a href="{{ url_for('ojt_evaluation.supervisor_evaluations', class_id=classroom.id) }}" class="profile-tab-button">Evaluations</a>
+            <a href="{{ url_for('classwork_ml_insights.supervisor_insights', class_id=classroom.id) }}" class="profile-tab-button">Performance Insights</a>
+            <a href="{{ url_for('classwork_ml_insights.supervisor_cohort_insights', class_id=classroom.id) }}" class="profile-tab-button">Cohort Insights</a>
+            <a href="{{ url_for('needs_attention.supervisor_needs_attention', class_id=classroom.id) }}" class="profile-tab-button">Needs Attention</a>
+            <a href="{{ url_for('performance_reports.supervisor_reports', class_id=classroom.id) }}" class="profile-tab-button">Reports</a>
+            <button id="internsTabButton" class="profile-tab-button" type="button" onclick="openClassTab('people',this)">Interns</button>
+        `;
+    });
+</script>
+{% endif %}
