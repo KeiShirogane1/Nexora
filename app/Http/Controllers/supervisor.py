@@ -99,36 +99,69 @@ def supervisor_dashboard():
     total_interns = cursor.fetchone()[0]
 
 
-    # Count active attendance sessions
+    # Count active attendance sessions. New scoped sessions belong to the
+    # supervisor through their Intern Classroom; legacy NULL-scoped sessions
+    # keep the previous student_assignments fallback.
     cursor.execute("""
         SELECT COUNT(*)
         FROM attendance a
-        JOIN student_assignments sa
-        ON a.student_id = sa.student_id
-        WHERE sa.supervisor_id = ?
-        AND a.status = 'Open'
-    """, (supervisor_id,))
+        WHERE a.status = 'Open'
+          AND (
+                (
+                    a.classroom_id IS NOT NULL
+                    AND EXISTS (
+                        SELECT 1
+                        FROM classrooms c
+                        WHERE c.id = a.classroom_id
+                          AND c.supervisor_id = ?
+                    )
+                )
+                OR
+                (
+                    a.classroom_id IS NULL
+                    AND EXISTS (
+                        SELECT 1
+                        FROM student_assignments sa
+                        WHERE sa.student_id = a.student_id
+                          AND sa.supervisor_id = ?
+                    )
+                )
+          )
+    """, (supervisor_id, supervisor_id))
 
     active_sessions = cursor.fetchone()[0]
 
-    # Display active interns
+    # Display active interns with the same scoped ownership rule.
     cursor.execute("""
         SELECT
             u.username,
             a.clock_in
         FROM attendance a
-
-        JOIN users u
-        ON a.student_id = u.id
-
-        JOIN student_assignments sa
-        ON a.student_id = sa.student_id
-
-        WHERE sa.supervisor_id = ?
-        AND a.status = 'Open'
-
+        JOIN users u ON a.student_id = u.id
+        WHERE a.status = 'Open'
+          AND (
+                (
+                    a.classroom_id IS NOT NULL
+                    AND EXISTS (
+                        SELECT 1
+                        FROM classrooms c
+                        WHERE c.id = a.classroom_id
+                          AND c.supervisor_id = ?
+                    )
+                )
+                OR
+                (
+                    a.classroom_id IS NULL
+                    AND EXISTS (
+                        SELECT 1
+                        FROM student_assignments sa
+                        WHERE sa.student_id = a.student_id
+                          AND sa.supervisor_id = ?
+                    )
+                )
+          )
         ORDER BY a.clock_in ASC
-    """, (supervisor_id,))
+    """, (supervisor_id, supervisor_id))
 
     active_interns = cursor.fetchall()
     
