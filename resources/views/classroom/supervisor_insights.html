@@ -7,732 +7,6 @@
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">
-        <style>
-            .supervisor-insights-page {
-                min-height: 100vh;
-                background: #f1f5f9;
-                color: #0f172a;
-            }
-
-            .supervisor-insights-shell {
-                max-width: 1500px;
-                margin: 0 auto;
-            }
-
-            .supervisor-insights-heading {
-                display: flex;
-                align-items: flex-end;
-                justify-content: space-between;
-                gap: 24px;
-                margin: 0 0 22px;
-            }
-
-            .supervisor-insights-heading h1 {
-                margin: 0 0 5px;
-                font-size: 2rem;
-                font-weight: 800;
-                letter-spacing: -0.025em;
-            }
-
-            .supervisor-insights-heading p {
-                margin: 0;
-                color: #64748b;
-            }
-
-            .supervisor-insights-actions {
-                display: flex;
-                gap: 10px;
-                flex-wrap: wrap;
-            }
-
-            .supervisor-insights-card {
-                overflow: hidden;
-                border: 1px solid #e8eef7;
-                border-radius: 18px;
-                background: #fff;
-                box-shadow: 0 8px 28px rgba(15, 23, 42, 0.07);
-            }
-
-            .supervisor-insights-view-tabs {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                padding: 16px 18px;
-                border-bottom: 1px solid #eef2f7;
-                background: #fbfdff;
-            }
-
-            .supervisor-insights-view-tab {
-                min-height: 38px;
-                padding: 0 15px;
-                border: 1px solid #dbe5f0;
-                border-radius: 10px;
-                background: #fff;
-                color: #475569;
-                font: inherit;
-                font-size: 0.78rem;
-                font-weight: 800;
-                cursor: pointer;
-            }
-
-            .supervisor-insights-view-tab:hover {
-                border-color: #93c5fd;
-                color: #2563eb;
-            }
-
-            .supervisor-insights-view-tab.active {
-                border-color: #2563eb;
-                background: #eff6ff;
-                color: #1d4ed8;
-            }
-
-            .supervisor-insights-panel {
-                padding: 20px;
-            }
-
-            .supervisor-insights-panel[hidden] {
-                display: none !important;
-            }
-
-            .supervisor-insights-panel-heading {
-                display: flex;
-                align-items: flex-start;
-                justify-content: space-between;
-                gap: 18px;
-                margin-bottom: 18px;
-            }
-
-            .supervisor-insights-panel-heading h2 {
-                margin: 0 0 4px;
-                font-size: 1.05rem;
-                font-weight: 800;
-                color: #0f172a;
-            }
-
-            .supervisor-insights-panel-heading p {
-                margin: 0;
-                color: #64748b;
-                font-size: 0.8rem;
-            }
-
-            .supervisor-insights-readiness {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
-                gap: 12px;
-            }
-
-            .supervisor-insights-readiness-card {
-                padding: 18px;
-                border: 1px solid #e4ebf4;
-                border-radius: 14px;
-                background: #f8fbff;
-            }
-
-            .supervisor-insights-readiness-card span {
-                display: block;
-                color: #64748b;
-                font-size: 0.72rem;
-                font-weight: 700;
-            }
-
-            .supervisor-insights-readiness-card strong {
-                display: block;
-                margin-top: 5px;
-                color: #10213d;
-                font-size: 1.65rem;
-                line-height: 1;
-                font-weight: 800;
-            }
-
-            .supervisor-insights-readiness-card.is-attention strong {
-                color: #c2410c;
-            }
-
-            .supervisor-insights-readiness-card.is-no-data strong {
-                color: #64748b;
-            }
-
-            .supervisor-insights-visuals {
-                display: grid;
-                grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
-                gap: 18px;
-                margin-top: 18px;
-            }
-
-            .supervisor-insights-chart-card {
-                overflow: hidden;
-                border: 1px solid #e4ebf4;
-                border-radius: 14px;
-                background: #fff;
-            }
-
-            .supervisor-insights-chart-header {
-                display: flex;
-                align-items: flex-start;
-                justify-content: space-between;
-                gap: 16px;
-                padding: 15px 16px;
-                border-bottom: 1px solid #eef2f7;
-                background: #f8fafc;
-            }
-
-            .supervisor-insights-chart-header strong {
-                color: #10213d;
-                font-size: 0.84rem;
-            }
-
-            .supervisor-insights-chart-header span {
-                color: #64748b;
-                font-size: 0.72rem;
-                text-align: right;
-            }
-
-            .supervisor-insights-chart-body {
-                padding: 12px 16px 15px;
-            }
-
-            .supervisor-insights-chart-row {
-                display: grid;
-                grid-template-columns: minmax(132px, 0.8fr) minmax(150px, 1.4fr) 54px;
-                align-items: center;
-                gap: 12px;
-                min-height: 42px;
-            }
-
-            .supervisor-insights-chart-label {
-                color: #475569;
-                font-size: 0.72rem;
-                font-weight: 800;
-            }
-
-            .supervisor-insights-chart-value {
-                color: #10213d;
-                font-size: 0.78rem;
-                font-weight: 800;
-                text-align: right;
-            }
-
-            .supervisor-insights-progress {
-                width: 100%;
-                height: 12px;
-                overflow: hidden;
-                border: 0;
-                border-radius: 999px;
-                appearance: none;
-                background: #e8eef6;
-            }
-
-            .supervisor-insights-progress::-webkit-progress-bar {
-                border-radius: 999px;
-                background: #e8eef6;
-            }
-
-            .supervisor-insights-progress::-webkit-progress-value {
-                border-radius: 999px;
-                background: #2563eb;
-            }
-
-            .supervisor-insights-progress::-moz-progress-bar {
-                border-radius: 999px;
-                background: #2563eb;
-            }
-
-            .supervisor-insights-progress.is-excellent::-webkit-progress-value { background: #16a34a; }
-            .supervisor-insights-progress.is-excellent::-moz-progress-bar { background: #16a34a; }
-            .supervisor-insights-progress.is-very-satisfactory::-webkit-progress-value { background: #2563eb; }
-            .supervisor-insights-progress.is-very-satisfactory::-moz-progress-bar { background: #2563eb; }
-            .supervisor-insights-progress.is-satisfactory::-webkit-progress-value { background: #d97706; }
-            .supervisor-insights-progress.is-satisfactory::-moz-progress-bar { background: #d97706; }
-            .supervisor-insights-progress.is-fair::-webkit-progress-value { background: #ea580c; }
-            .supervisor-insights-progress.is-fair::-moz-progress-bar { background: #ea580c; }
-            .supervisor-insights-progress.is-needs-improvement::-webkit-progress-value { background: #dc2626; }
-            .supervisor-insights-progress.is-needs-improvement::-moz-progress-bar { background: #dc2626; }
-            .supervisor-insights-progress.is-no-data::-webkit-progress-value { background: #94a3b8; }
-            .supervisor-insights-progress.is-no-data::-moz-progress-bar { background: #94a3b8; }
-            .supervisor-insights-progress.is-completion::-webkit-progress-value { background: #0f766e; }
-            .supervisor-insights-progress.is-completion::-moz-progress-bar { background: #0f766e; }
-
-            .supervisor-insights-overall-note {
-                margin-top: 14px;
-                padding: 14px 16px;
-                border: 1px solid #dbeafe;
-                border-radius: 12px;
-                background: #f8fbff;
-                color: #52647b;
-                font-size: 0.78rem;
-                line-height: 1.55;
-            }
-
-            .supervisor-insights-individual-tools {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                flex-wrap: wrap;
-                margin-bottom: 14px;
-            }
-
-            .supervisor-insights-search {
-                flex: 1 1 260px;
-                min-height: 40px;
-                padding: 0 13px;
-                border: 1px solid #dbe5f0;
-                border-radius: 10px;
-                background: #fff;
-                color: #0f172a;
-                font: inherit;
-                font-size: 0.78rem;
-                outline: none;
-            }
-
-            .supervisor-insights-search:focus {
-                border-color: #60a5fa;
-                box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-            }
-
-            .supervisor-insights-filters {
-                display: flex;
-                align-items: center;
-                gap: 6px;
-                flex-wrap: wrap;
-            }
-
-            .supervisor-insights-filter {
-                min-height: 36px;
-                padding: 0 11px;
-                border: 1px solid #dbe5f0;
-                border-radius: 9px;
-                background: #fff;
-                color: #64748b;
-                font: inherit;
-                font-size: 0.7rem;
-                font-weight: 800;
-                cursor: pointer;
-            }
-
-            .supervisor-insights-filter:hover {
-                border-color: #93c5fd;
-                color: #2563eb;
-            }
-
-            .supervisor-insights-filter.active {
-                border-color: #2563eb;
-                background: #eff6ff;
-                color: #1d4ed8;
-            }
-
-            .supervisor-insights-shown-count {
-                margin-left: auto;
-                color: #64748b;
-                font-size: 0.72rem;
-                font-weight: 800;
-                white-space: nowrap;
-            }
-
-            .supervisor-insights-list {
-                overflow: hidden;
-                border: 1px solid #e5ebf2;
-                border-radius: 14px;
-            }
-
-            .supervisor-insights-list-head,
-            .supervisor-insights-row-main {
-                display: grid;
-                grid-template-columns: minmax(220px, 1.5fr) minmax(150px, 0.8fr) minmax(120px, 0.65fr) 92px;
-                align-items: center;
-                gap: 14px;
-            }
-
-            .supervisor-insights-list-head {
-                padding: 11px 16px;
-                background: #f8fafc;
-                color: #64748b;
-                font-size: 0.68rem;
-                font-weight: 800;
-                letter-spacing: 0.04em;
-                text-transform: uppercase;
-            }
-
-            .supervisor-insights-row {
-                border-top: 1px solid #eef2f7;
-                background: #fff;
-            }
-
-            .supervisor-insights-row:first-of-type {
-                border-top: 0;
-            }
-
-            .supervisor-insights-row-main {
-                min-height: 72px;
-                padding: 12px 16px;
-            }
-
-            .supervisor-insights-person strong {
-                display: block;
-                color: #10213d;
-                font-size: 0.84rem;
-                font-weight: 800;
-            }
-
-            .supervisor-insights-person small {
-                display: block;
-                margin-top: 3px;
-                color: #94a3b8;
-                font-size: 0.72rem;
-            }
-
-            .supervisor-insights-label {
-                display: inline-flex;
-                align-items: center;
-                min-height: 26px;
-                padding: 0 9px;
-                border-radius: 999px;
-                font-size: 0.68rem;
-                font-weight: 800;
-            }
-
-            .supervisor-insights-label.is-excellent {
-                background: #dcfce7;
-                color: #166534;
-            }
-
-            .supervisor-insights-label.is-very-satisfactory {
-                background: #dbeafe;
-                color: #1e40af;
-            }
-
-            .supervisor-insights-label.is-satisfactory {
-                background: #fef3c7;
-                color: #92400e;
-            }
-
-            .supervisor-insights-label.is-fair {
-                background: #ffedd5;
-                color: #9a3412;
-            }
-
-            .supervisor-insights-label.is-needs-improvement {
-                background: #fee2e2;
-                color: #991b1b;
-            }
-
-            .supervisor-insights-label.is-no-data {
-                background: #f1f5f9;
-                color: #64748b;
-            }
-
-            .supervisor-insights-completion {
-                color: #334155;
-                font-size: 0.8rem;
-                font-weight: 800;
-            }
-
-            .supervisor-insights-view-button {
-                min-height: 34px;
-                padding: 0 13px;
-                border: 1px solid #bfdbfe;
-                border-radius: 9px;
-                background: #fff;
-                color: #2563eb;
-                font: inherit;
-                font-size: 0.72rem;
-                font-weight: 800;
-                cursor: pointer;
-            }
-
-            .supervisor-insights-view-button:hover {
-                border-color: #2563eb;
-                background: #eff6ff;
-            }
-
-            .supervisor-insights-row-details {
-                display: none;
-                padding: 0 16px 16px;
-            }
-
-            .supervisor-insights-row-details.open {
-                display: block;
-            }
-
-            .supervisor-insights-detail-card {
-                overflow: hidden;
-                border: 1px solid #dce6f1;
-                border-radius: 14px;
-                background: #f8fbff;
-            }
-
-            .supervisor-insights-detail-header {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 16px;
-                padding: 15px 16px;
-                border-bottom: 1px solid #e4ebf4;
-                background: #fff;
-            }
-
-            .supervisor-insights-detail-header small {
-                display: block;
-                margin-bottom: 3px;
-                color: #64748b;
-                font-size: 0.68rem;
-                font-weight: 800;
-                letter-spacing: 0.04em;
-                text-transform: uppercase;
-            }
-
-            .supervisor-insights-detail-header h3 {
-                margin: 0;
-                color: #10213d;
-                font-size: 0.96rem;
-                font-weight: 800;
-            }
-
-            .supervisor-insights-detail-body {
-                padding: 16px;
-            }
-
-            .supervisor-insights-detail-progress-grid {
-                display: grid;
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-                gap: 12px;
-            }
-
-            .supervisor-insights-detail-progress-card {
-                padding: 14px;
-                border: 1px solid #e3eaf3;
-                border-radius: 12px;
-                background: #fff;
-            }
-
-            .supervisor-insights-detail-progress-head {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 12px;
-                margin-bottom: 9px;
-            }
-
-            .supervisor-insights-detail-progress-head span {
-                color: #64748b;
-                font-size: 0.7rem;
-                font-weight: 800;
-            }
-
-            .supervisor-insights-detail-progress-head strong {
-                color: #10213d;
-                font-size: 0.88rem;
-                font-weight: 800;
-            }
-
-            .supervisor-insights-detail-section {
-                margin-top: 14px;
-                padding-top: 14px;
-                border-top: 1px solid #dfe7f1;
-            }
-
-            .supervisor-insights-detail-section h4 {
-                margin: 0 0 9px;
-                color: #10213d;
-                font-size: 0.76rem;
-                font-weight: 800;
-                letter-spacing: 0.02em;
-            }
-
-            .supervisor-insights-detail-metrics {
-                display: grid;
-                grid-template-columns: repeat(3, minmax(0, 1fr));
-                gap: 10px;
-            }
-
-            .supervisor-insights-detail-metric {
-                min-height: 72px;
-                padding: 12px;
-                border: 1px solid #e3eaf3;
-                border-radius: 11px;
-                background: #fff;
-            }
-
-            .supervisor-insights-detail-metric span {
-                display: block;
-                color: #64748b;
-                font-size: 0.66rem;
-                font-weight: 700;
-            }
-
-            .supervisor-insights-detail-metric strong {
-                display: block;
-                margin-top: 5px;
-                color: #0f172a;
-                font-size: 0.82rem;
-                font-weight: 800;
-                overflow-wrap: anywhere;
-            }
-
-            .supervisor-insights-detail-feedback-empty {
-                padding: 12px 14px;
-                border: 1px dashed #d7e1ec;
-                border-radius: 11px;
-                background: #fff;
-                color: #64748b;
-                font-size: 0.74rem;
-            }
-
-            .supervisor-insights-detail-recommendation {
-                margin-top: 14px;
-                padding: 14px 15px;
-                border: 1px solid #bfdbfe;
-                border-radius: 12px;
-                background: #eff6ff;
-            }
-
-            .supervisor-insights-detail-recommendation span {
-                display: block;
-                color: #1d4ed8;
-                font-size: 0.68rem;
-                font-weight: 800;
-                letter-spacing: 0.04em;
-                text-transform: uppercase;
-            }
-
-            .supervisor-insights-detail-recommendation p {
-                margin: 5px 0 0;
-                color: #334155;
-                font-size: 0.76rem;
-                line-height: 1.55;
-            }
-
-            .supervisor-insights-empty,
-            .supervisor-insights-filter-empty {
-                padding: 48px 24px;
-                text-align: center;
-                color: #64748b;
-            }
-
-            .supervisor-insights-empty h2,
-            .supervisor-insights-filter-empty h3 {
-                margin: 0 0 7px;
-                color: #0f172a;
-                font-size: 1.05rem;
-                font-weight: 800;
-            }
-
-            .supervisor-insights-filter-empty {
-                padding: 28px 20px;
-                border: 1px dashed #dbe5f0;
-                border-radius: 12px;
-                background: #f8fafc;
-            }
-
-            .supervisor-insights-filter-empty p {
-                margin: 0;
-                font-size: 0.78rem;
-            }
-
-            .supervisor-insights-footnote {
-                margin-top: 14px;
-                color: #64748b;
-                font-size: 0.76rem;
-            }
-
-            @media (max-width: 1050px) {
-                .supervisor-insights-visuals {
-                    grid-template-columns: 1fr;
-                }
-            }
-
-            @media (max-width: 900px) {
-                .supervisor-insights-heading,
-                .supervisor-insights-panel-heading {
-                    align-items: flex-start;
-                    flex-direction: column;
-                }
-
-                .supervisor-insights-heading h1 {
-                    font-size: 1.65rem;
-                }
-
-                .supervisor-insights-shown-count {
-                    width: 100%;
-                    margin-left: 0;
-                }
-
-                .supervisor-insights-list-head {
-                    display: none;
-                }
-
-                .supervisor-insights-row-main {
-                    grid-template-columns: 1fr auto;
-                }
-
-                .supervisor-insights-row-main > :nth-child(2),
-                .supervisor-insights-row-main > :nth-child(3) {
-                    grid-column: 1;
-                }
-
-                .supervisor-insights-row-main > :last-child {
-                    grid-column: 2;
-                    grid-row: 1 / span 3;
-                }
-
-                .supervisor-insights-detail-metrics {
-                    grid-template-columns: 1fr;
-                }
-            }
-
-            @media (max-width: 620px) {
-                .supervisor-insights-detail-progress-grid {
-                    grid-template-columns: 1fr;
-                }
-
-                .supervisor-insights-detail-header {
-                    align-items: flex-start;
-                    flex-direction: column;
-                }
-            }
-
-            @media (max-width: 520px) {
-                .supervisor-insights-view-tabs {
-                    align-items: stretch;
-                    flex-direction: column;
-                }
-
-                .supervisor-insights-chart-header {
-                    flex-direction: column;
-                }
-
-                .supervisor-insights-chart-header span {
-                    text-align: left;
-                }
-
-                .supervisor-insights-chart-row {
-                    grid-template-columns: 1fr 48px;
-                    gap: 8px 10px;
-                    padding: 5px 0;
-                }
-
-                .supervisor-insights-chart-row .supervisor-insights-progress {
-                    grid-column: 1 / -1;
-                    grid-row: 2;
-                }
-
-                .supervisor-insights-chart-value {
-                    grid-column: 2;
-                    grid-row: 1;
-                }
-
-                .supervisor-insights-individual-tools,
-                .supervisor-insights-filters {
-                    align-items: stretch;
-                    flex-direction: column;
-                }
-
-                .supervisor-insights-search,
-                .supervisor-insights-filter {
-                    width: 100%;
-                    flex-basis: auto;
-                }
-            }
-        </style>
     </head>
     <body class="supervisor-insights-page">
         {% include 'components/supervisor_sidebar.html' %}
@@ -741,7 +15,7 @@
                 {% set supervisor_class_active_tab = 'insights' %}
                 {% include 'components/supervisor_class_context.html' %}
 
-                <div class="supervisor-insights-heading">
+                <div class="supervisor-classwork-heading">
                     <div>
                         <h1>Performance Insights</h1>
                         <p>{{ classroom.section }} · Classroom performance and feedback evidence for your interns.</p>
@@ -800,115 +74,49 @@
                         </div>
 
                         <div class="supervisor-insights-readiness">
-                            <div class="supervisor-insights-readiness-card">
-                                <span>Total interns</span>
-                                <strong>{{ insights|length }}</strong>
-                            </div>
-                            <div class="supervisor-insights-readiness-card">
-                                <span>Cohort average</span>
-                                <strong>{% if cohort_average is not none %}{{ "%.1f"|format(cohort_average) }}%{% else %}—{% endif %}</strong>
-                            </div>
-                            <div class="supervisor-insights-readiness-card">
-                                <span>Average completion</span>
-                                <strong>{% if average_completion is not none %}{{ "%.1f"|format(average_completion) }}%{% else %}—{% endif %}</strong>
-                            </div>
-                            <div class="supervisor-insights-readiness-card is-attention">
-                                <span>Needs attention</span>
-                                <strong>{{ overall.needs_attention }}</strong>
-                            </div>
-                            <div class="supervisor-insights-readiness-card is-no-data">
-                                <span>No performance data</span>
-                                <strong>{{ overall.no_data }}</strong>
-                            </div>
+                            <div class="supervisor-insights-readiness-card"><span>Total interns</span><strong>{{ insights|length }}</strong></div>
+                            <div class="supervisor-insights-readiness-card"><span>Cohort average</span><strong>{% if cohort_average is not none %}{{ "%.1f"|format(cohort_average) }}%{% else %}—{% endif %}</strong></div>
+                            <div class="supervisor-insights-readiness-card"><span>Average completion</span><strong>{% if average_completion is not none %}{{ "%.1f"|format(average_completion) }}%{% else %}—{% endif %}</strong></div>
+                            <div class="supervisor-insights-readiness-card is-attention"><span>Needs attention</span><strong>{{ overall.needs_attention }}</strong></div>
+                            <div class="supervisor-insights-readiness-card is-no-data"><span>No performance data</span><strong>{{ overall.no_data }}</strong></div>
                         </div>
 
                         <div class="supervisor-insights-visuals">
                             <section class="supervisor-insights-chart-card" aria-labelledby="performanceDistributionTitle">
-                                <div class="supervisor-insights-chart-header">
-                                    <strong id="performanceDistributionTitle">Performance Distribution</strong>
-                                    <span>Counts across enrolled interns</span>
-                                </div>
+                                <div class="supervisor-insights-chart-header"><strong id="performanceDistributionTitle">Performance Distribution</strong><span>Counts across enrolled interns</span></div>
                                 <div class="supervisor-insights-chart-body">
-                                    <div class="supervisor-insights-chart-row">
-                                        <span class="supervisor-insights-chart-label">Excellent</span>
-                                        <progress class="supervisor-insights-progress is-excellent" value="{{ overall.excellent }}" max="{{ distribution_max }}">{{ overall.excellent }}</progress>
-                                        <span class="supervisor-insights-chart-value">{{ overall.excellent }}</span>
-                                    </div>
-                                    <div class="supervisor-insights-chart-row">
-                                        <span class="supervisor-insights-chart-label">Very Satisfactory</span>
-                                        <progress class="supervisor-insights-progress is-very-satisfactory" value="{{ overall.very_satisfactory }}" max="{{ distribution_max }}">{{ overall.very_satisfactory }}</progress>
-                                        <span class="supervisor-insights-chart-value">{{ overall.very_satisfactory }}</span>
-                                    </div>
-                                    <div class="supervisor-insights-chart-row">
-                                        <span class="supervisor-insights-chart-label">Satisfactory</span>
-                                        <progress class="supervisor-insights-progress is-satisfactory" value="{{ overall.satisfactory }}" max="{{ distribution_max }}">{{ overall.satisfactory }}</progress>
-                                        <span class="supervisor-insights-chart-value">{{ overall.satisfactory }}</span>
-                                    </div>
-                                    <div class="supervisor-insights-chart-row">
-                                        <span class="supervisor-insights-chart-label">Fair</span>
-                                        <progress class="supervisor-insights-progress is-fair" value="{{ overall.fair }}" max="{{ distribution_max }}">{{ overall.fair }}</progress>
-                                        <span class="supervisor-insights-chart-value">{{ overall.fair }}</span>
-                                    </div>
-                                    <div class="supervisor-insights-chart-row">
-                                        <span class="supervisor-insights-chart-label">Needs Improvement</span>
-                                        <progress class="supervisor-insights-progress is-needs-improvement" value="{{ overall.needs_improvement }}" max="{{ distribution_max }}">{{ overall.needs_improvement }}</progress>
-                                        <span class="supervisor-insights-chart-value">{{ overall.needs_improvement }}</span>
-                                    </div>
-                                    <div class="supervisor-insights-chart-row">
-                                        <span class="supervisor-insights-chart-label">No Performance Data</span>
-                                        <progress class="supervisor-insights-progress is-no-data" value="{{ overall.no_data }}" max="{{ distribution_max }}">{{ overall.no_data }}</progress>
-                                        <span class="supervisor-insights-chart-value">{{ overall.no_data }}</span>
-                                    </div>
+                                    <div class="supervisor-insights-chart-row"><span class="supervisor-insights-chart-label">Excellent</span><progress class="supervisor-insights-progress is-excellent" value="{{ overall.excellent }}" max="{{ distribution_max }}">{{ overall.excellent }}</progress><span class="supervisor-insights-chart-value">{{ overall.excellent }}</span></div>
+                                    <div class="supervisor-insights-chart-row"><span class="supervisor-insights-chart-label">Very Satisfactory</span><progress class="supervisor-insights-progress is-very-satisfactory" value="{{ overall.very_satisfactory }}" max="{{ distribution_max }}">{{ overall.very_satisfactory }}</progress><span class="supervisor-insights-chart-value">{{ overall.very_satisfactory }}</span></div>
+                                    <div class="supervisor-insights-chart-row"><span class="supervisor-insights-chart-label">Satisfactory</span><progress class="supervisor-insights-progress is-satisfactory" value="{{ overall.satisfactory }}" max="{{ distribution_max }}">{{ overall.satisfactory }}</progress><span class="supervisor-insights-chart-value">{{ overall.satisfactory }}</span></div>
+                                    <div class="supervisor-insights-chart-row"><span class="supervisor-insights-chart-label">Fair</span><progress class="supervisor-insights-progress is-fair" value="{{ overall.fair }}" max="{{ distribution_max }}">{{ overall.fair }}</progress><span class="supervisor-insights-chart-value">{{ overall.fair }}</span></div>
+                                    <div class="supervisor-insights-chart-row"><span class="supervisor-insights-chart-label">Needs Improvement</span><progress class="supervisor-insights-progress is-needs-improvement" value="{{ overall.needs_improvement }}" max="{{ distribution_max }}">{{ overall.needs_improvement }}</progress><span class="supervisor-insights-chart-value">{{ overall.needs_improvement }}</span></div>
+                                    <div class="supervisor-insights-chart-row"><span class="supervisor-insights-chart-label">No Performance Data</span><progress class="supervisor-insights-progress is-no-data" value="{{ overall.no_data }}" max="{{ distribution_max }}">{{ overall.no_data }}</progress><span class="supervisor-insights-chart-value">{{ overall.no_data }}</span></div>
                                 </div>
                             </section>
 
                             <section class="supervisor-insights-chart-card" aria-labelledby="classroomProgressTitle">
-                                <div class="supervisor-insights-chart-header">
-                                    <strong id="classroomProgressTitle">Classroom Progress</strong>
-                                    <span>Average performance vs completion</span>
-                                </div>
+                                <div class="supervisor-insights-chart-header"><strong id="classroomProgressTitle">Classroom Progress</strong><span>Average performance vs completion</span></div>
                                 <div class="supervisor-insights-chart-body">
-                                    <div class="supervisor-insights-chart-row">
-                                        <span class="supervisor-insights-chart-label">Average Performance</span>
-                                        <progress class="supervisor-insights-progress" value="{{ cohort_average if cohort_average is not none else 0 }}" max="100">{{ cohort_average if cohort_average is not none else 0 }}</progress>
-                                        <span class="supervisor-insights-chart-value">{% if cohort_average is not none %}{{ "%.1f"|format(cohort_average) }}%{% else %}—{% endif %}</span>
-                                    </div>
-                                    <div class="supervisor-insights-chart-row">
-                                        <span class="supervisor-insights-chart-label">Average Completion</span>
-                                        <progress class="supervisor-insights-progress is-completion" value="{{ average_completion if average_completion is not none else 0 }}" max="100">{{ average_completion if average_completion is not none else 0 }}</progress>
-                                        <span class="supervisor-insights-chart-value">{% if average_completion is not none %}{{ "%.1f"|format(average_completion) }}%{% else %}—{% endif %}</span>
-                                    </div>
+                                    <div class="supervisor-insights-chart-row"><span class="supervisor-insights-chart-label">Average Performance</span><progress class="supervisor-insights-progress" value="{{ cohort_average if cohort_average is not none else 0 }}" max="100">{{ cohort_average if cohort_average is not none else 0 }}</progress><span class="supervisor-insights-chart-value">{% if cohort_average is not none %}{{ "%.1f"|format(cohort_average) }}%{% else %}—{% endif %}</span></div>
+                                    <div class="supervisor-insights-chart-row"><span class="supervisor-insights-chart-label">Average Completion</span><progress class="supervisor-insights-progress is-completion" value="{{ average_completion if average_completion is not none else 0 }}" max="100">{{ average_completion if average_completion is not none else 0 }}</progress><span class="supervisor-insights-chart-value">{% if average_completion is not none %}{{ "%.1f"|format(average_completion) }}%{% else %}—{% endif %}</span></div>
                                 </div>
                             </section>
                         </div>
 
-                        <div class="supervisor-insights-overall-note">
-                            Cohort average uses only interns with reviewed numeric work. Average completion includes all enrolled interns. Needs Attention counts interns whose current numeric performance label is Fair or Needs Improvement. Interns without numeric evidence remain separate under No Performance Data.
-                        </div>
+                        <div class="supervisor-insights-overall-note">Cohort average uses only interns with reviewed numeric work. Average completion includes all enrolled interns. Needs Attention counts interns whose current numeric performance label is Fair or Needs Improvement. Interns without numeric evidence remain separate under No Performance Data.</div>
                     </div>
 
                     <div class="supervisor-insights-panel" id="individualInsightsPanel" role="tabpanel" hidden>
                         <div class="supervisor-insights-panel-heading">
-                            <div>
-                                <h2>Individual Intern Insights</h2>
-                                <p>Search or filter interns, then open only the performance evidence you need.</p>
-                            </div>
+                            <div><h2>Individual Intern Insights</h2><p>Search or filter interns, then open only the performance evidence you need.</p></div>
                             <span class="text-muted small"><strong>{{ insights|length }}</strong> intern{{ '' if insights|length == 1 else 's' }}</span>
                         </div>
 
                         {% if not insights %}
-                            <div class="supervisor-insights-empty">
-                                <h2>No interns enrolled</h2>
-                                <p>Interns will appear here after they join this Intern Classroom.</p>
-                            </div>
+                            <div class="supervisor-insights-empty"><h2>No interns enrolled</h2><p>Interns will appear here after they join this Intern Classroom.</p></div>
                         {% else %}
                             <div class="supervisor-insights-individual-tools">
-                                <input
-                                    id="individualInsightsSearch"
-                                    class="supervisor-insights-search"
-                                    type="search"
-                                    placeholder="Search intern name, student number, or email"
-                                    aria-label="Search individual intern insights">
+                                <input id="individualInsightsSearch" class="supervisor-insights-search" type="search" placeholder="Search intern name, student number, or email" aria-label="Search individual intern insights">
                                 <div class="supervisor-insights-filters" role="group" aria-label="Filter individual intern insights">
                                     <button type="button" class="supervisor-insights-filter active" data-intern-filter="all" aria-pressed="true">All</button>
                                     <button type="button" class="supervisor-insights-filter" data-intern-filter="with-data" aria-pressed="false">With Data</button>
@@ -919,242 +127,60 @@
                             </div>
 
                             <div class="supervisor-insights-list" id="individualInsightsList">
-                                <div class="supervisor-insights-list-head" aria-hidden="true">
-                                    <span>Intern</span>
-                                    <span>Performance</span>
-                                    <span>Completion</span>
-                                    <span>Action</span>
-                                </div>
-
+                                <div class="supervisor-insights-list-head" aria-hidden="true"><span>Intern</span><span>Performance</span><span>Completion</span><span>Action</span></div>
                                 {% for intern in insights %}
-                                    <article
-                                        class="supervisor-insights-row"
-                                        data-intern-row
-                                        data-search="{{ (intern.name ~ ' ' ~ (intern.student_number or '') ~ ' ' ~ (intern.email or ''))|lower|e }}"
-                                        data-has-data="{{ 'true' if intern.average_percentage is not none else 'false' }}"
-                                        data-needs-attention="{{ 'true' if intern.numeric_performance_label in ['Fair', 'Needs Improvement'] else 'false' }}">
+                                    <article class="supervisor-insights-row" data-intern-row data-search="{{ (intern.name ~ ' ' ~ (intern.student_number or '') ~ ' ' ~ (intern.email or ''))|lower|e }}" data-has-data="{{ 'true' if intern.average_percentage is not none else 'false' }}" data-needs-attention="{{ 'true' if intern.numeric_performance_label in ['Fair', 'Needs Improvement'] else 'false' }}">
                                         <div class="supervisor-insights-row-main">
-                                            <div class="supervisor-insights-person">
-                                                <strong>{{ intern.name }}</strong>
-                                                {% if intern.student_number %}
-                                                    <small>{{ intern.student_number }}</small>
-                                                {% elif intern.email %}
-                                                    <small>{{ intern.email }}</small>
-                                                {% endif %}
-                                            </div>
-
-                                            <div>
-                                                {% if intern.average_percentage is none %}
-                                                    <span class="supervisor-insights-label is-no-data">No data yet</span>
-                                                {% else %}
-                                                    {% set label = intern.numeric_performance_label %}
-                                                    <span class="supervisor-insights-label {% if label == 'Excellent' %}is-excellent{% elif label == 'Very Satisfactory' %}is-very-satisfactory{% elif label == 'Satisfactory' %}is-satisfactory{% elif label == 'Fair' %}is-fair{% else %}is-needs-improvement{% endif %}">{{ label }}</span>
-                                                {% endif %}
-                                            </div>
-
+                                            <div class="supervisor-insights-person"><strong>{{ intern.name }}</strong>{% if intern.student_number %}<small>{{ intern.student_number }}</small>{% elif intern.email %}<small>{{ intern.email }}</small>{% endif %}</div>
+                                            <div>{% if intern.average_percentage is none %}<span class="supervisor-insights-label is-no-data">No data yet</span>{% else %}{% set label = intern.numeric_performance_label %}<span class="supervisor-insights-label {% if label == 'Excellent' %}is-excellent{% elif label == 'Very Satisfactory' %}is-very-satisfactory{% elif label == 'Satisfactory' %}is-satisfactory{% elif label == 'Fair' %}is-fair{% else %}is-needs-improvement{% endif %}">{{ label }}</span>{% endif %}</div>
                                             <div class="supervisor-insights-completion">{{ "%.1f"|format(intern.completion_rate) }}%</div>
-
-                                            <div>
-                                                <button type="button" class="supervisor-insights-view-button" aria-expanded="false" aria-controls="internInsightDetails{{ intern.id }}" onclick="toggleInternInsightDetails(this, 'internInsightDetails{{ intern.id }}')">View</button>
-                                            </div>
+                                            <div><button type="button" class="supervisor-insights-view-button" aria-expanded="false" aria-controls="internInsightDetails{{ intern.id }}" onclick="toggleInternInsightDetails(this, 'internInsightDetails{{ intern.id }}')">View</button></div>
                                         </div>
 
                                         <div class="supervisor-insights-row-details" id="internInsightDetails{{ intern.id }}">
                                             <div class="supervisor-insights-detail-card">
                                                 <div class="supervisor-insights-detail-header">
-                                                    <div>
-                                                        <small>Performance summary</small>
-                                                        <h3>{{ intern.name }}{% if intern.student_number %} · {{ intern.student_number }}{% endif %}</h3>
-                                                    </div>
-                                                    {% if intern.average_percentage is none %}
-                                                        <span class="supervisor-insights-label is-no-data">No Performance Data</span>
-                                                    {% else %}
-                                                        {% set detail_label = intern.numeric_performance_label %}
-                                                        <span class="supervisor-insights-label {% if detail_label == 'Excellent' %}is-excellent{% elif detail_label == 'Very Satisfactory' %}is-very-satisfactory{% elif detail_label == 'Satisfactory' %}is-satisfactory{% elif detail_label == 'Fair' %}is-fair{% else %}is-needs-improvement{% endif %}">{{ detail_label }}</span>
-                                                    {% endif %}
+                                                    <div><small>Performance summary</small><h3>{{ intern.name }}{% if intern.student_number %} · {{ intern.student_number }}{% endif %}</h3></div>
+                                                    {% if intern.average_percentage is none %}<span class="supervisor-insights-label is-no-data">No Performance Data</span>{% else %}{% set detail_label = intern.numeric_performance_label %}<span class="supervisor-insights-label {% if detail_label == 'Excellent' %}is-excellent{% elif detail_label == 'Very Satisfactory' %}is-very-satisfactory{% elif detail_label == 'Satisfactory' %}is-satisfactory{% elif detail_label == 'Fair' %}is-fair{% else %}is-needs-improvement{% endif %}">{{ detail_label }}</span>{% endif %}
                                                 </div>
-
                                                 <div class="supervisor-insights-detail-body">
                                                     <div class="supervisor-insights-detail-progress-grid">
-                                                        <div class="supervisor-insights-detail-progress-card">
-                                                            <div class="supervisor-insights-detail-progress-head">
-                                                                <span>Average Performance</span>
-                                                                <strong>{% if intern.average_percentage is not none %}{{ "%.1f"|format(intern.average_percentage) }}%{% else %}—{% endif %}</strong>
-                                                            </div>
-                                                            {% if intern.average_percentage is not none %}
-                                                                <progress class="supervisor-insights-progress {% if intern.numeric_performance_label == 'Excellent' %}is-excellent{% elif intern.numeric_performance_label == 'Very Satisfactory' %}is-very-satisfactory{% elif intern.numeric_performance_label == 'Satisfactory' %}is-satisfactory{% elif intern.numeric_performance_label == 'Fair' %}is-fair{% else %}is-needs-improvement{% endif %}" value="{{ intern.average_percentage }}" max="100">{{ intern.average_percentage }}</progress>
-                                                            {% else %}
-                                                                <progress class="supervisor-insights-progress is-no-data" value="0" max="100">0</progress>
-                                                            {% endif %}
-                                                        </div>
-
-                                                        <div class="supervisor-insights-detail-progress-card">
-                                                            <div class="supervisor-insights-detail-progress-head">
-                                                                <span>Work Completion</span>
-                                                                <strong>{{ "%.1f"|format(intern.completion_rate) }}%</strong>
-                                                            </div>
-                                                            <progress class="supervisor-insights-progress is-completion" value="{{ intern.completion_rate }}" max="100">{{ intern.completion_rate }}</progress>
-                                                        </div>
+                                                        <div class="supervisor-insights-detail-progress-card"><div class="supervisor-insights-detail-progress-head"><span>Average Performance</span><strong>{% if intern.average_percentage is not none %}{{ "%.1f"|format(intern.average_percentage) }}%{% else %}—{% endif %}</strong></div>{% if intern.average_percentage is not none %}<progress class="supervisor-insights-progress {% if intern.numeric_performance_label == 'Excellent' %}is-excellent{% elif intern.numeric_performance_label == 'Very Satisfactory' %}is-very-satisfactory{% elif intern.numeric_performance_label == 'Satisfactory' %}is-satisfactory{% elif intern.numeric_performance_label == 'Fair' %}is-fair{% else %}is-needs-improvement{% endif %}" value="{{ intern.average_percentage }}" max="100">{{ intern.average_percentage }}</progress>{% else %}<progress class="supervisor-insights-progress is-no-data" value="0" max="100">0</progress>{% endif %}</div>
+                                                        <div class="supervisor-insights-detail-progress-card"><div class="supervisor-insights-detail-progress-head"><span>Work Completion</span><strong>{{ "%.1f"|format(intern.completion_rate) }}%</strong></div><progress class="supervisor-insights-progress is-completion" value="{{ intern.completion_rate }}" max="100">{{ intern.completion_rate }}</progress></div>
                                                     </div>
-
-                                                    <section class="supervisor-insights-detail-section" aria-label="Work evidence">
-                                                        <h4>Work Evidence</h4>
-                                                        <div class="supervisor-insights-detail-metrics">
-                                                            <div class="supervisor-insights-detail-metric">
-                                                                <span>Reviewed Work</span>
-                                                                <strong>{{ intern.graded_count }} / {{ intern.total_count }}</strong>
-                                                            </div>
-                                                            <div class="supervisor-insights-detail-metric">
-                                                                <span>Manual Reviews</span>
-                                                                <strong>{{ intern.manual_count }}</strong>
-                                                            </div>
-                                                            <div class="supervisor-insights-detail-metric">
-                                                                <span>Imported Results</span>
-                                                                <strong>{{ intern.imported_count }}</strong>
-                                                            </div>
-                                                        </div>
-                                                    </section>
-
-                                                    <section class="supervisor-insights-detail-section" aria-label="Feedback analysis">
-                                                        <h4>Feedback Analysis</h4>
-                                                        {% if intern.has_feedback %}
-                                                            <div class="supervisor-insights-detail-metrics">
-                                                                <div class="supervisor-insights-detail-metric">
-                                                                    <span>Sentiment</span>
-                                                                    <strong>{{ intern.sentiment }}</strong>
-                                                                </div>
-                                                                <div class="supervisor-insights-detail-metric">
-                                                                    <span>Competency Signal</span>
-                                                                    <strong>{{ intern.competency }}</strong>
-                                                                </div>
-                                                                <div class="supervisor-insights-detail-metric">
-                                                                    <span>Confidence</span>
-                                                                    <strong>{{ "%.2f"|format(intern.confidence) }}</strong>
-                                                                </div>
-                                                            </div>
-                                                        {% else %}
-                                                            <div class="supervisor-insights-detail-feedback-empty">
-                                                                No supervisor feedback evidence is available yet. Feedback analysis will appear here once feedback exists for this intern.
-                                                            </div>
-                                                        {% endif %}
-                                                    </section>
-
-                                                    <div class="supervisor-insights-detail-recommendation">
-                                                        <span>Recommendation</span>
-                                                        <p>{% if intern.has_feedback and intern.recommendation %}{{ intern.recommendation }}{% elif intern.average_percentage is none %}No performance recommendation yet. Reviewed work or supervisor feedback is needed first.{% elif intern.ml_recommendation and intern.ml_recommendation.recommendation %}{{ intern.ml_recommendation.recommendation }}{% else %}Continue monitoring current performance evidence.{% endif %}</p>
-                                                    </div>
+                                                    <section class="supervisor-insights-detail-section" aria-label="Work evidence"><h4>Work Evidence</h4><div class="supervisor-insights-detail-metrics"><div class="supervisor-insights-detail-metric"><span>Reviewed Work</span><strong>{{ intern.graded_count }} / {{ intern.total_count }}</strong></div><div class="supervisor-insights-detail-metric"><span>Manual Reviews</span><strong>{{ intern.manual_count }}</strong></div><div class="supervisor-insights-detail-metric"><span>Imported Results</span><strong>{{ intern.imported_count }}</strong></div></div></section>
+                                                    <section class="supervisor-insights-detail-section" aria-label="Feedback analysis"><h4>Feedback Analysis</h4>{% if intern.has_feedback %}<div class="supervisor-insights-detail-metrics"><div class="supervisor-insights-detail-metric"><span>Sentiment</span><strong>{{ intern.sentiment }}</strong></div><div class="supervisor-insights-detail-metric"><span>Competency Signal</span><strong>{{ intern.competency }}</strong></div><div class="supervisor-insights-detail-metric"><span>Confidence</span><strong>{{ "%.2f"|format(intern.confidence) }}</strong></div></div>{% else %}<div class="supervisor-insights-detail-feedback-empty">No supervisor feedback evidence is available yet. Feedback analysis will appear here once feedback exists for this intern.</div>{% endif %}</section>
+                                                    <div class="supervisor-insights-detail-recommendation"><span>Recommendation</span><p>{% if intern.has_feedback and intern.recommendation %}{{ intern.recommendation }}{% elif intern.average_percentage is none %}No performance recommendation yet. Reviewed work or supervisor feedback is needed first.{% elif intern.ml_recommendation and intern.ml_recommendation.recommendation %}{{ intern.ml_recommendation.recommendation }}{% else %}Continue monitoring current performance evidence.{% endif %}</p></div>
                                                 </div>
                                             </div>
                                         </div>
                                     </article>
                                 {% endfor %}
                             </div>
-
-                            <div class="supervisor-insights-filter-empty" id="individualInsightsNoResults" hidden>
-                                <h3>No matching interns</h3>
-                                <p>Try a different search or select another performance filter.</p>
-                            </div>
+                            <div class="supervisor-insights-filter-empty" id="individualInsightsNoResults" hidden><h3>No matching interns</h3><p>Try a different search or select another performance filter.</p></div>
                         {% endif %}
                     </div>
                 </section>
 
-                <div class="supervisor-insights-footnote">
-                    Performance labels are shown only when reviewed numeric work exists. Feedback analysis appears when supervisor feedback is available.
-                </div>
+                <div class="supervisor-insights-footnote">Performance labels are shown only when reviewed numeric work exists. Feedback analysis appears when supervisor feedback is available.</div>
             </div>
         </main>
 
         <script>
             const insightViewButtons = document.querySelectorAll('[data-insights-view]');
-            const insightPanels = {
-                overall: document.getElementById('overallInsightsPanel'),
-                individual: document.getElementById('individualInsightsPanel'),
-            };
-
-            insightViewButtons.forEach((button) => {
-                button.addEventListener('click', () => {
-                    const target = button.dataset.insightsView;
-                    insightViewButtons.forEach((item) => {
-                        const active = item === button;
-                        item.classList.toggle('active', active);
-                        item.setAttribute('aria-selected', active ? 'true' : 'false');
-                    });
-                    Object.entries(insightPanels).forEach(([name, panel]) => {
-                        if (panel) panel.hidden = name !== target;
-                    });
-                });
-            });
-
-            function toggleInternInsightDetails(button, detailsId) {
-                const details = document.getElementById(detailsId);
-                if (!details) return;
-                const opening = !details.classList.contains('open');
-                details.classList.toggle('open', opening);
-                button.setAttribute('aria-expanded', opening ? 'true' : 'false');
-                button.textContent = opening ? 'Hide' : 'View';
-            }
-
+            const insightPanels = { overall: document.getElementById('overallInsightsPanel'), individual: document.getElementById('individualInsightsPanel') };
+            insightViewButtons.forEach((button) => { button.addEventListener('click', () => { const target = button.dataset.insightsView; insightViewButtons.forEach((item) => { const active = item === button; item.classList.toggle('active', active); item.setAttribute('aria-selected', active ? 'true' : 'false'); }); Object.entries(insightPanels).forEach(([name, panel]) => { if (panel) panel.hidden = name !== target; }); }); });
+            function toggleInternInsightDetails(button, detailsId) { const details = document.getElementById(detailsId); if (!details) return; const opening = !details.classList.contains('open'); details.classList.toggle('open', opening); button.setAttribute('aria-expanded', opening ? 'true' : 'false'); button.textContent = opening ? 'Hide' : 'View'; }
             const individualInsightsSearch = document.getElementById('individualInsightsSearch');
             const individualFilterButtons = document.querySelectorAll('[data-intern-filter]');
             const individualRows = Array.from(document.querySelectorAll('[data-intern-row]'));
             const individualShownCount = document.getElementById('individualInsightsShownCount');
             const individualNoResults = document.getElementById('individualInsightsNoResults');
             let activeInternFilter = 'all';
-
-            function resetHiddenInternDetails(row) {
-                const details = row.querySelector('.supervisor-insights-row-details');
-                const button = row.querySelector('.supervisor-insights-view-button');
-                if (details) details.classList.remove('open');
-                if (button) {
-                    button.setAttribute('aria-expanded', 'false');
-                    button.textContent = 'View';
-                }
-            }
-
-            function applyIndividualInsightFilters() {
-                const query = (individualInsightsSearch?.value || '').trim().toLowerCase();
-                let visibleCount = 0;
-
-                individualRows.forEach((row) => {
-                    const searchable = row.dataset.search || '';
-                    const hasData = row.dataset.hasData === 'true';
-                    const needsAttention = row.dataset.needsAttention === 'true';
-                    const matchesSearch = !query || searchable.includes(query);
-                    let matchesFilter = true;
-
-                    if (activeInternFilter === 'with-data') matchesFilter = hasData;
-                    if (activeInternFilter === 'needs-attention') matchesFilter = needsAttention;
-                    if (activeInternFilter === 'no-data') matchesFilter = !hasData;
-
-                    const visible = matchesSearch && matchesFilter;
-                    row.hidden = !visible;
-                    if (visible) {
-                        visibleCount += 1;
-                    } else {
-                        resetHiddenInternDetails(row);
-                    }
-                });
-
-                if (individualShownCount) {
-                    individualShownCount.textContent = `${visibleCount} shown`;
-                }
-                if (individualNoResults) {
-                    individualNoResults.hidden = visibleCount !== 0;
-                }
-            }
-
+            function resetHiddenInternDetails(row) { const details = row.querySelector('.supervisor-insights-row-details'); const button = row.querySelector('.supervisor-insights-view-button'); if (details) details.classList.remove('open'); if (button) { button.setAttribute('aria-expanded', 'false'); button.textContent = 'View'; } }
+            function applyIndividualInsightFilters() { const query = (individualInsightsSearch?.value || '').trim().toLowerCase(); let visibleCount = 0; individualRows.forEach((row) => { const searchable = row.dataset.search || ''; const hasData = row.dataset.hasData === 'true'; const needsAttention = row.dataset.needsAttention === 'true'; const matchesSearch = !query || searchable.includes(query); let matchesFilter = true; if (activeInternFilter === 'with-data') matchesFilter = hasData; if (activeInternFilter === 'needs-attention') matchesFilter = needsAttention; if (activeInternFilter === 'no-data') matchesFilter = !hasData; const visible = matchesSearch && matchesFilter; row.hidden = !visible; if (visible) visibleCount += 1; else resetHiddenInternDetails(row); }); if (individualShownCount) individualShownCount.textContent = `${visibleCount} shown`; if (individualNoResults) individualNoResults.hidden = visibleCount !== 0; }
             individualInsightsSearch?.addEventListener('input', applyIndividualInsightFilters);
-            individualFilterButtons.forEach((button) => {
-                button.addEventListener('click', () => {
-                    activeInternFilter = button.dataset.internFilter || 'all';
-                    individualFilterButtons.forEach((item) => {
-                        const active = item === button;
-                        item.classList.toggle('active', active);
-                        item.setAttribute('aria-pressed', active ? 'true' : 'false');
-                    });
-                    applyIndividualInsightFilters();
-                });
-            });
+            individualFilterButtons.forEach((button) => { button.addEventListener('click', () => { activeInternFilter = button.dataset.internFilter || 'all'; individualFilterButtons.forEach((item) => { const active = item === button; item.classList.toggle('active', active); item.setAttribute('aria-pressed', active ? 'true' : 'false'); }); applyIndividualInsightFilters(); }); });
         </script>
     </body>
 </html>

@@ -7,830 +7,6 @@
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">
-        <style>
-            body.supervisor-class-page {
-                margin: 0;
-                background: #f4f8fc;
-                color: #10213d;
-            }
-
-            body.supervisor-class-page .supervisor-class-main {
-                min-height: 100vh;
-                padding: 96px 0 48px !important;
-                background:
-                    radial-gradient(circle at 78% 8%, rgba(225, 238, 255, 0.72), transparent 30rem),
-                    linear-gradient(180deg, #f7faff 0%, #f1f6fc 100%);
-            }
-
-            .nexora-class-page {
-                width: 100%;
-                max-width: 1540px;
-                margin: 0 auto;
-                padding: 0 34px 48px;
-                box-sizing: border-box;
-            }
-
-            .supervisor-class-breadcrumb {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                margin: 0 0 24px;
-                color: #718198;
-                font-size: 13px;
-            }
-
-            .supervisor-class-breadcrumb a {
-                color: #2563eb;
-                font-weight: 800;
-                text-decoration: none;
-            }
-
-            .supervisor-class-breadcrumb a:hover {
-                text-decoration: underline;
-            }
-
-            .class-hero {
-                position: relative;
-                z-index: 5;
-                overflow: visible;
-                margin: 0;
-                border: 1px solid #dfe7f1;
-                border-radius: 20px;
-                background: #fff;
-                box-shadow: 0 8px 26px rgba(30, 64, 175, 0.055);
-            }
-
-            .class-hero-banner {
-                height: 138px;
-                background: linear-gradient(135deg, #eef5ff 0%, #f8fbff 100%);
-                border-bottom: 1px solid #edf2f8;
-                border-radius: 19px 19px 0 0;
-            }
-
-            .class-hero-banner--blue {
-                background: linear-gradient(135deg, #93c5fd 0%, #dbeafe 100%);
-            }
-
-            .class-hero-banner--navy {
-                background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
-            }
-
-            .class-hero-banner--green {
-                background: linear-gradient(135deg, #6ee7b7 0%, #d1fae5 100%);
-            }
-
-            .class-hero-banner--teal {
-                background: linear-gradient(135deg, #5eead4 0%, #ccfbf1 100%);
-            }
-
-            .class-hero-banner--purple {
-                background: linear-gradient(135deg, #c4b5fd 0%, #ede9fe 100%);
-            }
-
-            .class-hero-banner--orange {
-                background: linear-gradient(135deg, #fdba74 0%, #ffedd5 100%);
-            }
-
-            .class-hero-banner--amber {
-                background: linear-gradient(135deg, #fcd34d 0%, #fef3c7 100%);
-            }
-
-            .class-hero-banner--rose {
-                background: linear-gradient(135deg, #fda4af 0%, #ffe4e6 100%);
-            }
-
-            .class-hero-banner--slate {
-                background: linear-gradient(135deg, #94a3b8 0%, #e2e8f0 100%);
-            }
-
-            .class-hero-body {
-                padding: 30px 34px 32px;
-            }
-
-            .class-hero-row {
-                display: grid;
-                grid-template-columns: minmax(0, 1fr) minmax(390px, auto);
-                align-items: center;
-                gap: 34px;
-            }
-
-            .supervisor-class-eyebrow {
-                display: block;
-                margin-bottom: 8px;
-                color: #2563eb;
-                font-size: 11px;
-                font-weight: 800;
-                letter-spacing: 0.13em;
-                text-transform: uppercase;
-            }
-
-            .class-title {
-                margin: 0;
-                color: #10213d;
-                font-size: 31px;
-                line-height: 1.12;
-                font-weight: 800;
-                letter-spacing: -0.035em;
-            }
-
-            .class-subtitle {
-                margin: 9px 0 0;
-                color: #687991;
-                font-size: 14px;
-                line-height: 1.55;
-            }
-
-            .supervisor-class-controls {
-                display: grid;
-                gap: 10px;
-                justify-items: stretch;
-            }
-
-            .supervisor-class-code-panel {
-                display: flex;
-                min-height: 92px;
-                align-items: center;
-                justify-content: flex-end;
-                gap: 10px;
-                padding: 16px 18px;
-                border: 1px solid #dce5ef;
-                border-radius: 16px;
-                background: #fbfcfe;
-                box-sizing: border-box;
-            }
-
-            .supervisor-class-code-label {
-                color: #708096;
-                font-size: 10px;
-                font-weight: 800;
-                letter-spacing: 0.08em;
-                text-transform: uppercase;
-                white-space: nowrap;
-            }
-
-            .class-code {
-                color: #10213d;
-                font-size: 20px;
-                line-height: 1;
-                font-weight: 800;
-                letter-spacing: 0.08em;
-                white-space: nowrap;
-            }
-
-            .supervisor-class-code-panel button,
-            .supervisor-class-management button,
-            .supervisor-class-management a {
-                min-height: 38px;
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                gap: 6px;
-                padding: 0 13px;
-                border-radius: 9px;
-                font-family: inherit;
-                font-size: 11px;
-                font-weight: 800;
-                line-height: 1;
-                text-decoration: none;
-                white-space: nowrap;
-            }
-
-            .supervisor-class-code-panel button {
-                border: 1px solid #d6e0eb;
-                background: #fff;
-                color: #10213d;
-            }
-
-            .supervisor-class-code-panel button:hover {
-                border-color: #2563eb;
-                color: #2563eb;
-            }
-
-            .supervisor-class-management {
-                display: flex;
-                align-items: center;
-                justify-content: flex-end;
-                flex-wrap: wrap;
-                gap: 8px;
-            }
-
-            .supervisor-class-management form {
-                margin: 0;
-            }
-
-            .supervisor-class-management .dropdown {
-                z-index: 20;
-            }
-
-            .supervisor-class-management .dropdown-menu {
-                top: calc(100% + 6px);
-                right: 0 !important;
-                left: auto !important;
-                transform: none !important;
-                min-width: 210px;
-                max-width: min(260px, calc(100vw - 24px));
-                z-index: 30;
-            }
-
-            .supervisor-class-management .dropdown-item {
-                width: 100%;
-                justify-content: flex-start;
-                border: 0;
-                border-radius: 0;
-                background: transparent;
-                color: #24364f !important;
-                box-shadow: none;
-            }
-
-            .supervisor-class-management .dropdown-item:hover {
-                background: #f8fafc;
-                color: #1d4ed8 !important;
-            }
-
-            .supervisor-class-management .dropdown-item.text-danger,
-            .supervisor-class-management .dropdown-item.text-danger:hover {
-                color: #dc2626 !important;
-            }
-
-            .class-banner-color-panel {
-                padding: 9px 13px 12px;
-                border-top: 1px solid #eef2f7;
-                background: #fbfdff;
-            }
-
-            .class-banner-color-panel[hidden] {
-                display: none !important;
-            }
-
-            .class-banner-color-label {
-                display: block;
-                margin-bottom: 8px;
-                color: #708096;
-                font-size: 9px;
-                font-weight: 800;
-                letter-spacing: 0.08em;
-                text-transform: uppercase;
-            }
-
-            .class-banner-color-grid {
-                display: grid;
-                grid-template-columns: repeat(3, 28px);
-                gap: 10px;
-            }
-
-            .supervisor-class-management .class-banner-swatch {
-                width: 28px !important;
-                height: 28px !important;
-                min-height: 28px !important;
-                padding: 0 !important;
-                border: 2px solid #fff !important;
-                border-radius: 999px !important;
-                box-shadow: 0 0 0 1px #cbd5e1 !important;
-                cursor: pointer;
-            }
-
-            .supervisor-class-management .class-banner-swatch.is-selected {
-                box-shadow: 0 0 0 2px #2563eb !important;
-            }
-
-            .class-banner-swatch--blue { background: #60a5fa !important; }
-            .class-banner-swatch--navy { background: #1e3a8a !important; }
-            .class-banner-swatch--green { background: #34d399 !important; }
-            .class-banner-swatch--teal { background: #14b8a6 !important; }
-            .class-banner-swatch--purple { background: #a78bfa !important; }
-            .class-banner-swatch--orange { background: #fb923c !important; }
-            .class-banner-swatch--amber { background: #f59e0b !important; }
-            .class-banner-swatch--rose { background: #fb7185 !important; }
-            .class-banner-swatch--slate { background: #64748b !important; }
-
-            .class-action-primary {
-                border: 1px solid #2563eb;
-                background: #2563eb;
-                color: #fff !important;
-                box-shadow: 0 6px 16px rgba(37, 99, 235, 0.16);
-            }
-
-            .class-action-primary:hover {
-                border-color: #1d4ed8;
-                background: #1d4ed8;
-                color: #fff !important;
-            }
-
-            .class-action-secondary {
-                border: 1px solid #d6e0eb;
-                background: #fff;
-                color: #24364f;
-            }
-
-            .class-action-secondary:hover {
-                border-color: #b7c8dc;
-                background: #f8fbff;
-                color: #1d4ed8;
-            }
-
-            .supervisor-regenerate-button {
-                border: 1px solid #f0c768 !important;
-                color: #b77900 !important;
-                background: #fffdf7 !important;
-            }
-
-            .supervisor-regenerate-button:hover {
-                border-color: #dfa51d !important;
-                background: #fff8e5 !important;
-                color: #976300 !important;
-            }
-
-            .class-tabs {
-                display: flex;
-                align-items: center;
-                gap: 4px;
-                margin: 22px 0 20px;
-                padding: 0 5px;
-                border-bottom: 1px solid #dce5ef;
-                background: transparent;
-                overflow-x: auto;
-            }
-
-            .class-tabs .profile-tab-button {
-                appearance: none;
-                display: inline-flex;
-                flex: 0 0 auto;
-                align-items: center;
-                justify-content: center;
-                border: 0;
-                border-bottom: 2px solid transparent;
-                border-radius: 0;
-                padding: 12px 16px;
-                background: transparent;
-                color: #64748b;
-                font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-                font-size: 13px;
-                line-height: 1.2;
-                font-weight: 800;
-                letter-spacing: -0.035em;
-                text-decoration: none;
-                white-space: nowrap;
-                box-shadow: none;
-                cursor: pointer;
-            }
-
-            .class-tabs .profile-tab-button:hover {
-                color: #2563eb;
-                text-decoration: none;
-            }
-
-            .class-tabs .profile-tab-button.active {
-                border-bottom-color: #2563eb;
-                background: transparent;
-                color: #2563eb;
-            }
-
-            .class-card {
-                background: #fff;
-                border: 1px solid #e5e7eb;
-                border-radius: 16px;
-                box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
-                margin-bottom: 18px;
-                overflow: hidden;
-            }
-
-            .class-card-header {
-                padding: 17px 20px;
-                border-bottom: 1px solid #eef2f7;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                gap: 14px;
-            }
-
-            .class-card-body {
-                padding: 20px;
-            }
-
-            .class-info-grid {
-                display: grid;
-                grid-template-columns: repeat(3, minmax(0, 1fr));
-                gap: 18px 34px;
-            }
-
-            .class-info-item strong {
-                display: block;
-                color: #64748b;
-                font-size: 13px;
-                margin-bottom: 5px;
-                font-weight: 700;
-            }
-
-            .class-info-item span {
-                color: #1e293b;
-                font-size: 15px;
-            }
-
-            .class-info-item a {
-                color: #2563eb;
-                font-size: 15px;
-                font-weight: 700;
-                text-decoration: none;
-                overflow-wrap: anywhere;
-            }
-
-            .class-info-item a:hover {
-                text-decoration: underline;
-            }
-
-            .empty-classwork {
-                text-align: center;
-                padding: 44px 20px;
-                color: #64748b;
-            }
-
-            .supervisor-interns-card .class-card-body {
-                padding: 0;
-            }
-
-            .supervisor-interns-header > div {
-                min-width: 0;
-            }
-
-            .supervisor-interns-header h6 {
-                margin: 0 0 4px;
-                color: #10213d;
-                font-size: 1rem;
-                font-weight: 800;
-            }
-
-            .supervisor-interns-header p {
-                margin: 0;
-                color: #64748b;
-                font-size: 0.78rem;
-            }
-
-            .supervisor-interns-summary {
-                display: flex;
-                align-items: center;
-                justify-content: flex-end;
-                gap: 8px;
-                flex-wrap: wrap;
-            }
-
-            .supervisor-interns-total,
-            .supervisor-interns-hours {
-                display: inline-flex;
-                align-items: center;
-                min-height: 30px;
-                padding: 0 10px;
-                border-radius: 999px;
-                font-size: 0.72rem;
-                font-weight: 800;
-                white-space: nowrap;
-            }
-
-            .supervisor-interns-total {
-                background: #eff6ff;
-                color: #1d4ed8;
-            }
-
-            .supervisor-interns-hours {
-                border: 1px solid #e2e8f0;
-                background: #f8fafc;
-                color: #475569;
-            }
-
-            .supervisor-interns-supervisor {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 16px;
-                padding: 16px 20px;
-                border-bottom: 1px solid #eef2f7;
-                background: #fbfdff;
-            }
-
-            .supervisor-intern-person {
-                display: flex;
-                align-items: center;
-                min-width: 0;
-                gap: 12px;
-            }
-
-            .supervisor-intern-avatar {
-                width: 42px;
-                height: 42px;
-                flex: 0 0 42px;
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                border-radius: 50%;
-                background: #dbeafe;
-                color: #1d4ed8;
-                font-size: 0.86rem;
-                font-weight: 800;
-            }
-
-            .supervisor-intern-person strong {
-                display: block;
-                color: #10213d;
-                font-size: 0.84rem;
-                font-weight: 800;
-                overflow-wrap: anywhere;
-            }
-
-            .supervisor-intern-person small {
-                display: block;
-                margin-top: 3px;
-                color: #94a3b8;
-                font-size: 0.72rem;
-                overflow-wrap: anywhere;
-            }
-
-            .supervisor-intern-role,
-            .supervisor-intern-status {
-                display: inline-flex;
-                align-items: center;
-                gap: 6px;
-                min-height: 28px;
-                padding: 0 9px;
-                border-radius: 999px;
-                font-size: 0.68rem;
-                font-weight: 800;
-                white-space: nowrap;
-            }
-
-            .supervisor-intern-role {
-                background: #eef2ff;
-                color: #3730a3;
-            }
-
-            .supervisor-intern-status {
-                background: #f1f5f9;
-                color: #64748b;
-            }
-
-            .supervisor-intern-status.is-active {
-                background: #dcfce7;
-                color: #166534;
-            }
-
-            .supervisor-intern-status.is-completed {
-                background: #dbeafe;
-                color: #1d4ed8;
-            }
-
-            .supervisor-intern-status.is-pending {
-                background: #fef3c7;
-                color: #92400e;
-            }
-
-            .supervisor-intern-status::before {
-                content: "";
-                width: 6px;
-                height: 6px;
-                border-radius: 50%;
-                background: currentColor;
-            }
-
-            .supervisor-intern-roster-metrics {
-                min-width: 0;
-            }
-
-            .supervisor-interns-toolbar {
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                padding: 16px 20px;
-                border-bottom: 1px solid #eef2f7;
-            }
-
-            .supervisor-interns-search {
-                width: 100%;
-                min-height: 42px;
-                padding: 0 13px;
-                border: 1px solid #dbe5f0;
-                border-radius: 10px;
-                background: #fff;
-                color: #10213d;
-                font: inherit;
-                font-size: 0.8rem;
-                outline: none;
-            }
-
-            .supervisor-interns-search:focus {
-                border-color: #60a5fa;
-                box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-            }
-
-            .supervisor-interns-shown {
-                flex: 0 0 auto;
-                color: #64748b;
-                font-size: 0.72rem;
-                font-weight: 800;
-                white-space: nowrap;
-            }
-
-            .supervisor-interns-list {
-                display: grid;
-            }
-
-            .supervisor-intern-row {
-                display: grid;
-                grid-template-columns: minmax(260px, 1.3fr) minmax(230px, 0.8fr) auto;
-                align-items: center;
-                gap: 18px;
-                padding: 14px 20px;
-                border-bottom: 1px solid #eef2f7;
-                background: #fff;
-            }
-
-            .supervisor-intern-row:last-child {
-                border-bottom: 0;
-            }
-
-            .supervisor-intern-actions {
-                display: flex;
-                align-items: center;
-                justify-content: flex-end;
-                gap: 8px;
-                flex-wrap: wrap;
-            }
-
-            .supervisor-intern-actions form {
-                margin: 0;
-            }
-
-            .supervisor-intern-actions .btn {
-                min-height: 34px;
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 0.72rem;
-                font-weight: 800;
-            }
-
-            .supervisor-interns-empty,
-            .supervisor-interns-filter-empty {
-                padding: 40px 20px;
-                text-align: center;
-                color: #64748b;
-            }
-
-            .supervisor-interns-empty h6,
-            .supervisor-interns-filter-empty h6 {
-                margin: 0 0 6px;
-                color: #10213d;
-                font-weight: 800;
-            }
-
-            .supervisor-interns-empty p,
-            .supervisor-interns-filter-empty p {
-                margin: 0;
-                font-size: 0.78rem;
-            }
-
-            .supervisor-interns-empty-code {
-                display: inline-flex;
-                align-items: center;
-                gap: 8px;
-                margin-top: 14px;
-                padding: 8px 10px;
-                border: 1px solid #dbe5f0;
-                border-radius: 10px;
-                background: #f8fafc;
-            }
-
-            .supervisor-interns-filter-empty {
-                border-top: 1px solid #eef2f7;
-                background: #fbfdff;
-            }
-
-            .nexora-class-modal {
-                display: none !important;
-                position: fixed !important;
-                inset: 0 !important;
-                z-index: 2000 !important;
-                align-items: center !important;
-                justify-content: center !important;
-                padding: 24px !important;
-                background: rgba(15, 23, 42, 0.48) !important;
-            }
-
-            .nexora-class-modal.open {
-                display: flex !important;
-            }
-
-            .nexora-class-modal .nexora-modal {
-                width: min(520px, 100%);
-                max-height: calc(100vh - 48px);
-                overflow: auto;
-            }
-
-            @media (max-width: 1050px) {
-                .class-hero-row {
-                    grid-template-columns: 1fr;
-                }
-
-                .supervisor-class-code-panel,
-                .supervisor-class-management {
-                    justify-content: flex-start;
-                }
-            }
-
-            @media (max-width: 900px) {
-                body.supervisor-class-page .supervisor-class-main {
-                    padding-top: 88px !important;
-                }
-
-                .nexora-class-page {
-                    padding: 0 18px 36px;
-                }
-
-                .class-info-grid {
-                    grid-template-columns: repeat(2, minmax(0, 1fr));
-                }
-
-                .supervisor-intern-row {
-                    grid-template-columns: minmax(0, 1fr) auto;
-                }
-
-                .supervisor-intern-roster-metrics {
-                    grid-column: 1;
-                    justify-self: start;
-                }
-
-                .supervisor-intern-actions {
-                    grid-column: 2;
-                    grid-row: 1 / span 2;
-                }
-            }
-
-            @media (max-width: 600px) {
-                .nexora-class-page {
-                    padding: 0 12px 28px;
-                }
-
-                .class-hero-banner {
-                    height: 92px;
-                }
-
-                .class-hero-body {
-                    padding: 20px;
-                }
-
-                .class-title {
-                    font-size: 27px;
-                }
-
-                .supervisor-class-code-panel {
-                    align-items: flex-start;
-                    justify-content: flex-start;
-                    flex-wrap: wrap;
-                }
-
-                .supervisor-class-management {
-                    justify-content: flex-start;
-                }
-
-                .class-info-grid {
-                    grid-template-columns: 1fr;
-                }
-
-                .supervisor-interns-header,
-                .supervisor-interns-supervisor,
-                .supervisor-interns-toolbar {
-                    align-items: flex-start;
-                    flex-direction: column;
-                }
-
-                .supervisor-interns-summary {
-                    justify-content: flex-start;
-                }
-
-                .supervisor-interns-search,
-                .supervisor-interns-shown {
-                    width: 100%;
-                }
-
-                .supervisor-intern-row {
-                    grid-template-columns: 1fr;
-                    gap: 10px;
-                }
-
-                .supervisor-intern-roster-metrics,
-                .supervisor-intern-actions {
-                    grid-column: 1;
-                    grid-row: auto;
-                }
-
-                .supervisor-intern-actions {
-                    justify-content: stretch;
-                }
-
-                .supervisor-intern-actions .btn,
-                .supervisor-intern-actions form,
-                .supervisor-intern-actions form .btn {
-                    width: 100%;
-                }
-            }
-        </style>
     </head>
     <body class="analytics-aesthetic supervisor-class-page">
         {% include 'components/supervisor_sidebar.html' %}
@@ -883,14 +59,7 @@
                                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                     <div class="class-banner-color-grid">
                                                         {% for theme, label in [('blue','Blue'),('navy','Navy'),('green','Green'),('teal','Teal'),('purple','Purple'),('orange','Orange'),('amber','Amber'),('rose','Rose'),('slate','Slate')] %}
-                                                            <button
-                                                                type="submit"
-                                                                name="banner_theme"
-                                                                value="{{ theme }}"
-                                                                class="class-banner-swatch class-banner-swatch--{{ theme }}{% if active_banner_theme == theme %} is-selected{% endif %}"
-                                                                aria-label="Use {{ label }} banner"
-                                                                title="{{ label }}">
-                                                            </button>
+                                                            <button type="submit" name="banner_theme" value="{{ theme }}" class="class-banner-swatch class-banner-swatch--{{ theme }}{% if active_banner_theme == theme %} is-selected{% endif %}" aria-label="Use {{ label }} banner" title="{{ label }}"></button>
                                                         {% endfor %}
                                                     </div>
                                                 </form>
@@ -921,115 +90,59 @@
                 {% endfor %}{% endif %}{% endwith %}
 
                 <nav class="class-tabs" aria-label="Class navigation">
-                    <button class="profile-tab-button active" onclick="openClassTab('stream',this)">Stream</button>
-                    <a href="{{ url_for('classwork.manage_classwork',class_id=classroom.id) }}" class="profile-tab-button">Work</a>
-                    <a href="{{ url_for('classwork_ml_insights.supervisor_insights',class_id=classroom.id) }}" class="profile-tab-button">Performance Insights</a>
-                    <a href="{{ url_for('performance_reports.supervisor_reports',class_id=classroom.id) }}" class="profile-tab-button">Reports</a>
-                    <button id="internsTabButton" class="profile-tab-button" onclick="openClassTab('people',this)">Interns</button>
+                    <button class="profile-tab-button active" type="button" onclick="openClassTab('stream',this)">Stream</button>
+                    <a href="{{ url_for('classwork.manage_classwork', class_id=classroom.id) }}" class="profile-tab-button">Work</a>
+                    <a href="{{ url_for('logbook_review.supervisor_logbook', class_id=classroom.id) }}" class="profile-tab-button">Logbook</a>
+                    <a href="{{ url_for('daily_performance_history.supervisor_history', class_id=classroom.id) }}" class="profile-tab-button">Daily Performance</a>
+                    <a href="{{ url_for('ojt_evaluation.supervisor_evaluations', class_id=classroom.id) }}" class="profile-tab-button">Evaluations</a>
+                    <a href="{{ url_for('classwork_ml_insights.supervisor_insights', class_id=classroom.id) }}" class="profile-tab-button">Performance Insights</a>
+                    <a href="{{ url_for('classwork_ml_insights.supervisor_cohort_insights', class_id=classroom.id) }}" class="profile-tab-button">Cohort Insights</a>
+                    <a href="{{ url_for('needs_attention.supervisor_needs_attention', class_id=classroom.id) }}" class="profile-tab-button">Needs Attention</a>
+                    <a href="{{ url_for('performance_reports.supervisor_reports', class_id=classroom.id) }}" class="profile-tab-button">Reports</a>
+                    <button id="internsTabButton" class="profile-tab-button" type="button" onclick="openClassTab('people',this)">Interns</button>
                 </nav>
 
                 <section id="stream" class="profile-tab active">
+                    <div class="supervisor-classwork-heading">
+                        <div>
+                            <h1>Stream</h1>
+                            <p>{{ classroom.section }} · Share announcements and classroom updates with your interns.</p>
+                        </div>
+                    </div>
+
                     <div class="class-card">
                         <div class="class-card-body">
                             <h5 class="mb-3">Intern Classroom Announcement</h5>
-                            <form method="POST" action="{{ url_for('classroom.create_post',class_id=classroom.id) }}">
+                            <form method="POST" action="{{ url_for('classroom.create_post', class_id=classroom.id) }}">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <input type="text" name="title" class="form-control mb-2" placeholder="Title (optional)" maxlength="200" {% if classroom.archived %}disabled{% endif %}>
-                                <textarea name="body" class="form-control mb-3" rows="3" placeholder="Announce something to your interns..." required maxlength="5000" {% if classroom.archived %}disabled{% endif %}>
-                                </textarea>
-                                <div class="text-end">
-                                    <button type="submit" class="btn btn-primary" {% if classroom.archived %}disabled{% endif %}>Post</button>
-                                </div>
+                                <textarea name="body" class="form-control mb-3" rows="3" placeholder="Announce something to your interns..." required maxlength="5000" {% if classroom.archived %}disabled{% endif %}></textarea>
+                                <div class="text-end"><button type="submit" class="btn btn-primary" {% if classroom.archived %}disabled{% endif %}>Post</button></div>
                             </form>
                         </div>
                     </div>
                     <div class="class-card">
-                        <div class="class-card-header">
-                            <h6 class="mb-0">Recent announcements</h6>
-                        </div>
+                        <div class="class-card-header"><h6 class="mb-0">Recent announcements</h6></div>
                         <div class="class-card-body">
-                            {% if announcements and announcements|length>0 %}{% for a in announcements %}
-                                <div class="border-bottom pb-3 mb-3">
-                                    {% if a.title %}
-                                        <strong>{{ a.title }}</strong>
-                                        <br>
-                                    {% endif %}
-                                    <p class="mb-1">{{ a.body }}</p>
-                                </div>
-                            {% endfor %}{% else %}
-                                <p class="text-muted mb-0">No announcements yet. Use the composer above.</p>
-                            {% endif %}
+                            {% if announcements and announcements|length>0 %}{% for a in announcements %}<div class="border-bottom pb-3 mb-3">{% if a.title %}<strong>{{ a.title }}</strong><br>{% endif %}<p class="mb-1">{{ a.body }}</p></div>{% endfor %}{% else %}<p class="text-muted mb-0">No announcements yet. Use the composer above.</p>{% endif %}
                         </div>
                     </div>
                     <div class="class-card">
-                        <div class="class-card-header">
-                            <div>
-                                <h6 class="mb-1">Intern Classroom Details</h6>
-                                <div class="small text-muted">Saved internship setup and current classroom information.</div>
-                            </div>
-                        </div>
+                        <div class="class-card-header"><div><h6 class="mb-1">Intern Classroom Details</h6><div class="small text-muted">Saved internship setup and current classroom information.</div></div></div>
                         <div class="class-card-body">
                             <div class="class-info-grid">
-                                <div class="class-info-item">
-                                    <strong>Company</strong>
-                                    <span>{{ classroom.company_name or '—' }}</span>
-                                </div>
-                                <div class="class-info-item">
-                                    <strong>Industry</strong>
-                                    <span>{{ classroom.industry or '—' }}</span>
-                                </div>
-                                <div class="class-info-item">
-                                    <strong>Work Arrangement</strong>
-                                    <span>{{ classroom.work_arrangement or '—' }}</span>
-                                </div>
-                                <div class="class-info-item">
-                                    <strong>Location</strong>
-                                    <span>{{ classroom.location or '—' }}</span>
-                                </div>
-                                <div class="class-info-item">
-                                    <strong>Schedule</strong>
-                                    <span>
-                                        {% if classroom.schedule_type == 'fixed_dates' %}
-                                            {{ classroom.start_date or '—' }} to {{ classroom.end_date or '—' }}
-                                        {% elif classroom.schedule_type == 'flexible' %}
-                                            Flexible{% if classroom.start_date or classroom.end_date %} · {{ classroom.start_date or 'Open' }} to {{ classroom.end_date or 'Open' }}{% endif %}
-                                        {% else %}
-                                            Not specified
-                                        {% endif %}
-                                    </span>
-                                </div>
-                                <div class="class-info-item">
-                                    <strong>Enrollment Deadline</strong>
-                                    <span>{{ classroom.enrollment_deadline or 'Not specified' }}</span>
-                                </div>
-                                <div class="class-info-item">
-                                    <strong>Required Hours</strong>
-                                    <span>{% if classroom.hours_mode == 'specified' and classroom.required_hours %}{{ classroom.required_hours }} hours{% else %}Not specified{% endif %}</span>
-                                </div>
-                                <div class="class-info-item">
-                                    <strong>Company Website</strong>
-                                    {% if classroom.company_website %}
-                                        <a href="{{ classroom.company_website }}" target="_blank" rel="noopener noreferrer">Visit website</a>
-                                    {% else %}
-                                        <span>—</span>
-                                    {% endif %}
-                                </div>
-                                <div class="class-info-item">
-                                    <strong>Section</strong>
-                                    <span>{{ classroom.section or '—' }}</span>
-                                </div>
-                                <div class="class-info-item">
-                                    <strong>Class Code</strong>
-                                    <span>{{ classroom.code }}</span>
-                                </div>
-                                <div class="class-info-item">
-                                    <strong>Current Interns</strong>
-                                    <span>{{ classroom.student_count }}</span>
-                                </div>
-                                <div class="class-info-item">
-                                    <strong>Status</strong>
-                                    <span class="badge {% if classroom.status == 'Active' %}bg-success{% else %}bg-secondary{% endif %}">{{ classroom.status }}</span>
-                                </div>
+                                <div class="class-info-item"><strong>Company</strong><span>{{ classroom.company_name or '—' }}</span></div>
+                                <div class="class-info-item"><strong>Industry</strong><span>{{ classroom.industry or '—' }}</span></div>
+                                <div class="class-info-item"><strong>Work Arrangement</strong><span>{{ classroom.work_arrangement or '—' }}</span></div>
+                                <div class="class-info-item"><strong>Location</strong><span>{{ classroom.location or '—' }}</span></div>
+                                <div class="class-info-item"><strong>Schedule</strong><span>{% if classroom.schedule_type == 'fixed_dates' %}{{ classroom.start_date or '—' }} to {{ classroom.end_date or '—' }}{% elif classroom.schedule_type == 'flexible' %}Flexible{% if classroom.start_date or classroom.end_date %} · {{ classroom.start_date or 'Open' }} to {{ classroom.end_date or 'Open' }}{% endif %}{% else %}Not specified{% endif %}</span></div>
+                                <div class="class-info-item"><strong>Enrollment Deadline</strong><span>{{ classroom.enrollment_deadline or 'Not specified' }}</span></div>
+                                <div class="class-info-item"><strong>Required Hours</strong><span>{% if classroom.hours_mode == 'specified' and classroom.required_hours %}{{ classroom.required_hours }} hours{% else %}Not specified{% endif %}</span></div>
+                                <div class="class-info-item"><strong>Company Website</strong>{% if classroom.company_website %}<a href="{{ classroom.company_website }}" target="_blank" rel="noopener noreferrer">Visit website</a>{% else %}<span>—</span>{% endif %}</div>
+                                <div class="class-info-item"><strong>Section</strong><span>{{ classroom.section or '—' }}</span></div>
+                                <div class="class-info-item"><strong>Class Code</strong><span>{{ classroom.code }}</span></div>
+                                <div class="class-info-item"><strong>Current Interns</strong><span>{{ classroom.student_count }}</span></div>
+                                <div class="class-info-item"><strong>Status</strong><span class="badge {% if classroom.status == 'Active' %}bg-success{% else %}bg-secondary{% endif %}">{{ classroom.status }}</span></div>
                             </div>
                         </div>
                     </div>
@@ -1037,143 +150,42 @@
 
                 <section id="classwork" class="profile-tab">
                     <div class="class-card">
-                        <div class="class-card-header">
-                            <div>
-                                <h6 class="mb-1">Work</h6>
-                                <div class="small text-muted">Tasks, online activities, files, and projects for your interns.</div>
-                            </div>
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="badge bg-primary">{{ assignments|length }} activities</span>
-                                <a href="{{ url_for('classwork.manage_classwork',class_id=classroom.id) }}" class="btn btn-primary btn-sm">+ Create Work</a>
-                            </div>
-                        </div>
+                        <div class="class-card-header"><div><h6 class="mb-1">Work</h6><div class="small text-muted">Tasks, online activities, files, and projects for your interns.</div></div><div class="d-flex align-items-center gap-2"><span class="badge bg-primary">{{ assignments|length }} activities</span><a href="{{ url_for('classwork.manage_classwork',class_id=classroom.id) }}" class="btn btn-primary btn-sm">+ Create Work</a></div></div>
                         <div class="class-card-body">
-                            {% if assignments and assignments|length>0 %}{% for ass in assignments %}
-                                <a href="{{ url_for('classroom.supervisor_assignment_detail',class_id=classroom.id,assignment_id=ass.id) }}" class="text-decoration-none">
-                                    <div class="border-bottom pb-3 mb-3 d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <strong>{{ ass.title }}</strong>
-                                            <div class="small text-muted">{{ ass.description[:80] if ass.description else '' }}</div>
-                                        </div>
-                                        <span class="badge bg-primary">View submissions</span>
-                                    </div>
-                                </a>
-                            {% endfor %}{% else %}
-                                <div class="empty-classwork">
-                                    <div style="font-size:34px">📝</div>
-                                    <h6>No work yet</h6>
-                                    <p>Create your first intern activity using the Work Studio.</p>
-                                    <a href="{{ url_for('classwork.manage_classwork',class_id=classroom.id) }}" class="btn btn-primary">Create Work</a>
-                                </div>
-                            {% endif %}
+                            {% if assignments and assignments|length>0 %}{% for ass in assignments %}<a href="{{ url_for('classroom.supervisor_assignment_detail',class_id=classroom.id,assignment_id=ass.id) }}" class="text-decoration-none"><div class="border-bottom pb-3 mb-3 d-flex justify-content-between align-items-center"><div><strong>{{ ass.title }}</strong><div class="small text-muted">{{ ass.description[:80] if ass.description else '' }}</div></div><span class="badge bg-primary">View submissions</span></div></a>{% endfor %}{% else %}<div class="empty-classwork"><div class="empty-classwork-icon">📝</div><h6>No work yet</h6><p>Create your first intern activity using the Work Studio.</p><a href="{{ url_for('classwork.manage_classwork',class_id=classroom.id) }}" class="btn btn-primary">Create Work</a></div>{% endif %}
                         </div>
                     </div>
                 </section>
 
                 <section id="people" class="profile-tab">
+                    <div class="supervisor-classwork-heading">
+                        <div>
+                            <h1>Interns</h1>
+                            <p>{{ classroom.section }} · Review the enrolled internship roster, OJT progress, Daily Performance, and Logbook status.</p>
+                        </div>
+                    </div>
+
                     <div class="class-card supervisor-interns-card">
                         <div class="class-card-header supervisor-interns-header">
-                            <div>
-                                <h6>Classroom Roster</h6>
-                                <p>Class-scoped OJT hours, Daily Performance, and Logbook status for enrolled interns.</p>
-                            </div>
-                            <div class="supervisor-interns-summary">
-                                <span class="supervisor-interns-total">{{ classroom.student_count }} enrolled</span>
-                                {% if classroom.hours_mode == 'specified' and classroom.required_hours %}
-                                    <span class="supervisor-interns-hours">{{ classroom.required_hours }} required hrs</span>
-                                {% endif %}
-                            </div>
+                            <div><h6>Classroom Roster</h6><p>Class-scoped OJT hours, Daily Performance, and Logbook status for enrolled interns.</p></div>
+                            <div class="supervisor-interns-summary"><span class="supervisor-interns-total">{{ classroom.student_count }} enrolled</span>{% if classroom.hours_mode == 'specified' and classroom.required_hours %}<span class="supervisor-interns-hours">{{ classroom.required_hours }} required hrs</span>{% endif %}</div>
                         </div>
-
                         <div class="class-card-body">
-                            <div class="supervisor-interns-supervisor">
-                                <div class="supervisor-intern-person">
-                                    <span class="supervisor-intern-avatar">S</span>
-                                    <div>
-                                        <strong>Class Supervisor</strong>
-                                        <small>You manage this Intern Classroom</small>
-                                    </div>
-                                </div>
-                                <span class="supervisor-intern-role">Supervisor</span>
-                            </div>
-
+                            <div class="supervisor-interns-supervisor"><div class="supervisor-intern-person"><span class="supervisor-intern-avatar">S</span><div><strong>Class Supervisor</strong><small>You manage this Intern Classroom</small></div></div><span class="supervisor-intern-role">Supervisor</span></div>
                             {% if students and students|length>0 %}
-                                <div class="supervisor-interns-toolbar">
-                                    <input
-                                        id="classInternSearch"
-                                        class="supervisor-interns-search"
-                                        type="search"
-                                        placeholder="Search intern, email, student number, program, or roster status"
-                                        aria-label="Search classroom roster">
-                                    <span class="supervisor-interns-shown" id="classInternShownCount">{{ students|length }} shown</span>
-                                </div>
-
+                                <div class="supervisor-interns-toolbar"><input id="classInternSearch" class="supervisor-interns-search" type="search" placeholder="Search intern, email, student number, program, or roster status" aria-label="Search classroom roster"><span class="supervisor-interns-shown" id="classInternShownCount">{{ students|length }} shown</span></div>
                                 <div class="supervisor-interns-list" id="classInternList">
                                     {% for s in students %}
-                                        <article
-                                            class="supervisor-intern-row"
-                                            data-class-intern
-                                            data-search="{{ (s.display_name ~ ' ' ~ s.username ~ ' ' ~ s.email_address ~ ' ' ~ s.student_number ~ ' ' ~ s.major_program ~ ' ' ~ s.grade_year ~ ' ' ~ s.roster_status)|lower|e }}">
-                                            <div class="supervisor-intern-person">
-                                                <span class="supervisor-intern-avatar">{{ (s.display_name[0] if s.display_name else 'I')|upper }}</span>
-                                                <div>
-                                                    <strong>{{ s.display_name }}</strong>
-                                                    <small>{{ s.email_address or s.username }}</small>
-                                                    {% set identity_meta = [] %}
-                                                    {% if s.student_number %}{% set _ = identity_meta.append('Student No. ' ~ s.student_number) %}{% endif %}
-                                                    {% if s.major_program %}{% set _ = identity_meta.append(s.major_program) %}{% endif %}
-                                                    {% if s.grade_year %}{% set _ = identity_meta.append(s.grade_year) %}{% endif %}
-                                                    {% if identity_meta %}<small>{{ identity_meta|join(' · ') }}</small>{% endif %}
-                                                </div>
-                                            </div>
-
-                                            <div class="supervisor-intern-roster-metrics d-flex flex-column align-items-start gap-1">
-                                                <span class="supervisor-intern-status{% if s.roster_status_key == 'active' %} is-active{% elif s.roster_status_key == 'completed' %} is-completed{% endif %}">{{ s.roster_status }}</span>
-                                                <small class="text-muted">
-                                                    {% if s.required_hours is not none %}
-                                                        {{ '%.2f'|format(s.rendered_hours) }} / {{ '%.0f'|format(s.required_hours) }} hrs · {{ '%.1f'|format(s.progress_percentage or 0) }}%
-                                                    {% else %}
-                                                        {{ '%.2f'|format(s.rendered_hours) }} rendered hrs
-                                                    {% endif %}
-                                                </small>
-                                                <small class="text-muted">
-                                                    {% if s.daily_average_star is not none %}
-                                                        Daily: {{ '%.1f'|format(s.daily_average_star) }} ★ · {{ '%.1f'|format(s.daily_average_percentage) }}% · {{ s.rated_days }} rated
-                                                    {% else %}
-                                                        Daily: no ratings yet
-                                                    {% endif %}
-                                                </small>
-                                                <small class="text-muted">
-                                                    Logbook: {{ s.logbook_count }} entr{% if s.logbook_count == 1 %}y{% else %}ies{% endif %}
-                                                    {% if s.revision_logbook_count %} · {{ s.revision_logbook_count }} revision requested{% elif s.pending_logbook_count %} · {{ s.pending_logbook_count }} pending review{% endif %}
-                                                </small>
-                                            </div>
-
-                                            <div class="supervisor-intern-actions">
-                                                <a class="btn btn-sm btn-outline-primary" href="{{ url_for('intern_profile.supervisor_intern_profile', class_id=classroom.id, student_id=s.id) }}">View Profile</a>
-                                                <a class="btn btn-sm btn-outline-primary" href="{{ url_for('performance_reports.supervisor_student_report', class_id=classroom.id, student_id=s.id) }}">View Performance</a>
-                                                <form method="POST" action="{{ url_for('classroom.remove_student',class_id=classroom.id,student_id=s.id) }}" onsubmit="return confirm('Remove {{ s.display_name|e }} from this Intern Classroom?')">
-                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
-                                                </form>
-                                            </div>
+                                        <article class="supervisor-intern-row" data-class-intern data-search="{{ (s.display_name ~ ' ' ~ s.username ~ ' ' ~ s.email_address ~ ' ' ~ s.student_number ~ ' ' ~ s.major_program ~ ' ' ~ s.grade_year ~ ' ' ~ s.roster_status)|lower|e }}">
+                                            <div class="supervisor-intern-person"><span class="supervisor-intern-avatar">{{ (s.display_name[0] if s.display_name else 'I')|upper }}</span><div><strong>{{ s.display_name }}</strong><small>{{ s.email_address or s.username }}</small>{% set identity_meta = [] %}{% if s.student_number %}{% set _ = identity_meta.append('Student No. ' ~ s.student_number) %}{% endif %}{% if s.major_program %}{% set _ = identity_meta.append(s.major_program) %}{% endif %}{% if s.grade_year %}{% set _ = identity_meta.append(s.grade_year) %}{% endif %}{% if identity_meta %}<small>{{ identity_meta|join(' · ') }}</small>{% endif %}</div></div>
+                                            <div class="supervisor-intern-roster-metrics d-flex flex-column align-items-start gap-1"><span class="supervisor-intern-status{% if s.roster_status_key == 'active' %} is-active{% elif s.roster_status_key == 'completed' %} is-completed{% endif %}">{{ s.roster_status }}</span><small class="text-muted">{% if s.required_hours is not none %}{{ '%.2f'|format(s.rendered_hours) }} / {{ '%.0f'|format(s.required_hours) }} hrs · {{ '%.1f'|format(s.progress_percentage or 0) }}%{% else %}{{ '%.2f'|format(s.rendered_hours) }} rendered hrs{% endif %}</small><small class="text-muted">{% if s.daily_average_star is not none %}Daily: {{ '%.1f'|format(s.daily_average_star) }} ★ · {{ '%.1f'|format(s.daily_average_percentage) }}% · {{ s.rated_days }} rated{% else %}Daily: no ratings yet{% endif %}</small><small class="text-muted">Logbook: {{ s.logbook_count }} entr{% if s.logbook_count == 1 %}y{% else %}ies{% endif %}{% if s.revision_logbook_count %} · {{ s.revision_logbook_count }} revision requested{% elif s.pending_logbook_count %} · {{ s.pending_logbook_count }} pending review{% endif %}</small></div>
+                                            <div class="supervisor-intern-actions"><a class="btn btn-sm btn-outline-primary" href="{{ url_for('intern_profile.supervisor_intern_profile', class_id=classroom.id, student_id=s.id) }}">View Profile</a><a class="btn btn-sm btn-outline-primary" href="{{ url_for('performance_reports.supervisor_student_report', class_id=classroom.id, student_id=s.id) }}">View Performance</a><form method="POST" action="{{ url_for('classroom.remove_student',class_id=classroom.id,student_id=s.id) }}" onsubmit="return confirm('Remove {{ s.display_name|e }} from this Intern Classroom?')"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="btn btn-sm btn-outline-danger">Remove</button></form></div>
                                         </article>
                                     {% endfor %}
                                 </div>
-
-                                <div class="supervisor-interns-filter-empty" id="classInternNoResults" hidden>
-                                    <h6>No matching interns</h6>
-                                    <p>Try a different name, profile detail, or classroom roster status.</p>
-                                </div>
+                                <div class="supervisor-interns-filter-empty" id="classInternNoResults" hidden><h6>No matching interns</h6><p>Try a different name, profile detail, or classroom roster status.</p></div>
                             {% else %}
-                                <div class="supervisor-interns-empty">
-                                    <h6>No interns enrolled yet</h6>
-                                    <p>Share this Intern Classroom code so interns can join.</p>
-                                    <div class="supervisor-interns-empty-code">
-                                        <strong id="peopleCode">{{ classroom.code }}</strong>
-                                        <button class="btn btn-sm btn-outline-primary" type="button" onclick="copyClassCode()">Copy</button>
-                                    </div>
-                                </div>
+                                <div class="supervisor-interns-empty"><h6>No interns enrolled yet</h6><p>Share this Intern Classroom code so interns can join.</p><div class="supervisor-interns-empty-code"><strong id="peopleCode">{{ classroom.code }}</strong><button class="btn btn-sm btn-outline-primary" type="button" onclick="copyClassCode()">Copy</button></div></div>
                             {% endif %}
                         </div>
                     </div>
@@ -1183,199 +195,52 @@
 
         <div id="classInfoModal" class="nexora-class-modal" onclick="if(event.target===this)closeClassInfo()" aria-hidden="true">
             <div class="nexora-modal" role="dialog" aria-modal="true" aria-labelledby="classInfoTitle">
-                <div class="nexora-modal-header">
-                    <h2 id="classInfoTitle">Intern Classroom Information</h2>
-                    <p>Saved internship details and current classroom activity</p>
-                    <button type="button" class="nexora-modal-close" onclick="closeClassInfo()">×</button>
+                <div class="nexora-modal-header"><h2 id="classInfoTitle">Intern Classroom Information</h2><p>Saved internship details and current classroom activity</p><button type="button" class="nexora-modal-close" onclick="closeClassInfo()">×</button></div>
+                <div class="nexora-modal-body nexora-class-info-body">
+                    <div class="d-flex justify-content-between gap-3"><strong>Intern Classroom</strong><span class="text-end">{{ classroom.name }}</span></div>
+                    <div class="d-flex justify-content-between gap-3"><strong>Company</strong><span class="text-end">{{ classroom.company_name or '—' }}</span></div>
+                    <div class="d-flex justify-content-between gap-3"><strong>Industry</strong><span class="text-end">{{ classroom.industry or '—' }}</span></div>
+                    <div class="d-flex justify-content-between gap-3"><strong>Work arrangement</strong><span class="text-end">{{ classroom.work_arrangement or '—' }}</span></div>
+                    <div class="d-flex justify-content-between gap-3"><strong>Location</strong><span class="text-end">{{ classroom.location or '—' }}</span></div>
+                    <div class="d-flex justify-content-between gap-3"><strong>Schedule</strong><span class="text-end">{% if classroom.schedule_type == 'fixed_dates' %}{{ classroom.start_date or '—' }} to {{ classroom.end_date or '—' }}{% elif classroom.schedule_type == 'flexible' %}Flexible{% if classroom.start_date or classroom.end_date %} · {{ classroom.start_date or 'Open' }} to {{ classroom.end_date or 'Open' }}{% endif %}{% else %}Not specified{% endif %}</span></div>
+                    <div class="d-flex justify-content-between gap-3"><strong>Enrollment deadline</strong><span class="text-end">{{ classroom.enrollment_deadline or 'Not specified' }}</span></div>
+                    <div class="d-flex justify-content-between gap-3"><strong>Required hours</strong><span class="text-end">{% if classroom.hours_mode == 'specified' and classroom.required_hours %}{{ classroom.required_hours }} hours{% else %}Not specified{% endif %}</span></div>
+                    <div class="d-flex justify-content-between gap-3"><strong>Company website</strong><span class="text-end">{% if classroom.company_website %}<a href="{{ classroom.company_website }}" target="_blank" rel="noopener noreferrer">Visit website</a>{% else %}—{% endif %}</span></div>
+                    <div class="d-flex justify-content-between gap-3"><strong>Section</strong><span class="text-end">{{ classroom.section }}</span></div>
+                    <div class="d-flex justify-content-between gap-3"><strong>Class code</strong><span class="text-end">{{ classroom.code }}</span></div>
+                    <div class="d-flex justify-content-between gap-3"><strong>Interns</strong><span class="text-end">{{ classroom.student_count }}</span></div>
+                    <div class="d-flex justify-content-between gap-3"><strong>Work items</strong><span class="text-end">{{ assignments|length }}</span></div>
+                    <div class="d-flex justify-content-between gap-3"><strong>Announcements</strong><span class="text-end">{{ announcements|length }}</span></div>
+                    <div class="d-flex justify-content-between gap-3"><strong>Status</strong><span class="text-end">{{ classroom.status }}</span></div>
                 </div>
-                <div class="nexora-modal-body" style="gap:10px">
-                    <div class="d-flex justify-content-between gap-3">
-                        <strong>Intern Classroom</strong>
-                        <span class="text-end">{{ classroom.name }}</span>
-                    </div>
-                    <div class="d-flex justify-content-between gap-3">
-                        <strong>Company</strong>
-                        <span class="text-end">{{ classroom.company_name or '—' }}</span>
-                    </div>
-                    <div class="d-flex justify-content-between gap-3">
-                        <strong>Industry</strong>
-                        <span class="text-end">{{ classroom.industry or '—' }}</span>
-                    </div>
-                    <div class="d-flex justify-content-between gap-3">
-                        <strong>Work arrangement</strong>
-                        <span class="text-end">{{ classroom.work_arrangement or '—' }}</span>
-                    </div>
-                    <div class="d-flex justify-content-between gap-3">
-                        <strong>Location</strong>
-                        <span class="text-end">{{ classroom.location or '—' }}</span>
-                    </div>
-                    <div class="d-flex justify-content-between gap-3">
-                        <strong>Schedule</strong>
-                        <span class="text-end">
-                            {% if classroom.schedule_type == 'fixed_dates' %}
-                                {{ classroom.start_date or '—' }} to {{ classroom.end_date or '—' }}
-                            {% elif classroom.schedule_type == 'flexible' %}
-                                Flexible{% if classroom.start_date or classroom.end_date %} · {{ classroom.start_date or 'Open' }} to {{ classroom.end_date or 'Open' }}{% endif %}
-                            {% else %}
-                                Not specified
-                            {% endif %}
-                        </span>
-                    </div>
-                    <div class="d-flex justify-content-between gap-3">
-                        <strong>Enrollment deadline</strong>
-                        <span class="text-end">{{ classroom.enrollment_deadline or 'Not specified' }}</span>
-                    </div>
-                    <div class="d-flex justify-content-between gap-3">
-                        <strong>Required hours</strong>
-                        <span class="text-end">{% if classroom.hours_mode == 'specified' and classroom.required_hours %}{{ classroom.required_hours }} hours{% else %}Not specified{% endif %}</span>
-                    </div>
-                    <div class="d-flex justify-content-between gap-3">
-                        <strong>Company website</strong>
-                        <span class="text-end">
-                            {% if classroom.company_website %}
-                                <a href="{{ classroom.company_website }}" target="_blank" rel="noopener noreferrer">Visit website</a>
-                            {% else %}
-                                —
-                            {% endif %}
-                        </span>
-                    </div>
-                    <div class="d-flex justify-content-between gap-3">
-                        <strong>Section</strong>
-                        <span class="text-end">{{ classroom.section }}</span>
-                    </div>
-                    <div class="d-flex justify-content-between gap-3">
-                        <strong>Class code</strong>
-                        <span class="text-end">{{ classroom.code }}</span>
-                    </div>
-                    <div class="d-flex justify-content-between gap-3">
-                        <strong>Interns</strong>
-                        <span class="text-end">{{ classroom.student_count }}</span>
-                    </div>
-                    <div class="d-flex justify-content-between gap-3">
-                        <strong>Work items</strong>
-                        <span class="text-end">{{ assignments|length }}</span>
-                    </div>
-                    <div class="d-flex justify-content-between gap-3">
-                        <strong>Announcements</strong>
-                        <span class="text-end">{{ announcements|length }}</span>
-                    </div>
-                    <div class="d-flex justify-content-between gap-3">
-                        <strong>Status</strong>
-                        <span class="text-end">{{ classroom.status }}</span>
-                    </div>
-                </div>
-                <div class="nexora-modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeClassInfo()">Close</button>
-                </div>
+                <div class="nexora-modal-footer"><button type="button" class="btn btn-secondary" onclick="closeClassInfo()">Close</button></div>
             </div>
         </div>
 
         <script>
             function copyClassCode() {
-                const code = (
-                    document.getElementById("classCodeBadge")?.innerText ||
-                    document.getElementById("peopleCode")?.innerText ||
-                    "{{ classroom.code }}"
-                ).trim();
-                if (navigator.clipboard?.writeText) {
-                    navigator.clipboard
-                        .writeText(code)
-                        .then(
-                            () =>
-                                window.showToast &&
-                                showToast("✓ Class code copied: " + code),
-                        )
-                        .catch(() => {});
-                } else {
-                    const ta = document.createElement("textarea");
-                    ta.value = code;
-                    document.body.appendChild(ta);
-                    ta.select();
-                    try {
-                        document.execCommand("copy");
-                    } catch (e) {}
-                    ta.remove();
-                }
+                const code = (document.getElementById("classCodeBadge")?.innerText || document.getElementById("peopleCode")?.innerText || "{{ classroom.code }}").trim();
+                if (navigator.clipboard?.writeText) navigator.clipboard.writeText(code).then(() => window.showToast && showToast("✓ Class code copied: " + code)).catch(() => {});
+                else { const ta = document.createElement("textarea"); ta.value = code; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); } catch (e) {} ta.remove(); }
             }
-            function openClassInfo() {
-                document.getElementById("classInfoModal").classList.add("open");
-                document
-                    .getElementById("classInfoModal")
-                    .setAttribute("aria-hidden", "false");
-            }
-            function closeClassInfo() {
-                document.getElementById("classInfoModal").classList.remove("open");
-                document
-                    .getElementById("classInfoModal")
-                    .setAttribute("aria-hidden", "true");
-            }
-            function toggleClassActions(event) {
-                event.stopPropagation();
-                const menu = document.getElementById("classManagementMenu");
-                const button = document.getElementById("classManagementButton");
-                if (!menu) return;
-                const opening = !menu.classList.contains("show");
-                menu.classList.toggle("show", opening);
-                if (button) button.setAttribute("aria-expanded", opening ? "true" : "false");
-            }
-            function toggleBannerColorChoices(event) {
-                event.stopPropagation();
-                const choices = document.getElementById("classBannerColorChoices");
-                if (choices) choices.hidden = !choices.hidden;
-            }
-            function closeClassActions() {
-                const menu = document.getElementById("classManagementMenu");
-                const button = document.getElementById("classManagementButton");
-                const choices = document.getElementById("classBannerColorChoices");
-                if (menu) menu.classList.remove("show");
-                if (button) button.setAttribute("aria-expanded", "false");
-                if (choices) choices.hidden = true;
-            }
+            function openClassInfo() { document.getElementById("classInfoModal").classList.add("open"); document.getElementById("classInfoModal").setAttribute("aria-hidden", "false"); }
+            function closeClassInfo() { document.getElementById("classInfoModal").classList.remove("open"); document.getElementById("classInfoModal").setAttribute("aria-hidden", "true"); }
+            function toggleClassActions(event) { event.stopPropagation(); const menu = document.getElementById("classManagementMenu"); const button = document.getElementById("classManagementButton"); if (!menu) return; const opening = !menu.classList.contains("show"); menu.classList.toggle("show", opening); if (button) button.setAttribute("aria-expanded", opening ? "true" : "false"); }
+            function toggleBannerColorChoices(event) { event.stopPropagation(); const choices = document.getElementById("classBannerColorChoices"); if (choices) choices.hidden = !choices.hidden; }
+            function closeClassActions() { const menu = document.getElementById("classManagementMenu"); const button = document.getElementById("classManagementButton"); const choices = document.getElementById("classBannerColorChoices"); if (menu) menu.classList.remove("show"); if (button) button.setAttribute("aria-expanded", "false"); if (choices) choices.hidden = true; }
             document.getElementById("classManagementMenu")?.addEventListener("click", (event) => event.stopPropagation());
             document.addEventListener("click", closeClassActions);
-            function openClassTab(name, btn) {
-                document
-                    .querySelectorAll(".profile-tab")
-                    .forEach((x) => x.classList.remove("active"));
-                const el = document.getElementById(name);
-                if (el) el.classList.add("active");
-                document
-                    .querySelectorAll(".class-tabs .profile-tab-button")
-                    .forEach((x) => x.classList.remove("active"));
-                if (btn) btn.classList.add("active");
-            }
-            function openHashClassTab() {
-                if (window.location.hash === "#people") {
-                    openClassTab("people", document.getElementById("internsTabButton"));
-                }
-            }
-
+            function openClassTab(name, btn) { document.querySelectorAll(".profile-tab").forEach((x) => x.classList.remove("active")); const el = document.getElementById(name); if (el) el.classList.add("active"); document.querySelectorAll(".class-tabs .profile-tab-button").forEach((x) => x.classList.remove("active")); if (btn) btn.classList.add("active"); }
+            function openHashClassTab() { if (window.location.hash === "#people") openClassTab("people", document.getElementById("internsTabButton")); }
             const classInternSearch = document.getElementById("classInternSearch");
             const classInternRows = Array.from(document.querySelectorAll("[data-class-intern]"));
             const classInternShownCount = document.getElementById("classInternShownCount");
             const classInternNoResults = document.getElementById("classInternNoResults");
-
-            function filterClassInterns() {
-                const query = (classInternSearch?.value || "").trim().toLowerCase();
-                let shown = 0;
-                classInternRows.forEach((row) => {
-                    const matches = !query || (row.dataset.search || "").includes(query);
-                    row.hidden = !matches;
-                    if (matches) shown += 1;
-                });
-                if (classInternShownCount) classInternShownCount.textContent = `${shown} shown`;
-                if (classInternNoResults) classInternNoResults.hidden = shown !== 0;
-            }
-
+            function filterClassInterns() { const query = (classInternSearch?.value || "").trim().toLowerCase(); let shown = 0; classInternRows.forEach((row) => { const matches = !query || (row.dataset.search || "").includes(query); row.hidden = !matches; if (matches) shown += 1; }); if (classInternShownCount) classInternShownCount.textContent = `${shown} shown`; if (classInternNoResults) classInternNoResults.hidden = shown !== 0; }
             classInternSearch?.addEventListener("input", filterClassInterns);
             window.addEventListener("hashchange", openHashClassTab);
             openHashClassTab();
-            document.addEventListener("keydown", (e) => {
-                if (e.key === "Escape") {
-                    closeClassInfo();
-                    closeClassActions();
-                }
-            });
+            document.addEventListener("keydown", (e) => { if (e.key === "Escape") { closeClassInfo(); closeClassActions(); } });
         </script>
     </body>
 </html>
