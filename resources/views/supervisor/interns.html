@@ -82,7 +82,22 @@
                                     <div class="d-flex align-items-center gap-2 flex-wrap ms-auto">
                                         <span class="badge rounded-pill bg-white text-primary border">{{ classroom.intern_count }} intern{% if classroom.intern_count != 1 %}s{% endif %}</span>
                                         {% if not classroom.is_legacy %}
-                                            <a class="btn btn-sm btn-outline-primary" href="{{ url_for('classwork_ml_insights.supervisor_insights', class_id=classroom.class_id) }}">View Overall Insights</a>
+                                            <a
+                                                class="btn btn-sm btn-outline-primary"
+                                                href="{{ url_for('classwork_ml_insights.supervisor_insights', class_id=classroom.class_id) }}"
+                                                data-insights-modal-open
+                                                data-insights-view="overall"
+                                                data-overall-url="{{ url_for('classwork_ml_insights.supervisor_insights', class_id=classroom.class_id) }}"
+                                                data-individual-url="{% if classroom.interns %}{{ url_for('classwork_ml_insights.supervisor_individual_insights', class_id=classroom.class_id, student_id=classroom.interns[0].id) }}{% endif %}"
+                                                data-classroom-title="{{ classroom.classroom_name|e }}"
+                                                data-classroom-meta="{{ (classroom.section ~ (' · ' ~ classroom.company_name if classroom.company_name else ''))|e }}"
+                                                data-individual-title="{% if classroom.interns %}{{ classroom.interns[0].display_name|e }}{% endif %}"
+                                                data-individual-meta="{% if classroom.interns %}{{ ((classroom.interns[0].student_number or classroom.interns[0].username) ~ (' · ' ~ classroom.interns[0].major_program if classroom.interns[0].major_program else '') ~ ' · ' ~ classroom.classroom_name)|e }}{% endif %}"
+                                                data-class-report-url="{{ url_for('performance_reports.supervisor_reports', class_id=classroom.class_id) }}"
+                                                data-individual-report-url="{% if classroom.interns %}{{ url_for('performance_reports.supervisor_student_report', class_id=classroom.class_id, student_id=classroom.interns[0].id) }}{% endif %}"
+                                                data-export-url="{{ url_for('classwork_gradebook_export.export_supervisor_gradebook', class_id=classroom.class_id) }}">
+                                                View Overall Insights
+                                            </a>
                                         {% endif %}
                                         <button
                                             type="button"
@@ -182,7 +197,22 @@
                                                                     {% endif %}
                                                                 </td>
                                                                 <td class="text-end pe-3">
-                                                                    <a class="btn btn-sm btn-outline-primary" href="{{ url_for('classwork_ml_insights.supervisor_insights', class_id=classroom.class_id) }}?student_id={{ intern.id }}#individual">View Insights</a>
+                                                                    <a
+                                                                        class="btn btn-sm btn-outline-primary"
+                                                                        href="{{ url_for('classwork_ml_insights.supervisor_individual_insights', class_id=classroom.class_id, student_id=intern.id) }}"
+                                                                        data-insights-modal-open
+                                                                        data-insights-view="individual"
+                                                                        data-overall-url="{{ url_for('classwork_ml_insights.supervisor_insights', class_id=classroom.class_id) }}"
+                                                                        data-individual-url="{{ url_for('classwork_ml_insights.supervisor_individual_insights', class_id=classroom.class_id, student_id=intern.id) }}"
+                                                                        data-classroom-title="{{ classroom.classroom_name|e }}"
+                                                                        data-classroom-meta="{{ (classroom.section ~ (' · ' ~ classroom.company_name if classroom.company_name else ''))|e }}"
+                                                                        data-individual-title="{{ intern.display_name|e }}"
+                                                                        data-individual-meta="{{ ((intern.student_number or intern.username) ~ (' · ' ~ intern.major_program if intern.major_program else '') ~ ' · ' ~ classroom.classroom_name)|e }}"
+                                                                        data-class-report-url="{{ url_for('performance_reports.supervisor_reports', class_id=classroom.class_id) }}"
+                                                                        data-individual-report-url="{{ url_for('performance_reports.supervisor_student_report', class_id=classroom.class_id, student_id=intern.id) }}"
+                                                                        data-export-url="{{ url_for('classwork_gradebook_export.export_supervisor_gradebook', class_id=classroom.class_id) }}">
+                                                                        View Insights
+                                                                    </a>
                                                                 </td>
                                                             </tr>
                                                         {% endfor %}
@@ -215,6 +245,37 @@
             </div>
         </main>
 
+        <div id="assignedInsightsModal" class="nexora-class-modal" aria-hidden="true" onclick="if(event.target===this)closeAssignedInsightsModal()">
+            <div class="nexora-modal w-100 mw-100" role="dialog" aria-modal="true" aria-labelledby="assignedInsightsModalTitle">
+                <div class="nexora-modal-header bg-success-subtle border-bottom">
+                    <div class="d-flex align-items-center gap-3 pe-5">
+                        <span id="assignedInsightsAvatar" class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary-subtle text-primary fw-bold px-3 py-2" aria-hidden="true">I</span>
+                        <div>
+                            <h2 id="assignedInsightsModalTitle">Insights</h2>
+                            <p id="assignedInsightsModalMeta" class="mb-0"></p>
+                        </div>
+                    </div>
+                    <button type="button" class="nexora-modal-close" aria-label="Close insights" onclick="closeAssignedInsightsModal()">×</button>
+                </div>
+
+                <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap px-4 py-3 border-bottom bg-white">
+                    <div class="supervisor-insights-view-tabs border-0 p-0" role="tablist" aria-label="Insight modal views">
+                        <button type="button" id="assignedInsightsOverallTab" class="supervisor-insights-view-tab active" role="tab" aria-selected="true" onclick="switchAssignedInsightsView('overall')">Overall Insights</button>
+                        <button type="button" id="assignedInsightsIndividualTab" class="supervisor-insights-view-tab" role="tab" aria-selected="false" onclick="switchAssignedInsightsView('individual')">Individual Insights</button>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <a id="assignedInsightsReportsLink" class="btn btn-sm btn-outline-primary" href="#">Reports</a>
+                        <a id="assignedInsightsExportLink" class="btn btn-sm btn-primary" href="#">Export CSV</a>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="closeAssignedInsightsModal()">Back to Assigned Interns</button>
+                    </div>
+                </div>
+
+                <div id="assignedInsightsModalBody" class="nexora-modal-body p-0" aria-live="polite">
+                    <div class="p-5 text-center text-secondary">Loading insights…</div>
+                </div>
+            </div>
+        </div>
+
         <script>
             function toggleAssignedClassroom(button, bodyId) {
                 const body = document.getElementById(bodyId);
@@ -225,6 +286,157 @@
                 const icon = button.querySelector('[aria-hidden="true"]');
                 if (icon) icon.textContent = opening ? '⌃' : '⌄';
             }
+
+            const assignedInsightsState = {
+                overallUrl: '',
+                individualUrl: '',
+                classReportUrl: '',
+                individualReportUrl: '',
+                exportUrl: '',
+                classroomTitle: '',
+                classroomMeta: '',
+                individualTitle: '',
+                individualMeta: '',
+                currentView: 'overall',
+                requestToken: 0,
+            };
+
+            function openAssignedInsightsModal(trigger) {
+                const modal = document.getElementById('assignedInsightsModal');
+                if (!modal || !trigger) return;
+
+                assignedInsightsState.overallUrl = trigger.dataset.overallUrl || '';
+                assignedInsightsState.individualUrl = trigger.dataset.individualUrl || '';
+                assignedInsightsState.classReportUrl = trigger.dataset.classReportUrl || '';
+                assignedInsightsState.individualReportUrl = trigger.dataset.individualReportUrl || '';
+                assignedInsightsState.exportUrl = trigger.dataset.exportUrl || '';
+                assignedInsightsState.classroomTitle = trigger.dataset.classroomTitle || 'Intern Classroom';
+                assignedInsightsState.classroomMeta = trigger.dataset.classroomMeta || '';
+                assignedInsightsState.individualTitle = trigger.dataset.individualTitle || '';
+                assignedInsightsState.individualMeta = trigger.dataset.individualMeta || '';
+
+                modal.classList.add('open');
+                modal.setAttribute('aria-hidden', 'false');
+                document.body.classList.add('overflow-hidden');
+                switchAssignedInsightsView(trigger.dataset.insightsView === 'individual' ? 'individual' : 'overall');
+            }
+
+            function closeAssignedInsightsModal() {
+                const modal = document.getElementById('assignedInsightsModal');
+                if (!modal) return;
+                assignedInsightsState.requestToken += 1;
+                modal.classList.remove('open');
+                modal.setAttribute('aria-hidden', 'true');
+                document.body.classList.remove('overflow-hidden');
+            }
+
+            function updateAssignedInsightsModalHeader(view) {
+                const title = document.getElementById('assignedInsightsModalTitle');
+                const meta = document.getElementById('assignedInsightsModalMeta');
+                const avatar = document.getElementById('assignedInsightsAvatar');
+                const reports = document.getElementById('assignedInsightsReportsLink');
+                const exportLink = document.getElementById('assignedInsightsExportLink');
+                const individualMode = view === 'individual' && assignedInsightsState.individualUrl;
+                const displayTitle = individualMode && assignedInsightsState.individualTitle
+                    ? assignedInsightsState.individualTitle
+                    : assignedInsightsState.classroomTitle;
+                const displayMeta = individualMode && assignedInsightsState.individualMeta
+                    ? assignedInsightsState.individualMeta
+                    : assignedInsightsState.classroomMeta;
+
+                if (title) title.textContent = displayTitle || 'Insights';
+                if (meta) meta.textContent = displayMeta || 'Classroom-scoped performance evidence';
+                if (avatar) avatar.textContent = (displayTitle || 'I').trim().charAt(0).toUpperCase();
+                if (reports) {
+                    reports.href = individualMode && assignedInsightsState.individualReportUrl
+                        ? assignedInsightsState.individualReportUrl
+                        : assignedInsightsState.classReportUrl || '#';
+                }
+                if (exportLink) exportLink.href = assignedInsightsState.exportUrl || '#';
+            }
+
+            async function switchAssignedInsightsView(view) {
+                const requestedView = view === 'individual' ? 'individual' : 'overall';
+                const url = requestedView === 'individual'
+                    ? assignedInsightsState.individualUrl
+                    : assignedInsightsState.overallUrl;
+                const overallTab = document.getElementById('assignedInsightsOverallTab');
+                const individualTab = document.getElementById('assignedInsightsIndividualTab');
+
+                if (individualTab) {
+                    individualTab.disabled = !assignedInsightsState.individualUrl;
+                    individualTab.setAttribute('aria-disabled', assignedInsightsState.individualUrl ? 'false' : 'true');
+                }
+                if (!url) return;
+
+                assignedInsightsState.currentView = requestedView;
+                [overallTab, individualTab].forEach((tab) => {
+                    if (!tab) return;
+                    const active = (requestedView === 'overall' && tab === overallTab) || (requestedView === 'individual' && tab === individualTab);
+                    tab.classList.toggle('active', active);
+                    tab.setAttribute('aria-selected', active ? 'true' : 'false');
+                });
+                updateAssignedInsightsModalHeader(requestedView);
+                await loadAssignedInsightsContent(url, requestedView);
+            }
+
+            async function loadAssignedInsightsContent(url, view) {
+                const body = document.getElementById('assignedInsightsModalBody');
+                if (!body) return;
+                const token = ++assignedInsightsState.requestToken;
+                body.innerHTML = '<div class="p-5 text-center text-secondary">Loading insights…</div>';
+
+                try {
+                    const response = await fetch(url, { credentials: 'same-origin' });
+                    if (!response.ok) throw new Error(`Insights request failed (${response.status})`);
+                    const html = await response.text();
+                    if (token !== assignedInsightsState.requestToken) return;
+                    const sourceDocument = new DOMParser().parseFromString(html, 'text/html');
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'p-4';
+
+                    if (view === 'overall') {
+                        const panel = sourceDocument.querySelector('#overallInsightsPanel');
+                        if (!panel) throw new Error('Overall insights content was not found.');
+                        const clone = panel.cloneNode(true);
+                        clone.hidden = false;
+                        clone.removeAttribute('hidden');
+                        wrapper.appendChild(clone);
+                    } else {
+                        const page = sourceDocument.querySelector('main .nexora-page');
+                        if (!page) throw new Error('Individual insights content was not found.');
+                        const clone = page.cloneNode(true);
+                        clone.querySelector('.supervisor-class-context')?.remove();
+                        const pageHeading = clone.querySelector(':scope > .d-flex.flex-wrap.align-items-start.justify-content-between.gap-3.mb-4');
+                        if (pageHeading) pageHeading.remove();
+                        while (clone.firstChild) wrapper.appendChild(clone.firstChild);
+                    }
+
+                    body.replaceChildren(wrapper);
+                    body.scrollTop = 0;
+                } catch (error) {
+                    if (token !== assignedInsightsState.requestToken) return;
+                    body.innerHTML = `
+                        <div class="p-5 text-center">
+                            <h3 class="h5 fw-bold mb-2">Unable to load insights</h3>
+                            <p class="text-secondary mb-3">${error.message || 'Please try again.'}</p>
+                            <a class="btn btn-outline-primary" href="${url}">Open the full insights page</a>
+                        </div>`;
+                }
+            }
+
+            document.addEventListener('click', (event) => {
+                const trigger = event.target.closest('[data-insights-modal-open]');
+                if (!trigger) return;
+                event.preventDefault();
+                openAssignedInsightsModal(trigger);
+            });
+
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && document.getElementById('assignedInsightsModal')?.classList.contains('open')) {
+                    closeAssignedInsightsModal();
+                }
+            });
 
             (() => {
                 const input = document.getElementById('assignedInternSearch');
@@ -257,9 +469,9 @@
                         if (visible) visibleGroups += 1;
 
                         if (query && visible && rows.length) {
-                            const body = group.querySelector('[data-classroom-body]');
+                            const classroomBody = group.querySelector('[data-classroom-body]');
                             const toggle = group.querySelector('[data-classroom-toggle]');
-                            if (body) body.hidden = false;
+                            if (classroomBody) classroomBody.hidden = false;
                             if (toggle) {
                                 toggle.setAttribute('aria-expanded', 'true');
                                 const icon = toggle.querySelector('[aria-hidden="true"]');
