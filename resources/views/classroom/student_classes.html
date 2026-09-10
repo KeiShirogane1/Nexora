@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Classes - Nexora</title>
+    <title>Intern Classrooms - Nexora</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
@@ -22,8 +22,8 @@
     {% include 'components/student_sidebar.html' %}
     <main class="classes-main">
         <div class="classes-wrap">
-            <div class="classes-breadcrumb"><a href="{{ url_for('student.student_dashboard') }}">Dashboard</a><span>›</span><span>My Classes</span></div>
-            <header class="classes-hero student-section-heading" aria-labelledby="classes-heading"><div><span class="student-section-eyebrow">Student Portal</span><h1 id="classes-heading">My Classes</h1><p>Your internship classrooms and learning spaces.</p></div><a href="{{ url_for('classroom.join_class') }}" class="join-btn">+ Join Class</a></header>
+            <div class="classes-breadcrumb"><a href="{{ url_for('student.student_dashboard') }}">Dashboard</a><span>›</span><span>Intern Classrooms</span></div>
+            <header class="classes-hero student-section-heading" aria-labelledby="classes-heading"><div><span class="student-section-eyebrow">Student Portal</span><h1 id="classes-heading">Intern Classrooms</h1><p>Your internship classrooms and OJT workspaces.</p></div><a href="{{ url_for('classroom.join_class') }}" class="join-btn">+ Join Intern Classroom</a></header>
             {% if classes and classes|length > 0 %}
                 <div class="classes-grid">
                     {% for c in classes %}
@@ -31,14 +31,14 @@
                             <div class="class-card-cover"></div>
                             <div class="class-card-body">
                                 <div class="class-card-heading"><h2>{{ c.name }}</h2><span class="class-status {% if c.status == 'Active' %}active{% endif %}">{{ c.status }}</span></div>
-                                <p class="class-section">{{ c.section }}</p><p class="class-teacher">Teacher: {{ c.supervisor }}</p>
-                                <div class="class-details"><div class="class-code"><span>Class code</span><strong>{{ c.code }}</strong></div><a href="{{ url_for('classroom.student_class',class_id=c.id) }}" class="open-class">Open Class →</a></div>
+                                <p class="class-section">{{ c.section }}</p><p class="class-teacher">Supervisor: {{ c.supervisor }}</p>
+                                <div class="class-details"><div class="class-code"><span>Classroom code</span><strong>{{ c.code }}</strong></div><a href="{{ url_for('classroom.student_class',class_id=c.id) }}" class="open-class">Open Intern Classroom →</a></div>
                             </div>
                         </article>
                     {% endfor %}
                 </div>
             {% else %}
-                <section class="classes-empty"><div class="empty-icon">📚</div><h2>No classes yet</h2><p>Ask your supervisor for the class code and join your classroom to get started.</p><a href="{{ url_for('classroom.join_class') }}" class="empty-join">Join Class</a></section>
+                <section class="classes-empty"><div class="empty-icon">📚</div><h2>No Intern Classrooms yet</h2><p>Ask your supervisor for the classroom code and join your internship workspace to get started.</p><a href="{{ url_for('classroom.join_class') }}" class="empty-join">Join Intern Classroom</a></section>
             {% endif %}
         </div>
     </main>
