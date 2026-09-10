@@ -65,6 +65,7 @@
                         <article
                             class="supervisor-insights-card mb-3"
                             data-evaluation-classroom
+                            data-bulk-modal-url="{{ url_for('ojt_evaluation.supervisor_bulk_evaluations', class_id=classroom.class_id) }}"
                             data-search="{{ (classroom.classroom_name ~ ' ' ~ classroom.section ~ ' ' ~ classroom.company_name ~ ' ' ~ classroom.internship_title)|lower|e }}">
                             <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap p-3 border-bottom supervisor-class-context-banner--{{ evaluation_theme }}{% if evaluation_theme == 'navy' %} text-white{% endif %}">
                                 <div class="d-flex align-items-center gap-3 min-w-0">
@@ -230,6 +231,7 @@
             const count = group.querySelector('[data-evaluation-selected-count]');
             const selectAll = group.querySelector('[data-evaluation-select-all]');
             const selectAllButton = group.querySelector('[data-evaluation-select-all-button]');
+            const evaluateSelected = group.querySelector('[data-evaluate-selected]');
 
             if (count) count.textContent = `${checked.length} selected`;
             if (selectAll) {
@@ -237,6 +239,10 @@
                 selectAll.indeterminate = checked.length > 0 && checked.length < checkboxes.length;
             }
             if (selectAllButton) selectAllButton.textContent = checkboxes.length > 0 && checked.length === checkboxes.length ? 'Clear All' : 'Select All';
+            if (evaluateSelected) {
+                evaluateSelected.disabled = checked.length < 2;
+                evaluateSelected.textContent = checked.length >= 2 ? `Evaluate Selected (${checked.length})` : 'Evaluate Selected';
+            }
         }
 
         document.querySelectorAll('[data-evaluation-classroom]').forEach((group) => {
@@ -359,8 +365,7 @@
                 if (firstClose) firstClose.focus();
             };
 
-            const openModal = async (button) => {
-                const url = button.dataset.modalUrl;
+            const openModalUrl = async (url) => {
                 if (!url) return;
 
                 modal.classList.add('open');
@@ -383,7 +388,22 @@
             };
 
             document.querySelectorAll('[data-evaluation-open]').forEach((button) => {
-                button.addEventListener('click', () => openModal(button));
+                button.addEventListener('click', () => openModalUrl(button.dataset.modalUrl));
+            });
+
+            document.querySelectorAll('[data-evaluate-selected]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    const group = button.closest('[data-evaluation-classroom]');
+                    if (!group || button.disabled) return;
+                    const selected = Array.from(group.querySelectorAll('[data-evaluation-student-checkbox]:not(:disabled):checked'));
+                    if (selected.length < 2) return;
+                    const baseUrl = group.dataset.bulkModalUrl;
+                    if (!baseUrl) return;
+                    const url = new URL(baseUrl, window.location.origin);
+                    url.searchParams.set('modal', '1');
+                    selected.forEach((checkbox) => url.searchParams.append('student_id', checkbox.value));
+                    openModalUrl(url.toString());
+                });
             });
 
             modal.addEventListener('click', (event) => {
