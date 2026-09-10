@@ -4,6 +4,9 @@ from datetime import datetime
 from app.Models.db import get_db_connection, using_postgres
 
 
+MAX_LOG_TEXT_LENGTH = 5000
+
+
 def _row_value(row, key, index=0, default=None):
     if row is None:
         return default
@@ -126,6 +129,183 @@ def _visible_work(conn, student_id, classroom_id):
         }
         for row in rows
     ]
+
+
+def _can_reference_work(conn, student_id, classroom_id, assignment_id):
+    if not classroom_id or not assignment_id:
+        return False
+    row = conn.execute(
+        """
+        SELECT 1
+        FROM classroom_assignments a
+        WHERE a.id = ?
+          AND a.classroom_id = ?
+          AND (
+                NOT EXISTS (
+                    SELECT 1
+                    FROM classroom_assignment_recipients r
+                    WHERE r.assignment_id = a.id
+                )
+                OR EXISTS (
+                    SELECT 1
+                    FROM classroom_assignment_recipients r
+                    WHERE r.assignment_id = a.id
+                      AND r.student_id = ?
+                )
+          )
+        LIMIT 1
+        """,
+        (assignment_id, classroom_id, student_id),
+    ).fetchone()
+    return row is not None
+
+
+def save_daily_log(
+    student_id,
+    attendance_id,
+    accomplishment,
+    reflection="",
+    challenges="",
+    related_assignment_id=None,
+):
+    """Create or update the single Daily OJT entry for one open attendance session."""
+    try:
+        student_id = int(student_id)
+        attendance_id = int(attendance_id)
+    except (TypeError, ValueError):
+        return {"ok": False, "error": "Invalid attendance session.", "classroom_id": None}
+
+    accomplishment = (accomplishment or "").strip()
+    reflection = (reflection or "").strip()
+    challenges = (challenges or "").strip()
+
+    if not accomplishment:
+        return {"ok": False, "error": "Daily accomplishment is required.", "classroom_id": None}
+    if any(len(value) > MAX_LOG_TEXT_LENGTH for value in (accomplishment, reflection, challenges)):
+        return {
+            "ok": False,
+            "error": f"Each Daily OJT text field must be {MAX_LOG_TEXT_LENGTH:,} characters or fewer.",
+            "classroom_id": None,
+        }
+
+    normalized_assignment_id = None
+    if related_assignment_id not in (None, ""):
+        try:
+            normalized_assignment_id = int(related_assignment_id)
+        except (TypeError, ValueError):
+            return {"ok": False, "error": "Choose a valid related Work item.", "classroom_id": None}
+
+    conn = get_db_connection()
+    try:
+        attendance = conn.execute(
+            """
+            SELECT id, classroom_id, status
+            FROM attendance
+            WHERE id = ? AND student_id = ?
+            LIMIT 1
+            """,
+            (attendance_id, student_id),
+        ).fetchone()
+        if not attendance:
+            return {"ok": False, "error": "Attendance session not found.", "classroom_id": None}
+
+        classroom_id = _row_value(attendance, "classroom_id", 1, None)
+        status = _row_value(attendance, "status", 2, "")
+        if status != "Open":
+            return {
+                "ok": False,
+                "error": "Daily OJT entries can only be changed while the attendance session is open.",
+                "classroom_id": classroom_id,
+            }
+
+        if normalized_assignment_id is not None and not _can_reference_work(
+            conn,
+            student_id,
+            classroom_id,
+            normalized_assignment_id,
+        ):
+            return {
+                "ok": False,
+                "error": "That Work item is not assigned to you in this Intern Classroom.",
+                "classroom_id": classroom_id,
+            }
+
+        existing = conn.execute(
+            """
+            SELECT id
+            FROM logs
+            WHERE attendance_id = ?
+              AND student_id = ?
+              AND entry_type = 'daily'
+            LIMIT 1
+            """,
+            (attendance_id, student_id),
+        ).fetchone()
+        now = datetime.now()
+
+        if existing:
+            log_id = int(_row_value(existing, "id", 0, 0))
+            conn.execute(
+                """
+                UPDATE logs
+                SET content = ?,
+                    accomplishment = ?,
+                    reflection = ?,
+                    challenges = ?,
+                    related_assignment_id = ?,
+                    updated_at = ?
+                WHERE id = ? AND student_id = ?
+                """,
+                (
+                    accomplishment,
+                    accomplishment,
+                    reflection or None,
+                    challenges or None,
+                    normalized_assignment_id,
+                    now,
+                    log_id,
+                    student_id,
+                ),
+            )
+        else:
+            conn.execute(
+                """
+                INSERT INTO logs (
+                    attendance_id,
+                    student_id,
+                    content,
+                    created_at,
+                    entry_type,
+                    accomplishment,
+                    reflection,
+                    challenges,
+                    related_assignment_id,
+                    updated_at
+                ) VALUES (?, ?, ?, ?, 'daily', ?, ?, ?, ?, ?)
+                """,
+                (
+                    attendance_id,
+                    student_id,
+                    accomplishment,
+                    now,
+                    accomplishment,
+                    reflection or None,
+                    challenges or None,
+                    normalized_assignment_id,
+                    now,
+                ),
+            )
+
+        conn.commit()
+        return {"ok": True, "error": None, "classroom_id": classroom_id}
+    except Exception:
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+        raise
+    finally:
+        conn.close()
 
 
 def _attendance_day_map(conn, student_id, classroom_id):
