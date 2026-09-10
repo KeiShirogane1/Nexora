@@ -8,6 +8,7 @@ from app.Http.Controllers.password import password
 from app.Http.Controllers.student import student
 from app.Http.Controllers.daily_logbook import daily_logbook
 from app.Http.Controllers.logbook_review import logbook_review
+from app.Http.Controllers.daily_performance_history import daily_performance_history
 from app.Http.Controllers.supervisor import supervisor
 from app.Http.Controllers.admin import admin
 from app.Http.Controllers.classroom import classroom
@@ -93,7 +94,7 @@ def repair_missing_student_profiles():
  except Exception as exc:conn.rollback();print("student profile repair skipped:",exc)
  finally:cur.close();conn.close()
 initialize_database();ensure_classroom_schema();ensure_classwork_submission_schema();ensure_classwork_score_schema();ensure_attendance_schema();ensure_logbook_schema();ensure_logbook_photo_schema();ensure_logbook_review_schema();ensure_daily_performance_rating_schema();ensure_session_schema();repair_missing_student_profiles()
-for bp in (auth,password,student,daily_logbook,logbook_review,student_classwork,student_gradebook,student_classmates,supervisor,admin,classroom,internship_classroom,classwork,classwork_submissions,classwork_grading,classwork_scores,classwork_gradebook,classwork_gradebook_export,classwork_ml_insights,performance_reports,admin_reports_overview,admin_trash,supervisor_profile_photo,notifications_bp):app.register_blueprint(bp)
+for bp in (auth,password,student,daily_logbook,logbook_review,daily_performance_history,student_classwork,student_gradebook,student_classmates,supervisor,admin,classroom,internship_classroom,classwork,classwork_submissions,classwork_grading,classwork_scores,classwork_gradebook,classwork_gradebook_export,classwork_ml_insights,performance_reports,admin_reports_overview,admin_trash,supervisor_profile_photo,notifications_bp):app.register_blueprint(bp)
 from flask import request
 @app.before_request
 def enforce_single_supervisor_session():
