@@ -110,7 +110,7 @@ def get_supervisor_assigned_interns(supervisor_id):
 
         roster = get_supervisor_classroom_roster(supervisor_id, classroom_id)
         students = roster.get("students") if roster.get("ok") else []
-        if students:
+        if students and not bool(_value(classroom, "archived", 3, 0)):
             classrooms_with_interns += 1
 
         classroom_data = {
