@@ -100,7 +100,7 @@
                 <div class="supervisor-reports-heading">
                     <div>
                         <h1>Reports</h1>
-                        <p>{{ classroom.section }} · Performance, completion, feedback analysis, and recommendations for this Intern Classroom.</p>
+                        <p>{{ classroom.section }} · Work scoring, Work completion, feedback analysis, and recommendations. Attendance/OJT Hours, Daily Performance, Logbook, and Official Evaluation remain separate.</p>
                     </div>
                     <div class="supervisor-reports-actions">
                         <a class="btn btn-outline-primary" href="{{ url_for('classwork_ml_insights.supervisor_insights', class_id=classroom.id) }}">Performance Insights</a>
@@ -110,8 +110,8 @@
 
                 <section class="supervisor-reports-card">
                     <div class="supervisor-reports-toolbar">
-                        <div class="text-muted small"><strong>{{ reports|length }}</strong> intern{{ '' if reports|length==1 else 's' }} · Reports</div>
-                        <span class="text-muted small">Intern · Performance % · Completion · Performance · Competency · Recommendation · Priority</span>
+                        <div class="text-muted small"><strong>{{ reports|length }}</strong> intern{{ '' if reports|length==1 else 's' }} · Work Reports</div>
+                        <span class="text-muted small">Intern · Work Average % · Work Completion · Work Performance · Competency · Recommendation · Priority</span>
                     </div>
                     {% if not reports %}
                         <div class="supervisor-reports-empty">
@@ -124,9 +124,9 @@
                                 <thead>
                                     <tr>
                                         <th class="supervisor-reports-student">Intern</th>
-                                        <th>Performance %</th>
-                                        <th>Completion</th>
-                                        <th>Performance</th>
+                                        <th>Work Average %</th>
+                                        <th>Work Completion</th>
+                                        <th>Work Performance</th>
                                         <th>Competency</th>
                                         <th>Recommendation</th>
                                         <th>Priority</th>
@@ -140,9 +140,9 @@
                                                 <strong>{{ r.student.username }}</strong>
                                                 {% if r.student.student_number %}<small class="text-muted d-block">{{ r.student.student_number }}</small>{% elif r.student.email %}<small class="text-muted d-block">{{ r.student.email }}</small>{% endif %}
                                             </td>
-                                            <td data-label="Performance %">{% if r.overall_percentage is not none %}{{ "%.1f"|format(r.overall_percentage) }}%{% else %}—{% endif %}</td>
-                                            <td data-label="Completion">{{ "%.1f"|format(r.completion_rate) }}%</td>
-                                            <td data-label="Performance">
+                                            <td data-label="Work Average %">{% if r.overall_percentage is not none %}{{ "%.1f"|format(r.overall_percentage) }}%{% else %}—{% endif %}</td>
+                                            <td data-label="Work Completion">{{ "%.1f"|format(r.completion_rate) }}%</td>
+                                            <td data-label="Work Performance">
                                                 {% if r.overall_percentage is none %}
                                                     <span class="supervisor-reports-label is-no-data">No data yet</span>
                                                 {% else %}
