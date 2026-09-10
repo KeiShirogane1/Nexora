@@ -15,6 +15,7 @@ MAX_STAR_RATING = Decimal("5.0")
 STAR_RATING_STEP = Decimal("0.1")
 PERCENTAGE_PRECISION = Decimal("0.1")
 MAX_DAILY_RATING_COMMENT_LENGTH = 2000
+MAX_BULK_RATING_ENTRIES = 100
 
 # Approved anchors for the Nexora daily OJT performance scale.
 # Values between anchors are linearly interpolated.
@@ -308,6 +309,148 @@ def save_daily_performance_rating(
             "attendance_id": attendance_id,
             "classroom_id": classroom_id,
             "student_id": int(_row_value(attendance, "student_id", 0, 0)),
+            "star_rating": snapshot["star_rating"],
+            "percentage": snapshot["percentage"],
+            "comment": comment,
+        }
+    except Exception:
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+        raise
+    finally:
+        conn.close()
+
+
+def save_bulk_daily_performance_ratings(
+    supervisor_id,
+    classroom_id,
+    log_ids,
+    star_rating,
+    comment="",
+):
+    """Apply one manual rating to selected closed Daily OJT entries atomically."""
+    try:
+        supervisor_id = int(supervisor_id)
+        classroom_id = int(classroom_id)
+    except (TypeError, ValueError):
+        return {"ok": False, "error": "Invalid Intern Classroom."}
+
+    normalized_log_ids = []
+    seen = set()
+    for value in log_ids or []:
+        try:
+            log_id = int(value)
+        except (TypeError, ValueError):
+            return {"ok": False, "error": "Choose valid Daily OJT entries."}
+        if log_id <= 0:
+            return {"ok": False, "error": "Choose valid Daily OJT entries."}
+        if log_id not in seen:
+            seen.add(log_id)
+            normalized_log_ids.append(log_id)
+
+    if not normalized_log_ids:
+        return {"ok": False, "error": "Select at least one completed Daily OJT entry."}
+    if len(normalized_log_ids) > MAX_BULK_RATING_ENTRIES:
+        return {
+            "ok": False,
+            "error": f"Bulk rating is limited to {MAX_BULK_RATING_ENTRIES} Daily OJT entries at a time.",
+        }
+
+    try:
+        snapshot = build_daily_rating_snapshot(star_rating)
+    except ValueError as exc:
+        return {"ok": False, "error": str(exc)}
+
+    comment = (comment or "").strip()
+    if len(comment) > MAX_DAILY_RATING_COMMENT_LENGTH:
+        return {
+            "ok": False,
+            "error": f"Daily performance comment must be {MAX_DAILY_RATING_COMMENT_LENGTH:,} characters or fewer.",
+        }
+
+    placeholders = ", ".join("?" for _ in normalized_log_ids)
+    conn = get_db_connection()
+    try:
+        rows = conn.execute(
+            f"""
+            SELECT l.id AS log_id, a.id AS attendance_id, a.student_id, a.status
+            FROM logs l
+            JOIN attendance a ON a.id = l.attendance_id
+            JOIN classrooms c ON c.id = a.classroom_id
+            WHERE l.id IN ({placeholders})
+              AND l.entry_type = 'daily'
+              AND a.classroom_id = ?
+              AND c.supervisor_id = ?
+            """,
+            tuple(normalized_log_ids) + (classroom_id, supervisor_id),
+        ).fetchall()
+
+        rows_by_log_id = {
+            int(_row_value(row, "log_id", 0, 0)): row
+            for row in rows
+        }
+        if len(rows_by_log_id) != len(normalized_log_ids):
+            return {
+                "ok": False,
+                "error": "One or more selected Daily OJT entries are unavailable in this Intern Classroom.",
+            }
+
+        ordered_rows = [rows_by_log_id[log_id] for log_id in normalized_log_ids]
+        if any(_row_value(row, "status", 3, "Open") == "Open" for row in ordered_rows):
+            return {
+                "ok": False,
+                "error": "Clock-out must be completed for every selected Daily OJT entry before bulk rating.",
+            }
+
+        now = datetime.now()
+        recipients = []
+        for row in ordered_rows:
+            attendance_id = int(_row_value(row, "attendance_id", 1, 0))
+            conn.execute(
+                """
+                INSERT INTO daily_performance_ratings (
+                    attendance_id,
+                    supervisor_id,
+                    star_rating,
+                    percentage,
+                    comment,
+                    rated_at,
+                    updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT (attendance_id) DO UPDATE SET
+                    supervisor_id = excluded.supervisor_id,
+                    star_rating = excluded.star_rating,
+                    percentage = excluded.percentage,
+                    comment = excluded.comment,
+                    updated_at = excluded.updated_at
+                """,
+                (
+                    attendance_id,
+                    supervisor_id,
+                    snapshot["star_rating"],
+                    snapshot["percentage"],
+                    comment or None,
+                    now,
+                    now,
+                ),
+            )
+            recipients.append(
+                {
+                    "log_id": int(_row_value(row, "log_id", 0, 0)),
+                    "attendance_id": attendance_id,
+                    "student_id": int(_row_value(row, "student_id", 2, 0)),
+                }
+            )
+
+        conn.commit()
+        return {
+            "ok": True,
+            "error": None,
+            "classroom_id": classroom_id,
+            "count": len(recipients),
+            "recipients": recipients,
             "star_rating": snapshot["star_rating"],
             "percentage": snapshot["percentage"],
             "comment": comment,
