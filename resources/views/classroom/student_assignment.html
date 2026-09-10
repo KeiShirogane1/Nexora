@@ -14,12 +14,8 @@
         }
         *{box-sizing:border-box}
         body.student-assignment-page{margin:0;background:var(--nx-bg);color:var(--nx-ink);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-        .assignment-main{margin-left:262px;min-height:100vh;padding:0 34px 40px}
-        .assignment-top{height:76px;display:flex;align-items:center;justify-content:flex-end}
-        .assignment-top-actions{display:flex;align-items:center;gap:18px}
-        .assignment-search{width:260px;height:42px;border:1px solid var(--nx-line);border-radius:12px;background:#fff;padding:0 15px;color:var(--nx-muted);outline:none}
-        .assignment-profile{display:flex;align-items:center;gap:10px;font-weight:700}
-        .assignment-profile img{width:40px;height:40px;border-radius:50%;object-fit:cover;border:1px solid var(--nx-line)}
+        body.student-assignment-page>.student-global-topbar{display:flex!important}
+        .assignment-main{margin-left:76px;min-height:100vh;padding:92px 34px 40px}
         .assignment-wrap{max-width:1180px;margin:0 auto}
         .assignment-breadcrumb{display:flex;align-items:center;gap:8px;margin:8px 0 22px;font-size:13px;color:var(--nx-muted)}
         .assignment-breadcrumb a{color:var(--nx-green-dark);font-weight:700;text-decoration:none}
@@ -69,28 +65,13 @@
         .assignment-side-item strong{text-align:right;font-size:13px}
         .assignment-note{font-size:12px;line-height:1.65;color:var(--nx-muted);margin:0}
         .assignment-flashes{display:grid;gap:10px;margin-bottom:20px}
-        @media(max-width:900px){.assignment-main{margin-left:0;padding:0 18px 30px}.assignment-grid{grid-template-columns:1fr}.assignment-top{height:64px}.assignment-search{width:190px}.assignment-hero{align-items:flex-start;flex-direction:column}.assignment-back{align-self:flex-start}}
-        @media(max-width:600px){.assignment-top-actions{width:100%;justify-content:flex-end}.assignment-search{display:none}.assignment-hero h1{font-size:27px}.assignment-meta{grid-template-columns:1fr}.assignment-card{padding:19px}}
+        @media(max-width:900px){.assignment-main{margin-left:0;padding:78px 18px 30px}.assignment-grid{grid-template-columns:1fr}.assignment-hero{align-items:flex-start;flex-direction:column}.assignment-back{align-self:flex-start}}
+        @media(max-width:600px){.assignment-hero h1{font-size:27px}.assignment-meta{grid-template-columns:1fr}.assignment-card{padding:19px}}
     </style>
 </head>
 <body class="student-page student-assignment-page">
     {% include 'components/student_sidebar.html' %}
     <main class="assignment-main">
-        <div class="assignment-top">
-            <div class="assignment-top-actions">
-                <input class="assignment-search" type="search" placeholder="Search..." aria-label="Search">
-                <a href="{{ url_for('notifications.notification_list') }}" aria-label="Notifications" style="text-decoration:none;font-size:20px;color:var(--nx-ink)">♢</a>
-                <div class="assignment-profile">
-                    {% if profile is defined and profile[5] %}
-                        <img src="{{ url_for('profile_picture', filename=profile[5]) }}" alt="Profile">
-                    {% else %}
-                        <img src="{{ url_for('static', filename='images/default_profile.png') }}" alt="Profile">
-                    {% endif %}
-                    {% if profile is defined %}<span>{{ profile[0] }}</span>{% endif %}
-                </div>
-            </div>
-        </div>
-
         <div class="assignment-wrap">
             <div class="assignment-breadcrumb">
                 <a href="{{ url_for('classroom.student_class', class_id=classroom.id) }}">Intern Classroom</a><span>›</span><span>Work Item</span>
