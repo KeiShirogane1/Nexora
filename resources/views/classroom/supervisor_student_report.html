@@ -88,10 +88,11 @@
                             <h1>{{ report.student.username }}</h1>
                             <p>{{ report.student.email }}{% if report.student.student_number %} · {{ report.student.student_number }}{% endif %} · Intern Classroom: {{ classroom.name }} ({{ classroom.section }})</p>
                             {% if report.supervisor.username %}<small class="text-muted">Supervisor: {{ report.supervisor.username }}</small>{% endif %}
+                            <small class="text-muted d-block mt-1">This report summarizes Work scoring and feedback analysis only. Attendance/OJT Hours, Daily Performance, Logbook, and Official Evaluation remain separate evidence dimensions.</small>
                         </div>
                         <div>
                             {% if report.overall_percentage is none %}
-                                <span class="supervisor-report-label is-no-data">No Performance Data</span>
+                                <span class="supervisor-report-label is-no-data">No Work Performance Data</span>
                             {% else %}
                                 <span class="supervisor-report-label {% if report.performance_label == 'Excellent' %}is-excellent{% elif report.performance_label == 'Very Satisfactory' %}is-very-satisfactory{% elif report.performance_label == 'Satisfactory' %}is-satisfactory{% elif report.performance_label == 'Fair' %}is-fair{% else %}is-needs-improvement{% endif %}">{{ report.performance_label }}</span>
                             {% endif %}
@@ -99,19 +100,19 @@
                     </div>
 
                     <section class="supervisor-report-card">
-                        <h2>PERFORMANCE SUMMARY</h2>
+                        <h2>WORK PERFORMANCE SUMMARY</h2>
                         {% if report.total_count == 0 %}
-                            <div class="text-muted">No performance data yet — no work items have been assigned in this Intern Classroom.</div>
+                            <div class="text-muted">No Work performance data yet — no work items have been assigned in this Intern Classroom.</div>
                         {% elif report.graded_count == 0 %}
-                            <div class="text-muted">No performance data yet — assigned work has not been reviewed yet.</div>
+                            <div class="text-muted">No Work performance data yet — assigned work has not been reviewed yet.</div>
                         {% endif %}
                         <table class="supervisor-report-table">
                             <tbody>
-                                <tr><th>Performance percentage</th><td>{% if report.overall_percentage is not none %}{{ "%.1f"|format(report.overall_percentage) }}%{% else %}—{% endif %}</td></tr>
-                                <tr><th>Completion rate</th><td>{{ "%.1f"|format(report.completion_rate) }}%</td></tr>
+                                <tr><th>Work average</th><td>{% if report.overall_percentage is not none %}{{ "%.1f"|format(report.overall_percentage) }}%{% else %}—{% endif %}</td></tr>
+                                <tr><th>Work completion</th><td>{{ "%.1f"|format(report.completion_rate) }}%</td></tr>
                                 <tr><th>Reviewed work</th><td>{{ report.graded_count }}</td></tr>
                                 <tr><th>Total work items</th><td>{{ report.total_count }}</td></tr>
-                                <tr><th>Performance classification</th><td>{% if report.overall_percentage is not none %}{{ report.performance_label }}{% else %}No Performance Data{% endif %}</td></tr>
+                                <tr><th>Work performance classification</th><td>{% if report.overall_percentage is not none %}{{ report.performance_label }}{% else %}No Work Performance Data{% endif %}</td></tr>
                             </tbody>
                         </table>
                     </section>
@@ -125,7 +126,7 @@
                                 <tbody>
                                     <tr><th>Sentiment</th><td>{{ report.sentiment or '—' }}</td></tr>
                                     <tr><th>Competency</th><td>{{ report.competency or '—' }}</td></tr>
-                                    <tr><th>Model-supported classification</th><td>{{ report.performance_label }}</td></tr>
+                                    <tr><th>Model-supported Work classification</th><td>{{ report.performance_label }}</td></tr>
                                     {% if report.feedback_analysis %}
                                         <tr><th>Naive Bayes prediction</th><td>{{ report.feedback_analysis.nb_prediction if report.feedback_analysis else '—' }}</td></tr>
                                         <tr><th>SVM prediction</th><td>{{ report.feedback_analysis.svm_prediction if report.feedback_analysis else '—' }}</td></tr>
