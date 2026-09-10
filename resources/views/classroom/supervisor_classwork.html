@@ -55,7 +55,7 @@
                                                 {% elif key == 'google_doc' %}Online document, sheet, or linked digital work.
                                                 {% elif key == 'file_reference' %}Guide, file, link, or reference interns should use.
                                                 {% elif key == 'project' %}Longer-term project or major deliverable.
-                                                {% else %}Collaborative work intended for a team.
+                                                {% else %}Collaborative work for two or more selected interns.
                                                 {% endif %}
                                             </small>
                                         </span>
@@ -67,6 +67,7 @@
                                 <div>
                                     <strong>Assign to</strong>
                                     <p>Choose whether everyone or only selected interns should receive this work and its notification.</p>
+                                    <p id="team-task-note" class="text-muted small mb-0" hidden>Team Tasks require at least two selected interns. Every selected member receives the Team Task and submits their own contribution.</p>
                                 </div>
                                 <div class="d-grid gap-2">
                                     <label class="supervisor-check-option">
@@ -149,7 +150,7 @@
                                 </label>
                                 <label class="supervisor-check-option">
                                     <input type="checkbox" name="group_mode" id="group_mode">
-                                    <span><strong>Team submission</strong><small>Use this work item as a team submission.</small></span>
+                                    <span><strong>Collaborative work</strong><small>Marks this as team-oriented work. Each selected intern still submits their own contribution.</small></span>
                                 </label>
                                 <label class="supervisor-group-size-field" for="max_group_size">
                                     <span>Max team size</span>
@@ -187,8 +188,14 @@
                                         {% if item.description %}<p>{{ item.description[:150] }}{% if item.description|length > 150 %}…{% endif %}</p>{% endif %}
                                         <div class="supervisor-classwork-item-meta">
                                             {% if item.due_at %}<span>Due {{ item.due_at }}</span>{% else %}<span>No due date</span>{% endif %}
-                                            {% if item.recipient_count %}<span>Selected · {{ item.recipient_count }} intern{% if item.recipient_count != 1 %}s{% endif %}</span>{% else %}<span>Entire classroom</span>{% endif %}
-                                            {% if item.group_mode %}<span>Team · max {{ item.max_group_size }}</span>{% endif %}
+                                            {% if item.activity_type == 'group_project' and item.recipient_count %}
+                                                <span>Team · {{ item.recipient_count }} members</span>
+                                            {% elif item.recipient_count %}
+                                                <span>Selected · {{ item.recipient_count }} intern{% if item.recipient_count != 1 %}s{% endif %}</span>
+                                            {% else %}
+                                                <span>Entire classroom</span>
+                                            {% endif %}
+                                            {% if item.group_mode and item.activity_type != 'group_project' %}<span>Collaborative · max {{ item.max_group_size }}</span>{% endif %}
                                             {% if item.allow_file_upload %}<span>Intern submissions</span>{% endif %}
                                         </div>
                                         <div class="supervisor-classwork-resource-links">
@@ -217,31 +224,59 @@
         <script>
             const groupMode = document.getElementById("group_mode");
             const groupSize = document.getElementById("max_group_size");
-            if (groupMode && groupSize) {
-                function syncGroupSize() {
-                    groupSize.disabled = !groupMode.checked;
-                    if (!groupMode.checked) groupSize.value = 1;
-                }
-                groupMode.addEventListener("change", syncGroupSize);
-                syncGroupSize();
-            }
-
             const assignmentScopeInputs = document.querySelectorAll('input[name="assignment_scope"]');
+            const classroomScopeInput = document.querySelector('input[name="assignment_scope"][value="classroom"]');
+            const selectedScopeInput = document.querySelector('input[name="assignment_scope"][value="selected"]');
+            const activityTypeInputs = document.querySelectorAll('input[name="activity_type"]');
             const recipientPicker = document.getElementById("recipient-picker");
             const recipientCheckboxes = document.querySelectorAll('input[name="recipient_ids"]');
+            const teamTaskNote = document.getElementById("team-task-note");
+
+            function isTeamTask() {
+                const selectedType = document.querySelector('input[name="activity_type"]:checked');
+                return selectedType && selectedType.value === "group_project";
+            }
+
+            function syncGroupSize() {
+                if (!groupMode || !groupSize) return;
+                if (isTeamTask()) {
+                    groupMode.dataset.teamForced = "1";
+                    groupMode.checked = true;
+                    groupMode.disabled = true;
+                    groupSize.disabled = true;
+                    const selectedCount = Array.from(recipientCheckboxes).filter((checkbox) => checkbox.checked).length;
+                    groupSize.value = Math.max(selectedCount, 1);
+                    return;
+                }
+
+                if (groupMode.dataset.teamForced === "1") {
+                    groupMode.checked = false;
+                    delete groupMode.dataset.teamForced;
+                }
+                groupMode.disabled = false;
+                groupSize.disabled = !groupMode.checked;
+                if (!groupMode.checked) groupSize.value = 1;
+            }
 
             function syncRecipientPicker() {
+                const teamTask = isTeamTask();
+                if (teamTask && selectedScopeInput) selectedScopeInput.checked = true;
+                if (classroomScopeInput) classroomScopeInput.disabled = teamTask;
+
                 const selectedScope = document.querySelector('input[name="assignment_scope"]:checked');
                 const useSelectedInterns = selectedScope && selectedScope.value === "selected";
                 if (recipientPicker) recipientPicker.hidden = !useSelectedInterns;
                 recipientCheckboxes.forEach((checkbox) => {
                     checkbox.disabled = !useSelectedInterns;
                 });
+                if (teamTaskNote) teamTaskNote.hidden = !teamTask;
+                syncGroupSize();
             }
 
-            assignmentScopeInputs.forEach((input) => {
-                input.addEventListener("change", syncRecipientPicker);
-            });
+            if (groupMode) groupMode.addEventListener("change", syncGroupSize);
+            recipientCheckboxes.forEach((checkbox) => checkbox.addEventListener("change", syncGroupSize));
+            assignmentScopeInputs.forEach((input) => input.addEventListener("change", syncRecipientPicker));
+            activityTypeInputs.forEach((input) => input.addEventListener("change", syncRecipientPicker));
             syncRecipientPicker();
         </script>
     </body>
