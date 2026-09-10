@@ -217,6 +217,38 @@
             color: #6d7d78;
         }
 
+        .student-logbook-time-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .student-logbook-time-item {
+            padding: 11px 12px;
+            border: 1px solid #e4ece8;
+            border-radius: 11px;
+            background: #fbfdfc;
+        }
+
+        .student-logbook-time-item strong,
+        .student-logbook-time-item span {
+            display: block;
+        }
+
+        .student-logbook-time-item strong {
+            color: #183a31;
+            font-size: 0.82rem;
+            font-weight: 800;
+        }
+
+        .student-logbook-time-item span {
+            margin-top: 2px;
+            color: #7b8985;
+            font-size: 0.66rem;
+            font-weight: 700;
+        }
+
         .student-logbook-session-form {
             display: grid;
             gap: 11px;
@@ -468,7 +500,8 @@
         }
 
         @media (max-width: 1000px) {
-            .student-logbook-compact-summary {
+            .student-logbook-compact-summary,
+            .student-logbook-time-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
             }
 
@@ -508,7 +541,8 @@
         }
 
         @media (max-width: 520px) {
-            .student-logbook-compact-summary {
+            .student-logbook-compact-summary,
+            .student-logbook-time-grid {
                 grid-template-columns: 1fr;
             }
 
@@ -539,6 +573,8 @@
     <main class="student-tasks-main student-logbook-main">
         <div class="student-tasks-content student-logbook-page-content">
             {% set total_hours = total_hours_all|default(0) %}
+            {% set ojt_progress = get_ojt_progress(session.get('user_id'), selected_classroom_id) if selected_classroom_id else none %}
+            {% set session_snapshot = attendance if attendance else (history[0] if history else none) %}
 
             <div class="student-logbook-compact">
                 <section class="student-logbook-page-heading student-section-heading" aria-labelledby="logbook-heading">
@@ -580,39 +616,72 @@
                     </section>
                 {% endif %}
 
-                <section class="student-logbook-compact-summary" aria-label="Logbook summary">
+                <section class="student-logbook-compact-summary" aria-label="OJT hours progress">
                     <article class="student-logbook-compact-stat">
-                        <strong>{{ '%.1f'|format(total_hours) }} hrs</strong>
-                        <span>Total Hours</span>
-                        <small>{% if selected_classroom %}{{ selected_classroom.company_name or selected_classroom.name }}{% else %}Recorded sessions{% endif %}</small>
+                        <strong>{{ '%.1f'|format(ojt_progress.rendered_hours if ojt_progress else total_hours) }} hrs</strong>
+                        <span>Rendered Hours</span>
+                        <small>{% if selected_classroom %}{{ selected_classroom.company_name or selected_classroom.name }}{% else %}Completed attendance only{% endif %}</small>
                     </article>
                     <article class="student-logbook-compact-stat">
-                        <strong>{{ total_history|default(history|length) }}</strong>
-                        <span>Days Logged</span>
-                        <small>Attendance records</small>
+                        {% if ojt_progress and ojt_progress.required_hours is not none %}
+                            <strong>{{ '%.1f'|format(ojt_progress.required_hours) }} hrs</strong>
+                        {% else %}
+                            <strong>—</strong>
+                        {% endif %}
+                        <span>Required Hours</span>
+                        <small>{% if ojt_progress and ojt_progress.required_hours is not none %}Configured internship target{% else %}Not configured for this internship{% endif %}</small>
                     </article>
                     <article class="student-logbook-compact-stat">
-                        <strong>{{ logs|length }}</strong>
-                        <span>Log Entries</span>
-                        <small>Activities recorded</small>
+                        {% if ojt_progress and ojt_progress.remaining_hours is not none %}
+                            <strong>{{ '%.1f'|format(ojt_progress.remaining_hours) }} hrs</strong>
+                        {% else %}
+                            <strong>—</strong>
+                        {% endif %}
+                        <span>Remaining Hours</span>
+                        <small>{% if ojt_progress and ojt_progress.is_complete %}Required hours completed{% elif ojt_progress and ojt_progress.remaining_hours is not none %}Until internship target{% else %}Requires a configured target{% endif %}</small>
                     </article>
                     <article class="student-logbook-compact-stat">
-                        <strong>{% if attendance %}Active{% elif requires_classroom_selection %}Select{% else %}Ready{% endif %}</strong>
-                        <span class="student-logbook-compact-status">Today</span>
-                        <small>{% if attendance %}Session in progress{% elif requires_classroom_selection %}Choose Intern Classroom{% else %}Clock in to begin{% endif %}</small>
+                        {% if ojt_progress and ojt_progress.progress_percent is not none %}
+                            <strong>{{ '%.1f'|format(ojt_progress.progress_percent) }}%</strong>
+                        {% else %}
+                            <strong>—</strong>
+                        {% endif %}
+                        <span>OJT Progress</span>
+                        <small>{% if ojt_progress and ojt_progress.is_complete %}Complete{% elif ojt_progress and ojt_progress.progress_percent is not none %}Based on rendered hours{% else %}No required-hours target{% endif %}</small>
                     </article>
                 </section>
 
                 <section class="student-logbook-compact-card student-logbook-session" id="new-log-entry" aria-labelledby="today-session-heading">
                     <div class="student-logbook-session-head">
                         <div>
-                            <span class="student-logbook-section-kicker">Today</span>
-                            <h2 id="today-session-heading">Today's Session</h2>
+                            <span class="student-logbook-section-kicker">Attendance</span>
+                            <h2 id="today-session-heading">{% if attendance %}Current Session{% else %}Latest Session{% endif %}</h2>
                         </div>
                         <span class="student-logbook-session-state{% if not attendance %} is-idle{% endif %}">
-                            {% if attendance %}Active session{% else %}No active session{% endif %}
+                            {% if attendance %}Active session{% elif session_snapshot %}{{ session_snapshot[4] }}{% else %}No attendance yet{% endif %}
                         </span>
                     </div>
+
+                    {% if session_snapshot %}
+                        <div class="student-logbook-time-grid" aria-label="Attendance time details">
+                            <div class="student-logbook-time-item">
+                                <strong>{{ session_snapshot[1] or '—' }}</strong>
+                                <span>Time In</span>
+                            </div>
+                            <div class="student-logbook-time-item">
+                                <strong>{% if attendance %}In progress{% else %}{{ session_snapshot[2] or '—' }}{% endif %}</strong>
+                                <span>Time Out</span>
+                            </div>
+                            <div class="student-logbook-time-item">
+                                <strong>{% if attendance %}In progress{% elif session_snapshot[3] is not none %}{{ '%.2f'|format(session_snapshot[3]) }} hrs{% else %}—{% endif %}</strong>
+                                <span>Session Hours</span>
+                            </div>
+                            <div class="student-logbook-time-item">
+                                <strong>{{ session_snapshot[4] }}</strong>
+                                <span>Status</span>
+                            </div>
+                        </div>
+                    {% endif %}
 
                     {% if attendance %}
                         <form class="student-logbook-session-form" method="POST" action="/student/log/add">
@@ -634,8 +703,8 @@
                                     <strong>Select an Intern Classroom before clocking in.</strong>
                                     <span>This keeps attendance and rendered hours attached to the correct internship.</span>
                                 {% else %}
-                                    <strong>Clock in before adding activities.</strong>
-                                    <span>Your daily log entries are attached to an active attendance session.</span>
+                                    <strong>Clock in to begin a new attendance session.</strong>
+                                    <span>Time In and Time Out will be recorded against the selected Intern Classroom.</span>
                                 {% endif %}
                             </div>
                             <form method="POST" action="/student/clock-in">
@@ -656,8 +725,8 @@
                     </div>
 
                     <div class="student-logbook-compact-toolbar" aria-label="Log entry tools">
-                        <div class="student-logbook-compact-filter">May 1 - May 31, 2025</div>
-                        <div class="student-logbook-compact-filter">All Status</div>
+                        <div class="student-logbook-compact-filter">{% if selected_classroom %}{{ selected_classroom.company_name or selected_classroom.name }}{% else %}Current session{% endif %}</div>
+                        <div class="student-logbook-compact-filter">Attendance-linked logs</div>
                         <label class="student-logbook-compact-search">
                             <span>⌕</span>
                             <input type="search" placeholder="Search logs..." aria-label="Search logs">
@@ -715,7 +784,7 @@
                         <div class="student-logbook-compact-empty">
                             <span class="student-logbook-compact-empty-icon">▤</span>
                             <strong>No log entries yet</strong>
-                            <span>{% if requires_classroom_selection %}Select an Intern Classroom to view its attendance history.{% elif attendance %}Add your first activity during today's active session.{% else %}Clock in, then add your first activity for the day.{% endif %}</span>
+                            <span>{% if requires_classroom_selection %}Select an Intern Classroom to view its attendance history.{% elif attendance %}Add your first activity during the active session.{% else %}Clock in, then add your first activity for the day.{% endif %}</span>
                         </div>
                     {% endif %}
                 </section>
@@ -723,24 +792,24 @@
                 <section class="student-logbook-bottom-grid" id="attendance-history">
                     <article class="student-logbook-compact-card student-logbook-bottom-card">
                         <div class="student-logbook-bottom-head">
-                            <h3>This Week</h3>
+                            <h3>OJT Activity</h3>
                         </div>
                         <div class="student-logbook-week-values">
                             <div class="student-logbook-week-value">
-                                <strong>{{ '%.1f'|format(total_hours) }} hrs</strong>
-                                <span>Hours logged</span>
-                            </div>
-                            <div class="student-logbook-week-value">
                                 <strong>{{ total_history|default(history|length) }}</strong>
-                                <span>Attendance days</span>
+                                <span>Attendance sessions</span>
                             </div>
                             <div class="student-logbook-week-value">
                                 <strong>{{ logs|length }}</strong>
-                                <span>Logs created</span>
+                                <span>Current-session logs</span>
                             </div>
                             <div class="student-logbook-week-value">
-                                <strong>{% if attendance %}Active{% elif requires_classroom_selection %}Select classroom{% else %}Not started{% endif %}</strong>
+                                <strong>{% if ojt_progress and ojt_progress.is_complete %}Complete{% elif attendance %}Active{% elif requires_classroom_selection %}Select classroom{% else %}Ready{% endif %}</strong>
                                 <span>Current status</span>
+                            </div>
+                            <div class="student-logbook-week-value">
+                                <strong>{{ '%.1f'|format(ojt_progress.rendered_hours if ojt_progress else total_hours) }} hrs</strong>
+                                <span>Completed hours</span>
                             </div>
                         </div>
                     </article>
@@ -760,12 +829,20 @@
                                         </div>
                                     </div>
                                 {% endfor %}
+                            {% elif session_snapshot %}
+                                <div class="student-logbook-recent-item">
+                                    <span class="student-logbook-recent-dot"></span>
+                                    <div>
+                                        <strong>Attendance recorded</strong>
+                                        <span>Time In {{ session_snapshot[1] or '—' }}{% if session_snapshot[2] %} · Time Out {{ session_snapshot[2] }}{% endif %}</span>
+                                    </div>
+                                </div>
                             {% else %}
                                 <div class="student-logbook-recent-item">
                                     <span class="student-logbook-recent-dot"></span>
                                     <div>
                                         <strong>No recent activity</strong>
-                                        <span>Your latest log entries will appear here.</span>
+                                        <span>Your latest attendance and log entries will appear here.</span>
                                     </div>
                                 </div>
                             {% endif %}
