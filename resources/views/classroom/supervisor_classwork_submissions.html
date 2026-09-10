@@ -12,32 +12,86 @@
         {% include 'components/supervisor_sidebar.html' %}
         <main class="page-content nexora-app-main">
             <div class="nexora-page" style="max-width:1100px;margin:auto;">
-                <a href="{{ url_for('classroom.supervisor_class', class_id=assignment.classroom_id) }}" class="text-decoration-none">← Back to Class</a>
+                <a href="{{ url_for('classwork.manage_classwork', class_id=assignment.classroom_id) }}" class="text-decoration-none">← Back to Work</a>
                 <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mt-3 mb-4">
-                    <div><p class="text-muted mb-1">SUBMISSIONS</p><h1 class="mb-1">{{ assignment.title }}</h1><p class="text-muted mb-0">{{ assignment.points }} points</p></div>
-                    <div class="d-flex gap-2"><span class="badge text-bg-secondary">{{ students|selectattr('submission_id')|list|length }} submitted</span><span class="badge text-bg-warning">{{ students|selectattr('status','in',['submitted','late','resubmission_required'])|list|length }} needs attention</span></div>
+                    <div>
+                        <p class="text-muted mb-1">WORK SUBMISSIONS</p>
+                        <h1 class="mb-1">{{ assignment.title }}</h1>
+                        <p class="text-muted mb-0">
+                            {{ assignment.points }} points
+                            {% if assignment.submission_mode == 'shared' %}
+                                · {{ assignment.team_name or 'Team' }} · Shared team submission
+                            {% endif %}
+                        </p>
+                    </div>
+                    {% if assignment.submission_mode == 'shared' %}
+                        <div class="d-flex gap-2">
+                            <span class="badge text-bg-secondary">{{ team_members|length }} members</span>
+                            <span class="badge {% if shared_submission %}text-bg-success{% else %}text-bg-warning{% endif %}">{% if shared_submission %}Team submitted{% else %}Waiting for team{% endif %}</span>
+                        </div>
+                    {% else %}
+                        <div class="d-flex gap-2">
+                            <span class="badge text-bg-secondary">{{ students|selectattr('submission_id')|list|length }} submitted</span>
+                            <span class="badge text-bg-warning">{{ students|selectattr('status','in',['submitted','late','resubmission_required'])|list|length }} needs attention</span>
+                        </div>
+                    {% endif %}
                 </div>
-                <div class="card shadow-sm border-0">
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table align-middle mb-0">
-                                <thead><tr><th class="ps-4">Student</th><th>Status</th><th>Attempt</th><th>Submitted</th><th>Grade</th><th class="text-end pe-4">Action</th></tr></thead>
-                                <tbody>
-                                    {% for student in students %}
-                                        <tr>
-                                            <td class="ps-4"><strong>{{ student.username }}</strong><div class="small text-muted">{{ student.email }}</div></td>
-                                            <td>{% if student.submission_id %}<span class="badge {% if student.status == 'graded' %}text-bg-success{% elif student.status == 'late' %}text-bg-warning{% elif student.status == 'resubmission_required' %}text-bg-danger{% else %}text-bg-primary{% endif %}">{{ student.status|replace('_',' ')|capitalize }}</span>{% else %}<span class="badge text-bg-light">Not submitted</span>{% endif %}</td>
-                                            <td>{{ student.attempt_no or '—' }}</td>
-                                            <td>{{ student.submitted_at or '—' }}</td>
-                                            <td>{{ student.grade if student.grade is not none else '—' }}</td>
-                                            <td class="text-end pe-4">{% if student.submission_id %}<a class="btn btn-sm btn-outline-primary" href="{{ url_for('classwork_grading.review', class_id=assignment.classroom_id, assignment_id=assignment.id, submission_id=student.submission_id) }}">Review</a>{% else %}<span class="text-muted small">Waiting</span>{% endif %}</td>
-                                        </tr>
-                                    {% else %}<tr><td colspan="6" class="text-center py-5 text-muted">No students are enrolled in this class.</td></tr>{% endfor %}
-                                </tbody>
-                            </table>
+
+                {% if assignment.submission_mode == 'shared' %}
+                    <div class="card shadow-sm border-0 mb-3">
+                        <div class="card-body">
+                            <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start">
+                                <div>
+                                    <div class="text-muted small text-uppercase fw-bold">{{ assignment.team_name or 'Team' }}</div>
+                                    <h2 class="h5 mb-2">Shared submission</h2>
+                                    <div class="small text-muted">
+                                        {% for member in team_members %}
+                                            {{ member.username }}{% if not loop.last %}, {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% if shared_submission %}
+                                    <a class="btn btn-outline-primary" href="{{ url_for('classwork_grading.review', class_id=assignment.classroom_id, assignment_id=assignment.id, submission_id=shared_submission.submission_id) }}">Review Team Submission</a>
+                                {% endif %}
+                            </div>
+
+                            {% if shared_submission %}
+                                <div class="row g-3 mt-2">
+                                    <div class="col-md-3"><div class="small text-muted">Status</div><strong>{{ shared_submission.status|replace('_',' ')|capitalize }}</strong></div>
+                                    <div class="col-md-2"><div class="small text-muted">Attempt</div><strong>{{ shared_submission.attempt_no }}</strong></div>
+                                    <div class="col-md-3"><div class="small text-muted">Submitted by</div><strong>{{ shared_submission.submitted_by }}</strong></div>
+                                    <div class="col-md-2"><div class="small text-muted">Submitted</div><strong>{{ shared_submission.submitted_at or '—' }}</strong></div>
+                                    <div class="col-md-2"><div class="small text-muted">Grade</div><strong>{{ shared_submission.grade if shared_submission.grade is not none else '—' }}</strong></div>
+                                </div>
+                                <div class="alert alert-info mt-3 mb-0 small">One review and grade applies to every selected team member.</div>
+                            {% else %}
+                                <div class="text-center text-muted py-4">No shared team submission has been sent yet.</div>
+                            {% endif %}
                         </div>
                     </div>
-                </div>
+                {% else %}
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table align-middle mb-0">
+                                    <thead><tr><th class="ps-4">Intern</th><th>Status</th><th>Attempt</th><th>Submitted</th><th>Grade</th><th class="text-end pe-4">Action</th></tr></thead>
+                                    <tbody>
+                                        {% for student in students %}
+                                            <tr>
+                                                <td class="ps-4"><strong>{{ student.username }}</strong><div class="small text-muted">{{ student.email }}</div></td>
+                                                <td>{% if student.submission_id %}<span class="badge {% if student.status == 'graded' %}text-bg-success{% elif student.status == 'late' %}text-bg-warning{% elif student.status == 'resubmission_required' %}text-bg-danger{% else %}text-bg-primary{% endif %}">{{ student.status|replace('_',' ')|capitalize }}</span>{% else %}<span class="badge text-bg-light">Not submitted</span>{% endif %}</td>
+                                                <td>{{ student.attempt_no or '—' }}</td>
+                                                <td>{{ student.submitted_at or '—' }}</td>
+                                                <td>{{ student.grade if student.grade is not none else '—' }}</td>
+                                                <td class="text-end pe-4">{% if student.submission_id %}<a class="btn btn-sm btn-outline-primary" href="{{ url_for('classwork_grading.review', class_id=assignment.classroom_id, assignment_id=assignment.id, submission_id=student.submission_id) }}">Review</a>{% else %}<span class="text-muted small">Waiting</span>{% endif %}</td>
+                                            </tr>
+                                        {% else %}<tr><td colspan="6" class="text-center py-5 text-muted">No assigned interns were found for this work item.</td></tr>{% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
             </div>
         </main>
     </body>
