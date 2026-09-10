@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluations - Nexora</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">
+</head>
+<body class="work-page supervisor-evaluations-page supervisor-classwork-page">
+    {% include 'components/supervisor_sidebar.html' %}
+
+    <main class="page-content nexora-app-main">
+        <div class="nexora-page supervisor-classwork-shell">
+            <div class="supervisor-classwork-heading">
+                <div>
+                    <h1>Evaluations</h1>
+                    <p>Manage and submit Official OJT Evaluations for all your Intern Classrooms.</p>
+                </div>
+                <div class="d-flex align-items-end gap-2 flex-wrap">
+                    <div>
+                        <label class="form-label small fw-bold text-secondary mb-1" for="evaluationDirectorySearch">Search evaluations</label>
+                        <input id="evaluationDirectorySearch" class="form-control" type="search" placeholder="Student, classroom, company, or program" autocomplete="off">
+                    </div>
+                    <span id="evaluationDirectoryShown" class="badge rounded-pill text-bg-light border text-secondary mb-1">{{ summary.total_interns }} shown</span>
+                </div>
+            </div>
+
+            <section class="supervisor-insights-readiness mb-4" aria-label="Evaluation summary">
+                <article class="supervisor-insights-readiness-card">
+                    <span>Total Interns</span>
+                    <strong>{{ summary.total_interns }}</strong>
+                    <small class="text-muted">Across all Intern Classrooms</small>
+                </article>
+                <article class="supervisor-insights-readiness-card">
+                    <span>Completed</span>
+                    <strong>{{ summary.completed }}</strong>
+                    <small class="text-muted">Submitted official evaluations</small>
+                </article>
+                <article class="supervisor-insights-readiness-card{% if summary.for_review %} is-attention{% endif %}">
+                    <span>For Review</span>
+                    <strong>{{ summary.for_review }}</strong>
+                    <small class="text-muted">Draft evaluations</small>
+                </article>
+                <article class="supervisor-insights-readiness-card">
+                    <span>Not Started</span>
+                    <strong>{{ summary.not_started }}</strong>
+                    <small class="text-muted">No official evaluation yet</small>
+                </article>
+            </section>
+
+            {% if classrooms %}
+                <section id="evaluationClassroomList" aria-label="Intern Classroom evaluations">
+                    {% for classroom in classrooms %}
+                        {% set evaluation_theme = classroom_banner_theme(classroom.class_id) %}
+                        <article
+                            class="supervisor-insights-card mb-3"
+                            data-evaluation-classroom
+                            data-search="{{ (classroom.classroom_name ~ ' ' ~ classroom.section ~ ' ' ~ classroom.company_name ~ ' ' ~ classroom.internship_title)|lower|e }}">
+                            <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap p-3 border-bottom supervisor-class-context-banner--{{ evaluation_theme }}{% if evaluation_theme == 'navy' %} text-white{% endif %}">
+                                <div class="d-flex align-items-center gap-3 min-w-0">
+                                    <span class="d-inline-flex align-items-center justify-content-center rounded-3 bg-white border px-3 py-2 text-primary fw-bold" aria-hidden="true">▣</span>
+                                    <div class="min-w-0">
+                                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                                            <h2 class="h6 fw-bold mb-0">{{ classroom.classroom_name }}</h2>
+                                            {% if classroom.archived %}
+                                                <span class="badge rounded-pill text-bg-secondary">Archived</span>
+                                            {% else %}
+                                                <span class="badge rounded-pill text-bg-success">Active</span>
+                                            {% endif %}
+                                        </div>
+                                        <p class="small mb-0 mt-1 {% if evaluation_theme == 'navy' %}text-white-50{% else %}text-secondary{% endif %}">
+                                            {% if classroom.section %}{{ classroom.section }}{% endif %}
+                                            {% if classroom.company_name %}{% if classroom.section %} · {% endif %}{{ classroom.company_name }}{% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex align-items-center gap-3 flex-wrap ms-auto">
+                                    <div class="text-end">
+                                        <strong class="d-block">{{ classroom.evaluated_count }}/{{ classroom.intern_count }} evaluated</strong>
+                                        <small class="{% if evaluation_theme == 'navy' %}text-white-50{% else %}text-secondary{% endif %}">{{ classroom.evaluation_percentage }}% complete</small>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        class="btn btn-sm {% if evaluation_theme == 'navy' %}btn-light{% else %}btn-outline-primary{% endif %}"
+                                        data-evaluation-classroom-toggle
+                                        aria-expanded="{{ 'true' if loop.first else 'false' }}"
+                                        aria-controls="evaluationClassroomBody{{ loop.index }}"
+                                        onclick="toggleEvaluationClassroom(this, 'evaluationClassroomBody{{ loop.index }}')">
+                                        <span aria-hidden="true">{{ '⌃' if loop.first else '⌄' }}</span>
+                                        <span class="visually-hidden">Toggle {{ classroom.classroom_name }}</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="evaluationClassroomBody{{ loop.index }}" data-evaluation-classroom-body{% if not loop.first %} hidden{% endif %}>
+                                {% if classroom.interns %}
+                                    <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap p-3 border-bottom bg-white">
+                                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                                            <label class="d-flex align-items-center gap-2 mb-0 fw-bold">
+                                                <input class="form-check-input mt-0" type="checkbox" data-evaluation-select-all {% if not classroom.selectable_count %}disabled{% endif %}>
+                                                <span>{{ classroom.intern_count }} student{% if classroom.intern_count != 1 %}s{% endif %}</span>
+                                            </label>
+                                            {% if classroom.selectable_count != classroom.intern_count %}
+                                                <span class="small text-secondary">{{ classroom.selectable_count }} available for editing</span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2 flex-wrap ms-auto">
+                                            <span class="small text-secondary" data-evaluation-selected-count>0 selected</span>
+                                            <button type="button" class="btn btn-sm btn-outline-primary" data-evaluation-select-all-button {% if not classroom.selectable_count %}disabled{% endif %}>Select All</button>
+                                            <button type="button" class="btn btn-sm btn-primary" data-evaluate-selected disabled>Evaluate Selected</button>
+                                        </div>
+                                    </div>
+
+                                    <div class="table-responsive">
+                                        <table class="table table-hover align-middle mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th scope="col" class="ps-3"><span class="visually-hidden">Select</span></th>
+                                                    <th scope="col">Student Name</th>
+                                                    <th scope="col">Student No.</th>
+                                                    <th scope="col">Program</th>
+                                                    <th scope="col">Year</th>
+                                                    <th scope="col">Evaluation Status</th>
+                                                    <th scope="col" class="text-end pe-3">Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for intern in classroom.interns %}
+                                                    <tr data-evaluation-student-row data-search="{{ (intern.display_name ~ ' ' ~ intern.username ~ ' ' ~ intern.email_address ~ ' ' ~ intern.student_number ~ ' ' ~ intern.major_program ~ ' ' ~ intern.grade_year)|lower|e }}">
+                                                        <td class="ps-3">
+                                                            <input
+                                                                class="form-check-input"
+                                                                type="checkbox"
+                                                                value="{{ intern.id }}"
+                                                                data-evaluation-student-checkbox
+                                                                aria-label="Select {{ intern.display_name }}"
+                                                                {% if not intern.evaluation_selectable %}disabled{% endif %}>
+                                                        </td>
+                                                        <td>
+                                                            <div class="d-flex align-items-center gap-2">
+                                                                <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary-subtle text-primary fw-bold px-2 py-1" aria-hidden="true">{{ (intern.display_name[0] if intern.display_name else 'I')|upper }}</span>
+                                                                <div>
+                                                                    <strong class="d-block">{{ intern.display_name }}</strong>
+                                                                    <small class="text-secondary">{{ intern.email_address or intern.username }}</small>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td>{{ intern.student_number or '—' }}</td>
+                                                        <td>{{ intern.major_program or '—' }}</td>
+                                                        <td>{{ intern.grade_year or '—' }}</td>
+                                                        <td>
+                                                            {% if intern.evaluation_status_key == 'submitted' %}
+                                                                <span class="badge rounded-pill text-bg-success">Submitted</span>
+                                                            {% elif intern.evaluation_status_key == 'draft' %}
+                                                                <span class="badge rounded-pill text-bg-warning">Draft</span>
+                                                            {% else %}
+                                                                <span class="badge rounded-pill text-bg-light border text-secondary">Not Started</span>
+                                                            {% endif %}
+                                                        </td>
+                                                        <td class="text-end pe-3">
+                                                            <a class="btn btn-sm btn-outline-primary" href="{{ url_for('ojt_evaluation.supervisor_evaluations', class_id=classroom.class_id, student_id=intern.id) }}">
+                                                                {% if intern.evaluation_status_key == 'submitted' %}View Evaluation{% else %}Evaluate{% endif %}
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                {% else %}
+                                    <div class="p-4 text-center text-secondary">
+                                        <strong class="d-block text-dark mb-1">No interns enrolled yet</strong>
+                                        <span class="small">Interns will appear here after joining this Intern Classroom.</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </article>
+                    {% endfor %}
+                </section>
+
+                <div class="supervisor-insights-filter-empty" id="evaluationDirectoryNoResults" hidden>
+                    <h3>No matching evaluations</h3>
+                    <p>Try another student name, student number, program, classroom, or company.</p>
+                </div>
+            {% else %}
+                <section class="supervisor-insights-card p-5 text-center">
+                    <h2 class="h5 fw-bold">No Intern Classrooms yet</h2>
+                    <p class="text-secondary mb-3">Create an Intern Classroom and enroll interns before Official OJT Evaluations can be managed here.</p>
+                    <a href="{{ url_for('classroom.supervisor_classes') }}" class="btn btn-primary">Open Intern Classrooms</a>
+                </section>
+            {% endif %}
+        </div>
+    </main>
+
+    <script>
+        function toggleEvaluationClassroom(button, bodyId) {
+            const body = document.getElementById(bodyId);
+            if (!body) return;
+            const opening = body.hidden;
+            body.hidden = !opening;
+            button.setAttribute('aria-expanded', opening ? 'true' : 'false');
+            const icon = button.querySelector('[aria-hidden="true"]');
+            if (icon) icon.textContent = opening ? '⌃' : '⌄';
+        }
+
+        function updateEvaluationSelection(group) {
+            const checkboxes = Array.from(group.querySelectorAll('[data-evaluation-student-checkbox]:not(:disabled)'));
+            const checked = checkboxes.filter((checkbox) => checkbox.checked);
+            const count = group.querySelector('[data-evaluation-selected-count]');
+            const selectAll = group.querySelector('[data-evaluation-select-all]');
+            const selectAllButton = group.querySelector('[data-evaluation-select-all-button]');
+
+            if (count) count.textContent = `${checked.length} selected`;
+            if (selectAll) {
+                selectAll.checked = checkboxes.length > 0 && checked.length === checkboxes.length;
+                selectAll.indeterminate = checked.length > 0 && checked.length < checkboxes.length;
+            }
+            if (selectAllButton) selectAllButton.textContent = checkboxes.length > 0 && checked.length === checkboxes.length ? 'Clear All' : 'Select All';
+        }
+
+        document.querySelectorAll('[data-evaluation-classroom]').forEach((group) => {
+            const checkboxes = Array.from(group.querySelectorAll('[data-evaluation-student-checkbox]:not(:disabled)'));
+            const selectAll = group.querySelector('[data-evaluation-select-all]');
+            const selectAllButton = group.querySelector('[data-evaluation-select-all-button]');
+
+            checkboxes.forEach((checkbox) => checkbox.addEventListener('change', () => updateEvaluationSelection(group)));
+            if (selectAll) {
+                selectAll.addEventListener('change', () => {
+                    checkboxes.forEach((checkbox) => { checkbox.checked = selectAll.checked; });
+                    updateEvaluationSelection(group);
+                });
+            }
+            if (selectAllButton) {
+                selectAllButton.addEventListener('click', () => {
+                    const allChecked = checkboxes.length > 0 && checkboxes.every((checkbox) => checkbox.checked);
+                    checkboxes.forEach((checkbox) => { checkbox.checked = !allChecked; });
+                    updateEvaluationSelection(group);
+                });
+            }
+            updateEvaluationSelection(group);
+        });
+
+        (() => {
+            const input = document.getElementById('evaluationDirectorySearch');
+            const groups = Array.from(document.querySelectorAll('[data-evaluation-classroom]'));
+            const shown = document.getElementById('evaluationDirectoryShown');
+            const noResults = document.getElementById('evaluationDirectoryNoResults');
+            if (!input || !groups.length) return;
+
+            const applyFilter = () => {
+                const query = input.value.trim().toLowerCase();
+                let visibleStudents = 0;
+                let visibleGroups = 0;
+
+                groups.forEach((group) => {
+                    const groupMatches = !query || (group.dataset.search || '').includes(query);
+                    const rows = Array.from(group.querySelectorAll('[data-evaluation-student-row]'));
+                    let groupVisibleStudents = 0;
+
+                    rows.forEach((row) => {
+                        const rowMatches = groupMatches || !query || (row.dataset.search || '').includes(query);
+                        row.hidden = !rowMatches;
+                        if (rowMatches) {
+                            groupVisibleStudents += 1;
+                            visibleStudents += 1;
+                        }
+                    });
+
+                    const visible = groupMatches || groupVisibleStudents > 0 || (!rows.length && !query);
+                    group.hidden = !visible;
+                    if (visible) visibleGroups += 1;
+
+                    if (query && visible && rows.length) {
+                        const body = group.querySelector('[data-evaluation-classroom-body]');
+                        const toggle = group.querySelector('[data-evaluation-classroom-toggle]');
+                        if (body) body.hidden = false;
+                        if (toggle) {
+                            toggle.setAttribute('aria-expanded', 'true');
+                            const icon = toggle.querySelector('[aria-hidden="true"]');
+                            if (icon) icon.textContent = '⌃';
+                        }
+                    }
+                });
+
+                if (shown) shown.textContent = `${visibleStudents} shown`;
+                if (noResults) noResults.hidden = visibleGroups !== 0;
+            };
+
+            input.addEventListener('input', applyFilter);
+        })();
+    </script>
+</body>
+</html>
