@@ -2,6 +2,18 @@
 {% set supervisor_class_theme = classroom_banner_theme(classroom.id) %}
 {% set supervisor_class_code = classroom.code|default('', true) %}
 {% set supervisor_class_description = classroom.description|default('', true) %}
+{% set supervisor_class_archived = classroom.archived|default(false) %}
+{% set supervisor_class_company = classroom.company_name|default('', true) %}
+{% set supervisor_class_industry = classroom.industry|default('', true) %}
+{% set supervisor_class_arrangement = classroom.work_arrangement|default('', true) %}
+{% set supervisor_class_location = classroom.location|default('', true) %}
+{% set supervisor_class_schedule = classroom.schedule_type|default('not_specified', true) %}
+{% set supervisor_class_start = classroom.start_date|default('', true) %}
+{% set supervisor_class_end = classroom.end_date|default('', true) %}
+{% set supervisor_class_deadline = classroom.enrollment_deadline|default('', true) %}
+{% set supervisor_class_hours_mode = classroom.hours_mode|default('not_specified', true) %}
+{% set supervisor_class_required_hours = classroom.required_hours|default(0, true) %}
+{% set supervisor_class_website = classroom.company_website|default('', true) %}
 
 <section class="supervisor-class-context" aria-label="Intern Classroom navigation">
     <div class="supervisor-class-context-breadcrumb">
@@ -19,13 +31,51 @@
                 <p class="supervisor-class-context-description">{{ supervisor_class_description or 'Intern Classroom' }}</p>
             </div>
 
-            {% if supervisor_class_code %}
-                <div class="supervisor-class-context-code">
-                    <span class="supervisor-class-context-code-label">Class code</span>
-                    <strong id="supervisorContextClassCode">{{ supervisor_class_code }}</strong>
-                    <button type="button" class="supervisor-class-context-copy" onclick="copySupervisorContextClassCode(this)">Copy</button>
+            <div class="supervisor-class-controls">
+                {% if supervisor_class_code %}
+                    <div class="supervisor-class-context-code">
+                        <span class="supervisor-class-context-code-label">Class code</span>
+                        <strong id="supervisorContextClassCode">{{ supervisor_class_code }}</strong>
+                        <button type="button" class="supervisor-class-context-copy" onclick="copySupervisorContextClassCode(this)">Copy</button>
+                        <button type="button" class="supervisor-class-context-copy" onclick="openSupervisorBannerClassInfo()">Class Info</button>
+                    </div>
+                {% endif %}
+
+                <div class="supervisor-class-management">
+                    <a href="{{ url_for('classwork.manage_classwork', class_id=classroom.id) }}" class="class-action-primary">Assign Task</a>
+                    <div class="dropdown position-relative">
+                        <button type="button" class="class-action-secondary" id="supervisorBannerManagementButton" aria-label="Class management options" aria-expanded="false" onclick="toggleSupervisorBannerClassActions(event)">⋮</button>
+                        <div class="dropdown-menu dropdown-menu-end shadow-sm" id="supervisorBannerManagementMenu">
+                            <a class="dropdown-item" href="{{ url_for('internship_classroom.edit_intern_classroom', class_id=classroom.id) }}">Edit Intern Class</a>
+                            <button type="button" class="dropdown-item" onclick="toggleSupervisorBannerColorChoices(event)">Change Banner Color</button>
+                            <div class="class-banner-color-panel" id="supervisorBannerColorChoices" hidden>
+                                <span class="class-banner-color-label">Banner color</span>
+                                <form method="POST" action="{{ url_for('internship_classroom.update_classroom_banner_theme', class_id=classroom.id) }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <div class="class-banner-color-grid">
+                                        {% for theme, label in [('blue','Blue'),('navy','Navy'),('green','Green'),('teal','Teal'),('purple','Purple'),('orange','Orange'),('amber','Amber'),('rose','Rose'),('slate','Slate')] %}
+                                            <button type="submit" name="banner_theme" value="{{ theme }}" class="class-banner-swatch class-banner-swatch--{{ theme }}{% if supervisor_class_theme == theme %} is-selected{% endif %}" aria-label="Use {{ label }} banner" title="{{ label }}"></button>
+                                        {% endfor %}
+                                    </div>
+                                </form>
+                            </div>
+                            <form method="POST" action="{{ url_for('classroom.regenerate_code', class_id=classroom.id) }}" class="m-0" onsubmit="return confirm('Regenerate class code? Old code will stop working.')">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="dropdown-item">Regenerate Class Code</button>
+                            </form>
+                            <form method="POST" action="{{ url_for('classroom.archive_class', class_id=classroom.id) }}" class="m-0"{% if not supervisor_class_archived %} onsubmit="return confirm('Complete and archive this Intern Classroom? Historical data will be preserved, while new announcements, work, and enrollment will be disabled until it is restored.')"{% endif %}>
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="dropdown-item">{% if supervisor_class_archived %}Restore Intern Classroom{% else %}Complete &amp; Archive{% endif %}</button>
+                            </form>
+                            <div class="dropdown-divider"></div>
+                            <form method="POST" action="{{ url_for('internship_classroom.delete_classroom', class_id=classroom.id) }}" class="m-0" onsubmit="return confirm('Permanently delete {{ classroom.name|e }}? This removes enrolled members, classroom activities, submissions, and related classroom data. This cannot be undone.')">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="dropdown-item text-danger">Delete Class</button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
-            {% endif %}
+            </div>
         </div>
     </div>
 
@@ -42,6 +92,32 @@
         <a href="{{ url_for('classroom.supervisor_class', class_id=classroom.id) }}#people" class="supervisor-class-context-tab{% if supervisor_class_tab == 'interns' %} active{% endif %}"{% if supervisor_class_tab == 'interns' %} aria-current="page"{% endif %}>Interns</a>
     </nav>
 </section>
+
+<div id="supervisorBannerClassInfoModal" class="nexora-class-modal" onclick="if(event.target===this)closeSupervisorBannerClassInfo()" aria-hidden="true">
+    <div class="nexora-modal" role="dialog" aria-modal="true" aria-labelledby="supervisorBannerClassInfoTitle">
+        <div class="nexora-modal-header">
+            <h2 id="supervisorBannerClassInfoTitle">Intern Classroom Information</h2>
+            <p>Saved internship details and current classroom information</p>
+            <button type="button" class="nexora-modal-close" onclick="closeSupervisorBannerClassInfo()">×</button>
+        </div>
+        <div class="nexora-modal-body nexora-class-info-body">
+            <div class="d-flex justify-content-between gap-3"><strong>Intern Classroom</strong><span class="text-end">{{ classroom.name }}</span></div>
+            <div class="d-flex justify-content-between gap-3"><strong>Company</strong><span class="text-end">{{ supervisor_class_company or '—' }}</span></div>
+            <div class="d-flex justify-content-between gap-3"><strong>Industry</strong><span class="text-end">{{ supervisor_class_industry or '—' }}</span></div>
+            <div class="d-flex justify-content-between gap-3"><strong>Work arrangement</strong><span class="text-end">{{ supervisor_class_arrangement or '—' }}</span></div>
+            <div class="d-flex justify-content-between gap-3"><strong>Location</strong><span class="text-end">{{ supervisor_class_location or '—' }}</span></div>
+            <div class="d-flex justify-content-between gap-3"><strong>Schedule</strong><span class="text-end">{% if supervisor_class_schedule == 'fixed_dates' %}{{ supervisor_class_start or '—' }} to {{ supervisor_class_end or '—' }}{% elif supervisor_class_schedule == 'flexible' %}Flexible{% if supervisor_class_start or supervisor_class_end %} · {{ supervisor_class_start or 'Open' }} to {{ supervisor_class_end or 'Open' }}{% endif %}{% else %}Not specified{% endif %}</span></div>
+            <div class="d-flex justify-content-between gap-3"><strong>Enrollment deadline</strong><span class="text-end">{{ supervisor_class_deadline or 'Not specified' }}</span></div>
+            <div class="d-flex justify-content-between gap-3"><strong>Required hours</strong><span class="text-end">{% if supervisor_class_hours_mode == 'specified' and supervisor_class_required_hours %}{{ supervisor_class_required_hours }} hours{% else %}Not specified{% endif %}</span></div>
+            <div class="d-flex justify-content-between gap-3"><strong>Company website</strong><span class="text-end">{% if supervisor_class_website %}<a href="{{ supervisor_class_website }}" target="_blank" rel="noopener noreferrer">Visit website</a>{% else %}—{% endif %}</span></div>
+            <div class="d-flex justify-content-between gap-3"><strong>Section</strong><span class="text-end">{{ classroom.section|default('—', true) }}</span></div>
+            <div class="d-flex justify-content-between gap-3"><strong>Class code</strong><span class="text-end">{{ supervisor_class_code or '—' }}</span></div>
+            {% if classroom.student_count is defined %}<div class="d-flex justify-content-between gap-3"><strong>Interns</strong><span class="text-end">{{ classroom.student_count }}</span></div>{% endif %}
+            <div class="d-flex justify-content-between gap-3"><strong>Status</strong><span class="text-end">{% if supervisor_class_archived %}Archived{% else %}Active{% endif %}</span></div>
+        </div>
+        <div class="nexora-modal-footer"><button type="button" class="btn btn-secondary" onclick="closeSupervisorBannerClassInfo()">Close</button></div>
+    </div>
+</div>
 
 <script>
     function copySupervisorContextClassCode(button) {
@@ -71,4 +147,55 @@
         input.remove();
         done();
     }
+
+    function openSupervisorBannerClassInfo() {
+        const modal = document.getElementById('supervisorBannerClassInfoModal');
+        if (!modal) return;
+        modal.classList.add('open');
+        modal.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeSupervisorBannerClassInfo() {
+        const modal = document.getElementById('supervisorBannerClassInfoModal');
+        if (!modal) return;
+        modal.classList.remove('open');
+        modal.setAttribute('aria-hidden', 'true');
+    }
+
+    function toggleSupervisorBannerClassActions(event) {
+        event.stopPropagation();
+        const menu = document.getElementById('supervisorBannerManagementMenu');
+        const button = document.getElementById('supervisorBannerManagementButton');
+        if (!menu) return;
+        const opening = !menu.classList.contains('show');
+        menu.classList.toggle('show', opening);
+        if (button) button.setAttribute('aria-expanded', opening ? 'true' : 'false');
+    }
+
+    function toggleSupervisorBannerColorChoices(event) {
+        event.stopPropagation();
+        const choices = document.getElementById('supervisorBannerColorChoices');
+        if (choices) choices.hidden = !choices.hidden;
+    }
+
+    function closeSupervisorBannerClassActions() {
+        const menu = document.getElementById('supervisorBannerManagementMenu');
+        const button = document.getElementById('supervisorBannerManagementButton');
+        const choices = document.getElementById('supervisorBannerColorChoices');
+        if (menu) menu.classList.remove('show');
+        if (button) button.setAttribute('aria-expanded', 'false');
+        if (choices) choices.hidden = true;
+    }
+
+    document.getElementById('supervisorBannerManagementMenu')?.addEventListener('click', (event) => event.stopPropagation());
+    document.addEventListener('click', closeSupervisorBannerClassActions);
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            closeSupervisorBannerClassInfo();
+            closeSupervisorBannerClassActions();
+        }
+    });
+
+    const legacyStreamManagement = document.querySelector('body.supervisor-class-page .supervisor-classwork-heading > .supervisor-class-management');
+    if (legacyStreamManagement) legacyStreamManagement.hidden = true;
 </script>
