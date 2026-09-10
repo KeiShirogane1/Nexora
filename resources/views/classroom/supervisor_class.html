@@ -14,99 +14,58 @@
 
         <main class="page-content nexora-app-main supervisor-class-main">
             <div class="nexora-class-page">
-                <div class="supervisor-class-breadcrumb">
-                    <a href="{{ url_for('classroom.supervisor_classes') }}">My Classes</a>
-                    <span>›</span>
-                    <span>{{ classroom.name }}</span>
-                </div>
-
+                {% set supervisor_class_active_tab = 'stream' %}
+                {% include 'components/supervisor_class_context.html' %}
                 {% set active_banner_theme = classroom_banner_theme(classroom.id) %}
-                <section class="class-hero">
-                    <div class="class-hero-banner class-hero-banner--{{ active_banner_theme }}"></div>
-                    <div class="class-hero-body">
-                        <div class="class-hero-row">
-                            <div>
-                                <span class="supervisor-class-eyebrow">{{ classroom.section }} · Supervisor</span>
-                                <h1 class="class-title">{{ classroom.name }}</h1>
-                                {% if classroom.company_name %}
-                                    <p class="class-subtitle">{{ classroom.company_name }} · Intern Classroom</p>
-                                {% elif classroom.description %}
-                                    <p class="class-subtitle">{{ classroom.description }}</p>
-                                {% endif %}
-                                {% if classroom.archived %}
-                                    <div class="alert alert-warning mt-3 mb-0">This Intern Classroom is completed and archived. Historical records remain available; new announcements, work, and enrollment are disabled until it is restored.</div>
-                                {% endif %}
-                            </div>
 
-                            <div class="supervisor-class-controls">
-                                <div class="supervisor-class-code-panel">
-                                    <span class="supervisor-class-code-label">Class code</span>
-                                    <strong class="class-code" id="classCodeBadge">{{ classroom.code }}</strong>
-                                    <button type="button" onclick="copyClassCode()">Copy</button>
-                                    <button type="button" onclick="openClassInfo()">Class Info</button>
-                                </div>
-
-                                <div class="supervisor-class-management">
-                                    <a href="{{ url_for('classwork.manage_classwork', class_id=classroom.id) }}" class="class-action-primary">Assign Task</a>
-                                    <div class="dropdown position-relative">
-                                        <button type="button" class="class-action-secondary" id="classManagementButton" aria-label="Class management options" aria-expanded="false" onclick="toggleClassActions(event)">⋮</button>
-                                        <div class="dropdown-menu dropdown-menu-end shadow-sm" id="classManagementMenu">
-                                            <a class="dropdown-item" href="{{ url_for('internship_classroom.edit_intern_classroom', class_id=classroom.id) }}">Edit Intern Class</a>
-                                            <button type="button" class="dropdown-item" onclick="toggleBannerColorChoices(event)">Change Banner Color</button>
-                                            <div class="class-banner-color-panel" id="classBannerColorChoices" hidden>
-                                                <span class="class-banner-color-label">Banner color</span>
-                                                <form method="POST" action="{{ url_for('internship_classroom.update_classroom_banner_theme', class_id=classroom.id) }}">
-                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                    <div class="class-banner-color-grid">
-                                                        {% for theme, label in [('blue','Blue'),('navy','Navy'),('green','Green'),('teal','Teal'),('purple','Purple'),('orange','Orange'),('amber','Amber'),('rose','Rose'),('slate','Slate')] %}
-                                                            <button type="submit" name="banner_theme" value="{{ theme }}" class="class-banner-swatch class-banner-swatch--{{ theme }}{% if active_banner_theme == theme %} is-selected{% endif %}" aria-label="Use {{ label }} banner" title="{{ label }}"></button>
-                                                        {% endfor %}
-                                                    </div>
-                                                </form>
-                                            </div>
-                                            <form method="POST" action="{{ url_for('classroom.regenerate_code', class_id=classroom.id) }}" class="m-0" onsubmit="return confirm('Regenerate class code? Old code will stop working.')">
-                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                <button type="submit" class="dropdown-item">Regenerate Class Code</button>
-                                            </form>
-                                            <form method="POST" action="{{ url_for('classroom.archive_class', class_id=classroom.id) }}" class="m-0"{% if not classroom.archived %} onsubmit="return confirm('Complete and archive this Intern Classroom? Historical data will be preserved, while new announcements, work, and enrollment will be disabled until it is restored.')"{% endif %}>
-                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                <button type="submit" class="dropdown-item">{% if classroom.archived %}Restore Intern Classroom{% else %}Complete &amp; Archive{% endif %}</button>
-                                            </form>
-                                            <div class="dropdown-divider"></div>
-                                            <form method="POST" action="{{ url_for('internship_classroom.delete_classroom', class_id=classroom.id) }}" class="m-0" onsubmit="return confirm('Permanently delete {{ classroom.name|e }}? This removes enrolled members, classroom activities, submissions, and related classroom data. This cannot be undone.')">
-                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                <button type="submit" class="dropdown-item text-danger">Delete Class</button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
+                {% if classroom.archived %}
+                    <div class="alert alert-warning mb-3">This Intern Classroom is completed and archived. Historical records remain available; new announcements, work, and enrollment are disabled until it is restored.</div>
+                {% endif %}
 
                 {% with messages=get_flashed_messages(with_categories=true) %}{% if messages %}{% for category,message in messages %}
-                    <div class="alert alert-{{ 'danger' if category=='danger' else 'success' if category=='success' else 'warning' if category=='warning' else 'info' }} mt-3">{{ message }}</div>
+                    <div class="alert alert-{{ 'danger' if category=='danger' else 'success' if category=='success' else 'warning' if category=='warning' else 'info' }} mb-3">{{ message }}</div>
                 {% endfor %}{% endif %}{% endwith %}
-
-                <nav class="class-tabs" aria-label="Class navigation">
-                    <button class="profile-tab-button active" type="button" onclick="openClassTab('stream',this)">Stream</button>
-                    <a href="{{ url_for('classwork.manage_classwork', class_id=classroom.id) }}" class="profile-tab-button">Work</a>
-                    <a href="{{ url_for('logbook_review.supervisor_logbook', class_id=classroom.id) }}" class="profile-tab-button">Logbook</a>
-                    <a href="{{ url_for('daily_performance_history.supervisor_history', class_id=classroom.id) }}" class="profile-tab-button">Daily Performance</a>
-                    <a href="{{ url_for('ojt_evaluation.supervisor_evaluations', class_id=classroom.id) }}" class="profile-tab-button">Evaluations</a>
-                    <a href="{{ url_for('classwork_ml_insights.supervisor_insights', class_id=classroom.id) }}" class="profile-tab-button">Performance Insights</a>
-                    <a href="{{ url_for('classwork_ml_insights.supervisor_cohort_insights', class_id=classroom.id) }}" class="profile-tab-button">Cohort Insights</a>
-                    <a href="{{ url_for('needs_attention.supervisor_needs_attention', class_id=classroom.id) }}" class="profile-tab-button">Needs Attention</a>
-                    <a href="{{ url_for('performance_reports.supervisor_reports', class_id=classroom.id) }}" class="profile-tab-button">Reports</a>
-                    <button id="internsTabButton" class="profile-tab-button" type="button" onclick="openClassTab('people',this)">Interns</button>
-                </nav>
 
                 <section id="stream" class="profile-tab active">
                     <div class="supervisor-classwork-heading">
                         <div>
                             <h1>Stream</h1>
                             <p>{{ classroom.section }} · Share announcements and classroom updates with your interns.</p>
+                        </div>
+                        <div class="supervisor-class-management">
+                            <button type="button" class="class-action-secondary" onclick="openClassInfo()">Class Info</button>
+                            <a href="{{ url_for('classwork.manage_classwork', class_id=classroom.id) }}" class="class-action-primary">Assign Task</a>
+                            <div class="dropdown position-relative">
+                                <button type="button" class="class-action-secondary" id="classManagementButton" aria-label="Class management options" aria-expanded="false" onclick="toggleClassActions(event)">⋮</button>
+                                <div class="dropdown-menu dropdown-menu-end shadow-sm" id="classManagementMenu">
+                                    <a class="dropdown-item" href="{{ url_for('internship_classroom.edit_intern_classroom', class_id=classroom.id) }}">Edit Intern Class</a>
+                                    <button type="button" class="dropdown-item" onclick="toggleBannerColorChoices(event)">Change Banner Color</button>
+                                    <div class="class-banner-color-panel" id="classBannerColorChoices" hidden>
+                                        <span class="class-banner-color-label">Banner color</span>
+                                        <form method="POST" action="{{ url_for('internship_classroom.update_classroom_banner_theme', class_id=classroom.id) }}">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <div class="class-banner-color-grid">
+                                                {% for theme, label in [('blue','Blue'),('navy','Navy'),('green','Green'),('teal','Teal'),('purple','Purple'),('orange','Orange'),('amber','Amber'),('rose','Rose'),('slate','Slate')] %}
+                                                    <button type="submit" name="banner_theme" value="{{ theme }}" class="class-banner-swatch class-banner-swatch--{{ theme }}{% if active_banner_theme == theme %} is-selected{% endif %}" aria-label="Use {{ label }} banner" title="{{ label }}"></button>
+                                                {% endfor %}
+                                            </div>
+                                        </form>
+                                    </div>
+                                    <form method="POST" action="{{ url_for('classroom.regenerate_code', class_id=classroom.id) }}" class="m-0" onsubmit="return confirm('Regenerate class code? Old code will stop working.')">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="dropdown-item">Regenerate Class Code</button>
+                                    </form>
+                                    <form method="POST" action="{{ url_for('classroom.archive_class', class_id=classroom.id) }}" class="m-0"{% if not classroom.archived %} onsubmit="return confirm('Complete and archive this Intern Classroom? Historical data will be preserved, while new announcements, work, and enrollment will be disabled until it is restored.')"{% endif %}>
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="dropdown-item">{% if classroom.archived %}Restore Intern Classroom{% else %}Complete &amp; Archive{% endif %}</button>
+                                    </form>
+                                    <div class="dropdown-divider"></div>
+                                    <form method="POST" action="{{ url_for('internship_classroom.delete_classroom', class_id=classroom.id) }}" class="m-0" onsubmit="return confirm('Permanently delete {{ classroom.name|e }}? This removes enrolled members, classroom activities, submissions, and related classroom data. This cannot be undone.')">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="dropdown-item text-danger">Delete Class</button>
+                                    </form>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -219,7 +178,7 @@
 
         <script>
             function copyClassCode() {
-                const code = (document.getElementById("classCodeBadge")?.innerText || document.getElementById("peopleCode")?.innerText || "{{ classroom.code }}").trim();
+                const code = (document.getElementById("supervisorContextClassCode")?.innerText || document.getElementById("peopleCode")?.innerText || "{{ classroom.code }}").trim();
                 if (navigator.clipboard?.writeText) navigator.clipboard.writeText(code).then(() => window.showToast && showToast("✓ Class code copied: " + code)).catch(() => {});
                 else { const ta = document.createElement("textarea"); ta.value = code; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); } catch (e) {} ta.remove(); }
             }
@@ -230,8 +189,17 @@
             function closeClassActions() { const menu = document.getElementById("classManagementMenu"); const button = document.getElementById("classManagementButton"); const choices = document.getElementById("classBannerColorChoices"); if (menu) menu.classList.remove("show"); if (button) button.setAttribute("aria-expanded", "false"); if (choices) choices.hidden = true; }
             document.getElementById("classManagementMenu")?.addEventListener("click", (event) => event.stopPropagation());
             document.addEventListener("click", closeClassActions);
-            function openClassTab(name, btn) { document.querySelectorAll(".profile-tab").forEach((x) => x.classList.remove("active")); const el = document.getElementById(name); if (el) el.classList.add("active"); document.querySelectorAll(".class-tabs .profile-tab-button").forEach((x) => x.classList.remove("active")); if (btn) btn.classList.add("active"); }
-            function openHashClassTab() { if (window.location.hash === "#people") openClassTab("people", document.getElementById("internsTabButton")); }
+            function openClassTab(name) {
+                document.querySelectorAll(".profile-tab").forEach((item) => item.classList.remove("active"));
+                const panel = document.getElementById(name);
+                if (panel) panel.classList.add("active");
+                const tabs = Array.from(document.querySelectorAll(".supervisor-class-context-tab"));
+                tabs.forEach((item) => { item.classList.remove("active"); item.removeAttribute("aria-current"); });
+                const selector = name === "people" ? 'a[href$="#people"]' : 'a[href="{{ url_for("classroom.supervisor_class", class_id=classroom.id) }}"]';
+                const activeTab = document.querySelector(`.supervisor-class-context-tabs ${selector}`);
+                if (activeTab) { activeTab.classList.add("active"); activeTab.setAttribute("aria-current", "page"); }
+            }
+            function openHashClassTab() { openClassTab(window.location.hash === "#people" ? "people" : "stream"); }
             const classInternSearch = document.getElementById("classInternSearch");
             const classInternRows = Array.from(document.querySelectorAll("[data-class-intern]"));
             const classInternShownCount = document.getElementById("classInternShownCount");
