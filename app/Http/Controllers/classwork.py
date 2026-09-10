@@ -177,12 +177,16 @@ def manage_classwork(class_id):
             max_group_size_raw = (request.form.get("max_group_size") or "1").strip()
             assignment_scope = (request.form.get("assignment_scope") or "classroom").strip().lower()
             team_name = (request.form.get("team_name") or "").strip()
+            submission_mode = (request.form.get("submission_mode") or "individual").strip().lower()
 
             if activity_type not in ACTIVITY_TYPES:
                 flash("Choose a valid work type.", "danger")
                 return redirect(url_for("classwork.manage_classwork", class_id=class_id))
             if assignment_scope not in {"classroom", "selected"}:
                 flash("Choose who should receive this work.", "danger")
+                return redirect(url_for("classwork.manage_classwork", class_id=class_id))
+            if submission_mode not in {"individual", "shared"}:
+                flash("Choose a valid submission mode.", "danger")
                 return redirect(url_for("classwork.manage_classwork", class_id=class_id))
             if len(title) < 3 or len(title) > 200:
                 flash("Title is required and must be 3-200 characters.", "danger")
@@ -228,6 +232,7 @@ def manage_classwork(class_id):
                 team_name = team_name or None
             else:
                 team_name = None
+                submission_mode = "individual"
 
             try:
                 points = int(points_raw)
@@ -272,8 +277,8 @@ def manage_classwork(class_id):
                     """INSERT INTO classroom_assignment_meta
                        (assignment_id, activity_type, external_url, resource_label,
                         resource_filename, resource_filepath, allow_file_upload,
-                        group_mode, max_group_size, team_name)
-                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                        group_mode, max_group_size, team_name, submission_mode)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                     (
                         assignment_id,
                         activity_type,
@@ -285,6 +290,7 @@ def manage_classwork(class_id):
                         group_mode,
                         max_group_size,
                         team_name,
+                        submission_mode,
                     ),
                 )
 
@@ -336,6 +342,7 @@ def manage_classwork(class_id):
                       m.activity_type, m.external_url, m.resource_label,
                       m.resource_filename, m.resource_filepath,
                       m.allow_file_upload, m.group_mode, m.max_group_size, m.team_name,
+                      COALESCE(m.submission_mode, 'individual') AS submission_mode,
                       (SELECT COUNT(*) FROM classroom_assignment_recipients ar
                        WHERE ar.assignment_id = a.id) AS recipient_count
                FROM classroom_assignments a
@@ -364,7 +371,8 @@ def manage_classwork(class_id):
                 "group_mode": get("group_mode", 12) or 0,
                 "max_group_size": get("max_group_size", 13) or 1,
                 "team_name": get("team_name", 14) or "",
-                "recipient_count": get("recipient_count", 15) or 0,
+                "submission_mode": get("submission_mode", 15) or "individual",
+                "recipient_count": get("recipient_count", 16) or 0,
             })
 
         classroom_data = {
