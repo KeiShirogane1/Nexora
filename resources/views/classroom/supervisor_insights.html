@@ -20,10 +20,6 @@
                         <h1>Performance Insights</h1>
                         <p>{{ classroom.section }} · Classroom performance and feedback evidence for your interns.</p>
                     </div>
-                    <div class="supervisor-insights-actions">
-                        <a class="btn btn-outline-primary" href="{{ url_for('performance_reports.supervisor_reports', class_id=classroom.id) }}">Reports</a>
-                        <a class="btn btn-primary" href="{{ url_for('classwork_gradebook_export.export_supervisor_gradebook', class_id=classroom.id) }}">Export CSV</a>
-                    </div>
                 </div>
 
                 {% with messages = get_flashed_messages(with_categories=true) %}
@@ -63,6 +59,10 @@
                     <div class="supervisor-insights-view-tabs" role="tablist" aria-label="Performance insight views">
                         <button type="button" class="supervisor-insights-view-tab active" data-insights-view="overall" role="tab" aria-selected="true">Overall Insights</button>
                         <button type="button" class="supervisor-insights-view-tab" data-insights-view="individual" role="tab" aria-selected="false">Individual Insights</button>
+                        <div class="ms-auto d-flex align-items-center gap-2 flex-wrap">
+                            <a class="btn btn-sm btn-outline-primary" href="{{ url_for('performance_reports.supervisor_reports', class_id=classroom.id) }}">Reports</a>
+                            <a class="btn btn-sm btn-primary" href="{{ url_for('classwork_gradebook_export.export_supervisor_gradebook', class_id=classroom.id) }}">Export CSV</a>
+                        </div>
                     </div>
 
                     <div class="supervisor-insights-panel" id="overallInsightsPanel" role="tabpanel">
@@ -129,7 +129,7 @@
                             <div class="supervisor-insights-list" id="individualInsightsList">
                                 <div class="supervisor-insights-list-head" aria-hidden="true"><span>Intern</span><span>Performance</span><span>Completion</span><span>Action</span></div>
                                 {% for intern in insights %}
-                                    <article class="supervisor-insights-row" data-intern-row data-search="{{ (intern.name ~ ' ' ~ (intern.student_number or '') ~ ' ' ~ (intern.email or ''))|lower|e }}" data-has-data="{{ 'true' if intern.average_percentage is not none else 'false' }}" data-needs-attention="{{ 'true' if intern.numeric_performance_label in ['Fair', 'Needs Improvement'] else 'false' }}">
+                                    <article class="supervisor-insights-row" data-intern-row data-student-id="{{ intern.id }}" data-search="{{ (intern.name ~ ' ' ~ (intern.student_number or '') ~ ' ' ~ (intern.email or ''))|lower|e }}" data-has-data="{{ 'true' if intern.average_percentage is not none else 'false' }}" data-needs-attention="{{ 'true' if intern.numeric_performance_label in ['Fair', 'Needs Improvement'] else 'false' }}">
                                         <div class="supervisor-insights-row-main">
                                             <div class="supervisor-insights-person"><strong>{{ intern.name }}</strong>{% if intern.student_number %}<small>{{ intern.student_number }}</small>{% elif intern.email %}<small>{{ intern.email }}</small>{% endif %}</div>
                                             <div>{% if intern.average_percentage is none %}<span class="supervisor-insights-label is-no-data">No data yet</span>{% else %}{% set label = intern.numeric_performance_label %}<span class="supervisor-insights-label {% if label == 'Excellent' %}is-excellent{% elif label == 'Very Satisfactory' %}is-very-satisfactory{% elif label == 'Satisfactory' %}is-satisfactory{% elif label == 'Fair' %}is-fair{% else %}is-needs-improvement{% endif %}">{{ label }}</span>{% endif %}</div>
@@ -169,18 +169,105 @@
         <script>
             const insightViewButtons = document.querySelectorAll('[data-insights-view]');
             const insightPanels = { overall: document.getElementById('overallInsightsPanel'), individual: document.getElementById('individualInsightsPanel') };
-            insightViewButtons.forEach((button) => { button.addEventListener('click', () => { const target = button.dataset.insightsView; insightViewButtons.forEach((item) => { const active = item === button; item.classList.toggle('active', active); item.setAttribute('aria-selected', active ? 'true' : 'false'); }); Object.entries(insightPanels).forEach(([name, panel]) => { if (panel) panel.hidden = name !== target; }); }); });
-            function toggleInternInsightDetails(button, detailsId) { const details = document.getElementById(detailsId); if (!details) return; const opening = !details.classList.contains('open'); details.classList.toggle('open', opening); button.setAttribute('aria-expanded', opening ? 'true' : 'false'); button.textContent = opening ? 'Hide' : 'View'; }
+
+            function setInsightView(target) {
+                insightViewButtons.forEach((item) => {
+                    const active = item.dataset.insightsView === target;
+                    item.classList.toggle('active', active);
+                    item.setAttribute('aria-selected', active ? 'true' : 'false');
+                });
+                Object.entries(insightPanels).forEach(([name, panel]) => {
+                    if (panel) panel.hidden = name !== target;
+                });
+            }
+
+            insightViewButtons.forEach((button) => {
+                button.addEventListener('click', () => setInsightView(button.dataset.insightsView));
+            });
+
+            function toggleInternInsightDetails(button, detailsId) {
+                const details = document.getElementById(detailsId);
+                if (!details) return;
+                const opening = !details.classList.contains('open');
+                details.classList.toggle('open', opening);
+                button.setAttribute('aria-expanded', opening ? 'true' : 'false');
+                button.textContent = opening ? 'Hide' : 'View';
+            }
+
             const individualInsightsSearch = document.getElementById('individualInsightsSearch');
             const individualFilterButtons = document.querySelectorAll('[data-intern-filter]');
             const individualRows = Array.from(document.querySelectorAll('[data-intern-row]'));
             const individualShownCount = document.getElementById('individualInsightsShownCount');
             const individualNoResults = document.getElementById('individualInsightsNoResults');
             let activeInternFilter = 'all';
-            function resetHiddenInternDetails(row) { const details = row.querySelector('.supervisor-insights-row-details'); const button = row.querySelector('.supervisor-insights-view-button'); if (details) details.classList.remove('open'); if (button) { button.setAttribute('aria-expanded', 'false'); button.textContent = 'View'; } }
-            function applyIndividualInsightFilters() { const query = (individualInsightsSearch?.value || '').trim().toLowerCase(); let visibleCount = 0; individualRows.forEach((row) => { const searchable = row.dataset.search || ''; const hasData = row.dataset.hasData === 'true'; const needsAttention = row.dataset.needsAttention === 'true'; const matchesSearch = !query || searchable.includes(query); let matchesFilter = true; if (activeInternFilter === 'with-data') matchesFilter = hasData; if (activeInternFilter === 'needs-attention') matchesFilter = needsAttention; if (activeInternFilter === 'no-data') matchesFilter = !hasData; const visible = matchesSearch && matchesFilter; row.hidden = !visible; if (visible) visibleCount += 1; else resetHiddenInternDetails(row); }); if (individualShownCount) individualShownCount.textContent = `${visibleCount} shown`; if (individualNoResults) individualNoResults.hidden = visibleCount !== 0; }
+
+            function resetHiddenInternDetails(row) {
+                const details = row.querySelector('.supervisor-insights-row-details');
+                const button = row.querySelector('.supervisor-insights-view-button');
+                if (details) details.classList.remove('open');
+                if (button) {
+                    button.setAttribute('aria-expanded', 'false');
+                    button.textContent = 'View';
+                }
+            }
+
+            function applyIndividualInsightFilters() {
+                const query = (individualInsightsSearch?.value || '').trim().toLowerCase();
+                let visibleCount = 0;
+                individualRows.forEach((row) => {
+                    const searchable = row.dataset.search || '';
+                    const hasData = row.dataset.hasData === 'true';
+                    const needsAttention = row.dataset.needsAttention === 'true';
+                    const matchesSearch = !query || searchable.includes(query);
+                    let matchesFilter = true;
+                    if (activeInternFilter === 'with-data') matchesFilter = hasData;
+                    if (activeInternFilter === 'needs-attention') matchesFilter = needsAttention;
+                    if (activeInternFilter === 'no-data') matchesFilter = !hasData;
+                    const visible = matchesSearch && matchesFilter;
+                    row.hidden = !visible;
+                    if (visible) visibleCount += 1;
+                    else resetHiddenInternDetails(row);
+                });
+                if (individualShownCount) individualShownCount.textContent = `${visibleCount} shown`;
+                if (individualNoResults) individualNoResults.hidden = visibleCount !== 0;
+            }
+
             individualInsightsSearch?.addEventListener('input', applyIndividualInsightFilters);
-            individualFilterButtons.forEach((button) => { button.addEventListener('click', () => { activeInternFilter = button.dataset.internFilter || 'all'; individualFilterButtons.forEach((item) => { const active = item === button; item.classList.toggle('active', active); item.setAttribute('aria-pressed', active ? 'true' : 'false'); }); applyIndividualInsightFilters(); }); });
+            individualFilterButtons.forEach((button) => {
+                button.addEventListener('click', () => {
+                    activeInternFilter = button.dataset.internFilter || 'all';
+                    individualFilterButtons.forEach((item) => {
+                        const active = item === button;
+                        item.classList.toggle('active', active);
+                        item.setAttribute('aria-pressed', active ? 'true' : 'false');
+                    });
+                    applyIndividualInsightFilters();
+                });
+            });
+
+            const selectedStudentId = new URLSearchParams(window.location.search).get('student_id');
+            if (window.location.hash === '#individual' || selectedStudentId) {
+                setInsightView('individual');
+            }
+            if (selectedStudentId) {
+                activeInternFilter = 'all';
+                individualFilterButtons.forEach((item) => {
+                    const active = item.dataset.internFilter === 'all';
+                    item.classList.toggle('active', active);
+                    item.setAttribute('aria-pressed', active ? 'true' : 'false');
+                });
+                if (individualInsightsSearch) individualInsightsSearch.value = '';
+                applyIndividualInsightFilters();
+                const selectedRow = document.querySelector(`[data-intern-row][data-student-id="${CSS.escape(selectedStudentId)}"]`);
+                if (selectedRow) {
+                    const selectedButton = selectedRow.querySelector('.supervisor-insights-view-button');
+                    const selectedDetails = selectedRow.querySelector('.supervisor-insights-row-details');
+                    if (selectedDetails && selectedButton && !selectedDetails.classList.contains('open')) {
+                        toggleInternInsightDetails(selectedButton, selectedDetails.id);
+                    }
+                    window.requestAnimationFrame(() => selectedRow.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+                }
+            }
         </script>
     </body>
 </html>
