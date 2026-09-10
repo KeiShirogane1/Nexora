@@ -13,6 +13,14 @@
 
     <main class="page-content nexora-app-main">
         <div class="nexora-page supervisor-classwork-shell">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'danger' else 'warning' if category == 'warning' else 'success' if category == 'success' else 'info' }}" role="alert">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
             <div class="supervisor-classwork-heading">
                 <div>
                     <h1>Evaluations</h1>
@@ -161,9 +169,13 @@
                                                             {% endif %}
                                                         </td>
                                                         <td class="text-end pe-3">
-                                                            <a class="btn btn-sm btn-outline-primary" href="{{ url_for('ojt_evaluation.supervisor_evaluations', class_id=classroom.class_id, student_id=intern.id) }}">
+                                                            <button
+                                                                type="button"
+                                                                class="btn btn-sm btn-outline-primary"
+                                                                data-evaluation-open
+                                                                data-modal-url="{{ url_for('ojt_evaluation.supervisor_evaluations', class_id=classroom.class_id, student_id=intern.id, modal=1) }}">
                                                                 {% if intern.evaluation_status_key == 'submitted' %}View Evaluation{% else %}Evaluate{% endif %}
-                                                            </a>
+                                                            </button>
                                                         </td>
                                                     </tr>
                                                 {% endfor %}
@@ -194,6 +206,12 @@
             {% endif %}
         </div>
     </main>
+
+    <div id="supervisorEvaluationModal" class="nexora-class-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Official OJT Evaluation">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable w-100" role="document">
+            <div id="supervisorEvaluationModalContent" class="w-100"></div>
+        </div>
+    </div>
 
     <script>
         function toggleEvaluationClassroom(button, bodyId) {
@@ -290,6 +308,90 @@
             };
 
             input.addEventListener('input', applyFilter);
+        })();
+
+        (() => {
+            const modal = document.getElementById('supervisorEvaluationModal');
+            const content = document.getElementById('supervisorEvaluationModalContent');
+            if (!modal || !content) return;
+
+            const closeModal = () => {
+                modal.classList.remove('open');
+                modal.setAttribute('aria-hidden', 'true');
+                document.body.classList.remove('modal-open');
+                content.innerHTML = '';
+            };
+
+            const bindModalContent = () => {
+                content.querySelectorAll('[data-evaluation-modal-close]').forEach((button) => {
+                    button.addEventListener('click', closeModal);
+                });
+
+                const body = content.querySelector('[data-evaluation-criteria-body]');
+                const addButton = content.querySelector('[data-evaluation-add-criterion]');
+                const template = content.querySelector('[data-evaluation-criterion-template]');
+
+                const bindRemoveButtons = () => {
+                    content.querySelectorAll('[data-evaluation-remove-row]').forEach((button) => {
+                        button.onclick = () => {
+                            const row = button.closest('[data-evaluation-row]');
+                            if (!row || !body) return;
+                            const rows = body.querySelectorAll('[data-evaluation-row]');
+                            if (rows.length === 1) {
+                                row.querySelectorAll('input').forEach((field) => { field.value = ''; });
+                                return;
+                            }
+                            row.remove();
+                        };
+                    });
+                };
+
+                if (body && addButton && template) {
+                    addButton.addEventListener('click', () => {
+                        if (body.querySelectorAll('[data-evaluation-row]').length >= 50) return;
+                        body.appendChild(template.content.cloneNode(true));
+                        bindRemoveButtons();
+                    });
+                    bindRemoveButtons();
+                }
+
+                const firstClose = content.querySelector('[data-evaluation-modal-close]');
+                if (firstClose) firstClose.focus();
+            };
+
+            const openModal = async (button) => {
+                const url = button.dataset.modalUrl;
+                if (!url) return;
+
+                modal.classList.add('open');
+                modal.setAttribute('aria-hidden', 'false');
+                document.body.classList.add('modal-open');
+                content.innerHTML = '<div class="modal-content border-0 rounded-4 shadow-lg"><div class="modal-body p-5 text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading evaluation</span></div><p class="text-secondary mt-3 mb-0">Loading Official OJT Evaluation…</p></div></div>';
+
+                try {
+                    const response = await fetch(url, {
+                        credentials: 'same-origin',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    });
+                    if (!response.ok) throw new Error(`Evaluation request failed with status ${response.status}`);
+                    content.innerHTML = await response.text();
+                    bindModalContent();
+                } catch (error) {
+                    content.innerHTML = '<div class="modal-content border-0 rounded-4 shadow-lg"><div class="modal-body p-5 text-center"><h2 class="h5 fw-bold">Unable to open evaluation</h2><p class="text-secondary">Please close this window and try again.</p><button type="button" class="btn btn-primary" data-evaluation-modal-close>Close</button></div></div>';
+                    bindModalContent();
+                }
+            };
+
+            document.querySelectorAll('[data-evaluation-open]').forEach((button) => {
+                button.addEventListener('click', () => openModal(button));
+            });
+
+            modal.addEventListener('click', (event) => {
+                if (event.target === modal) closeModal();
+            });
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && modal.classList.contains('open')) closeModal();
+            });
         })();
     </script>
 </body>
