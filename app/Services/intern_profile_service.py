@@ -115,6 +115,23 @@ def _safe_percentage(score, max_score, stored_percentage):
         return None
 
 
+def _can_use_legacy_attendance(conn, student_id, classroom_id):
+    """Use unscoped attendance only when this is the intern's sole Intern Classroom."""
+    rows = conn.execute(
+        """
+        SELECT c.id
+        FROM classroom_students cs
+        JOIN classrooms c ON c.id = cs.classroom_id
+        WHERE cs.student_id = ?
+          AND COALESCE(c.classroom_type, 'classroom') = 'internship'
+        ORDER BY c.id
+        """,
+        (student_id,),
+    ).fetchall()
+    classroom_ids = [int(_value(row, "id", 0, 0)) for row in rows]
+    return len(classroom_ids) == 1 and classroom_ids[0] == int(classroom_id)
+
+
 def get_supervisor_intern_profile(supervisor_id, classroom_id, student_id):
     """Return one enrolled intern's classroom-scoped OJT profile."""
     try:
@@ -179,6 +196,20 @@ def get_supervisor_intern_profile(supervisor_id, classroom_id, student_id):
             """,
             (classroom_id, student_id),
         ).fetchall()
+
+        use_legacy_attendance = False
+        if not attendance_rows and _can_use_legacy_attendance(conn, student_id, classroom_id):
+            attendance_rows = conn.execute(
+                """
+                SELECT id, clock_in, clock_out, hours_rendered, status
+                FROM attendance
+                WHERE classroom_id IS NULL AND student_id = ?
+                ORDER BY clock_in DESC, id DESC
+                """,
+                (student_id,),
+            ).fetchall()
+            use_legacy_attendance = bool(attendance_rows)
+
         attendance_day_number_by_id = {
             int(_value(row, "id", 0, 0)): day_number
             for day_number, row in enumerate(reversed(attendance_rows), start=1)
@@ -219,22 +250,40 @@ def get_supervisor_intern_profile(supervisor_id, classroom_id, student_id):
             remaining_hours = max(required_hours - rendered_hours, 0.0)
             progress_percentage = min((rendered_hours / required_hours) * 100.0, 100.0)
 
-        log_rows = conn.execute(
-            """
-            SELECT l.id, a.id AS attendance_id, a.clock_in, a.status,
-                   COALESCE(l.accomplishment, l.content, '') AS accomplishment,
-                   COALESCE(lr.status, '') AS review_status,
-                   (SELECT COUNT(*) FROM logbook_photos lp WHERE lp.log_id = l.id) AS photo_count
-            FROM logs l
-            JOIN attendance a ON a.id = l.attendance_id
-            LEFT JOIN logbook_reviews lr ON lr.log_id = l.id
-            WHERE l.student_id = ?
-              AND l.entry_type = 'daily'
-              AND a.classroom_id = ?
-            ORDER BY a.clock_in DESC, l.id DESC
-            """,
-            (student_id, classroom_id),
-        ).fetchall()
+        if use_legacy_attendance:
+            log_rows = conn.execute(
+                """
+                SELECT l.id, a.id AS attendance_id, a.clock_in, a.status,
+                       COALESCE(l.accomplishment, l.content, '') AS accomplishment,
+                       COALESCE(lr.status, '') AS review_status,
+                       (SELECT COUNT(*) FROM logbook_photos lp WHERE lp.log_id = l.id) AS photo_count
+                FROM logs l
+                JOIN attendance a ON a.id = l.attendance_id
+                LEFT JOIN logbook_reviews lr ON lr.log_id = l.id
+                WHERE l.student_id = ?
+                  AND l.entry_type = 'daily'
+                  AND a.classroom_id IS NULL
+                ORDER BY a.clock_in DESC, l.id DESC
+                """,
+                (student_id,),
+            ).fetchall()
+        else:
+            log_rows = conn.execute(
+                """
+                SELECT l.id, a.id AS attendance_id, a.clock_in, a.status,
+                       COALESCE(l.accomplishment, l.content, '') AS accomplishment,
+                       COALESCE(lr.status, '') AS review_status,
+                       (SELECT COUNT(*) FROM logbook_photos lp WHERE lp.log_id = l.id) AS photo_count
+                FROM logs l
+                JOIN attendance a ON a.id = l.attendance_id
+                LEFT JOIN logbook_reviews lr ON lr.log_id = l.id
+                WHERE l.student_id = ?
+                  AND l.entry_type = 'daily'
+                  AND a.classroom_id = ?
+                ORDER BY a.clock_in DESC, l.id DESC
+                """,
+                (student_id, classroom_id),
+            ).fetchall()
 
         logbook_entries = []
         logbook_counts = {
