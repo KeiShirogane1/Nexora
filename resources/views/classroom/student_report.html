@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Performance Report - {{ classroom.name }} - Nexora</title>
+    <title>Work Performance Report - {{ classroom.name }} - Nexora</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
@@ -101,12 +101,16 @@
             <header class="student-section-heading" aria-labelledby="report-heading">
                 <div>
                     <span class="student-section-eyebrow">Student Portal</span>
-                    <h1 id="report-heading">Performance Report</h1>
+                    <h1 id="report-heading">Work Performance Report</h1>
                     <p>{{ classroom.section }} · Supervisor: {{ classroom.supervisor }} · {{ report.student.username }}</p>
-                    <p class="text-muted small">This report summarizes Work scoring and feedback analysis only. Attendance/OJT Hours, Daily Performance, Logbook, and Official Evaluation are separate evidence dimensions.</p>
+                    <p class="text-muted small">This student report contains Work/gradebook scoring and Work-related feedback analytics only. Attendance/OJT Hours, Daily Performance, Logbook, and Official Evaluation are separate OJT evidence dimensions and are not combined into this result.</p>
                 </div>
                 <div>
-                    <span class="student-report-label {% if report.performance_label == 'Excellent' %}is-excellent{% elif report.performance_label == 'Very Satisfactory' %}is-very-satisfactory{% elif report.performance_label == 'Satisfactory' %}is-satisfactory{% elif report.performance_label == 'Fair' %}is-fair{% else %}is-needs-improvement{% endif %}">{{ report.performance_label }}</span>
+                    {% if report.overall_percentage is none %}
+                        <span class="student-report-label is-needs-improvement">No Work Performance Data</span>
+                    {% else %}
+                        <span class="student-report-label {% if report.performance_label == 'Excellent' %}is-excellent{% elif report.performance_label == 'Very Satisfactory' %}is-very-satisfactory{% elif report.performance_label == 'Satisfactory' %}is-satisfactory{% elif report.performance_label == 'Fair' %}is-fair{% else %}is-needs-improvement{% endif %}">{{ report.performance_label }}</span>
+                    {% endif %}
                 </div>
             </header>
 
@@ -123,38 +127,40 @@
                         <tr><th>Work completion</th><td>{{ "%.1f"|format(report.completion_rate) }}%</td></tr>
                         <tr><th>Graded assignments</th><td>{{ report.graded_count }}</td></tr>
                         <tr><th>Total assignments</th><td>{{ report.total_count }}</td></tr>
-                        <tr><th>Work performance classification</th><td>{{ report.performance_label }}</td></tr>
+                        <tr><th>Work performance classification</th><td>{% if report.overall_percentage is not none %}{{ report.performance_label }}{% else %}No Work Performance Data{% endif %}</td></tr>
                     </tbody>
                 </table>
             </section>
 
             <section class="student-report-card">
-                <h2>ML ANALYSIS</h2>
+                <h2>WORK FEEDBACK ANALYSIS</h2>
                 {% if not report.has_feedback %}
-                    <div class="text-muted small mb-2">No feedback text available — showing default analysis.</div>
+                    <div class="text-muted small mb-2">No supervisor feedback evidence is available yet. Work feedback analysis will appear after feedback is recorded.</div>
+                {% else %}
+                    <table class="student-report-table">
+                        <tbody>
+                            <tr><th>Sentiment</th><td>{{ report.sentiment or '—' }}</td></tr>
+                            <tr><th>Competency</th><td>{{ report.competency or '—' }}</td></tr>
+                            <tr><th>Model-derived Work classification</th><td>{{ report.performance_label }}</td></tr>
+                        </tbody>
+                    </table>
                 {% endif %}
+            </section>
+
+            <section class="student-report-card">
+                <h2>WORK RECOMMENDATION</h2>
+                <p class="text-muted small">This recommendation is based on Work/gradebook and available feedback evidence. It is not an Official OJT Evaluation.</p>
                 <table class="student-report-table">
                     <tbody>
-                        <tr><th>Sentiment</th><td>{{ report.sentiment or '—' }}</td></tr>
-                        <tr><th>Competency</th><td>{{ report.competency or '—' }}</td></tr>
-                        <tr><th>Model-derived Work classification</th><td>{{ report.performance_label }}</td></tr>
+                        <tr><th>Recommendation text</th><td style="color:#334155;">{% if report.overall_percentage is none and not report.has_feedback %}No recommendation yet. Reviewed Work or supervisor feedback is needed first.{% else %}{{ report.recommendation }}{% endif %}</td></tr>
+                        <tr><th>Priority</th><td>{% if report.overall_percentage is none and not report.has_feedback %}—{% else %}<span class="student-report-label {% if report.priority == 'low' %}is-satisfactory{% elif report.priority == 'medium' %}is-very-satisfactory{% elif report.priority == 'high' %}is-fair{% else %}is-needs-improvement{% endif %}">{{ report.priority }}</span>{% endif %}</td></tr>
+                        <tr><th>Explainable Work basis</th><td style="color:#64748b;font-size:.82rem;">{% if report.basis %}{{ report.basis|join(" · ") }}{% else %}—{% endif %}</td></tr>
                     </tbody>
                 </table>
             </section>
 
             <section class="student-report-card">
-                <h2>RECOMMENDATION</h2>
-                <table class="student-report-table">
-                    <tbody>
-                        <tr><th>Recommendation text</th><td style="color:#334155;">{{ report.recommendation }}</td></tr>
-                        <tr><th>Priority</th><td><span class="student-report-label {% if report.priority == 'low' %}is-satisfactory{% elif report.priority == 'medium' %}is-very-satisfactory{% elif report.priority == 'high' %}is-fair{% else %}is-needs-improvement{% endif %}">{{ report.priority }}</span></td></tr>
-                        <tr><th>Explainable basis</th><td style="color:#64748b;font-size:.82rem;">{% if report.basis %}{{ report.basis|join(" · ") }}{% else %}—{% endif %}</td></tr>
-                    </tbody>
-                </table>
-            </section>
-
-            <section class="student-report-card">
-                <h2>WORK PERFORMANCE</h2>
+                <h2>WORK ITEMS</h2>
                 {% if not report.assignments %}
                     <div class="text-muted">No data available — no assignments.</div>
                 {% else %}
@@ -196,6 +202,11 @@
                     {% endif %}
                 {% endif %}
             </section>
+
+            <div class="student-report-card">
+                <strong>Evidence boundary:</strong>
+                <span class="text-muted small">This page does not calculate an overall OJT grade and does not generate an Official OJT Evaluation from Work analytics.</span>
+            </div>
         </div>
     </main>
 </body>
