@@ -110,6 +110,52 @@ def format_time(timestamp):
     return dt.strftime("%I:%M %p").lstrip("0")
 
 
+def _get_active_intern_classrooms(cursor, student_id):
+    rows = cursor.execute(
+        """
+        SELECT
+            c.id,
+            c.name,
+            c.section,
+            COALESCE(cid.company_name, '') AS company_name
+        FROM classroom_students cs
+        JOIN classrooms c ON c.id = cs.classroom_id
+        LEFT JOIN classroom_internship_details cid ON cid.classroom_id = c.id
+        WHERE cs.student_id = ?
+          AND c.archived = 0
+          AND COALESCE(c.classroom_type, 'classroom') = 'internship'
+        ORDER BY cs.joined_at DESC, c.id DESC
+        """,
+        (student_id,),
+    ).fetchall()
+
+    classrooms = []
+    for row in rows:
+        classrooms.append({
+            "id": int(row["id"] if "id" in row.keys() else row[0]),
+            "name": row["name"] if "name" in row.keys() else row[1],
+            "section": row["section"] if "section" in row.keys() else row[2],
+            "company_name": row["company_name"] if "company_name" in row.keys() else row[3],
+        })
+    return classrooms
+
+
+def _resolve_classroom_choice(classrooms, raw_classroom_id):
+    if not classrooms:
+        return None
+    if raw_classroom_id not in (None, ""):
+        try:
+            requested_id = int(raw_classroom_id)
+        except (TypeError, ValueError):
+            return None
+        if any(item["id"] == requested_id for item in classrooms):
+            return requested_id
+        return None
+    if len(classrooms) == 1:
+        return classrooms[0]["id"]
+    return None
+
+
 student = Blueprint("student", __name__)
 
 @student.before_request
@@ -401,7 +447,18 @@ def clock_in():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Check if the student already has an open attendance session
+    classrooms = _get_active_intern_classrooms(cursor, session["user_id"])
+    classroom_id = _resolve_classroom_choice(
+        classrooms,
+        request.form.get("classroom_id"),
+    )
+
+    if classrooms and classroom_id is None:
+        conn.close()
+        flash("Choose the Intern Classroom this attendance session belongs to.", "warning")
+        return redirect("/student/logbook")
+
+    # Keep one open session per intern. This also protects legacy open sessions.
     cursor.execute("""
         SELECT id
         FROM attendance
@@ -415,25 +472,28 @@ def clock_in():
         conn.close()
         return redirect("/student/logbook")
 
-    # Create a new attendance session
-
-    clock_in = datetime.now()
+    # Create a new attendance session scoped to the selected Intern Classroom.
+    clock_in_time = datetime.now()
     cursor.execute("""
         INSERT INTO attendance (
             student_id,
+            classroom_id,
             clock_in,
             status
         )
         VALUES (
             ?,
             ?,
+            ?,
             ?
         )
-    """, (session["user_id"], clock_in, "Open"))
+    """, (session["user_id"], classroom_id, clock_in_time, "Open"))
 
     conn.commit()
     conn.close()
 
+    if classroom_id is not None:
+        return redirect(f"/student/logbook?classroom_id={classroom_id}")
     return redirect("/student/logbook")
 
 @student.route("/student/logbook")
@@ -443,10 +503,13 @@ def logbook():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Current attendance session
+    classrooms = _get_active_intern_classrooms(cursor, session["user_id"])
+
+    # Any existing open session remains authoritative, including a legacy NULL-scoped one.
     cursor.execute("""
         SELECT
             id,
+            classroom_id,
             clock_in,
             clock_out,
             hours_rendered,
@@ -454,22 +517,38 @@ def logbook():
         FROM attendance
         WHERE student_id = ?
         AND status = 'Open'
+        ORDER BY clock_in DESC
+        LIMIT 1
     """, (session["user_id"],))
+    open_attendance = cursor.fetchone()
 
-    attendance = cursor.fetchone()
+    selected_classroom_id = None
+    if open_attendance and open_attendance[1] is not None:
+        try:
+            selected_classroom_id = int(open_attendance[1])
+        except (TypeError, ValueError):
+            selected_classroom_id = None
+    elif not open_attendance:
+        selected_classroom_id = _resolve_classroom_choice(
+            classrooms,
+            request.args.get("classroom_id"),
+        )
 
+    selected_classroom = next(
+        (item for item in classrooms if item["id"] == selected_classroom_id),
+        None,
+    )
+
+    attendance = None
     logs = []
-
-    attendance = (
-    attendance[0],
-    format_time(attendance[1]),
-    format_time(attendance[2]),
-    attendance[3],
-    attendance[4]
-    ) if attendance else None
-
-    # Load logs only if an open session exists
-    if attendance:
+    if open_attendance:
+        attendance = (
+            open_attendance[0],
+            format_time(open_attendance[2]),
+            format_time(open_attendance[3]),
+            open_attendance[4],
+            open_attendance[5],
+        )
 
         cursor.execute("""
             SELECT id, content, created_at
@@ -489,48 +568,69 @@ def logbook():
             for log in logs
         ]
 
-    # Attendance history with pagination
     page = request.args.get("page", 1, type=int)
     per_page = 10
-    offset = (page - 1) * per_page
 
-    cursor.execute("""
-        SELECT COUNT(*)
-        FROM attendance
-        WHERE student_id = ?
-    """, (session["user_id"],))
-    total_history = cursor.fetchone()[0]
-    total_pages = max(1, (total_history + per_page - 1) // per_page)
-    page = max(1, min(page, total_pages))
-    offset = (page - 1) * per_page
+    history_filter = None
+    history_params = []
+    if selected_classroom_id is not None:
+        history_filter = "student_id = ? AND classroom_id = ?"
+        history_params = [session["user_id"], selected_classroom_id]
+    elif not classrooms:
+        # Legacy fallback for users who have not joined an Intern Classroom yet.
+        history_filter = "student_id = ? AND classroom_id IS NULL"
+        history_params = [session["user_id"]]
 
-    cursor.execute("""
-        SELECT id, clock_in, clock_out, hours_rendered, status
-        FROM attendance
-        WHERE student_id = ?
-        ORDER BY clock_in DESC
-        LIMIT ? OFFSET ?
-    """, (session["user_id"], per_page, offset))
+    history = []
+    total_history = 0
+    total_hours_all = 0
 
-    history = cursor.fetchall()
-
-    history = [
-        (
-            record[0],
-            format_time(record[1]),
-            format_time(record[2]),
-            record[3],
-            record[4]
+    if history_filter:
+        cursor.execute(
+            f"SELECT COUNT(*) FROM attendance WHERE {history_filter}",
+            tuple(history_params),
         )
-        for record in history
-    ]
+        total_history = int(cursor.fetchone()[0] or 0)
 
-    cursor.execute("""
-        SELECT COALESCE(SUM(hours_rendered), 0)
-        FROM attendance
-        WHERE student_id = ? AND status = 'Completed'
-    """, (session["user_id"],))
-    total_hours_all = cursor.fetchone()[0]
+        total_pages = max(1, (total_history + per_page - 1) // per_page)
+        page = max(1, min(page, total_pages))
+        offset = (page - 1) * per_page
+
+        cursor.execute(
+            f"""
+            SELECT id, clock_in, clock_out, hours_rendered, status
+            FROM attendance
+            WHERE {history_filter}
+            ORDER BY clock_in DESC
+            LIMIT ? OFFSET ?
+            """,
+            tuple(history_params + [per_page, offset]),
+        )
+        history_rows = cursor.fetchall()
+
+        history = [
+            (
+                record[0],
+                format_time(record[1]),
+                format_time(record[2]),
+                record[3],
+                record[4]
+            )
+            for record in history_rows
+        ]
+
+        cursor.execute(
+            f"""
+            SELECT COALESCE(SUM(hours_rendered), 0)
+            FROM attendance
+            WHERE {history_filter} AND status = 'Completed'
+            """,
+            tuple(history_params),
+        )
+        total_hours_all = cursor.fetchone()[0] or 0
+    else:
+        total_pages = 1
+        page = 1
 
     conn.close()
 
@@ -544,7 +644,11 @@ def logbook():
         page=page,
         total_pages=total_pages,
         total_history=total_history,
-        total_hours_all=total_hours_all
+        total_hours_all=total_hours_all,
+        classroom_options=classrooms,
+        selected_classroom_id=selected_classroom_id,
+        selected_classroom=selected_classroom,
+        requires_classroom_selection=bool(classrooms and selected_classroom_id is None and not open_attendance),
     )
 
 @student.route("/student/clock-out", methods=["POST"])
@@ -554,14 +658,17 @@ def clock_out():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Find the student's current open attendance
+    # Find the student's current open attendance and retain its classroom scope.
     cursor.execute("""
         SELECT
             id,
-            clock_in
+            clock_in,
+            classroom_id
         FROM attendance
         WHERE student_id = ?
         AND status = 'Open'
+        ORDER BY clock_in DESC
+        LIMIT 1
     """, (session["user_id"],))
 
     attendance = cursor.fetchone()
@@ -571,14 +678,14 @@ def clock_out():
         return redirect("/student/logbook")
 
     attendance_id = attendance[0]
-    clock_in = parse_datetime(attendance[1])
-    
+    clock_in_time = parse_datetime(attendance[1])
+    classroom_id = attendance[2]
     current_time = datetime.now()
 
     hours_rendered = max(
         0,
         round(
-        (current_time - clock_in).total_seconds() / 3600,
+        (current_time - clock_in_time).total_seconds() / 3600,
         2
     )
     )
@@ -586,24 +693,41 @@ def clock_out():
     cursor.execute("""
         UPDATE attendance
         SET clock_out = ?, hours_rendered = ?, status = 'Completed'
-        WHERE id = ?
+        WHERE id = ? AND student_id = ?
     """, (
         current_time,
         hours_rendered,
-        attendance_id
+        attendance_id,
+        session["user_id"],
     ))
 
-    # Roll up completed hours to internships (keep student dashboard internship completed_hours in sync)
-    try:
-        cursor.execute("SELECT COALESCE(SUM(hours_rendered),0) FROM attendance WHERE student_id = ? AND status='Completed'", (session["user_id"],))
-        total_hours = cursor.fetchone()[0] or 0
-        cursor.execute("UPDATE internships SET completed_hours = ? WHERE student_id = ?", (total_hours, session["user_id"]))
-    except Exception as e:
-        print("hours rollup failed:", e)
+    # Preserve the legacy internship rollup only for legacy unscoped attendance.
+    # Scoped Intern Classroom hours stay isolated and are read directly from attendance.
+    if classroom_id is None:
+        try:
+            cursor.execute(
+                """
+                SELECT COALESCE(SUM(hours_rendered), 0)
+                FROM attendance
+                WHERE student_id = ?
+                  AND classroom_id IS NULL
+                  AND status = 'Completed'
+                """,
+                (session["user_id"],),
+            )
+            total_hours = cursor.fetchone()[0] or 0
+            cursor.execute(
+                "UPDATE internships SET completed_hours = ? WHERE student_id = ?",
+                (total_hours, session["user_id"]),
+            )
+        except Exception as e:
+            print("legacy hours rollup failed:", e)
 
     conn.commit()
     conn.close()
 
+    if classroom_id is not None:
+        return redirect(f"/student/logbook?classroom_id={int(classroom_id)}")
     return redirect("/student/logbook")
 
 @student.route("/student/log/add", methods=["POST"])
