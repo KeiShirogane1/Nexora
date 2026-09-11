@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
+    {% include 'components/supervisor_document_styles.html' %}
 </head>
 <body class="supervisor-page supervisor-student-documents-page">
     {% include 'components/supervisor_sidebar.html' %}
@@ -55,7 +56,7 @@
                         <option value="without" {% if document_state == 'without' %}selected{% endif %}>No Documents</option>
                     </select>
                     <div class="supervisor-doc-filter-actions">
-                        <a href="{{ url_for('supervisor.student_documents') }}">Reset</a>
+                        <a href="{{ url_for('supervisor_documents.student_documents') }}">Reset</a>
                         <button type="submit">Apply</button>
                     </div>
                 </form>
@@ -89,7 +90,7 @@
                                             <td>{{ student.major_program or '—' }}</td>
                                             <td><span class="supervisor-doc-count">▤ {{ student.document_count }}</span></td>
                                             <td>{{ student.last_upload }}</td>
-                                            <td><a class="supervisor-doc-view-button" href="{{ url_for('supervisor.student_document_folder', student_id=student.id) }}">View Documents</a></td>
+                                            <td><a class="supervisor-doc-view-button" href="{{ url_for('supervisor_documents.student_document_folder', student_id=student.id) }}">View Documents</a></td>
                                         </tr>
                                     {% endfor %}
                                 </tbody>
