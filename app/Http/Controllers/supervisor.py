@@ -88,16 +88,17 @@ def supervisor_dashboard():
 
     supervisor_id = session["user_id"]
 
+    # Reuse the classroom-first Assigned Interns read model so dashboard
+    # summary counts match the rest of the Supervisor portal. Legacy admin
+    # assignments remain a compatibility fallback inside the service.
+    from app.Services.assigned_interns_service import get_supervisor_assigned_interns
 
-    # Count assigned interns
-    cursor.execute("""
-        SELECT COUNT(*)
-        FROM student_assignments
-        WHERE supervisor_id = ?
-    """, (supervisor_id,))
-
-    total_interns = cursor.fetchone()[0]
-
+    dashboard_context = get_supervisor_assigned_interns(supervisor_id)
+    dashboard_summary = dashboard_context["summary"]
+    total_interns = dashboard_summary["total_interns"]
+    active_classrooms = dashboard_summary["classroom_count"]
+    pending_reviews = dashboard_summary["pending_reviews"]
+    dashboard_classrooms = dashboard_context["classrooms"]
 
     # Count active attendance sessions. New scoped sessions belong to the
     # supervisor through their Intern Classroom; legacy NULL-scoped sessions
@@ -251,7 +252,10 @@ def supervisor_dashboard():
         active_page="dashboard",
 
         total_interns=total_interns,
+        active_classrooms=active_classrooms,
         active_sessions=active_sessions,
+        pending_reviews=pending_reviews,
+        dashboard_classrooms=dashboard_classrooms,
         active_interns=active_interns,
         acts=acts,
         recent_tasks=recent_tasks
