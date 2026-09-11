@@ -393,10 +393,12 @@
             font-size: .67rem;
             font-weight: 900;
         }
-        .student-document-preview-modal[hidden] {
+        .student-document-preview-modal[hidden],
+        .student-document-remove-modal[hidden] {
             display: none !important;
         }
-        .student-document-preview-modal {
+        .student-document-preview-modal,
+        .student-document-remove-modal {
             position: fixed;
             inset: 0;
             z-index: 9999;
@@ -483,6 +485,85 @@
             color: #bdf0cf;
             font-weight: 800;
         }
+        .student-document-remove-dialog {
+            width: min(430px, 92vw);
+            overflow: hidden;
+            border: 1px solid #eadede;
+            border-radius: 14px;
+            background: #fff;
+            box-shadow: 0 24px 60px rgba(49, 15, 15, .2);
+        }
+        .student-document-remove-body {
+            padding: 24px 24px 18px;
+            text-align: center;
+        }
+        .student-document-remove-icon {
+            width: 52px;
+            height: 52px;
+            display: grid;
+            place-items: center;
+            margin: 0 auto 14px;
+            border-radius: 50%;
+            background: #fff0f0;
+            color: #c92f2f;
+            font-size: 24px;
+            font-weight: 900;
+        }
+        .student-document-remove-body h2 {
+            margin: 0;
+            color: #172a21;
+            font-size: 1.05rem;
+            font-weight: 800;
+        }
+        .student-document-remove-body p {
+            margin: 8px 0 0;
+            color: #66776e;
+            font-size: .78rem;
+            line-height: 1.5;
+        }
+        .student-document-remove-name {
+            display: block;
+            max-width: 100%;
+            margin-top: 8px;
+            overflow: hidden;
+            color: #31483d;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: .76rem;
+            font-weight: 800;
+        }
+        .student-document-remove-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 9px;
+            padding: 14px 16px;
+            border-top: 1px solid #ece7e7;
+            background: #fcfbfb;
+        }
+        .student-document-remove-cancel,
+        .student-document-remove-confirm {
+            min-height: 36px;
+            padding: 0 14px;
+            border-radius: 8px;
+            font: inherit;
+            font-size: .73rem;
+            font-weight: 800;
+            cursor: pointer;
+        }
+        .student-document-remove-cancel {
+            border: 1px solid #dce4df;
+            background: #fff;
+            color: #455b50;
+        }
+        .student-document-remove-confirm {
+            border: 1px solid #c92f2f;
+            background: #c92f2f;
+            color: #fff;
+        }
+        .student-document-remove-confirm:hover {
+            border-color: #b42323;
+            background: #b42323;
+        }
         .student-documents-pagination {
             display: flex;
             align-items: center;
@@ -530,8 +611,16 @@
             .student-document-upload-button {
                 width: 100%;
             }
-            .student-document-preview-modal {
+            .student-document-preview-modal,
+            .student-document-remove-modal {
                 padding: 10px;
+            }
+            .student-document-remove-footer {
+                flex-direction: column-reverse;
+            }
+            .student-document-remove-cancel,
+            .student-document-remove-confirm {
+                width: 100%;
             }
         }
     </style>
@@ -636,7 +725,7 @@
                                                 {% else %}
                                                     <a class="student-document-action" href="/student/document/{{ doc[0] }}" target="_blank" rel="noopener">↗ Open</a>
                                                 {% endif %}
-                                                <form method="POST" action="/student/document/{{ doc[0] }}/delete" class="js-document-remove-form">
+                                                <form method="POST" action="/student/document/{{ doc[0] }}/delete" class="js-document-remove-form" data-document-name="{{ display_name }}">
                                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                     <button type="submit" class="student-document-action is-remove">▣ Remove</button>
                                                 </form>
@@ -717,6 +806,21 @@
         </div>
     </div>
 
+    <div class="student-document-remove-modal" id="document-remove-modal" hidden aria-hidden="true">
+        <div class="student-document-remove-dialog" role="dialog" aria-modal="true" aria-labelledby="document-remove-title" aria-describedby="document-remove-description">
+            <div class="student-document-remove-body">
+                <div class="student-document-remove-icon" aria-hidden="true">!</div>
+                <h2 id="document-remove-title">Remove document?</h2>
+                <p id="document-remove-description">This file will be removed from your Nexora documents.</p>
+                <strong class="student-document-remove-name" id="document-remove-name"></strong>
+            </div>
+            <div class="student-document-remove-footer">
+                <button type="button" class="student-document-remove-cancel" id="document-remove-cancel">Cancel</button>
+                <button type="button" class="student-document-remove-confirm" id="document-remove-confirm">Remove Document</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         (function () {
             const modal = document.getElementById('document-preview-modal');
@@ -729,6 +833,11 @@
             const fallbackLink = document.getElementById('document-preview-open');
             const fileInput = document.getElementById('document-file');
             const fileName = document.getElementById('document-file-name');
+            const removeModal = document.getElementById('document-remove-modal');
+            const removeName = document.getElementById('document-remove-name');
+            const removeCancel = document.getElementById('document-remove-cancel');
+            const removeConfirm = document.getElementById('document-remove-confirm');
+            let pendingRemoveForm = null;
 
             function resetPreview() {
                 frame.hidden = true;
@@ -742,6 +851,14 @@
                 resetPreview();
                 modal.hidden = true;
                 modal.setAttribute('aria-hidden', 'true');
+                document.body.style.overflow = '';
+            }
+
+            function closeRemoveModal() {
+                removeModal.hidden = true;
+                removeModal.setAttribute('aria-hidden', 'true');
+                pendingRemoveForm = null;
+                removeName.textContent = '';
                 document.body.style.overflow = '';
             }
 
@@ -778,16 +895,37 @@
             modal.addEventListener('click', function (event) {
                 if (event.target === modal) closePreview();
             });
-            document.addEventListener('keydown', function (event) {
-                if (event.key === 'Escape' && !modal.hidden) closePreview();
-            });
 
             document.querySelectorAll('.js-document-remove-form').forEach(function (form) {
                 form.addEventListener('submit', function (event) {
-                    if (!window.confirm('Remove this document from Nexora?')) {
-                        event.preventDefault();
-                    }
+                    event.preventDefault();
+                    pendingRemoveForm = form;
+                    removeName.textContent = form.dataset.documentName || 'Selected document';
+                    removeModal.hidden = false;
+                    removeModal.setAttribute('aria-hidden', 'false');
+                    document.body.style.overflow = 'hidden';
+                    removeCancel.focus();
                 });
+            });
+
+            removeCancel.addEventListener('click', closeRemoveModal);
+            removeModal.addEventListener('click', function (event) {
+                if (event.target === removeModal) closeRemoveModal();
+            });
+            removeConfirm.addEventListener('click', function () {
+                if (!pendingRemoveForm) return;
+                const form = pendingRemoveForm;
+                closeRemoveModal();
+                form.submit();
+            });
+
+            document.addEventListener('keydown', function (event) {
+                if (event.key !== 'Escape') return;
+                if (!removeModal.hidden) {
+                    closeRemoveModal();
+                } else if (!modal.hidden) {
+                    closePreview();
+                }
             });
 
             if (fileInput && fileName) {
