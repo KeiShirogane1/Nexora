@@ -8,13 +8,14 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
+    {% include 'components/supervisor_document_styles.html' %}
 </head>
 <body class="supervisor-page supervisor-student-document-folder-page">
     {% include 'components/supervisor_sidebar.html' %}
 
     <main class="page-content supervisor-document-folder-page">
         <div class="nexora-page supervisor-document-folder-shell">
-            <a class="supervisor-doc-back" href="{{ url_for('supervisor.student_documents') }}">← Back to Student Documents</a>
+            <a class="supervisor-doc-back" href="{{ url_for('supervisor_documents.student_documents') }}">← Back to Student Documents</a>
 
             <header class="sp-heading supervisor-doc-folder-heading">
                 <div>
@@ -55,7 +56,7 @@
                                 <thead><tr><th>#</th><th>Document</th><th>Type</th><th>Size</th><th>Uploaded</th><th>Actions</th></tr></thead>
                                 <tbody>
                                 {% for document in documents %}
-                                    {% set document_url = url_for('supervisor.view_student_document', student_id=student.id, document_id=document.id) %}
+                                    {% set document_url = url_for('supervisor_documents.view_student_document', student_id=student.id, document_id=document.id) %}
                                     <tr>
                                         <td>{{ loop.index }}</td>
                                         <td><strong>{{ document.filename }}</strong></td>
