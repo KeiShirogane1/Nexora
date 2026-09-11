@@ -157,7 +157,7 @@
         }
         .student-documents-table {
             width: 100%;
-            min-width: 850px;
+            min-width: 900px;
             border-collapse: collapse;
         }
         .student-documents-table th {
@@ -274,6 +274,17 @@
         }
         .student-document-action:hover {
             background: #eaf8ef;
+        }
+        body.student-documents-page .student-document-actions .student-document-action.is-rename {
+            border-color: #8db8df !important;
+            background: #f6faff !important;
+            color: #25649a !important;
+            box-shadow: none !important;
+        }
+        body.student-documents-page .student-document-actions .student-document-action.is-rename:hover {
+            border-color: #6ea1cf !important;
+            background: #edf6ff !important;
+            color: #1f5685 !important;
         }
         body.student-documents-page .student-document-actions .student-document-action.is-remove {
             border-color: #e06464 !important;
@@ -394,10 +405,12 @@
             font-weight: 900;
         }
         .student-document-preview-modal[hidden],
+        .student-document-rename-modal[hidden],
         .student-document-remove-modal[hidden] {
             display: none !important;
         }
         .student-document-preview-modal,
+        .student-document-rename-modal,
         .student-document-remove-modal {
             position: fixed;
             inset: 0;
@@ -485,12 +498,110 @@
             color: #bdf0cf;
             font-weight: 800;
         }
+        .student-document-rename-dialog,
         .student-document-remove-dialog {
             width: min(430px, 92vw);
             overflow: hidden;
-            border: 1px solid #eadede;
             border-radius: 14px;
             background: #fff;
+        }
+        .student-document-rename-dialog {
+            border: 1px solid #dce8f2;
+            box-shadow: 0 24px 60px rgba(15, 42, 64, .2);
+        }
+        .student-document-rename-body {
+            padding: 22px 22px 18px;
+        }
+        .student-document-rename-body h2 {
+            margin: 0;
+            color: #172a21;
+            font-size: 1.05rem;
+            font-weight: 800;
+        }
+        .student-document-rename-body p {
+            margin: 7px 0 16px;
+            color: #66776e;
+            font-size: .76rem;
+            line-height: 1.45;
+        }
+        .student-document-rename-label {
+            display: block;
+            margin-bottom: 7px;
+            color: #31483d;
+            font-size: .72rem;
+            font-weight: 800;
+        }
+        .student-document-rename-field {
+            display: flex;
+            align-items: stretch;
+            overflow: hidden;
+            border: 1px solid #cfdcd5;
+            border-radius: 8px;
+            background: #fff;
+        }
+        .student-document-rename-field:focus-within {
+            border-color: #6ea1cf;
+            box-shadow: 0 0 0 3px rgba(86, 149, 203, .12);
+        }
+        .student-document-rename-field input {
+            min-width: 0;
+            flex: 1 1 auto;
+            padding: 9px 10px;
+            border: 0;
+            outline: 0;
+            color: #172a21;
+            background: transparent;
+            font: inherit;
+            font-size: .78rem;
+        }
+        .student-document-rename-extension {
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            border-left: 1px solid #e1e8e4;
+            background: #f7faf8;
+            color: #5d7066;
+            font-size: .75rem;
+            font-weight: 800;
+        }
+        .student-document-rename-footer,
+        .student-document-remove-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 9px;
+            padding: 14px 16px;
+            border-top: 1px solid #ece7e7;
+            background: #fcfbfb;
+        }
+        .student-document-rename-cancel,
+        .student-document-rename-confirm,
+        .student-document-remove-cancel,
+        .student-document-remove-confirm {
+            min-height: 36px;
+            padding: 0 14px;
+            border-radius: 8px;
+            font: inherit;
+            font-size: .73rem;
+            font-weight: 800;
+            cursor: pointer;
+        }
+        .student-document-rename-cancel,
+        .student-document-remove-cancel {
+            border: 1px solid #dce4df;
+            background: #fff;
+            color: #455b50;
+        }
+        .student-document-rename-confirm {
+            border: 1px solid #2878b8;
+            background: #2878b8;
+            color: #fff;
+        }
+        .student-document-rename-confirm:hover {
+            border-color: #21679e;
+            background: #21679e;
+        }
+        .student-document-remove-dialog {
+            border: 1px solid #eadede;
             box-shadow: 0 24px 60px rgba(49, 15, 15, .2);
         }
         .student-document-remove-body {
@@ -531,29 +642,6 @@
             white-space: nowrap;
             font-size: .76rem;
             font-weight: 800;
-        }
-        .student-document-remove-footer {
-            display: flex;
-            justify-content: flex-end;
-            gap: 9px;
-            padding: 14px 16px;
-            border-top: 1px solid #ece7e7;
-            background: #fcfbfb;
-        }
-        .student-document-remove-cancel,
-        .student-document-remove-confirm {
-            min-height: 36px;
-            padding: 0 14px;
-            border-radius: 8px;
-            font: inherit;
-            font-size: .73rem;
-            font-weight: 800;
-            cursor: pointer;
-        }
-        .student-document-remove-cancel {
-            border: 1px solid #dce4df;
-            background: #fff;
-            color: #455b50;
         }
         .student-document-remove-confirm {
             border: 1px solid #c92f2f;
@@ -612,12 +700,16 @@
                 width: 100%;
             }
             .student-document-preview-modal,
+            .student-document-rename-modal,
             .student-document-remove-modal {
                 padding: 10px;
             }
+            .student-document-rename-footer,
             .student-document-remove-footer {
                 flex-direction: column-reverse;
             }
+            .student-document-rename-cancel,
+            .student-document-rename-confirm,
             .student-document-remove-cancel,
             .student-document-remove-confirm {
                 width: 100%;
@@ -698,6 +790,8 @@
                                 {% for doc in docs %}
                                     {% set display_name = doc[1].split('_', 1)[1] if '_' in doc[1] else doc[1] %}
                                     {% set extension = display_name.rsplit('.', 1)[1]|lower if '.' in display_name else 'file' %}
+                                    {% set rename_base = display_name.rsplit('.', 1)[0] if '.' in display_name else display_name %}
+                                    {% set rename_extension = '.' ~ extension if extension != 'file' else '' %}
                                     <tr>
                                         <td class="student-documents-number">{{ ((page - 1) * 10) + loop.index }}</td>
                                         <td class="student-document-name-cell">
@@ -725,6 +819,14 @@
                                                 {% else %}
                                                     <a class="student-document-action" href="/student/document/{{ doc[0] }}" target="_blank" rel="noopener">↗ Open</a>
                                                 {% endif %}
+                                                <button
+                                                    type="button"
+                                                    class="student-document-action is-rename js-document-rename"
+                                                    data-rename-action="/student/document/{{ doc[0] }}/rename"
+                                                    data-document-name="{{ display_name }}"
+                                                    data-document-base="{{ rename_base }}"
+                                                    data-document-extension="{{ rename_extension }}"
+                                                >✎ Rename</button>
                                                 <form method="POST" action="/student/document/{{ doc[0] }}/delete" class="js-document-remove-form" data-document-name="{{ display_name }}">
                                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                     <button type="submit" class="student-document-action is-remove">▣ Remove</button>
@@ -806,6 +908,26 @@
         </div>
     </div>
 
+    <div class="student-document-rename-modal" id="document-rename-modal" hidden aria-hidden="true">
+        <form class="student-document-rename-dialog" id="document-rename-form" method="POST" role="dialog" aria-modal="true" aria-labelledby="document-rename-title">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="page" value="{{ page }}">
+            <div class="student-document-rename-body">
+                <h2 id="document-rename-title">Rename document</h2>
+                <p>Change the document name. The original file type will stay the same.</p>
+                <label class="student-document-rename-label" for="document-rename-input">Document name</label>
+                <div class="student-document-rename-field">
+                    <input id="document-rename-input" name="filename" type="text" maxlength="120" autocomplete="off" required>
+                    <span class="student-document-rename-extension" id="document-rename-extension"></span>
+                </div>
+            </div>
+            <div class="student-document-rename-footer">
+                <button type="button" class="student-document-rename-cancel" id="document-rename-cancel">Cancel</button>
+                <button type="submit" class="student-document-rename-confirm">Save Name</button>
+            </div>
+        </form>
+    </div>
+
     <div class="student-document-remove-modal" id="document-remove-modal" hidden aria-hidden="true">
         <div class="student-document-remove-dialog" role="dialog" aria-modal="true" aria-labelledby="document-remove-title" aria-describedby="document-remove-description">
             <div class="student-document-remove-body">
@@ -833,6 +955,11 @@
             const fallbackLink = document.getElementById('document-preview-open');
             const fileInput = document.getElementById('document-file');
             const fileName = document.getElementById('document-file-name');
+            const renameModal = document.getElementById('document-rename-modal');
+            const renameForm = document.getElementById('document-rename-form');
+            const renameInput = document.getElementById('document-rename-input');
+            const renameExtension = document.getElementById('document-rename-extension');
+            const renameCancel = document.getElementById('document-rename-cancel');
             const removeModal = document.getElementById('document-remove-modal');
             const removeName = document.getElementById('document-remove-name');
             const removeCancel = document.getElementById('document-remove-cancel');
@@ -851,6 +978,15 @@
                 resetPreview();
                 modal.hidden = true;
                 modal.setAttribute('aria-hidden', 'true');
+                document.body.style.overflow = '';
+            }
+
+            function closeRenameModal() {
+                renameModal.hidden = true;
+                renameModal.setAttribute('aria-hidden', 'true');
+                renameForm.removeAttribute('action');
+                renameInput.value = '';
+                renameExtension.textContent = '';
                 document.body.style.overflow = '';
             }
 
@@ -896,6 +1032,24 @@
                 if (event.target === modal) closePreview();
             });
 
+            document.querySelectorAll('.js-document-rename').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    renameForm.action = button.dataset.renameAction;
+                    renameInput.value = button.dataset.documentBase || '';
+                    renameExtension.textContent = button.dataset.documentExtension || '';
+                    renameModal.hidden = false;
+                    renameModal.setAttribute('aria-hidden', 'false');
+                    document.body.style.overflow = 'hidden';
+                    renameInput.focus();
+                    renameInput.select();
+                });
+            });
+
+            renameCancel.addEventListener('click', closeRenameModal);
+            renameModal.addEventListener('click', function (event) {
+                if (event.target === renameModal) closeRenameModal();
+            });
+
             document.querySelectorAll('.js-document-remove-form').forEach(function (form) {
                 form.addEventListener('submit', function (event) {
                     event.preventDefault();
@@ -921,7 +1075,9 @@
 
             document.addEventListener('keydown', function (event) {
                 if (event.key !== 'Escape') return;
-                if (!removeModal.hidden) {
+                if (!renameModal.hidden) {
+                    closeRenameModal();
+                } else if (!removeModal.hidden) {
                     closeRemoveModal();
                 } else if (!modal.hidden) {
                     closePreview();

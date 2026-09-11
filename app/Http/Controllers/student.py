@@ -1801,6 +1801,69 @@ def update_profile_photo():
     return "OK"
 
 
+@student.route("/student/document/<int:document_id>/rename", methods=["POST"])
+@role_required("student")
+def rename_document(document_id):
+    new_name = (request.form.get("filename") or "").strip()
+    page = (request.form.get("page") or "1").strip()
+
+    if not new_name:
+        flash("Document name is required.", "warning")
+        return redirect(f"/student/documents?page={page}" if page.isdigit() else "/student/documents")
+
+    if len(new_name) > 120:
+        flash("Document name must be 120 characters or fewer.", "warning")
+        return redirect(f"/student/documents?page={page}" if page.isdigit() else "/student/documents")
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        SELECT filename
+        FROM documents
+        WHERE id = ?
+        AND student_id = ?
+        """,
+        (document_id, session["user_id"]),
+    )
+    document = cursor.fetchone()
+
+    if not document:
+        conn.close()
+        return "Document not found.", 404
+
+    current_filename = document[0]
+    current_display_name = current_filename.split("_", 1)[1] if "_" in current_filename else current_filename
+    extension = os.path.splitext(current_display_name)[1]
+
+    safe_name = secure_filename(new_name)
+    if extension and safe_name.lower().endswith(extension.lower()):
+        safe_name = safe_name[:-len(extension)]
+    safe_name = safe_name.strip("._-")
+
+    if not safe_name:
+        conn.close()
+        flash("Enter a valid document name.", "warning")
+        return redirect(f"/student/documents?page={page}" if page.isdigit() else "/student/documents")
+
+    renamed_filename = f"{session['user_id']}_{safe_name}{extension}"
+    cursor.execute(
+        """
+        UPDATE documents
+        SET filename = ?
+        WHERE id = ?
+        AND student_id = ?
+        """,
+        (renamed_filename, document_id, session["user_id"]),
+    )
+    conn.commit()
+    conn.close()
+
+    flash("Document renamed.", "success")
+    return redirect(f"/student/documents?page={page}" if page.isdigit() else "/student/documents")
+
+
 @student.route("/student/document/<int:document_id>/delete", methods=["POST"])
 @role_required("student")
 def delete_document(document_id):
