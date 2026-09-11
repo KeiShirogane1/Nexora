@@ -1,0 +1,273 @@
+{# Shared protected-file fullscreen viewer. Include once per document folder page. #}
+<style id="nx-document-viewer-style">
+.nx-document-viewer[hidden] { display: none !important; }
+.nx-document-viewer {
+    position: fixed;
+    inset: 0;
+    z-index: 4200;
+    display: flex;
+    flex-direction: column;
+    background: rgba(8, 15, 25, .96);
+    color: #fff;
+}
+.nx-document-viewer-toolbar {
+    min-height: 58px;
+    padding: 9px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid rgba(255,255,255,.12);
+    background: rgba(8, 15, 25, .92);
+}
+.nx-document-viewer-title {
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: .86rem;
+    font-weight: 800;
+}
+.nx-document-viewer-actions {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+.nx-document-viewer-button {
+    min-width: 36px;
+    height: 36px;
+    padding: 0 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: 9px;
+    background: rgba(255,255,255,.08);
+    color: #fff;
+    font: inherit;
+    font-size: .78rem;
+    font-weight: 800;
+    cursor: pointer;
+}
+.nx-document-viewer-button:hover,
+.nx-document-viewer-button:focus-visible {
+    background: rgba(255,255,255,.16);
+    outline: none;
+}
+.nx-document-viewer-stage {
+    position: relative;
+    min-height: 0;
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.nx-document-viewer-image-wrap {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    touch-action: none;
+}
+.nx-document-viewer-image-wrap.is-dragging { cursor: grabbing; }
+.nx-document-viewer-image {
+    max-width: 92vw;
+    max-height: calc(100vh - 82px);
+    object-fit: contain;
+    user-select: none;
+    -webkit-user-drag: none;
+    transform-origin: center center;
+    transition: transform .08s ease-out;
+}
+.nx-document-viewer-frame {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    background: #fff;
+}
+.nx-document-viewer-hint {
+    position: absolute;
+    left: 50%;
+    bottom: 12px;
+    transform: translateX(-50%);
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(0,0,0,.55);
+    color: rgba(255,255,255,.88);
+    font-size: .68rem;
+    pointer-events: none;
+}
+@media (max-width: 640px) {
+    .nx-document-viewer-toolbar { min-height: 52px; padding: 7px 9px; }
+    .nx-document-viewer-title { font-size: .75rem; }
+    .nx-document-viewer-button { min-width: 32px; height: 32px; padding: 0 8px; }
+}
+</style>
+
+<div class="nx-document-viewer" id="nxDocumentViewer" role="dialog" aria-modal="true" aria-label="Document fullscreen viewer" hidden>
+    <div class="nx-document-viewer-toolbar">
+        <div class="nx-document-viewer-title" id="nxDocumentViewerTitle">Document Preview</div>
+        <div class="nx-document-viewer-actions">
+            <button type="button" class="nx-document-viewer-button" id="nxDocumentZoomOut" aria-label="Zoom out">−</button>
+            <button type="button" class="nx-document-viewer-button" id="nxDocumentZoomReset" aria-label="Reset zoom">100%</button>
+            <button type="button" class="nx-document-viewer-button" id="nxDocumentZoomIn" aria-label="Zoom in">+</button>
+            <button type="button" class="nx-document-viewer-button" id="nxDocumentViewerClose" aria-label="Close fullscreen preview">✕</button>
+        </div>
+    </div>
+    <div class="nx-document-viewer-stage" id="nxDocumentViewerStage">
+        <div class="nx-document-viewer-image-wrap" id="nxDocumentImageWrap" hidden>
+            <img class="nx-document-viewer-image" id="nxDocumentViewerImage" alt="Document preview">
+        </div>
+        <iframe class="nx-document-viewer-frame" id="nxDocumentViewerFrame" title="Document preview" hidden></iframe>
+        <div class="nx-document-viewer-hint" id="nxDocumentViewerHint" hidden>Mouse wheel or + / − to zoom · drag to pan · Esc to close</div>
+    </div>
+</div>
+
+<script>
+(function () {
+    var viewer = document.getElementById('nxDocumentViewer');
+    if (!viewer || viewer.dataset.ready === 'true') return;
+    viewer.dataset.ready = 'true';
+
+    var title = document.getElementById('nxDocumentViewerTitle');
+    var closeButton = document.getElementById('nxDocumentViewerClose');
+    var zoomOut = document.getElementById('nxDocumentZoomOut');
+    var zoomReset = document.getElementById('nxDocumentZoomReset');
+    var zoomIn = document.getElementById('nxDocumentZoomIn');
+    var stage = document.getElementById('nxDocumentViewerStage');
+    var imageWrap = document.getElementById('nxDocumentImageWrap');
+    var image = document.getElementById('nxDocumentViewerImage');
+    var frame = document.getElementById('nxDocumentViewerFrame');
+    var hint = document.getElementById('nxDocumentViewerHint');
+    var scale = 1;
+    var offsetX = 0;
+    var offsetY = 0;
+    var dragging = false;
+    var dragStartX = 0;
+    var dragStartY = 0;
+    var dragOriginX = 0;
+    var dragOriginY = 0;
+    var previousOverflow = '';
+
+    function clampScale(value) {
+        return Math.max(.25, Math.min(5, value));
+    }
+
+    function renderImageTransform() {
+        image.style.transform = 'translate(' + offsetX + 'px,' + offsetY + 'px) scale(' + scale + ')';
+        zoomReset.textContent = Math.round(scale * 100) + '%';
+    }
+
+    function resetImage() {
+        scale = 1;
+        offsetX = 0;
+        offsetY = 0;
+        renderImageTransform();
+    }
+
+    function setZoom(nextScale) {
+        if (imageWrap.hidden) return;
+        scale = clampScale(nextScale);
+        if (scale <= 1) {
+            offsetX = 0;
+            offsetY = 0;
+        }
+        renderImageTransform();
+    }
+
+    function closeViewer() {
+        viewer.hidden = true;
+        imageWrap.hidden = true;
+        frame.hidden = true;
+        hint.hidden = true;
+        image.removeAttribute('src');
+        frame.removeAttribute('src');
+        resetImage();
+        document.body.style.overflow = previousOverflow;
+    }
+
+    function openViewer(options) {
+        options = options || {};
+        var url = options.url || '';
+        if (!url) return;
+        var type = String(options.type || '').toLowerCase();
+        var name = options.name || 'Document Preview';
+        previousOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        title.textContent = name;
+        viewer.hidden = false;
+        imageWrap.hidden = true;
+        frame.hidden = true;
+        hint.hidden = true;
+        resetImage();
+
+        if (type === 'image') {
+            image.src = url;
+            image.alt = name;
+            imageWrap.hidden = false;
+            hint.hidden = false;
+        } else {
+            frame.src = url;
+            frame.hidden = false;
+        }
+        closeButton.focus();
+    }
+
+    closeButton.addEventListener('click', closeViewer);
+    zoomOut.addEventListener('click', function () { setZoom(scale - .25); });
+    zoomIn.addEventListener('click', function () { setZoom(scale + .25); });
+    zoomReset.addEventListener('click', resetImage);
+
+    imageWrap.addEventListener('wheel', function (event) {
+        if (imageWrap.hidden) return;
+        event.preventDefault();
+        setZoom(scale + (event.deltaY < 0 ? .15 : -.15));
+    }, { passive: false });
+
+    imageWrap.addEventListener('pointerdown', function (event) {
+        if (scale <= 1) return;
+        dragging = true;
+        dragStartX = event.clientX;
+        dragStartY = event.clientY;
+        dragOriginX = offsetX;
+        dragOriginY = offsetY;
+        imageWrap.classList.add('is-dragging');
+        imageWrap.setPointerCapture(event.pointerId);
+    });
+    imageWrap.addEventListener('pointermove', function (event) {
+        if (!dragging) return;
+        offsetX = dragOriginX + event.clientX - dragStartX;
+        offsetY = dragOriginY + event.clientY - dragStartY;
+        renderImageTransform();
+    });
+    imageWrap.addEventListener('pointerup', function (event) {
+        dragging = false;
+        imageWrap.classList.remove('is-dragging');
+        try { imageWrap.releasePointerCapture(event.pointerId); } catch (error) {}
+    });
+    imageWrap.addEventListener('pointercancel', function () {
+        dragging = false;
+        imageWrap.classList.remove('is-dragging');
+    });
+
+    stage.addEventListener('click', function (event) {
+        if (event.target === stage) closeViewer();
+    });
+    document.addEventListener('keydown', function (event) {
+        if (viewer.hidden) return;
+        if (event.key === 'Escape') closeViewer();
+        if (event.key === '+' || event.key === '=') setZoom(scale + .25);
+        if (event.key === '-') setZoom(scale - .25);
+        if (event.key === '0') resetImage();
+    });
+
+    window.NexoraDocumentViewer = {
+        open: openViewer,
+        close: closeViewer
+    };
+})();
+</script>
