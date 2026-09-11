@@ -133,47 +133,6 @@ def supervisor_dashboard():
 
     active_sessions = cursor.fetchone()[0]
 
-    # Display active interns with the same scoped ownership rule.
-    cursor.execute("""
-        SELECT
-            u.username,
-            a.clock_in
-        FROM attendance a
-        JOIN users u ON a.student_id = u.id
-        WHERE a.status = 'Open'
-          AND (
-                (
-                    a.classroom_id IS NOT NULL
-                    AND EXISTS (
-                        SELECT 1
-                        FROM classrooms c
-                        WHERE c.id = a.classroom_id
-                          AND c.supervisor_id = ?
-                    )
-                )
-                OR
-                (
-                    a.classroom_id IS NULL
-                    AND EXISTS (
-                        SELECT 1
-                        FROM student_assignments sa
-                        WHERE sa.student_id = a.student_id
-                          AND sa.supervisor_id = ?
-                    )
-                )
-          )
-        ORDER BY a.clock_in ASC
-    """, (supervisor_id, supervisor_id))
-
-    active_interns = cursor.fetchall()
-    active_interns = [
-        (
-            intern[0],
-            format_time(intern[1])
-        )
-        for intern in active_interns
-    ]
-
     def row_value(row, key, index=0, default=None):
         try:
             if key in row.keys():
@@ -361,53 +320,6 @@ def supervisor_dashboard():
     activity_events.sort(key=activity_sort_key, reverse=True)
     recent_activity = activity_events[:6]
 
-    # Latest Work items from Supervisor-owned classrooms. This replaces the
-    # legacy per-student tasks feed and reports real submission attempt counts.
-    recent_work_rows = cursor.execute("""
-        SELECT a.id, a.classroom_id, a.title, a.due_at, a.created_at,
-               c.name AS classroom_name,
-               COALESCE(m.activity_type, 'assignment') AS activity_type,
-               (SELECT COUNT(*) FROM classwork_submissions s
-                WHERE s.assignment_id = a.id) AS submission_count
-        FROM classroom_assignments a
-        JOIN classrooms c ON c.id = a.classroom_id
-        LEFT JOIN classroom_assignment_meta m ON m.assignment_id = a.id
-        WHERE c.supervisor_id = ?
-        ORDER BY a.created_at DESC, a.id DESC
-        LIMIT 5
-    """, (supervisor_id,)).fetchall()
-
-    activity_labels = {
-        "assignment": "Task",
-        "google_form": "Form / Assessment",
-        "google_doc": "Online Work",
-        "file_reference": "Resource",
-        "project": "Project",
-        "group_project": "Team Task",
-    }
-    recent_work = []
-    for row in recent_work_rows:
-        assignment_id = int(row_value(row, "id", 0, 0) or 0)
-        class_id = int(row_value(row, "classroom_id", 1, 0) or 0)
-        activity_type = str(row_value(row, "activity_type", 6, "assignment") or "assignment")
-        submission_count = int(row_value(row, "submission_count", 7, 0) or 0)
-        recent_work.append({
-            "id": assignment_id,
-            "class_id": class_id,
-            "title": row_value(row, "title", 2, "Work"),
-            "due_at": format_datetime(row_value(row, "due_at", 3, None)),
-            "created_at": format_datetime(row_value(row, "created_at", 4, None)),
-            "classroom_name": row_value(row, "classroom_name", 5, "Intern Classroom"),
-            "activity_type": activity_type,
-            "activity_label": activity_labels.get(activity_type, "Work"),
-            "submission_count": submission_count,
-            "url": url_for(
-                "classwork_submissions.supervisor_submissions",
-                class_id=class_id,
-                assignment_id=assignment_id,
-            ),
-        })
-
     # Seven-day activity series for the dashboard chart. Dates are grouped in
     # Python to keep the query portable across SQLite and Postgres.
     now = datetime.now()
@@ -547,9 +459,7 @@ def supervisor_dashboard():
         active_sessions=active_sessions,
         pending_reviews=pending_reviews,
         dashboard_classrooms=dashboard_classrooms,
-        active_interns=active_interns,
         recent_activity=recent_activity,
-        recent_work=recent_work,
         activity_chart=activity_chart,
         dashboard_attention=dashboard_attention,
         new_interns_this_month=int(new_interns_this_month or 0),
