@@ -20,7 +20,20 @@
                         <h1>Work</h1>
                         <p>{% if classroom.company_name %}{{ classroom.company_name }} · {% endif %}{{ classroom.section }} · Create and manage tasks, projects, resources, and other OJT work for your interns.</p>
                     </div>
-                    {% if classroom.archived %}<span class="supervisor-classwork-archived">Archived Intern Classroom</span>{% endif %}
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        {% if classroom.archived %}
+                            <span class="supervisor-classwork-archived">Archived Intern Classroom</span>
+                        {% endif %}
+                        <button
+                            type="button"
+                            class="btn btn-primary d-inline-flex align-items-center gap-2"
+                            aria-controls="createWorkModal"
+                            onclick="openCreateWorkModal()"
+                            {% if classroom.archived %}disabled{% endif %}>
+                            <span aria-hidden="true">＋</span>
+                            <span>Create Work</span>
+                        </button>
+                    </div>
                 </div>
 
                 {% with messages = get_flashed_messages(with_categories=true) %}
@@ -29,162 +42,7 @@
                     {% endfor %}
                 {% endwith %}
 
-                <div class="supervisor-classwork-grid">
-                    <section class="supervisor-classwork-create-card">
-                        <div class="supervisor-classwork-card-heading">
-                            <div>
-                                <span class="supervisor-classwork-eyebrow">NEW WORK</span>
-                                <h2>Create work</h2>
-                                <p>Choose a work type, assign the right interns, then publish.</p>
-                            </div>
-                        </div>
-
-                        <form method="POST" enctype="multipart/form-data" class="supervisor-classwork-form">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-                            <label class="supervisor-form-label">Work type</label>
-                            <div class="supervisor-activity-types">
-                                {% for key, label in activity_types.items() %}
-                                    <label class="supervisor-activity-option">
-                                        <input type="radio" name="activity_type" value="{{ key }}" {% if loop.first %}checked{% endif %}>
-                                        <span>
-                                            <strong>{{ label }}</strong>
-                                            <small>
-                                                {% if key == 'assignment' %}Individual task or day-to-day work responsibility.
-                                                {% elif key == 'google_form' %}Form, check-in, assessment, or structured response.
-                                                {% elif key == 'google_doc' %}Online document, sheet, or linked digital work.
-                                                {% elif key == 'file_reference' %}Guide, file, link, or reference interns should use.
-                                                {% elif key == 'project' %}Longer-term project or major deliverable.
-                                                {% else %}Collaborative work for two or more selected interns.
-                                                {% endif %}
-                                            </small>
-                                        </span>
-                                    </label>
-                                {% endfor %}
-                            </div>
-
-                            <div class="supervisor-resource-box">
-                                <div>
-                                    <strong>Assign to</strong>
-                                    <p>Choose whether everyone or only selected interns should receive this work and its notification.</p>
-                                    <p id="team-task-note" class="text-muted small mb-0" hidden>Team Tasks require at least two selected interns. Choose whether members submit individually or share one team submission.</p>
-                                </div>
-                                <div class="d-grid gap-2">
-                                    <label class="supervisor-check-option">
-                                        <input type="radio" name="assignment_scope" value="classroom" checked>
-                                        <span><strong>Entire Intern Classroom</strong><small>Every enrolled intern can see and complete this work.</small></span>
-                                    </label>
-                                    <label class="supervisor-check-option">
-                                        <input type="radio" name="assignment_scope" value="selected">
-                                        <span><strong>Selected Interns</strong><small>Only the interns you select will see, receive, and be able to submit this work.</small></span>
-                                    </label>
-                                </div>
-
-                                <div id="recipient-picker" class="mt-3" hidden>
-                                    <label class="supervisor-form-label">Select interns</label>
-                                    {% if enrolled_students %}
-                                        <div class="row g-2">
-                                            {% for student in enrolled_students %}
-                                                <div class="col-md-6">
-                                                    <label class="supervisor-check-option h-100">
-                                                        <input type="checkbox" name="recipient_ids" value="{{ student.id }}" disabled>
-                                                        <span>
-                                                            <strong>{{ student.username }}</strong>
-                                                            <small>{{ student.email or 'Enrolled intern' }}</small>
-                                                        </span>
-                                                    </label>
-                                                </div>
-                                            {% endfor %}
-                                        </div>
-                                    {% else %}
-                                        <p class="text-muted small mb-0">No interns are enrolled in this Intern Classroom yet.</p>
-                                    {% endif %}
-
-                                    <div id="team-name-field" class="mt-3" hidden>
-                                        <label class="supervisor-form-label" for="team_name">Team name <span class="text-muted">(optional)</span></label>
-                                        <input id="team_name" name="team_name" class="form-control" maxlength="100" disabled placeholder="e.g. Frontend Team">
-                                        <small class="text-muted">Give this selected group a clear name for this Team Task.</small>
-                                    </div>
-
-                                    <div id="team-submission-field" class="mt-3" hidden>
-                                        <label class="supervisor-form-label">Submission mode</label>
-                                        <div class="d-grid gap-2">
-                                            <label class="supervisor-check-option">
-                                                <input type="radio" name="submission_mode" value="individual" checked disabled>
-                                                <span><strong>Individual submissions</strong><small>Every team member submits and is reviewed separately.</small></span>
-                                            </label>
-                                            <label class="supervisor-check-option">
-                                                <input type="radio" name="submission_mode" value="shared" disabled>
-                                                <span><strong>Shared team submission</strong><small>Any team member can submit one shared output. One supervisor grade applies to every selected member.</small></span>
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="row g-3">
-                                <div class="col-12">
-                                    <label class="supervisor-form-label" for="title">Title</label>
-                                    <input id="title" name="title" class="form-control" maxlength="200" required placeholder="e.g. Weekly Progress Report">
-                                </div>
-                                <div class="col-12">
-                                    <label class="supervisor-form-label" for="description">Instructions</label>
-                                    <textarea id="description" name="description" class="form-control" rows="5" maxlength="5000" placeholder="Explain what interns need to do and what they should submit."></textarea>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="supervisor-form-label" for="due_at">Due date</label>
-                                    <input id="due_at" name="due_at" type="datetime-local" class="form-control">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="supervisor-form-label" for="points">Maximum work score</label>
-                                    <input id="points" name="points" type="number" min="0" max="10000" value="100" class="form-control">
-                                </div>
-                            </div>
-
-                            <div class="supervisor-resource-box">
-                                <div>
-                                    <strong>Link or resource</strong>
-                                    <p>Add a form, shared document, work link, instructions, or reference material.</p>
-                                </div>
-                                <div class="row g-3">
-                                    <div class="col-12">
-                                        <label class="supervisor-form-label" for="external_url">Link</label>
-                                        <input id="external_url" name="external_url" type="url" class="form-control" placeholder="https://...">
-                                    </div>
-                                    <div class="col-md-5">
-                                        <label class="supervisor-form-label" for="resource_label">Link label</label>
-                                        <input id="resource_label" name="resource_label" class="form-control" maxlength="120" placeholder="Open resource / Open work">
-                                    </div>
-                                    <div class="col-md-7">
-                                        <label class="supervisor-form-label" for="resource_file">Reference file</label>
-                                        <input id="resource_file" name="resource_file" type="file" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.png,.jpg,.jpeg,.gif,.zip">
-                                        <small class="text-muted">Maximum 5 MB.</small>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="supervisor-options-row">
-                                <label class="supervisor-check-option">
-                                    <input type="checkbox" name="allow_file_upload" id="allow_file_upload">
-                                    <span><strong>Allow intern submissions</strong><small>Interns can upload photos, PDFs, documents, or other allowed files.</small></span>
-                                </label>
-                                <label class="supervisor-check-option">
-                                    <input type="checkbox" name="group_mode" id="group_mode">
-                                    <span><strong>Collaborative work</strong><small>Marks this as team-oriented work.</small></span>
-                                </label>
-                                <label class="supervisor-group-size-field" for="max_group_size">
-                                    <span>Max team size</span>
-                                    <input id="max_group_size" name="max_group_size" type="number" min="1" max="100" value="1" class="form-control">
-                                </label>
-                            </div>
-
-                            <div class="supervisor-classwork-form-footer">
-                                <a href="{{ url_for('classroom.supervisor_class', class_id=classroom.id) }}" class="btn btn-light">Cancel</a>
-                                <button type="submit" class="btn btn-primary" {% if classroom.archived %}disabled{% endif %}>Create Work</button>
-                            </div>
-                        </form>
-                    </section>
-
+                <div class="supervisor-classwork-grid d-block">
                     <aside class="supervisor-classwork-list-card">
                         <div class="supervisor-classwork-card-heading">
                             <div>
@@ -242,7 +100,180 @@
             </div>
         </main>
 
+        <div
+            id="createWorkModal"
+            class="nexora-modal-overlay"
+            aria-hidden="true"
+            onclick="if(event.target===this)closeCreateWorkModal()">
+            <div class="container-fluid px-0">
+                <div class="row justify-content-center g-0">
+                    <div class="col-12 col-lg-10 col-xl-8 col-xxl-7 px-2">
+                        <div class="nexora-modal mw-100" role="dialog" aria-modal="true" aria-labelledby="createWorkModalTitle">
+                            <div class="nexora-modal-header bg-primary-subtle">
+                                <h2 id="createWorkModalTitle">Create Work</h2>
+                                <p>Choose a work type, assign the right interns, then publish.</p>
+                                <button type="button" class="nexora-modal-close" aria-label="Close Create Work" onclick="closeCreateWorkModal()">×</button>
+                            </div>
+
+                            <form id="createWorkForm" method="POST" enctype="multipart/form-data" class="supervisor-classwork-form">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                                <div class="nexora-modal-body">
+                                    <section>
+                                        <label class="supervisor-form-label">Work type</label>
+                                        <div class="row g-2">
+                                            {% for key, label in activity_types.items() %}
+                                                <label class="supervisor-activity-option col-12 col-md-6 col-xl-4">
+                                                    <input type="radio" name="activity_type" value="{{ key }}" {% if loop.first %}checked{% endif %}>
+                                                    <span>
+                                                        <strong>{{ label }}</strong>
+                                                        <small>
+                                                            {% if key == 'assignment' %}Individual task or day-to-day work responsibility.
+                                                            {% elif key == 'google_form' %}Form, check-in, assessment, or structured response.
+                                                            {% elif key == 'google_doc' %}Online document, sheet, or linked digital work.
+                                                            {% elif key == 'file_reference' %}Guide, file, link, or reference interns should use.
+                                                            {% elif key == 'project' %}Longer-term project or major deliverable.
+                                                            {% else %}Collaborative work for two or more selected interns.
+                                                            {% endif %}
+                                                        </small>
+                                                    </span>
+                                                </label>
+                                            {% endfor %}
+                                        </div>
+                                    </section>
+
+                                    <section class="pt-3 border-top">
+                                        <label class="supervisor-form-label mb-2">Assign to</label>
+                                        <div class="d-flex align-items-center flex-wrap gap-4">
+                                            <label class="form-check d-flex align-items-center gap-2 mb-0">
+                                                <input class="form-check-input mt-0" type="radio" name="assignment_scope" value="classroom" checked>
+                                                <span class="small fw-semibold text-dark">All interns in this class</span>
+                                            </label>
+                                            <label class="form-check d-flex align-items-center gap-2 mb-0">
+                                                <input class="form-check-input mt-0" type="radio" name="assignment_scope" value="selected">
+                                                <span class="small fw-semibold text-dark">Selected interns only</span>
+                                            </label>
+                                        </div>
+                                        <p id="team-task-note" class="text-muted small mt-2 mb-0" hidden>Team Tasks require at least two selected interns. Choose whether members submit individually or share one team submission.</p>
+
+                                        <div id="recipient-picker" class="mt-3" hidden>
+                                            <label class="supervisor-form-label">Select interns</label>
+                                            {% if enrolled_students %}
+                                                <div class="row g-2">
+                                                    {% for student in enrolled_students %}
+                                                        <div class="col-md-6">
+                                                            <label class="supervisor-check-option h-100">
+                                                                <input type="checkbox" name="recipient_ids" value="{{ student.id }}" disabled>
+                                                                <span>
+                                                                    <strong>{{ student.username }}</strong>
+                                                                    <small>{{ student.email or 'Enrolled intern' }}</small>
+                                                                </span>
+                                                            </label>
+                                                        </div>
+                                                    {% endfor %}
+                                                </div>
+                                            {% else %}
+                                                <p class="text-muted small mb-0">No interns are enrolled in this Intern Classroom yet.</p>
+                                            {% endif %}
+
+                                            <div id="team-name-field" class="mt-3" hidden>
+                                                <label class="supervisor-form-label" for="team_name">Team name <span class="text-muted">(optional)</span></label>
+                                                <input id="team_name" name="team_name" class="form-control" maxlength="100" disabled placeholder="e.g. Frontend Team">
+                                                <small class="text-muted">Give this selected group a clear name for this Team Task.</small>
+                                            </div>
+
+                                            <div id="team-submission-field" class="mt-3" hidden>
+                                                <label class="supervisor-form-label">Submission mode</label>
+                                                <div class="row g-2">
+                                                    <div class="col-md-6">
+                                                        <label class="supervisor-check-option h-100">
+                                                            <input type="radio" name="submission_mode" value="individual" checked disabled>
+                                                            <span><strong>Individual submissions</strong><small>Every team member submits and is reviewed separately.</small></span>
+                                                        </label>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="supervisor-check-option h-100">
+                                                            <input type="radio" name="submission_mode" value="shared" disabled>
+                                                            <span><strong>Shared team submission</strong><small>Any team member can submit one shared output. One supervisor grade applies to every selected member.</small></span>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </section>
+
+                                    <section class="pt-3 border-top">
+                                        <div class="row g-3">
+                                            <div class="col-md-8">
+                                                <label class="supervisor-form-label" for="title">Title <span class="text-danger">*</span></label>
+                                                <input id="title" name="title" class="form-control" maxlength="200" required placeholder="Enter work title...">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="supervisor-form-label" for="due_at">Due date</label>
+                                                <input id="due_at" name="due_at" type="datetime-local" class="form-control">
+                                            </div>
+                                            <div class="col-12">
+                                                <label class="supervisor-form-label" for="description">Instructions</label>
+                                                <textarea id="description" name="description" class="form-control" rows="4" maxlength="5000" placeholder="Provide clear instructions, requirements, and expectations..."></textarea>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="supervisor-form-label" for="points">Maximum score</label>
+                                                <input id="points" name="points" type="number" min="0" max="10000" value="100" class="form-control" placeholder="e.g. 100">
+                                            </div>
+                                            <div class="col-md-8">
+                                                <label class="supervisor-form-label" for="external_url">Link <span class="text-muted">(optional)</span></label>
+                                                <input id="external_url" name="external_url" type="url" class="form-control" placeholder="https://...">
+                                            </div>
+                                            <div class="col-md-5">
+                                                <label class="supervisor-form-label" for="resource_label">Link label <span class="text-muted">(optional)</span></label>
+                                                <input id="resource_label" name="resource_label" class="form-control" maxlength="120" placeholder="Open resource / Open work">
+                                            </div>
+                                            <div class="col-md-7">
+                                                <label class="supervisor-form-label" for="resource_file">Attach file <span class="text-muted">(optional)</span></label>
+                                                <input id="resource_file" name="resource_file" type="file" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.png,.jpg,.jpeg,.gif,.zip">
+                                                <small class="text-muted">PDF, documents, spreadsheets, presentations, images, TXT, or ZIP. Maximum 5 MB.</small>
+                                            </div>
+                                        </div>
+                                    </section>
+
+                                    <section class="pt-3 border-top">
+                                        <label class="supervisor-form-label">Submission options</label>
+                                        <div class="row g-2">
+                                            <div class="col-md-5">
+                                                <label class="supervisor-check-option h-100">
+                                                    <input type="checkbox" name="allow_file_upload" id="allow_file_upload">
+                                                    <span><strong>Allow intern submissions</strong><small>Interns can upload photos, PDFs, documents, or other allowed files.</small></span>
+                                                </label>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <label class="supervisor-check-option h-100">
+                                                    <input type="checkbox" name="group_mode" id="group_mode">
+                                                    <span><strong>Collaborative work</strong><small>Marks this as team-oriented work.</small></span>
+                                                </label>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="supervisor-group-size-field h-100 d-block" for="max_group_size">
+                                                    <span>Max team size</span>
+                                                    <input id="max_group_size" name="max_group_size" type="number" min="1" max="100" value="1" class="form-control">
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </section>
+                                </div>
+
+                                <div class="nexora-modal-footer">
+                                    <button type="button" class="btn btn-light" onclick="closeCreateWorkModal()">Cancel</button>
+                                    <button type="submit" class="btn btn-primary" {% if classroom.archived %}disabled{% endif %}>Create Work</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <script>
+            const createWorkModal = document.getElementById("createWorkModal");
             const groupMode = document.getElementById("group_mode");
             const groupSize = document.getElementById("max_group_size");
             const assignmentScopeInputs = document.querySelectorAll('input[name="assignment_scope"]');
@@ -256,6 +287,20 @@
             const teamNameInput = document.getElementById("team_name");
             const teamSubmissionField = document.getElementById("team-submission-field");
             const submissionModeInputs = document.querySelectorAll('input[name="submission_mode"]');
+
+            function openCreateWorkModal() {
+                if (!createWorkModal) return;
+                createWorkModal.classList.add("open");
+                createWorkModal.setAttribute("aria-hidden", "false");
+                document.body.classList.add("modal-open");
+            }
+
+            function closeCreateWorkModal() {
+                if (!createWorkModal) return;
+                createWorkModal.classList.remove("open");
+                createWorkModal.setAttribute("aria-hidden", "true");
+                document.body.classList.remove("modal-open");
+            }
 
             function isTeamTask() {
                 const selectedType = document.querySelector('input[name="activity_type"]:checked');
@@ -312,7 +357,13 @@
             recipientCheckboxes.forEach((checkbox) => checkbox.addEventListener("change", syncGroupSize));
             assignmentScopeInputs.forEach((input) => input.addEventListener("change", syncRecipientPicker));
             activityTypeInputs.forEach((input) => input.addEventListener("change", syncRecipientPicker));
+            document.addEventListener("keydown", (event) => {
+                if (event.key === "Escape" && createWorkModal?.classList.contains("open")) closeCreateWorkModal();
+            });
+
             syncRecipientPicker();
+
+            if (document.querySelector(".alert-danger")) openCreateWorkModal();
         </script>
     </body>
 </html>
