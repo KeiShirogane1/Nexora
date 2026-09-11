@@ -8,6 +8,15 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
+    <style>
+        .student-dashboard-approved-stack {
+            display: grid;
+            gap: 16px;
+        }
+        .student-dashboard-approved-stack > .student-tasks-stats {
+            margin-bottom: 0;
+        }
+    </style>
 </head>
 <body class="student-page student-dashboard-page">
     {% include 'components/student_sidebar.html' %}
@@ -44,7 +53,7 @@
                 </div>
             </section>
 
-            <div class="student-dashboard-right-stack">
+            <div class="student-dashboard-approved-stack">
                 <section class="student-dashboard-quick-actions" aria-label="Attendance status">
                     <div class="student-dashboard-quick-copy">
                         <span class="student-dashboard-quick-icon" aria-hidden="true">◷</span>
@@ -225,7 +234,7 @@
                     <span class="student-dashboard-tip-icon" aria-hidden="true">▥</span>
                     <strong>Performance Insights</strong>
                     <p>
-                        {% if performance.average_percentage is not none %}
+                        {% if performance.average_percentage is defined and performance.average_percentage is not none %}
                             Your supervisor-rated daily performance averages {{ performance.average_percentage }}% across {{ performance.rated_days }} rated day{% if performance.rated_days != 1 %}s{% endif %}.
                         {% else %}
                             Performance insights will appear after your supervisor records daily performance ratings.
