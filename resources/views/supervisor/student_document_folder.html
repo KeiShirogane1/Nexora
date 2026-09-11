@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ student.display_name }} Documents - Nexora Supervisor</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
+</head>
+<body class="supervisor-page supervisor-student-document-folder-page">
+    {% include 'components/supervisor_sidebar.html' %}
+
+    <main class="page-content supervisor-document-folder-page">
+        <div class="nexora-page supervisor-document-folder-shell">
+            <a class="supervisor-doc-back" href="{{ url_for('supervisor.student_documents') }}">← Back to Student Documents</a>
+
+            <header class="sp-heading supervisor-doc-folder-heading">
+                <div>
+                    <span class="ui-eyebrow">Supervisor Portal</span>
+                    <h1>{{ student.display_name }}</h1>
+                    <p>{{ student.student_number or student.username }}{% if student.major_program %} · {{ student.major_program }}{% endif %}{% if student.grade_year %} · {{ student.grade_year }}{% endif %}</p>
+                </div>
+            </header>
+
+            <section class="supervisor-doc-folder-overview">
+                <article class="supervisor-doc-student-card">
+                    <div class="supervisor-doc-avatar">{{ (student.display_name[:2] or 'ST')|upper }}</div>
+                    <div>
+                        <strong>{{ student.display_name }}</strong>
+                        <span>{{ student.email or 'No email provided' }}</span>
+                        <small>{{ documents|length }} document{% if documents|length != 1 %}s{% endif %} · {{ memberships|length }} classroom{% if memberships|length != 1 %}s{% endif %}</small>
+                    </div>
+                </article>
+                <article class="supervisor-doc-memberships-card">
+                    <h2>Your Classroom Memberships ({{ memberships|length }})</h2>
+                    {% for classroom in memberships %}
+                        <div class="supervisor-doc-membership-row">
+                            <span>▧</span>
+                            <div><strong>{{ classroom.name }}{% if classroom.section %} - {{ classroom.section }}{% endif %}</strong><small>{% if classroom.company_name %}{{ classroom.company_name }} · {% endif %}{{ 'Archived' if classroom.archived else 'Active' }}</small></div>
+                        </div>
+                    {% endfor %}
+                </article>
+            </section>
+
+            <section class="supervisor-doc-folder-layout">
+                <article class="supervisor-doc-files-card">
+                    <div class="supervisor-doc-card-heading">
+                        <div><span class="ui-eyebrow">Student Files</span><h2>Documents ({{ documents|length }})</h2></div>
+                    </div>
+                    {% if documents %}
+                        <div class="table-responsive">
+                            <table class="supervisor-doc-table supervisor-doc-folder-table">
+                                <thead><tr><th>#</th><th>Document</th><th>Type</th><th>Size</th><th>Uploaded</th><th>Actions</th></tr></thead>
+                                <tbody>
+                                {% for document in documents %}
+                                    {% set document_url = url_for('supervisor.view_student_document', student_id=student.id, document_id=document.id) %}
+                                    <tr>
+                                        <td>{{ loop.index }}</td>
+                                        <td><strong>{{ document.filename }}</strong></td>
+                                        <td>{{ document.extension|upper }}</td>
+                                        <td>{{ document.size }}</td>
+                                        <td>{{ document.uploaded_at }}</td>
+                                        <td>
+                                            {% if document.available %}
+                                                {% if document.preview_type %}
+                                                    <button type="button" class="supervisor-doc-view-button js-supervisor-doc-preview" data-preview-url="{{ document_url }}" data-preview-name="{{ document.filename }}" data-preview-type="{{ document.preview_type }}">Preview</button>
+                                                {% else %}
+                                                    <a class="supervisor-doc-view-button" href="{{ document_url }}" target="_blank" rel="noopener">Open</a>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="supervisor-doc-unavailable">Unavailable</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="supervisor-doc-empty"><strong>No documents yet</strong><span>This student has not uploaded any files.</span></div>
+                    {% endif %}
+                </article>
+
+                <aside class="supervisor-doc-preview-card">
+                    <div class="supervisor-doc-card-heading"><div><span class="ui-eyebrow">Preview</span><h2>Document Preview</h2></div></div>
+                    <button type="button" class="supervisor-doc-preview-body" id="supervisorDocPreviewBody" disabled aria-label="Open document fullscreen">
+                        <div class="supervisor-doc-preview-placeholder" id="supervisorDocPreviewPlaceholder">
+                            <span class="supervisor-doc-preview-icon">▤</span>
+                            <strong>Select a document to preview</strong>
+                            <small>Images, PDFs, and text files can open fullscreen.</small>
+                        </div>
+                        <img id="supervisorDocPreviewImage" class="supervisor-doc-preview-image" alt="Student document preview" hidden>
+                        <div id="supervisorDocPreviewFile" class="supervisor-doc-preview-file" hidden>
+                            <span>▤</span><strong id="supervisorDocPreviewName"></strong><small>Click to open fullscreen</small>
+                        </div>
+                    </button>
+                </aside>
+            </section>
+        </div>
+    </main>
+
+    {% include 'components/document_fullscreen_viewer.html' %}
+    <script>
+    (function () {
+        var body = document.getElementById('supervisorDocPreviewBody');
+        var placeholder = document.getElementById('supervisorDocPreviewPlaceholder');
+        var image = document.getElementById('supervisorDocPreviewImage');
+        var file = document.getElementById('supervisorDocPreviewFile');
+        var fileName = document.getElementById('supervisorDocPreviewName');
+        var current = null;
+        if (!body) return;
+
+        function selectPreview(button) {
+            current = {
+                url: button.dataset.previewUrl,
+                name: button.dataset.previewName || 'Document Preview',
+                type: button.dataset.previewType || 'file'
+            };
+            placeholder.hidden = true;
+            image.hidden = true;
+            file.hidden = true;
+            if (current.type === 'image') {
+                image.src = current.url;
+                image.alt = current.name;
+                image.hidden = false;
+            } else {
+                fileName.textContent = current.name;
+                file.hidden = false;
+            }
+            body.disabled = false;
+            body.title = 'Open ' + current.name + ' fullscreen';
+        }
+
+        document.querySelectorAll('.js-supervisor-doc-preview').forEach(function (button) {
+            button.addEventListener('click', function () { selectPreview(button); });
+        });
+        body.addEventListener('click', function () {
+            if (!current || !window.NexoraDocumentViewer) return;
+            window.NexoraDocumentViewer.open(current);
+        });
+    })();
+    </script>
+</body>
+</html>
