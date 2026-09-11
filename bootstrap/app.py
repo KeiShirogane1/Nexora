@@ -13,6 +13,7 @@ from app.Http.Controllers.intern_profile import intern_profile
 from app.Http.Controllers.ojt_evaluation import ojt_evaluation
 from app.Http.Controllers.needs_attention import needs_attention
 from app.Http.Controllers.supervisor import supervisor
+from app.Http.Controllers.supervisor_documents import supervisor_documents
 from app.Http.Controllers.admin import admin
 from app.Http.Controllers.classroom import classroom
 from app.Http.Controllers.internship_classroom import internship_classroom
@@ -99,7 +100,7 @@ def repair_missing_student_profiles():
  except Exception as exc:conn.rollback();print("student profile repair skipped:",exc)
  finally:cur.close();conn.close()
 initialize_database();ensure_classroom_schema();ensure_classwork_submission_schema();ensure_classwork_score_schema();ensure_attendance_schema();ensure_logbook_schema();ensure_logbook_photo_schema();ensure_logbook_review_schema();ensure_daily_performance_rating_schema();ensure_ojt_evaluation_schema();ensure_session_schema();repair_missing_student_profiles()
-for bp in (auth,password,student,daily_logbook,logbook_review,daily_performance_history,intern_profile,ojt_evaluation,needs_attention,student_classwork,student_gradebook,student_classmates,supervisor,admin,classroom,internship_classroom,classwork,classwork_submissions,classwork_grading,classwork_scores,classwork_gradebook,classwork_gradebook_export,classwork_ml_insights,performance_reports,admin_classrooms,admin_reports_overview,admin_trash,supervisor_profile_photo,notifications_bp):app.register_blueprint(bp)
+for bp in (auth,password,student,daily_logbook,logbook_review,daily_performance_history,intern_profile,ojt_evaluation,needs_attention,student_classwork,student_gradebook,student_classmates,supervisor,supervisor_documents,admin,classroom,internship_classroom,classwork,classwork_submissions,classwork_grading,classwork_scores,classwork_gradebook,classwork_gradebook_export,classwork_ml_insights,performance_reports,admin_classrooms,admin_reports_overview,admin_trash,supervisor_profile_photo,notifications_bp):app.register_blueprint(bp)
 from flask import request
 @app.before_request
 def enforce_single_supervisor_session():
