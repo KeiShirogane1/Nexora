@@ -125,10 +125,100 @@
         });
     }
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', applyCanonicalStudentHeading);
-    } else {
+    function enhanceStudentDocumentsPage() {
+        if (!document.body.classList.contains('student-documents-page')) return;
+
+        var fileInput = document.getElementById('document-file');
+        var fileName = document.getElementById('document-file-name');
+        var uploadButton = document.querySelector('.student-document-upload-button');
+        var uploadForm = document.getElementById('document-upload');
+        var allowedExtensions = new Set([
+            'pdf', 'docx', 'doc', 'xlsx', 'xls', 'pptx', 'txt', 'zip', 'png', 'jpg', 'jpeg', 'gif'
+        ]);
+        var maxUploadSize = 5 * 1024 * 1024;
+
+        document.querySelectorAll('.js-document-preview').forEach(function (button) {
+            var link = document.createElement('a');
+            link.className = button.className.replace(/\bjs-document-preview\b/g, '').trim();
+            link.href = button.dataset.previewUrl || '#';
+            link.target = '_blank';
+            link.rel = 'noopener';
+            link.textContent = button.textContent;
+            link.setAttribute(
+                'aria-label',
+                'Open ' + (button.dataset.previewName || 'document') + ' in a new tab'
+            );
+            button.replaceWith(link);
+        });
+
+        if (!fileInput || !fileName || !uploadButton || !uploadForm) return;
+
+        fileInput.setAttribute(
+            'accept',
+            'application/pdf,.pdf,.docx,.doc,.xlsx,.xls,.pptx,.txt,.zip,.png,.jpg,.jpeg,.gif'
+        );
+
+        function setUploadButtonEnabled(enabled) {
+            uploadButton.disabled = !enabled;
+            uploadButton.setAttribute('aria-disabled', enabled ? 'false' : 'true');
+            uploadButton.style.opacity = enabled ? '' : '0.55';
+            uploadButton.style.cursor = enabled ? '' : 'not-allowed';
+            uploadButton.style.boxShadow = enabled ? '' : 'none';
+            uploadButton.style.background = enabled ? '' : '#9fb3a8';
+        }
+
+        function setFileFeedback(message, isError) {
+            fileName.textContent = message;
+            fileName.style.color = isError ? '#b42323' : '';
+            fileName.style.fontWeight = isError ? '800' : '';
+        }
+
+        function validateSelectedFile() {
+            var file = fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
+            if (!file) {
+                setUploadButtonEnabled(false);
+                setFileFeedback('', false);
+                return false;
+            }
+
+            var parts = file.name.split('.');
+            var extension = parts.length > 1 ? parts.pop().toLowerCase() : '';
+
+            if (!allowedExtensions.has(extension)) {
+                fileInput.value = '';
+                setUploadButtonEnabled(false);
+                setFileFeedback('Unsupported file type. Choose PDF, DOCX, XLSX, PPTX, TXT, ZIP, PNG, or JPG.', true);
+                return false;
+            }
+
+            if (file.size > maxUploadSize) {
+                fileInput.value = '';
+                setUploadButtonEnabled(false);
+                setFileFeedback('File is too large. Maximum size is 5 MB.', true);
+                return false;
+            }
+
+            setUploadButtonEnabled(true);
+            setFileFeedback('Selected: ' + file.name, false);
+            return true;
+        }
+
+        setUploadButtonEnabled(false);
+        fileInput.addEventListener('change', validateSelectedFile);
+        uploadForm.addEventListener('submit', function (event) {
+            if (!validateSelectedFile()) event.preventDefault();
+        });
+    }
+
+    function applyStudentShellEnhancements() {
         applyCanonicalStudentHeading();
+        enhanceStudentDocumentsPage();
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', applyStudentShellEnhancements);
+    } else {
+        applyStudentShellEnhancements();
     }
 })();
 </script>
