@@ -181,263 +181,31 @@ def _check_student_active():
 @student.route("/student/dashboard")
 @role_required("student")
 def student_dashboard():
-
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    
-    student_user_id = int(session["user_id"])
-
-    # =========================
-    # STUDENT PROFILE
-    # =========================
-
-    cursor.execute("""
-        SELECT
-            first_name,
-            middle_name,
-            last_name,
-            age,
-            student_id,
-            profile_picture,
-            phone_number,
-            home_address,
-            grade_year,
-            major_program
-
-        FROM student_profiles
-
-        WHERE user_id = ?
-
-    """,
-    (
-        session["user_id"],
-    ))
-
-
-    profile = cursor.fetchone()
-
-   # ==============================
-    # GET STUDENT INTERNSHIP
-    # ==============================
-
-    cursor.execute("""
-        SELECT
-            i.company_name,
-            i.position,
-            i.supervisor_name,
-            i.start_date,
-            i.end_date,
-            i.required_hours,
-            i.completed_hours,
-            i.status
-
-        FROM internships i
-
-        JOIN users u
-        ON i.student_id = u.id
-
-        WHERE u.id = ?
-
-    """,
-    (
-        session["user_id"],
-    ))
-
-
-    internship = cursor.fetchone()
-
-    if not profile or profile[8] is None:
-
-        conn.close()
-
-        return redirect(
-            "/student/profile/setup"
-        )
-
-
-
-    # =========================
-    # DASHBOARD STATISTICS
-    # =========================
-
-
-    # Total logs
-
-    cursor.execute("""
-        SELECT COUNT(*)
-        FROM logs
-        WHERE student_id = ?
-    """,
-    (
-        session["user_id"],
-    ))
-
-    log_count = cursor.fetchone()[0]
-
-
-
-    # Total tasks
-
-    cursor.execute("""
-        SELECT COUNT(*)
-        FROM tasks
-        WHERE student_id = ?
-    """,
-    (
-        session["user_id"],
-    ))
-
-    task_total = cursor.fetchone()[0]
-
-
-
-    # Completed tasks
-
-    cursor.execute("""
-        SELECT COUNT(*)
-        FROM tasks
-        WHERE student_id = ?
-        AND status = 'Submitted'
-    """,
-    (
-        session["user_id"],
-    ))
-
-    task_completed = cursor.fetchone()[0]
-
-
-
-    # Documents
-
-    cursor.execute("""
-        SELECT COUNT(*)
-        FROM documents
-        WHERE student_id = ?
-    """,
-    (
-        session["user_id"],
-    ))
-
-    document_count = cursor.fetchone()[0]
-
-
-
-    # Attendance
-
-    cursor.execute("""
-        SELECT COUNT(*)
-        FROM attendance
-        WHERE student_id = ?
-    """,
-    (
-        session["user_id"],
-    ))
-
-    attendance_count = cursor.fetchone()[0]
-
-
-
-    conn.close()
-
-
-    # ==========================
-    # RECENT ACTIVITY
-    # ==========================
-
-
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-
-
-    recent_logs = cursor.execute(
-        """
-        SELECT *
-        FROM logs
-        WHERE student_id = ?
-        ORDER BY id DESC
-        LIMIT 5
-        """,
-        (
-            session["user_id"],
-        )
-    ).fetchall()
-
-
-
-    recent_tasks = cursor.execute(
-        """
-        SELECT *
-        FROM tasks
-        WHERE student_id = ?
-        ORDER BY id DESC
-        LIMIT 5
-        """,
-        (
-            session["user_id"],
-        )
-    ).fetchall()
-
-
-
-    recent_documents = cursor.execute(
-        """
-        SELECT *
-        FROM documents
-        WHERE student_id = ?
-        ORDER BY id DESC
-        LIMIT 5
-        """,
-        (
-            session["user_id"],
-        )
-    ).fetchall()
-
-
-
-    recent_attendance = cursor.execute(
-        """
-        SELECT *
-        FROM attendance
-        WHERE student_id = ?
-        ORDER BY id DESC
-        LIMIT 5
-        """,
-        (
-            session["user_id"],
-        )
-    ).fetchall()
-
-
-
-    conn.close()
-
-
+    from app.Services.student_dashboard_service import get_student_dashboard_context
+
+    context = get_student_dashboard_context(session["user_id"])
+    if not context.get("profile_ready"):
+        return redirect("/student/profile/setup")
 
     return render_template(
         "student/dashboard.html",
-
-        profile=profile,
-        
-        internship=internship,
-
-        log_count=log_count,
-
-        task_total=task_total,
-
-        task_completed=task_completed,
-
-        document_count=document_count,
-
-        attendance_count=attendance_count,
-
-        recent_logs=recent_logs,
-
-        recent_tasks=recent_tasks,
-
-        recent_documents=recent_documents,
-
-        recent_attendance=recent_attendance
+        profile=context["profile"],
+        internship=context["internship"],
+        log_count=context["log_count"],
+        task_total=context["task_total"],
+        task_completed=context["task_completed"],
+        document_count=context["document_count"],
+        attendance_count=context["attendance_count"],
+        recent_logs=context["recent_logs"],
+        recent_tasks=context["recent_tasks"],
+        recent_documents=context["recent_documents"],
+        recent_attendance=context["recent_attendance"],
+        dashboard_classrooms=context["dashboard_classrooms"],
+        open_attendance=context["open_attendance"],
+        logbook_review_status=context["logbook_review_status"],
+        dashboard_performance=context["dashboard_performance"],
+        dashboard_competencies=context["dashboard_competencies"],
+        active_page="dashboard",
     )
 
 @student.route("/student/clock-in", methods=["POST"])
