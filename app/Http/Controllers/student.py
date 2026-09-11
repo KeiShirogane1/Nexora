@@ -1799,3 +1799,47 @@ def update_profile_photo():
 
 
     return "OK"
+
+
+@student.route("/student/document/<int:document_id>/delete", methods=["POST"])
+@role_required("student")
+def delete_document(document_id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        SELECT filepath
+        FROM documents
+        WHERE id = ?
+        AND student_id = ?
+        """,
+        (document_id, session["user_id"]),
+    )
+    document = cursor.fetchone()
+
+    if not document:
+        conn.close()
+        return "Document not found.", 404
+
+    filepath = document[0]
+    upload_base = current_app.config.get("UPLOAD_FOLDER", "")
+    if upload_base and not _is_safe_path(upload_base, filepath):
+        conn.close()
+        return "Invalid file path.", 403
+
+    cursor.execute(
+        "DELETE FROM documents WHERE id = ? AND student_id = ?",
+        (document_id, session["user_id"]),
+    )
+    conn.commit()
+    conn.close()
+
+    if filepath and os.path.exists(filepath):
+        try:
+            os.remove(filepath)
+        except OSError:
+            pass
+
+    flash("Document removed.", "success")
+    return redirect("/student/documents")
