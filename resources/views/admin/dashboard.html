@@ -18,21 +18,7 @@
     {% endif %}
     {% set recent_activities = actionable_metrics.get('recent_activities', []) %}
     {% set system_status = actionable_metrics.get('system_status', {'database_status': 'Not verified', 'database_engine': 'Not verified', 'email_status': 'Not configured', 'email_configured': false}) %}
-    <header class="admin-global-topbar" aria-label="Admin portal header">
-        <div class="admin-topbar-left">
-            <label class="admin-search" aria-label="Search">
-                <span aria-hidden="true">⌕</span>
-                <input type="search" placeholder="Search anything...">
-            </label>
-        </div>
-        <div class="admin-topbar-right">
-            {% include 'components/admin_notification_bell.html' %}
-            <div class="admin-topbar-user">
-                <img src="{{ url_for('static', filename='images/default_profile.png') }}" alt="Administrator profile">
-                <span><strong>Administrator</strong><small>Admin</small></span>
-            </div>
-        </div>
-    </header>
+    {% include 'components/admin_topbar.html' %}
     <main class="admin-main nexora-app-main">
         <div class="admin-dashboard-content">
             <div class="admin-breadcrumb">Dashboard <span>/</span> Admin</div>

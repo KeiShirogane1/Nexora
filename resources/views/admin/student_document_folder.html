@@ -9,412 +9,552 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
     <style>
-        .admin-document-folder-page .compact-dashboard { padding-bottom: 28px; }
-        .admin-document-breadcrumb {
-            margin-bottom: 10px;
-            color: #737b86;
-            font-size: .72rem;
+        body.admin-document-folder-page {
+            --docs-accent: #f45125;
+            --docs-accent-dark: #d9471b;
+            --docs-accent-soft: #fff0ea;
+            --docs-border: #e6ebef;
+            --docs-text: #152338;
+            --docs-muted: #728094;
+            background: #f6f8fb !important;
         }
-        .admin-document-breadcrumb a {
-            color: #b63b1c;
+        .admin-document-folder-page .admin-main { padding: 0 !important; }
+        .admin-document-folder-page .admin-document-content {
+            width: min(100%, 1320px);
+            margin: 0 auto;
+            padding: 20px 28px 44px;
+        }
+        .admin-document-folder-page .admin-document-breadcrumb {
+            margin-bottom: 8px;
+            color: #8290a0;
+            font-size: 9px;
+            font-weight: 650;
+        }
+        .admin-document-folder-page .admin-document-breadcrumb a {
+            color: #617084;
+            text-decoration: none;
+        }
+        .admin-document-folder-page .admin-document-breadcrumb span { margin: 0 5px; color: #b0b8c2; }
+        .admin-document-folder-page .admin-document-back {
+            min-height: 31px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 10px;
+            padding: 0 10px;
+            border: 1px solid #dce3e8;
+            border-radius: 7px;
+            background: #fff;
+            color: #3f5064;
+            font-size: 8px;
             font-weight: 800;
             text-decoration: none;
         }
-        .admin-document-student-hero {
+        .admin-document-folder-page .admin-student-overview {
             display: grid;
-            grid-template-columns: minmax(0, 1fr) minmax(320px, .62fr);
-            gap: 16px;
+            grid-template-columns: minmax(0, 1fr) minmax(330px, .72fr);
+            gap: 14px;
             align-items: stretch;
-            margin-bottom: 16px;
+            margin-bottom: 10px;
         }
-        .admin-document-student-card,
-        .admin-document-memberships {
-            border: 1px solid #e3e6ea;
-            border-radius: 12px;
+        .admin-document-folder-page .admin-student-profile,
+        .admin-document-folder-page .admin-memberships-card {
+            border: 1px solid var(--docs-border);
+            border-radius: 11px;
             background: #fff;
-            box-shadow: 0 5px 16px rgba(25, 35, 45, .035);
+            box-shadow: 0 4px 15px rgba(22,35,48,.035);
         }
-        .admin-document-student-card {
+        .admin-document-folder-page .admin-student-profile {
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 17px;
+            min-height: 116px;
             padding: 18px;
         }
-        .admin-document-student-avatar {
-            width: 58px;
-            height: 58px;
+        .admin-document-folder-page .admin-profile-avatar {
+            width: 62px;
+            height: 62px;
             display: grid;
             place-items: center;
-            flex: 0 0 58px;
+            flex: 0 0 62px;
             border-radius: 50%;
-            background: #eef2f7;
-            color: #475569;
-            font-size: 1.05rem;
+            background: #dfe8f2;
+            color: #32475e;
+            font-size: 19px;
             font-weight: 900;
         }
-        .admin-document-student-copy h1 {
-            margin: 0;
-            color: #172033;
-            font-size: 1.35rem;
-            font-weight: 800;
-        }
-        .admin-document-student-copy p {
-            margin: 5px 0 0;
-            color: #6f7886;
-            font-size: .74rem;
-        }
-        .admin-document-memberships {
-            padding: 14px 16px;
-        }
-        .admin-document-memberships h2 {
-            margin: 0 0 10px;
-            color: #293241;
-            font-size: .82rem;
-            font-weight: 800;
-        }
-        .admin-membership-item {
+        .admin-document-folder-page .admin-profile-title-row {
             display: flex;
+            align-items: center;
             gap: 9px;
-            padding: 9px 0;
+            flex-wrap: wrap;
+        }
+        .admin-document-folder-page .admin-profile-title-row h1 {
+            margin: 0;
+            color: #15253a;
+            font-size: 24px;
+            line-height: 1.1;
+            font-weight: 900;
+            letter-spacing: -.02em;
+        }
+        .admin-document-folder-page .admin-profile-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: #e6f7ed;
+            color: #16784b;
+            font-size: 8px;
+            font-weight: 850;
+        }
+        .admin-document-folder-page .admin-profile-status.inactive { background: #eef1f4; color: #687587; }
+        .admin-document-folder-page .admin-profile-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+            color: #66768a;
+            font-size: 9px;
+        }
+        .admin-document-folder-page .admin-profile-meta span + span::before {
+            content: "•";
+            margin-right: 8px;
+            color: #9aa5b1;
+        }
+        .admin-document-folder-page .admin-profile-email {
+            margin-top: 6px;
+            color: #94a0ad;
+            font-size: 8px;
+        }
+        .admin-document-folder-page .admin-memberships-card { padding: 13px 15px; }
+        .admin-document-folder-page .admin-memberships-card h2 {
+            margin: 0 0 7px;
+            color: #223146;
+            font-size: 10px;
+            font-weight: 850;
+        }
+        .admin-document-folder-page .admin-membership-row {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 8px 0;
             border-top: 1px solid #edf0f3;
         }
-        .admin-membership-item:first-of-type {
-            padding-top: 0;
-            border-top: 0;
-        }
-        .admin-membership-icon {
+        .admin-document-folder-page .admin-membership-row:first-of-type { border-top: 0; }
+        .admin-document-folder-page .admin-membership-icon {
             width: 30px;
             height: 30px;
             display: grid;
             place-items: center;
             flex: 0 0 30px;
             border-radius: 8px;
-            background: #fff0e9;
-            color: #d94720;
-            font-size: .72rem;
+            background: var(--docs-accent-soft);
+            color: var(--docs-accent);
             font-weight: 900;
         }
-        .admin-membership-copy strong {
-            display: block;
-            color: #273142;
-            font-size: .72rem;
-        }
-        .admin-membership-copy span {
-            display: block;
-            margin-top: 2px;
-            color: #78818d;
-            font-size: .64rem;
-            line-height: 1.35;
-        }
-        .admin-latest-upload-value { font-size: .83rem !important; line-height: 1.25; }
-        .admin-document-table .admin-document-file {
+        .admin-document-folder-page .admin-membership-copy { min-width: 0; }
+        .admin-document-folder-page .admin-membership-name {
             display: flex;
             align-items: center;
-            gap: 9px;
-            min-width: 210px;
+            gap: 6px;
+            flex-wrap: wrap;
         }
-        .admin-document-file-icon {
-            width: 32px;
-            height: 32px;
+        .admin-document-folder-page .admin-membership-name strong {
+            color: #26364a;
+            font-size: 8px;
+            font-weight: 850;
+        }
+        .admin-document-folder-page .admin-membership-chip {
+            padding: 3px 7px;
+            border-radius: 999px;
+            background: #eaf3ff;
+            color: #2d67a9;
+            font-size: 7px;
+            font-weight: 800;
+        }
+        .admin-document-folder-page .admin-membership-copy small {
+            display: block;
+            margin-top: 3px;
+            color: #8290a0;
+            font-size: 7px;
+        }
+        .admin-document-folder-page .admin-document-tabs {
+            display: flex;
+            align-items: flex-end;
+            gap: 4px;
+            margin-bottom: 0;
+            border-bottom: 1px solid #e2e7eb;
+        }
+        .admin-document-folder-page .admin-document-tab {
+            min-height: 36px;
+            padding: 0 13px;
+            border: 0;
+            border-bottom: 2px solid transparent;
+            background: transparent;
+            color: #59697c;
+            font-size: 8px;
+            font-weight: 850;
+            cursor: pointer;
+        }
+        .admin-document-folder-page .admin-document-tab.active {
+            border-bottom-color: var(--docs-accent);
+            color: var(--docs-accent-dark);
+            background: #fff8f5;
+        }
+        .admin-document-folder-page .admin-tab-panel[hidden] { display: none !important; }
+        .admin-document-folder-page .admin-document-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 360px;
+            gap: 14px;
+            margin-top: 10px;
+        }
+        .admin-document-folder-page .admin-document-table-card,
+        .admin-document-folder-page .admin-document-preview-card,
+        .admin-document-folder-page .admin-student-information-card {
+            border: 1px solid var(--docs-border);
+            border-radius: 11px;
+            background: #fff;
+            box-shadow: 0 4px 15px rgba(22,35,48,.035);
+        }
+        .admin-document-folder-page .admin-document-table-card { overflow: hidden; }
+        .admin-document-folder-page .admin-document-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .admin-document-folder-page .admin-document-table th {
+            padding: 9px 12px;
+            border-bottom: 1px solid #e5e9ed;
+            background: #fafbfc;
+            color: #56657a;
+            font-size: 8px;
+            font-weight: 850;
+            text-transform: uppercase;
+            letter-spacing: .03em;
+        }
+        .admin-document-folder-page .admin-document-table td {
+            padding: 9px 12px;
+            border-bottom: 1px solid #edf0f3;
+            color: #425267;
+            font-size: 8px;
+            vertical-align: middle;
+        }
+        .admin-document-folder-page .admin-document-table tbody tr:last-child td { border-bottom: 0; }
+        .admin-document-folder-page .admin-file-cell {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 185px;
+        }
+        .admin-document-folder-page .admin-file-icon {
+            width: 26px;
+            height: 30px;
             display: grid;
             place-items: center;
-            flex: 0 0 32px;
-            border-radius: 8px;
-            background: #fff0e9;
-            color: #c53d1b;
-            font-size: .58rem;
+            flex: 0 0 26px;
+            border-radius: 6px;
+            background: #edf3f7;
+            color: #506277;
+            font-size: 7px;
             font-weight: 900;
             text-transform: uppercase;
         }
-        .admin-document-file strong {
-            display: block;
-            max-width: 360px;
+        .admin-document-folder-page .admin-file-icon.pdf { background: #ffe8e6; color: #d43e31; }
+        .admin-document-folder-page .admin-file-icon.jpg,
+        .admin-document-folder-page .admin-file-icon.jpeg,
+        .admin-document-folder-page .admin-file-icon.png,
+        .admin-document-folder-page .admin-file-icon.gif { background: #e8f7ed; color: #1c9156; }
+        .admin-document-folder-page .admin-file-icon.doc,
+        .admin-document-folder-page .admin-file-icon.docx { background: #e8f1ff; color: #2d70c8; }
+        .admin-document-folder-page .admin-file-cell strong {
+            max-width: 260px;
             overflow: hidden;
-            color: #263142;
+            color: #1e2d40;
             text-overflow: ellipsis;
             white-space: nowrap;
-            font-size: .75rem;
+            font-size: 9px;
+            font-weight: 800;
         }
-        .admin-document-preview-overlay[hidden] { display: none !important; }
-        .admin-document-preview-overlay {
-            position: fixed;
-            inset: 0;
-            z-index: 9999;
+        .admin-document-folder-page .admin-file-action {
+            min-height: 27px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 0 9px;
+            border: 1px solid #b9c5d2;
+            border-radius: 6px;
+            background: #fff;
+            color: #31465c;
+            font-size: 8px;
+            font-weight: 800;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .admin-document-folder-page .admin-file-action:hover { border-color: var(--docs-accent); color: var(--docs-accent-dark); }
+        .admin-document-folder-page .admin-file-action[disabled] { opacity: .45; cursor: not-allowed; }
+        .admin-document-folder-page .admin-document-preview-card {
+            min-height: 330px;
+            display: flex;
+            flex-direction: column;
+        }
+        .admin-document-folder-page .admin-preview-heading {
+            padding: 12px 14px;
+            border-bottom: 1px solid #edf0f3;
+            color: #26364a;
+            font-size: 10px;
+            font-weight: 850;
+        }
+        .admin-document-folder-page .admin-preview-body {
+            flex: 1;
+            min-height: 280px;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 24px;
-            background: rgba(29, 20, 18, .55);
+            padding: 16px;
+            background: #fbfcfd;
         }
-        .admin-document-preview-dialog {
-            width: min(900px, 94vw);
-            max-height: 90vh;
-            overflow: hidden;
-            border: 1px solid rgba(255,255,255,.6);
-            border-radius: 14px;
-            background: #fff;
-            box-shadow: 0 24px 70px rgba(30, 12, 8, .28);
+        .admin-document-folder-page .admin-preview-placeholder {
+            max-width: 250px;
+            text-align: center;
+            color: #8793a1;
         }
-        .admin-document-preview-head {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            padding: 14px 16px;
-            border-bottom: 1px solid #e7e9ed;
-        }
-        .admin-document-preview-head strong {
-            max-width: 760px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            color: #263142;
-            font-size: .82rem;
-        }
-        .admin-document-preview-close {
-            width: 34px;
-            height: 34px;
+        .admin-document-folder-page .admin-preview-placeholder-icon {
+            width: 48px;
+            height: 56px;
             display: grid;
             place-items: center;
-            border: 0;
+            margin: 0 auto 11px;
+            border: 3px solid #9aa7b4;
             border-radius: 8px;
-            background: #f3f4f6;
-            color: #555f6c;
-            font-size: 20px;
-            cursor: pointer;
+            color: #9aa7b4;
+            font-size: 19px;
+            font-weight: 900;
         }
-        .admin-document-preview-body {
-            height: min(70vh, 670px);
-            padding: 10px;
-            background: #2d3138;
+        .admin-document-folder-page .admin-preview-placeholder strong {
+            display: block;
+            color: #344458;
+            font-size: 9px;
+            font-weight: 850;
         }
-        .admin-document-preview-body img {
+        .admin-document-folder-page .admin-preview-placeholder span {
+            display: block;
+            margin-top: 5px;
+            font-size: 7px;
+            line-height: 1.5;
+        }
+        .admin-document-folder-page .admin-preview-image {
             width: 100%;
-            height: 100%;
+            max-height: 310px;
             object-fit: contain;
             border-radius: 7px;
-            background: #22262c;
         }
-        @media (max-width: 920px) {
-            .admin-document-student-hero { grid-template-columns: 1fr; }
+        .admin-document-folder-page .admin-student-information-card {
+            margin-top: 10px;
+            padding: 16px;
+        }
+        .admin-document-folder-page .admin-student-info-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+        }
+        .admin-document-folder-page .admin-student-info-item {
+            padding: 12px;
+            border: 1px solid #edf0f3;
+            border-radius: 8px;
+            background: #fafbfc;
+        }
+        .admin-document-folder-page .admin-student-info-item span {
+            display: block;
+            color: #8b96a4;
+            font-size: 7px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+        .admin-document-folder-page .admin-student-info-item strong {
+            display: block;
+            margin-top: 5px;
+            color: #25364a;
+            font-size: 9px;
+            font-weight: 850;
+            word-break: break-word;
+        }
+        .admin-document-folder-page .admin-document-empty {
+            padding: 34px 18px;
+            text-align: center;
+            color: #8793a1;
+            font-size: 9px;
+        }
+        @media (max-width: 1100px) {
+            .admin-document-folder-page .admin-student-overview,
+            .admin-document-folder-page .admin-document-layout { grid-template-columns: 1fr; }
+            .admin-document-folder-page .admin-document-preview-card { min-height: 260px; }
+            .admin-document-folder-page .admin-student-info-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+        }
+        @media (max-width: 760px) {
+            .admin-document-folder-page .admin-document-content { padding: 16px 14px 32px; }
+            .admin-document-folder-page .admin-student-profile { align-items: flex-start; }
+            .admin-document-folder-page .admin-profile-title-row h1 { font-size: 21px; }
+            .admin-document-folder-page .admin-student-info-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body class="nexora-admin-body admin-page admin-document-folder-page">
     {% include 'components/admin_sidebar.html' %}
+    {% include 'components/admin_topbar.html' %}
 
     <main class="admin-main nexora-app-main">
-        <div class="nexora-page">
-            <div class="compact-dashboard compact-dashboard-flush">
-                <div class="admin-document-breadcrumb">
-                    <a href="{{ url_for('admin_classrooms.student_documents') }}">Student Documents</a>
-                    <span> › {{ student.display_name }}</span>
-                </div>
+        <div class="admin-document-content">
+            <div class="admin-document-breadcrumb"><a href="{{ url_for('admin_classrooms.student_documents') }}">Student Documents</a><span>/</span>{{ student.display_name }}</div>
+            <a href="{{ url_for('admin_classrooms.student_documents') }}" class="admin-document-back">← Back to Student Documents</a>
 
-                <a href="{{ url_for('admin_classrooms.student_documents') }}" class="btn-nexora-secondary mb-3">← Back to Student Documents</a>
-
-                <section class="admin-document-student-hero">
-                    <article class="admin-document-student-card">
-                        <div class="admin-document-student-avatar">{{ (student.display_name[:2] or 'ST')|upper }}</div>
-                        <div class="admin-document-student-copy">
-                            <div class="d-flex align-items-center gap-2 flex-wrap">
-                                <h1>{{ student.display_name }}</h1>
-                                {% if student.status == 'inactive' %}
-                                    <span class="badge rounded-pill text-bg-secondary">Inactive</span>
-                                {% else %}
-                                    <span class="badge rounded-pill text-bg-success">Active</span>
-                                {% endif %}
-                            </div>
-                            <p>
-                                {{ student.student_number or student.username }}
-                                {% if student.major_program %} · {{ student.major_program }}{% endif %}
-                                {% if student.grade_year %} · {{ student.grade_year }}{% endif %}
-                            </p>
-                            <p>{{ student.email or 'No email provided' }}</p>
+            <section class="admin-student-overview">
+                <article class="admin-student-profile">
+                    <div class="admin-profile-avatar">{{ (student.display_name[:2] or 'ST')|upper }}</div>
+                    <div>
+                        <div class="admin-profile-title-row">
+                            <h1>{{ student.display_name }}</h1>
+                            <span class="admin-profile-status{% if student.status == 'inactive' %} inactive{% endif %}">{{ 'Inactive' if student.status == 'inactive' else 'Active' }}</span>
                         </div>
-                    </article>
+                        <div class="admin-profile-meta">
+                            <span>{{ student.student_number or student.username }}</span>
+                            <span>{{ student.major_program or 'No program' }}</span>
+                            <span>{{ student.grade_year or 'Year not set' }}</span>
+                        </div>
+                        <div class="admin-profile-email">{{ student.email or 'No email provided' }}</div>
+                    </div>
+                </article>
 
-                    <aside class="admin-document-memberships">
-                        <h2>Classroom Memberships ({{ memberships|length }})</h2>
-                        {% for classroom in memberships %}
-                            <div class="admin-membership-item">
-                                <span class="admin-membership-icon" aria-hidden="true">▧</span>
-                                <div class="admin-membership-copy">
-                                    <strong>
-                                        {{ classroom.name }}
-                                        {% if classroom.archived %}<span class="text-muted"> · Archived</span>{% endif %}
-                                    </strong>
-                                    <span>
-                                        {{ classroom.section or 'No section' }}
-                                        · {{ classroom.supervisor_name }}
-                                        {% if classroom.company_name %} · {{ classroom.company_name }}{% endif %}
-                                    </span>
+                <aside class="admin-memberships-card">
+                    <h2>Classroom Memberships ({{ memberships|length }})</h2>
+                    {% for classroom in memberships %}
+                        <div class="admin-membership-row">
+                            <span class="admin-membership-icon">▧</span>
+                            <div class="admin-membership-copy">
+                                <div class="admin-membership-name">
+                                    <strong>{{ classroom.name }}{% if classroom.section %} - {{ classroom.section }}{% endif %}</strong>
+                                    <span class="admin-membership-chip">{{ 'Intern Classroom' if classroom.classroom_type == 'internship' else 'Classroom' }}</span>
                                 </div>
+                                <small>{% if classroom.company_name %}{{ classroom.company_name }} · {% endif %}{{ classroom.supervisor_name }}{% if classroom.archived %} · Archived{% endif %}</small>
                             </div>
-                        {% else %}
-                            <div class="text-muted small">This student is not currently enrolled in a classroom.</div>
-                        {% endfor %}
-                    </aside>
-                </section>
-
-                <section class="summary-grid" aria-label="Student folder summary">
-                    <div class="summary-card">
-                        <div class="summary-icon total">▤</div>
-                        <div class="summary-content">
-                            <span class="summary-label">Documents</span>
-                            <span class="summary-value">{{ documents|length }}</span>
-                        </div>
-                    </div>
-                    <div class="summary-card">
-                        <div class="summary-icon active">▧</div>
-                        <div class="summary-content">
-                            <span class="summary-label">Classrooms</span>
-                            <span class="summary-value">{{ memberships|length }}</span>
-                        </div>
-                    </div>
-                    <div class="summary-card">
-                        <div class="summary-icon assigned">◫</div>
-                        <div class="summary-content">
-                            <span class="summary-label">File Types</span>
-                            <span class="summary-value">{{ file_type_count }}</span>
-                        </div>
-                    </div>
-                    <div class="summary-card">
-                        <div class="summary-icon pending">↥</div>
-                        <div class="summary-content">
-                            <span class="summary-label">Latest Upload</span>
-                            <span class="summary-value admin-latest-upload-value">{{ latest_upload }}</span>
-                        </div>
-                    </div>
-                </section>
-
-                <section class="nexora-card table-card admin-document-table">
-                    <div class="table-card-header">
-                        <div>
-                            <h3>Documents</h3>
-                            <span class="table-meta">Student-owned OJT files · newest first</span>
-                        </div>
-                        <span class="badge rounded-pill text-bg-light border text-secondary">Read only</span>
-                    </div>
-
-                    {% if documents %}
-                        <div class="table-responsive">
-                            <table class="table nexora-table align-middle">
-                                <thead>
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Document</th>
-                                        <th>File Type</th>
-                                        <th>Size</th>
-                                        <th>Uploaded</th>
-                                        <th>Status</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for document in documents %}
-                                        {% set document_url = url_for('admin_classrooms.view_student_document', student_id=student.id, document_id=document.id) %}
-                                        <tr>
-                                            <td class="text-muted">{{ loop.index }}</td>
-                                            <td>
-                                                <div class="admin-document-file">
-                                                    <span class="admin-document-file-icon">{{ document.extension[:4] }}</span>
-                                                    <strong title="{{ document.filename }}">{{ document.filename }}</strong>
-                                                </div>
-                                            </td>
-                                            <td>{{ document.extension|upper }}</td>
-                                            <td>{{ document.size }}</td>
-                                            <td>{{ document.uploaded_at }}</td>
-                                            <td>
-                                                {% if document.available %}
-                                                    <span class="status-badge status-active"><span class="status-dot"></span> Available</span>
-                                                {% else %}
-                                                    <span class="status-badge status-inactive"><span class="status-dot"></span> Missing file</span>
-                                                {% endif %}
-                                            </td>
-                                            <td>
-                                                {% if document.available %}
-                                                    {% if document.is_image %}
-                                                        <button
-                                                            type="button"
-                                                            class="btn-view js-admin-image-preview"
-                                                            data-preview-url="{{ document_url }}"
-                                                            data-preview-name="{{ document.filename }}"
-                                                        >View</button>
-                                                    {% else %}
-                                                        <a class="btn-view" href="{{ document_url }}" target="_blank" rel="noopener">Open</a>
-                                                    {% endif %}
-                                                {% else %}
-                                                    <span class="text-muted small">Unavailable</span>
-                                                {% endif %}
-                                            </td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
                         </div>
                     {% else %}
-                        <div class="empty-state">
-                            <div class="icon">▤</div>
-                            <div class="empty-state-title">No documents uploaded</div>
-                            <div class="empty-state-copy">Files uploaded by this student will appear here automatically.</div>
-                        </div>
-                    {% endif %}
-                </section>
+                        <div class="text-muted small">This student is not currently enrolled in a classroom.</div>
+                    {% endfor %}
+                </aside>
+            </section>
 
-                <div class="alert alert-light border mt-3 mb-0" role="note">
-                    Admin can view these files but cannot rename, remove, or replace student documents in this phase.
-                </div>
+            <div class="admin-document-tabs" role="tablist" aria-label="Student document folder sections">
+                <button type="button" class="admin-document-tab active" data-tab="documents" role="tab" aria-selected="true">▤ Documents ({{ documents|length }})</button>
+                <button type="button" class="admin-document-tab" data-tab="student-info" role="tab" aria-selected="false">♟ Student Information</button>
             </div>
+
+            <section class="admin-tab-panel" data-panel="documents">
+                <div class="admin-document-layout">
+                    <article class="admin-document-table-card">
+                        {% if documents %}
+                            <div class="table-responsive">
+                                <table class="admin-document-table">
+                                    <thead><tr><th>#</th><th>Document</th><th>File Type</th><th>Size</th><th>Uploaded On</th><th>Actions</th></tr></thead>
+                                    <tbody>
+                                        {% for document in documents %}
+                                            {% set document_url = url_for('admin_classrooms.view_student_document', student_id=student.id, document_id=document.id) %}
+                                            <tr>
+                                                <td>{{ loop.index }}</td>
+                                                <td>
+                                                    <div class="admin-file-cell">
+                                                        <span class="admin-file-icon {{ document.extension|lower }}">{{ document.extension[:4] }}</span>
+                                                        <strong title="{{ document.filename }}">{{ document.filename }}</strong>
+                                                    </div>
+                                                </td>
+                                                <td>{{ document.extension|upper }}</td>
+                                                <td>{{ document.size }}</td>
+                                                <td>{{ document.uploaded_at }}</td>
+                                                <td>
+                                                    {% if document.available %}
+                                                        {% if document.is_image %}
+                                                            <button type="button" class="admin-file-action js-inline-image-preview" data-preview-url="{{ document_url }}" data-preview-name="{{ document.filename }}">◉ View</button>
+                                                        {% elif document.extension|lower == 'pdf' %}
+                                                            <a class="admin-file-action" href="{{ document_url }}" target="_blank" rel="noopener">◉ View</a>
+                                                        {% else %}
+                                                            <a class="admin-file-action" href="{{ document_url }}" target="_blank" rel="noopener">↧ Open</a>
+                                                        {% endif %}
+                                                    {% else %}
+                                                        <button type="button" class="admin-file-action" disabled>Unavailable</button>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="admin-document-empty">No documents have been uploaded by this student yet.</div>
+                        {% endif %}
+                    </article>
+
+                    <aside class="admin-document-preview-card">
+                        <div class="admin-preview-heading">Document Preview</div>
+                        <div class="admin-preview-body" id="adminPreviewBody">
+                            <div class="admin-preview-placeholder" id="adminPreviewPlaceholder">
+                                <div class="admin-preview-placeholder-icon">▤</div>
+                                <strong>Select a document to preview</strong>
+                                <span>Images will preview here. PDF and other supported files open in a new browser tab.</span>
+                            </div>
+                            <img class="admin-preview-image" id="adminPreviewImage" alt="Student document preview" hidden>
+                        </div>
+                    </aside>
+                </div>
+            </section>
+
+            <section class="admin-tab-panel" data-panel="student-info" hidden>
+                <article class="admin-student-information-card">
+                    <div class="admin-student-info-grid">
+                        <div class="admin-student-info-item"><span>Student Name</span><strong>{{ student.display_name }}</strong></div>
+                        <div class="admin-student-info-item"><span>Student Number</span><strong>{{ student.student_number or '—' }}</strong></div>
+                        <div class="admin-student-info-item"><span>Email</span><strong>{{ student.email or '—' }}</strong></div>
+                        <div class="admin-student-info-item"><span>Program</span><strong>{{ student.major_program or '—' }}</strong></div>
+                        <div class="admin-student-info-item"><span>Year</span><strong>{{ student.grade_year or '—' }}</strong></div>
+                        <div class="admin-student-info-item"><span>Status</span><strong>{{ 'Inactive' if student.status == 'inactive' else 'Active' }}</strong></div>
+                        <div class="admin-student-info-item"><span>Classrooms</span><strong>{{ memberships|length }}</strong></div>
+                        <div class="admin-student-info-item"><span>Documents</span><strong>{{ documents|length }}</strong></div>
+                        <div class="admin-student-info-item"><span>Latest Upload</span><strong>{{ latest_upload }}</strong></div>
+                    </div>
+                </article>
+            </section>
         </div>
     </main>
 
-    <div class="admin-document-preview-overlay" id="adminDocumentImagePreview" hidden aria-hidden="true">
-        <div class="admin-document-preview-dialog" role="dialog" aria-modal="true" aria-labelledby="adminDocumentPreviewTitle">
-            <div class="admin-document-preview-head">
-                <strong id="adminDocumentPreviewTitle">Image preview</strong>
-                <button type="button" class="admin-document-preview-close" id="adminDocumentPreviewClose" aria-label="Close image preview">×</button>
-            </div>
-            <div class="admin-document-preview-body">
-                <img id="adminDocumentPreviewImage" alt="Student document preview">
-            </div>
-        </div>
-    </div>
-
     <script>
-        (function () {
-            var modal = document.getElementById('adminDocumentImagePreview');
-            var image = document.getElementById('adminDocumentPreviewImage');
-            var title = document.getElementById('adminDocumentPreviewTitle');
-            var closeButton = document.getElementById('adminDocumentPreviewClose');
-
-            function closePreview() {
-                modal.hidden = true;
-                modal.setAttribute('aria-hidden', 'true');
-                image.removeAttribute('src');
-                document.body.style.overflow = '';
-            }
-
-            document.querySelectorAll('.js-admin-image-preview').forEach(function (button) {
-                button.addEventListener('click', function () {
-                    image.src = button.dataset.previewUrl;
-                    image.alt = button.dataset.previewName || 'Student document preview';
-                    title.textContent = button.dataset.previewName || 'Image preview';
-                    modal.hidden = false;
-                    modal.setAttribute('aria-hidden', 'false');
-                    document.body.style.overflow = 'hidden';
-                    closeButton.focus();
+    (function () {
+        var tabs = document.querySelectorAll('[data-tab]');
+        var panels = document.querySelectorAll('[data-panel]');
+        tabs.forEach(function (tab) {
+            tab.addEventListener('click', function () {
+                var target = tab.dataset.tab;
+                tabs.forEach(function (item) {
+                    var active = item === tab;
+                    item.classList.toggle('active', active);
+                    item.setAttribute('aria-selected', String(active));
+                });
+                panels.forEach(function (panel) {
+                    panel.hidden = panel.dataset.panel !== target;
                 });
             });
+        });
 
-            closeButton.addEventListener('click', closePreview);
-            modal.addEventListener('click', function (event) {
-                if (event.target === modal) closePreview();
+        var previewImage = document.getElementById('adminPreviewImage');
+        var previewPlaceholder = document.getElementById('adminPreviewPlaceholder');
+        document.querySelectorAll('.js-inline-image-preview').forEach(function (button) {
+            button.addEventListener('click', function () {
+                previewImage.src = button.dataset.previewUrl;
+                previewImage.alt = button.dataset.previewName || 'Student document preview';
+                previewImage.hidden = false;
+                previewPlaceholder.hidden = true;
             });
-            document.addEventListener('keydown', function (event) {
-                if (event.key === 'Escape' && !modal.hidden) closePreview();
-            });
-        })();
+        });
+    })();
     </script>
 </body>
 </html>
