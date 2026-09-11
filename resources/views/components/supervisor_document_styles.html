@@ -1,0 +1,277 @@
+<style id="nx-supervisor-document-styles">
+body.supervisor-student-documents-page,
+body.supervisor-student-document-folder-page {
+    background: #f4f7fb !important;
+    color: #17233b;
+}
+body.supervisor-student-documents-page .supervisor-documents-page,
+body.supervisor-student-document-folder-page .supervisor-document-folder-page {
+    min-height: 100vh;
+    margin: 0 !important;
+    padding: 96px 30px 46px !important;
+    background: #f4f7fb !important;
+}
+.supervisor-documents-shell,
+.supervisor-document-folder-shell {
+    width: min(100%, 1440px);
+    margin: 0 auto;
+}
+.supervisor-doc-summary {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 16px;
+}
+.supervisor-doc-summary-card {
+    min-height: 92px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    border: 1px solid #e1e8f2;
+    border-radius: 13px;
+    background: #fff;
+    box-shadow: 0 5px 18px rgba(15,23,42,.045);
+}
+.supervisor-doc-summary-icon,
+.supervisor-doc-classroom-icon {
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+    display: grid;
+    place-items: center;
+    border-radius: 11px;
+    background: #eaf2ff;
+    color: #2563eb;
+    font-size: 17px;
+    font-weight: 850;
+}
+.supervisor-doc-summary-card small,
+.supervisor-doc-summary-card span,
+.supervisor-doc-student-card span,
+.supervisor-doc-student-card small,
+.supervisor-doc-membership-row small {
+    display: block;
+    color: #8390a3;
+    font-size: .72rem;
+}
+.supervisor-doc-summary-card strong {
+    display: block;
+    margin: 3px 0;
+    color: #17233b;
+    font-size: 1.35rem;
+    line-height: 1;
+    font-weight: 850;
+}
+.supervisor-doc-filter-card,
+.supervisor-doc-classroom-card,
+.supervisor-doc-files-card,
+.supervisor-doc-preview-card,
+.supervisor-doc-student-card,
+.supervisor-doc-memberships-card {
+    border: 1px solid #e1e8f2;
+    border-radius: 13px;
+    background: #fff;
+    box-shadow: 0 5px 18px rgba(15,23,42,.045);
+}
+.supervisor-doc-filter-card { margin-bottom: 14px; padding: 9px; }
+.supervisor-doc-filter-grid {
+    display: grid;
+    grid-template-columns: minmax(260px, 1fr) 190px 190px auto;
+    gap: 10px;
+    align-items: center;
+}
+.supervisor-doc-filter-grid input,
+.supervisor-doc-filter-grid select {
+    width: 100%;
+    height: 40px;
+    padding: 0 12px;
+    border: 1px solid #dce4ee;
+    border-radius: 9px;
+    background: #fff;
+    color: #334155;
+    font: inherit;
+    font-size: .78rem;
+    outline: none;
+}
+.supervisor-doc-filter-grid input:focus,
+.supervisor-doc-filter-grid select:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+}
+.supervisor-doc-filter-actions { display: flex; align-items: center; gap: 7px; }
+.supervisor-doc-filter-actions a,
+.supervisor-doc-filter-actions button,
+.supervisor-doc-view-button,
+.supervisor-doc-back {
+    min-height: 36px;
+    padding: 0 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #cbd7e6;
+    border-radius: 8px;
+    background: #fff;
+    color: #2563eb;
+    font: inherit;
+    font-size: .74rem;
+    font-weight: 800;
+    text-decoration: none !important;
+    cursor: pointer;
+}
+.supervisor-doc-filter-actions button,
+.supervisor-doc-view-button:hover,
+.supervisor-doc-view-button:focus-visible {
+    border-color: #2563eb;
+    background: #2563eb;
+    color: #fff !important;
+}
+.supervisor-doc-filter-actions a:hover,
+.supervisor-doc-back:hover { background: #eff6ff; color: #1d4ed8; }
+.supervisor-doc-groups { display: grid; gap: 12px; }
+.supervisor-doc-classroom-card { overflow: hidden; }
+.supervisor-doc-classroom-header {
+    min-height: 72px;
+    padding: 12px 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+}
+.supervisor-doc-classroom-title { min-width: 0; display: flex; align-items: center; gap: 12px; }
+.supervisor-doc-title-line { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.supervisor-doc-title-line h2 { margin: 0; color: #17233b; font-size: .95rem; font-weight: 850; }
+.supervisor-doc-classroom-title p { margin: 4px 0 0; color: #8491a3; font-size: .72rem; }
+.supervisor-doc-type-pill,
+.supervisor-doc-status-pill {
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: #eaf2ff;
+    color: #2563eb;
+    font-size: .64rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+.supervisor-doc-status-pill { background: #e7f8ef; color: #15803d; }
+.supervisor-doc-status-pill.is-archived { background: #edf1f5; color: #64748b; }
+.supervisor-doc-table { width: 100%; border-collapse: collapse; }
+.supervisor-doc-table th {
+    padding: 10px 12px;
+    border-top: 1px solid #e8edf3;
+    border-bottom: 1px solid #e8edf3;
+    background: #f8fafc;
+    color: #64748b;
+    font-size: .68rem;
+    font-weight: 850;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+}
+.supervisor-doc-table td {
+    padding: 11px 12px;
+    border-bottom: 1px solid #edf1f5;
+    color: #475569;
+    font-size: .74rem;
+    vertical-align: middle;
+}
+.supervisor-doc-table tbody tr:last-child td { border-bottom: 0; }
+.supervisor-doc-table td strong { display: block; color: #1e293b; font-size: .77rem; }
+.supervisor-doc-table td small { display: block; margin-top: 3px; color: #94a3b8; font-size: .66rem; }
+.supervisor-doc-count { color: #334155; font-weight: 800; }
+.supervisor-doc-empty {
+    padding: 42px 18px;
+    border: 1px dashed #cbd7e6;
+    border-radius: 13px;
+    background: #fff;
+    text-align: center;
+}
+.supervisor-doc-empty strong,
+.supervisor-doc-empty span { display: block; }
+.supervisor-doc-empty strong { color: #334155; }
+.supervisor-doc-empty span { margin-top: 5px; color: #94a3b8; font-size: .75rem; }
+.supervisor-doc-back { margin-bottom: 14px; }
+.supervisor-doc-folder-heading { margin-bottom: 18px !important; }
+.supervisor-doc-folder-overview {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(320px, .7fr);
+    gap: 14px;
+    margin-bottom: 14px;
+}
+.supervisor-doc-student-card { min-height: 108px; padding: 16px; display: flex; align-items: center; gap: 14px; }
+.supervisor-doc-avatar {
+    width: 58px;
+    height: 58px;
+    flex: 0 0 58px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: #dbeafe;
+    color: #1d4ed8;
+    font-size: 1.05rem;
+    font-weight: 900;
+}
+.supervisor-doc-student-card strong { display: block; color: #17233b; font-size: 1rem; font-weight: 850; }
+.supervisor-doc-student-card span { margin-top: 4px; }
+.supervisor-doc-student-card small { margin-top: 5px; }
+.supervisor-doc-memberships-card { padding: 13px 15px; }
+.supervisor-doc-memberships-card h2,
+.supervisor-doc-card-heading h2 { margin: 0; color: #1e293b; font-size: .85rem; font-weight: 850; }
+.supervisor-doc-membership-row { display: flex; gap: 9px; padding: 8px 0; border-top: 1px solid #edf1f5; }
+.supervisor-doc-membership-row:first-of-type { border-top: 0; }
+.supervisor-doc-membership-row > span { color: #2563eb; }
+.supervisor-doc-membership-row strong { display: block; color: #334155; font-size: .74rem; }
+.supervisor-doc-folder-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 360px;
+    gap: 14px;
+    align-items: stretch;
+}
+.supervisor-doc-files-card,
+.supervisor-doc-preview-card { overflow: hidden; }
+.supervisor-doc-card-heading { min-height: 56px; padding: 12px 14px; display: flex; align-items: center; border-bottom: 1px solid #edf1f5; }
+.supervisor-doc-card-heading .ui-eyebrow { display: block; margin-bottom: 3px; color: #2563eb; font-size: .62rem; font-weight: 850; letter-spacing: .08em; text-transform: uppercase; }
+.supervisor-doc-folder-table th { border-top: 0; }
+.supervisor-doc-unavailable { color: #94a3b8; font-size: .7rem; }
+.supervisor-doc-preview-card { min-height: 360px; display: flex; flex-direction: column; }
+.supervisor-doc-preview-body {
+    width: 100%;
+    min-height: 300px;
+    flex: 1;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    background: #fbfdff;
+    color: inherit;
+    font: inherit;
+    text-align: center;
+    cursor: pointer;
+}
+.supervisor-doc-preview-body:not(:disabled):hover { background: #f3f7ff; }
+.supervisor-doc-preview-body:disabled { cursor: default; }
+.supervisor-doc-preview-placeholder strong,
+.supervisor-doc-preview-file strong { display: block; color: #334155; font-size: .78rem; font-weight: 850; }
+.supervisor-doc-preview-placeholder small,
+.supervisor-doc-preview-file small { display: block; margin-top: 5px; color: #8b98aa; font-size: .68rem; }
+.supervisor-doc-preview-icon,
+.supervisor-doc-preview-file > span { display: block; margin-bottom: 10px; color: #2563eb; font-size: 34px; }
+.supervisor-doc-preview-image { width: 100%; max-height: 330px; object-fit: contain; border-radius: 8px; }
+@media (max-width: 1050px) {
+    .supervisor-doc-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .supervisor-doc-filter-grid { grid-template-columns: 1fr 1fr; }
+    .supervisor-doc-filter-grid input { grid-column: 1 / -1; }
+    .supervisor-doc-folder-overview,
+    .supervisor-doc-folder-layout { grid-template-columns: 1fr; }
+}
+@media (max-width: 760px) {
+    body.supervisor-student-documents-page .supervisor-documents-page,
+    body.supervisor-student-document-folder-page .supervisor-document-folder-page {
+        padding: 82px 14px 32px !important;
+    }
+    .supervisor-doc-summary,
+    .supervisor-doc-filter-grid { grid-template-columns: 1fr; }
+    .supervisor-doc-filter-grid input { grid-column: auto; }
+    .supervisor-doc-classroom-header { align-items: flex-start; }
+    .supervisor-doc-status-pill { margin-top: 4px; }
+}
+</style>
