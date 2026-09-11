@@ -13,6 +13,9 @@
             display: grid;
             gap: 16px;
         }
+        .student-dashboard-approved-stack > * {
+            grid-area: auto !important;
+        }
         .student-dashboard-approved-stack > .student-tasks-stats {
             margin-bottom: 0;
         }
@@ -139,16 +142,22 @@
                             <div class="student-dashboard-card-title"><span class="student-dashboard-card-icon" aria-hidden="true">✓</span><h2 id="task-completion-title">Work Completion</h2></div>
                             <a href="{{ url_for('classroom.student_classes') }}">Open Work →</a>
                         </header>
-                        <div class="student-dashboard-progress-body">
-                            <div class="student-dashboard-overall-progress">
-                                <div class="student-dashboard-progress-ring" data-progress="{{ '%.0f'|format(work_progress) }}"><strong>{{ '%.0f'|format(work_progress) }}%</strong></div>
-                                <strong>Submitted</strong>
-                                <span>{{ submitted_work }} / {{ total_work }} Work items</span>
-                                <small>Current Internship Classrooms</small>
+                        <div class="student-dashboard-overall-progress">
+                            <div class="student-dashboard-progress-ring" data-progress="{{ '%.0f'|format(work_progress) }}"><strong>{{ '%.0f'|format(work_progress) }}%</strong></div>
+                            <strong>Submitted Work</strong>
+                            <span>{{ submitted_work }} / {{ total_work }} Work items</span>
+                            <small>{{ pending_work }} still pending</small>
+                        </div>
+                        <div class="student-dashboard-list">
+                            <div class="student-dashboard-list-row">
+                                <span class="student-dashboard-list-icon" aria-hidden="true">✓</span>
+                                <span class="student-dashboard-list-copy"><strong>{{ submitted_work }} Submitted</strong><small>Completed submission attempts</small></span>
+                                <em class="is-complete">Done</em>
                             </div>
-                            <div class="student-dashboard-hours">
-                                <div class="student-dashboard-progress-row"><div><span>Submitted Work</span><strong>{{ submitted_work }}</strong></div><div class="student-dashboard-track"><i data-width="{{ '%.1f'|format(work_progress) }}"></i></div></div>
-                                <div class="student-dashboard-progress-row"><div><span>Pending Work</span><strong>{{ pending_work }}</strong></div><div class="student-dashboard-track"><i data-width="{{ '%.1f'|format(100 - work_progress if total_work > 0 else 0) }}"></i></div></div>
+                            <div class="student-dashboard-list-row">
+                                <span class="student-dashboard-list-icon" aria-hidden="true">⌛</span>
+                                <span class="student-dashboard-list-copy"><strong>{{ pending_work }} Pending</strong><small>Work still awaiting submission</small></span>
+                                <em class="is-pending">Pending</em>
                             </div>
                         </div>
                     </article>
@@ -261,10 +270,6 @@
             });
         }
 
-        document.querySelectorAll('[data-width]').forEach(function (bar) {
-            const value = Math.max(0, Math.min(100, Number(bar.dataset.width || 0)));
-            bar.style.width = value + '%';
-        });
         document.querySelectorAll('[data-progress]').forEach(function (ring) {
             const value = Math.max(0, Math.min(100, Number(ring.dataset.progress || 0)));
             ring.style.setProperty('--dashboard-progress', value);
