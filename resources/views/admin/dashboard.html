@@ -14,8 +14,10 @@
     {% if get_admin_dashboard_actionable_metrics is defined %}
         {% set actionable_metrics = get_admin_dashboard_actionable_metrics() %}
     {% else %}
-        {% set actionable_metrics = {'unenrolled_students': 0, 'trash_expiring_soon': 0} %}
+        {% set actionable_metrics = {'unenrolled_students': 0, 'trash_expiring_soon': 0, 'recent_activities': [], 'system_status': {'database_status': 'Not verified', 'database_engine': 'Not verified', 'email_status': 'Not configured', 'email_configured': false}} %}
     {% endif %}
+    {% set recent_activities = actionable_metrics.get('recent_activities', []) %}
+    {% set system_status = actionable_metrics.get('system_status', {'database_status': 'Not verified', 'database_engine': 'Not verified', 'email_status': 'Not configured', 'email_configured': false}) %}
     <header class="admin-global-topbar" aria-label="Admin portal header">
         <div class="admin-topbar-left">
             <label class="admin-search" aria-label="Search">
@@ -41,7 +43,7 @@
                     <p>Welcome back, Administrator.</p>
                     <p class="admin-hero-description">Monitor internship operations, student progress, and system activity from one place.</p>
                 </div>
-                <div class="admin-hero-status"><span class="admin-status-pulse"></span><div><strong>System Online</strong><small>All core services operational</small></div></div>
+                <div class="admin-hero-status"><span class="admin-status-pulse"></span><div><strong>Database {{ system_status.database_status }}</strong><small>{{ system_status.database_engine }} connection used for dashboard data</small></div></div>
             </section>
 
             {% if pending_students|default(0)|int > 0 %}
@@ -83,8 +85,12 @@
                     </div>
                 </article>
                 <article class="admin-surface-card admin-system-card">
-                    <div class="admin-card-heading"><div><span class="admin-card-kicker">PLATFORM HEALTH</span><h2>System Monitoring</h2></div><span class="admin-health-label"><i></i> Healthy</span></div>
-                    <div class="admin-system-list"><div class="admin-system-item"><span><i></i>Database Status</span><strong>Online</strong></div><div class="admin-system-item"><span><i></i>Email Service</span><strong>Connected</strong></div><div class="admin-system-item"><span><i class="neutral"></i>Last Backup</span><strong>Today</strong></div></div>
+                    <div class="admin-card-heading"><div><span class="admin-card-kicker">PLATFORM STATUS</span><h2>System Monitoring</h2></div><span class="admin-health-label"><i></i> Database {{ system_status.database_status|lower }}</span></div>
+                    <div class="admin-system-list">
+                        <div class="admin-system-item"><span><i></i>Database Status</span><strong>{{ system_status.database_status }}</strong></div>
+                        <div class="admin-system-item"><span><i></i>Database Engine</span><strong>{{ system_status.database_engine }}</strong></div>
+                        <div class="admin-system-item"><span><i{% if not system_status.email_configured %} class="neutral"{% endif %}></i>Email Configuration</span><strong>{{ system_status.email_status }}</strong></div>
+                    </div>
                 </article>
             </section>
             <section class="admin-surface-card admin-actions-card">
@@ -98,12 +104,22 @@
             </section>
             <section class="admin-dashboard-grid admin-dashboard-grid-lower">
                 <article class="admin-surface-card admin-activity-card">
-                    <div class="admin-card-heading"><div><span class="admin-card-kicker">LATEST ACTIVITY</span><h2>Recent Activities</h2><p>Latest activity across the system.</p></div></div>
+                    <div class="admin-card-heading"><div><span class="admin-card-kicker">LATEST ACTIVITY</span><h2>Recent Activities</h2><p>Latest timestamped activity across the system.</p></div></div>
                     <ul class="admin-activity-list">
-                        <li><span class="admin-activity-icon orange">♟</span><span><strong>{{ students_count }} student accounts registered</strong><small>Student account activity</small></span></li>
-                        <li><span class="admin-activity-icon amber">♙</span><span><strong>{{ supervisors_count }} supervisor accounts registered</strong><small>Supervisor account activity</small></span></li>
-                        <li><span class="admin-activity-icon red">▣</span><span><strong>{{ assignments_count }} internship assignments</strong><small>Internship management activity</small></span></li>
-                        <li><span class="admin-activity-icon purple">◌</span><span><strong>{{ feedback_count }} feedback entries submitted</strong><small>Feedback activity</small></span></li>
+                        {% for activity in recent_activities %}
+                            <li>
+                                <span class="admin-activity-icon {{ activity.tone }}">{{ activity.icon }}</span>
+                                <span>
+                                    <strong>{{ activity.title }}</strong>
+                                    <small>{{ activity.context }} · {{ activity.timestamp }}</small>
+                                </span>
+                            </li>
+                        {% else %}
+                            <li>
+                                <span class="admin-activity-icon orange">◷</span>
+                                <span><strong>No recent timestamped activity</strong><small>No supported activity events are available yet.</small></span>
+                            </li>
+                        {% endfor %}
                     </ul>
                 </article>
                 <article class="admin-surface-card admin-reports-card">

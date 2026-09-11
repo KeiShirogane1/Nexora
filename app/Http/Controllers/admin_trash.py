@@ -1,3 +1,4 @@
+import os
 from datetime import datetime, timedelta
 from flask import Blueprint, jsonify, redirect, render_template, session, flash
 from app.Http.Middleware.security import role_required
@@ -51,11 +52,40 @@ def seed_existing(conn):
     conn.commit()
 
 
+def _parse_dashboard_timestamp(value):
+    if not value:
+        return None
+    if isinstance(value, datetime):
+        return value
+    try:
+        return datetime.fromisoformat(str(value))
+    except (TypeError, ValueError):
+        return None
+
+
+def _format_dashboard_timestamp(value):
+    parsed = _parse_dashboard_timestamp(value)
+    if not parsed:
+        return "Timestamp unavailable"
+    return parsed.strftime("%b %d, %Y • %I:%M %p").lstrip("0")
+
+
 @admin_trash.app_context_processor
 def inject_admin_dashboard_actionable_metrics():
     def get_admin_dashboard_actionable_metrics():
+        default_metrics = {
+            "unenrolled_students": 0,
+            "trash_expiring_soon": 0,
+            "recent_activities": [],
+            "system_status": {
+                "database_status": "Not verified",
+                "database_engine": "Not verified",
+                "email_status": "Not configured",
+                "email_configured": False,
+            },
+        }
         if session.get("role") != "admin":
-            return {"unenrolled_students": 0, "trash_expiring_soon": 0}
+            return default_metrics
 
         conn = get_db_connection()
         try:
@@ -98,13 +128,111 @@ def inject_admin_dashboard_actionable_metrics():
             except Exception:
                 trash_expiring_soon = 0
 
+            recent_activities = []
+            try:
+                classroom_rows = conn.execute(
+                    """
+                    SELECT c.name, c.classroom_type, c.created_at,
+                           u.username AS supervisor_name
+                    FROM classrooms c
+                    JOIN users u ON u.id = c.supervisor_id
+                    WHERE c.created_at IS NOT NULL
+                    ORDER BY c.created_at DESC
+                    LIMIT 8
+                    """
+                ).fetchall()
+                for row in classroom_rows:
+                    event_at = _parse_dashboard_timestamp(row[2])
+                    if not event_at:
+                        continue
+                    classroom_label = "Intern Classroom" if row[1] == "internship" else "Classroom"
+                    recent_activities.append({
+                        "sort_at": event_at,
+                        "title": f"{classroom_label} '{row[0]}' created",
+                        "context": f"Created by {row[3]}",
+                        "timestamp": _format_dashboard_timestamp(row[2]),
+                        "tone": "red",
+                        "icon": "▣",
+                    })
+
+                enrollment_rows = conn.execute(
+                    """
+                    SELECT s.username, c.name, cs.joined_at
+                    FROM classroom_students cs
+                    JOIN classrooms c ON c.id = cs.classroom_id
+                    JOIN users s ON s.id = cs.student_id
+                    WHERE c.classroom_type = 'internship'
+                      AND cs.joined_at IS NOT NULL
+                    ORDER BY cs.joined_at DESC
+                    LIMIT 8
+                    """
+                ).fetchall()
+                for row in enrollment_rows:
+                    event_at = _parse_dashboard_timestamp(row[2])
+                    if not event_at:
+                        continue
+                    recent_activities.append({
+                        "sort_at": event_at,
+                        "title": f"{row[0]} joined an Intern Classroom",
+                        "context": row[1],
+                        "timestamp": _format_dashboard_timestamp(row[2]),
+                        "tone": "orange",
+                        "icon": "♟",
+                    })
+
+                feedback_rows = conn.execute(
+                    """
+                    SELECT student.username, supervisor.username, f.created_at
+                    FROM feedback f
+                    JOIN users student ON student.id = f.student_id
+                    JOIN users supervisor ON supervisor.id = f.supervisor_id
+                    WHERE f.created_at IS NOT NULL
+                    ORDER BY f.created_at DESC
+                    LIMIT 8
+                    """
+                ).fetchall()
+                for row in feedback_rows:
+                    event_at = _parse_dashboard_timestamp(row[2])
+                    if not event_at:
+                        continue
+                    recent_activities.append({
+                        "sort_at": event_at,
+                        "title": f"Feedback submitted for {row[0]}",
+                        "context": f"Submitted by {row[1]}",
+                        "timestamp": _format_dashboard_timestamp(row[2]),
+                        "tone": "purple",
+                        "icon": "◌",
+                    })
+            except Exception as exc:
+                print("admin dashboard recent activity failed:", exc)
+
+            recent_activities.sort(
+                key=lambda activity: activity["sort_at"],
+                reverse=True,
+            )
+            recent_activities = recent_activities[:6]
+            for activity in recent_activities:
+                activity.pop("sort_at", None)
+
+            email_configured = bool(
+                os.environ.get("BREVO_API_KEY", "").strip()
+                and os.environ.get("BREVO_SENDER_EMAIL", "").strip()
+            )
+
             return {
                 "unenrolled_students": int((unenrolled_row[0] if unenrolled_row else 0) or 0),
                 "trash_expiring_soon": trash_expiring_soon,
+                "recent_activities": recent_activities,
+                "system_status": {
+                    "database_status": "Available",
+                    "database_engine": "PostgreSQL" if using_postgres() else "SQLite",
+                    "email_status": "Configured" if email_configured else "Not configured",
+                    "email_configured": email_configured,
+                },
             }
         except Exception as exc:
             print("admin dashboard actionable metrics failed:", exc)
-            return {"unenrolled_students": 0, "trash_expiring_soon": 0}
+            return default_metrics
         finally:
             conn.close()
 
