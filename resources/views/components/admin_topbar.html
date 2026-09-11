@@ -16,3 +16,81 @@ body.admin-document-folder-page:has(.nx-role-sidebar-shell.nx-role-admin):has(.n
     }
 }
 </style>
+
+<script>
+(function () {
+    function setupStudentProfileDocumentLinks() {
+        var match = window.location.pathname.match(/^\/admin\/student\/(\d+)\/?$/);
+        if (!match) return;
+
+        var studentId = match[1];
+        document.querySelectorAll('.document-list .document-item').forEach(function (item) {
+            var nameNode = item.querySelector('strong');
+            var link = item.querySelector('a.btn');
+            if (!nameNode || !link) return;
+
+            var filename = (nameNode.textContent || '').trim().replace(/^📄\s*/, '').trim();
+            if (!filename) return;
+
+            link.href = '/admin/student-documents/' + encodeURIComponent(studentId) + '?preview=' + encodeURIComponent(filename);
+            link.removeAttribute('target');
+            link.removeAttribute('rel');
+            link.title = 'Open this document using the protected document viewer';
+        });
+    }
+
+    function setupDocumentFolderAutoPreview() {
+        if (!document.body.classList.contains('admin-document-folder-page')) return;
+
+        var params = new URLSearchParams(window.location.search);
+        var requestedName = params.get('preview');
+        if (!requestedName) return;
+
+        var pathMatch = window.location.pathname.match(/^\/admin\/student-documents\/(\d+)\/?$/);
+        var studentId = pathMatch ? pathMatch[1] : '';
+        var cleanName = requestedName;
+        var prefix = studentId ? studentId + '_' : '';
+        if (prefix && cleanName.indexOf(prefix) === 0) cleanName = cleanName.slice(prefix.length);
+
+        var matchedRow = null;
+        document.querySelectorAll('.admin-document-table tbody tr').forEach(function (row) {
+            if (matchedRow) return;
+            var nameNode = row.querySelector('.admin-file-cell strong');
+            if (!nameNode) return;
+            var rowName = (nameNode.getAttribute('title') || nameNode.textContent || '').trim();
+            if (rowName === requestedName || rowName === cleanName) matchedRow = row;
+        });
+        if (!matchedRow) return;
+
+        params.delete('preview');
+        var cleanQuery = params.toString();
+        var cleanUrl = window.location.pathname + (cleanQuery ? '?' + cleanQuery : '') + window.location.hash;
+        window.history.replaceState({}, document.title, cleanUrl);
+
+        matchedRow.scrollIntoView({block: 'center'});
+        var previewButton = matchedRow.querySelector('.js-admin-doc-preview');
+        if (previewButton) {
+            previewButton.click();
+            window.requestAnimationFrame(function () {
+                var previewBody = document.getElementById('adminPreviewBody');
+                if (previewBody && !previewBody.disabled) previewBody.click();
+            });
+            return;
+        }
+
+        var openLink = matchedRow.querySelector('a.admin-file-action[href]');
+        if (openLink) window.location.assign(openLink.href);
+    }
+
+    function bootLegacyDocumentBridge() {
+        setupStudentProfileDocumentLinks();
+        setupDocumentFolderAutoPreview();
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bootLegacyDocumentBridge, {once: true});
+    } else {
+        bootLegacyDocumentBridge();
+    }
+})();
+</script>
