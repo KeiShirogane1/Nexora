@@ -47,13 +47,16 @@
     font: inherit;
     font-size: .78rem;
     font-weight: 800;
+    text-decoration: none !important;
     cursor: pointer;
 }
 .nx-document-viewer-button:hover,
 .nx-document-viewer-button:focus-visible {
     background: rgba(255,255,255,.16);
+    color: #fff;
     outline: none;
 }
+.nx-document-viewer-button[hidden] { display: none !important; }
 .nx-document-viewer-stage {
     position: relative;
     min-height: 0;
@@ -89,6 +92,16 @@
     border: 0;
     background: #fff;
 }
+.nx-document-viewer-status {
+    max-width: min(520px, calc(100vw - 32px));
+    padding: 18px 20px;
+    border: 1px solid rgba(255,255,255,.16);
+    border-radius: 12px;
+    background: rgba(255,255,255,.08);
+    color: rgba(255,255,255,.88);
+    font-size: .8rem;
+    text-align: center;
+}
 .nx-document-viewer-hint {
     position: absolute;
     left: 50%;
@@ -115,6 +128,7 @@
             <button type="button" class="nx-document-viewer-button" id="nxDocumentZoomOut" aria-label="Zoom out">−</button>
             <button type="button" class="nx-document-viewer-button" id="nxDocumentZoomReset" aria-label="Reset zoom">100%</button>
             <button type="button" class="nx-document-viewer-button" id="nxDocumentZoomIn" aria-label="Zoom in">+</button>
+            <a class="nx-document-viewer-button" id="nxDocumentOpenNew" href="#" target="_blank" rel="noopener" aria-label="Open document in a new tab">↗</a>
             <button type="button" class="nx-document-viewer-button" id="nxDocumentViewerClose" aria-label="Close fullscreen preview">✕</button>
         </div>
     </div>
@@ -123,6 +137,7 @@
             <img class="nx-document-viewer-image" id="nxDocumentViewerImage" alt="Document preview">
         </div>
         <iframe class="nx-document-viewer-frame" id="nxDocumentViewerFrame" title="Document preview" hidden></iframe>
+        <div class="nx-document-viewer-status" id="nxDocumentViewerStatus" hidden>Loading document…</div>
         <div class="nx-document-viewer-hint" id="nxDocumentViewerHint" hidden>Mouse wheel or + / − to zoom · drag to pan · Esc to close</div>
     </div>
 </div>
@@ -138,10 +153,12 @@
     var zoomOut = document.getElementById('nxDocumentZoomOut');
     var zoomReset = document.getElementById('nxDocumentZoomReset');
     var zoomIn = document.getElementById('nxDocumentZoomIn');
+    var openNew = document.getElementById('nxDocumentOpenNew');
     var stage = document.getElementById('nxDocumentViewerStage');
     var imageWrap = document.getElementById('nxDocumentImageWrap');
     var image = document.getElementById('nxDocumentViewerImage');
     var frame = document.getElementById('nxDocumentViewerFrame');
+    var status = document.getElementById('nxDocumentViewerStatus');
     var hint = document.getElementById('nxDocumentViewerHint');
     var scale = 1;
     var offsetX = 0;
@@ -152,6 +169,8 @@
     var dragOriginX = 0;
     var dragOriginY = 0;
     var previousOverflow = '';
+    var objectUrl = '';
+    var loadSequence = 0;
 
     function clampScale(value) {
         return Math.max(.25, Math.min(5, value));
@@ -179,15 +198,57 @@
         renderImageTransform();
     }
 
-    function closeViewer() {
-        viewer.hidden = true;
+    function revokeObjectUrl() {
+        if (!objectUrl) return;
+        URL.revokeObjectURL(objectUrl);
+        objectUrl = '';
+    }
+
+    function setImageControls(enabled) {
+        zoomOut.hidden = !enabled;
+        zoomReset.hidden = !enabled;
+        zoomIn.hidden = !enabled;
+    }
+
+    function clearContent() {
+        loadSequence += 1;
+        revokeObjectUrl();
         imageWrap.hidden = true;
         frame.hidden = true;
+        status.hidden = true;
         hint.hidden = true;
         image.removeAttribute('src');
         frame.removeAttribute('src');
         resetImage();
+    }
+
+    function closeViewer() {
+        viewer.hidden = true;
+        clearContent();
         document.body.style.overflow = previousOverflow;
+    }
+
+    function loadProtectedFrame(url, sequence) {
+        status.textContent = 'Loading document…';
+        status.hidden = false;
+        fetch(url, { credentials: 'same-origin' })
+            .then(function (response) {
+                if (!response.ok) throw new Error('Unable to load document');
+                return response.blob();
+            })
+            .then(function (blob) {
+                if (sequence !== loadSequence || viewer.hidden) return;
+                revokeObjectUrl();
+                objectUrl = URL.createObjectURL(blob);
+                frame.src = objectUrl;
+                frame.hidden = false;
+                status.hidden = true;
+            })
+            .catch(function () {
+                if (sequence !== loadSequence || viewer.hidden) return;
+                status.textContent = 'This file could not be embedded. Use ↗ to open it in a new tab.';
+                status.hidden = false;
+            });
     }
 
     function openViewer(options) {
@@ -199,20 +260,20 @@
         previousOverflow = document.body.style.overflow;
         document.body.style.overflow = 'hidden';
         title.textContent = name;
+        openNew.href = url;
         viewer.hidden = false;
-        imageWrap.hidden = true;
-        frame.hidden = true;
-        hint.hidden = true;
-        resetImage();
+        clearContent();
+        var sequence = loadSequence;
 
         if (type === 'image') {
+            setImageControls(true);
             image.src = url;
             image.alt = name;
             imageWrap.hidden = false;
             hint.hidden = false;
         } else {
-            frame.src = url;
-            frame.hidden = false;
+            setImageControls(false);
+            loadProtectedFrame(url, sequence);
         }
         closeButton.focus();
     }
@@ -265,6 +326,7 @@
         if (event.key === '0') resetImage();
     });
 
+    window.addEventListener('pagehide', revokeObjectUrl, { once: true });
     window.NexoraDocumentViewer = {
         open: openViewer,
         close: closeViewer
