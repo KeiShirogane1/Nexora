@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Documents - Nexora Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
+    <style>
+        .admin-documents-page .compact-dashboard { padding-bottom: 28px; }
+        .admin-documents-intro {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(340px, .82fr);
+            gap: 16px;
+            align-items: stretch;
+            margin-bottom: 16px;
+        }
+        .admin-documents-intro .students-page-header {
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+        .admin-documents-note {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-height: 86px;
+            padding: 16px 18px;
+            border: 1px solid #f2d5cc;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #fff9f6, #fff2ed);
+        }
+        .admin-documents-note-icon,
+        .admin-classroom-folder-icon {
+            display: grid;
+            place-items: center;
+            flex: 0 0 auto;
+            color: #d94720;
+            background: #ffe7dc;
+        }
+        .admin-documents-note-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            font-size: 20px;
+            font-weight: 900;
+        }
+        .admin-documents-note strong {
+            display: block;
+            color: #8d2b17;
+            font-size: .84rem;
+        }
+        .admin-documents-note span {
+            display: block;
+            margin-top: 4px;
+            color: #765c54;
+            font-size: .75rem;
+            line-height: 1.45;
+        }
+        .admin-documents-latest { margin-bottom: 16px; }
+        .admin-documents-latest .table-card-header,
+        .admin-classroom-folder-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+        .admin-document-name {
+            max-width: 330px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .admin-classroom-folders {
+            display: grid;
+            gap: 12px;
+        }
+        .admin-classroom-folder {
+            overflow: hidden;
+            border: 1px solid #e4e7eb;
+            border-radius: 12px;
+            background: #fff;
+            box-shadow: 0 5px 16px rgba(25, 35, 45, .035);
+        }
+        .admin-classroom-folder-head {
+            padding: 13px 16px;
+            border-bottom: 1px solid #eceff2;
+            background: linear-gradient(90deg, #fffaf8, #fff);
+        }
+        .admin-classroom-folder-main {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+        .admin-classroom-folder-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            font-weight: 900;
+        }
+        .admin-classroom-folder-title {
+            min-width: 0;
+        }
+        .admin-classroom-folder-title h3 {
+            margin: 0;
+            color: #18212f;
+            font-size: .92rem;
+            font-weight: 800;
+        }
+        .admin-classroom-folder-title p {
+            margin: 3px 0 0;
+            color: #6d7785;
+            font-size: .7rem;
+        }
+        .admin-classroom-folder-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .admin-folder-toggle {
+            width: 32px;
+            height: 32px;
+            display: grid;
+            place-items: center;
+            border: 1px solid #dddfe3;
+            border-radius: 8px;
+            background: #fff;
+            color: #5b6470;
+            font-weight: 900;
+            cursor: pointer;
+        }
+        .admin-student-identity {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            min-width: 190px;
+        }
+        .admin-student-avatar {
+            width: 32px;
+            height: 32px;
+            display: grid;
+            place-items: center;
+            flex: 0 0 32px;
+            border-radius: 50%;
+            background: #f0f3f7;
+            color: #475569;
+            font-size: .68rem;
+            font-weight: 900;
+        }
+        .admin-student-identity strong {
+            display: block;
+            color: #18212f;
+            font-size: .76rem;
+        }
+        .admin-student-identity small {
+            display: block;
+            margin-top: 2px;
+            color: #7b8490;
+            font-size: .65rem;
+        }
+        .admin-doc-count {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 9px;
+            border-radius: 999px;
+            background: #fff1eb;
+            color: #b63b1c;
+            font-size: .68rem;
+            font-weight: 800;
+        }
+        .admin-doc-count.is-empty {
+            background: #f3f4f6;
+            color: #737b86;
+        }
+        .admin-documents-empty {
+            padding: 32px 20px;
+            text-align: center;
+            color: #737b86;
+        }
+        .admin-documents-empty strong {
+            display: block;
+            margin-bottom: 4px;
+            color: #2f3742;
+        }
+        @media (max-width: 980px) {
+            .admin-documents-intro { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 760px) {
+            .admin-classroom-folder-head { align-items: flex-start; }
+            .admin-classroom-folder-actions { width: 100%; justify-content: space-between; }
+        }
+    </style>
+</head>
+<body class="nexora-admin-body admin-page admin-documents-page">
+    {% include 'components/admin_sidebar.html' %}
+
+    <main class="admin-main nexora-app-main">
+        <div class="nexora-page">
+            <div class="compact-dashboard compact-dashboard-flush">
+                <section class="admin-documents-intro">
+                    <div class="students-page-header">
+                        <div>
+                            <h1>Student Documents</h1>
+                            <p>Browse student OJT files by classroom and open each student's read-only document folder.</p>
+                        </div>
+                    </div>
+                    <aside class="admin-documents-note" aria-label="Student document information">
+                        <span class="admin-documents-note-icon" aria-hidden="true">i</span>
+                        <div>
+                            <strong>Student-owned document storage</strong>
+                            <span>Documents are not assigned to a specific classroom. Classroom information only shows where each student is enrolled.</span>
+                        </div>
+                    </aside>
+                </section>
+
+                <section class="summary-grid" aria-label="Student document summary">
+                    <div class="summary-card">
+                        <div class="summary-icon total">♙</div>
+                        <div class="summary-content">
+                            <span class="summary-label">Total Students</span>
+                            <span class="summary-value">{{ summary.total_students }}</span>
+                        </div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-icon active">✓</div>
+                        <div class="summary-content">
+                            <span class="summary-label">With Documents</span>
+                            <span class="summary-value">{{ summary.with_documents }}</span>
+                        </div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-icon assigned">▤</div>
+                        <div class="summary-content">
+                            <span class="summary-label">Total Documents</span>
+                            <span class="summary-value">{{ summary.total_documents }}</span>
+                        </div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-icon pending">▧</div>
+                        <div class="summary-content">
+                            <span class="summary-label">Classrooms</span>
+                            <span class="summary-value">{{ summary.total_classrooms }}</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="nexora-card filter-card">
+                    <form method="GET" class="filter-grid" aria-label="Student document filters">
+                        <div class="search-group">
+                            <label for="studentDocumentSearch">Search</label>
+                            <input
+                                id="studentDocumentSearch"
+                                name="search"
+                                type="search"
+                                class="form-control"
+                                value="{{ search }}"
+                                placeholder="Student, number, program, classroom, company, or adviser"
+                            >
+                        </div>
+                        <div>
+                            <label for="studentDocumentType">Classroom Type</label>
+                            <select id="studentDocumentType" name="type" class="form-select">
+                                <option value="all" {% if classroom_type == 'all' %}selected{% endif %}>All Types</option>
+                                <option value="classroom" {% if classroom_type == 'classroom' %}selected{% endif %}>Classroom</option>
+                                <option value="internship" {% if classroom_type == 'internship' %}selected{% endif %}>Intern Classroom</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="studentDocumentState">Documents</label>
+                            <select id="studentDocumentState" name="documents" class="form-select">
+                                <option value="all" {% if document_state == 'all' %}selected{% endif %}>All Students</option>
+                                <option value="with" {% if document_state == 'with' %}selected{% endif %}>Has Documents</option>
+                                <option value="without" {% if document_state == 'without' %}selected{% endif %}>No Documents</option>
+                            </select>
+                        </div>
+                        <div class="filter-actions filter-actions-end">
+                            <a href="{{ url_for('admin_classrooms.student_documents') }}" class="btn-nexora-secondary">Reset</a>
+                            <button type="submit" class="btn-nexora-primary">Apply</button>
+                        </div>
+                    </form>
+                </section>
+
+                <section class="nexora-card table-card admin-documents-latest" aria-labelledby="latestUploadsHeading">
+                    <div class="table-card-header">
+                        <div>
+                            <h3 id="latestUploadsHeading">Latest Uploads</h3>
+                            <span class="table-meta">The 8 most recently uploaded student documents.</span>
+                        </div>
+                        <span class="status-badge status-active"><span class="status-dot"></span> Newest first</span>
+                    </div>
+                    {% if latest_uploads %}
+                        <div class="table-responsive">
+                            <table class="table nexora-table align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Student</th>
+                                        <th>Document</th>
+                                        <th>Program</th>
+                                        <th>Uploaded</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in latest_uploads %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ item.student_name }}</strong>
+                                                <div class="text-muted small">{{ item.student_number or 'No student number' }}</div>
+                                            </td>
+                                            <td><div class="admin-document-name" title="{{ item.filename }}">{{ item.filename }}</div></td>
+                                            <td>{{ item.major_program or '—' }}</td>
+                                            <td>{{ item.uploaded_at }}</td>
+                                            <td>
+                                                <a class="btn-view" href="{{ url_for('admin_classrooms.student_document_folder', student_id=item.student_id) }}">Open Folder</a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="admin-documents-empty">
+                            <strong>No uploads yet</strong>
+                            <span>Recent student document uploads will appear here.</span>
+                        </div>
+                    {% endif %}
+                </section>
+
+                <div class="table-card-header px-0 pb-2">
+                    <div>
+                        <h3>Classroom Student Folders</h3>
+                        <span class="table-meta">{{ shown_students }} student row{% if shown_students != 1 %}s{% endif %} shown</span>
+                    </div>
+                </div>
+
+                <section class="admin-classroom-folders" aria-label="Student folders grouped by classroom">
+                    {% for classroom in classroom_groups %}
+                        <article class="admin-classroom-folder">
+                            <header class="admin-classroom-folder-head">
+                                <div class="admin-classroom-folder-main">
+                                    <span class="admin-classroom-folder-icon" aria-hidden="true">▧</span>
+                                    <div class="admin-classroom-folder-title">
+                                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                                            <h3>{{ classroom.name }}</h3>
+                                            {% if classroom.classroom_type == 'internship' %}
+                                                <span class="badge rounded-pill text-bg-warning">Intern Classroom</span>
+                                            {% else %}
+                                                <span class="badge rounded-pill text-bg-secondary">Classroom</span>
+                                            {% endif %}
+                                            {% if classroom.archived %}
+                                                <span class="badge rounded-pill text-bg-light border text-secondary">Archived</span>
+                                            {% else %}
+                                                <span class="badge rounded-pill text-bg-success">Active</span>
+                                            {% endif %}
+                                        </div>
+                                        <p>
+                                            {{ classroom.section or 'No section' }}
+                                            · Adviser: {{ classroom.supervisor_name }}
+                                            {% if classroom.company_name %} · {{ classroom.company_name }}{% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="admin-classroom-folder-actions">
+                                    <span class="admin-doc-count">{{ classroom.students|length }} student{% if classroom.students|length != 1 %}s{% endif %}</span>
+                                    <button
+                                        type="button"
+                                        class="admin-folder-toggle"
+                                        data-folder-toggle
+                                        aria-expanded="{{ 'true' if loop.first else 'false' }}"
+                                        aria-controls="adminDocumentClassroom{{ classroom.id }}"
+                                    >{{ '⌃' if loop.first else '⌄' }}</button>
+                                </div>
+                            </header>
+
+                            <div id="adminDocumentClassroom{{ classroom.id }}" data-folder-body {% if not loop.first %}hidden{% endif %}>
+                                <div class="table-responsive">
+                                    <table class="table nexora-table align-middle mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th class="ps-3">Student</th>
+                                                <th>Student No.</th>
+                                                <th>Program</th>
+                                                <th>Year</th>
+                                                <th>Documents</th>
+                                                <th>Latest Upload</th>
+                                                <th class="text-end pe-3">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for student in classroom.students %}
+                                                <tr>
+                                                    <td class="ps-3">
+                                                        <div class="admin-student-identity">
+                                                            <span class="admin-student-avatar">{{ (student.display_name[:1] or 'S')|upper }}</span>
+                                                            <div>
+                                                                <strong>{{ student.display_name }}</strong>
+                                                                <small>{{ student.email or student.username }}</small>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td>{{ student.student_number or '—' }}</td>
+                                                    <td>{{ student.major_program or '—' }}</td>
+                                                    <td>{{ student.grade_year or '—' }}</td>
+                                                    <td>
+                                                        <span class="admin-doc-count {% if student.document_count == 0 %}is-empty{% endif %}">
+                                                            ▤ {{ student.document_count }}
+                                                        </span>
+                                                    </td>
+                                                    <td>{{ student.last_upload }}</td>
+                                                    <td class="text-end pe-3">
+                                                        <a class="btn-view" href="{{ url_for('admin_classrooms.student_document_folder', student_id=student.id) }}">View Documents</a>
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </article>
+                    {% endfor %}
+
+                    {% if unassigned_students %}
+                        <article class="admin-classroom-folder">
+                            <header class="admin-classroom-folder-head">
+                                <div class="admin-classroom-folder-main">
+                                    <span class="admin-classroom-folder-icon" aria-hidden="true">—</span>
+                                    <div class="admin-classroom-folder-title">
+                                        <h3>Not Enrolled in a Classroom</h3>
+                                        <p>Students who do not currently appear in classroom_students.</p>
+                                    </div>
+                                </div>
+                                <div class="admin-classroom-folder-actions">
+                                    <span class="admin-doc-count is-empty">{{ unassigned_students|length }} student{% if unassigned_students|length != 1 %}s{% endif %}</span>
+                                    <button type="button" class="admin-folder-toggle" data-folder-toggle aria-expanded="false" aria-controls="adminDocumentUnassigned">⌄</button>
+                                </div>
+                            </header>
+                            <div id="adminDocumentUnassigned" data-folder-body hidden>
+                                <div class="table-responsive">
+                                    <table class="table nexora-table align-middle mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th class="ps-3">Student</th>
+                                                <th>Student No.</th>
+                                                <th>Program</th>
+                                                <th>Year</th>
+                                                <th>Documents</th>
+                                                <th>Latest Upload</th>
+                                                <th class="text-end pe-3">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for student in unassigned_students %}
+                                                <tr>
+                                                    <td class="ps-3">
+                                                        <div class="admin-student-identity">
+                                                            <span class="admin-student-avatar">{{ (student.display_name[:1] or 'S')|upper }}</span>
+                                                            <div>
+                                                                <strong>{{ student.display_name }}</strong>
+                                                                <small>{{ student.email or student.username }}</small>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td>{{ student.student_number or '—' }}</td>
+                                                    <td>{{ student.major_program or '—' }}</td>
+                                                    <td>{{ student.grade_year or '—' }}</td>
+                                                    <td><span class="admin-doc-count {% if student.document_count == 0 %}is-empty{% endif %}">▤ {{ student.document_count }}</span></td>
+                                                    <td>{{ student.last_upload }}</td>
+                                                    <td class="text-end pe-3">
+                                                        <a class="btn-view" href="{{ url_for('admin_classrooms.student_document_folder', student_id=student.id) }}">View Documents</a>
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </article>
+                    {% endif %}
+
+                    {% if not classroom_groups and not unassigned_students %}
+                        <div class="nexora-card admin-documents-empty">
+                            <strong>No matching student folders</strong>
+                            <span>Try changing the search or filters.</span>
+                        </div>
+                    {% endif %}
+                </section>
+
+                <div class="alert alert-light border mt-3 mb-0" role="note">
+                    Admin access is read-only in this phase. Students keep ownership of upload, rename, and remove actions.
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.querySelectorAll('[data-folder-toggle]').forEach(function (button) {
+            button.addEventListener('click', function () {
+                var body = document.getElementById(button.getAttribute('aria-controls'));
+                if (!body) return;
+                var opening = body.hidden;
+                body.hidden = !opening;
+                button.setAttribute('aria-expanded', opening ? 'true' : 'false');
+                button.textContent = opening ? '⌃' : '⌄';
+            });
+        });
+    </script>
+</body>
+</html>

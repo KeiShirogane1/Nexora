@@ -3,6 +3,47 @@
     Uses the same global sidebar geometry and hover behavior as Student.
 #}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebars.css') }}">
+<style>
+@media (min-width: 761px) {
+    .nx-role-admin .nx-role-sidebar {
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        padding-bottom: 14px !important;
+        background:
+            linear-gradient(
+                180deg,
+                rgba(75, 8, 8, .96),
+                rgba(48, 6, 7, .92)
+            ) !important;
+        -webkit-backdrop-filter: blur(14px) saturate(1.05);
+        backdrop-filter: blur(14px) saturate(1.05);
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255, 154, 123, .42) transparent;
+    }
+    .nx-role-admin .nx-role-sidebar::-webkit-scrollbar {
+        width: 6px;
+    }
+    .nx-role-admin .nx-role-sidebar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .nx-role-admin .nx-role-sidebar::-webkit-scrollbar-thumb {
+        border-radius: 999px;
+        background: rgba(255, 154, 123, .38);
+    }
+    .nx-role-admin .nx-role-sidebar::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 154, 123, .58);
+    }
+    .nx-role-admin .nx-role-sidebar:hover,
+    .nx-role-admin .nx-role-sidebar:focus-within {
+        background:
+            linear-gradient(
+                180deg,
+                rgba(75, 8, 8, .93),
+                rgba(48, 6, 7, .89)
+            ) !important;
+    }
+}
+</style>
 
 <div class="nx-role-sidebar-shell nx-role-admin">
     <aside class="nx-role-sidebar" id="adminSidebar" aria-label="Admin navigation">
@@ -44,6 +85,10 @@
 
             <a href="{{ url_for('admin_classrooms.classrooms') }}" aria-label="Classrooms" class="{% if request.path.startswith('/admin/classrooms') %}active{% endif %}">
                 <span class="nx-role-icon">▧</span><span class="nx-role-nav-text">Classrooms</span>
+            </a>
+
+            <a href="{{ url_for('admin_classrooms.student_documents') }}" aria-label="Student Documents" class="{% if request.path.startswith('/admin/student-documents') %}active{% endif %}">
+                <span class="nx-role-icon">▤</span><span class="nx-role-nav-text">Student Documents</span>
             </a>
 
             <div class="nx-role-nav-group {% if request.path.startswith('/admin/reports') %}open{% endif %}">
