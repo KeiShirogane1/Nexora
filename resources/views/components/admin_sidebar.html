@@ -153,6 +153,17 @@
     <div class="nx-role-sidebar-backdrop" aria-hidden="true"></div>
 </div>
 
+{# Admin pages that already place the shared topbar explicitly. #}
+{% set admin_topbar_manual_endpoints = [
+    'admin.admin_dashboard',
+    'admin_classrooms.student_documents',
+    'admin_classrooms.student_document_folder',
+    'notifications.notification_list'
+] %}
+{% if request.endpoint not in admin_topbar_manual_endpoints %}
+    {% include 'components/admin_topbar.html' %}
+{% endif %}
+
 {% include 'components/logout_modal.html' %}
 {% include 'components/toast.html' %}
 

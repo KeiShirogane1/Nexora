@@ -1,0 +1,485 @@
+{# Shared Nexora portal topbar. Wrappers set nx_topbar_role. #}
+{% set nx_role = nx_topbar_role|default('student') %}
+{% set nx_role_label = nx_role|title %}
+{% set nx_default_avatar = url_for('static', filename='images/default_profile.png') %}
+{% set nx_avatar = nx_default_avatar %}
+{% set nx_display_name = nx_role_label %}
+{% set nx_profile_url = none %}
+
+{% if nx_role == 'student' %}
+    {% set nx_profile_url = url_for('student.student_profile') %}
+    {% if sidebar_profile is defined and sidebar_profile and sidebar_profile.profile_picture %}
+        {% set nx_avatar = url_for('profile_picture', filename=sidebar_profile.profile_picture) %}
+    {% elif profile is defined and profile and profile[5] %}
+        {% set nx_avatar = url_for('profile_picture', filename=profile[5]) %}
+    {% endif %}
+    {% if sidebar_profile is defined and sidebar_profile and sidebar_profile.first_name %}
+        {% set nx_display_name = (sidebar_profile.first_name ~ ' ' ~ (sidebar_profile.last_name or ''))|trim %}
+    {% elif sidebar_profile is defined and sidebar_profile and sidebar_profile.username %}
+        {% set nx_display_name = sidebar_profile.username %}
+    {% elif profile is defined and profile %}
+        {% set nx_display_name = ((profile[0] or '') ~ ' ' ~ (profile[2] or ''))|trim %}
+    {% else %}
+        {% set nx_display_name = 'Student' %}
+    {% endif %}
+{% elif nx_role == 'supervisor' %}
+    {% set nx_profile_url = url_for('supervisor.supervisor_profile') %}
+    {% if sidebar_profile is defined and sidebar_profile and sidebar_profile.profile_picture %}
+        {% set nx_avatar = url_for('profile_picture', filename=sidebar_profile.profile_picture) %}
+    {% endif %}
+    {% if sidebar_profile is defined and sidebar_profile and sidebar_profile.first_name %}
+        {% set nx_display_name = (sidebar_profile.first_name ~ ' ' ~ (sidebar_profile.last_name or ''))|trim %}
+    {% elif sidebar_profile is defined and sidebar_profile and sidebar_profile.username %}
+        {% set nx_display_name = sidebar_profile.username %}
+    {% else %}
+        {% set nx_display_name = 'Supervisor' %}
+    {% endif %}
+{% else %}
+    {% set nx_role_label = 'Admin' %}
+    {% set nx_display_name = 'Administrator' %}
+{% endif %}
+
+{% if nx_role == 'student' %}
+    {% set nx_legacy_topbar_class = 'student-tasks-topbar student-global-topbar' %}
+{% elif nx_role == 'supervisor' %}
+    {% set nx_legacy_topbar_class = 'supervisor-topbar' %}
+{% else %}
+    {% set nx_legacy_topbar_class = 'admin-global-topbar' %}
+{% endif %}
+
+<style>
+.nx-role-topbar {
+    --nx-topbar-accent: #0a8f46;
+    --nx-topbar-accent-soft: #edf8f1;
+    --nx-topbar-ink: #17233b;
+    --nx-topbar-muted: #7b8797;
+    --nx-topbar-border: #e4eaf0;
+    position: fixed !important;
+    top: 0 !important;
+    z-index: 1150 !important;
+    height: 68px !important;
+    min-height: 68px !important;
+    padding: 0 28px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 22px !important;
+    overflow: visible !important;
+    box-sizing: border-box !important;
+    background: rgba(255, 255, 255, .97) !important;
+    border-bottom: 1px solid var(--nx-topbar-border) !important;
+    box-shadow: 0 2px 12px rgba(15, 23, 42, .035) !important;
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+}
+.nx-role-topbar--supervisor {
+    --nx-topbar-accent: #2563eb;
+    --nx-topbar-accent-soft: #eff6ff;
+}
+.nx-role-topbar--admin {
+    --nx-topbar-accent: #f45125;
+    --nx-topbar-accent-soft: #fff1eb;
+}
+.nx-role-topbar-left,
+.nx-role-topbar-right {
+    display: flex;
+    align-items: center;
+}
+.nx-role-topbar-left {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.nx-role-topbar-right {
+    flex: 0 0 auto;
+    gap: 18px;
+}
+.nx-quick-search {
+    position: relative;
+    width: min(460px, 100%);
+    min-width: 0;
+}
+.nx-quick-search-control {
+    height: 40px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 10px 0 12px;
+    border: 1px solid #dfe6eb;
+    border-radius: 10px;
+    background: #f8fafb;
+    color: #8190a0;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .65);
+    transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
+}
+.nx-quick-search:focus-within .nx-quick-search-control {
+    border-color: var(--nx-topbar-accent);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(15, 23, 42, .05);
+}
+.nx-quick-search-control svg {
+    width: 17px;
+    height: 17px;
+    flex: 0 0 17px;
+    stroke: currentColor;
+}
+.nx-quick-search-control input {
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--nx-topbar-ink);
+    font: inherit;
+    font-size: 12px;
+}
+.nx-quick-search-control input::placeholder { color: #92a0ae; }
+.nx-quick-search-shortcut {
+    flex: 0 0 auto;
+    min-width: 43px;
+    padding: 4px 6px;
+    border: 1px solid #e1e7ec;
+    border-bottom-color: #d4dce3;
+    border-radius: 6px;
+    background: #fff;
+    color: #8995a2;
+    font-family: inherit;
+    font-size: 8px;
+    font-weight: 800;
+    line-height: 1;
+    text-align: center;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+}
+.nx-quick-search-panel {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    z-index: 2400;
+    width: 100%;
+    max-height: min(420px, calc(100vh - 96px));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 8px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 20px 45px rgba(15, 23, 42, .16), 0 4px 14px rgba(15, 23, 42, .06);
+}
+.nx-quick-search-panel[hidden] { display: none !important; }
+.nx-quick-search-label {
+    padding: 5px 9px 7px;
+    color: #94a3b8;
+    font-size: 8px;
+    font-weight: 900;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+.nx-quick-search-item {
+    min-height: 42px;
+    padding: 0 11px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border-radius: 8px;
+    color: #334155;
+    text-decoration: none !important;
+    font-size: 12px;
+    font-weight: 750;
+}
+.nx-quick-search-item small {
+    flex: 0 0 auto;
+    color: #94a3b8;
+    font-size: 9px;
+    font-weight: 700;
+}
+.nx-quick-search-item:hover,
+.nx-quick-search-item:focus-visible,
+.nx-quick-search-item.is-selected {
+    outline: 0;
+    background: var(--nx-topbar-accent-soft);
+    color: var(--nx-topbar-accent);
+}
+.nx-quick-search-item:hover small,
+.nx-quick-search-item:focus-visible small,
+.nx-quick-search-item.is-selected small { color: currentColor; opacity: .72; }
+.nx-quick-search-empty {
+    padding: 18px 11px;
+    color: #94a3b8;
+    font-size: 11px;
+    text-align: center;
+}
+.nx-role-topbar-user {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: inherit !important;
+    text-decoration: none !important;
+}
+.nx-role-topbar-user img {
+    width: 36px !important;
+    min-width: 36px !important;
+    height: 36px !important;
+    margin: 0 !important;
+    flex: 0 0 36px;
+    border: 1px solid #e2e8f0;
+    border-radius: 50%;
+    background: #fff;
+    object-fit: cover;
+}
+.nx-role-topbar-user-copy {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
+}
+.nx-role-topbar-user-copy strong {
+    max-width: 180px;
+    overflow: hidden;
+    color: #1e293b;
+    font-size: 11px;
+    font-weight: 800;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.nx-role-topbar-user-copy span {
+    margin-top: 4px;
+    color: var(--nx-topbar-muted);
+    font-size: 9px;
+    font-weight: 650;
+}
+.nx-role-topbar-chevron {
+    color: #94a3b8;
+    font-size: 12px;
+}
+
+/* Admin pages historically used a sticky topbar. Reserve the same space now
+   that the shared role topbar is fixed like Student and Supervisor. */
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main {
+    padding-top: 96px !important;
+}
+body.admin-documents-page:has(.nx-role-topbar) .admin-main,
+body.admin-document-folder-page:has(.nx-role-topbar) .admin-main {
+    padding-top: 68px !important;
+}
+
+@media (max-width: 760px) {
+    .nx-role-topbar {
+        height: 64px !important;
+        min-height: 64px !important;
+        padding: 0 14px !important;
+        gap: 12px !important;
+    }
+    .nx-role-topbar-right { gap: 10px; }
+    .nx-quick-search { width: min(100%, 420px); }
+    .nx-quick-search-shortcut,
+    .nx-role-topbar-user-copy,
+    .nx-role-topbar-chevron { display: none !important; }
+    .nx-role-topbar-user img {
+        width: 34px !important;
+        min-width: 34px !important;
+        height: 34px !important;
+        flex-basis: 34px;
+    }
+    body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main {
+        padding-top: 84px !important;
+    }
+    body.admin-documents-page:has(.nx-role-topbar) .admin-main,
+    body.admin-document-folder-page:has(.nx-role-topbar) .admin-main {
+        padding-top: 64px !important;
+    }
+}
+@media (max-width: 480px) {
+    .nx-role-topbar { padding: 0 10px !important; }
+    .nx-quick-search-control { height: 38px; padding: 0 9px; }
+    .nx-role-topbar-user { display: none !important; }
+    .nx-quick-search-panel { width: min(360px, calc(100vw - 20px)); }
+}
+</style>
+
+<header class="nx-role-topbar nx-role-topbar--{{ nx_role }} {{ nx_legacy_topbar_class }}" aria-label="{{ nx_role_label }} portal header">
+    <div class="nx-role-topbar-left">
+        <div class="nx-quick-search" data-nx-quick-search>
+            <div class="nx-quick-search-control">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="11" cy="11" r="7"></circle>
+                    <path d="m20 20-3.5-3.5"></path>
+                </svg>
+                <input
+                    type="search"
+                    placeholder="Quick Search..."
+                    autocomplete="off"
+                    aria-label="Quick Search"
+                    aria-expanded="false"
+                    aria-controls="nxQuickSearch{{ nx_role|title }}"
+                    data-nx-quick-search-input
+                >
+                <kbd class="nx-quick-search-shortcut" aria-hidden="true">Ctrl K</kbd>
+            </div>
+
+            <div class="nx-quick-search-panel" id="nxQuickSearch{{ nx_role|title }}" data-nx-quick-search-panel hidden>
+                <div class="nx-quick-search-label">Quick Search</div>
+                {% if nx_role == 'student' %}
+                    <a class="nx-quick-search-item" href="{{ url_for('student.student_dashboard') }}" data-search-text="dashboard home overview"><span>Dashboard</span><small>Student</small></a>
+                    <a class="nx-quick-search-item" href="{{ url_for('classroom.student_classes') }}" data-search-text="intern classrooms classes classroom"><span>Intern Classrooms</span><small>Classes</small></a>
+                    <a class="nx-quick-search-item" href="{{ url_for('student.logbook') }}" data-search-text="logbook daily log hours attendance"><span>Logbook</span><small>OJT</small></a>
+                    <a class="nx-quick-search-item" href="{{ url_for('student.tasks') }}" data-search-text="tasks assignments deadlines work"><span>Tasks</span><small>Work</small></a>
+                    <a class="nx-quick-search-item" href="{{ url_for('student.documents') }}" data-search-text="documents files uploads requirements"><span>Documents</span><small>Files</small></a>
+                    <a class="nx-quick-search-item" href="{{ url_for('notifications.notification_list') }}" data-search-text="notifications alerts updates"><span>Notifications</span><small>Updates</small></a>
+                    <a class="nx-quick-search-item" href="{{ url_for('student.student_profile') }}" data-search-text="profile account student information"><span>Profile</span><small>Account</small></a>
+                {% elif nx_role == 'supervisor' %}
+                    <a class="nx-quick-search-item" href="{{ url_for('supervisor.supervisor_dashboard') }}" data-search-text="dashboard home overview"><span>Dashboard</span><small>Supervisor</small></a>
+                    <a class="nx-quick-search-item" href="{{ url_for('supervisor.view_interns') }}" data-search-text="assigned interns students intern roster"><span>Assigned Interns</span><small>Interns</small></a>
+                    <a class="nx-quick-search-item" href="{{ url_for('ojt_evaluation.supervisor_evaluation_directory') }}" data-search-text="evaluations evaluation ojt ratings"><span>Evaluations</span><small>OJT</small></a>
+                    <a class="nx-quick-search-item" href="{{ url_for('classroom.supervisor_classes') }}" data-search-text="intern classrooms classes classroom"><span>Intern Classrooms</span><small>Classes</small></a>
+                    <a class="nx-quick-search-item" href="{{ url_for('notifications.notification_list') }}" data-search-text="notifications alerts updates"><span>Notifications</span><small>Updates</small></a>
+                    <a class="nx-quick-search-item" href="{{ url_for('supervisor.supervisor_profile') }}" data-search-text="profile account supervisor information"><span>Profile</span><small>Account</small></a>
+                {% else %}
+                    <a class="nx-quick-search-item" href="{{ url_for('admin.admin_dashboard') }}" data-search-text="dashboard home overview"><span>Dashboard</span><small>Admin</small></a>
+                    <a class="nx-quick-search-item" href="{{ url_for('admin.admin_students') }}" data-search-text="students users accounts approvals"><span>Students</span><small>Users</small></a>
+                    <a class="nx-quick-search-item" href="{{ url_for('admin.admin_supervisors') }}" data-search-text="supervisors users accounts advisers"><span>Supervisors</span><small>Users</small></a>
+                    <a class="nx-quick-search-item" href="{{ url_for('admin_trash.trash') }}" data-search-text="trash deleted accounts restore"><span>Trash</span><small>Users</small></a>
+                    <a class="nx-quick-search-item" href="{{ url_for('admin.internship_assign') }}" data-search-text="internship assignments assign"><span>Internship</span><small>Assignments</small></a>
+                    <a class="nx-quick-search-item" href="{{ url_for('admin_classrooms.classrooms') }}" data-search-text="classrooms classes classroom"><span>Classrooms</span><small>Classes</small></a>
+                    <a class="nx-quick-search-item" href="{{ url_for('admin_classrooms.student_documents') }}" data-search-text="student documents files uploads folders"><span>Student Documents</span><small>Files</small></a>
+                    <a class="nx-quick-search-item" href="{{ url_for('admin.admin_reports_list') }}" data-search-text="reports reporting analytics performance attendance"><span>Reports</span><small>Reports</small></a>
+                    <a class="nx-quick-search-item" href="{{ url_for('notifications.notification_list') }}" data-search-text="notifications alerts updates"><span>Notifications</span><small>Updates</small></a>
+                {% endif %}
+                <div class="nx-quick-search-empty" data-nx-quick-search-empty hidden>No matching destination.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="nx-role-topbar-right">
+        {% set notification_role = nx_role %}
+        {% include 'components/role_notification_bell.html' %}
+
+        {% if nx_profile_url %}
+            <a class="nx-role-topbar-user" href="{{ nx_profile_url }}" aria-label="Open {{ nx_role_label }} profile">
+                <img src="{{ nx_avatar }}" alt="{{ nx_role_label }} profile" onerror="this.onerror=null;this.src='{{ nx_default_avatar }}';">
+                <span class="nx-role-topbar-user-copy"><strong>{{ nx_display_name }}</strong><span>{{ nx_role_label }}</span></span>
+                <span class="nx-role-topbar-chevron" aria-hidden="true">⌄</span>
+            </a>
+        {% else %}
+            <div class="nx-role-topbar-user" aria-label="Administrator account">
+                <img src="{{ nx_default_avatar }}" alt="Administrator profile">
+                <span class="nx-role-topbar-user-copy"><strong>{{ nx_display_name }}</strong><span>{{ nx_role_label }}</span></span>
+            </div>
+        {% endif %}
+    </div>
+</header>
+
+<script>
+(function () {
+    function initQuickSearch(root) {
+        if (!root || root.dataset.nxQuickSearchReady === 'true') return;
+        root.dataset.nxQuickSearchReady = 'true';
+
+        var input = root.querySelector('[data-nx-quick-search-input]');
+        var panel = root.querySelector('[data-nx-quick-search-panel]');
+        var empty = root.querySelector('[data-nx-quick-search-empty]');
+        var items = Array.prototype.slice.call(root.querySelectorAll('.nx-quick-search-item'));
+        var selectedIndex = -1;
+
+        if (!input || !panel || !items.length) return;
+
+        function visibleItems() {
+            return items.filter(function (item) { return !item.hidden; });
+        }
+
+        function setSelected(index) {
+            var visible = visibleItems();
+            items.forEach(function (item) { item.classList.remove('is-selected'); });
+            if (!visible.length || index < 0) {
+                selectedIndex = -1;
+                return;
+            }
+            selectedIndex = Math.max(0, Math.min(index, visible.length - 1));
+            visible[selectedIndex].classList.add('is-selected');
+            visible[selectedIndex].scrollIntoView({ block: 'nearest' });
+        }
+
+        function openPanel() {
+            panel.hidden = false;
+            input.setAttribute('aria-expanded', 'true');
+        }
+
+        function closePanel() {
+            panel.hidden = true;
+            input.setAttribute('aria-expanded', 'false');
+            selectedIndex = -1;
+            items.forEach(function (item) { item.classList.remove('is-selected'); });
+        }
+
+        function filterItems() {
+            var tokens = input.value.toLowerCase().trim().split(/\s+/).filter(Boolean);
+            var matched = 0;
+            items.forEach(function (item) {
+                var haystack = ((item.dataset.searchText || '') + ' ' + item.textContent).toLowerCase();
+                var show = tokens.every(function (token) { return haystack.indexOf(token) !== -1; });
+                item.hidden = !show;
+                if (show) matched += 1;
+            });
+            if (empty) empty.hidden = matched !== 0;
+            openPanel();
+            setSelected(matched ? 0 : -1);
+        }
+
+        input.addEventListener('focus', filterItems);
+        input.addEventListener('input', filterItems);
+        input.addEventListener('keydown', function (event) {
+            var visible = visibleItems();
+            if (event.key === 'ArrowDown') {
+                if (!visible.length) return;
+                event.preventDefault();
+                openPanel();
+                setSelected(selectedIndex < 0 ? 0 : (selectedIndex + 1) % visible.length);
+            } else if (event.key === 'ArrowUp') {
+                if (!visible.length) return;
+                event.preventDefault();
+                openPanel();
+                setSelected(selectedIndex <= 0 ? visible.length - 1 : selectedIndex - 1);
+            } else if (event.key === 'Enter') {
+                if (!panel.hidden && visible.length) {
+                    event.preventDefault();
+                    visible[selectedIndex >= 0 ? selectedIndex : 0].click();
+                }
+            } else if (event.key === 'Escape') {
+                closePanel();
+                input.blur();
+            }
+        });
+
+        root.addEventListener('mousemove', function (event) {
+            var item = event.target.closest('.nx-quick-search-item');
+            if (!item || item.hidden) return;
+            var visible = visibleItems();
+            setSelected(visible.indexOf(item));
+        });
+
+        document.addEventListener('click', function (event) {
+            if (!root.contains(event.target)) closePanel();
+        });
+    }
+
+    function bootQuickSearch() {
+        document.querySelectorAll('[data-nx-quick-search]').forEach(initQuickSearch);
+        if (window.__nexoraQuickSearchBound) return;
+        window.__nexoraQuickSearchBound = true;
+        document.addEventListener('keydown', function (event) {
+            if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+                var input = document.querySelector('[data-nx-quick-search-input]');
+                if (!input) return;
+                event.preventDefault();
+                input.focus();
+                input.select();
+            }
+        });
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bootQuickSearch);
+    else bootQuickSearch();
+})();
+</script>

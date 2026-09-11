@@ -1,24 +1,2 @@
-<header class="supervisor-topbar" aria-label="Supervisor portal header">
-    <div class="supervisor-topbar-left">
-        <label class="supervisor-search" aria-label="Search">
-            <span aria-hidden="true">⌕</span>
-            <input type="search" placeholder="Search anything...">
-        </label>
-    </div>
-    <div class="supervisor-topbar-right">
-        {% include 'components/supervisor_notification_bell.html' %}
-
-        <a class="supervisor-topbar-user" href="{{ url_for('supervisor.supervisor_profile') }}">
-            {% if sidebar_profile and sidebar_profile.profile_picture %}
-                <img src="{{ url_for('profile_picture', filename=sidebar_profile.profile_picture) }}" alt="Supervisor profile">
-            {% else %}
-                <img src="{{ url_for('static', filename='images/default_profile.png') }}" alt="Supervisor profile">
-            {% endif %}
-            <span class="supervisor-topbar-user-copy">
-                <strong>{% if sidebar_profile and sidebar_profile.first_name %}{{ sidebar_profile.first_name }} {{ sidebar_profile.last_name or '' }}{% elif sidebar_profile %}{{ sidebar_profile.username }}{% else %}Supervisor{% endif %}</strong>
-                <span>Supervisor</span>
-            </span>
-            <span class="supervisor-user-chevron" aria-hidden="true">⌄</span>
-        </a>
-    </div>
-</header>
+{% set nx_topbar_role = 'supervisor' %}
+{% include 'components/role_topbar.html' %}
