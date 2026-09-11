@@ -12,198 +12,254 @@
 <body class="student-page student-dashboard-page">
     {% include 'components/student_sidebar.html' %}
 
-    {#
-      Dashboard controller contract:
-      profile, internship, log_count, task_total, task_completed,
-      document_count, attendance_count, recent_logs, recent_tasks,
-      recent_documents, recent_attendance, recent_notifications,
-      dashboard_classrooms, open_attendance, logbook_review_status,
-      dashboard_performance, dashboard_competencies.
-    #}
-
     {% set required_hours = internship[5]|float if internship and internship[5] else 0 %}
     {% set completed_hours = internship[6]|float if internship and internship[6] else 0 %}
     {% set remaining_hours = [required_hours - completed_hours, 0]|max %}
-    {% set progress = ((completed_hours / required_hours) * 100) if required_hours > 0 else 0 %}
-    {% set progress_capped = [progress, 100]|min %}
+    {% set submitted_work = task_completed|default(0)|int %}
+    {% set total_work = task_total|default(0)|int %}
+    {% set pending_work = [total_work - submitted_work, 0]|max %}
+    {% set work_progress = ((submitted_work / total_work) * 100) if total_work > 0 else 0 %}
+    {% set review_pending = logbook_review_status.pending|default(0) if logbook_review_status is defined else 0 %}
+    {% set revision_requested = logbook_review_status.revision_requested|default(0) if logbook_review_status is defined else 0 %}
     {% set notification_rows = recent_notifications if recent_notifications is defined else [] %}
-    {% set competency_rows = dashboard_competencies if dashboard_competencies is defined else [] %}
     {% set is_clocked_in = open_attendance is defined and open_attendance %}
+    {% set primary_classroom = dashboard_classrooms[0] if dashboard_classrooms is defined and dashboard_classrooms else none %}
+    {% set performance = dashboard_performance if dashboard_performance is defined else {} %}
+    {% set student_name = profile[0] if profile and profile[0] else 'Student' %}
 
     <main class="student-tasks-main student-dashboard-main">
         <div class="student-tasks-content student-dashboard-content">
-
             <section class="student-dashboard-heading student-section-heading" aria-labelledby="dashboard-heading">
                 <div class="student-dashboard-heading-copy">
-                    <span class="student-section-eyebrow">Student Portal</span>
-                    <h1 id="dashboard-heading">Dashboard</h1>
-                    <p>Here's your internship overview for today. Keep going, you're making great progress!</p>
+                    <span class="student-section-eyebrow">Student Dashboard</span>
+                    <h1 id="dashboard-heading">Welcome back, {{ student_name }}!</h1>
+                    <p>Keep going. Every completed hour, Work item, and logbook entry moves your OJT forward.</p>
                 </div>
 
-                <div class="student-dashboard-greeting" aria-label="Welcome message">
-                    <span class="student-dashboard-greeting-icon" aria-hidden="true">☀</span>
+                <div class="student-dashboard-greeting" aria-label="Current date">
                     <div class="student-dashboard-greeting-copy">
-                        <small id="dashboard-greeting-label">Good morning,</small>
-                        <strong>{% if profile %}{{ profile[0] }} {{ profile[2] }}{% else %}Student{% endif %}</strong>
-                        <span id="dashboard-current-date"></span>
+                        <strong id="dashboard-current-date">Today</strong>
+                        <span>Stay consistent and keep building great habits.</span>
                     </div>
                 </div>
             </section>
 
-            <section class="student-dashboard-stats" aria-label="Dashboard summary">
-                <article class="student-dashboard-stat">
-                    <div class="student-dashboard-stat-visual">
-                        <span class="student-dashboard-mini-ring" data-progress="{{ '%.0f'|format(progress_capped) }}"><span class="student-dashboard-mini-ring-icon" aria-hidden="true">▥</span></span>
-                    </div>
-                    <div class="student-dashboard-stat-copy"><span>Internship Progress</span><strong>{{ '%.0f'|format(progress_capped) }}%</strong><small>{{ completed_hours|round(1) }} / {{ required_hours|round(1) }} hours</small></div>
-                </article>
-                <article class="student-dashboard-stat"><span class="student-dashboard-stat-icon is-green" aria-hidden="true">◷</span><div class="student-dashboard-stat-copy"><span>Hours Completed</span><strong>{{ completed_hours|round(1) }}</strong><small>This internship</small></div></article>
-                <article class="student-dashboard-stat"><span class="student-dashboard-stat-icon is-amber" aria-hidden="true">⌛</span><div class="student-dashboard-stat-copy"><span>Remaining Hours</span><strong>{{ remaining_hours|round(1) }}</strong><small>Until completion</small></div></article>
-                <article class="student-dashboard-stat"><span class="student-dashboard-stat-icon is-green" aria-hidden="true">✓</span><div class="student-dashboard-stat-copy"><span>Submitted Work</span><strong>{{ task_completed }}</strong><small>Out of {{ task_total }} Work items</small></div></article>
-                <article class="student-dashboard-stat"><span class="student-dashboard-stat-icon is-blue" aria-hidden="true">♙</span><div class="student-dashboard-stat-copy"><span>Attendance Status</span><strong>{% if is_clocked_in %}Clocked In{% else %}{{ attendance_count }}{% endif %}</strong><small>{% if is_clocked_in %}Since {{ open_attendance.clock_in }}{% else %}Completed days logged{% endif %}</small></div></article>
-                <article class="student-dashboard-stat"><span class="student-dashboard-stat-icon is-red" aria-hidden="true">▣</span><div class="student-dashboard-stat-copy"><span>Days Remaining</span><strong id="dashboard-days-remaining">—</strong><small>Until internship ends</small></div></article>
-            </section>
-
-            <section class="student-dashboard-workspace">
-                <article class="student-dashboard-card student-dashboard-progress-card" aria-labelledby="internship-progress-title">
-                    <header class="student-dashboard-card-header">
-                        <div class="student-dashboard-card-title"><span class="student-dashboard-card-icon" aria-hidden="true">▥</span><h2 id="internship-progress-title">Internship Progress</h2></div>
-                        <a href="{{ url_for('student.logbook') }}">View Full Progress <span aria-hidden="true">→</span></a>
-                    </header>
-
-                    <div class="student-dashboard-progress-body">
-                        <div class="student-dashboard-overall-progress">
-                            <div class="student-dashboard-progress-ring" data-progress="{{ '%.0f'|format(progress_capped) }}"><strong>{{ '%.0f'|format(progress_capped) }}%</strong></div>
-                            <strong>Overall Progress</strong>
-                            <span>{{ completed_hours|round(1) }} / {{ required_hours|round(1) }} hours</span>
-                            <small>Completed</small>
+            <div class="student-dashboard-right-stack">
+                <section class="student-dashboard-quick-actions" aria-label="Attendance status">
+                    <div class="student-dashboard-quick-copy">
+                        <span class="student-dashboard-quick-icon" aria-hidden="true">◷</span>
+                        <div>
+                            {% if is_clocked_in %}
+                                <strong>You're Currently Clocked In</strong>
+                                <span>Since {{ open_attendance.clock_in }}{% if open_attendance.classroom_name %} · {{ open_attendance.classroom_name }}{% endif %}</span>
+                            {% else %}
+                                <strong>You're Currently Clocked Out</strong>
+                                <span>Open your Logbook when you're ready to begin an OJT session.</span>
+                            {% endif %}
                         </div>
+                    </div>
+                    <nav aria-label="Attendance action">
+                        <a href="{{ url_for('student.logbook') }}" class="student-dashboard-button is-primary">View Logbook →</a>
+                    </nav>
+                </section>
 
-                        <div class="student-dashboard-progress-details">
+                <section class="student-tasks-stats" aria-label="Student internship summary">
+                    <article class="student-tasks-stat">
+                        <span class="student-tasks-stat-icon" aria-hidden="true">◷</span>
+                        <div class="student-tasks-stat-copy">
+                            <span>OJT Hours</span>
+                            <strong>{{ completed_hours|round(1) }}</strong>
+                            <small>{% if required_hours > 0 %}{{ remaining_hours|round(1) }} hours remaining{% else %}Completed classroom hours{% endif %}</small>
+                        </div>
+                    </article>
+
+                    <article class="student-tasks-stat">
+                        <span class="student-tasks-stat-icon" aria-hidden="true">♙</span>
+                        <div class="student-tasks-stat-copy">
+                            <span>Active Internship Classroom</span>
+                            <strong>{% if primary_classroom %}{{ primary_classroom.name }}{% else %}—{% endif %}</strong>
+                            <small>{% if primary_classroom %}{{ primary_classroom.company_name or primary_classroom.section or 'Intern Classroom' }}{% else %}Not enrolled yet{% endif %}</small>
+                        </div>
+                    </article>
+
+                    <article class="student-tasks-stat">
+                        <span class="student-tasks-stat-icon" aria-hidden="true">▤</span>
+                        <div class="student-tasks-stat-copy">
+                            <span>Pending Work</span>
+                            <strong>{{ pending_work }}</strong>
+                            <small>{{ submitted_work }} of {{ total_work }} submitted</small>
+                        </div>
+                    </article>
+
+                    <article class="student-tasks-stat">
+                        <span class="student-tasks-stat-icon" aria-hidden="true">▧</span>
+                        <div class="student-tasks-stat-copy">
+                            <span>Logbook Review Status</span>
+                            <strong>{{ review_pending }}</strong>
+                            <small>{% if revision_requested %}{{ revision_requested }} revision request{% if revision_requested != 1 %}s{% endif %}{% else %}Entries awaiting review{% endif %}</small>
+                        </div>
+                    </article>
+                </section>
+
+                <section class="student-dashboard-bottom-grid" aria-label="Classrooms, Work progress, and attendance">
+                    <article class="student-dashboard-card" aria-labelledby="dashboard-classrooms-title">
+                        <header class="student-dashboard-card-header">
+                            <div class="student-dashboard-card-title"><span class="student-dashboard-card-icon" aria-hidden="true">♙</span><h2 id="dashboard-classrooms-title">My Internship Classrooms</h2></div>
+                            <a href="{{ url_for('classroom.student_classes') }}">View All →</a>
+                        </header>
+                        <div class="student-dashboard-list">
+                            {% if dashboard_classrooms %}
+                                {% for classroom in dashboard_classrooms[:3] %}
+                                    <a class="student-dashboard-list-row" href="{{ url_for('classroom.student_class', class_id=classroom.id) }}">
+                                        <span class="student-dashboard-list-icon" aria-hidden="true">♙</span>
+                                        <span class="student-dashboard-list-copy">
+                                            <strong>{{ classroom.name }}</strong>
+                                            <small>{{ classroom.company_name or 'Intern Classroom' }}{% if classroom.section %} · {{ classroom.section }}{% endif %}</small>
+                                        </span>
+                                        <em class="is-complete">Active</em>
+                                    </a>
+                                {% endfor %}
+                            {% else %}
+                                <div class="student-dashboard-list-empty"><strong>No active Internship Classroom</strong><span>Join an Internship Classroom to see your OJT workspace here.</span></div>
+                            {% endif %}
+                        </div>
+                    </article>
+
+                    <article class="student-dashboard-card" aria-labelledby="task-completion-title">
+                        <header class="student-dashboard-card-header">
+                            <div class="student-dashboard-card-title"><span class="student-dashboard-card-icon" aria-hidden="true">✓</span><h2 id="task-completion-title">Work Completion</h2></div>
+                            <a href="{{ url_for('classroom.student_classes') }}">Open Work →</a>
+                        </header>
+                        <div class="student-dashboard-progress-body">
+                            <div class="student-dashboard-overall-progress">
+                                <div class="student-dashboard-progress-ring" data-progress="{{ '%.0f'|format(work_progress) }}"><strong>{{ '%.0f'|format(work_progress) }}%</strong></div>
+                                <strong>Submitted</strong>
+                                <span>{{ submitted_work }} / {{ total_work }} Work items</span>
+                                <small>Current Internship Classrooms</small>
+                            </div>
                             <div class="student-dashboard-hours">
-                                <div class="student-dashboard-progress-row"><div><span>Completed Hours</span><strong>{{ completed_hours|round(1) }} hrs</strong></div><div class="student-dashboard-track"><i data-width="{{ '%.1f'|format(progress_capped) }}"></i></div></div>
-                                <div class="student-dashboard-progress-row"><div><span>Remaining Hours</span><strong>{{ remaining_hours|round(1) }} hrs</strong></div><div class="student-dashboard-track"><i data-width="{{ '%.1f'|format((remaining_hours / required_hours * 100) if required_hours > 0 else 0) }}"></i></div></div>
-                                <div class="student-dashboard-progress-row"><div><span>Total Required Hours</span><strong>{{ required_hours|round(1) }} hrs</strong></div><div class="student-dashboard-track"><i data-width="{{ 100 if required_hours > 0 else 0 }}"></i></div></div>
-                            </div>
-
-                            <div class="student-dashboard-competencies">
-                                <div class="student-dashboard-subheading"><span aria-hidden="true">▥</span><h3>Progress by Competency</h3></div>
-                                {% if competency_rows %}
-                                    {% for competency, value in competency_rows %}<div class="student-dashboard-competency-row"><span>{{ competency }}</span><div class="student-dashboard-track"><i data-width="{{ value }}"></i></div><strong>{{ value }}%</strong></div>{% endfor %}
-                                {% else %}
-                                    <div class="student-dashboard-list-empty"><strong>No competency breakdown yet</strong><span>Nexora will only show competency percentages when rubric-backed competency data is available.</span></div>
-                                {% endif %}
+                                <div class="student-dashboard-progress-row"><div><span>Submitted Work</span><strong>{{ submitted_work }}</strong></div><div class="student-dashboard-track"><i data-width="{{ '%.1f'|format(work_progress) }}"></i></div></div>
+                                <div class="student-dashboard-progress-row"><div><span>Pending Work</span><strong>{{ pending_work }}</strong></div><div class="student-dashboard-track"><i data-width="{{ '%.1f'|format(100 - work_progress if total_work > 0 else 0) }}"></i></div></div>
                             </div>
                         </div>
-                    </div>
-                </article>
+                    </article>
 
-                <article class="student-dashboard-card student-dashboard-calendar-card" aria-labelledby="dashboard-calendar-title">
-                    <header class="student-dashboard-card-header">
-                        <div class="student-dashboard-card-title"><span class="student-dashboard-card-icon" aria-hidden="true">▦</span><h2 id="dashboard-calendar-title">Calendar</h2></div>
-                        <a href="{{ url_for('student.logbook') }}#attendance-history">View Calendar <span aria-hidden="true">→</span></a>
-                    </header>
-                    <div class="student-dashboard-calendar-toolbar"><strong id="dashboard-calendar-month"></strong><div><button id="dashboard-calendar-prev" type="button" aria-label="Previous month">‹</button><button id="dashboard-calendar-today" type="button">Today</button><button id="dashboard-calendar-next" type="button" aria-label="Next month">›</button></div></div>
-                    <div class="student-dashboard-calendar-weekdays" aria-hidden="true"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div>
-                    <div class="student-dashboard-calendar-grid" id="dashboard-calendar-grid"></div>
-                </article>
+                    <article class="student-dashboard-card" aria-labelledby="attendance-summary-title">
+                        <header class="student-dashboard-card-header">
+                            <div class="student-dashboard-card-title"><span class="student-dashboard-card-icon" aria-hidden="true">▦</span><h2 id="attendance-summary-title">Attendance Activity</h2></div>
+                            <a href="{{ url_for('student.logbook') }}#attendance-history">History →</a>
+                        </header>
+                        <div class="student-dashboard-overall-progress">
+                            <span class="student-dashboard-stat-icon is-green" aria-hidden="true">▦</span>
+                            <strong>{{ attendance_count }} Completed Day{% if attendance_count != 1 %}s{% endif %}</strong>
+                            <span>{{ completed_hours|round(1) }} total OJT hours</span>
+                            <small>{% if is_clocked_in %}Current session started {{ open_attendance.clock_in }}{% else %}No open attendance session{% endif %}</small>
+                        </div>
+                    </article>
+                </section>
 
-                <aside class="student-dashboard-right-stack">
-                    <article class="student-dashboard-card" aria-labelledby="upcoming-tasks-title">
-                        <header class="student-dashboard-card-header"><div class="student-dashboard-card-title"><span class="student-dashboard-card-icon" aria-hidden="true">☷</span><h2 id="upcoming-tasks-title">Upcoming Work</h2></div><a href="{{ url_for('classroom.student_classes') }}">View All <span aria-hidden="true">→</span></a></header>
-                        <div class="student-dashboard-list student-dashboard-task-list">
+                <section class="student-dashboard-bottom-grid" aria-label="Upcoming Work, logbook, and notifications">
+                    <article class="student-dashboard-card" aria-labelledby="upcoming-work-title">
+                        <header class="student-dashboard-card-header">
+                            <div class="student-dashboard-card-title"><span class="student-dashboard-card-icon" aria-hidden="true">▤</span><h2 id="upcoming-work-title">Upcoming Work</h2></div>
+                            <a href="{{ url_for('classroom.student_classes') }}">View All →</a>
+                        </header>
+                        <div class="student-dashboard-list">
                             {% if recent_tasks %}
                                 {% for task in recent_tasks[:3] %}
-                                    <a class="student-dashboard-list-row" href="{{ task.url }}"><span class="student-dashboard-list-icon" aria-hidden="true">▤</span><span class="student-dashboard-list-copy"><strong>{{ task.title }}</strong><small>{{ task.activity_label }}{% if task.classroom_name %} · {{ task.classroom_name }}{% endif %}</small></span><em class="{% if task.status|string|lower in ['submitted','completed','reviewed'] %}is-complete{% else %}is-pending{% endif %}">{{ task.status }}</em></a>
+                                    <a class="student-dashboard-list-row" href="{{ task.url }}">
+                                        <span class="student-dashboard-list-icon" aria-hidden="true">▤</span>
+                                        <span class="student-dashboard-list-copy"><strong>{{ task.title }}</strong><small>{{ task.activity_label }}{% if task.classroom_name %} · {{ task.classroom_name }}{% endif %}</small></span>
+                                        <em class="{% if task.status|string|lower in ['submitted','completed','reviewed'] %}is-complete{% else %}is-pending{% endif %}">{{ task.status }}</em>
+                                    </a>
                                 {% endfor %}
-                            {% else %}<div class="student-dashboard-list-empty"><strong>No upcoming Work</strong><span>Work assigned through your Intern Classrooms will appear here.</span></div>{% endif %}
+                            {% else %}
+                                <div class="student-dashboard-list-empty"><strong>No upcoming Work</strong><span>New classroom Work will appear here.</span></div>
+                            {% endif %}
+                        </div>
+                    </article>
+
+                    <article class="student-dashboard-card" aria-labelledby="recent-logbook-title">
+                        <header class="student-dashboard-card-header">
+                            <div class="student-dashboard-card-title"><span class="student-dashboard-card-icon" aria-hidden="true">▧</span><h2 id="recent-logbook-title">Recent Logbook Entries</h2></div>
+                            <a href="{{ url_for('student.logbook') }}">View All →</a>
+                        </header>
+                        <div class="student-dashboard-list">
+                            {% if recent_logs %}
+                                {% for log in recent_logs[:3] %}
+                                    <a class="student-dashboard-list-row" href="{{ log.url }}">
+                                        <span class="student-dashboard-list-icon" aria-hidden="true">▧</span>
+                                        <span class="student-dashboard-list-copy"><strong>{{ log.content|string|truncate(42, True, '…') }}</strong><small>{{ log.classroom_name or 'Daily OJT Logbook' }}</small></span>
+                                        <em class="{% if log.review_status in ['reviewed','approved'] %}is-complete{% else %}is-pending{% endif %}">{{ log.review_label }}</em>
+                                    </a>
+                                {% endfor %}
+                            {% else %}
+                                <div class="student-dashboard-list-empty"><strong>No logbook entries yet</strong><span>Your latest Daily OJT entries will appear here.</span></div>
+                            {% endif %}
                         </div>
                     </article>
 
                     <article class="student-dashboard-card student-dashboard-notifications-card" aria-labelledby="recent-notifications-title">
-                        <header class="student-dashboard-card-header"><div class="student-dashboard-card-title"><span class="student-dashboard-card-icon" aria-hidden="true">♧</span><h2 id="recent-notifications-title">Recent Notifications</h2></div><a href="{{ url_for('notifications.notification_list') }}">View All <span aria-hidden="true">→</span></a></header>
+                        <header class="student-dashboard-card-header">
+                            <div class="student-dashboard-card-title"><span class="student-dashboard-card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg></span><h2 id="recent-notifications-title">Recent Notifications</h2></div>
+                            <a href="{{ url_for('notifications.notification_list') }}">View All →</a>
+                        </header>
                         <div class="student-dashboard-notification-list">
                             {% if notification_rows %}
                                 {% for notification in notification_rows[:3] %}
-                                    <a class="student-dashboard-notification-row" href="{{ notification.link_url or url_for('notifications.notification_list') }}"><span class="student-dashboard-notification-dot {% if notification.notification_type|default('') == 'classroom' %}is-blue{% endif %}"></span><span class="student-dashboard-notification-icon" aria-hidden="true">♧</span><span class="student-dashboard-notification-copy"><strong>{{ notification.title|default('Notification') }}</strong><span>{{ notification.message|default('You have a new update.') }}</span></span><time>{{ notification.created_at|default('Recently') }}</time></a>
+                                    <a class="student-dashboard-notification-row" href="{{ notification.link_url or url_for('notifications.notification_list') }}">
+                                        <span class="student-dashboard-notification-dot {% if notification.notification_type|default('') == 'classroom' %}is-blue{% endif %}"></span>
+                                        <span class="student-dashboard-notification-icon" aria-hidden="true">●</span>
+                                        <span class="student-dashboard-notification-copy"><strong>{{ notification.title|default('Notification') }}</strong><span>{{ notification.message|default('You have a new update.') }}</span></span>
+                                        <time>{{ notification.created_at|default('Recently') }}</time>
+                                    </a>
                                 {% endfor %}
-                            {% else %}<div class="student-dashboard-list-empty student-dashboard-notification-empty"><strong>No recent notifications</strong><span>Your latest updates will appear here.</span></div>{% endif %}
+                            {% else %}
+                                <div class="student-dashboard-list-empty student-dashboard-notification-empty"><strong>No recent notifications</strong><span>Your latest updates will appear here.</span></div>
+                            {% endif %}
                         </div>
                     </article>
+                </section>
+
+                <aside class="student-dashboard-tip" aria-label="Performance insights">
+                    <span class="student-dashboard-tip-icon" aria-hidden="true">▥</span>
+                    <strong>Performance Insights</strong>
+                    <p>
+                        {% if performance.average_percentage is not none %}
+                            Your supervisor-rated daily performance averages {{ performance.average_percentage }}% across {{ performance.rated_days }} rated day{% if performance.rated_days != 1 %}s{% endif %}.
+                        {% else %}
+                            Performance insights will appear after your supervisor records daily performance ratings.
+                        {% endif %}
+                    </p>
+                    {% if primary_classroom %}
+                        <a class="student-dashboard-button" href="{{ url_for('classwork_ml_insights.student_insights', class_id=primary_classroom.id) }}">View Detailed Insights →</a>
+                    {% endif %}
                 </aside>
-
-                <section class="student-dashboard-quick-actions" aria-label="Quick actions">
-                    <div class="student-dashboard-quick-copy"><span class="student-dashboard-quick-icon" aria-hidden="true">⚡</span><div><strong>Quick Actions</strong><span>Get started with your most common tasks.</span></div></div>
-                    <nav aria-label="Dashboard quick actions"><a href="{{ url_for('student.logbook') }}" class="student-dashboard-button is-primary">▤ Go to Logbook</a><a href="{{ url_for('classroom.student_classes') }}" class="student-dashboard-button">☷ View Work</a><a href="{{ url_for('classroom.join_class') }}" class="student-dashboard-button">♙ Join Class</a></nav>
-                </section>
-
-                <section class="student-dashboard-bottom-grid">
-                    <article class="student-dashboard-card" aria-labelledby="recent-logbook-title">
-                        <header class="student-dashboard-card-header"><div class="student-dashboard-card-title"><span class="student-dashboard-card-icon" aria-hidden="true">▤</span><h2 id="recent-logbook-title">Recent Logbook Entries</h2></div><a href="{{ url_for('student.logbook') }}">View All <span aria-hidden="true">→</span></a></header>
-                        <div class="student-dashboard-list">
-                            {% if recent_logs %}{% for log in recent_logs[:3] %}<a class="student-dashboard-list-row" href="{{ log.url }}"><span class="student-dashboard-list-icon" aria-hidden="true">▧</span><span class="student-dashboard-list-copy"><strong>{{ log.content|string|truncate(45, True, '…') }}</strong><small>{{ log.classroom_name or 'Recent logbook activity' }}</small></span><em class="{% if log.review_status in ['reviewed','approved'] %}is-complete{% else %}is-pending{% endif %}">{{ log.review_label }}</em></a>{% endfor %}
-                            {% else %}<div class="student-dashboard-list-empty"><strong>No logbook entries</strong><span>Your latest entries will appear here.</span></div>{% endif %}
-                        </div>
-                    </article>
-
-                    <article class="student-dashboard-card" aria-labelledby="recent-documents-title">
-                        <header class="student-dashboard-card-header"><div class="student-dashboard-card-title"><span class="student-dashboard-card-icon" aria-hidden="true">▥</span><h2 id="recent-documents-title">Recent Documents</h2></div><a href="{{ url_for('student.documents') }}">View All <span aria-hidden="true">→</span></a></header>
-                        <div class="student-dashboard-list">
-                            {% if recent_documents %}{% for doc in recent_documents[:3] %}<a class="student-dashboard-list-row" href="/student/document/{{ doc[0] }}" target="_blank" rel="noopener"><span class="student-dashboard-list-icon is-document" aria-hidden="true">▧</span><span class="student-dashboard-list-copy"><strong>{{ doc[1] if doc|length > 1 else 'Document' }}</strong><small>{% if doc|length > 2 %}Uploaded {{ doc[2] }}{% else %}Uploaded document{% endif %}</small></span><span class="student-dashboard-row-arrow" aria-hidden="true">⋮</span></a>{% endfor %}
-                            {% else %}<div class="student-dashboard-list-empty"><strong>No documents uploaded</strong><span>Your latest files will appear here.</span></div>{% endif %}
-                        </div>
-                    </article>
-
-                    <article class="student-dashboard-card student-dashboard-overview-card" aria-labelledby="internship-overview-title">
-                        <header class="student-dashboard-card-header"><div class="student-dashboard-card-title"><span class="student-dashboard-card-icon" aria-hidden="true">▦</span><h2 id="internship-overview-title">Internship Overview</h2></div></header>
-                        <dl class="student-dashboard-overview-list"><div><dt>Company</dt><dd>{{ internship[0] if internship else 'Not assigned' }}</dd></div><div><dt>Department</dt><dd>{{ profile[9] if profile and profile[9] else 'Not specified' }}</dd></div><div><dt>Position</dt><dd>{{ internship[1] if internship else 'Not assigned' }}</dd></div><div><dt>Supervisor</dt><dd>{{ internship[2] if internship else 'Not assigned' }}</dd></div><div><dt>Status</dt><dd><span class="student-dashboard-status">{{ internship[7] if internship else 'Not assigned' }}</span></dd></div><div><dt>Start Date</dt><dd>{{ internship[3] if internship else '—' }}</dd></div><div><dt>End Date</dt><dd>{{ internship[4] if internship else '—' }}</dd></div></dl>
-                    </article>
-                </section>
-
-                <aside class="student-dashboard-tip" aria-label="Productivity tip"><span class="student-dashboard-tip-icon" aria-hidden="true">💡</span><strong>Productivity Tip</strong><p>Break larger tasks into smaller, manageable steps to stay productive and make steady progress.</p><button type="button" class="student-dashboard-tip-dismiss" aria-label="Dismiss productivity tip">Got it!</button></aside>
-            </section>
+            </div>
         </div>
     </main>
 
     <script>
     (function () {
         const now = new Date();
-        const endDate = {{ (internship[4] if internship else '')|tojson }};
-        const daysRemaining = document.getElementById('dashboard-days-remaining');
-        if (daysRemaining) { if (endDate) { const end = new Date(endDate); end.setHours(23,59,59,999); daysRemaining.textContent = Math.max(0, Math.ceil((end-now)/86400000)); } else { daysRemaining.textContent = '—'; } }
-
         const currentDate = document.getElementById('dashboard-current-date');
-        const greetingLabel = document.getElementById('dashboard-greeting-label');
-        if (currentDate) currentDate.textContent = now.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'});
-        if (greetingLabel) { const hour = now.getHours(); greetingLabel.textContent = hour < 12 ? 'Good morning,' : hour < 18 ? 'Good afternoon,' : 'Good evening,'; }
-
-        document.querySelectorAll('[data-width]').forEach(function (bar) { const value = Math.max(0, Math.min(100, Number(bar.dataset.width || 0))); bar.style.width = value + '%'; });
-        document.querySelectorAll('[data-progress]').forEach(function (ring) { const value = Math.max(0, Math.min(100, Number(ring.dataset.progress || 0))); ring.style.setProperty('--dashboard-progress', value); });
-
-        const calendarGrid = document.getElementById('dashboard-calendar-grid');
-        const calendarMonth = document.getElementById('dashboard-calendar-month');
-        let calendarView = new Date();
-
-        function renderCalendar() {
-            if (!calendarGrid || !calendarMonth) return;
-            calendarGrid.innerHTML = '';
-            const year = calendarView.getFullYear();
-            const month = calendarView.getMonth();
-            const firstDay = new Date(year, month, 1).getDay();
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-            const previousMonthDays = new Date(year, month, 0).getDate();
-            calendarMonth.textContent = calendarView.toLocaleDateString(undefined,{month:'long',year:'numeric'});
-            for (let offset = firstDay - 1; offset >= 0; offset--) { const day = document.createElement('span'); day.className = 'is-muted'; day.textContent = previousMonthDays - offset; calendarGrid.appendChild(day); }
-            for (let dayNumber = 1; dayNumber <= daysInMonth; dayNumber++) { const day = document.createElement('span'); const date = new Date(year, month, dayNumber); day.textContent = dayNumber; if (date.toDateString() === now.toDateString()) day.classList.add('is-today'); calendarGrid.appendChild(day); }
-            let nextMonthDay = 1;
-            while (calendarGrid.children.length < 42) { const day = document.createElement('span'); day.className = 'is-muted'; day.textContent = nextMonthDay++; calendarGrid.appendChild(day); }
+        if (currentDate) {
+            currentDate.textContent = now.toLocaleDateString(undefined, {
+                weekday: 'long',
+                month: 'long',
+                day: 'numeric',
+                year: 'numeric'
+            });
         }
 
-        renderCalendar();
-        document.getElementById('dashboard-calendar-prev')?.addEventListener('click', function () { calendarView.setMonth(calendarView.getMonth() - 1); renderCalendar(); });
-        document.getElementById('dashboard-calendar-next')?.addEventListener('click', function () { calendarView.setMonth(calendarView.getMonth() + 1); renderCalendar(); });
-        document.getElementById('dashboard-calendar-today')?.addEventListener('click', function () { calendarView = new Date(); renderCalendar(); });
-        document.querySelector('.student-dashboard-tip-dismiss')?.addEventListener('click', function () { this.closest('.student-dashboard-tip')?.remove(); });
+        document.querySelectorAll('[data-width]').forEach(function (bar) {
+            const value = Math.max(0, Math.min(100, Number(bar.dataset.width || 0)));
+            bar.style.width = value + '%';
+        });
+        document.querySelectorAll('[data-progress]').forEach(function (ring) {
+            const value = Math.max(0, Math.min(100, Number(ring.dataset.progress || 0)));
+            ring.style.setProperty('--dashboard-progress', value);
+        });
     })();
     </script>
 </body>
