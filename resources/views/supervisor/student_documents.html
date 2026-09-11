@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Documents - Nexora Supervisor</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
+</head>
+<body class="supervisor-page supervisor-student-documents-page">
+    {% include 'components/supervisor_sidebar.html' %}
+
+    <main class="page-content supervisor-documents-page">
+        <div class="nexora-page supervisor-documents-shell">
+            <header class="sp-heading">
+                <div>
+                    <span class="ui-eyebrow">Supervisor Portal</span>
+                    <h1>Student Documents</h1>
+                    <p>View files uploaded by students enrolled in your classrooms.</p>
+                </div>
+            </header>
+
+            <section class="supervisor-doc-summary" aria-label="Document summary">
+                <article class="supervisor-doc-summary-card">
+                    <span class="supervisor-doc-summary-icon">♟</span>
+                    <div><small>Students</small><strong>{{ summary.total_students }}</strong><span>In your classrooms</span></div>
+                </article>
+                <article class="supervisor-doc-summary-card">
+                    <span class="supervisor-doc-summary-icon">▤</span>
+                    <div><small>With Documents</small><strong>{{ summary.with_documents }}</strong><span>Students with uploads</span></div>
+                </article>
+                <article class="supervisor-doc-summary-card">
+                    <span class="supervisor-doc-summary-icon">▧</span>
+                    <div><small>Total Documents</small><strong>{{ summary.total_documents }}</strong><span>Accessible student files</span></div>
+                </article>
+                <article class="supervisor-doc-summary-card">
+                    <span class="supervisor-doc-summary-icon">▣</span>
+                    <div><small>Classrooms</small><strong>{{ summary.total_classrooms }}</strong><span>Owned classrooms</span></div>
+                </article>
+            </section>
+
+            <section class="supervisor-doc-filter-card">
+                <form method="GET" class="supervisor-doc-filter-grid" aria-label="Student document filters">
+                    <input type="search" name="search" value="{{ search }}" placeholder="Search student, number, program, classroom..." aria-label="Search student documents">
+                    <select name="type" aria-label="Classroom type">
+                        <option value="all" {% if classroom_type == 'all' %}selected{% endif %}>All Classrooms</option>
+                        <option value="classroom" {% if classroom_type == 'classroom' %}selected{% endif %}>Classroom</option>
+                        <option value="internship" {% if classroom_type == 'internship' %}selected{% endif %}>Intern Classroom</option>
+                    </select>
+                    <select name="documents" aria-label="Document state">
+                        <option value="all" {% if document_state == 'all' %}selected{% endif %}>All Students</option>
+                        <option value="with" {% if document_state == 'with' %}selected{% endif %}>Has Documents</option>
+                        <option value="without" {% if document_state == 'without' %}selected{% endif %}>No Documents</option>
+                    </select>
+                    <div class="supervisor-doc-filter-actions">
+                        <a href="{{ url_for('supervisor.student_documents') }}">Reset</a>
+                        <button type="submit">Apply</button>
+                    </div>
+                </form>
+            </section>
+
+            <section class="supervisor-doc-groups" aria-label="Classroom student documents">
+                {% for classroom in classroom_groups %}
+                    <article class="supervisor-doc-classroom-card">
+                        <div class="supervisor-doc-classroom-header">
+                            <div class="supervisor-doc-classroom-title">
+                                <span class="supervisor-doc-classroom-icon">▧</span>
+                                <div>
+                                    <div class="supervisor-doc-title-line">
+                                        <h2>{{ classroom.name }}{% if classroom.section %} - {{ classroom.section }}{% endif %}</h2>
+                                        <span class="supervisor-doc-type-pill">{{ 'Intern Classroom' if classroom.classroom_type == 'internship' else 'Classroom' }}</span>
+                                    </div>
+                                    <p>{% if classroom.company_name %}{{ classroom.company_name }} · {% endif %}{{ classroom.students|length }} student{% if classroom.students|length != 1 %}s{% endif %}</p>
+                                </div>
+                            </div>
+                            <span class="supervisor-doc-status-pill{% if classroom.archived %} is-archived{% endif %}">{{ 'Archived' if classroom.archived else 'Active' }}</span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="supervisor-doc-table">
+                                <thead><tr><th>#</th><th>Student</th><th>Student No.</th><th>Program</th><th>Documents</th><th>Last Upload</th><th>Actions</th></tr></thead>
+                                <tbody>
+                                    {% for student in classroom.students %}
+                                        <tr>
+                                            <td>{{ loop.index }}</td>
+                                            <td><strong>{{ student.display_name }}</strong><small>{{ student.username }}</small></td>
+                                            <td>{{ student.student_number or '—' }}</td>
+                                            <td>{{ student.major_program or '—' }}</td>
+                                            <td><span class="supervisor-doc-count">▤ {{ student.document_count }}</span></td>
+                                            <td>{{ student.last_upload }}</td>
+                                            <td><a class="supervisor-doc-view-button" href="{{ url_for('supervisor.student_document_folder', student_id=student.id) }}">View Documents</a></td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </article>
+                {% else %}
+                    <div class="supervisor-doc-empty">
+                        <strong>No students found</strong>
+                        <span>Try changing the search or filters.</span>
+                    </div>
+                {% endfor %}
+            </section>
+        </div>
+    </main>
+</body>
+</html>
