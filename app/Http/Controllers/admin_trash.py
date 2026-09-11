@@ -51,6 +51,66 @@ def seed_existing(conn):
     conn.commit()
 
 
+@admin_trash.app_context_processor
+def inject_admin_dashboard_actionable_metrics():
+    def get_admin_dashboard_actionable_metrics():
+        if session.get("role") != "admin":
+            return {"unenrolled_students": 0, "trash_expiring_soon": 0}
+
+        conn = get_db_connection()
+        try:
+            # Match the Student portal's authoritative definition of an active
+            # Internship Classroom enrollment instead of legacy assignments.
+            unenrolled_row = conn.execute(
+                """
+                SELECT COUNT(*)
+                FROM users u
+                WHERE u.role = 'student'
+                  AND COALESCE(u.status, 'active') = 'active'
+                  AND NOT EXISTS (
+                      SELECT 1
+                      FROM classroom_students cs
+                      JOIN classrooms c ON c.id = cs.classroom_id
+                      WHERE cs.student_id = u.id
+                        AND COALESCE(c.archived, 0) = 0
+                        AND COALESCE(c.classroom_type, 'classroom') = 'internship'
+                  )
+                """
+            ).fetchone()
+
+            # Trash entries are retained for 30 days. Keep this Dashboard read
+            # side-effect free: if Trash has not been initialized, show 0.
+            trash_expiring_soon = 0
+            now = datetime.now()
+            trash_window_start = now - timedelta(days=30)
+            trash_window_end = now - timedelta(days=23)
+            try:
+                trash_row = conn.execute(
+                    """
+                    SELECT COUNT(*)
+                    FROM admin_user_trash
+                    WHERE deleted_at >= ?
+                      AND deleted_at <= ?
+                    """,
+                    (trash_window_start, trash_window_end),
+                ).fetchone()
+                trash_expiring_soon = int((trash_row[0] if trash_row else 0) or 0)
+            except Exception:
+                trash_expiring_soon = 0
+
+            return {
+                "unenrolled_students": int((unenrolled_row[0] if unenrolled_row else 0) or 0),
+                "trash_expiring_soon": trash_expiring_soon,
+            }
+        except Exception as exc:
+            print("admin dashboard actionable metrics failed:", exc)
+            return {"unenrolled_students": 0, "trash_expiring_soon": 0}
+        finally:
+            conn.close()
+
+    return {"get_admin_dashboard_actionable_metrics": get_admin_dashboard_actionable_metrics}
+
+
 @admin_trash.route("/admin/trash")
 @role_required("admin")
 def trash():

@@ -11,6 +11,11 @@
 </head>
 <body class="nexora-admin-body admin-dashboard-page">
     {% include 'components/admin_sidebar.html' %}
+    {% if get_admin_dashboard_actionable_metrics is defined %}
+        {% set actionable_metrics = get_admin_dashboard_actionable_metrics() %}
+    {% else %}
+        {% set actionable_metrics = {'unenrolled_students': 0, 'trash_expiring_soon': 0} %}
+    {% endif %}
     <header class="admin-global-topbar" aria-label="Admin portal header">
         <div class="admin-topbar-left">
             <label class="admin-search" aria-label="Search">
@@ -38,8 +43,30 @@
                 </div>
                 <div class="admin-hero-status"><span class="admin-status-pulse"></span><div><strong>System Online</strong><small>All core services operational</small></div></div>
             </section>
+
+            {% if pending_students|default(0)|int > 0 %}
+                <section class="alert alert-warning d-flex align-items-center justify-content-between gap-3 flex-wrap mb-3" role="alert" aria-label="Pending student approvals">
+                    <div>
+                        <strong>{{ pending_students }} student account{% if pending_students != 1 %}s{% endif %} awaiting approval.</strong>
+                        <span class="d-block small">Review pending registrations so approved students can continue into the OJT workflow.</span>
+                    </div>
+                    <a href="{{ url_for('admin.admin_students') }}" class="alert-link text-nowrap">Review students →</a>
+                </section>
+            {% endif %}
+
+            {% if actionable_metrics.trash_expiring_soon|default(0)|int > 0 %}
+                <section class="alert alert-danger d-flex align-items-center justify-content-between gap-3 flex-wrap mb-3" role="alert" aria-label="Trash expiry warning">
+                    <div>
+                        <strong>{{ actionable_metrics.trash_expiring_soon }} account{% if actionable_metrics.trash_expiring_soon != 1 %}s{% endif %} will expire from Trash within 7 days.</strong>
+                        <span class="d-block small">Restore anything that should remain available before the 30-day retention period ends.</span>
+                    </div>
+                    <a href="{{ url_for('admin_trash.trash') }}" class="alert-link text-nowrap">Open Trash →</a>
+                </section>
+            {% endif %}
+
             <section class="admin-metric-grid" aria-label="Dashboard statistics">
                 <article class="admin-metric-card"><div class="admin-metric-icon admin-icon-orange">♟</div><div class="admin-metric-copy"><span>Students</span><strong>{{ students_count }}</strong><small>Registered accounts</small></div></article>
+                <article class="admin-metric-card"><div class="admin-metric-icon admin-icon-red">▣</div><div class="admin-metric-copy"><span>Not Enrolled</span><strong>{{ actionable_metrics.unenrolled_students }}</strong><small>No active Intern Classroom</small></div></article>
                 <article class="admin-metric-card"><div class="admin-metric-icon admin-icon-amber">♙</div><div class="admin-metric-copy"><span>Supervisors</span><strong>{{ supervisors_count }}</strong><small>Registered accounts</small></div></article>
                 <article class="admin-metric-card"><div class="admin-metric-icon admin-icon-red">▣</div><div class="admin-metric-copy"><span>Internship Assignments</span><strong>{{ assignments_count }}</strong><small>Current assignments</small></div></article>
                 <article class="admin-metric-card"><div class="admin-metric-icon admin-icon-slate">◎</div><div class="admin-metric-copy"><span>Online Interns</span><strong>{{ online_interns }}</strong><small>Currently online</small></div></article>
