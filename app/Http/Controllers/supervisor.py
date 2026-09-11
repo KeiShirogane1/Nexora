@@ -165,100 +165,230 @@ def supervisor_dashboard():
     """, (supervisor_id, supervisor_id))
 
     active_interns = cursor.fetchall()
-    
     active_interns = [
-    (
-        intern[0],
-        format_time(intern[1])
-    )
-    for intern in active_interns
+        (
+            intern[0],
+            format_time(intern[1])
+        )
+        for intern in active_interns
     ]
 
-    # Recent logs from assigned interns
-    cursor.execute("""
-        SELECT
-        u.username,
-            l.content,
-            l.created_at,
-            l.student_id
+    def row_value(row, key, index=0, default=None):
+        try:
+            if key in row.keys():
+                value = row[key]
+                return default if value is None else value
+        except Exception:
+            pass
+        try:
+            value = row[index]
+            return default if value is None else value
+        except Exception:
+            return default
+
+    def display_name(row, username_index, first_index, last_index):
+        first_name = str(row_value(row, "first_name", first_index, "") or "").strip()
+        last_name = str(row_value(row, "last_name", last_index, "") or "").strip()
+        username = str(row_value(row, "username", username_index, "") or "").strip()
+        return " ".join(part for part in (first_name, last_name) if part).strip() or username or "Intern"
+
+    # Current classroom-scoped activity feed. These events come from the
+    # same Work, Daily OJT, enrollment, and Evaluation data used elsewhere
+    # in the Supervisor portal; no legacy student_assignments join is used.
+    activity_events = []
+
+    work_submission_rows = cursor.execute("""
+        SELECT s.id AS submission_id, s.submitted_at, s.status,
+               a.id AS assignment_id, a.title, a.classroom_id,
+               c.name AS classroom_name, s.student_id, u.username,
+               COALESCE(sp.first_name, '') AS first_name,
+               COALESCE(sp.last_name, '') AS last_name
+        FROM classwork_submissions s
+        JOIN classroom_assignments a ON a.id = s.assignment_id
+        JOIN classrooms c ON c.id = a.classroom_id
+        JOIN users u ON u.id = s.student_id
+        LEFT JOIN student_profiles sp ON sp.user_id = u.id
+        WHERE c.supervisor_id = ?
+        ORDER BY s.submitted_at DESC, s.id DESC
+        LIMIT 6
+    """, (supervisor_id,)).fetchall()
+    for row in work_submission_rows:
+        class_id = int(row_value(row, "classroom_id", 5, 0) or 0)
+        assignment_id = int(row_value(row, "assignment_id", 3, 0) or 0)
+        submission_id = int(row_value(row, "submission_id", 0, 0) or 0)
+        submitted_at = row_value(row, "submitted_at", 1, None)
+        activity_events.append({
+            "name": display_name(row, 8, 9, 10),
+            "message": f"Submitted {row_value(row, 'title', 4, 'Work')} in {row_value(row, 'classroom_name', 6, 'Intern Classroom')}",
+            "time": format_datetime(submitted_at),
+            "timestamp": submitted_at,
+            "icon": "✓",
+            "url": url_for(
+                "classwork_grading.review",
+                class_id=class_id,
+                assignment_id=assignment_id,
+                submission_id=submission_id,
+            ),
+            "action_label": "Review Work",
+        })
+
+    logbook_rows = cursor.execute("""
+        SELECT l.id AS log_id,
+               COALESCE(l.updated_at, l.created_at) AS activity_at,
+               l.student_id, a.classroom_id, c.name AS classroom_name,
+               u.username,
+               COALESCE(sp.first_name, '') AS first_name,
+               COALESCE(sp.last_name, '') AS last_name
         FROM logs l
+        JOIN attendance a ON a.id = l.attendance_id
+        JOIN classrooms c ON c.id = a.classroom_id
+        JOIN users u ON u.id = l.student_id
+        LEFT JOIN student_profiles sp ON sp.user_id = u.id
+        WHERE l.entry_type = 'daily'
+          AND c.supervisor_id = ?
+        ORDER BY COALESCE(l.updated_at, l.created_at) DESC, l.id DESC
+        LIMIT 6
+    """, (supervisor_id,)).fetchall()
+    for row in logbook_rows:
+        log_id = int(row_value(row, "log_id", 0, 0) or 0)
+        activity_at = row_value(row, "activity_at", 1, None)
+        class_id = int(row_value(row, "classroom_id", 3, 0) or 0)
+        activity_events.append({
+            "name": display_name(row, 5, 6, 7),
+            "message": f"Daily OJT Logbook entry in {row_value(row, 'classroom_name', 4, 'Intern Classroom')}",
+            "time": format_datetime(activity_at),
+            "timestamp": activity_at,
+            "icon": "▤",
+            "url": url_for("logbook_review.supervisor_logbook", class_id=class_id, log_id=log_id),
+            "action_label": "Open Logbook",
+        })
 
-        JOIN users u
-        ON l.student_id = u.id
+    join_rows = cursor.execute("""
+        SELECT cs.joined_at, cs.student_id, cs.classroom_id,
+               c.name AS classroom_name, u.username,
+               COALESCE(sp.first_name, '') AS first_name,
+               COALESCE(sp.last_name, '') AS last_name
+        FROM classroom_students cs
+        JOIN classrooms c ON c.id = cs.classroom_id
+        JOIN users u ON u.id = cs.student_id
+        LEFT JOIN student_profiles sp ON sp.user_id = u.id
+        WHERE c.supervisor_id = ?
+        ORDER BY cs.joined_at DESC, cs.id DESC
+        LIMIT 6
+    """, (supervisor_id,)).fetchall()
+    for row in join_rows:
+        joined_at = row_value(row, "joined_at", 0, None)
+        student_id = int(row_value(row, "student_id", 1, 0) or 0)
+        class_id = int(row_value(row, "classroom_id", 2, 0) or 0)
+        activity_events.append({
+            "name": display_name(row, 4, 5, 6),
+            "message": f"Joined {row_value(row, 'classroom_name', 3, 'Intern Classroom')}",
+            "time": format_datetime(joined_at),
+            "timestamp": joined_at,
+            "icon": "+",
+            "url": url_for("intern_profile.supervisor_intern_profile", class_id=class_id, student_id=student_id),
+            "action_label": "View Intern",
+        })
 
-        JOIN student_assignments sa
-        ON l.student_id = sa.student_id
+    evaluation_rows = cursor.execute("""
+        SELECT e.updated_at, e.status, e.classroom_id, e.student_id,
+               c.name AS classroom_name, u.username,
+               COALESCE(sp.first_name, '') AS first_name,
+               COALESCE(sp.last_name, '') AS last_name
+        FROM ojt_evaluations e
+        JOIN classrooms c ON c.id = e.classroom_id
+        JOIN users u ON u.id = e.student_id
+        LEFT JOIN student_profiles sp ON sp.user_id = u.id
+        WHERE e.supervisor_id = ?
+        ORDER BY e.updated_at DESC, e.id DESC
+        LIMIT 6
+    """, (supervisor_id,)).fetchall()
+    for row in evaluation_rows:
+        updated_at = row_value(row, "updated_at", 0, None)
+        status = str(row_value(row, "status", 1, "draft") or "draft").strip().lower()
+        class_id = int(row_value(row, "classroom_id", 2, 0) or 0)
+        student_id = int(row_value(row, "student_id", 3, 0) or 0)
+        status_label = "Submitted" if status == "submitted" else "Draft"
+        activity_events.append({
+            "name": display_name(row, 5, 6, 7),
+            "message": f"Official OJT Evaluation {status_label.lower()} in {row_value(row, 'classroom_name', 4, 'Intern Classroom')}",
+            "time": format_datetime(updated_at),
+            "timestamp": updated_at,
+            "icon": "★",
+            "url": url_for("ojt_evaluation.supervisor_evaluations", class_id=class_id, student_id=student_id),
+            "action_label": "Open Evaluation",
+        })
 
-        WHERE sa.supervisor_id = ?
+    def activity_sort_key(item):
+        try:
+            dt = parse_datetime(item.get("timestamp"))
+            return dt.timestamp() if dt else 0
+        except Exception:
+            return 0
 
-        ORDER BY l.created_at DESC
+    activity_events.sort(key=activity_sort_key, reverse=True)
+    recent_activity = activity_events[:6]
 
+    # Latest Work items from Supervisor-owned classrooms. This replaces the
+    # legacy per-student tasks feed and reports real submission attempt counts.
+    recent_work_rows = cursor.execute("""
+        SELECT a.id, a.classroom_id, a.title, a.due_at, a.created_at,
+               c.name AS classroom_name,
+               COALESCE(m.activity_type, 'assignment') AS activity_type,
+               (SELECT COUNT(*) FROM classwork_submissions s
+                WHERE s.assignment_id = a.id) AS submission_count
+        FROM classroom_assignments a
+        JOIN classrooms c ON c.id = a.classroom_id
+        LEFT JOIN classroom_assignment_meta m ON m.assignment_id = a.id
+        WHERE c.supervisor_id = ?
+        ORDER BY a.created_at DESC, a.id DESC
         LIMIT 5
-    """, (supervisor_id,))
+    """, (supervisor_id,)).fetchall()
 
-    acts = cursor.fetchall()
-
-    acts = [
-    (
-        act[0],
-        act[1],
-        format_datetime(act[2]),
-        act[3]
-    )
-    for act in acts 
-    ]
-
-    # Recent tasks
-    cursor.execute("""
-        SELECT
-            t.task_title,
-            u.username,
-            t.status,
-            t.deadline
-
-        FROM tasks t
-
-        JOIN users u
-        ON t.student_id = u.id
-
-        JOIN student_assignments sa
-        ON t.student_id = sa.student_id
-
-        WHERE sa.supervisor_id = ?
-
-        ORDER BY t.id DESC
-
-        LIMIT 5
-    """, (supervisor_id,))
-
-    recent_tasks = cursor.fetchall()
-    
-    recent_tasks = [
-    (
-        task[0],
-        task[1],
-        task[2],
-        format_datetime(task[3])
-    )
-    for task in recent_tasks
-    ]
+    activity_labels = {
+        "assignment": "Task",
+        "google_form": "Form / Assessment",
+        "google_doc": "Online Work",
+        "file_reference": "Resource",
+        "project": "Project",
+        "group_project": "Team Task",
+    }
+    recent_work = []
+    for row in recent_work_rows:
+        assignment_id = int(row_value(row, "id", 0, 0) or 0)
+        class_id = int(row_value(row, "classroom_id", 1, 0) or 0)
+        activity_type = str(row_value(row, "activity_type", 6, "assignment") or "assignment")
+        submission_count = int(row_value(row, "submission_count", 7, 0) or 0)
+        recent_work.append({
+            "id": assignment_id,
+            "class_id": class_id,
+            "title": row_value(row, "title", 2, "Work"),
+            "due_at": format_datetime(row_value(row, "due_at", 3, None)),
+            "created_at": format_datetime(row_value(row, "created_at", 4, None)),
+            "classroom_name": row_value(row, "classroom_name", 5, "Intern Classroom"),
+            "activity_type": activity_type,
+            "activity_label": activity_labels.get(activity_type, "Work"),
+            "submission_count": submission_count,
+            "url": url_for(
+                "classwork_submissions.supervisor_submissions",
+                class_id=class_id,
+                assignment_id=assignment_id,
+            ),
+        })
 
     conn.close()
 
-
     return render_template(
         "supervisor/dashboard.html",
-
         active_page="dashboard",
-
         total_interns=total_interns,
         active_classrooms=active_classrooms,
         active_sessions=active_sessions,
         pending_reviews=pending_reviews,
         dashboard_classrooms=dashboard_classrooms,
         active_interns=active_interns,
-        acts=acts,
-        recent_tasks=recent_tasks
+        recent_activity=recent_activity,
+        recent_work=recent_work,
     )
 
 # view interns

@@ -80,21 +80,24 @@
                             <h2>Recent Activity</h2>
                         </div>
                         <div class="d-flex align-items-center gap-2">
-                            {% if acts %}<span class="heading-count">{{ acts|length }} recent</span>{% endif %}
+                            {% if recent_activity %}<span class="heading-count">{{ recent_activity|length }} recent</span>{% endif %}
                             <a href="{{ url_for('supervisor.view_interns') }}" class="section-link">View interns →</a>
                         </div>
                     </header>
                     <div class="supervisor-dashboard-card-body">
-                        {% if acts %}
+                        {% if recent_activity %}
                             <div class="supervisor-activity-list">
-                                {% for act in acts %}
+                                {% for activity in recent_activity %}
                                     <div class="supervisor-activity-item">
-                                        <span class="supervisor-activity-icon" aria-hidden="true">↗</span>
+                                        <span class="supervisor-activity-icon" aria-hidden="true">{{ activity.icon }}</span>
                                         <div class="supervisor-activity-copy">
-                                            <strong>{{ act[0] }}</strong>
-                                            <p>{{ act[1] }}</p>
-                                            <small>{{ act[2] }}</small>
+                                            <strong>{{ activity.name }}</strong>
+                                            <p>{{ activity.message }}</p>
+                                            <small>{{ activity.time }}</small>
                                         </div>
+                                        {% if activity.url %}
+                                            <a href="{{ activity.url }}" class="supervisor-activity-action">{{ activity.action_label }}</a>
+                                        {% endif %}
                                     </div>
                                 {% endfor %}
                             </div>
@@ -102,7 +105,7 @@
                             <div class="supervisor-empty-state compact">
                                 <div class="empty-state-icon">↗</div>
                                 <strong>No recent activities</strong>
-                                <p>Intern submissions and supervision activity will appear here.</p>
+                                <p>Classroom joins, Daily OJT entries, Work submissions, and Evaluation activity will appear here.</p>
                             </div>
                         {% endif %}
                     </div>
@@ -137,37 +140,30 @@
 
                     <article class="supervisor-dashboard-card supervisor-side-card">
                         <header class="supervisor-dashboard-card-heading">
-                            <div><span class="card-kicker">WORK</span><h2>Recent Tasks</h2></div>
+                            <div><span class="card-kicker">WORK</span><h2>Recent Work</h2></div>
                             <a href="{{ url_for('classroom.supervisor_classes') }}" class="section-link">Classes →</a>
                         </header>
                         <div class="supervisor-dashboard-card-body">
-                            {% if recent_tasks %}
+                            {% if recent_work %}
                                 <div class="supervisor-task-list">
-                                    {% for task in recent_tasks[:4] %}
+                                    {% for work in recent_work[:4] %}
                                         <div class="supervisor-task-item">
                                             <span class="task-marker" aria-hidden="true"></span>
                                             <div class="task-copy">
-                                                <strong>{{ task[0] }}</strong>
-                                                <small>Assigned to {{ task[1] }}</small>
-                                                {% if task[3] %}<small>Due {{ task[3] }}</small>{% endif %}
+                                                <strong>{{ work.title }}</strong>
+                                                <small>{{ work.activity_label }} · {{ work.classroom_name }}</small>
+                                                {% if work.due_at %}<small>Due {{ work.due_at }}</small>{% endif %}
+                                                <small>{{ work.submission_count }} submission attempt{% if work.submission_count != 1 %}s{% endif %}</small>
                                             </div>
-                                            {% if task[2] == 'Submitted' %}
-                                                <span class="supervisor-status submitted">Submitted</span>
-                                            {% elif task[2] == 'Reviewed' %}
-                                                <span class="supervisor-status reviewed">Reviewed</span>
-                                            {% elif task[2] == 'Reopened' %}
-                                                <span class="supervisor-status reopened">Reopened</span>
-                                            {% else %}
-                                                <span class="supervisor-status pending">Pending</span>
-                                            {% endif %}
+                                            <a href="{{ work.url }}" class="supervisor-activity-action">Review</a>
                                         </div>
                                     {% endfor %}
                                 </div>
                             {% else %}
                                 <div class="supervisor-empty-state compact">
                                     <div class="empty-state-icon">✓</div>
-                                    <strong>No tasks available</strong>
-                                    <p>New task activity will appear here.</p>
+                                    <strong>No Work items yet</strong>
+                                    <p>Create Work inside an Intern Classroom and it will appear here.</p>
                                 </div>
                             {% endif %}
                         </div>
@@ -235,10 +231,10 @@
                             <div class="supervisor-task-item">
                                 <span class="task-marker" aria-hidden="true"></span>
                                 <div class="task-copy">
-                                    <strong>Recent Task Activity</strong>
-                                    <small>Latest work items on the Dashboard feed</small>
+                                    <strong>Recent Work Items</strong>
+                                    <small>Latest classroom Work created for interns</small>
                                 </div>
-                                <span class="supervisor-status reviewed">{{ recent_tasks|length }}</span>
+                                <span class="supervisor-status reviewed">{{ recent_work|length }}</span>
                             </div>
                             <div class="supervisor-task-item">
                                 <span class="task-marker" aria-hidden="true"></span>
