@@ -138,6 +138,9 @@
         var maxUploadSize = 5 * 1024 * 1024;
 
         document.querySelectorAll('.js-document-preview').forEach(function (button) {
+            var type = (button.dataset.previewType || '').toLowerCase();
+            if (type !== 'pdf') return;
+
             var link = document.createElement('a');
             link.className = button.className.replace(/\bjs-document-preview\b/g, '').trim();
             link.href = button.dataset.previewUrl || '#';
