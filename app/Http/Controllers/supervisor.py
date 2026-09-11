@@ -4,7 +4,7 @@ import os
 import re
 import mimetypes
 from app.Models.db import get_db_connection
-from datetime import datetime
+from datetime import datetime, timedelta
 from app.ML.predictor import analyze_feedback, analyze_feedback_detailed
 from app.Services.notification_service import create_notification
 
@@ -99,6 +99,7 @@ def supervisor_dashboard():
     active_classrooms = dashboard_summary["classroom_count"]
     pending_reviews = dashboard_summary["pending_reviews"]
     dashboard_classrooms = dashboard_context["classrooms"]
+    archived_classrooms = sum(1 for classroom in dashboard_classrooms if classroom.get("archived"))
 
     # Count active attendance sessions. New scoped sessions belong to the
     # supervisor through their Intern Classroom; legacy NULL-scoped sessions
@@ -192,6 +193,25 @@ def supervisor_dashboard():
         username = str(row_value(row, "username", username_index, "") or "").strip()
         return " ".join(part for part in (first_name, last_name) if part).strip() or username or "Intern"
 
+    def relative_time(timestamp):
+        dt = parse_datetime(timestamp)
+        if not dt:
+            return "Recently"
+        now_for_dt = datetime.now(dt.tzinfo) if dt.tzinfo else datetime.now()
+        seconds = max(0, int((now_for_dt - dt).total_seconds()))
+        if seconds < 60:
+            return "Just now"
+        minutes = seconds // 60
+        if minutes < 60:
+            return f"{minutes} min ago"
+        hours = minutes // 60
+        if hours < 24:
+            return f"{hours} hr{'s' if hours != 1 else ''} ago"
+        days = hours // 24
+        if days < 7:
+            return f"{days} day{'s' if days != 1 else ''} ago"
+        return format_datetime(dt)
+
     # Current classroom-scoped activity feed. These events come from the
     # same Work, Daily OJT, enrollment, and Evaluation data used elsewhere
     # in the Supervisor portal; no legacy student_assignments join is used.
@@ -220,9 +240,12 @@ def supervisor_dashboard():
         activity_events.append({
             "name": display_name(row, 8, 9, 10),
             "message": f"Submitted {row_value(row, 'title', 4, 'Work')} in {row_value(row, 'classroom_name', 6, 'Intern Classroom')}",
-            "time": format_datetime(submitted_at),
+            "summary": f"submitted {row_value(row, 'title', 4, 'Work')}",
+            "context": row_value(row, "classroom_name", 6, "Intern Classroom"),
+            "time": relative_time(submitted_at),
             "timestamp": submitted_at,
-            "icon": "✓",
+            "icon": "↥",
+            "tone": "blue",
             "url": url_for(
                 "classwork_grading.review",
                 class_id=class_id,
@@ -256,9 +279,12 @@ def supervisor_dashboard():
         activity_events.append({
             "name": display_name(row, 5, 6, 7),
             "message": f"Daily OJT Logbook entry in {row_value(row, 'classroom_name', 4, 'Intern Classroom')}",
-            "time": format_datetime(activity_at),
+            "summary": "submitted a logbook entry",
+            "context": row_value(row, "classroom_name", 4, "Intern Classroom"),
+            "time": relative_time(activity_at),
             "timestamp": activity_at,
             "icon": "▤",
+            "tone": "green",
             "url": url_for("logbook_review.supervisor_logbook", class_id=class_id, log_id=log_id),
             "action_label": "Open Logbook",
         })
@@ -283,9 +309,12 @@ def supervisor_dashboard():
         activity_events.append({
             "name": display_name(row, 4, 5, 6),
             "message": f"Joined {row_value(row, 'classroom_name', 3, 'Intern Classroom')}",
-            "time": format_datetime(joined_at),
+            "summary": "joined your classroom",
+            "context": row_value(row, "classroom_name", 3, "Intern Classroom"),
+            "time": relative_time(joined_at),
             "timestamp": joined_at,
-            "icon": "+",
+            "icon": "♙",
+            "tone": "orange",
             "url": url_for("intern_profile.supervisor_intern_profile", class_id=class_id, student_id=student_id),
             "action_label": "View Intern",
         })
@@ -312,9 +341,12 @@ def supervisor_dashboard():
         activity_events.append({
             "name": display_name(row, 5, 6, 7),
             "message": f"Official OJT Evaluation {status_label.lower()} in {row_value(row, 'classroom_name', 4, 'Intern Classroom')}",
-            "time": format_datetime(updated_at),
+            "summary": f"has an evaluation {status_label.lower()}",
+            "context": row_value(row, "classroom_name", 4, "Intern Classroom"),
+            "time": relative_time(updated_at),
             "timestamp": updated_at,
-            "icon": "★",
+            "icon": "▤",
+            "tone": "rose",
             "url": url_for("ojt_evaluation.supervisor_evaluations", class_id=class_id, student_id=student_id),
             "action_label": "Open Evaluation",
         })
@@ -376,6 +408,135 @@ def supervisor_dashboard():
             ),
         })
 
+    # Seven-day activity series for the dashboard chart. Dates are grouped in
+    # Python to keep the query portable across SQLite and Postgres.
+    now = datetime.now()
+    chart_days = [(now - timedelta(days=offset)).date() for offset in range(6, -1, -1)]
+    chart_start = datetime.combine(chart_days[0], datetime.min.time())
+    chart_index = {day: index for index, day in enumerate(chart_days)}
+
+    def chart_counts(rows, key, index):
+        counts = [0] * len(chart_days)
+        for row in rows:
+            dt = parse_datetime(row_value(row, key, index, None))
+            if dt and dt.date() in chart_index:
+                counts[chart_index[dt.date()]] += 1
+        return counts
+
+    chart_log_rows = cursor.execute("""
+        SELECT COALESCE(l.updated_at, l.created_at) AS activity_at
+        FROM logs l
+        JOIN attendance a ON a.id = l.attendance_id
+        JOIN classrooms c ON c.id = a.classroom_id
+        WHERE l.entry_type = 'daily'
+          AND c.supervisor_id = ?
+          AND COALESCE(l.updated_at, l.created_at) >= ?
+    """, (supervisor_id, chart_start)).fetchall()
+
+    chart_work_rows = cursor.execute("""
+        SELECT s.submitted_at
+        FROM classwork_submissions s
+        JOIN classroom_assignments a ON a.id = s.assignment_id
+        JOIN classrooms c ON c.id = a.classroom_id
+        WHERE c.supervisor_id = ?
+          AND s.submitted_at >= ?
+    """, (supervisor_id, chart_start)).fetchall()
+
+    chart_evaluation_rows = cursor.execute("""
+        SELECT COALESCE(e.submitted_at, e.updated_at, e.created_at) AS activity_at
+        FROM ojt_evaluations e
+        WHERE e.supervisor_id = ?
+          AND COALESCE(e.submitted_at, e.updated_at, e.created_at) >= ?
+    """, (supervisor_id, chart_start)).fetchall()
+
+    activity_chart = {
+        "labels": [f"{day.strftime('%b')} {day.day}" for day in chart_days],
+        "logbook": chart_counts(chart_log_rows, "activity_at", 0),
+        "work": chart_counts(chart_work_rows, "submitted_at", 0),
+        "evaluations": chart_counts(chart_evaluation_rows, "activity_at", 0),
+    }
+
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    new_interns_this_month = cursor.execute("""
+        SELECT COUNT(DISTINCT cs.student_id)
+        FROM classroom_students cs
+        JOIN classrooms c ON c.id = cs.classroom_id
+        WHERE c.supervisor_id = ?
+          AND COALESCE(c.archived, 0) = 0
+          AND cs.joined_at >= ?
+    """, (supervisor_id, month_start)).fetchone()[0]
+
+    upcoming_deadlines = cursor.execute("""
+        SELECT COUNT(*)
+        FROM classroom_assignments a
+        JOIN classrooms c ON c.id = a.classroom_id
+        WHERE c.supervisor_id = ?
+          AND COALESCE(c.archived, 0) = 0
+          AND a.due_at IS NOT NULL
+          AND a.due_at >= ?
+          AND a.due_at < ?
+    """, (supervisor_id, now, now + timedelta(days=7))).fetchone()[0]
+
+    evaluation_drafts = cursor.execute("""
+        SELECT COUNT(*)
+        FROM ojt_evaluations
+        WHERE supervisor_id = ?
+          AND status = 'draft'
+    """, (supervisor_id,)).fetchone()[0]
+
+    inactivity_cutoff = now - timedelta(days=7)
+    classroom_join_rows = cursor.execute("""
+        SELECT cs.student_id, MAX(cs.joined_at) AS latest_joined_at
+        FROM classroom_students cs
+        JOIN classrooms c ON c.id = cs.classroom_id
+        WHERE c.supervisor_id = ?
+          AND COALESCE(c.archived, 0) = 0
+        GROUP BY cs.student_id
+    """, (supervisor_id,)).fetchall()
+
+    recent_intern_activity_rows = cursor.execute("""
+        SELECT DISTINCT a.student_id
+        FROM attendance a
+        JOIN classrooms c ON c.id = a.classroom_id
+        WHERE c.supervisor_id = ?
+          AND COALESCE(c.archived, 0) = 0
+          AND a.clock_in >= ?
+        UNION
+        SELECT DISTINCT l.student_id
+        FROM logs l
+        JOIN attendance a ON a.id = l.attendance_id
+        JOIN classrooms c ON c.id = a.classroom_id
+        WHERE c.supervisor_id = ?
+          AND COALESCE(c.archived, 0) = 0
+          AND COALESCE(l.updated_at, l.created_at) >= ?
+        UNION
+        SELECT DISTINCT s.student_id
+        FROM classwork_submissions s
+        JOIN classroom_assignments a ON a.id = s.assignment_id
+        JOIN classrooms c ON c.id = a.classroom_id
+        WHERE c.supervisor_id = ?
+          AND COALESCE(c.archived, 0) = 0
+          AND s.submitted_at >= ?
+    """, (
+        supervisor_id, inactivity_cutoff,
+        supervisor_id, inactivity_cutoff,
+        supervisor_id, inactivity_cutoff,
+    )).fetchall()
+    recent_intern_ids = {int(row_value(row, "student_id", 0, 0) or 0) for row in recent_intern_activity_rows}
+    inactive_interns = 0
+    for row in classroom_join_rows:
+        student_id = int(row_value(row, "student_id", 0, 0) or 0)
+        joined_at = parse_datetime(row_value(row, "latest_joined_at", 1, None))
+        if student_id and joined_at and joined_at < inactivity_cutoff and student_id not in recent_intern_ids:
+            inactive_interns += 1
+
+    dashboard_attention = {
+        "pending_reviews": int(pending_reviews or 0),
+        "upcoming_deadlines": int(upcoming_deadlines or 0),
+        "inactive_interns": inactive_interns,
+        "evaluation_drafts": int(evaluation_drafts or 0),
+    }
+
     conn.close()
 
     return render_template(
@@ -389,6 +550,10 @@ def supervisor_dashboard():
         active_interns=active_interns,
         recent_activity=recent_activity,
         recent_work=recent_work,
+        activity_chart=activity_chart,
+        dashboard_attention=dashboard_attention,
+        new_interns_this_month=int(new_interns_this_month or 0),
+        archived_classrooms=archived_classrooms,
     )
 
 # view interns
