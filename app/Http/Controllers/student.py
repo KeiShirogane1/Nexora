@@ -1259,8 +1259,8 @@ def profile_setup():
                     return "Image too large (max 2MB)", 400
                 # basic image header check (jpeg/png/gif)
                 if not (decoded.startswith(b"\xff\xd8") or decoded.startswith(b"\x89PNG") or decoded.startswith(b"GIF")):
-                    # allow but log; still write for now
-                    pass
+                    conn.close()
+                    return "Invalid image data", 400
             except Exception:
                 conn.close()
                 return "Invalid image data", 400
@@ -1662,48 +1662,51 @@ def edit_profile():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    cursor.execute("""
-        SELECT
-            first_name,
-            middle_name,
-            last_name,
-            age,
-            student_id,
-            profile_picture,
-            phone_number,
-            home_address,
-            grade_year,
-            major_program,
-            emergency_name,
-            emergency_relationship,
-            emergency_phone,
-            emergency_email
+    try:
+        cursor.execute("""
+            SELECT
+                first_name,
+                middle_name,
+                last_name,
+                age,
+                student_id,
+                profile_picture,
+                phone_number,
+                home_address,
+                grade_year,
+                major_program,
+                emergency_name,
+                emergency_relationship,
+                emergency_phone,
+                emergency_email
 
-        FROM student_profiles
+            FROM student_profiles
 
-        WHERE user_id = ?
+            WHERE user_id = ?
 
-    """,
-    (
-        session["user_id"],
-    ))
+        """,
+        (
+            session["user_id"],
+        ))
 
+        profile = cursor.fetchone()
+        user_email = None
 
-    profile = cursor.fetchone()
+        if profile:
+            cursor.execute("""
+                SELECT email
+                FROM users
+                WHERE id = ?
+            """, (session["user_id"],))
+            email_row = cursor.fetchone()
+            user_email = email_row[0] if email_row else None
+    finally:
+        cursor.close()
+        conn.close()
 
     if not profile:
-        conn.close()
         flash("Please complete your profile setup first.", "warning")
         return redirect("/student/profile/setup")
-
-    cursor.execute("""
-        SELECT email
-        FROM users
-        WHERE id = ?
-    """, (session["user_id"],))
-
-    user_email = cursor.fetchone()[0]
-
 
     student = {
         "id": session["user_id"],
@@ -1826,7 +1829,7 @@ def rename_document(document_id):
         WHERE id = ?
         AND student_id = ?
         """,
-        (document_id, session["user_id"]),
+        (document_id, session["user_id"],),
     )
     document = cursor.fetchone()
 
@@ -1856,7 +1859,7 @@ def rename_document(document_id):
         WHERE id = ?
         AND student_id = ?
         """,
-        (renamed_filename, document_id, session["user_id"]),
+        (renamed_filename, document_id, session["user_id"],),
     )
     conn.commit()
     conn.close()
