@@ -102,11 +102,19 @@ def _student_internship_memberships(conn, student_id, active_only=True):
                       AND LOWER(TRIM(COALESCE(i.supervisor_name, ''))) = LOWER(TRIM(u.username))
                 )
                 OR (
-                    EXISTS (
-                        SELECT 1
-                        FROM student_assignments sa
-                        WHERE sa.student_id = cs.student_id
-                          AND sa.supervisor_id = c.supervisor_id
+                    (
+                        EXISTS (
+                            SELECT 1
+                            FROM student_assignments sa
+                            WHERE sa.student_id = cs.student_id
+                              AND sa.supervisor_id = c.supervisor_id
+                        )
+                        OR EXISTS (
+                            SELECT 1
+                            FROM internships i
+                            WHERE i.student_id = cs.student_id
+                              AND i.supervisor_id = c.supervisor_id
+                        )
                     )
                     AND (
                         SELECT COUNT(*)
@@ -659,6 +667,7 @@ def student_classes():
         for r in rows:
             class_id = r["id"] if "id" in r.keys() else r[0]
             raw_classroom_type = r["classroom_type"] if "classroom_type" in r.keys() else r[8]
+            is_internship = int(class_id) in internship_ids
             classes.append({
                 "id": class_id,
                 "name": r["name"] if "name" in r.keys() else r[1],
@@ -668,7 +677,8 @@ def student_classes():
                 "archived": r["archived"] if "archived" in r.keys() else r[5],
                 "status": "Active",
                 "supervisor": r["supervisor_name"] if "supervisor_name" in r.keys() else r[7],
-                "classroom_type": "internship" if int(class_id) in internship_ids else raw_classroom_type,
+                "classroom_type": "internship" if is_internship else raw_classroom_type,
+                "is_internship": is_internship,
             })
     finally:
         conn.close()
@@ -697,6 +707,7 @@ def join_class():
                 errors["class_code"] = "Invalid class code."
                 return render_template("classroom/join_class.html", errors=errors, form=request.form, active_page="classes")
             cid = c["id"] if "id" in c.keys() else c[0]
+            supervisor_id = c["supervisor_id"] if "supervisor_id" in c.keys() else c[1]
             arch = c["archived"] if "archived" in c.keys() else c[2]
             classroom_type = c["classroom_type"] if "classroom_type" in c.keys() else c[3]
             if arch:
@@ -707,7 +718,47 @@ def join_class():
                 flash("You are already enrolled in this class.", "info")
                 return redirect(url_for("classroom.student_classes"))
 
-            if classroom_type == "internship":
+            target_is_internship = classroom_type == "internship"
+            if not target_is_internship:
+                target_is_internship = conn.execute(
+                    "SELECT 1 FROM classroom_internship_details WHERE classroom_id = ? LIMIT 1",
+                    (cid,),
+                ).fetchone() is not None
+            if not target_is_internship:
+                legacy_target = conn.execute("""
+                    SELECT 1
+                    WHERE (
+                        EXISTS (
+                            SELECT 1
+                            FROM student_assignments sa
+                            WHERE sa.student_id = ?
+                              AND sa.supervisor_id = ?
+                        )
+                        OR EXISTS (
+                            SELECT 1
+                            FROM internships i
+                            WHERE i.student_id = ?
+                              AND i.supervisor_id = ?
+                        )
+                    )
+                    AND (
+                        SELECT COUNT(*)
+                        FROM classrooms legacy_c
+                        WHERE legacy_c.supervisor_id = ?
+                          AND COALESCE(legacy_c.archived, 0) = 0
+                          AND COALESCE(legacy_c.classroom_type, 'classroom') = 'classroom'
+                    ) = 1
+                    LIMIT 1
+                """, (
+                    session["user_id"],
+                    supervisor_id,
+                    session["user_id"],
+                    supervisor_id,
+                    supervisor_id,
+                )).fetchone()
+                target_is_internship = legacy_target is not None
+
+            if target_is_internship:
                 if using_postgres():
                     conn.execute(
                         "SELECT id FROM users WHERE id = ? FOR UPDATE",
@@ -787,7 +838,7 @@ def leave_class(class_id):
             LIMIT 1
         """, (student_id,)).fetchone()
         if open_attendance:
-            flash("Clock out before leaving your Intern Classroom.", "warning")
+            flash("You must Clock Out before leaving your Intern Classroom.", "warning")
             return redirect(url_for("classroom.student_classes"))
 
         class_name = membership["name"] if "name" in membership.keys() else membership[1]
