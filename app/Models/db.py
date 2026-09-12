@@ -51,16 +51,24 @@ class HybridRow:
 class PostgresCursor:
     def __init__(self, cursor):
         self._cursor = cursor
+        self._last_insert_table = None
 
     @staticmethod
     def _convert_placeholders(sql):
         return re.sub(r"\?", "%s", sql)
 
     def execute(self, sql, params=None):
+        insert_match = re.match(
+            r"\s*INSERT\s+INTO\s+([A-Za-z_][A-Za-z0-9_.]*)",
+            sql,
+            re.IGNORECASE,
+        )
+        self._last_insert_table = insert_match.group(1) if insert_match else None
         self._cursor.execute(self._convert_placeholders(sql), params or ())
         return self
 
     def executemany(self, sql, seq_of_params):
+        self._last_insert_table = None
         self._cursor.executemany(self._convert_placeholders(sql), seq_of_params)
         return self
 
@@ -84,8 +92,13 @@ class PostgresCursor:
 
     @property
     def lastrowid(self):
-        """Provide SQLite-compatible generated-id access on PostgreSQL."""
-        self._cursor.execute("SELECT LASTVAL()")
+        """Return the generated id for the immediately preceding INSERT table."""
+        if not self._last_insert_table:
+            return None
+        self._cursor.execute(
+            "SELECT currval(pg_get_serial_sequence(%s, 'id'))",
+            (self._last_insert_table,),
+        )
         row = self._cursor.fetchone()
         return row[0] if row else None
 
