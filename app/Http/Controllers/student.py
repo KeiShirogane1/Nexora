@@ -501,52 +501,55 @@ def clock_out():
 @student.route("/student/log/add", methods=["POST"])
 @role_required("student")
 def add_log():
+    content = (request.form.get("content") or "").strip()
+
+    if not content:
+        return redirect("/student/logbook")
 
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    content = request.form["content"].strip()
+    try:
+        # Find the student's current open attendance session
+        cursor.execute("""
+            SELECT id
+            FROM attendance
+            WHERE student_id = ?
+            AND status = 'Open'
+        """, (session["user_id"],))
 
-    if not content:
-        conn.close()
-        return redirect("/student/logbook")
+        attendance = cursor.fetchone()
 
-    # Find the student's current open attendance session
-    cursor.execute("""
-        SELECT id
-        FROM attendance
-        WHERE student_id = ?
-        AND status = 'Open'
-    """, (session["user_id"],))
+        if not attendance:
+            return redirect("/student/logbook")
 
-    attendance = cursor.fetchone()
+        attendance_id = attendance[0]
 
-    if not attendance:
-        conn.close()
-        return redirect("/student/logbook")
+        # Insert log entry
+        current_time = datetime.now()
 
-    attendance_id = attendance[0]
-
-    # Insert log entry
-    current_time = datetime.now()
-
-    cursor.execute("""
-        INSERT INTO logs (
+        cursor.execute("""
+            INSERT INTO logs (
+                attendance_id,
+                student_id,
+                content,
+                created_at
+            )
+            VALUES (?, ?, ?, ?)
+        """, (
             attendance_id,
-            student_id,
+            session["user_id"],
             content,
-            created_at
-        )
-        VALUES (?, ?, ?, ?)
-    """, (
-        attendance_id,
-        session["user_id"],
-        content,
-        current_time
-    ))
+            current_time
+        ))
 
-    conn.commit()
-    conn.close()
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        cursor.close()
+        conn.close()
 
     return redirect("/student/logbook")
 
@@ -1508,26 +1511,29 @@ def edit_profile():
         # Student cannot change Student ID
 
         conn = get_db_connection()
-
         cursor = conn.cursor()
 
-
-        cursor.execute(
-            """
-            SELECT student_id
-            FROM student_profiles
-            WHERE user_id = ?
-            """,
-            (
-                session["user_id"],
+        try:
+            cursor.execute(
+                """
+                SELECT student_id
+                FROM student_profiles
+                WHERE user_id = ?
+                """,
+                (
+                    session["user_id"],
+                )
             )
-        )
+            current_profile = cursor.fetchone()
+        finally:
+            cursor.close()
+            conn.close()
 
+        if not current_profile:
+            flash("Please complete your profile setup first.", "warning")
+            return redirect("/student/profile/setup")
 
-        current_student_id = cursor.fetchone()[0]
-
-
-        conn.close()
+        current_student_id = current_profile[0]
 
 
 
@@ -1877,7 +1883,7 @@ def delete_document(document_id):
         WHERE id = ?
         AND student_id = ?
         """,
-        (document_id, session["user_id"]),
+        (document_id, session["user_id"],),
     )
     document = cursor.fetchone()
 
@@ -1893,7 +1899,7 @@ def delete_document(document_id):
 
     cursor.execute(
         "DELETE FROM documents WHERE id = ? AND student_id = ?",
-        (document_id, session["user_id"]),
+        (document_id, session["user_id"],),
     )
     conn.commit()
     conn.close()

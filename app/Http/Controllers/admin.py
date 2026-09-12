@@ -82,63 +82,54 @@ def reset_student_password(student_id):
     conn = get_db_connection()
     cursor = conn.cursor()
 
-
-    cursor.execute(
-        """
-        SELECT
-            id,
-            username,
-            email
-        FROM users
-        WHERE id = ?
-        """,
-        (student_id,)
-    )
-
-
-    student = cursor.fetchone()
-
-
-    if not student:
-
-        flash(
-            "Student not found.",
-            "danger"
+    try:
+        cursor.execute(
+            """
+            SELECT
+                id,
+                username,
+                email
+            FROM users
+            WHERE id = ?
+            """,
+            (student_id,)
         )
 
-        return redirect(
-            url_for("admin.admin_students")
+        student = cursor.fetchone()
+
+        if not student:
+            flash(
+                "Student not found.",
+                "danger"
+            )
+            return redirect(
+                url_for("admin.admin_students")
+            )
+
+        temporary_password = generate_temp_password()
+        hashed_password = hash_password(
+            temporary_password
         )
 
-
-    temporary_password = generate_temp_password()
-
-
-    hashed_password = hash_password(
-        temporary_password
-    )
-
-
-    cursor.execute(
-        """
-        UPDATE users
-        SET password = ?
-        WHERE id = ?
-        """,
-        (
-            hashed_password,
-            student_id
+        cursor.execute(
+            """
+            UPDATE users
+            SET password = ?
+            WHERE id = ?
+            """,
+            (
+                hashed_password,
+                student_id
+            )
         )
-    )
 
-
-    conn.commit()
-
-
-    cursor.close()
-    conn.close()
-
-
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        cursor.close()
+        conn.close()
 
     try:
 
@@ -2012,7 +2003,11 @@ def student_report(student_id):
 
     for log in log_dates:
 
-        date_value = parse_datetime(log[0]).strftime("%Y-%m-%d")
+        parsed_log_date = parse_datetime(log[0])
+        if not parsed_log_date:
+            continue
+
+        date_value = parsed_log_date.strftime("%Y-%m-%d")
         display_date = format_date(log[0])
 
         if date_value not in logbook_days:

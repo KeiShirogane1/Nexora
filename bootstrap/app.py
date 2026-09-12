@@ -3,6 +3,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 BASE_DIR=Path(__file__).resolve().parent.parent; load_dotenv(BASE_DIR/".env")
 from flask import Flask,send_from_directory,session,redirect,url_for
+from app.Http.Middleware.security import login_required
 from app.Http.Controllers.auth import auth
 from app.Http.Controllers.password import password
 from app.Http.Controllers.student import student
@@ -66,11 +67,32 @@ except ImportError as exc:
 def _security(response):
  response.headers["X-Content-Type-Options"]="nosniff"; response.headers["X-Frame-Options"]="DENY"; response.headers["Referrer-Policy"]="strict-origin-when-cross-origin"; response.headers["Content-Security-Policy"]="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' https: data:; connect-src 'self'; frame-ancestors 'none'"; return response
 UPLOAD_FOLDER=BASE_DIR/"storage"/"uploads"; UPLOAD_FOLDER.mkdir(parents=True,exist_ok=True); app.config["UPLOAD_FOLDER"]=str(UPLOAD_FOLDER); PROFILE_UPLOAD_FOLDER=UPLOAD_FOLDER/"profile_pictures"; PROFILE_UPLOAD_FOLDER.mkdir(parents=True,exist_ok=True); app.config["PROFILE_UPLOAD_FOLDER"]=str(PROFILE_UPLOAD_FOLDER)
+def _is_registered_document_upload(filename):
+ candidate=(UPLOAD_FOLDER/filename).resolve()
+ conn=get_db_connection()
+ try:
+  rows=conn.execute("SELECT filepath FROM documents WHERE filepath IS NOT NULL").fetchall()
+ except Exception:
+  return True
+ finally:
+  conn.close()
+ for row in rows:
+  try:
+   stored=row[0]
+   if stored and Path(stored).resolve()==candidate:return True
+  except Exception:
+   continue
+ return False
 @app.route("/uploads/<path:filename>")
-def uploaded_file(filename): return send_from_directory(str(UPLOAD_FOLDER),filename)
+@login_required
+def uploaded_file(filename):
+ if _is_registered_document_upload(filename):return "Direct document access is not allowed.",403
+ return send_from_directory(str(UPLOAD_FOLDER),filename)
 @app.route("/uploads/profile_pictures/<filename>")
+@login_required
 def profile_picture(filename): return send_from_directory(app.config["PROFILE_UPLOAD_FOLDER"],filename)
 @app.route("/profile-picture/<int:user_id>")
+@login_required
 def user_profile_picture(user_id):
  conn=get_db_connection()
  try:

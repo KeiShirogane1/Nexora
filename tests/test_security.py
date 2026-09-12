@@ -66,6 +66,16 @@ def test_upload_size_limit():
     from bootstrap.app import app
     assert app.config["MAX_CONTENT_LENGTH"] == 5 * 1024 * 1024
 
+def test_private_upload_routes_require_login(client):
+    for path in (
+        "/uploads/private-document.pdf",
+        "/uploads/profile_pictures/private-profile.jpg",
+        "/profile-picture/1",
+    ):
+        response = client.get(path, follow_redirects=False)
+        assert response.status_code in (301, 302)
+        assert response.headers["Location"].endswith("/login")
+
 def test_temp_password_strength():
     from app.Http.Controllers.admin import generate_temp_password
     pw = generate_temp_password()
