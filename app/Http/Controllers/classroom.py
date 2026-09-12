@@ -823,14 +823,6 @@ def leave_class(class_id):
             flash("You are not enrolled in this Intern Classroom.", "warning")
             return redirect(url_for("classroom.student_classes"))
 
-        internship_ids = {
-            item["id"]
-            for item in _student_internship_memberships(conn, student_id, active_only=False)
-        }
-        if int(class_id) not in internship_ids:
-            flash("Only Intern Classrooms can be left from this page.", "warning")
-            return redirect(url_for("classroom.student_classes"))
-
         open_attendance = conn.execute("""
             SELECT id
             FROM attendance

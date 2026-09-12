@@ -546,15 +546,13 @@
                                                     <span aria-hidden="true">▣</span> Copy Classroom Code
                                                 </button>
 
-                                                {% if c.is_internship %}
-                                                    <div class="student-intern-menu-divider"></div>
-                                                    <form method="POST" action="{{ url_for('classroom.leave_class', class_id=c.id) }}" onsubmit='return confirm("Leave " + {{ c.name|tojson }} + "?\nYou will no longer have an active supervisor or receive new Work from this internship.\nYour completed attendance and Daily OJT history will remain preserved.");'>
-                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                        <button type="submit" class="student-intern-menu-item is-danger">
-                                                            <span aria-hidden="true">↪</span> Leave Intern Classroom
-                                                        </button>
-                                                    </form>
-                                                {% endif %}
+                                                <div class="student-intern-menu-divider"></div>
+                                                <form method="POST" action="{{ url_for('classroom.leave_class', class_id=c.id) }}" onsubmit='return confirm("Leave " + {{ c.name|tojson }} + "?\nYou will no longer have an active supervisor or receive new Work from this internship.\nYour completed attendance and Daily OJT history will remain preserved.");'>
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                    <button type="submit" class="student-intern-menu-item is-danger">
+                                                        <span aria-hidden="true">↪</span> Leave Intern Classroom
+                                                    </button>
+                                                </form>
                                             </div>
                                         </div>
                                     </div>
