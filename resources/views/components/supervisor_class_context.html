@@ -166,9 +166,12 @@
         event.stopPropagation();
         const menu = document.getElementById('supervisorBannerManagementMenu');
         const button = document.getElementById('supervisorBannerManagementButton');
+        const hero = button?.closest('.supervisor-class-context-hero');
         if (!menu) return;
         const opening = !menu.classList.contains('show');
         menu.classList.toggle('show', opening);
+        menu.style.zIndex = opening ? '1080' : '';
+        if (hero) hero.style.overflow = opening ? 'visible' : '';
         if (button) button.setAttribute('aria-expanded', opening ? 'true' : 'false');
     }
 
@@ -182,7 +185,12 @@
         const menu = document.getElementById('supervisorBannerManagementMenu');
         const button = document.getElementById('supervisorBannerManagementButton');
         const choices = document.getElementById('supervisorBannerColorChoices');
-        if (menu) menu.classList.remove('show');
+        const hero = button?.closest('.supervisor-class-context-hero');
+        if (menu) {
+            menu.classList.remove('show');
+            menu.style.zIndex = '';
+        }
+        if (hero) hero.style.overflow = '';
         if (button) button.setAttribute('aria-expanded', 'false');
         if (choices) choices.hidden = true;
     }
