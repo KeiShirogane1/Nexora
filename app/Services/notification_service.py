@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from app.Models.db import get_db_connection
+from app.Models.db import get_db_connection, using_postgres
 
 ALLOWED_TYPES = {"info", "success", "warning", "error", "task", "feedback", "system", "classroom"}
 
@@ -37,19 +37,28 @@ def create_notification(user_id, title, message, notification_type="info", link_
         cursor.execute("SELECT id FROM users WHERE id = ?", (user_id,))
         if not cursor.fetchone():
             raise ValueError(f"user_id {user_id} does not exist")
-        cursor.execute(
-            """
+        insert_sql = """
             INSERT INTO notifications
             (user_id, title, message, notification_type, link_url)
             VALUES (?, ?, ?, ?, ?)
-            """,
+            """
+        if using_postgres():
+            insert_sql += " RETURNING id"
+        cursor.execute(
+            insert_sql,
             (user_id, title, message, notification_type, link_url),
         )
+        if using_postgres():
+            row = cursor.fetchone()
+            notification_id = (
+                row["id"]
+                if row and "id" in row.keys()
+                else row[0] if row else None
+            )
+        else:
+            notification_id = cursor.lastrowid
         conn.commit()
-        try:
-            return cursor.lastrowid
-        except Exception:
-            return None
+        return notification_id
     except Exception:
         try:
             conn.rollback()
