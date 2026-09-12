@@ -1156,7 +1156,7 @@ def view_document(document_id):
     conn.close()
 
     if not document:
-        return "Submission not found.", 404
+        return "Document not found.", 404
 
     filepath = document[1]
     filename = document[0]
