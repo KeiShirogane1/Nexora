@@ -6,7 +6,7 @@ from datetime import datetime
 from flask import Blueprint, render_template, request, redirect, session, flash, url_for, current_app, send_file
 from werkzeug.utils import secure_filename
 from app.Http.Middleware.security import role_required
-from app.Models.db import get_db_connection
+from app.Models.db import get_db_connection, using_postgres
 from app.Services.notification_service import create_notification
 from app.Services.classroom_roster_service import get_supervisor_classroom_roster
 
@@ -578,7 +578,8 @@ def student_classes():
     try:
         rows = conn.execute("""
             SELECT c.id, c.name, c.section, c.description, c.code, c.archived, c.created_at,
-                   u.username AS supervisor_name
+                   u.username AS supervisor_name,
+                   COALESCE(c.classroom_type, 'classroom') AS classroom_type
             FROM classrooms c
             JOIN classroom_students cs ON cs.classroom_id = c.id
             JOIN users u ON u.id = c.supervisor_id
@@ -596,6 +597,7 @@ def student_classes():
                 "archived": r["archived"] if "archived" in r.keys() else r[5],
                 "status": "Active",
                 "supervisor": r["supervisor_name"] if "supervisor_name" in r.keys() else r[7],
+                "classroom_type": r["classroom_type"] if "classroom_type" in r.keys() else r[8],
             })
     finally:
         conn.close()
@@ -616,15 +618,16 @@ def join_class():
             return render_template("classroom/join_class.html", errors=errors, form=request.form, active_page="classes")
         conn = get_db_connection()
         try:
-            c = conn.execute("SELECT id, supervisor_id, archived FROM classrooms WHERE UPPER(code) = UPPER(?)", (code,)).fetchone()
+            c = conn.execute("SELECT id, supervisor_id, archived, COALESCE(classroom_type, 'classroom') AS classroom_type, name FROM classrooms WHERE UPPER(code) = UPPER(?)", (code,)).fetchone()
             if not c:
-                c2 = conn.execute("SELECT id, supervisor_id, archived FROM classrooms WHERE REPLACE(UPPER(code), '-', '') = REPLACE(UPPER(?), '-', '')", (code,)).fetchone()
+                c2 = conn.execute("SELECT id, supervisor_id, archived, COALESCE(classroom_type, 'classroom') AS classroom_type, name FROM classrooms WHERE REPLACE(UPPER(code), '-', '') = REPLACE(UPPER(?), '-', '')", (code,)).fetchone()
                 c = c2
             if not c:
                 errors["class_code"] = "Invalid class code."
                 return render_template("classroom/join_class.html", errors=errors, form=request.form, active_page="classes")
             cid = c["id"] if "id" in c.keys() else c[0]
             arch = c["archived"] if "archived" in c.keys() else c[2]
+            classroom_type = c["classroom_type"] if "classroom_type" in c.keys() else c[3]
             if arch:
                 errors["class_code"] = "Cannot join archived class."
                 return render_template("classroom/join_class.html", errors=errors, form=request.form, active_page="classes")
@@ -632,14 +635,36 @@ def join_class():
             if exists:
                 flash("You are already enrolled in this class.", "info")
                 return redirect(url_for("classroom.student_classes"))
+
+            if classroom_type == "internship":
+                if using_postgres():
+                    conn.execute(
+                        "SELECT id FROM users WHERE id = ? FOR UPDATE",
+                        (session["user_id"],),
+                    ).fetchone()
+                active_internship = conn.execute("""
+                    SELECT c.id, c.name
+                    FROM classroom_students cs
+                    JOIN classrooms c ON c.id = cs.classroom_id
+                    WHERE cs.student_id = ?
+                      AND c.archived = 0
+                      AND COALESCE(c.classroom_type, 'classroom') = 'internship'
+                      AND c.id <> ?
+                    ORDER BY cs.joined_at DESC, c.id DESC
+                    LIMIT 1
+                """, (session["user_id"], cid)).fetchone()
+                if active_internship:
+                    active_name = active_internship["name"] if "name" in active_internship.keys() else active_internship[1]
+                    errors["class_code"] = f"You already have an active Intern Classroom ({active_name}). Leave it before joining another."
+                    return render_template("classroom/join_class.html", errors=errors, form=request.form, active_page="classes")
+
             conn.execute("INSERT INTO classroom_students (classroom_id, student_id) VALUES (?, ?)", (cid, session["user_id"]))
             conn.commit()
             try:
                 sup_id = c["supervisor_id"] if "supervisor_id" in c.keys() else c[1]
                 u = conn.execute("SELECT username FROM users WHERE id = ?", (session["user_id"],)).fetchone()
                 sname = (u["username"] if u and "username" in u.keys() else (u[0] if u else "Student"))
-                cn = conn.execute("SELECT name FROM classrooms WHERE id = ?", (cid,)).fetchone()
-                cname = (cn["name"] if cn and "name" in cn.keys() else "Class")
+                cname = c["name"] if "name" in c.keys() else c[4]
                 create_notification(int(sup_id), "New Class Enrollment", f"{sname} joined your class {cname} ({code}).", "classroom", link_url=f"/supervisor/classes/{cid}")
             except Exception as e:
                 print("join notification failed:", e)
@@ -658,6 +683,77 @@ def join_class():
         finally:
             conn.close()
     return render_template("classroom/join_class.html", errors={}, form={}, active_page="classes")
+
+# Student: Leave Intern Classroom
+@classroom.route("/student/classes/<int:class_id>/leave", methods=["POST"])
+@role_required("student")
+def leave_class(class_id):
+    student_id = session["user_id"]
+    conn = get_db_connection()
+    try:
+        membership = conn.execute("""
+            SELECT c.id, c.name, c.supervisor_id,
+                   COALESCE(c.classroom_type, 'classroom') AS classroom_type
+            FROM classroom_students cs
+            JOIN classrooms c ON c.id = cs.classroom_id
+            WHERE cs.student_id = ? AND cs.classroom_id = ?
+            LIMIT 1
+        """, (student_id, class_id)).fetchone()
+        if not membership:
+            flash("You are not enrolled in this Intern Classroom.", "warning")
+            return redirect(url_for("classroom.student_classes"))
+
+        classroom_type = membership["classroom_type"] if "classroom_type" in membership.keys() else membership[3]
+        if classroom_type != "internship":
+            flash("Only Intern Classrooms can be left from this page.", "warning")
+            return redirect(url_for("classroom.student_classes"))
+
+        open_attendance = conn.execute("""
+            SELECT id
+            FROM attendance
+            WHERE student_id = ? AND status = 'Open'
+            LIMIT 1
+        """, (student_id,)).fetchone()
+        if open_attendance:
+            flash("Clock out before leaving your Intern Classroom.", "warning")
+            return redirect(url_for("classroom.student_classes"))
+
+        class_name = membership["name"] if "name" in membership.keys() else membership[1]
+        supervisor_id = membership["supervisor_id"] if "supervisor_id" in membership.keys() else membership[2]
+        student_row = conn.execute("SELECT username FROM users WHERE id = ?", (student_id,)).fetchone()
+        student_name = student_row["username"] if student_row and "username" in student_row.keys() else (student_row[0] if student_row else "Student")
+
+        conn.execute(
+            "DELETE FROM classroom_students WHERE classroom_id = ? AND student_id = ?",
+            (class_id, student_id),
+        )
+        conn.commit()
+
+        try:
+            create_notification(
+                int(supervisor_id),
+                "Intern Left Classroom",
+                f"{student_name} left your Intern Classroom {class_name}.",
+                "classroom",
+                link_url=f"/supervisor/classes/{class_id}",
+            )
+        except Exception:
+            current_app.logger.warning("leave classroom notification failed", exc_info=True)
+
+        flash(
+            f"You left {class_name}. Your completed attendance and Daily OJT history were preserved.",
+            "success",
+        )
+    except Exception:
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+        current_app.logger.exception("Student failed to leave Intern Classroom")
+        flash("Unable to leave the Intern Classroom. Please try again.", "danger")
+    finally:
+        conn.close()
+    return redirect(url_for("classroom.student_classes"))
 
 # Student: Class detail
 @classroom.route("/student/classes/<int:class_id>")
