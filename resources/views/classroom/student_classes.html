@@ -150,7 +150,51 @@
             padding: 22px;
             border-bottom: 1px solid rgba(18, 168, 121, .17);
             border-radius: 17px 17px 0 0;
-            background: linear-gradient(135deg, #b9efd9 0%, #ecfaf5 100%);
+        }
+
+        .student-intern-banner--blue {
+            background: linear-gradient(135deg, #93c5fd 0%, #dbeafe 100%);
+        }
+
+        .student-intern-banner--navy {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+        }
+
+        .student-intern-banner--green {
+            background: linear-gradient(135deg, #6ee7b7 0%, #d1fae5 100%);
+        }
+
+        .student-intern-banner--teal {
+            background: linear-gradient(135deg, #5eead4 0%, #ccfbf1 100%);
+        }
+
+        .student-intern-banner--purple {
+            background: linear-gradient(135deg, #c4b5fd 0%, #ede9fe 100%);
+        }
+
+        .student-intern-banner--orange {
+            background: linear-gradient(135deg, #fdba74 0%, #ffedd5 100%);
+        }
+
+        .student-intern-banner--amber {
+            background: linear-gradient(135deg, #fcd34d 0%, #fef3c7 100%);
+        }
+
+        .student-intern-banner--rose {
+            background: linear-gradient(135deg, #fda4af 0%, #ffe4e6 100%);
+        }
+
+        .student-intern-banner--slate {
+            background: linear-gradient(135deg, #94a3b8 0%, #e2e8f0 100%);
+        }
+
+        .student-intern-banner--navy h2,
+        .student-intern-banner--navy .student-intern-section {
+            color: #fff;
+        }
+
+        .student-intern-banner--navy .student-intern-supervisor {
+            color: #dbeafe;
         }
 
         .student-intern-top {
@@ -541,7 +585,7 @@
                 <div class="classes-grid">
                     {% for c in classes %}
                         <article class="student-intern-card">
-                            <div class="student-intern-banner">
+                            <div class="student-intern-banner student-intern-banner--{{ c.banner_theme }}">
                                 <div class="student-intern-top">
                                     <div>
                                         <h2>{{ c.name }}</h2>
@@ -591,6 +635,27 @@
                                     <span class="student-intern-meta-icon" aria-hidden="true">👤</span>
                                     <span>Supervisor: <strong>{{ c.supervisor }}</strong></span>
                                 </div>
+
+                                {% if c.company_name %}
+                                    <div class="student-intern-meta-row">
+                                        <span class="student-intern-meta-icon" aria-hidden="true">🏢</span>
+                                        <span>Company: <strong>{{ c.company_name }}</strong></span>
+                                    </div>
+                                {% endif %}
+
+                                {% if c.work_arrangement or c.location %}
+                                    <div class="student-intern-meta-row">
+                                        <span class="student-intern-meta-icon" aria-hidden="true">📍</span>
+                                        <span>{% if c.work_arrangement %}{{ c.work_arrangement }}{% endif %}{% if c.work_arrangement and c.location %} · {% endif %}{% if c.location %}{{ c.location }}{% endif %}</span>
+                                    </div>
+                                {% endif %}
+
+                                {% if c.hours_mode == 'specified' and c.required_hours %}
+                                    <div class="student-intern-meta-row">
+                                        <span class="student-intern-meta-icon" aria-hidden="true">⏱</span>
+                                        <span>{{ c.required_hours }} required hrs</span>
+                                    </div>
+                                {% endif %}
 
                                 <div class="student-intern-code-row">
                                     <span class="student-intern-meta-icon" aria-hidden="true">🔑</span>

@@ -652,10 +652,17 @@ def student_classes():
         rows = conn.execute("""
             SELECT c.id, c.name, c.section, c.description, c.code, c.archived, c.created_at,
                    u.username AS supervisor_name,
-                   COALESCE(c.classroom_type, 'classroom') AS classroom_type
+                   COALESCE(c.classroom_type, 'classroom') AS classroom_type,
+                   COALESCE(c.banner_theme, 'blue') AS banner_theme,
+                   COALESCE(cid.company_name, '') AS company_name,
+                   COALESCE(cid.work_arrangement, '') AS work_arrangement,
+                   COALESCE(cid.location, '') AS location,
+                   COALESCE(cid.hours_mode, 'not_specified') AS hours_mode,
+                   COALESCE(cid.required_hours, 0) AS required_hours
             FROM classrooms c
             JOIN classroom_students cs ON cs.classroom_id = c.id
             JOIN users u ON u.id = c.supervisor_id
+            LEFT JOIN classroom_internship_details cid ON cid.classroom_id = c.id
             WHERE cs.student_id = ? AND c.archived = 0
             ORDER BY cs.joined_at DESC
         """, (stu,)).fetchall()
@@ -663,11 +670,15 @@ def student_classes():
             item["id"]
             for item in _student_internship_memberships(conn, stu, active_only=True)
         }
+        valid_banner_themes = {"blue", "navy", "green", "teal", "purple", "orange", "amber", "rose", "slate"}
         classes = []
         for r in rows:
             class_id = r["id"] if "id" in r.keys() else r[0]
             raw_classroom_type = r["classroom_type"] if "classroom_type" in r.keys() else r[8]
             is_internship = int(class_id) in internship_ids
+            banner_theme = str(r["banner_theme"] if "banner_theme" in r.keys() else r[9]).lower()
+            if banner_theme not in valid_banner_themes:
+                banner_theme = "blue"
             classes.append({
                 "id": class_id,
                 "name": r["name"] if "name" in r.keys() else r[1],
@@ -679,6 +690,12 @@ def student_classes():
                 "supervisor": r["supervisor_name"] if "supervisor_name" in r.keys() else r[7],
                 "classroom_type": "internship" if is_internship else raw_classroom_type,
                 "is_internship": is_internship,
+                "banner_theme": banner_theme,
+                "company_name": r["company_name"] if "company_name" in r.keys() else r[10],
+                "work_arrangement": r["work_arrangement"] if "work_arrangement" in r.keys() else r[11],
+                "location": r["location"] if "location" in r.keys() else r[12],
+                "hours_mode": r["hours_mode"] if "hours_mode" in r.keys() else r[13],
+                "required_hours": r["required_hours"] if "required_hours" in r.keys() else r[14],
             })
     finally:
         conn.close()
