@@ -69,6 +69,29 @@
                 z-index: 40;
             }
 
+            .supervisor-class-pending-pill {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 30px;
+                padding: 5px 9px;
+                border: 1px solid #fed7aa;
+                border-radius: 999px;
+                background: #fff7ed;
+                color: #c2410c !important;
+                font-size: 0.72rem;
+                font-weight: 800;
+                line-height: 1;
+                text-decoration: none !important;
+                white-space: nowrap;
+            }
+
+            .supervisor-class-pending-pill:hover {
+                border-color: #fdba74;
+                background: #ffedd5;
+                color: #9a3412 !important;
+            }
+
             .supervisor-class-card .class-banner-color-panel {
                 padding: 9px 13px 12px;
                 border-top: 1px solid #eef2f7;
@@ -144,6 +167,8 @@
                     {% if classes and classes|length > 0 %}
                         {% for c in classes %}
                             {% set active_banner_theme = classroom_banner_theme(c.id) %}
+                            {% set pending = supervisor_class_pending_counts.get(c.id, {}) %}
+                            {% set pending_total = pending.get('total', 0) %}
                             <article class="supervisor-class-card">
                                 <div class="supervisor-class-card-banner supervisor-class-card-banner--{{ active_banner_theme }}">
                                     <div class="supervisor-class-card-top">
@@ -158,6 +183,14 @@
                                             <span class="supervisor-status {% if c.status == 'Active' %}is-active{% endif %}">
                                                 <span class="supervisor-status-dot"></span>{{ c.status }}
                                             </span>
+                                            {% if pending_total > 0 %}
+                                                <a
+                                                    href="{{ url_for('classroom.supervisor_class', class_id=c.id) }}"
+                                                    class="supervisor-class-pending-pill"
+                                                    title="{{ pending.get('logbook', 0) }} Daily OJT review{% if pending.get('logbook', 0) != 1 %}s{% endif %} · {{ pending.get('work', 0) }} Work submission{% if pending.get('work', 0) != 1 %}s{% endif %}">
+                                                    {{ pending_total }} pending
+                                                </a>
+                                            {% endif %}
                                             <div class="dropdown position-relative">
                                                 <button
                                                     type="button"
@@ -287,7 +320,7 @@
             document.addEventListener('click', function () {
                 document.querySelectorAll('.supervisor-class-card .dropdown-menu.show').forEach((menu) => menu.classList.remove('show'));
                 document.querySelectorAll('.supervisor-class-card [aria-expanded="true"]').forEach((button) => button.setAttribute('aria-expanded', 'false'));
-                document.querySelectorAll('.supervisor-class-card .class-banner-color-panel').forEach((panel) => panel.hidden = true);
+                document.querySelectorAll('.supervisor-class-card .class-banner-color-panel').forEach((panel) => panel.hidden = true;
             });
 
             document.querySelectorAll('.supervisor-class-card .dropdown-menu').forEach((menu) => {

@@ -143,8 +143,9 @@ def enforce_single_supervisor_session():
  if current is not None and session.get("session_version")!=int(current):session.clear();session["login_error"]="You were signed out because this supervisor account logged in on another device.";return redirect(url_for("auth.login"))
 @app.context_processor
 def inject_notifications():
- if "user_id" not in session:return {"notifications":[],"recent_notifications":[],"unread_count":0,"sidebar_profile":None}
- uid=session["user_id"];sidebar=None
+ defaults={"notifications":[],"recent_notifications":[],"unread_count":0,"sidebar_profile":None,"supervisor_classroom_pending_count":0,"supervisor_evaluation_pending_count":0,"supervisor_class_pending_counts":{}}
+ if "user_id" not in session:return defaults
+ uid=session["user_id"];sidebar=None;supervisor_class_pending_counts={};supervisor_classroom_pending_count=0;supervisor_evaluation_pending_count=0
  try:
   conn=get_db_connection()
   try:
@@ -157,7 +158,42 @@ def inject_notifications():
     elif user["role"]=="supervisor":
      p=conn.execute("SELECT first_name,last_name FROM supervisor_profiles WHERE user_id=?",(uid,)).fetchone()
      if p:sidebar.update({"first_name":p["first_name"],"last_name":p["last_name"]})
+     pending_rows=conn.execute("""
+      SELECT c.id AS classroom_id,
+             (SELECT COUNT(*)
+              FROM logs l
+              JOIN attendance a ON a.id=l.attendance_id
+              LEFT JOIN logbook_reviews r ON r.log_id=l.id
+              WHERE l.entry_type='daily'
+                AND a.classroom_id=c.id
+                AND COALESCE(a.status,'Open')<>'Open'
+                AND COALESCE(r.status,'pending')='pending') AS pending_logbooks,
+             (SELECT COUNT(*)
+              FROM classwork_submissions s
+              JOIN classroom_assignments ca ON ca.id=s.assignment_id
+              WHERE ca.classroom_id=c.id
+                AND COALESCE(s.status,'submitted')='submitted'
+                AND s.grade IS NULL) AS pending_work
+      FROM classrooms c
+      WHERE c.supervisor_id=? AND COALESCE(c.archived,0)=0
+     """,(uid,)).fetchall()
+     for pending_row in pending_rows:
+      class_id=int(pending_row["classroom_id"] if "classroom_id" in pending_row.keys() else pending_row[0]);logbook_pending=int(pending_row["pending_logbooks"] if "pending_logbooks" in pending_row.keys() else pending_row[1] or 0);work_pending=int(pending_row["pending_work"] if "pending_work" in pending_row.keys() else pending_row[2] or 0);total_pending=logbook_pending+work_pending
+      supervisor_class_pending_counts[class_id]={"logbook":logbook_pending,"work":work_pending,"total":total_pending};supervisor_classroom_pending_count+=total_pending
+     evaluation_row=conn.execute("""
+      SELECT COUNT(*) AS pending_count
+      FROM classroom_students cs
+      JOIN classrooms c ON c.id=cs.classroom_id
+      LEFT JOIN ojt_evaluations e
+        ON e.classroom_id=c.id
+       AND e.student_id=cs.student_id
+       AND e.supervisor_id=c.supervisor_id
+      WHERE c.supervisor_id=?
+        AND COALESCE(c.archived,0)=0
+        AND LOWER(COALESCE(e.status,'draft'))<>'submitted'
+     """,(uid,)).fetchone()
+     if evaluation_row:supervisor_evaluation_pending_count=int(evaluation_row["pending_count"] if "pending_count" in evaluation_row.keys() else evaluation_row[0] or 0)
   finally:conn.close()
-  return {"notifications":get_user_notifications(uid,limit=20),"recent_notifications":get_recent_notifications(uid,days=7,limit=10),"unread_count":get_unread_count(uid),"sidebar_profile":sidebar}
- except Exception as exc:print("inject_notifications failed:",exc);return {"notifications":[],"recent_notifications":[],"unread_count":0,"sidebar_profile":sidebar}
+  return {"notifications":get_user_notifications(uid,limit=20),"recent_notifications":get_recent_notifications(uid,days=7,limit=10),"unread_count":get_unread_count(uid),"sidebar_profile":sidebar,"supervisor_classroom_pending_count":supervisor_classroom_pending_count,"supervisor_evaluation_pending_count":supervisor_evaluation_pending_count,"supervisor_class_pending_counts":supervisor_class_pending_counts}
+ except Exception as exc:print("inject_notifications failed:",exc);defaults["sidebar_profile"]=sidebar;return defaults
 if __name__=="__main__":app.run(debug=app.debug)

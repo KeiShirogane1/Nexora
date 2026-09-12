@@ -75,12 +75,21 @@
                             </div>
 
                             <div class="row g-3 align-items-start">
-                                <div class="col-md-3">
-                                    <label class="form-label fw-bold" for="bulk-star-rating">Stars *</label>
-                                    <input class="form-control" id="bulk-star-rating" name="star_rating" type="number" min="1.0" max="5.0" step="0.1" placeholder="4.0" required>
-                                    <div class="form-text">1.0–5.0, in 0.1 increments.</div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold" id="bulk-star-rating-label">Stars *</label>
+                                    <div class="d-flex align-items-center flex-wrap gap-1" data-star-picker data-input-id="bulk-star-rating" aria-labelledby="bulk-star-rating-label">
+                                        <input id="bulk-star-rating" name="star_rating" type="hidden" value="">
+                                        {% for star in range(1, 6) %}
+                                            <button class="btn btn-link p-0 text-secondary fs-2 lh-1 text-decoration-none" type="button" data-star-value="{{ star }}" aria-label="Set rating to {{ star }} star{% if star != 1 %}s{% endif %}">☆</button>
+                                        {% endfor %}
+                                        <button class="btn btn-sm btn-outline-secondary ms-2" type="button" data-star-step="-0.1" aria-label="Decrease rating by 0.1">−</button>
+                                        <span class="small fw-bold text-muted px-1" data-star-label>Choose rating</span>
+                                        <button class="btn btn-sm btn-outline-secondary" type="button" data-star-step="0.1" aria-label="Increase rating by 0.1">+</button>
+                                    </div>
+                                    <div class="form-text">Click a star, then use − / + for 0.1-star adjustments.</div>
+                                    <div class="text-danger small mt-1" data-star-error hidden>Choose a star rating before applying it.</div>
                                 </div>
-                                <div class="col-md-7">
+                                <div class="col-md-6">
                                     <label class="form-label fw-bold" for="bulk-rating-comment">Performance comment <span class="text-muted fw-normal">(optional)</span></label>
                                     <textarea class="form-control" id="bulk-rating-comment" name="rating_comment" maxlength="2000" rows="3" placeholder="This same comment will be stored on every selected Daily OJT rating."></textarea>
                                 </div>
@@ -193,9 +202,18 @@
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <div class="row g-3">
                                             <div class="col-md-4">
-                                                <label class="form-label fw-bold" for="daily-star-rating">Stars *</label>
-                                                <input class="form-control" id="daily-star-rating" name="star_rating" type="number" min="1.0" max="5.0" step="0.1" value="{% if daily_rating %}{{ '%.1f'|format(daily_rating.star_rating) }}{% endif %}" placeholder="4.0" required>
-                                                <div class="form-text">1.0–5.0 stars, in 0.1 increments.</div>
+                                                <label class="form-label fw-bold" id="daily-star-rating-label">Stars *</label>
+                                                <div class="d-flex align-items-center flex-wrap gap-1" data-star-picker data-input-id="daily-star-rating" aria-labelledby="daily-star-rating-label">
+                                                    <input id="daily-star-rating" name="star_rating" type="hidden" value="{% if daily_rating %}{{ '%.1f'|format(daily_rating.star_rating) }}{% endif %}">
+                                                    {% for star in range(1, 6) %}
+                                                        <button class="btn btn-link p-0 text-secondary fs-2 lh-1 text-decoration-none" type="button" data-star-value="{{ star }}" aria-label="Set rating to {{ star }} star{% if star != 1 %}s{% endif %}">☆</button>
+                                                    {% endfor %}
+                                                    <button class="btn btn-sm btn-outline-secondary ms-2" type="button" data-star-step="-0.1" aria-label="Decrease rating by 0.1">−</button>
+                                                    <span class="small fw-bold text-muted px-1" data-star-label>Choose rating</span>
+                                                    <button class="btn btn-sm btn-outline-secondary" type="button" data-star-step="0.1" aria-label="Increase rating by 0.1">+</button>
+                                                </div>
+                                                <div class="form-text">Click a star, then use − / + for 0.1-star adjustments.</div>
+                                                <div class="text-danger small mt-1" data-star-error hidden>Choose a star rating before saving.</div>
                                             </div>
                                             <div class="col-md-8">
                                                 <label class="form-label fw-bold" for="daily-rating-comment">Performance comment <span class="text-muted fw-normal">(optional)</span></label>
@@ -250,6 +268,67 @@
                 });
             });
         }
+
+        function bindStarPicker(picker) {
+            const input = document.getElementById(picker.dataset.inputId || '');
+            if (!input) return;
+            const starButtons = Array.from(picker.querySelectorAll('[data-star-value]'));
+            const stepButtons = Array.from(picker.querySelectorAll('[data-star-step]'));
+            const label = picker.querySelector('[data-star-label]');
+            const error = picker.parentElement ? picker.parentElement.querySelector('[data-star-error]') : null;
+            let value = Number.parseFloat(input.value) || 0;
+
+            const render = () => {
+                const whole = Math.floor(value);
+                const hasFraction = value > whole;
+                starButtons.forEach((button) => {
+                    const star = Number(button.dataset.starValue || 0);
+                    button.classList.remove('text-warning', 'text-secondary', 'opacity-50');
+                    if (value && star <= whole) {
+                        button.textContent = '★';
+                        button.classList.add('text-warning');
+                    } else if (value && hasFraction && star === whole + 1) {
+                        button.textContent = '★';
+                        button.classList.add('text-warning', 'opacity-50');
+                    } else {
+                        button.textContent = '☆';
+                        button.classList.add('text-secondary');
+                    }
+                });
+                if (label) label.textContent = value ? `${value.toFixed(1)} / 5` : 'Choose rating';
+            };
+
+            const setValue = (next) => {
+                const rounded = Math.round(Number(next) * 10) / 10;
+                value = Math.min(5, Math.max(1, rounded));
+                input.value = value.toFixed(1);
+                if (error) error.hidden = true;
+                render();
+            };
+
+            starButtons.forEach((button) => {
+                button.addEventListener('click', () => setValue(Number(button.dataset.starValue || 1)));
+            });
+            stepButtons.forEach((button) => {
+                button.addEventListener('click', () => {
+                    const step = Number(button.dataset.starStep || 0);
+                    setValue((value || 1) + step);
+                });
+            });
+
+            const form = picker.closest('form');
+            if (form) {
+                form.addEventListener('submit', (event) => {
+                    if (input.value) return;
+                    event.preventDefault();
+                    if (error) error.hidden = false;
+                    if (starButtons[0]) starButtons[0].focus();
+                });
+            }
+            render();
+        }
+
+        document.querySelectorAll('[data-star-picker]').forEach(bindStarPicker);
     </script>
 </body>
 </html>
