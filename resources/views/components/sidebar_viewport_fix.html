@@ -1,11 +1,40 @@
 <style id="nx-sidebar-viewport-fix">
+html:has(.nx-role-sidebar-shell),
+body:has(.nx-role-sidebar-shell) {
+    min-height: 100% !important;
+    min-height: 100dvh !important;
+}
+
 .nx-role-sidebar {
     top: 0 !important;
     bottom: 0 !important;
     height: auto !important;
     min-height: 0 !important;
 }
+
+@media (min-width: 761px) {
+    .nx-role-sidebar-shell::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 1290;
+        width: 76px;
+        pointer-events: none;
+        background: linear-gradient(
+            180deg,
+            var(--nx-sidebar-bg-start),
+            var(--nx-sidebar-bg-end)
+        );
+    }
+}
+
 @media (max-width: 760px) {
+    .nx-role-sidebar-shell::before {
+        display: none !important;
+    }
+
     .nx-role-footer {
         margin-top: auto !important;
         margin-bottom: 0 !important;
