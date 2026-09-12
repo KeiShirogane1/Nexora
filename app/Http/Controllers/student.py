@@ -216,15 +216,17 @@ def clock_in():
     cursor = conn.cursor()
 
     classrooms = _get_active_intern_classrooms(cursor, session["user_id"])
-    classroom_id = _resolve_classroom_choice(
-        classrooms,
-        request.form.get("classroom_id"),
-    )
-
-    if classrooms and classroom_id is None:
+    if not classrooms:
         conn.close()
-        flash("Choose the Intern Classroom this attendance session belongs to.", "warning")
-        return redirect("/student/logbook")
+        flash("Join an active Intern Classroom before clocking in.", "warning")
+        return redirect("/student/classes")
+    if len(classrooms) != 1:
+        conn.close()
+        flash("You have multiple active Intern Classrooms. Leave the extra classroom before clocking in.", "warning")
+        return redirect("/student/classes")
+
+    # The single active Intern Classroom is authoritative for every new OJT session.
+    classroom_id = classrooms[0]["id"]
 
     # Keep one open session per intern. This also protects legacy open sessions.
     cursor.execute("""
@@ -240,7 +242,7 @@ def clock_in():
         conn.close()
         return redirect("/student/logbook")
 
-    # Create a new attendance session scoped to the selected Intern Classroom.
+    # Create a new attendance session scoped to the active Intern Classroom.
     clock_in_time = datetime.now()
     cursor.execute("""
         INSERT INTO attendance (
@@ -260,9 +262,7 @@ def clock_in():
     conn.commit()
     conn.close()
 
-    if classroom_id is not None:
-        return redirect(f"/student/logbook?classroom_id={classroom_id}")
-    return redirect("/student/logbook")
+    return redirect(f"/student/logbook?classroom_id={classroom_id}")
 
 @student.route("/student/logbook")
 @role_required("student")
@@ -296,11 +296,8 @@ def logbook():
             selected_classroom_id = int(open_attendance[1])
         except (TypeError, ValueError):
             selected_classroom_id = None
-    elif not open_attendance:
-        selected_classroom_id = _resolve_classroom_choice(
-            classrooms,
-            request.args.get("classroom_id"),
-        )
+    elif not open_attendance and len(classrooms) == 1:
+        selected_classroom_id = classrooms[0]["id"]
 
     selected_classroom = next(
         (item for item in classrooms if item["id"] == selected_classroom_id),
@@ -1159,7 +1156,7 @@ def view_document(document_id):
     conn.close()
 
     if not document:
-        return "Document not found.", 404
+        return "Submission not found.", 404
 
     filepath = document[1]
     filename = document[0]
