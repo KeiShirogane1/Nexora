@@ -714,7 +714,7 @@ def add_feedback(student_id):
             link_url=f"/student/dashboard",
         )
     except Exception as e:
-        print("feedback notification failed:", e)
+        current_app.logger.warning("Feedback notification failed: %s", e)
 
     return redirect(f"/supervisor/student/{student_id}")
 
@@ -726,37 +726,37 @@ def assign_task(student_id):
         return "Forbidden — student not assigned to you", 403
 
     conn = get_db_connection()
+    task_title = None
+    try:
+        # Retrieve student information
+        student = conn.execute("""
+            SELECT username
+            FROM users
+            WHERE id = ?
+        """, (student_id,)).fetchone()
 
+        if not student:
+            return "Student not found"
 
-    # Retrieve student information
-    student = conn.execute("""
-        SELECT username
-        FROM users
-        WHERE id = ?
-    """, (student_id,)).fetchone()
-
-
-    if not student:
-
-        conn.close()
-
-        return "Student not found"
-
-
-    if request.method == "POST":
+        if request.method != "POST":
+            return render_template(
+                "supervisor/assign_task.html",
+                student=student,
+                student_id=student_id,
+                active_page="assign_task"
+            )
 
         task_title = (request.form.get("task_title") or "").strip()
         task_description = (request.form.get("task_description") or "").strip()
         deadline_raw = (request.form.get("deadline") or "").strip()
         deadline = deadline_raw or None
+
         # Validation — title/description required, student_id is URL param (do not trust form)
         if not task_title or len(task_title) < 3 or len(task_title) > 200:
             flash("Task title is required (3-200 chars).", "danger")
-            conn.close()
             return redirect(f"/supervisor/student/{student_id}/assign-task")
         if not task_description or len(task_description) < 5 or len(task_description) > 5000:
             flash("Task description is required (5-5000 chars).", "danger")
-            conn.close()
             return redirect(f"/supervisor/student/{student_id}/assign-task")
         if deadline:
             try:
@@ -771,17 +771,14 @@ def assign_task(student_id):
                         datetime.strptime(deadline, "%Y-%m-%d %H:%M")
                     except:
                         flash("Invalid deadline format.", "danger")
-                        conn.close()
                         return redirect(f"/supervisor/student/{student_id}/assign-task")
 
         requires_submission = (
             1 if request.form.get("requires_submission") else 0
         )
-
         allow_late_submission = (
             1 if request.form.get("allow_late_submission") else 0
         )
-
 
         conn.execute("""
             INSERT INTO tasks (
@@ -793,61 +790,39 @@ def assign_task(student_id):
                 requires_submission,
                 allow_late_submission
             )
-
             VALUES (?, ?, ?, ?, ?, ?, ?)
-
         """, (
-
             student_id,
-
             session["user_id"],
-
             task_title,
-
             task_description,
-
             deadline,
-
             requires_submission,
-
             allow_late_submission
-
         ))
-
-
         conn.commit()
-
+    except Exception:
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+        raise
+    finally:
         conn.close()
 
-        try:
-            create_notification(
-                student_id,
-                "New Task Assigned",
-                f"You have a new task: {task_title}",
-                "task",
-                link_url="/student/tasks",
-            )
-        except Exception as e:
-            print("task notification failed:", e)
-
-        return redirect(
-            f"/supervisor/student/{student_id}"
+    try:
+        create_notification(
+            student_id,
+            "New Task Assigned",
+            f"You have a new task: {task_title}",
+            "task",
+            link_url="/student/tasks",
         )
+    except Exception as e:
+        current_app.logger.warning("Task notification failed: %s", e)
 
-
-    conn.close()
-
-
-    return render_template(
-
-        "supervisor/assign_task.html",
-
-        student=student,
-
-        student_id=student_id,
-
-        active_page="assign_task"
-
+    return redirect(
+        f"/supervisor/student/{student_id}"
     )
 
 # View, Edit, Delete, Reopen, and Toggle Tasks #
@@ -856,99 +831,104 @@ def assign_task(student_id):
 @supervisor.route("/supervisor/task/<int:task_id>")
 @role_required("supervisor")
 def view_task(task_id):
-
     conn = get_db_connection()
-    task = conn.execute("""
-    SELECT
-        tasks.id,
-        tasks.student_id,
-        tasks.task_title,
-        tasks.task_description,
-        tasks.assigned_at,
-        tasks.deadline,
-        tasks.requires_submission,
-        tasks.allow_late_submission,
-        tasks.status,
-        users.username
-    FROM tasks
-    JOIN users
-        ON tasks.student_id = users.id
-    WHERE tasks.id = ?
-    AND tasks.supervisor_id = ?
-    """, (
-    task_id, session["user_id"])).fetchone()
+    try:
+        task = conn.execute("""
+            SELECT
+                tasks.id,
+                tasks.student_id,
+                tasks.task_title,
+                tasks.task_description,
+                tasks.assigned_at,
+                tasks.deadline,
+                tasks.requires_submission,
+                tasks.allow_late_submission,
+                tasks.status,
+                users.username
+            FROM tasks
+            JOIN users
+                ON tasks.student_id = users.id
+            WHERE tasks.id = ?
+            AND tasks.supervisor_id = ?
+        """, (task_id, session["user_id"])).fetchone()
 
-    if not task:
+        if not task:
+            return "Task not found"
 
+        submissions = conn.execute("""
+            SELECT
+                id,
+                filename,
+                filepath,
+                submitted_at,
+                remarks
+            FROM task_submissions
+            WHERE task_id = ?
+            ORDER BY submitted_at DESC
+        """, (task_id,)).fetchall()
+
+        return render_template(
+            "supervisor/view_task.html",
+            task=task,
+            submissions=submissions,
+            active_page="interns"
+        )
+    finally:
         conn.close()
-
-        return "Task not found"
-
-    submissions = conn.execute("""
-        SELECT
-            id,
-            filename,
-            filepath,
-            submitted_at,
-            remarks
-        FROM task_submissions
-        WHERE task_id = ?
-        ORDER BY submitted_at DESC
-    """, (task_id,)).fetchall()
-
-    conn.close()
-
-    return render_template(
-        "supervisor/view_task.html",
-        task=task,
-        submissions=submissions,
-        active_page="interns"
-    )
 
 # Edit #
 @supervisor.route("/supervisor/task/<int:task_id>/edit", methods=["GET", "POST"])
 @role_required("supervisor")
 def edit_task(task_id):
-
     conn = get_db_connection()
+    try:
+        # Get current task
+        task = conn.execute("""
+            SELECT
+                id,
+                student_id,
+                task_title,
+                task_description,
+                deadline,
+                requires_submission,
+                allow_late_submission,
+                status
+            FROM tasks
+            WHERE id = ?
+            AND supervisor_id = ?
+        """, (task_id, session["user_id"])).fetchone()
 
-    # Get current task
-    task = conn.execute("""
-        SELECT
-            id,
-            student_id,
-            task_title,
-            task_description,
-            deadline,
-            requires_submission,
-            allow_late_submission,
-            status
-        FROM tasks
-        WHERE id = ?
-        AND supervisor_id = ?
-    """, (task_id, session["user_id"])).fetchone()
+        # Not a task, or wrong supervisor
+        if not task:
+            return "Task not found or access denied", 404
 
-    # Not a task, or wrong supervisor
-    if not task:
+        try:
+            student_id = task["student_id"] if "student_id" in task.keys() else task[1]
+        except:
+            try:
+                student_id = task[1]
+            except:
+                student_id = task["student_id"]
 
-        conn.close()
-
-        return "Task not found or access denied", 404
-
-    # Save changes
-    if request.method == "POST":
+        if request.method != "POST":
+            return render_template(
+                "supervisor/edit_task.html",
+                task=task,
+                task_id=task_id,
+                student_id=student_id,
+                active_page="edit_task"
+            )
 
         task_title = (request.form.get("task_title") or "").strip()
         task_description = (request.form.get("task_description") or "").strip()
         deadline_raw = (request.form.get("deadline") or "").strip()
         deadline = deadline_raw or None
+
         if not task_title or len(task_title) < 3 or len(task_title) > 200:
             flash("Task title is required (3-200 chars).", "danger")
-            conn.close()
             return redirect(f"/supervisor/task/{task_id}/edit")
         if not task_description or len(task_description) < 5 or len(task_description) > 5000:
             flash("Task description is required (5-5000 chars).", "danger")
-            conn.close()
             return redirect(f"/supervisor/task/{task_id}/edit")
         if deadline:
             try:
@@ -962,29 +942,24 @@ def edit_task(task_id):
                         datetime.strptime(deadline, "%Y-%m-%d %H:%M")
                     except:
                         flash("Invalid deadline format.", "danger")
-                        conn.close()
                         return redirect(f"/supervisor/task/{task_id}/edit")
 
         requires_submission = (
             1 if request.form.get("requires_submission") else 0
         )
-
         allow_late_submission = (
             1 if request.form.get("allow_late_submission") else 0
         )
 
         conn.execute("""
             UPDATE tasks
-
             SET
                 task_title = ?,
                 task_description = ?,
                 deadline = ?,
                 requires_submission = ?,
                 allow_late_submission = ?
-
             WHERE id = ?
-
             AND supervisor_id = ?
         """, (
             task_title,
@@ -995,84 +970,66 @@ def edit_task(task_id):
             task_id,
             session["user_id"]
         ))
-
         conn.commit()
-
-        try:
-            student_id = task["student_id"] if "student_id" in task.keys() else task[1]
-        except:
-            try:
-                student_id = task[1]
-            except:
-                student_id = task["student_id"]
-
-        conn.close()
 
         return redirect(
             f"/supervisor/task/{task_id}"
         )
-
-    try:
-        student_id = task["student_id"] if "student_id" in task.keys() else task[1]
-    except:
+    except Exception:
         try:
-            student_id = task[1]
-        except:
-            student_id = task["student_id"]
-    conn.close()
-
-    return render_template(
-        "supervisor/edit_task.html",
-        task=task,
-        task_id=task_id,
-        student_id=student_id,
-        active_page="edit_task"
-    )
+            conn.rollback()
+        except Exception:
+            pass
+        raise
+    finally:
+        conn.close()
 
 # Delete #
 @supervisor.route("/supervisor/task/<int:task_id>/delete", methods=["POST"])
 @role_required("supervisor")
 def delete_task(task_id):
-
     conn = get_db_connection()
+    try:
+        task = conn.execute("""
+            SELECT student_id
+            FROM tasks
+            WHERE id = ?
+            AND supervisor_id = ?
+        """, (task_id, session["user_id"])).fetchone()
 
-    task = conn.execute("""
-        SELECT student_id
-        FROM tasks
-        WHERE id = ?
-        AND supervisor_id = ?
-    """, ( task_id, session["user_id"])).fetchone()
+        if not task:
+            return "Task not found or access denied", 404
 
-    if not task:
+        student_id = task[0]
+
+        # Delete related submissions first
+        conn.execute("""
+            DELETE FROM task_submissions
+            WHERE task_id = ?
+        """, (task_id,))
+
+        # Delete the task
+        conn.execute("""
+            DELETE FROM tasks
+            WHERE id = ?
+            AND supervisor_id = ?
+        """, (
+            task_id,
+            session["user_id"]
+        ))
+
+        conn.commit()
+        return redirect(
+            f"/supervisor/student/{student_id}"
+        )
+    except Exception:
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+        raise
+    finally:
         conn.close()
-
-        return "Task not found or access denied", 404
-
-    student_id = task[0]
-
-    # Delete related submissions first
-    conn.execute("""
-        DELETE FROM task_submissions
-        WHERE task_id = ?
-
-    """, (task_id,))
-
-    # Delete the task
-    conn.execute("""
-        DELETE FROM tasks
-        WHERE id = ?
-        AND supervisor_id = ?
-    """, (
-        task_id,
-        session["user_id"]
-    ))
-
-    conn.commit()
-    conn.close()
-
-    return redirect(
-        f"/supervisor/student/{student_id}"
-    )
 
 # Supervisor document access — secure, ownership-checked
 @supervisor.route("/supervisor/document/<int:document_id>")
