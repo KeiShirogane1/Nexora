@@ -1,96 +1,226 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assign Internship - Nexora</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    <style>
+        .admin-internship-assign-page {
+            --internship-accent: #ea5b2a;
+            --internship-accent-dark: #cf4518;
+            --internship-soft: #fff1eb;
+            --internship-border: #e5eaee;
+            --internship-ink: #17233b;
+            --internship-muted: #6b7b86;
+            background: #f5f8fa;
+        }
+        .admin-internship-assign-shell {
+            width: min(100%, 1120px);
+            margin: 0 auto;
+            padding: 28px 30px 46px;
+        }
+        .admin-internship-heading-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .admin-internship-card {
+            border: 1px solid var(--internship-border);
+            border-radius: 16px;
+            background: #fff;
+            box-shadow: 0 10px 28px rgba(15, 23, 42, .05);
+            overflow: hidden;
+        }
+        .admin-internship-note {
+            margin: 0;
+            padding: 14px 18px;
+            display: flex;
+            align-items: flex-start;
+            gap: 11px;
+            border-bottom: 1px solid #f0e6e1;
+            background: #fff8f4;
+            color: #6f554c;
+            font-size: .79rem;
+            line-height: 1.5;
+        }
+        .admin-internship-note-icon {
+            width: 28px;
+            height: 28px;
+            flex: 0 0 28px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: #ffe8dc;
+            color: var(--internship-accent);
+            font-weight: 900;
+        }
+        .admin-internship-form {
+            padding: 22px;
+        }
+        .admin-internship-form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 17px 18px;
+        }
+        .admin-internship-field.is-wide { grid-column: 1 / -1; }
+        .admin-internship-field label {
+            display: block;
+            margin-bottom: 7px;
+            color: #263646;
+            font-size: .78rem;
+            font-weight: 800;
+        }
+        .admin-internship-required { color: var(--internship-accent); }
+        .admin-internship-field .form-control,
+        .admin-internship-field .form-select {
+            min-height: 44px;
+            border: 1px solid #dbe4ea;
+            border-radius: 10px;
+            background-color: #fff;
+            box-shadow: none;
+            color: #243242;
+            font-size: .84rem;
+        }
+        .admin-internship-field .form-control:focus,
+        .admin-internship-field .form-select:focus {
+            border-color: var(--internship-accent);
+            box-shadow: 0 0 0 3px rgba(234, 91, 42, .1);
+        }
+        .admin-internship-help {
+            margin: 7px 0 0;
+            color: var(--internship-muted);
+            font-size: .7rem;
+            line-height: 1.45;
+        }
+        .admin-internship-actions {
+            margin-top: 22px;
+            padding-top: 18px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 9px;
+            border-top: 1px solid #edf1f3;
+        }
+        .admin-internship-actions .btn {
+            min-height: 40px;
+            padding: 8px 16px;
+            border-radius: 9px;
+            font-size: .78rem;
+            font-weight: 800;
+        }
+        .admin-internship-actions .btn-primary {
+            --bs-btn-bg: var(--internship-accent);
+            --bs-btn-border-color: var(--internship-accent);
+            --bs-btn-hover-bg: var(--internship-accent-dark);
+            --bs-btn-hover-border-color: var(--internship-accent-dark);
+        }
+        @media (max-width: 760px) {
+            .admin-internship-assign-shell { padding: 22px 16px 36px; }
+            .admin-internship-form-grid { grid-template-columns: 1fr; }
+            .admin-internship-field.is-wide { grid-column: auto; }
+            .admin-internship-actions { justify-content: stretch; flex-direction: column-reverse; }
+            .admin-internship-actions .btn { width: 100%; }
+        }
+    </style>
+</head>
+<body class="nexora-admin-body admin-page admin-internship-assign-page">
+    {% include 'components/admin_sidebar.html' %}
 
-    <head>
-        <meta charset="UTF-8">
-
-        <title>
-            Assign Internship
-        </title>
-
-        <link rel="stylesheet"
-              href="{{ url_for('static', filename='css/style.css') }}">
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
-
-    </head>
-
-
-    <body class="nexora-admin-body">
-        {% include 'components/admin_sidebar.html' %}
-        <main class="admin-main nexora-app-main">
-            <div class="nexora-page">
-                <div class="compact-dashboard">
-                    <div class="dashboard-header">
-                        <div>
-                            <h1>Assign Internship</h1>
-                            <p>Link students with supervisors and create internship records.</p>
-                        </div>
-                        <a href="{{ url_for('admin.admin_dashboard') }}" class="btn btn-light btn-sm">← Dashboard</a>
-                    </div>
-                    <div class="nexora-card filter-card">
-                        <form method="POST" class="row g-3">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <div class="col-12">
-                                <label class="form-label">Student <span class="text-danger">*</span></label>
-                                <select name="student_id" class="form-select" required>
-                                    {% for student in students %}
-                                        <option value="{{student.id}}">{{student.username}}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">Supervisor (authoritative assignment)</label>
-                                <select name="supervisor_id" class="form-select">
-                                    <option value="">-- Select Supervisor --</option>
-                                    {% for sup in supervisors %}
-                                        <option value="{{sup.id}}">{{sup.username}}</option>
-                                    {% endfor %}
-                                </select>
-                                <p class="form-text">Selecting a supervisor creates the authoritative <code>student_assignments</code> relationship and sets <code>internships.supervisor_id</code>.</p>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Company Name <span class="text-danger">*</span></label>
-                                <input name="company_name" class="form-control" placeholder="Company Name" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Company Address <span class="text-danger">*</span></label>
-                                <input name="company_address" class="form-control" placeholder="Company Address" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Supervisor Name <span class="text-danger">*</span></label>
-                                <input name="supervisor_name" class="form-control" placeholder="Supervisor Name" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Supervisor Email <span class="text-danger">*</span></label>
-                                <input name="supervisor_email" type="email" class="form-control" placeholder="Supervisor Email" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Position <span class="text-danger">*</span></label>
-                                <input name="position" class="form-control" placeholder="Position" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Required Hours</label>
-                                <input name="required_hours" type="number" class="form-control" placeholder="400" value="400" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Start Date <span class="text-danger">*</span></label>
-                                <input type="date" name="start_date" class="form-control" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">End Date <span class="text-danger">*</span></label>
-                                <input type="date" name="end_date" class="form-control" required>
-                            </div>
-                            <div class="col-12">
-                                <button type="submit" class="btn btn-primary">Assign Internship</button>
-                                <a href="{{ url_for('admin.admin_dashboard') }}" class="btn btn-secondary ms-2">Cancel</a>
-                            </div>
-                        </form>
-                    </div>
+    <main class="admin-main nexora-app-main">
+        <div class="admin-internship-assign-shell">
+            <div class="ui-page-heading">
+                <div>
+                    <span class="ui-eyebrow">Admin Portal</span>
+                    <h1>Assign Internship</h1>
+                    <p>Link a student with a supervisor and record their internship placement.</p>
+                </div>
+                <div class="admin-internship-heading-actions">
+                    <a href="{{ url_for('admin_assigned_interns.assigned_interns') }}" class="btn btn-outline-primary btn-sm">Assigned Interns</a>
+                    <a href="{{ url_for('admin.admin_dashboard') }}" class="btn btn-outline-secondary btn-sm">Dashboard</a>
                 </div>
             </div>
-        </main>
 
+            <section class="admin-internship-card" aria-label="Assign internship form">
+                <p class="admin-internship-note">
+                    <span class="admin-internship-note-icon" aria-hidden="true">i</span>
+                    <span>Selecting a Nexora supervisor links this internship to that supervisor. Existing validation and assignment rules remain unchanged.</span>
+                </p>
 
-    </body>
+                <form method="POST" class="admin-internship-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="admin-internship-form-grid">
+                        <div class="admin-internship-field">
+                            <label for="internshipStudent">Student <span class="admin-internship-required">*</span></label>
+                            <select id="internshipStudent" name="student_id" class="form-select" required>
+                                {% for student in students %}
+                                    <option value="{{ student.id }}" {% if request.form.get('student_id') == student.id|string %}selected{% endif %}>{{ student.username }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
 
+                        <div class="admin-internship-field">
+                            <label for="internshipSupervisor">Supervisor</label>
+                            <select id="internshipSupervisor" name="supervisor_id" class="form-select">
+                                <option value="">-- Select Supervisor --</option>
+                                {% for sup in supervisors %}
+                                    <option value="{{ sup.id }}" {% if request.form.get('supervisor_id') == sup.id|string %}selected{% endif %}>{{ sup.username }}</option>
+                                {% endfor %}
+                            </select>
+                            <p class="admin-internship-help">Use a Nexora Supervisor account when this placement should appear in that supervisor's Assigned Interns workflow.</p>
+                        </div>
+
+                        <div class="admin-internship-field">
+                            <label for="companyName">Company Name <span class="admin-internship-required">*</span></label>
+                            <input id="companyName" name="company_name" class="form-control" value="{{ request.form.get('company_name', '') }}" placeholder="Company Name" required>
+                        </div>
+
+                        <div class="admin-internship-field">
+                            <label for="companyAddress">Company Address <span class="admin-internship-required">*</span></label>
+                            <input id="companyAddress" name="company_address" class="form-control" value="{{ request.form.get('company_address', '') }}" placeholder="Company Address" required>
+                        </div>
+
+                        <div class="admin-internship-field">
+                            <label for="supervisorName">Supervisor Name <span class="admin-internship-required">*</span></label>
+                            <input id="supervisorName" name="supervisor_name" class="form-control" value="{{ request.form.get('supervisor_name', '') }}" placeholder="Supervisor Name" required>
+                        </div>
+
+                        <div class="admin-internship-field">
+                            <label for="supervisorEmail">Supervisor Email <span class="admin-internship-required">*</span></label>
+                            <input id="supervisorEmail" name="supervisor_email" type="email" class="form-control" value="{{ request.form.get('supervisor_email', '') }}" placeholder="Supervisor Email" required>
+                        </div>
+
+                        <div class="admin-internship-field">
+                            <label for="position">Position <span class="admin-internship-required">*</span></label>
+                            <input id="position" name="position" class="form-control" value="{{ request.form.get('position', '') }}" placeholder="Position" required>
+                        </div>
+
+                        <div class="admin-internship-field">
+                            <label for="requiredHours">Required Hours</label>
+                            <input id="requiredHours" name="required_hours" type="number" min="1" max="2000" class="form-control" value="{{ request.form.get('required_hours', '400') }}" required>
+                        </div>
+
+                        <div class="admin-internship-field">
+                            <label for="startDate">Start Date <span class="admin-internship-required">*</span></label>
+                            <input id="startDate" type="date" name="start_date" class="form-control" value="{{ request.form.get('start_date', '') }}" required>
+                        </div>
+
+                        <div class="admin-internship-field">
+                            <label for="endDate">End Date <span class="admin-internship-required">*</span></label>
+                            <input id="endDate" type="date" name="end_date" class="form-control" value="{{ request.form.get('end_date', '') }}" required>
+                        </div>
+                    </div>
+
+                    <div class="admin-internship-actions">
+                        <a href="{{ url_for('admin.admin_dashboard') }}" class="btn btn-light border">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Assign Internship</button>
+                    </div>
+                </form>
+            </section>
+        </div>
+    </main>
+</body>
 </html>

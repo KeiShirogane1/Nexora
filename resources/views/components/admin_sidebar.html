@@ -3,6 +3,7 @@
     Uses the same global sidebar geometry and hover behavior as Student.
 #}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebars.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
 <style>
 @media (min-width: 761px) {
     .nx-role-admin .nx-role-sidebar {
@@ -106,9 +107,15 @@
                 </div>
             </div>
 
-            <a href="{{ url_for('admin.internship_assign') }}" aria-label="Internship" class="{% if request.path == '/admin/internship-assign' %}active{% endif %}">
-                <span class="nx-role-icon">▣</span><span class="nx-role-nav-text">Internship</span>
-            </a>
+            <div class="nx-role-nav-group {% if request.path == '/admin/internship-assign' or request.path == '/admin/assigned-interns' %}open{% endif %}">
+                <button class="nx-role-nav-parent {% if request.path == '/admin/internship-assign' or request.path == '/admin/assigned-interns' %}active-parent{% endif %}" type="button" aria-label="Internship" onclick="this.parentElement.classList.toggle('open')">
+                    <span class="nx-role-icon">▣</span><span class="nx-role-nav-text">Internship</span><span class="nx-role-nav-arrow">›</span>
+                </button>
+                <div class="nx-role-submenu">
+                    <a href="{{ url_for('admin.internship_assign') }}" class="{% if request.path == '/admin/internship-assign' %}active{% endif %}"><span class="nx-role-icon">＋</span><span>Assign Internship</span></a>
+                    <a href="{{ url_for('admin_assigned_interns.assigned_interns') }}" class="{% if request.path == '/admin/assigned-interns' %}active{% endif %}"><span class="nx-role-icon">♙</span><span>Assigned Interns</span></a>
+                </div>
+            </div>
 
             <a href="{{ url_for('admin_classrooms.classrooms') }}" aria-label="Classrooms" class="{% if request.path.startswith('/admin/classrooms') %}active{% endif %}">
                 <span class="nx-role-icon">▧</span><span class="nx-role-nav-text">Classrooms</span>

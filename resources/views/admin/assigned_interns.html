@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assigned Interns - Nexora</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    <style>
+        .admin-assigned-interns-page{--ai:#ea5b2a;--ai-soft:#fff1eb;--ai-border:#e5eaee;background:#f5f8fa}
+        .admin-assigned-shell{width:min(100%,1440px);margin:auto;padding:28px 30px 46px}
+        .admin-assigned-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}
+        .admin-assigned-summary article,.admin-assigned-toolbar,.admin-assigned-group{border:1px solid var(--ai-border);border-radius:14px;background:#fff;box-shadow:0 8px 24px rgba(15,23,42,.045)}
+        .admin-assigned-summary article{padding:16px 18px}.admin-assigned-summary span,.admin-assigned-summary small{display:block;color:#6b7b86;font-size:.72rem}.admin-assigned-summary strong{display:block;margin:2px 0;color:#17233b;font-size:1.45rem}
+        .admin-assigned-toolbar{display:grid;grid-template-columns:1fr minmax(210px,280px);gap:10px;padding:12px;margin-bottom:18px}.admin-assigned-toolbar .form-control,.admin-assigned-toolbar .form-select{min-height:42px;border-radius:10px;border-color:#dbe4ea;box-shadow:none;font-size:.84rem}.admin-assigned-toolbar .form-control:focus,.admin-assigned-toolbar .form-select:focus{border-color:var(--ai);box-shadow:0 0 0 3px rgba(234,91,42,.1)}
+        .admin-assigned-group{overflow:hidden;margin-bottom:14px}.admin-assigned-group>summary{list-style:none;padding:15px 17px;display:flex;align-items:center;justify-content:space-between;gap:14px;cursor:pointer}.admin-assigned-group>summary::-webkit-details-marker{display:none}.admin-assigned-group[open]>summary{border-bottom:1px solid var(--ai-border)}
+        .admin-assigned-class h2{margin:0;color:#17233b;font-size:.95rem;font-weight:800}.admin-assigned-class p{margin:4px 0 0;color:#6b7b86;font-size:.73rem}.admin-assigned-meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:flex-end}.admin-assigned-pill{display:inline-flex;padding:4px 9px;border:1px solid #e2e8f0;border-radius:999px;background:#f8fafc;color:#52606d;font-size:.67rem;font-weight:800}.admin-assigned-pill.active{background:#e8f8ef;color:#137544;border-color:#d4f0e0}.admin-assigned-pill.archived{background:#eef2f6;color:#64748b}.admin-assigned-pill.legacy{background:#fff7df;color:#9a6500;border-color:#f6e7b7}
+        .admin-assigned-table{margin:0}.admin-assigned-table th{padding:10px 13px;background:#f8fafb;color:#536471;font-size:.66rem;text-transform:uppercase;white-space:nowrap}.admin-assigned-table td{padding:11px 13px;color:#334155;font-size:.76rem;vertical-align:middle}.admin-assigned-name strong{display:block;color:#17233b}.admin-assigned-name small{color:#7b8793}.admin-assigned-actions{display:flex;justify-content:flex-end;gap:6px;flex-wrap:wrap}.admin-assigned-actions .btn,.admin-assigned-meta .btn{border-radius:8px;font-size:.68rem;font-weight:800}.admin-assigned-actions .btn-outline-primary,.admin-assigned-meta .btn-outline-primary{--bs-btn-color:var(--ai);--bs-btn-border-color:#f0a58c;--bs-btn-hover-bg:var(--ai);--bs-btn-hover-border-color:var(--ai)}.admin-assigned-empty{padding:38px 18px;text-align:center;color:#6b7b86}
+        @media(max-width:1050px){.admin-assigned-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:760px){.admin-assigned-shell{padding:22px 16px 36px}.admin-assigned-toolbar{grid-template-columns:1fr}.admin-assigned-group>summary{align-items:flex-start;flex-direction:column}.admin-assigned-meta{justify-content:flex-start}}@media(max-width:520px){.admin-assigned-summary{grid-template-columns:1fr}}
+    </style>
+</head>
+<body class="nexora-admin-body admin-page admin-assigned-interns-page">
+{% include 'components/admin_sidebar.html' %}
+<main class="admin-main nexora-app-main">
+<div class="admin-assigned-shell">
+    <div class="ui-page-heading">
+        <div><span class="ui-eyebrow">Admin Portal</span><h1>Assigned Interns</h1><p>View interns across every supervisor and classroom from one read-only directory.</p></div>
+        <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.internship_assign') }}">Assign Internship</a>
+    </div>
+
+    <section class="admin-assigned-summary" aria-label="Assigned intern summary">
+        <article><span>Total Interns</span><strong>{{ summary.total_interns }}</strong><small>Unique interns across supervisors</small></article>
+        <article><span>Active Classrooms</span><strong>{{ summary.classroom_count }}</strong><small>Classrooms with enrolled interns</small></article>
+        <article><span>Placements</span><strong>{{ summary.classroom_placements }}</strong><small>Classroom-scoped placements</small></article>
+        <article><span>Pending Reviews</span><strong>{{ summary.pending_reviews }}</strong><small>Logbook entries awaiting review</small></article>
+    </section>
+
+    <section class="admin-assigned-toolbar" aria-label="Assigned intern filters">
+        <input id="adminAssignedSearch" class="form-control" type="search" placeholder="Search intern, student number, program, classroom, company, or supervisor..." autocomplete="off">
+        <select id="adminAssignedSupervisor" class="form-select"><option value="all">All Supervisors</option>{% for supervisor in supervisors %}<option value="{{ supervisor.id }}">{{ supervisor.name }}</option>{% endfor %}</select>
+    </section>
+
+    <section aria-label="Assigned interns by classroom">
+    {% for classroom in interns %}
+        <details class="admin-assigned-group" data-assigned-group data-supervisor-id="{{ classroom.supervisor_id }}" data-search="{{ (classroom.classroom_name ~ ' ' ~ classroom.section ~ ' ' ~ classroom.company_name ~ ' ' ~ classroom.internship_title ~ ' ' ~ classroom.supervisor_name ~ ' ' ~ classroom.supervisor_email)|lower|e }}" {% if loop.first %}open{% endif %}>
+            <summary>
+                <div class="admin-assigned-class"><h2>{{ classroom.classroom_name }}</h2><p>Supervisor: {{ classroom.supervisor_name }}{% if classroom.section %} · {{ classroom.section }}{% endif %}{% if classroom.company_name %} · {{ classroom.company_name }}{% endif %}</p></div>
+                <div class="admin-assigned-meta">
+                    {% if classroom.is_legacy %}<span class="admin-assigned-pill legacy">Legacy</span>{% elif classroom.archived %}<span class="admin-assigned-pill archived">Archived</span>{% else %}<span class="admin-assigned-pill active">Active</span>{% endif %}
+                    <span class="admin-assigned-pill">{{ classroom.intern_count }} intern{% if classroom.intern_count != 1 %}s{% endif %}</span>
+                    {% if not classroom.is_legacy and classroom.class_id %}<a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin_classrooms.classroom_detail', classroom_id=classroom.class_id) }}" onclick="event.stopPropagation()">View Classroom</a>{% endif %}
+                </div>
+            </summary>
+            {% if classroom.interns %}
+            <div class="table-responsive"><table class="table admin-assigned-table align-middle"><thead><tr><th>Intern</th><th>Student No.</th><th>Program / Year</th><th>OJT Hours</th><th>Daily Performance</th><th>Logbook</th><th>Status</th><th class="text-end">Actions</th></tr></thead><tbody>
+            {% for intern in classroom.interns %}
+                <tr data-assigned-intern-row data-search="{{ (intern.display_name ~ ' ' ~ intern.username ~ ' ' ~ intern.email_address ~ ' ' ~ intern.student_number ~ ' ' ~ intern.major_program ~ ' ' ~ intern.grade_year)|lower|e }}">
+                    <td class="admin-assigned-name"><strong>{{ intern.display_name }}</strong><small>{{ intern.email_address or intern.username }}</small></td><td>{{ intern.student_number or '—' }}</td><td>{{ intern.major_program or '—' }}{% if intern.grade_year %}<small class="d-block text-secondary">{{ intern.grade_year }}</small>{% endif %}</td>
+                    <td>{% if classroom.is_legacy %}<span class="text-secondary">Not classroom-scoped</span>{% elif intern.required_hours is not none %}<strong>{{ '%.2f'|format(intern.rendered_hours) }} / {{ '%.0f'|format(intern.required_hours) }} hrs</strong><small class="d-block text-secondary">{{ '%.1f'|format(intern.progress_percentage or 0) }}% complete</small>{% else %}<strong>{{ '%.2f'|format(intern.rendered_hours) }} hrs</strong><small class="d-block text-secondary">Required hours not specified</small>{% endif %}</td>
+                    <td>{% if classroom.is_legacy %}—{% elif intern.daily_average_star is not none %}<strong>{{ '%.1f'|format(intern.daily_average_star) }} / 5</strong><small class="d-block text-secondary">{{ intern.rated_days }} rated day{% if intern.rated_days != 1 %}s{% endif %}</small>{% else %}<span class="text-secondary">No ratings yet</span>{% endif %}</td>
+                    <td>{% if classroom.is_legacy %}—{% else %}<strong>{{ intern.logbook_count }} entr{% if intern.logbook_count == 1 %}y{% else %}ies{% endif %}</strong>{% if intern.revision_logbook_count %}<small class="d-block text-danger">{{ intern.revision_logbook_count }} revision requested</small>{% elif intern.pending_logbook_count %}<small class="d-block text-warning-emphasis">{{ intern.pending_logbook_count }} pending review</small>{% else %}<small class="d-block text-secondary">No review pending</small>{% endif %}{% endif %}</td>
+                    <td>{% if classroom.is_legacy %}<span class="admin-assigned-pill legacy">Legacy</span>{% elif intern.roster_status_key == 'active' %}<span class="admin-assigned-pill active">{{ intern.roster_status }}</span>{% else %}<span class="admin-assigned-pill">{{ intern.roster_status }}</span>{% endif %}</td>
+                    <td><div class="admin-assigned-actions"><a class="btn btn-sm btn-outline-secondary" href="{{ url_for('admin.student_profile', student_id=intern.id) }}">View Student</a><a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin_classrooms.student_document_folder', student_id=intern.id) }}">Documents</a></div></td>
+                </tr>
+            {% endfor %}
+            </tbody></table></div>
+            {% else %}<div class="admin-assigned-empty">No interns are currently enrolled in this classroom.</div>{% endif %}
+        </details>
+    {% else %}<div class="admin-assigned-group admin-assigned-empty">No assigned interns were found.</div>{% endfor %}
+    </section>
+    <div id="adminAssignedNoResults" class="admin-assigned-group admin-assigned-empty" hidden>No matching interns or classrooms. Try another search or supervisor.</div>
+</div>
+</main>
+<script>
+(function(){var search=document.getElementById('adminAssignedSearch'),supervisor=document.getElementById('adminAssignedSupervisor'),groups=[].slice.call(document.querySelectorAll('[data-assigned-group]')),empty=document.getElementById('adminAssignedNoResults');function apply(){var q=(search.value||'').trim().toLowerCase(),sid=supervisor.value,shown=0;groups.forEach(function(group){var sup=sid==='all'||group.dataset.supervisorId===sid,base=group.dataset.search||'',rows=[].slice.call(group.querySelectorAll('[data-assigned-intern-row]')),baseMatch=!q||base.indexOf(q)!==-1,rowCount=0;rows.forEach(function(row){var match=!q||baseMatch||(row.dataset.search||'').indexOf(q)!==-1;row.hidden=!match;if(match)rowCount++});var match=sup&&(!q||baseMatch||rowCount>0);group.hidden=!match;if(match){shown++;if(q)group.open=true}});empty.hidden=shown!==0||groups.length===0}search.addEventListener('input',apply);supervisor.addEventListener('change',apply)})();
+</script>
+</body>
+</html>
