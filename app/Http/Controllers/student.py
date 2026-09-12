@@ -1829,7 +1829,7 @@ def rename_document(document_id):
         WHERE id = ?
         AND student_id = ?
         """,
-        (document_id, session["user_id"],),
+        (document_id, session["user_id"]),
     )
     document = cursor.fetchone()
 
@@ -1859,7 +1859,7 @@ def rename_document(document_id):
         WHERE id = ?
         AND student_id = ?
         """,
-        (renamed_filename, document_id, session["user_id"],),
+        (renamed_filename, document_id, session["user_id"]),
     )
     conn.commit()
     conn.close()
