@@ -493,136 +493,135 @@ def view_student(student_id):
     if not _is_assigned(session.get("user_id"), student_id):
         return "Forbidden — student not assigned to you", 403
     conn = get_db_connection()
-
-    # Student info
-    student = conn.execute(
-        "SELECT username FROM users WHERE id = ?",
-        (student_id,)
-    ).fetchone()
-
-    if not student:
-        conn.close()
-        return "Student not found"
-
-    # Sessions / Attendance
-    sessions = conn.execute("""
-        SELECT id, clock_in, clock_out, hours_rendered, status
-        FROM attendance
-        WHERE student_id = ?
-        ORDER BY clock_in DESC
-        LIMIT 5
-    """, (student_id,)).fetchall()
-
-    sessions = [(
-        session[0],
-        format_datetime(session[1]),
-        format_datetime(session[2]),
-        session[3],
-        session[4]
-    )
-    for session in sessions
-    ]
-
-    # Tasks
-    tasks = conn.execute("""
-        SELECT id, task_title, assigned_at, deadline, status
-        FROM tasks
-        WHERE student_id = ?
-        ORDER BY assigned_at DESC
-    """, (student_id,)).fetchall()
-
-    # Documents (include id for secure supervisor download link)
-    docs = conn.execute("""
-        SELECT id, filename, uploaded_at
-        FROM documents
-        WHERE student_id = ?
-        ORDER BY uploaded_at DESC
-    """, (student_id,)).fetchall()
-
-    # Feedback history — prefer stored ML, fallback to predictor for legacy NULLs
     try:
-        raw_feedback = conn.execute("""
-            SELECT comment, created_at, performance_label,
-                   ml_prediction, ml_sentiment, ml_competency,
-                   ml_recommendation, ml_svm_prediction, ml_confidence
-            FROM feedback
-            WHERE student_id = ?
-            ORDER BY created_at DESC
-            """, (student_id,)).fetchall()
-    except Exception:
-        # legacy DB without ml cols
-        raw_feedback = conn.execute("""
-            SELECT comment, created_at, performance_label
-            FROM feedback
-            WHERE student_id = ?
-            ORDER BY created_at DESC
-            """, (student_id,)).fetchall()
+        # Student info
+        student = conn.execute(
+            "SELECT username FROM users WHERE id = ?",
+            (student_id,)
+        ).fetchone()
 
-    # Enrich each row: ensure ML fields present via predictor fallback
-    feedback = []
-    for fb in raw_feedback:
+        if not student:
+            return "Student not found"
+
+        # Sessions / Attendance
+        sessions = conn.execute("""
+            SELECT id, clock_in, clock_out, hours_rendered, status
+            FROM attendance
+            WHERE student_id = ?
+            ORDER BY clock_in DESC
+            LIMIT 5
+        """, (student_id,)).fetchall()
+
+        sessions = [(
+            attendance_row[0],
+            format_datetime(attendance_row[1]),
+            format_datetime(attendance_row[2]),
+            attendance_row[3],
+            attendance_row[4]
+        )
+        for attendance_row in sessions
+        ]
+
+        # Tasks
+        tasks = conn.execute("""
+            SELECT id, task_title, assigned_at, deadline, status
+            FROM tasks
+            WHERE student_id = ?
+            ORDER BY assigned_at DESC
+        """, (student_id,)).fetchall()
+
+        # Documents (include id for secure supervisor download link)
+        docs = conn.execute("""
+            SELECT id, filename, uploaded_at
+            FROM documents
+            WHERE student_id = ?
+            ORDER BY uploaded_at DESC
+        """, (student_id,)).fetchall()
+
+        # Feedback history — prefer stored ML, fallback to predictor for legacy NULLs
         try:
-            # Handle variable column count via keys or index
-            comment = fb["comment"] if "comment" in fb.keys() else fb[0]
-            created = fb["created_at"] if "created_at" in fb.keys() else fb[1]
-            perf_label = fb["performance_label"] if "performance_label" in fb.keys() else fb[2]
-            # try stored ML
-            ml_pred = None
-            ml_sent = None
-            ml_comp = None
-            ml_rec = None
-            ml_svm = None
-            ml_conf = None
+            raw_feedback = conn.execute("""
+                SELECT comment, created_at, performance_label,
+                       ml_prediction, ml_sentiment, ml_competency,
+                       ml_recommendation, ml_svm_prediction, ml_confidence
+                FROM feedback
+                WHERE student_id = ?
+                ORDER BY created_at DESC
+                """, (student_id,)).fetchall()
+        except Exception:
+            # legacy DB without ml cols
+            raw_feedback = conn.execute("""
+                SELECT comment, created_at, performance_label
+                FROM feedback
+                WHERE student_id = ?
+                ORDER BY created_at DESC
+                """, (student_id,)).fetchall()
+
+        # Enrich each row: ensure ML fields present via predictor fallback
+        feedback = []
+        for fb in raw_feedback:
             try:
-                ml_pred = fb["ml_prediction"] if "ml_prediction" in fb.keys() else (fb[3] if len(fb) > 3 else None)
-                ml_sent = fb["ml_sentiment"] if "ml_sentiment" in fb.keys() else (fb[4] if len(fb) > 4 else None)
-                ml_comp = fb["ml_competency"] if "ml_competency" in fb.keys() else (fb[5] if len(fb) > 5 else None)
-                ml_rec = fb["ml_recommendation"] if "ml_recommendation" in fb.keys() else (fb[6] if len(fb) > 6 else None)
-                ml_svm = fb["ml_svm_prediction"] if "ml_svm_prediction" in fb.keys() else (fb[7] if len(fb) > 7 else None)
-                ml_conf = fb["ml_confidence"] if "ml_confidence" in fb.keys() else (fb[8] if len(fb) > 8 else None)
-            except Exception:
-                pass
-            # Fallback for legacy NULLs using predictor
-            if not ml_pred or not ml_sent:
+                # Handle variable column count via keys or index
+                comment = fb["comment"] if "comment" in fb.keys() else fb[0]
+                created = fb["created_at"] if "created_at" in fb.keys() else fb[1]
+                perf_label = fb["performance_label"] if "performance_label" in fb.keys() else fb[2]
+                # try stored ML
+                ml_pred = None
+                ml_sent = None
+                ml_comp = None
+                ml_rec = None
+                ml_svm = None
+                ml_conf = None
                 try:
-                    from app.ML.predictor import analyze_feedback_detailed as _afd
-                    d = _afd(comment)
-                    if not ml_pred:
-                        ml_pred = d.get("performance_label")
-                    if not ml_sent:
-                        ml_sent = d.get("sentiment")
-                    if not ml_comp:
-                        ml_comp = d.get("competency")
-                    if not ml_rec:
-                        ml_rec = d.get("recommendation")
-                    if not ml_svm:
-                        ml_svm = d.get("svm_prediction")
-                    if ml_conf is None:
-                        ml_conf = d.get("confidence")
+                    ml_pred = fb["ml_prediction"] if "ml_prediction" in fb.keys() else (fb[3] if len(fb) > 3 else None)
+                    ml_sent = fb["ml_sentiment"] if "ml_sentiment" in fb.keys() else (fb[4] if len(fb) > 4 else None)
+                    ml_comp = fb["ml_competency"] if "ml_competency" in fb.keys() else (fb[5] if len(fb) > 5 else None)
+                    ml_rec = fb["ml_recommendation"] if "ml_recommendation" in fb.keys() else (fb[6] if len(fb) > 6 else None)
+                    ml_svm = fb["ml_svm_prediction"] if "ml_svm_prediction" in fb.keys() else (fb[7] if len(fb) > 7 else None)
+                    ml_conf = fb["ml_confidence"] if "ml_confidence" in fb.keys() else (fb[8] if len(fb) > 8 else None)
                 except Exception:
                     pass
-            # Normalise confidence
-            try:
-                ml_conf = float(ml_conf) if ml_conf is not None else 0.0
+                # Fallback for legacy NULLs using predictor
+                if not ml_pred or not ml_sent:
+                    try:
+                        from app.ML.predictor import analyze_feedback_detailed as _afd
+                        d = _afd(comment)
+                        if not ml_pred:
+                            ml_pred = d.get("performance_label")
+                        if not ml_sent:
+                            ml_sent = d.get("sentiment")
+                        if not ml_comp:
+                            ml_comp = d.get("competency")
+                        if not ml_rec:
+                            ml_rec = d.get("recommendation")
+                        if not ml_svm:
+                            ml_svm = d.get("svm_prediction")
+                        if ml_conf is None:
+                            ml_conf = d.get("confidence")
+                    except Exception:
+                        pass
+                # Normalise confidence
+                try:
+                    ml_conf = float(ml_conf) if ml_conf is not None else 0.0
+                except Exception:
+                    ml_conf = 0.0
+                feedback.append((comment, created, perf_label, ml_pred, ml_sent, ml_comp, ml_rec, ml_svm, ml_conf))
             except Exception:
-                ml_conf = 0.0
-            feedback.append((comment, created, perf_label, ml_pred, ml_sent, ml_comp, ml_rec, ml_svm, ml_conf))
-        except Exception:
-            # last resort: append as-is
-            feedback.append(tuple(fb))
+                # last resort: append as-is
+                feedback.append(tuple(fb))
 
-    conn.close()
-
-    return render_template(
-        "supervisor/student_profile.html",
-        student=student,
-        sessions=sessions,
-        tasks=tasks,
-        docs=docs,
-        feedback=feedback,
-        student_id=student_id,
-        active_page="interns"
-    )
+        return render_template(
+            "supervisor/student_profile.html",
+            student=student,
+            sessions=sessions,
+            tasks=tasks,
+            docs=docs,
+            feedback=feedback,
+            student_id=student_id,
+            active_page="interns"
+        )
+    finally:
+        conn.close()
 
 
 # ---------------- ADD FEEDBACK ----------------
@@ -660,50 +659,51 @@ def add_feedback(student_id):
         }
 
     conn = get_db_connection()
-
-    # Try to persist ML artifacts (if columns exist); fallback to legacy schema
     try:
-        conn.execute(
-            """
-            INSERT INTO feedback
-            (student_id, supervisor_id, comment, performance_label, ml_prediction, ml_sentiment, ml_competency, ml_recommendation, ml_svm_prediction, ml_confidence)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            (
-                student_id,
-                session["user_id"],
-                comment,
-                label,
-                ml_result.get("performance_label"),
-                ml_result.get("sentiment"),
-                ml_result.get("competency"),
-                ml_result.get("recommendation"),
-                ml_result.get("svm_prediction"),
-                float(ml_result.get("confidence", 0.0)),
-            )
-        )
-    except Exception:
-        # legacy DB without ml columns
+        # Try to persist ML artifacts (if columns exist); fallback to legacy schema
         try:
-            conn.rollback()
-        except Exception:
-            pass
-        conn.execute(
-            """
-            INSERT INTO feedback
-            (student_id, supervisor_id, comment, performance_label)
-            VALUES (?, ?, ?, ?)
-            """,
-            (
-                student_id,
-                session["user_id"],
-                comment,
-                label
+            conn.execute(
+                """
+                INSERT INTO feedback
+                (student_id, supervisor_id, comment, performance_label, ml_prediction, ml_sentiment, ml_competency, ml_recommendation, ml_svm_prediction, ml_confidence)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    student_id,
+                    session["user_id"],
+                    comment,
+                    label,
+                    ml_result.get("performance_label"),
+                    ml_result.get("sentiment"),
+                    ml_result.get("competency"),
+                    ml_result.get("recommendation"),
+                    ml_result.get("svm_prediction"),
+                    float(ml_result.get("confidence", 0.0)),
+                )
             )
-        )
+        except Exception:
+            # legacy DB without ml columns
+            conn.rollback()
+            conn.execute(
+                """
+                INSERT INTO feedback
+                (student_id, supervisor_id, comment, performance_label)
+                VALUES (?, ?, ?, ?)
+                """,
+                (
+                    student_id,
+                    session["user_id"],
+                    comment,
+                    label
+                )
+            )
 
-    conn.commit()
-    conn.close()
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
 
     try:
         create_notification(
