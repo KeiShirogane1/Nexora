@@ -82,8 +82,14 @@ def _is_assigned(supervisor_id, student_id):
 @supervisor.route("/supervisor/dashboard")
 @role_required("supervisor")
 def supervisor_dashboard():
-
     conn = get_db_connection()
+    try:
+        return _supervisor_dashboard_with_conn(conn)
+    finally:
+        conn.close()
+
+
+def _supervisor_dashboard_with_conn(conn):
     cursor = conn.cursor()
 
     supervisor_id = session["user_id"]
@@ -449,8 +455,6 @@ def supervisor_dashboard():
         "evaluation_drafts": int(evaluation_drafts or 0),
     }
 
-    conn.close()
-
     return render_template(
         "supervisor/dashboard.html",
         active_page="dashboard",
@@ -546,7 +550,7 @@ def view_student(student_id):
             ORDER BY created_at DESC
             """, (student_id,)).fetchall()
     except Exception:
-        # legacy DB without ML cols
+        # legacy DB without ml cols
         raw_feedback = conn.execute("""
             SELECT comment, created_at, performance_label
             FROM feedback

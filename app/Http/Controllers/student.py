@@ -35,33 +35,33 @@ def get_student_profile():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    cursor.execute("""
-        SELECT
-            first_name,
-            middle_name,
-            last_name,
-            age,
-            student_id,
-            profile_picture,
-            phone_number,
-            home_address,
-            grade_year,
-            major_program
+    try:
+        cursor.execute("""
+            SELECT
+                first_name,
+                middle_name,
+                last_name,
+                age,
+                student_id,
+                profile_picture,
+                phone_number,
+                home_address,
+                grade_year,
+                major_program
 
-        FROM student_profiles
+            FROM student_profiles
 
-        WHERE user_id = ?
+            WHERE user_id = ?
 
-    """,
-    (
-        session["user_id"],
-    ))
+        """,
+        (
+            session["user_id"],
+        ))
 
-    profile = cursor.fetchone()
-
-    conn.close()
-
-    return profile
+        return cursor.fetchone()
+    finally:
+        cursor.close()
+        conn.close()
 
 
 def format_title_case(value):
@@ -560,58 +560,56 @@ def edit_log(log_id):
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    cursor.execute("""
-        SELECT
-            logs.id,
-            logs.content,
-            attendance.status
-        FROM logs
-        JOIN attendance
-            ON logs.attendance_id = attendance.id
-        WHERE logs.id = ?
-        AND logs.student_id = ?
-    """, (log_id, session["user_id"]))
+    try:
+        cursor.execute("""
+            SELECT
+                logs.id,
+                logs.content,
+                attendance.status
+            FROM logs
+            JOIN attendance
+                ON logs.attendance_id = attendance.id
+            WHERE logs.id = ?
+            AND logs.student_id = ?
+        """, (log_id, session["user_id"]))
 
-    log = cursor.fetchone()
+        log = cursor.fetchone()
 
-    if not log:
+        if not log:
+            return "Log not found.", 404
+
+        # Prevent editing after clock out
+        if log[2] != "Open":
+            return redirect("/student/logbook")
+
+        if request.method == "POST":
+
+            content = (request.form.get("content") or "").strip()
+
+            if content:
+
+                cursor.execute("""
+                    UPDATE logs
+                    SET content = ?
+                    WHERE id = ? AND student_id = ?
+                """, (
+                    content,
+                    log_id,
+                    session["user_id"]
+                ))
+
+                conn.commit()
+
+            return redirect("/student/logbook")
+
+        return render_template(
+            "student/edit_log.html",
+            log=log,
+            active_page="logbook"
+        )
+    finally:
+        cursor.close()
         conn.close()
-        return "Log not found.", 404
-
-    # Prevent editing after clock out
-    if log[2] != "Open":
-        conn.close()
-        return redirect("/student/logbook")
-
-    if request.method == "POST":
-
-        content = request.form["content"].strip()
-
-        if content:
-
-            cursor.execute("""
-                UPDATE logs
-                SET content = ?
-                WHERE id = ? AND student_id = ?
-            """, (
-                content,
-                log_id,
-                session["user_id"]
-            ))
-
-            conn.commit()
-
-        conn.close()
-
-        return redirect("/student/logbook")
-
-    conn.close()
-
-    return render_template(
-        "student/edit_log.html",
-        log=log,
-        active_page="logbook"
-    )
 
 @student.route("/student/log/<int:log_id>/delete", methods=["POST"])
 @role_required("student")

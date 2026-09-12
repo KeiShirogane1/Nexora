@@ -7,7 +7,7 @@ from flask import Blueprint, abort, current_app, flash, redirect, render_templat
 from werkzeug.utils import secure_filename
 
 from app.Http.Middleware.security import role_required
-from app.Models.db import get_db_connection
+from app.Models.db import get_db_connection, using_postgres
 from app.Services.notification_service import create_notification
 
 classwork = Blueprint("classwork", __name__)
@@ -255,19 +255,27 @@ def manage_classwork(class_id):
             resource_filepath = None
 
             try:
-                conn.execute(
-                    """INSERT INTO classroom_assignments
+                insert_sql = """INSERT INTO classroom_assignments
                        (classroom_id, author_id, title, description, due_at, points)
-                       VALUES (?, ?, ?, ?, ?, ?)""",
+                       VALUES (?, ?, ?, ?, ?, ?)"""
+                if using_postgres():
+                    insert_sql += " RETURNING id"
+
+                insert_cursor = conn.execute(
+                    insert_sql,
                     (class_id, sid, title, description, due_at, points),
                 )
-                assignment_row = conn.execute(
-                    """SELECT MAX(id) AS id
-                       FROM classroom_assignments
-                       WHERE classroom_id = ? AND author_id = ?""",
-                    (class_id, sid),
-                ).fetchone()
-                assignment_id = assignment_row["id"] if "id" in assignment_row.keys() else assignment_row[0]
+
+                if using_postgres():
+                    assignment_row = insert_cursor.fetchone()
+                    assignment_id = (
+                        assignment_row["id"]
+                        if assignment_row and "id" in assignment_row.keys()
+                        else assignment_row[0] if assignment_row else None
+                    )
+                else:
+                    assignment_id = insert_cursor.lastrowid
+
                 if not assignment_id:
                     raise RuntimeError("Could not determine the new work ID.")
 

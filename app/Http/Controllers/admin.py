@@ -185,64 +185,66 @@ def admin_dashboard():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    cursor.execute("SELECT COUNT(*) FROM users WHERE role='student'")
-    students_count = cursor.fetchone()[0]
+    try:
+        cursor.execute("SELECT COUNT(*) FROM users WHERE role='student'")
+        students_count = cursor.fetchone()[0]
 
-    cursor.execute("SELECT COUNT(*) FROM users WHERE role='supervisor'")
-    supervisors_count = cursor.fetchone()[0]
+        cursor.execute("SELECT COUNT(*) FROM users WHERE role='supervisor'")
+        supervisors_count = cursor.fetchone()[0]
 
-    cursor.execute("SELECT COUNT(*) FROM student_assignments")
-    assignments_count = cursor.fetchone()[0]
+        cursor.execute("SELECT COUNT(*) FROM student_assignments")
+        assignments_count = cursor.fetchone()[0]
 
-    cursor.execute("SELECT COUNT(*) FROM feedback")
-    feedback_count = cursor.fetchone()[0]
+        cursor.execute("SELECT COUNT(*) FROM feedback")
+        feedback_count = cursor.fetchone()[0]
 
-    cursor.execute("SELECT COUNT(*) FROM attendance WHERE status = 'Open'")
-    online_interns = cursor.fetchone()[0]
+        cursor.execute("SELECT COUNT(*) FROM attendance WHERE status = 'Open'")
+        online_interns = cursor.fetchone()[0]
 
-    cursor.execute("SELECT COALESCE(SUM(hours_rendered), 0) FROM attendance WHERE status = 'Completed'")
-    total_hours = cursor.fetchone()[0]
-    
-        # INTERNSHIP STATUS SUMMARY
+        cursor.execute("SELECT COALESCE(SUM(hours_rendered), 0) FROM attendance WHERE status = 'Completed'")
+        total_hours = cursor.fetchone()[0]
+        
+            # INTERNSHIP STATUS SUMMARY
 
-    cursor.execute("""
-        SELECT COUNT(*)
-        FROM users
-        WHERE role='pending_student'
-    """)
-    pending_students = cursor.fetchone()[0]
-
-
-    cursor.execute("""
-        SELECT COUNT(*)
-        FROM internships
-        WHERE status='Active'
-    """)
-    active_internships = cursor.fetchone()[0]
+        cursor.execute("""
+            SELECT COUNT(*)
+            FROM users
+            WHERE role='pending_student'
+        """)
+        pending_students = cursor.fetchone()[0]
 
 
-    cursor.execute("""
-        SELECT COUNT(*)
-        FROM internships
-        WHERE status='Completed'
-    """)
-    completed_internships = cursor.fetchone()[0]
+        cursor.execute("""
+            SELECT COUNT(*)
+            FROM internships
+            WHERE status='Active'
+        """)
+        active_internships = cursor.fetchone()[0]
 
-    conn.close()
 
-    return render_template(
-        "admin/dashboard.html",
-        students_count=students_count,
-        supervisors_count=supervisors_count,
-        assignments_count=assignments_count,
-        feedback_count=feedback_count,
-        online_interns=online_interns,
-        total_hours=total_hours,
-        active_page="dashboard",
-        pending_students=pending_students,
-        active_internships=active_internships,
-        completed_internships=completed_internships
-    )
+        cursor.execute("""
+            SELECT COUNT(*)
+            FROM internships
+            WHERE status='Completed'
+        """)
+        completed_internships = cursor.fetchone()[0]
+
+        return render_template(
+            "admin/dashboard.html",
+            students_count=students_count,
+            supervisors_count=supervisors_count,
+            assignments_count=assignments_count,
+            feedback_count=feedback_count,
+            online_interns=online_interns,
+            total_hours=total_hours,
+            active_page="dashboard",
+            pending_students=pending_students,
+            active_internships=active_internships,
+            completed_internships=completed_internships
+        )
+    finally:
+        cursor.close()
+        conn.close()
 
 @admin.route("/admin/users")
 @role_required("admin")
@@ -1086,33 +1088,35 @@ def admin_reports_list():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    cursor.execute("""
-        SELECT
-            s.id,
-            s.username,
-            COALESCE(sup.username, 'Not Assigned')
-        FROM users s
+    try:
+        cursor.execute("""
+            SELECT
+                s.id,
+                s.username,
+                COALESCE(sup.username, 'Not Assigned')
+            FROM users s
 
-        LEFT JOIN student_assignments sa
-            ON s.id = sa.student_id
+            LEFT JOIN student_assignments sa
+                ON s.id = sa.student_id
 
-        LEFT JOIN users sup
-            ON sa.supervisor_id = sup.id
+            LEFT JOIN users sup
+                ON sa.supervisor_id = sup.id
 
-        WHERE s.role = 'student'
+            WHERE s.role = 'student'
 
-        ORDER BY s.username ASC
-    """)
+            ORDER BY s.username ASC
+        """)
 
-    students = cursor.fetchall()
+        students = cursor.fetchall()
 
-    conn.close()
-
-    return render_template(
-        "admin/reports_list.html",
-        students=students,
-        active_page="reports"
-    )
+        return render_template(
+            "admin/reports_list.html",
+            students=students,
+            active_page="reports"
+        )
+    finally:
+        cursor.close()
+        conn.close()
 
 @admin.route("/admin/reports/<int:student_id>")
 @role_required("admin")
@@ -1127,44 +1131,46 @@ def admin_assignments():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # students & supervisors
-    cursor.execute("SELECT id, username FROM users WHERE role='student'")
-    students = cursor.fetchall()
+    try:
+        # students & supervisors
+        cursor.execute("SELECT id, username FROM users WHERE role='student'")
+        students = cursor.fetchall()
 
-    cursor.execute("SELECT id, username FROM users WHERE role='supervisor'")
-    supervisors = cursor.fetchall()
+        cursor.execute("SELECT id, username FROM users WHERE role='supervisor'")
+        supervisors = cursor.fetchall()
 
-    # assignments
-    cursor.execute("""
-        SELECT sa.student_id, s.username, sa.supervisor_id, sup.username
-        FROM student_assignments sa
-        JOIN users s ON sa.student_id = s.id
-        JOIN users sup ON sa.supervisor_id = sup.id
-    """)
-    assignments = cursor.fetchall()
+        # assignments
+        cursor.execute("""
+            SELECT sa.student_id, s.username, sa.supervisor_id, sup.username
+            FROM student_assignments sa
+            JOIN users s ON sa.student_id = s.id
+            JOIN users sup ON sa.supervisor_id = sup.id
+        """)
+        assignments = cursor.fetchall()
 
-    # pending users (THIS is Step 2)
-    cursor.execute("""
-        SELECT id, username, role
-        FROM users
-        WHERE role IN
-        (
-            'pending_student',
-            'pending_supervisor'
+        # pending users (THIS is Step 2)
+        cursor.execute("""
+            SELECT id, username, role
+            FROM users
+            WHERE role IN
+            (
+                'pending_student',
+                'pending_supervisor'
+            )
+        """)
+        pending_users = cursor.fetchall()
+
+        return render_template(
+            "admin/assignments.html",
+            students=students,
+            supervisors=supervisors,
+            assignments=assignments,
+            pending_users=pending_users,
+            active_page="assign"
         )
-    """)
-    pending_users = cursor.fetchall()
-
-    conn.close()
-
-    return render_template(
-        "admin/assignments.html",
-        students=students,
-        supervisors=supervisors,
-        assignments=assignments,
-        pending_users=pending_users,
-        active_page="assign"
-    )
+    finally:
+        cursor.close()
+        conn.close()
     
 @admin.route("/admin/reject-student/<int:user_id>", methods=["POST"])
 @role_required("admin")
