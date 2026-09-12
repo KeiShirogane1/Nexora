@@ -9,7 +9,7 @@ from app.Models.db import get_db_connection, using_postgres
 
 
 MAX_PHOTOS_PER_LOG = 5
-MAX_PHOTO_BYTES = 2 * 1024 * 1024
+MAX_PHOTO_BYTES = 8 * 1024 * 1024
 ALLOWED_IMAGE_EXTENSIONS = {"jpg", "jpeg", "png", "webp"}
 PHOTO_ROOT = Path(__file__).resolve().parents[2] / "storage" / "logbook_photos"
 
@@ -141,7 +141,7 @@ def _validated_photo(file_storage):
     if not data:
         return None, f"Photo is empty: {original}"
     if len(data) > MAX_PHOTO_BYTES:
-        return None, f"Photo exceeds the 2 MB limit: {original}"
+        return None, f"Photo exceeds the 8 MB limit: {original}"
 
     detected_kind, mime_type = _image_kind(data)
     extension_kind = "jpeg" if extension in {"jpg", "jpeg"} else extension

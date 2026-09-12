@@ -118,6 +118,21 @@ def view_photo(photo_id):
     )
 
 
+@daily_logbook.route("/student/daily-log/photo/<int:photo_id>/download")
+@role_required("student")
+def download_photo(photo_id):
+    photo = get_photo_for_student(session["user_id"], photo_id)
+    if not photo:
+        abort(404)
+    return send_file(
+        photo["path"],
+        mimetype=photo["mime_type"],
+        as_attachment=True,
+        download_name=photo["original_filename"],
+        conditional=True,
+    )
+
+
 @daily_logbook.route("/student/daily-log/photo/<int:photo_id>/delete", methods=["POST"])
 @role_required("student")
 def delete_photo(photo_id):

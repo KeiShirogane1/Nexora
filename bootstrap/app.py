@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 BASE_DIR=Path(__file__).resolve().parent.parent; load_dotenv(BASE_DIR/".env")
-from flask import Flask,send_from_directory,session,redirect,url_for
+from flask import Flask,send_from_directory,session,redirect,url_for,flash,request
 from app.Http.Middleware.security import login_required
 from app.Http.Controllers.auth import auth
 from app.Http.Controllers.password import password
@@ -56,7 +56,7 @@ _secret=os.environ.get("SECRET_KEY")
 if not _secret:
  if os.environ.get("FLASK_ENV")=="production" or os.environ.get("NEXORA_ENV")=="production": raise RuntimeError("SECRET_KEY must be set in production")
  _secret="dev-secret-key-change-me-not-for-production"
-app.secret_key=_secret; app.config.update(SECRET_KEY=_secret,SESSION_COOKIE_HTTPONLY=True,SESSION_COOKIE_SAMESITE="Lax",MAX_CONTENT_LENGTH=5*1024*1024); app.config["SESSION_COOKIE_SECURE"]=os.environ.get("SESSION_COOKIE_SECURE","").lower() in ("1","true","yes") or os.environ.get("FLASK_ENV")=="production" or os.environ.get("NEXORA_ENV")=="production"; app.config["WTF_CSRF_ENABLED"]=True; app.config["WTF_CSRF_TIME_LIMIT"]=None; _debug=os.environ.get("FLASK_DEBUG",os.environ.get("NEXORA_DEBUG","0")); app.debug=_debug.lower() in ("1","true","yes")
+app.secret_key=_secret; app.config.update(SECRET_KEY=_secret,SESSION_COOKIE_HTTPONLY=True,SESSION_COOKIE_SAMESITE="Lax",MAX_CONTENT_LENGTH=45*1024*1024); app.config["SESSION_COOKIE_SECURE"]=os.environ.get("SESSION_COOKIE_SECURE","").lower() in ("1","true","yes") or os.environ.get("FLASK_ENV")=="production" or os.environ.get("NEXORA_ENV")=="production"; app.config["WTF_CSRF_ENABLED"]=True; app.config["WTF_CSRF_TIME_LIMIT"]=None; _debug=os.environ.get("FLASK_DEBUG",os.environ.get("NEXORA_DEBUG","0")); app.debug=_debug.lower() in ("1","true","yes")
 try:
  from flask_wtf.csrf import CSRFProtect
  csrf=CSRFProtect(app)
@@ -66,6 +66,15 @@ except ImportError as exc:
 @app.after_request
 def _security(response):
  response.headers["X-Content-Type-Options"]="nosniff"; response.headers["X-Frame-Options"]="DENY"; response.headers["Referrer-Policy"]="strict-origin-when-cross-origin"; response.headers["Content-Security-Policy"]="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' https: data:; connect-src 'self'; frame-ancestors 'none'"; return response
+@app.errorhandler(413)
+def request_entity_too_large(error):
+ if request.path=="/student/daily-log/save":
+  flash("Photo upload is too large. Daily OJT evidence supports up to 5 photos at 8 MB each.","danger")
+  return redirect(url_for("student.logbook",daily_entry_error="request_too_large"))
+ if request.path.startswith("/student/daily-log/"):
+  flash("Photo upload is too large. Daily OJT evidence supports up to 5 photos at 8 MB each.","danger")
+  return redirect(url_for("student.logbook"))
+ return "Request Entity Too Large",413
 UPLOAD_FOLDER=BASE_DIR/"storage"/"uploads"; UPLOAD_FOLDER.mkdir(parents=True,exist_ok=True); app.config["UPLOAD_FOLDER"]=str(UPLOAD_FOLDER); PROFILE_UPLOAD_FOLDER=UPLOAD_FOLDER/"profile_pictures"; PROFILE_UPLOAD_FOLDER.mkdir(parents=True,exist_ok=True); app.config["PROFILE_UPLOAD_FOLDER"]=str(PROFILE_UPLOAD_FOLDER)
 def _is_registered_document_upload(filename):
  candidate=(UPLOAD_FOLDER/filename).resolve()
@@ -124,7 +133,6 @@ def repair_missing_student_profiles():
  finally:cur.close();conn.close()
 initialize_database();ensure_classroom_schema();ensure_classwork_submission_schema();ensure_classwork_score_schema();ensure_attendance_schema();ensure_logbook_schema();ensure_logbook_photo_schema();ensure_logbook_review_schema();ensure_daily_performance_rating_schema();ensure_ojt_evaluation_schema();ensure_session_schema();repair_missing_student_profiles()
 for bp in (auth,password,student,daily_logbook,logbook_review,daily_performance_history,intern_profile,ojt_evaluation,needs_attention,student_classwork,student_gradebook,student_classmates,supervisor,supervisor_documents,admin,admin_assigned_interns,classroom,internship_classroom,classwork,classwork_submissions,classwork_grading,classwork_scores,classwork_gradebook,classwork_gradebook_export,classwork_ml_insights,performance_reports,admin_classrooms,admin_reports_overview,admin_trash,supervisor_profile_photo,notifications_bp):app.register_blueprint(bp)
-from flask import request
 @app.before_request
 def enforce_single_supervisor_session():
  if session.get("role")!="supervisor" or not session.get("user_id") or request.path in ("/login","/logout","/signup","/") or request.path.startswith("/static/"):return None

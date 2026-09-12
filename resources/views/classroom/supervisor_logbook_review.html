@@ -155,7 +155,7 @@
 
                                 <div class="border-top pt-4 mt-4">
                                     <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
-                                        <div><h3 class="h6 fw-bold mb-1">Photo Evidence</h3><p class="text-muted small mb-0">Private evidence attached by the intern.</p></div>
+                                        <div><h3 class="h6 fw-bold mb-1">Photo Evidence</h3><p class="text-muted small mb-0">Private evidence attached by the intern. Original image quality is preserved.</p></div>
                                         <span class="badge text-bg-light">{{ selected_photos|length }} photo{% if selected_photos|length != 1 %}s{% endif %}</span>
                                     </div>
                                     {% if selected_photos %}
@@ -165,7 +165,10 @@
                                                     <a class="d-block border rounded-3 overflow-hidden" href="{{ url_for('logbook_review.supervisor_photo', class_id=classroom.id, photo_id=photo.id) }}" target="_blank" rel="noopener">
                                                         <img class="img-fluid w-100" src="{{ url_for('logbook_review.supervisor_photo', class_id=classroom.id, photo_id=photo.id) }}" alt="{{ photo.original_filename }}">
                                                     </a>
-                                                    <div class="text-muted small text-truncate mt-1" title="{{ photo.original_filename }}">{{ photo.original_filename }}</div>
+                                                    <div class="d-flex align-items-center justify-content-between gap-2 mt-1">
+                                                        <div class="text-muted small text-truncate" title="{{ photo.original_filename }}">{{ photo.original_filename }}</div>
+                                                        <a class="btn btn-sm btn-outline-secondary flex-shrink-0" href="{{ url_for('logbook_review.supervisor_photo_download', class_id=classroom.id, photo_id=photo.id) }}">Download</a>
+                                                    </div>
                                                 </div>
                                             {% endfor %}
                                         </div>

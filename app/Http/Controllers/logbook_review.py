@@ -212,6 +212,21 @@ def supervisor_photo(class_id, photo_id):
     )
 
 
+@logbook_review.route("/supervisor/classes/<int:class_id>/logbook/photo/<int:photo_id>/download")
+@role_required("supervisor")
+def supervisor_photo_download(class_id, photo_id):
+    photo = get_supervisor_logbook_photo(session["user_id"], class_id, photo_id)
+    if not photo:
+        abort(404)
+    return send_file(
+        photo["path"],
+        mimetype=photo["mime_type"],
+        as_attachment=True,
+        download_name=photo["original_filename"],
+        conditional=True,
+    )
+
+
 @logbook_review.route("/student/daily-log/<int:log_id>/review")
 @role_required("student")
 def student_review(log_id):

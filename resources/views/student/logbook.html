@@ -159,6 +159,7 @@
         .student-logbook-daily-modal .nexora-modal { max-width: 760px; }
         .student-logbook-clock-modal .nexora-modal { max-width: 470px; }
         .student-logbook-modal-warning { padding: 12px 14px; border: 1px solid #fde2a7; border-radius: 12px; background: #fff9e8; color: #7c4a03; font-size: .8rem; line-height: 1.5; }
+        .student-logbook-modal-warning.is-error { border-color: #fecaca; background: #fff1f2; color: #b42318; }
         .student-logbook-clock-modal .nexora-modal-footer form { margin: 0; }
 
         @media (max-width: 1000px) {
@@ -207,8 +208,10 @@
             {% set daily_context = get_daily_logbook_context(session.get('user_id'), selected_classroom_id, current_attendance_id) %}
             {% set daily_entries = daily_context.entries %}
             {% set current_daily = daily_context.current_entry %}
+            {% set current_daily_photos = get_logbook_photos(session.get('user_id'), current_daily.id) if current_daily else [] %}
             {% set work_options = daily_context.work_options %}
             {% set current_day_number = current_daily.day_number if current_daily else total_history|default(0) %}
+            {% set daily_upload_error = request.args.get('daily_entry_error') %}
 
             <div class="student-logbook-compact">
                 <section class="student-logbook-page-heading student-section-heading" aria-labelledby="logbook-heading">
@@ -453,7 +456,7 @@
     {% if attendance %}
         <div class="nexora-modal-overlay student-logbook-daily-modal" id="dailyEntryModal" aria-hidden="true" onclick="closeLogbookModalFromBackdrop(event, 'dailyEntryModal')">
             <div class="nexora-modal" role="dialog" aria-modal="true" aria-labelledby="daily-entry-modal-title">
-                <form class="student-logbook-session-form" method="POST" action="{{ url_for('daily_logbook.save_daily_entry') }}" enctype="multipart/form-data">
+                <form class="student-logbook-session-form" id="dailyEntryForm" method="POST" action="{{ url_for('daily_logbook.save_daily_entry') }}" enctype="multipart/form-data">
                     <div class="nexora-modal-header">
                         <h2 id="daily-entry-modal-title">Today's Daily OJT Entry</h2>
                         <p>Day {{ current_day_number }} · Complete this record before ending today's attendance session.</p>
@@ -463,6 +466,7 @@
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <input type="hidden" name="attendance_id" value="{{ attendance[0] }}">
                         <div class="student-logbook-modal-warning"><strong>Required before Clock Out.</strong> Save your Daily OJT accomplishment for this attendance session. You can update it again while the session remains open.</div>
+                        <div class="student-logbook-modal-warning is-error" id="daily-photo-error" role="alert" {% if not daily_upload_error %}hidden{% endif %}><strong>Photo upload error.</strong> <span id="daily-photo-error-text">{% if daily_upload_error %}The selected upload exceeded the Daily OJT evidence limit. Use up to 5 JPG, PNG, or WebP photos at 8 MB each.{% endif %}</span></div>
                         <div class="student-logbook-field-grid">
                             <div class="student-logbook-field is-full">
                                 <label for="daily-accomplishment">Daily accomplishment *</label>
@@ -488,8 +492,8 @@
                             </div>
                             <div class="student-logbook-field is-full">
                                 <label for="daily-photos">Photo evidence <span class="student-logbook-form-help">(optional)</span></label>
-                                <input class="student-logbook-photo-input" id="daily-photos" type="file" name="photos" accept="image/jpeg,image/png,image/webp" multiple>
-                                <p class="student-logbook-form-help">Up to 5 photos. JPG, PNG, or WebP only; 2 MB per photo. The existing 5 MB request limit still applies.</p>
+                                <input class="student-logbook-photo-input" id="daily-photos" type="file" name="photos" accept="image/jpeg,image/png,image/webp" multiple data-existing-photo-count="{{ current_daily_photos|length }}">
+                                <p class="student-logbook-form-help">Up to 5 photos total. JPG, PNG, or WebP only; maximum 8 MB per photo. Original image quality is preserved.</p>
                             </div>
                         </div>
                     </div>
@@ -546,11 +550,78 @@
             if (event.target && event.target.id === id) closeLogbookModal(id);
         }
 
+        function showDailyPhotoError(message) {
+            const box = document.getElementById('daily-photo-error');
+            const text = document.getElementById('daily-photo-error-text');
+            if (!box || !text) return;
+            text.textContent = message;
+            box.hidden = false;
+        }
+
+        function clearDailyPhotoError() {
+            const box = document.getElementById('daily-photo-error');
+            const text = document.getElementById('daily-photo-error-text');
+            if (!box || !text) return;
+            text.textContent = '';
+            box.hidden = true;
+        }
+
+        function validateDailyEntryPhotos(event) {
+            const input = document.getElementById('daily-photos');
+            if (!input) return true;
+
+            const files = Array.from(input.files || []);
+            const existingCount = Number(input.dataset.existingPhotoCount || 0);
+            const maxPhotos = 5;
+            const maxBytes = 8 * 1024 * 1024;
+            const allowedTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
+            const allowedName = /\.(jpe?g|png|webp)$/i;
+            let message = '';
+
+            if (existingCount + files.length > maxPhotos) {
+                message = `This Daily OJT entry can contain up to ${maxPhotos} photos total. You already have ${existingCount}.`;
+            } else {
+                for (const file of files) {
+                    if (file.size > maxBytes) {
+                        message = `${file.name} is ${(file.size / (1024 * 1024)).toFixed(1)} MB. Each photo must be 8 MB or smaller.`;
+                        break;
+                    }
+                    if (!allowedName.test(file.name) || (file.type && !allowedTypes.has(file.type))) {
+                        message = `${file.name} is not a supported image. Choose a JPG, PNG, or WebP photo.`;
+                        break;
+                    }
+                }
+            }
+
+            if (message) {
+                if (event) event.preventDefault();
+                showDailyPhotoError(message);
+                openLogbookModal('dailyEntryModal');
+                return false;
+            }
+
+            clearDailyPhotoError();
+            return true;
+        }
+
+        const dailyEntryForm = document.getElementById('dailyEntryForm');
+        if (dailyEntryForm) {
+            dailyEntryForm.addEventListener('submit', validateDailyEntryPhotos);
+        }
+        const dailyPhotoInput = document.getElementById('daily-photos');
+        if (dailyPhotoInput) {
+            dailyPhotoInput.addEventListener('change', function () { validateDailyEntryPhotos(); });
+        }
+
         document.addEventListener('keydown', function (event) {
             if (event.key !== 'Escape') return;
             const modal = document.querySelector('.nexora-modal-overlay.open');
             if (modal) closeLogbookModal(modal.id);
         });
+
+        {% if daily_upload_error %}
+        window.setTimeout(function () { openLogbookModal('dailyEntryModal'); }, 0);
+        {% endif %}
     </script>
 </body>
 </html>
