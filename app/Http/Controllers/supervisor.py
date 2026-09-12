@@ -1102,15 +1102,23 @@ def review_task(task_id):
             return redirect(f"/supervisor/task/{task_id}")
         conn.execute("UPDATE tasks SET status = 'Reviewed' WHERE id = ? AND supervisor_id = ?", (task_id, session.get("user_id")))
         conn.commit()
+    except Exception:
         try:
-            sid = task["student_id"] if "student_id" in task.keys() else task[1]
-            create_notification(sid, "Task Reviewed", f"Your task has been reviewed.", "task", link_url="/student/tasks")
-        except:
+            conn.rollback()
+        except Exception:
             pass
-        flash("Task marked as Reviewed.", "success")
-        return redirect(f"/supervisor/task/{task_id}")
+        raise
     finally:
         conn.close()
+
+    try:
+        sid = task["student_id"] if "student_id" in task.keys() else task[1]
+        create_notification(sid, "Task Reviewed", f"Your task has been reviewed.", "task", link_url="/student/tasks")
+    except Exception as e:
+        current_app.logger.warning("Task review notification failed: %s", e)
+
+    flash("Task marked as Reviewed.", "success")
+    return redirect(f"/supervisor/task/{task_id}")
 
 @supervisor.route("/supervisor/task/<int:task_id>/reopen", methods=["POST"])
 @role_required("supervisor")
@@ -1126,15 +1134,23 @@ def reopen_task(task_id):
             return redirect(f"/supervisor/task/{task_id}")
         conn.execute("UPDATE tasks SET status = 'Reopened' WHERE id = ? AND supervisor_id = ?", (task_id, session.get("user_id")))
         conn.commit()
+    except Exception:
         try:
-            sid = task["student_id"] if "student_id" in task.keys() else task[1]
-            create_notification(sid, "Task Reopened", f"Your task has been reopened for revision.", "task", link_url="/student/tasks")
-        except:
+            conn.rollback()
+        except Exception:
             pass
-        flash("Task reopened.", "success")
-        return redirect(f"/supervisor/task/{task_id}")
+        raise
     finally:
         conn.close()
+
+    try:
+        sid = task["student_id"] if "student_id" in task.keys() else task[1]
+        create_notification(sid, "Task Reopened", f"Your task has been reopened for revision.", "task", link_url="/student/tasks")
+    except Exception as e:
+        current_app.logger.warning("Task reopen notification failed: %s", e)
+
+    flash("Task reopened.", "success")
+    return redirect(f"/supervisor/task/{task_id}")
 
 @supervisor.route("/supervisor/profile", methods=["GET", "POST"])
 @role_required("supervisor")
