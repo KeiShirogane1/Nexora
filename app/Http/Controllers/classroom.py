@@ -69,6 +69,71 @@ def _is_student_member(student_id, classroom_id):
     finally:
         conn.close()
 
+
+def _student_internship_memberships(conn, student_id, active_only=True):
+    """Resolve current Intern Classroom memberships, including safe legacy OJT matches.
+
+    Older classrooms received the default ``classroom`` type when the additive
+    classroom_type column was introduced. Keep explicit modern types authoritative,
+    but also recognize an old membership when existing OJT evidence ties that
+    student to the same classroom/supervisor. No classroom rows are rewritten.
+    """
+    rows = conn.execute("""
+        SELECT DISTINCT c.id, c.name
+        FROM classroom_students cs
+        JOIN classrooms c ON c.id = cs.classroom_id
+        JOIN users u ON u.id = c.supervisor_id
+        LEFT JOIN classroom_internship_details cid ON cid.classroom_id = c.id
+        WHERE cs.student_id = ?
+          AND (? = 0 OR COALESCE(c.archived, 0) = 0)
+          AND (
+                COALESCE(c.classroom_type, 'classroom') = 'internship'
+                OR cid.classroom_id IS NOT NULL
+                OR EXISTS (
+                    SELECT 1
+                    FROM attendance a
+                    WHERE a.student_id = cs.student_id
+                      AND a.classroom_id = c.id
+                )
+                OR EXISTS (
+                    SELECT 1
+                    FROM internships i
+                    WHERE i.student_id = cs.student_id
+                      AND LOWER(TRIM(COALESCE(i.supervisor_name, ''))) = LOWER(TRIM(u.username))
+                )
+                OR (
+                    EXISTS (
+                        SELECT 1
+                        FROM student_assignments sa
+                        WHERE sa.student_id = cs.student_id
+                          AND sa.supervisor_id = c.supervisor_id
+                    )
+                    AND (
+                        SELECT COUNT(*)
+                        FROM classroom_students legacy_cs
+                        JOIN classrooms legacy_c ON legacy_c.id = legacy_cs.classroom_id
+                        WHERE legacy_cs.student_id = cs.student_id
+                          AND legacy_c.supervisor_id = c.supervisor_id
+                          AND COALESCE(legacy_c.archived, 0) = 0
+                          AND COALESCE(legacy_c.classroom_type, 'classroom') = 'classroom'
+                    ) = 1
+                )
+          )
+        ORDER BY c.id DESC
+    """, (student_id, 1 if active_only else 0)).fetchall()
+
+    memberships = []
+    for row in rows:
+        try:
+            class_id = int(row["id"] if "id" in row.keys() else row[0])
+        except (TypeError, ValueError):
+            continue
+        memberships.append({
+            "id": class_id,
+            "name": row["name"] if "name" in row.keys() else row[1],
+        })
+    return memberships
+
 # Supervisor: My Intern Classrooms
 @classroom.route("/supervisor/classes")
 @role_required("supervisor")
@@ -586,10 +651,16 @@ def student_classes():
             WHERE cs.student_id = ? AND c.archived = 0
             ORDER BY cs.joined_at DESC
         """, (stu,)).fetchall()
+        internship_ids = {
+            item["id"]
+            for item in _student_internship_memberships(conn, stu, active_only=True)
+        }
         classes = []
         for r in rows:
+            class_id = r["id"] if "id" in r.keys() else r[0]
+            raw_classroom_type = r["classroom_type"] if "classroom_type" in r.keys() else r[8]
             classes.append({
-                "id": r["id"] if "id" in r.keys() else r[0],
+                "id": class_id,
                 "name": r["name"] if "name" in r.keys() else r[1],
                 "section": r["section"] if "section" in r.keys() else r[2],
                 "description": r["description"] if "description" in r.keys() else r[3],
@@ -597,7 +668,7 @@ def student_classes():
                 "archived": r["archived"] if "archived" in r.keys() else r[5],
                 "status": "Active",
                 "supervisor": r["supervisor_name"] if "supervisor_name" in r.keys() else r[7],
-                "classroom_type": r["classroom_type"] if "classroom_type" in r.keys() else r[8],
+                "classroom_type": "internship" if int(class_id) in internship_ids else raw_classroom_type,
             })
     finally:
         conn.close()
@@ -642,19 +713,17 @@ def join_class():
                         "SELECT id FROM users WHERE id = ? FOR UPDATE",
                         (session["user_id"],),
                     ).fetchone()
-                active_internship = conn.execute("""
-                    SELECT c.id, c.name
-                    FROM classroom_students cs
-                    JOIN classrooms c ON c.id = cs.classroom_id
-                    WHERE cs.student_id = ?
-                      AND c.archived = 0
-                      AND COALESCE(c.classroom_type, 'classroom') = 'internship'
-                      AND c.id <> ?
-                    ORDER BY cs.joined_at DESC, c.id DESC
-                    LIMIT 1
-                """, (session["user_id"], cid)).fetchone()
+                active_internship = next((
+                    item
+                    for item in _student_internship_memberships(
+                        conn,
+                        session["user_id"],
+                        active_only=True,
+                    )
+                    if item["id"] != int(cid)
+                ), None)
                 if active_internship:
-                    active_name = active_internship["name"] if "name" in active_internship.keys() else active_internship[1]
+                    active_name = active_internship["name"]
                     errors["class_code"] = f"You already have an active Intern Classroom ({active_name}). Leave it before joining another."
                     return render_template("classroom/join_class.html", errors=errors, form=request.form, active_page="classes")
 
@@ -703,8 +772,11 @@ def leave_class(class_id):
             flash("You are not enrolled in this Intern Classroom.", "warning")
             return redirect(url_for("classroom.student_classes"))
 
-        classroom_type = membership["classroom_type"] if "classroom_type" in membership.keys() else membership[3]
-        if classroom_type != "internship":
+        internship_ids = {
+            item["id"]
+            for item in _student_internship_memberships(conn, student_id, active_only=False)
+        }
+        if int(class_id) not in internship_ids:
             flash("Only Intern Classrooms can be left from this page.", "warning")
             return redirect(url_for("classroom.student_classes"))
 
