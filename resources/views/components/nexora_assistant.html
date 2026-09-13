@@ -20,7 +20,7 @@
                 <span class="nx-assistant-mark">◆</span>
                 <div>
                     <strong>How can Nexora help?</strong>
-                    <p>Use a shortcut or type what you want to open. Nexora will take you to the matching page.</p>
+                    <p>Open portal pages or message people you are authorized to contact.</p>
                 </div>
             </div>
 
@@ -34,12 +34,15 @@
                     <button type="button" data-assistant-command="/tasks"><strong>/tasks</strong><span>Assigned tasks</span></button>
                     <button type="button" data-assistant-command="/help"><strong>/help</strong><span>All commands</span></button>
                 {% elif assistant_role == 'supervisor' %}
+                    <button type="button" data-assistant-command="@student"><strong>@student</strong><span>Message intern</span></button>
                     <button type="button" data-assistant-command="@admin"><strong>@admin</strong><span>Contact admin</span></button>
                     <button type="button" data-assistant-command="/classes"><strong>/classes</strong><span>Intern classrooms</span></button>
                     <button type="button" data-assistant-command="/interns"><strong>/interns</strong><span>Assigned interns</span></button>
                     <button type="button" data-assistant-command="/evaluations"><strong>/evaluations</strong><span>OJT evaluations</span></button>
                     <button type="button" data-assistant-command="/help"><strong>/help</strong><span>All commands</span></button>
                 {% else %}
+                    <button type="button" data-assistant-command="@student"><strong>@student</strong><span>Message student</span></button>
+                    <button type="button" data-assistant-command="@supervisor"><strong>@supervisor</strong><span>Message supervisor</span></button>
                     <button type="button" data-assistant-command="/approvals"><strong>/approvals</strong><span>Pending accounts</span></button>
                     <button type="button" data-assistant-command="/students"><strong>/students</strong><span>Student accounts</span></button>
                     <button type="button" data-assistant-command="/supervisors"><strong>/supervisors</strong><span>Supervisors</span></button>
@@ -51,13 +54,13 @@
             <div class="nx-assistant-conversation" id="nxAssistantConversation" role="log" aria-live="polite" aria-label="Assistant responses">
                 <div class="nx-assistant-message is-assistant">
                     <span>N</span>
-                    <p>I can open Nexora pages for you now. Try <strong>/help</strong> or type something like “open my classes”.</p>
+                    <p>I can navigate Nexora and open authorized direct-message threads. Try <strong>/help</strong> or <strong>@supervisor</strong>.</p>
                 </div>
             </div>
         </div>
 
         <footer class="nx-assistant-composer">
-            <textarea id="nxAssistantInput" rows="1" placeholder="Try /classes or ‘open my logbook’" aria-label="Assistant message"></textarea>
+            <textarea id="nxAssistantInput" rows="1" maxlength="2000" placeholder="Try /classes or @supervisor hello" aria-label="Assistant message"></textarea>
             <button id="nxAssistantSend" type="button">Send</button>
         </footer>
     </section>
@@ -69,7 +72,7 @@
 </div>
 
 <style id="nx-assistant-styles">
-.nx-assistant{--nx-assistant-accent:#2563eb;--nx-assistant-accent-dark:#1d4ed8;--nx-assistant-soft:#eff6ff;position:fixed;right:24px;bottom:24px;z-index:3200;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.nx-assistant-student{--nx-assistant-accent:#0a8f46;--nx-assistant-accent-dark:#08783b;--nx-assistant-soft:#e7f7ed}.nx-assistant-admin{--nx-assistant-accent:#f45125;--nx-assistant-accent-dark:#d9431c;--nx-assistant-soft:#fff1eb}.nx-assistant-launcher{position:relative;width:58px;height:58px;display:grid;place-items:center;margin-left:auto;border:0;border-radius:50%;background:var(--nx-assistant-accent);box-shadow:0 12px 30px rgba(15,23,42,.22);cursor:pointer;transition:transform .16s ease,box-shadow .16s ease}.nx-assistant-launcher:hover{transform:translateY(-2px);box-shadow:0 16px 36px rgba(15,23,42,.26)}.nx-assistant-launcher img{width:31px;height:31px;object-fit:contain}.nx-assistant-launcher-dot{position:absolute;top:3px;right:3px;width:12px;height:12px;border:3px solid #fff;border-radius:50%;background:#22c55e}.nx-assistant-panel{width:min(390px,calc(100vw - 32px));height:min(600px,calc(100vh - 110px));display:none;flex-direction:column;margin-bottom:12px;overflow:hidden;border:1px solid #e2e8f0;border-radius:18px;background:#fff;box-shadow:0 24px 70px rgba(15,23,42,.22)}.nx-assistant.is-open .nx-assistant-panel{display:flex}.nx-assistant.is-open .nx-assistant-launcher{display:none}.nx-assistant.is-expanded .nx-assistant-panel{width:min(680px,calc(100vw - 48px));height:min(760px,calc(100vh - 48px))}.nx-assistant.is-minimized .nx-assistant-panel{height:auto}.nx-assistant.is-minimized .nx-assistant-body,.nx-assistant.is-minimized .nx-assistant-composer{display:none}.nx-assistant-header{min-height:72px;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 14px 13px 16px;background:var(--nx-assistant-accent);color:#fff}.nx-assistant-brand{display:flex;align-items:center;gap:11px;min-width:0}.nx-assistant-brand img{width:38px;height:38px;flex:0 0 38px;object-fit:contain}.nx-assistant-brand strong,.nx-assistant-brand span{display:block}.nx-assistant-brand strong{font-size:.96rem;font-weight:800}.nx-assistant-brand span{margin-top:2px;font-size:.7rem;opacity:.82}.nx-assistant-window-actions{display:flex;align-items:center;gap:3px}.nx-assistant-window-actions button{width:31px;height:31px;border:0;border-radius:8px;background:rgba(255,255,255,.12);color:#fff;font-size:1rem;cursor:pointer}.nx-assistant-window-actions button:hover{background:rgba(255,255,255,.22)}.nx-assistant-body{flex:1;min-height:0;padding:18px;overflow-y:auto;background:#f8fafc}.nx-assistant-welcome{display:flex;gap:12px;padding:15px;border:1px solid #e7edf3;border-radius:14px;background:#fff}.nx-assistant-mark{width:34px;height:34px;flex:0 0 34px;display:grid;place-items:center;border-radius:10px;background:var(--nx-assistant-soft);color:var(--nx-assistant-accent);font-size:.88rem}.nx-assistant-welcome strong{color:#0f172a;font-size:.88rem}.nx-assistant-welcome p{margin:5px 0 0;color:#64748b;font-size:.76rem;line-height:1.45}.nx-assistant-preview-label{margin:20px 0 9px;color:#94a3b8;font-size:.65rem;font-weight:900;letter-spacing:.09em;text-transform:uppercase}.nx-assistant-shortcuts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.nx-assistant-shortcuts button{min-width:0;padding:9px 10px;border:1px solid #dfe7ee;border-radius:11px;background:#fff;color:#475569;text-align:left;cursor:pointer;transition:border-color .16s ease,box-shadow .16s ease,transform .16s ease}.nx-assistant-shortcuts button:hover,.nx-assistant-shortcuts button:focus-visible{border-color:var(--nx-assistant-accent);box-shadow:0 5px 16px rgba(15,23,42,.08);transform:translateY(-1px);outline:none}.nx-assistant-shortcuts strong,.nx-assistant-shortcuts span{display:block}.nx-assistant-shortcuts strong{color:var(--nx-assistant-accent);font-size:.72rem;font-weight:900}.nx-assistant-shortcuts span{margin-top:2px;color:#64748b;font-size:.64rem}.nx-assistant-conversation{display:flex;flex-direction:column;gap:10px;margin-top:18px}.nx-assistant-message{display:flex;align-items:flex-start;gap:9px;max-width:92%}.nx-assistant-message>span{width:26px;height:26px;flex:0 0 26px;display:grid;place-items:center;border-radius:8px;background:var(--nx-assistant-accent);color:#fff;font-size:.65rem;font-weight:900}.nx-assistant-message p{margin:0;padding:9px 11px;border:1px solid #e2e8f0;border-radius:4px 12px 12px 12px;background:#fff;color:#475569;font-size:.72rem;line-height:1.5;white-space:pre-line}.nx-assistant-message.is-user{align-self:flex-end;flex-direction:row-reverse}.nx-assistant-message.is-user>span{background:#64748b}.nx-assistant-message.is-user p{border-color:transparent;border-radius:12px 4px 12px 12px;background:var(--nx-assistant-accent);color:#fff;white-space:normal}.nx-assistant-composer{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;padding:13px;border-top:1px solid #e8edf2;background:#fff}.nx-assistant-composer textarea{min-height:42px;max-height:96px;resize:none;padding:10px 12px;border:1px solid #dbe3ea;border-radius:11px;background:#f8fafc;color:#334155;font:inherit;font-size:.78rem;outline:none}.nx-assistant-composer textarea:focus{border-color:var(--nx-assistant-accent);box-shadow:0 0 0 3px var(--nx-assistant-soft)}.nx-assistant-composer button{min-width:66px;border:0;border-radius:10px;background:var(--nx-assistant-accent);color:#fff;font-size:.75rem;font-weight:800;cursor:pointer}.nx-assistant-composer button:hover{background:var(--nx-assistant-accent-dark)}@media(max-width:760px){.nx-assistant{right:14px;bottom:14px}.nx-assistant-panel,.nx-assistant.is-expanded .nx-assistant-panel{width:calc(100vw - 28px);height:min(620px,calc(100vh - 86px));border-radius:16px}.nx-assistant-launcher{width:54px;height:54px}.nx-assistant-launcher img{width:28px;height:28px}.nx-assistant-shortcuts{grid-template-columns:1fr 1fr}}
+.nx-assistant{--nx-assistant-accent:#2563eb;--nx-assistant-accent-dark:#1d4ed8;--nx-assistant-soft:#eff6ff;position:fixed;right:24px;bottom:24px;z-index:3200;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.nx-assistant-student{--nx-assistant-accent:#0a8f46;--nx-assistant-accent-dark:#08783b;--nx-assistant-soft:#e7f7ed}.nx-assistant-admin{--nx-assistant-accent:#f45125;--nx-assistant-accent-dark:#d9431c;--nx-assistant-soft:#fff1eb}.nx-assistant-launcher{position:relative;width:58px;height:58px;display:grid;place-items:center;margin-left:auto;border:0;border-radius:50%;background:var(--nx-assistant-accent);box-shadow:0 12px 30px rgba(15,23,42,.22);cursor:pointer;transition:transform .16s ease,box-shadow .16s ease}.nx-assistant-launcher:hover{transform:translateY(-2px);box-shadow:0 16px 36px rgba(15,23,42,.26)}.nx-assistant-launcher img{width:31px;height:31px;object-fit:contain}.nx-assistant-launcher-dot{position:absolute;top:3px;right:3px;width:12px;height:12px;border:3px solid #fff;border-radius:50%;background:#22c55e}.nx-assistant-panel{width:min(390px,calc(100vw - 32px));height:min(600px,calc(100vh - 110px));display:none;flex-direction:column;margin-bottom:12px;overflow:hidden;border:1px solid #e2e8f0;border-radius:18px;background:#fff;box-shadow:0 24px 70px rgba(15,23,42,.22)}.nx-assistant.is-open .nx-assistant-panel{display:flex}.nx-assistant.is-open .nx-assistant-launcher{display:none}.nx-assistant.is-expanded .nx-assistant-panel{width:min(680px,calc(100vw - 48px));height:min(760px,calc(100vh - 48px))}.nx-assistant.is-minimized .nx-assistant-panel{height:auto}.nx-assistant.is-minimized .nx-assistant-body,.nx-assistant.is-minimized .nx-assistant-composer{display:none}.nx-assistant-header{min-height:72px;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 14px 13px 16px;background:var(--nx-assistant-accent);color:#fff}.nx-assistant-brand{display:flex;align-items:center;gap:11px;min-width:0}.nx-assistant-brand img{width:38px;height:38px;flex:0 0 38px;object-fit:contain}.nx-assistant-brand strong,.nx-assistant-brand span{display:block}.nx-assistant-brand strong{font-size:.96rem;font-weight:800}.nx-assistant-brand span{margin-top:2px;font-size:.7rem;opacity:.82}.nx-assistant-window-actions{display:flex;align-items:center;gap:3px}.nx-assistant-window-actions button{width:31px;height:31px;border:0;border-radius:8px;background:rgba(255,255,255,.12);color:#fff;font-size:1rem;cursor:pointer}.nx-assistant-window-actions button:hover{background:rgba(255,255,255,.22)}.nx-assistant-body{flex:1;min-height:0;padding:18px;overflow-y:auto;background:#f8fafc}.nx-assistant-welcome{display:flex;gap:12px;padding:15px;border:1px solid #e7edf3;border-radius:14px;background:#fff}.nx-assistant-mark{width:34px;height:34px;flex:0 0 34px;display:grid;place-items:center;border-radius:10px;background:var(--nx-assistant-soft);color:var(--nx-assistant-accent);font-size:.88rem}.nx-assistant-welcome strong{color:#0f172a;font-size:.88rem}.nx-assistant-welcome p{margin:5px 0 0;color:#64748b;font-size:.76rem;line-height:1.45}.nx-assistant-preview-label{margin:20px 0 9px;color:#94a3b8;font-size:.65rem;font-weight:900;letter-spacing:.09em;text-transform:uppercase}.nx-assistant-shortcuts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.nx-assistant-shortcuts button{min-width:0;padding:9px 10px;border:1px solid #dfe7ee;border-radius:11px;background:#fff;color:#475569;text-align:left;cursor:pointer;transition:border-color .16s ease,box-shadow .16s ease,transform .16s ease}.nx-assistant-shortcuts button:hover,.nx-assistant-shortcuts button:focus-visible{border-color:var(--nx-assistant-accent);box-shadow:0 5px 16px rgba(15,23,42,.08);transform:translateY(-1px);outline:none}.nx-assistant-shortcuts strong,.nx-assistant-shortcuts span{display:block}.nx-assistant-shortcuts strong{color:var(--nx-assistant-accent);font-size:.72rem;font-weight:900}.nx-assistant-shortcuts span{margin-top:2px;color:#64748b;font-size:.64rem}.nx-assistant-conversation{display:flex;flex-direction:column;gap:10px;margin-top:18px}.nx-assistant-message{display:flex;align-items:flex-start;gap:9px;max-width:92%}.nx-assistant-message>span{width:26px;height:26px;flex:0 0 26px;display:grid;place-items:center;border-radius:8px;background:var(--nx-assistant-accent);color:#fff;font-size:.65rem;font-weight:900}.nx-assistant-message p{margin:0;padding:9px 11px;border:1px solid #e2e8f0;border-radius:4px 12px 12px 12px;background:#fff;color:#475569;font-size:.72rem;line-height:1.5;white-space:pre-line}.nx-assistant-message.is-user{align-self:flex-end;flex-direction:row-reverse}.nx-assistant-message.is-user>span{background:#64748b}.nx-assistant-message.is-user p{border-color:transparent;border-radius:12px 4px 12px 12px;background:var(--nx-assistant-accent);color:#fff;white-space:normal}.nx-assistant-message-time{display:block;margin-top:4px;font-size:.6rem;opacity:.68}.nx-assistant-contact-list{display:grid;gap:7px;width:100%;max-width:92%}.nx-assistant-contact{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 10px;border:1px solid #dfe7ee;border-radius:10px;background:#fff;color:#334155;text-align:left;cursor:pointer}.nx-assistant-contact:hover{border-color:var(--nx-assistant-accent)}.nx-assistant-contact strong,.nx-assistant-contact small{display:block}.nx-assistant-contact strong{font-size:.72rem}.nx-assistant-contact small{margin-top:2px;color:#64748b;font-size:.63rem}.nx-assistant-contact em{min-width:20px;padding:2px 6px;border-radius:999px;background:var(--nx-assistant-accent);color:#fff;font-size:.6rem;font-style:normal;text-align:center}.nx-assistant-composer{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;padding:13px;border-top:1px solid #e8edf2;background:#fff}.nx-assistant-composer textarea{min-height:42px;max-height:96px;resize:none;padding:10px 12px;border:1px solid #dbe3ea;border-radius:11px;background:#f8fafc;color:#334155;font:inherit;font-size:.78rem;outline:none}.nx-assistant-composer textarea:focus{border-color:var(--nx-assistant-accent);box-shadow:0 0 0 3px var(--nx-assistant-soft)}.nx-assistant-composer button{min-width:66px;border:0;border-radius:10px;background:var(--nx-assistant-accent);color:#fff;font-size:.75rem;font-weight:800;cursor:pointer}.nx-assistant-composer button:hover{background:var(--nx-assistant-accent-dark)}.nx-assistant-composer button:disabled{opacity:.55;cursor:wait}@media(max-width:760px){.nx-assistant{right:14px;bottom:14px}.nx-assistant-panel,.nx-assistant.is-expanded .nx-assistant-panel{width:calc(100vw - 28px);height:min(620px,calc(100vh - 86px));border-radius:16px}.nx-assistant-launcher{width:54px;height:54px}.nx-assistant-launcher img{width:28px;height:28px}.nx-assistant-shortcuts{grid-template-columns:1fr 1fr}}
 </style>
 
 <script>
@@ -85,6 +88,8 @@
     var input=document.getElementById('nxAssistantInput');
     var send=document.getElementById('nxAssistantSend');
     var role=root.dataset.role;
+    var csrfToken={{ csrf_token()|tojson }};
+    var activeContact=null;
 
     var routes={
         {% if assistant_role == 'student' %}
@@ -115,12 +120,7 @@
         {% endif %}
     };
 
-    var aliases={
-        '/home':'/dashboard',
-        '/alerts':'/notifications',
-        '/notification':'/notifications',
-        '/docs':'/documents'
-    };
+    var aliases={'/home':'/dashboard','/alerts':'/notifications','/notification':'/notifications','/docs':'/documents'};
     if(role==='student'||role==='supervisor')aliases['/classrooms']='/classes';
     if(role==='admin')aliases['/classes']='/classrooms';
 
@@ -139,26 +139,31 @@
         if(open)window.setTimeout(function(){input.focus()},40);
     }
 
-    function appendMessage(kind,text){
+    function scrollBottom(){body.scrollTop=body.scrollHeight;}
+
+    function appendMessage(kind,text,timeText){
         var row=document.createElement('div');
         row.className='nx-assistant-message '+(kind==='user'?'is-user':'is-assistant');
         var avatar=document.createElement('span');
         avatar.textContent=kind==='user'?'You':'N';
         var message=document.createElement('p');
         message.textContent=text;
+        if(timeText){
+            var time=document.createElement('small');
+            time.className='nx-assistant-message-time';
+            time.textContent=timeText;
+            message.appendChild(time);
+        }
         row.appendChild(avatar);
         row.appendChild(message);
         conversation.appendChild(row);
-        body.scrollTop=body.scrollHeight;
+        scrollBottom();
     }
 
     function showHelp(){
-        appendMessage('assistant','Available shortcuts:\n'+helpCommands.join('   ')+'\n\nYou can also type a request like “open my classes” or “show notifications”.');
-    }
-
-    function messagingUnavailable(target){
-        var label=target==='@supervisor'?'your supervisor':'an administrator';
-        appendMessage('assistant','Direct messaging to '+label+' is not connected yet. No message was sent. You can still use the navigation commands here.');
+        activeContact=null;
+        input.placeholder="Try /classes or @supervisor hello";
+        appendMessage('assistant','Available navigation shortcuts:\n'+helpCommands.join('   ')+'\n\nMessaging: use @student, @supervisor, or @admin when that role is available to your account.');
     }
 
     function goTo(command){
@@ -168,6 +173,125 @@
         appendMessage('assistant','Opening '+(labels[canonical]||canonical.replace('/',''))+'…');
         window.setTimeout(function(){window.location.assign(target)},180);
         return true;
+    }
+
+    function requestJson(url,options){
+        options=options||{};
+        options.headers=options.headers||{};
+        options.headers.Accept='application/json';
+        if(options.method&&options.method.toUpperCase()!=='GET'){
+            options.headers['Content-Type']='application/json';
+            options.headers['X-CSRFToken']=csrfToken;
+        }
+        return fetch(url,options).then(function(response){
+            return response.json().catch(function(){return {ok:false,error:'Unexpected server response.'};}).then(function(data){
+                if(!response.ok||data.ok===false)throw new Error(data.error||'Request failed.');
+                return data;
+            });
+        });
+    }
+
+    function formatTimestamp(value){
+        if(!value)return '';
+        var parsed=new Date(value);
+        if(Number.isNaN(parsed.getTime()))return String(value);
+        return parsed.toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+    }
+
+    function renderContactChoices(targetRole,contacts,pendingBody){
+        appendMessage('assistant','Choose the '+targetRole+' you want to message.');
+        var list=document.createElement('div');
+        list.className='nx-assistant-contact-list';
+        contacts.forEach(function(contact){
+            var button=document.createElement('button');
+            button.type='button';
+            button.className='nx-assistant-contact';
+            var copy=document.createElement('span');
+            var name=document.createElement('strong');
+            name.textContent=contact.display_name||contact.username;
+            var detail=document.createElement('small');
+            detail.textContent=(contact.role||'contact')+(contact.username?' · @'+contact.username:'');
+            copy.appendChild(name);
+            copy.appendChild(detail);
+            button.appendChild(copy);
+            if(contact.unread_count){
+                var badge=document.createElement('em');
+                badge.textContent=String(contact.unread_count);
+                button.appendChild(badge);
+            }
+            button.addEventListener('click',function(){openThread(contact.id,pendingBody);});
+            list.appendChild(button);
+        });
+        conversation.appendChild(list);
+        scrollBottom();
+    }
+
+    function loadContacts(targetRole,pendingBody){
+        appendMessage('assistant','Loading authorized '+targetRole+' contacts…');
+        requestJson('/messages/contacts?role='+encodeURIComponent(targetRole))
+            .then(function(data){
+                var contacts=data.contacts||[];
+                if(!contacts.length){
+                    appendMessage('assistant','No active '+targetRole+' contact is currently authorized for your account.');
+                    return;
+                }
+                if(contacts.length===1){
+                    openThread(contacts[0].id,pendingBody);
+                    return;
+                }
+                renderContactChoices(targetRole,contacts,pendingBody);
+            })
+            .catch(function(error){appendMessage('assistant',error.message);});
+    }
+
+    function openThread(contactId,pendingBody){
+        send.disabled=true;
+        requestJson('/messages/thread/'+encodeURIComponent(contactId))
+            .then(function(data){
+                activeContact=data.contact;
+                conversation.innerHTML='';
+                appendMessage('assistant','Conversation with '+activeContact.display_name+' ('+activeContact.role+'). Type a message below, or use /help to leave the thread.');
+                (data.messages||[]).forEach(function(message){
+                    appendMessage(message.mine?'user':'assistant',message.body,formatTimestamp(message.created_at));
+                });
+                input.placeholder='Message '+activeContact.display_name;
+                if(pendingBody)sendDirectMessage(pendingBody);
+            })
+            .catch(function(error){
+                activeContact=null;
+                appendMessage('assistant',error.message);
+            })
+            .finally(function(){send.disabled=false;input.focus();});
+    }
+
+    function sendDirectMessage(text){
+        var bodyText=(text||'').trim();
+        if(!activeContact||!bodyText)return;
+        send.disabled=true;
+        requestJson('/messages/send',{
+            method:'POST',
+            body:JSON.stringify({recipient_id:activeContact.id,body:bodyText})
+        }).then(function(data){
+            appendMessage('user',data.message.body,formatTimestamp(data.message.created_at));
+        }).catch(function(error){
+            appendMessage('assistant','Message was not sent: '+error.message);
+        }).finally(function(){
+            send.disabled=false;
+            input.focus();
+        });
+    }
+
+    function startMessaging(targetRole,pendingBody){
+        var allowed={
+            student:['supervisor','admin'],
+            supervisor:['student','admin'],
+            admin:['student','supervisor']
+        };
+        if((allowed[role]||[]).indexOf(targetRole)===-1){
+            appendMessage('assistant','That messaging target is not available for your '+role+' account.');
+            return;
+        }
+        loadContacts(targetRole,(pendingBody||'').trim());
     }
 
     function naturalCommand(text){
@@ -220,13 +344,30 @@
     function processInput(raw){
         var text=(raw||'').trim();
         if(!text)return;
-        appendMessage('user',text);
-
         var lower=text.toLowerCase();
-        if(lower.indexOf('@supervisor')===0){messagingUnavailable('@supervisor');return;}
-        if(lower.indexOf('@admin')===0){messagingUnavailable('@admin');return;}
-        if(/\b(message|contact|chat|ask)\b.*\bsupervisor\b/.test(lower)&&role==='student'){messagingUnavailable('@supervisor');return;}
-        if(/\b(message|contact|chat|ask)\b.*\badmin\b/.test(lower)){messagingUnavailable('@admin');return;}
+
+        var mention=lower.match(/^@(student|supervisor|admin)\b/);
+        if(mention){
+            var targetRole=mention[1];
+            var bodyText=text.slice(mention[0].length).trim();
+            if(!bodyText)appendMessage('user','@'+targetRole);
+            startMessaging(targetRole,bodyText);
+            return;
+        }
+
+        var messageMatch=lower.match(/\b(message|contact|chat|ask)\b.*\b(student|supervisor|admin)\b/);
+        if(messageMatch){
+            appendMessage('user',text);
+            startMessaging(messageMatch[2],'');
+            return;
+        }
+
+        if(activeContact&&lower.charAt(0)!=='/'){
+            sendDirectMessage(text);
+            return;
+        }
+
+        appendMessage('user',text);
 
         if(lower.charAt(0)==='/'){
             var command=lower.split(/\s+/)[0].replace(/[?!.,]+$/,'');
@@ -239,7 +380,7 @@
         var inferred=naturalCommand(text);
         if(inferred==='/help'){showHelp();return;}
         if(inferred&&goTo(inferred))return;
-        appendMessage('assistant','I can handle Nexora navigation right now. Type /help to see available shortcuts, or ask me to open a page such as classes, documents, notifications, or your dashboard.');
+        appendMessage('assistant','I can navigate Nexora or open authorized message threads. Type /help to see available shortcuts.');
     }
 
     function submit(){
@@ -265,6 +406,17 @@
         input.style.height=Math.min(input.scrollHeight,96)+'px';
     });
     document.addEventListener('keydown',function(event){if(event.key==='Escape'&&root.classList.contains('is-open'))setOpen(false)});
+
+    var params=new URLSearchParams(window.location.search);
+    var contactId=parseInt(params.get('contact')||'',10);
+    if(params.get('assistant')==='messages'&&contactId>0){
+        setOpen(true);
+        openThread(contactId,'');
+        params.delete('assistant');
+        params.delete('contact');
+        var remaining=params.toString();
+        window.history.replaceState({},document.title,window.location.pathname+(remaining?'?'+remaining:'')+window.location.hash);
+    }
 })();
 </script>
 {% endif %}
