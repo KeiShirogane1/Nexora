@@ -18,6 +18,7 @@
     {% endif %}
     {% set recent_activities = actionable_metrics.get('recent_activities', []) %}
     {% set system_status = actionable_metrics.get('system_status', {'database_status': 'Not verified', 'database_engine': 'Not verified', 'email_status': 'Not configured', 'email_configured': false}) %}
+    {% set pending_approvals = admin_pending_approval_count|default(pending_students|default(0))|int %}
     {% include 'components/admin_topbar.html' %}
     <main class="admin-main nexora-app-main">
         <div class="admin-dashboard-content">
@@ -32,13 +33,13 @@
                 <div class="admin-hero-status"><span class="admin-status-pulse"></span><div><strong>Database {{ system_status.database_status }}</strong><small>{{ system_status.database_engine }} connection used for dashboard data</small></div></div>
             </section>
 
-            {% if pending_students|default(0)|int > 0 %}
-                <section class="alert alert-warning d-flex align-items-center justify-content-between gap-3 flex-wrap mb-3" role="alert" aria-label="Pending student approvals">
+            {% if pending_approvals > 0 %}
+                <section class="alert alert-warning d-flex align-items-center justify-content-between gap-3 flex-wrap mb-3" role="alert" aria-label="Pending account approvals">
                     <div>
-                        <strong>{{ pending_students }} student account{% if pending_students != 1 %}s{% endif %} awaiting approval.</strong>
-                        <span class="d-block small">Review pending registrations so approved students can continue into the OJT workflow.</span>
+                        <strong>{{ pending_approvals }} account{% if pending_approvals != 1 %}s{% endif %} awaiting approval.</strong>
+                        <span class="d-block small">Review pending student and supervisor registrations so approved users can continue into Nexora.</span>
                     </div>
-                    <a href="{{ url_for('admin.admin_students') }}" class="alert-link text-nowrap">Review students →</a>
+                    <a href="{{ url_for('admin.admin_users') }}" class="btn btn-warning btn-sm fw-semibold text-nowrap">Review approvals →</a>
                 </section>
             {% endif %}
 
@@ -65,7 +66,7 @@
                 <article class="admin-surface-card admin-overview-card">
                     <div class="admin-card-heading"><div><span class="admin-card-kicker">INTERNSHIP MANAGEMENT</span><h2>Internship Overview</h2><p>Current internship activity across the platform.</p></div><a href="{{ url_for('admin.internship_assign') }}" class="admin-text-link">Manage assignments <span>→</span></a></div>
                     <div class="admin-overview-stats">
-                        <div class="admin-overview-stat admin-overview-pending"><div class="admin-stat-top"><span>Pending Approval</span><b>{{ pending_students }}</b></div><div class="admin-mini-track"><span></span></div><small>Accounts awaiting review</small></div>
+                        <div class="admin-overview-stat admin-overview-pending"><div class="admin-stat-top"><span>Pending Approval</span><b>{{ pending_approvals }}</b></div><div class="admin-mini-track"><span></span></div><small>Accounts awaiting review</small></div>
                         <div class="admin-overview-stat admin-overview-active"><div class="admin-stat-top"><span>Active Internship</span><b>{{ active_internships }}</b></div><div class="admin-mini-track"><span></span></div><small>Currently in progress</small></div>
                         <div class="admin-overview-stat admin-overview-complete"><div class="admin-stat-top"><span>Completed</span><b>{{ completed_internships }}</b></div><div class="admin-mini-track"><span></span></div><small>Finished internships</small></div>
                     </div>
@@ -82,7 +83,7 @@
             <section class="admin-surface-card admin-actions-card">
                 <div class="admin-card-heading admin-actions-heading"><div><span class="admin-card-kicker">ADMIN TOOLS</span><h2>Quick Actions</h2><p>Common administrative tasks.</p></div></div>
                 <div class="admin-action-grid">
-                    <a href="{{ url_for('admin.admin_students') }}" class="admin-action-tile"><span class="admin-action-icon">✓</span><span><strong>Approve Student Accounts</strong><small>Review account requests</small></span><b>→</b></a>
+                    <a href="{{ url_for('admin.admin_users') }}" class="admin-action-tile"><span class="admin-action-icon">✓</span><span><strong>Review Account Approvals</strong><small>Review pending student and supervisor requests</small></span><b>→</b></a>
                     <a href="{{ url_for('admin.admin_users') }}" class="admin-action-tile"><span class="admin-action-icon">♟</span><span><strong>Manage Users</strong><small>Manage platform accounts</small></span><b>→</b></a>
                     <a href="{{ url_for('admin.internship_assign') }}" class="admin-action-tile"><span class="admin-action-icon">▣</span><span><strong>Assign Internships</strong><small>Create or update assignments</small></span><b>→</b></a>
                     <a href="{{ url_for('admin.admin_reports_list') }}" class="admin-action-tile"><span class="admin-action-icon">▤</span><span><strong>View Reports</strong><small>Open administrative reports</small></span><b>→</b></a>
