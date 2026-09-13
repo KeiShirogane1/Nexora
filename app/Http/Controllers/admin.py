@@ -18,7 +18,7 @@ from app.Services.notification_service import (
 )
 import os
 from app.Models.db import get_db_connection, using_postgres
-from datetime import datetime
+from datetime import datetime, timedelta
 from collections import Counter
 from app.ML.predictor import analyze_feedback, analyze_feedback_detailed
 import secrets
@@ -131,12 +131,14 @@ def reset_student_password(student_id):
         cursor.close()
         conn.close()
 
-    try:
+    if student["email"]:
 
-        send_email(
-            student["email"],
-            "Nexora Temporary Password",
-            f"""
+        try:
+
+            send_email(
+                student["email"],
+                "Nexora Temporary Password",
+                f"""
     Hello {student["username"]},
 
     Your Nexora account password has been reset by the administrator.
@@ -149,27 +151,34 @@ def reset_student_password(student_id):
 
     Nexora System
     """
-        )
+            )
 
-    except Exception as e:
+        except Exception as e:
+
+            flash(
+                f"Password reset but email failed: {e}",
+                "warning"
+            )
+
+            return redirect(
+                url_for(
+                    "admin.student_profile",
+                    student_id=student_id
+                )
+            )
+
 
         flash(
-            f"Password reset but email failed: {e}",
+            "Temporary password sent to student email.",
+            "success"
+        )
+
+    else:
+
+        flash(
+            "Password reset. The student has no email on file, so give them the temporary password manually.",
             "warning"
         )
-
-        return redirect(
-            url_for(
-                "admin.student_profile",
-                student_id=student_id
-            )
-        )
-
-
-    flash(
-        "Temporary password sent to student email.",
-        "success"
-    )
 
 
     return redirect(
@@ -1892,34 +1901,7 @@ def student_report(student_id):
         return "Student not found"
 
 
-    # attendance table
-
-    attendance = conn.execute("""
-        SELECT
-            id,
-            clock_in,
-            clock_out,
-            hours_rendered,
-            status
-        FROM attendance
-        WHERE student_id = ?
-        ORDER BY clock_in DESC
-    """, (student_id,)).fetchall()
-
-    attendance = [
-    (
-        session[0],
-        format_date(session[1]),
-        format_time(session[1]),
-        format_time(session[2]),
-        session[3],
-        session[4]
-    )
-    for session in attendance
-]
-
-
-# ATTENDANCE PAGINATION
+    # ATTENDANCE PAGINATION & METRICS
 
     attendance_per_page = 10
 
@@ -1932,7 +1914,15 @@ def student_report(student_id):
     if attendance_page < 1:
         attendance_page = 1
 
-    total_sessions = len(attendance)
+    total_sessions_row = conn.execute("""
+        SELECT COUNT(*) FROM attendance WHERE student_id = ?
+    """, (student_id,)).fetchone()
+    total_sessions = total_sessions_row[0] if total_sessions_row else 0
+
+    total_hours_row = conn.execute("""
+        SELECT COALESCE(SUM(hours_rendered), 0) FROM attendance WHERE student_id = ?
+    """, (student_id,)).fetchone()
+    total_hours = total_hours_row[0] if total_hours_row else 0
 
     attendance_total_pages = (
         (total_sessions + attendance_per_page - 1)
@@ -1946,19 +1936,30 @@ def student_report(student_id):
         attendance_page - 1
     ) * attendance_per_page
 
-    attendance_end = (
-        attendance_start + attendance_per_page
+    attendance_raw = conn.execute("""
+        SELECT
+            id,
+            clock_in,
+            clock_out,
+            hours_rendered,
+            status
+        FROM attendance
+        WHERE student_id = ?
+        ORDER BY clock_in DESC
+        LIMIT ? OFFSET ?
+    """, (student_id, attendance_per_page, attendance_start)).fetchall()
+
+    attendance_display = [
+    (
+        session[0],
+        format_date(session[1]),
+        format_time(session[1]),
+        format_time(session[2]),
+        session[3],
+        session[4]
     )
-
-    attendance_display = attendance[
-        attendance_start:attendance_end
-    ]
-
-
-    total_hours = sum(
-        session[4] or 0
-        for session in attendance
-    )
+    for session in attendance_raw
+]
 
     average_hours = (
         total_hours / total_sessions
@@ -2580,6 +2581,12 @@ def student_logbook(student_id, date):
 
     display_date = report_date.strftime("%b %d, %Y")
 
+    # Use a half-open range [report_date, next_day) instead of
+    # SQLite-only date() so the query is portable across SQLite and
+    # PostgreSQL, and can still use an index on the timestamp column.
+
+    next_day = report_date + timedelta(days=1)
+
 
     # GET ATTENDANCE FOR THIS DATE
 
@@ -2592,9 +2599,10 @@ def student_logbook(student_id, date):
             status
         FROM attendance
         WHERE student_id = ?
-        AND date(clock_in) = ?
+        AND clock_in >= ?
+        AND clock_in < ?
         ORDER BY clock_in ASC
-    """, (student_id, date)).fetchall()
+    """, (student_id, report_date, next_day)).fetchall()
 
 
     attendance = [
@@ -2619,9 +2627,10 @@ def student_logbook(student_id, date):
             created_at
         FROM logs
         WHERE student_id = ?
-        AND date(created_at) = ?
+        AND created_at >= ?
+        AND created_at < ?
         ORDER BY created_at ASC
-    """, (student_id, date)).fetchall()
+    """, (student_id, report_date, next_day)).fetchall()
 
 
     logs = [
@@ -2675,6 +2684,7 @@ def deactivate_student(student_id):
                 email
             FROM users
             WHERE id = ?
+            AND role = 'student'
             """,
             (student_id,)
         )
@@ -2701,6 +2711,7 @@ def deactivate_student(student_id):
             UPDATE users
             SET status = ?
             WHERE id = ?
+            AND role = 'student'
             """,
             (
                 "inactive",
@@ -2780,6 +2791,7 @@ def activate_student(student_id):
                 email
             FROM users
             WHERE id = ?
+            AND role = 'student'
             """,
             (student_id,)
         )
@@ -2806,6 +2818,7 @@ def activate_student(student_id):
             UPDATE users
             SET status = ?
             WHERE id = ?
+            AND role = 'student'
             """,
             (
                 "active",

@@ -68,6 +68,28 @@ def login_required(func):
         if "user_id" not in session:
             return redirect("/login")
 
+        conn = get_db_connection()
+        try:
+            row = conn.execute(
+                "SELECT role, status FROM users WHERE id = ?",
+                (session.get("user_id"),),
+            ).fetchone()
+        finally:
+            conn.close()
+
+        if row is None:
+            session.clear()
+            return redirect("/login")
+
+        try:
+            status = row["status"]
+        except Exception:
+            status = row[1] if len(row) > 1 else None
+
+        if status == "inactive":
+            session.clear()
+            return "Account deactivated — contact administrator.", 403
+
         return func(*args, **kwargs)
 
     return inner

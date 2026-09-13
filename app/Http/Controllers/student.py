@@ -1,4 +1,4 @@
-from flask import Blueprint, current_app, render_template, request, redirect, session, send_file, flash
+from flask import Blueprint, current_app, render_template, request, redirect, url_for, session, send_file, flash
 from app.Http.Middleware.security import role_required
 from app.Models.db import get_db_connection
 
@@ -1402,6 +1402,19 @@ def student_profile():
     ))
 
     profile = cursor.fetchone()
+
+    if not profile:
+
+        conn.close()
+
+        flash(
+            "Please complete your profile first.",
+            "danger"
+        )
+
+        return redirect(
+            url_for("student.profile_setup")
+        )
     
         # ==========================
     # PROFILE COMPLETION

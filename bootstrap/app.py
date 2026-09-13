@@ -95,8 +95,64 @@ def _is_registered_document_upload(filename):
 @app.route("/uploads/<path:filename>")
 @login_required
 def uploaded_file(filename):
- if _is_registered_document_upload(filename):return "Direct document access is not allowed.",403
- return send_from_directory(str(UPLOAD_FOLDER),filename)
+    user_id = session.get("user_id")
+    role = session.get("role")
+    conn = get_db_connection()
+    authorized = False
+
+    try:
+        # --- Authorization Checks ---
+
+        # 1. Check if it's a registered document.
+        # If it IS a registered document: deny for non-admins, allow for admins.
+        is_doc = _is_registered_document_upload(filename)
+        if is_doc:
+            if role == "admin":
+                authorized = True
+            else:
+                return "Direct document access is not allowed.", 403 # Original denial for non-admins
+
+        # If it's NOT a registered document, check other types:
+        else:
+            # Profile pictures: allow admins
+            # Note: The specific route /uploads/profile_pictures/<filename> already handles this for non-admins,
+            # but this generic route for profile_pictures is likely intended for admin viewing of student profiles.
+            if filename.startswith("profile_pictures/"):
+                if role == "admin":
+                    authorized = True
+
+            # Classwork resources: allow admin, student (if enrolled), supervisor (if owns class)
+            elif filename.startswith("classwork/"):
+                parts = filename.split('/')
+                if len(parts) >= 3 and parts[0] == 'classwork':
+                    class_id_str, assignment_id_str, *resource_parts = parts[1:]
+                    try:
+                        class_id = int(class_id_str)
+
+                        if role == "admin":
+                            authorized = True
+                        elif role == "student":
+                            # Check if student is enrolled in this class
+                            student_enrollment_sql = "SELECT 1 FROM classroom_students WHERE classroom_id = ? AND student_id = ?"
+                            if conn.execute(student_enrollment_sql, (class_id, user_id)).fetchone():
+                                authorized = True
+                        elif role == "supervisor":
+                            # Check if supervisor owns this class
+                            supervisor_class_sql = "SELECT 1 FROM classrooms WHERE id = ? AND supervisor_id = ?"
+                            if conn.execute(supervisor_class_sql, (class_id, user_id)).fetchone():
+                                authorized = True
+                    except ValueError:
+                        pass # Invalid path format, falls through to deny
+
+        # Default deny if no explicit authorization was granted
+        if not authorized:
+            return "Access denied.", 403
+
+    finally:
+        conn.close()
+
+    # If authorized, serve the file
+    return send_from_directory(str(UPLOAD_FOLDER), filename)
 @app.route("/uploads/profile_pictures/<filename>")
 @login_required
 def profile_picture(filename): return send_from_directory(app.config["PROFILE_UPLOAD_FOLDER"],filename)
