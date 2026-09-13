@@ -15,35 +15,50 @@
             </div>
         </header>
 
-        <div class="nx-assistant-body">
+        <div class="nx-assistant-body" id="nxAssistantBody">
             <div class="nx-assistant-welcome">
                 <span class="nx-assistant-mark">◆</span>
                 <div>
                     <strong>How can Nexora help?</strong>
-                    <p>Quick navigation, support shortcuts, and role-aware assistance will live here.</p>
+                    <p>Use a shortcut or type what you want to open. Nexora will take you to the matching page.</p>
                 </div>
             </div>
 
-            <div class="nx-assistant-preview-label">Coming next</div>
-            <div class="nx-assistant-shortcuts" aria-label="Assistant shortcut preview">
+            <div class="nx-assistant-preview-label">Quick actions</div>
+            <div class="nx-assistant-shortcuts" aria-label="Assistant shortcuts">
                 {% if assistant_role == 'student' %}
-                    <span>@supervisor</span><span>@admin</span><span>/logbook</span><span>/classes</span><span>/tasks</span><span>/help</span>
+                    <button type="button" data-assistant-command="@supervisor"><strong>@supervisor</strong><span>Message supervisor</span></button>
+                    <button type="button" data-assistant-command="@admin"><strong>@admin</strong><span>Contact admin</span></button>
+                    <button type="button" data-assistant-command="/logbook"><strong>/logbook</strong><span>Daily OJT log</span></button>
+                    <button type="button" data-assistant-command="/classes"><strong>/classes</strong><span>Intern classrooms</span></button>
+                    <button type="button" data-assistant-command="/tasks"><strong>/tasks</strong><span>Assigned tasks</span></button>
+                    <button type="button" data-assistant-command="/help"><strong>/help</strong><span>All commands</span></button>
                 {% elif assistant_role == 'supervisor' %}
-                    <span>@admin</span><span>/classes</span><span>/interns</span><span>/evaluations</span><span>/help</span>
+                    <button type="button" data-assistant-command="@admin"><strong>@admin</strong><span>Contact admin</span></button>
+                    <button type="button" data-assistant-command="/classes"><strong>/classes</strong><span>Intern classrooms</span></button>
+                    <button type="button" data-assistant-command="/interns"><strong>/interns</strong><span>Assigned interns</span></button>
+                    <button type="button" data-assistant-command="/evaluations"><strong>/evaluations</strong><span>OJT evaluations</span></button>
+                    <button type="button" data-assistant-command="/help"><strong>/help</strong><span>All commands</span></button>
                 {% else %}
-                    <span>/approvals</span><span>/students</span><span>/supervisors</span><span>/reports</span><span>/help</span>
+                    <button type="button" data-assistant-command="/approvals"><strong>/approvals</strong><span>Pending accounts</span></button>
+                    <button type="button" data-assistant-command="/students"><strong>/students</strong><span>Student accounts</span></button>
+                    <button type="button" data-assistant-command="/supervisors"><strong>/supervisors</strong><span>Supervisors</span></button>
+                    <button type="button" data-assistant-command="/reports"><strong>/reports</strong><span>Reports overview</span></button>
+                    <button type="button" data-assistant-command="/help"><strong>/help</strong><span>All commands</span></button>
                 {% endif %}
             </div>
 
-            <div class="nx-assistant-placeholder-message">
-                <span>i</span>
-                <p>This phase adds the shared Assistant interface only. Navigation actions, role messaging, and AI responses are not connected yet.</p>
+            <div class="nx-assistant-conversation" id="nxAssistantConversation" role="log" aria-live="polite" aria-label="Assistant responses">
+                <div class="nx-assistant-message is-assistant">
+                    <span>N</span>
+                    <p>I can open Nexora pages for you now. Try <strong>/help</strong> or type something like “open my classes”.</p>
+                </div>
             </div>
         </div>
 
         <footer class="nx-assistant-composer">
-            <textarea rows="1" placeholder="Type a message…" aria-label="Assistant message" disabled></textarea>
-            <button type="button" disabled aria-disabled="true" title="Assistant actions are connected in the next phase">Send</button>
+            <textarea id="nxAssistantInput" rows="1" placeholder="Try /classes or ‘open my logbook’" aria-label="Assistant message"></textarea>
+            <button id="nxAssistantSend" type="button">Send</button>
         </footer>
     </section>
 
@@ -54,7 +69,7 @@
 </div>
 
 <style id="nx-assistant-styles">
-.nx-assistant{--nx-assistant-accent:#2563eb;--nx-assistant-accent-dark:#1d4ed8;--nx-assistant-soft:#eff6ff;position:fixed;right:24px;bottom:24px;z-index:3200;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.nx-assistant-student{--nx-assistant-accent:#0a8f46;--nx-assistant-accent-dark:#08783b;--nx-assistant-soft:#e7f7ed}.nx-assistant-admin{--nx-assistant-accent:#f45125;--nx-assistant-accent-dark:#d9431c;--nx-assistant-soft:#fff1eb}.nx-assistant-launcher{position:relative;width:58px;height:58px;display:grid;place-items:center;margin-left:auto;border:0;border-radius:50%;background:var(--nx-assistant-accent);box-shadow:0 12px 30px rgba(15,23,42,.22);cursor:pointer;transition:transform .16s ease,box-shadow .16s ease}.nx-assistant-launcher:hover{transform:translateY(-2px);box-shadow:0 16px 36px rgba(15,23,42,.26)}.nx-assistant-launcher img{width:31px;height:31px;object-fit:contain}.nx-assistant-launcher-dot{position:absolute;top:3px;right:3px;width:12px;height:12px;border:3px solid #fff;border-radius:50%;background:#22c55e}.nx-assistant-panel{width:min(390px,calc(100vw - 32px));height:min(600px,calc(100vh - 110px));display:none;flex-direction:column;margin-bottom:12px;overflow:hidden;border:1px solid #e2e8f0;border-radius:18px;background:#fff;box-shadow:0 24px 70px rgba(15,23,42,.22)}.nx-assistant.is-open .nx-assistant-panel{display:flex}.nx-assistant.is-open .nx-assistant-launcher{display:none}.nx-assistant.is-expanded .nx-assistant-panel{width:min(680px,calc(100vw - 48px));height:min(760px,calc(100vh - 48px))}.nx-assistant.is-minimized .nx-assistant-panel{height:auto}.nx-assistant.is-minimized .nx-assistant-body,.nx-assistant.is-minimized .nx-assistant-composer{display:none}.nx-assistant-header{min-height:72px;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 14px 13px 16px;background:var(--nx-assistant-accent);color:#fff}.nx-assistant-brand{display:flex;align-items:center;gap:11px;min-width:0}.nx-assistant-brand img{width:38px;height:38px;flex:0 0 38px;object-fit:contain}.nx-assistant-brand strong,.nx-assistant-brand span{display:block}.nx-assistant-brand strong{font-size:.96rem;font-weight:800}.nx-assistant-brand span{margin-top:2px;font-size:.7rem;opacity:.82}.nx-assistant-window-actions{display:flex;align-items:center;gap:3px}.nx-assistant-window-actions button{width:31px;height:31px;border:0;border-radius:8px;background:rgba(255,255,255,.12);color:#fff;font-size:1rem;cursor:pointer}.nx-assistant-window-actions button:hover{background:rgba(255,255,255,.22)}.nx-assistant-body{flex:1;min-height:0;padding:18px;overflow-y:auto;background:#f8fafc}.nx-assistant-welcome{display:flex;gap:12px;padding:15px;border:1px solid #e7edf3;border-radius:14px;background:#fff}.nx-assistant-mark{width:34px;height:34px;flex:0 0 34px;display:grid;place-items:center;border-radius:10px;background:var(--nx-assistant-soft);color:var(--nx-assistant-accent);font-size:.88rem}.nx-assistant-welcome strong{color:#0f172a;font-size:.88rem}.nx-assistant-welcome p{margin:5px 0 0;color:#64748b;font-size:.76rem;line-height:1.45}.nx-assistant-preview-label{margin:20px 0 9px;color:#94a3b8;font-size:.65rem;font-weight:900;letter-spacing:.09em;text-transform:uppercase}.nx-assistant-shortcuts{display:flex;flex-wrap:wrap;gap:8px}.nx-assistant-shortcuts span{padding:7px 10px;border:1px solid #dfe7ee;border-radius:999px;background:#fff;color:#475569;font-size:.7rem;font-weight:800}.nx-assistant-placeholder-message{display:flex;align-items:flex-start;gap:10px;margin-top:18px;padding:13px;border-radius:12px;background:var(--nx-assistant-soft);color:#475569}.nx-assistant-placeholder-message>span{width:22px;height:22px;flex:0 0 22px;display:grid;place-items:center;border-radius:50%;background:var(--nx-assistant-accent);color:#fff;font-size:.7rem;font-weight:900}.nx-assistant-placeholder-message p{margin:0;font-size:.72rem;line-height:1.48}.nx-assistant-composer{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;padding:13px;border-top:1px solid #e8edf2;background:#fff}.nx-assistant-composer textarea{min-height:42px;max-height:96px;resize:none;padding:10px 12px;border:1px solid #dbe3ea;border-radius:11px;background:#f8fafc;color:#64748b;font:inherit;font-size:.78rem;outline:none}.nx-assistant-composer button{min-width:66px;border:0;border-radius:10px;background:var(--nx-assistant-accent);color:#fff;font-size:.75rem;font-weight:800;opacity:.48;cursor:not-allowed}@media(max-width:760px){.nx-assistant{right:14px;bottom:14px}.nx-assistant-panel,.nx-assistant.is-expanded .nx-assistant-panel{width:calc(100vw - 28px);height:min(620px,calc(100vh - 86px));border-radius:16px}.nx-assistant-launcher{width:54px;height:54px}.nx-assistant-launcher img{width:28px;height:28px}}
+.nx-assistant{--nx-assistant-accent:#2563eb;--nx-assistant-accent-dark:#1d4ed8;--nx-assistant-soft:#eff6ff;position:fixed;right:24px;bottom:24px;z-index:3200;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.nx-assistant-student{--nx-assistant-accent:#0a8f46;--nx-assistant-accent-dark:#08783b;--nx-assistant-soft:#e7f7ed}.nx-assistant-admin{--nx-assistant-accent:#f45125;--nx-assistant-accent-dark:#d9431c;--nx-assistant-soft:#fff1eb}.nx-assistant-launcher{position:relative;width:58px;height:58px;display:grid;place-items:center;margin-left:auto;border:0;border-radius:50%;background:var(--nx-assistant-accent);box-shadow:0 12px 30px rgba(15,23,42,.22);cursor:pointer;transition:transform .16s ease,box-shadow .16s ease}.nx-assistant-launcher:hover{transform:translateY(-2px);box-shadow:0 16px 36px rgba(15,23,42,.26)}.nx-assistant-launcher img{width:31px;height:31px;object-fit:contain}.nx-assistant-launcher-dot{position:absolute;top:3px;right:3px;width:12px;height:12px;border:3px solid #fff;border-radius:50%;background:#22c55e}.nx-assistant-panel{width:min(390px,calc(100vw - 32px));height:min(600px,calc(100vh - 110px));display:none;flex-direction:column;margin-bottom:12px;overflow:hidden;border:1px solid #e2e8f0;border-radius:18px;background:#fff;box-shadow:0 24px 70px rgba(15,23,42,.22)}.nx-assistant.is-open .nx-assistant-panel{display:flex}.nx-assistant.is-open .nx-assistant-launcher{display:none}.nx-assistant.is-expanded .nx-assistant-panel{width:min(680px,calc(100vw - 48px));height:min(760px,calc(100vh - 48px))}.nx-assistant.is-minimized .nx-assistant-panel{height:auto}.nx-assistant.is-minimized .nx-assistant-body,.nx-assistant.is-minimized .nx-assistant-composer{display:none}.nx-assistant-header{min-height:72px;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 14px 13px 16px;background:var(--nx-assistant-accent);color:#fff}.nx-assistant-brand{display:flex;align-items:center;gap:11px;min-width:0}.nx-assistant-brand img{width:38px;height:38px;flex:0 0 38px;object-fit:contain}.nx-assistant-brand strong,.nx-assistant-brand span{display:block}.nx-assistant-brand strong{font-size:.96rem;font-weight:800}.nx-assistant-brand span{margin-top:2px;font-size:.7rem;opacity:.82}.nx-assistant-window-actions{display:flex;align-items:center;gap:3px}.nx-assistant-window-actions button{width:31px;height:31px;border:0;border-radius:8px;background:rgba(255,255,255,.12);color:#fff;font-size:1rem;cursor:pointer}.nx-assistant-window-actions button:hover{background:rgba(255,255,255,.22)}.nx-assistant-body{flex:1;min-height:0;padding:18px;overflow-y:auto;background:#f8fafc}.nx-assistant-welcome{display:flex;gap:12px;padding:15px;border:1px solid #e7edf3;border-radius:14px;background:#fff}.nx-assistant-mark{width:34px;height:34px;flex:0 0 34px;display:grid;place-items:center;border-radius:10px;background:var(--nx-assistant-soft);color:var(--nx-assistant-accent);font-size:.88rem}.nx-assistant-welcome strong{color:#0f172a;font-size:.88rem}.nx-assistant-welcome p{margin:5px 0 0;color:#64748b;font-size:.76rem;line-height:1.45}.nx-assistant-preview-label{margin:20px 0 9px;color:#94a3b8;font-size:.65rem;font-weight:900;letter-spacing:.09em;text-transform:uppercase}.nx-assistant-shortcuts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.nx-assistant-shortcuts button{min-width:0;padding:9px 10px;border:1px solid #dfe7ee;border-radius:11px;background:#fff;color:#475569;text-align:left;cursor:pointer;transition:border-color .16s ease,box-shadow .16s ease,transform .16s ease}.nx-assistant-shortcuts button:hover,.nx-assistant-shortcuts button:focus-visible{border-color:var(--nx-assistant-accent);box-shadow:0 5px 16px rgba(15,23,42,.08);transform:translateY(-1px);outline:none}.nx-assistant-shortcuts strong,.nx-assistant-shortcuts span{display:block}.nx-assistant-shortcuts strong{color:var(--nx-assistant-accent);font-size:.72rem;font-weight:900}.nx-assistant-shortcuts span{margin-top:2px;color:#64748b;font-size:.64rem}.nx-assistant-conversation{display:flex;flex-direction:column;gap:10px;margin-top:18px}.nx-assistant-message{display:flex;align-items:flex-start;gap:9px;max-width:92%}.nx-assistant-message>span{width:26px;height:26px;flex:0 0 26px;display:grid;place-items:center;border-radius:8px;background:var(--nx-assistant-accent);color:#fff;font-size:.65rem;font-weight:900}.nx-assistant-message p{margin:0;padding:9px 11px;border:1px solid #e2e8f0;border-radius:4px 12px 12px 12px;background:#fff;color:#475569;font-size:.72rem;line-height:1.5;white-space:pre-line}.nx-assistant-message.is-user{align-self:flex-end;flex-direction:row-reverse}.nx-assistant-message.is-user>span{background:#64748b}.nx-assistant-message.is-user p{border-color:transparent;border-radius:12px 4px 12px 12px;background:var(--nx-assistant-accent);color:#fff;white-space:normal}.nx-assistant-composer{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;padding:13px;border-top:1px solid #e8edf2;background:#fff}.nx-assistant-composer textarea{min-height:42px;max-height:96px;resize:none;padding:10px 12px;border:1px solid #dbe3ea;border-radius:11px;background:#f8fafc;color:#334155;font:inherit;font-size:.78rem;outline:none}.nx-assistant-composer textarea:focus{border-color:var(--nx-assistant-accent);box-shadow:0 0 0 3px var(--nx-assistant-soft)}.nx-assistant-composer button{min-width:66px;border:0;border-radius:10px;background:var(--nx-assistant-accent);color:#fff;font-size:.75rem;font-weight:800;cursor:pointer}.nx-assistant-composer button:hover{background:var(--nx-assistant-accent-dark)}@media(max-width:760px){.nx-assistant{right:14px;bottom:14px}.nx-assistant-panel,.nx-assistant.is-expanded .nx-assistant-panel{width:calc(100vw - 28px);height:min(620px,calc(100vh - 86px));border-radius:16px}.nx-assistant-launcher{width:54px;height:54px}.nx-assistant-launcher img{width:28px;height:28px}.nx-assistant-shortcuts{grid-template-columns:1fr 1fr}}
 </style>
 
 <script>
@@ -62,13 +77,193 @@
     var root=document.getElementById('nxAssistant');
     if(!root||root.dataset.ready==='1')return;
     root.dataset.ready='1';
+
     var panel=document.getElementById('nxAssistantPanel');
     var launcher=document.getElementById('nxAssistantLauncher');
-    function setOpen(open){root.classList.toggle('is-open',open);if(!open){root.classList.remove('is-minimized','is-expanded')}launcher.setAttribute('aria-expanded',open?'true':'false');panel.setAttribute('aria-hidden',open?'false':'true')}
+    var body=document.getElementById('nxAssistantBody');
+    var conversation=document.getElementById('nxAssistantConversation');
+    var input=document.getElementById('nxAssistantInput');
+    var send=document.getElementById('nxAssistantSend');
+    var role=root.dataset.role;
+
+    var routes={
+        {% if assistant_role == 'student' %}
+        '/dashboard':{{ url_for('student.student_dashboard')|tojson }},
+        '/classes':{{ url_for('classroom.student_classes')|tojson }},
+        '/logbook':{{ url_for('student.logbook')|tojson }},
+        '/tasks':{{ url_for('student.tasks')|tojson }},
+        '/documents':{{ url_for('student.documents')|tojson }},
+        '/notifications':{{ url_for('notifications.notification_list')|tojson }},
+        '/profile':{{ url_for('student.student_profile')|tojson }}
+        {% elif assistant_role == 'supervisor' %}
+        '/dashboard':{{ url_for('supervisor.supervisor_dashboard')|tojson }},
+        '/classes':{{ url_for('classroom.supervisor_classes')|tojson }},
+        '/interns':{{ url_for('supervisor.view_interns')|tojson }},
+        '/documents':{{ url_for('supervisor_documents.student_documents')|tojson }},
+        '/evaluations':{{ url_for('ojt_evaluation.supervisor_evaluation_directory')|tojson }},
+        '/notifications':{{ url_for('notifications.notification_list')|tojson }},
+        '/profile':{{ url_for('supervisor.supervisor_profile')|tojson }}
+        {% else %}
+        '/dashboard':{{ url_for('admin.admin_dashboard')|tojson }},
+        '/approvals':{{ url_for('admin.admin_users')|tojson }},
+        '/students':{{ url_for('admin.admin_students')|tojson }},
+        '/supervisors':{{ url_for('admin.admin_supervisors')|tojson }},
+        '/classrooms':{{ url_for('admin_classrooms.classrooms')|tojson }},
+        '/documents':{{ url_for('admin_classrooms.student_documents')|tojson }},
+        '/reports':{{ url_for('admin.admin_reports_list')|tojson }},
+        '/notifications':{{ url_for('notifications.notification_list')|tojson }}
+        {% endif %}
+    };
+
+    var aliases={
+        '/home':'/dashboard',
+        '/alerts':'/notifications',
+        '/notification':'/notifications',
+        '/docs':'/documents'
+    };
+    if(role==='student'||role==='supervisor')aliases['/classrooms']='/classes';
+    if(role==='admin')aliases['/classes']='/classrooms';
+
+    var helpCommands=Object.keys(routes);
+    var labels={
+        '/dashboard':'Dashboard','/classes':'Intern Classrooms','/classrooms':'Classrooms','/logbook':'Logbook','/tasks':'Tasks',
+        '/documents':'Documents','/notifications':'Notifications','/profile':'Profile','/interns':'Assigned Interns',
+        '/evaluations':'Evaluations','/approvals':'Approvals','/students':'Students','/supervisors':'Supervisors','/reports':'Reports'
+    };
+
+    function setOpen(open){
+        root.classList.toggle('is-open',open);
+        if(!open)root.classList.remove('is-minimized','is-expanded');
+        launcher.setAttribute('aria-expanded',open?'true':'false');
+        panel.setAttribute('aria-hidden',open?'false':'true');
+        if(open)window.setTimeout(function(){input.focus()},40);
+    }
+
+    function appendMessage(kind,text){
+        var row=document.createElement('div');
+        row.className='nx-assistant-message '+(kind==='user'?'is-user':'is-assistant');
+        var avatar=document.createElement('span');
+        avatar.textContent=kind==='user'?'You':'N';
+        var message=document.createElement('p');
+        message.textContent=text;
+        row.appendChild(avatar);
+        row.appendChild(message);
+        conversation.appendChild(row);
+        body.scrollTop=body.scrollHeight;
+    }
+
+    function showHelp(){
+        appendMessage('assistant','Available shortcuts:\n'+helpCommands.join('   ')+'\n\nYou can also type a request like “open my classes” or “show notifications”.');
+    }
+
+    function messagingUnavailable(target){
+        var label=target==='@supervisor'?'your supervisor':'an administrator';
+        appendMessage('assistant','Direct messaging to '+label+' is not connected yet. No message was sent. You can still use the navigation commands here.');
+    }
+
+    function goTo(command){
+        var canonical=aliases[command]||command;
+        var target=routes[canonical];
+        if(!target)return false;
+        appendMessage('assistant','Opening '+(labels[canonical]||canonical.replace('/',''))+'…');
+        window.setTimeout(function(){window.location.assign(target)},180);
+        return true;
+    }
+
+    function naturalCommand(text){
+        var value=text.toLowerCase().replace(/[?!.,]/g,' ').replace(/\s+/g,' ').trim();
+        if(!value)return null;
+        if(value.indexOf('help')!==-1||value.indexOf('what can you do')!==-1||value.indexOf('commands')!==-1)return '/help';
+
+        var roleIntents=[];
+        if(role==='student'){
+            roleIntents=[
+                [['logbook','daily log','ojt log'],'/logbook'],
+                [['task','tasks'],'/tasks'],
+                [['classroom','classrooms','classes','class'],'/classes'],
+                [['document','documents','files'],'/documents'],
+                [['notification','notifications','alerts'],'/notifications'],
+                [['profile','account'],'/profile'],
+                [['dashboard','home'],'/dashboard']
+            ];
+        }else if(role==='supervisor'){
+            roleIntents=[
+                [['evaluation','evaluations'],'/evaluations'],
+                [['intern','interns','assigned interns'],'/interns'],
+                [['classroom','classrooms','classes','class'],'/classes'],
+                [['document','documents','files'],'/documents'],
+                [['notification','notifications','alerts'],'/notifications'],
+                [['profile','account'],'/profile'],
+                [['dashboard','home'],'/dashboard']
+            ];
+        }else{
+            roleIntents=[
+                [['approval','approvals','pending account','pending accounts'],'/approvals'],
+                [['supervisor','supervisors'],'/supervisors'],
+                [['student','students'],'/students'],
+                [['classroom','classrooms','classes'],'/classrooms'],
+                [['report','reports'],'/reports'],
+                [['document','documents','files'],'/documents'],
+                [['notification','notifications','alerts'],'/notifications'],
+                [['dashboard','home'],'/dashboard']
+            ];
+        }
+
+        for(var i=0;i<roleIntents.length;i++){
+            for(var j=0;j<roleIntents[i][0].length;j++){
+                if(value.indexOf(roleIntents[i][0][j])!==-1)return roleIntents[i][1];
+            }
+        }
+        return null;
+    }
+
+    function processInput(raw){
+        var text=(raw||'').trim();
+        if(!text)return;
+        appendMessage('user',text);
+
+        var lower=text.toLowerCase();
+        if(lower.indexOf('@supervisor')===0){messagingUnavailable('@supervisor');return;}
+        if(lower.indexOf('@admin')===0){messagingUnavailable('@admin');return;}
+        if(/\b(message|contact|chat|ask)\b.*\bsupervisor\b/.test(lower)&&role==='student'){messagingUnavailable('@supervisor');return;}
+        if(/\b(message|contact|chat|ask)\b.*\badmin\b/.test(lower)){messagingUnavailable('@admin');return;}
+
+        if(lower.charAt(0)==='/'){
+            var command=lower.split(/\s+/)[0].replace(/[?!.,]+$/,'');
+            if(command==='/help'){showHelp();return;}
+            if(goTo(command))return;
+            appendMessage('assistant','I do not recognize that shortcut for your '+role+' account. Type /help to see the commands available to you.');
+            return;
+        }
+
+        var inferred=naturalCommand(text);
+        if(inferred==='/help'){showHelp();return;}
+        if(inferred&&goTo(inferred))return;
+        appendMessage('assistant','I can handle Nexora navigation right now. Type /help to see available shortcuts, or ask me to open a page such as classes, documents, notifications, or your dashboard.');
+    }
+
+    function submit(){
+        var value=input.value;
+        input.value='';
+        input.style.height='';
+        processInput(value);
+    }
+
     launcher.addEventListener('click',function(){setOpen(true)});
     root.querySelector('[data-assistant-action="close"]').addEventListener('click',function(){setOpen(false)});
     root.querySelector('[data-assistant-action="minimize"]').addEventListener('click',function(){root.classList.toggle('is-minimized');root.classList.remove('is-expanded')});
     root.querySelector('[data-assistant-action="expand"]').addEventListener('click',function(){root.classList.toggle('is-expanded');root.classList.remove('is-minimized')});
+    root.querySelectorAll('[data-assistant-command]').forEach(function(button){
+        button.addEventListener('click',function(){processInput(button.dataset.assistantCommand||'')});
+    });
+    send.addEventListener('click',submit);
+    input.addEventListener('keydown',function(event){
+        if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();submit();}
+    });
+    input.addEventListener('input',function(){
+        input.style.height='auto';
+        input.style.height=Math.min(input.scrollHeight,96)+'px';
+    });
     document.addEventListener('keydown',function(event){if(event.key==='Escape'&&root.classList.contains('is-open'))setOpen(false)});
 })();
 </script>
