@@ -46,6 +46,7 @@
         </style>
     </head>
     <body class="general-page">
+        {% set form_data = form_data|default({}) %}
         <div class="login-container" style="width:440px;">
             <div class="auth-brand">
                 <img src="{{ url_for('static', filename='images/nexora_logo_supervisor.png') }}" alt="Nexora">
@@ -65,16 +66,16 @@
             <form method="POST" novalidate>
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="auth-field">
-                    <input type="text" name="username" placeholder="Username" required>
+                    <input type="text" name="username" placeholder="Username" required value="{{ form_data.get('username', '') }}">
                 </div>
                 <div class="auth-field">
-                    <input type="email" name="email" placeholder="Email Address" required autocomplete="email">
+                    <input type="email" name="email" placeholder="Email Address" required autocomplete="email" value="{{ form_data.get('email', '') }}">
                 </div>
                 <div class="auth-field">
                     <select name="account_type" class="form-control" required>
-                        <option value="" selected disabled>Select Account Type</option>
-                        <option value="student">Student</option>
-                        <option value="supervisor">Advisor / Supervisor</option>
+                        <option value="" disabled {% if not form_data.get('account_type') %}selected{% endif %}>Select Account Type</option>
+                        <option value="student" {% if form_data.get('account_type') == 'student' %}selected{% endif %}>Student</option>
+                        <option value="supervisor" {% if form_data.get('account_type') == 'supervisor' %}selected{% endif %}>Advisor / Supervisor</option>
                     </select>
                 </div>
                 <div class="auth-field">

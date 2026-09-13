@@ -1,6 +1,7 @@
 from flask import Blueprint,render_template,request,redirect,url_for,session,flash
 from app.Models.db import get_db_connection,using_postgres
 from app.Services.password_security import hash_password,verify_password
+import re
 
 auth=Blueprint("auth",__name__)
 
@@ -42,23 +43,88 @@ def login():
 
 @auth.route("/signup",methods=["GET","POST"])
 def signup():
+ form_data={"username":"","email":"","account_type":""}
+
  if request.method=="POST":
-  username=request.form.get("username","").strip();email=request.form.get("email","").strip().lower();password=request.form.get("password","");confirm_password=request.form.get("confirm_password","");account_type=request.form.get("account_type","").strip().lower()
-  if not username:flash("Username is required.","danger");return render_template("auth/signup.html")
-  if not email:flash("Email address is required.","danger");return render_template("auth/signup.html")
-  if account_type not in ("student","supervisor"):flash("Please select an account type.","danger");return render_template("auth/signup.html")
-  if not password:flash("Password is required.","danger");return render_template("auth/signup.html")
-  if not confirm_password:flash("Please confirm your password.","danger");return render_template("auth/signup.html")
-  if password!=confirm_password:flash("Passwords do not match ❌","danger");return render_template("auth/signup.html")
-  if len(password)<8:flash("Password must be at least 8 characters ❌","danger");return render_template("auth/signup.html")
+  username=request.form.get("username","").strip()
+  email=request.form.get("email","").strip().lower()
+  password=request.form.get("password","")
+  confirm_password=request.form.get("confirm_password","")
+  account_type=request.form.get("account_type","").strip().lower()
+
+  form_data={
+   "username":username,
+   "email":email,
+   "account_type":account_type,
+  }
+
+  if not username:
+   flash("Username is required.","danger")
+   return render_template("auth/signup.html",form_data=form_data)
+  if len(username)<3:
+   flash("Username must be at least 3 characters.","danger")
+   return render_template("auth/signup.html",form_data=form_data)
+  if not re.match(r"^[A-Za-z0-9_.-]+$",username):
+   flash("Username may only contain letters, numbers, underscores, periods, and hyphens.","danger")
+   return render_template("auth/signup.html",form_data=form_data)
+  if not email:
+   flash("Email address is required.","danger")
+   return render_template("auth/signup.html",form_data=form_data)
+  if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$",email):
+   flash("Enter a valid email address.","danger")
+   return render_template("auth/signup.html",form_data=form_data)
+  if account_type not in ("student","supervisor"):
+   flash("Please select an account type.","danger")
+   return render_template("auth/signup.html",form_data=form_data)
+  if not password:
+   flash("Password is required.","danger")
+   return render_template("auth/signup.html",form_data=form_data)
+  if not confirm_password:
+   flash("Please confirm your password.","danger")
+   return render_template("auth/signup.html",form_data=form_data)
+  if password!=confirm_password:
+   flash("Passwords do not match ❌","danger")
+   return render_template("auth/signup.html",form_data=form_data)
+  if len(password)<8:
+   flash("Password must be at least 8 characters ❌","danger")
+   return render_template("auth/signup.html",form_data=form_data)
+
   conn=get_db_connection();cur=conn.cursor()
   try:
-   if cur.execute("SELECT id FROM users WHERE username=? OR LOWER(email)=LOWER(?)",(username,email)).fetchone():flash("Username or email already exists ❌","danger");return render_template("auth/signup.html")
-   pending_role="pending_student" if account_type=="student" else "pending_supervisor";insert_sql="INSERT INTO users (username,email,password,role) VALUES (?,?,?,?)";insert_sql+=" RETURNING id" if using_postgres() else "";cur.execute(insert_sql,(username,email,hash_password(password),pending_role));user_row=cur.fetchone() if using_postgres() else None;user_id=(user_row["id"] if user_row and "id" in user_row.keys() else user_row[0] if user_row else None) if using_postgres() else cur.lastrowid
-   if not user_id:raise RuntimeError("Could not determine the new user ID.")
-   if account_type=="student":cur.execute("INSERT INTO student_profiles (user_id,profile_completed) VALUES (?,0)",(user_id,))
+   cur.execute("SELECT id FROM users WHERE username=?",(username,))
+   username_exists=cur.fetchone() is not None
+   cur.execute("SELECT id FROM users WHERE LOWER(email)=LOWER(?)",(email,))
+   email_exists=cur.fetchone() is not None
+
+   if username_exists or email_exists:
+    if username_exists:
+     flash("Username already exists.","danger")
+    if email_exists:
+     flash("Email address already exists.","danger")
+    return render_template("auth/signup.html",form_data=form_data)
+
+   pending_role="pending_student" if account_type=="student" else "pending_supervisor"
+   insert_sql="INSERT INTO users (username,email,password,role) VALUES (?,?,?,?)"
+   insert_sql+=" RETURNING id" if using_postgres() else ""
+   cur.execute(insert_sql,(username,email,hash_password(password),pending_role))
+   user_row=cur.fetchone() if using_postgres() else None
+   user_id=(user_row["id"] if user_row and "id" in user_row.keys() else user_row[0] if user_row else None) if using_postgres() else cur.lastrowid
+
+   if not user_id:
+    raise RuntimeError("Could not determine the new user ID.")
+
+   if account_type=="student":
+    cur.execute("INSERT INTO student_profiles (user_id,profile_completed) VALUES (?,0)",(user_id,))
+
    conn.commit()
-  except Exception:conn.rollback();raise
-  finally:cur.close();conn.close()
-  flash("Account created successfully. Wait for approval.","success");return redirect(url_for("auth.login"))
- return render_template("auth/signup.html")
+  except Exception:
+   conn.rollback()
+   raise
+  finally:
+   cur.close()
+   conn.close()
+
+  flash("Account created successfully. Wait for approval.","success")
+  return redirect(url_for("auth.login"))
+
+ return render_template("auth/signup.html",form_data=form_data)
