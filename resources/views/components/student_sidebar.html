@@ -78,9 +78,8 @@
 {% set sidebar_class_id = request.view_args.get('class_id') if request.view_args else none %}
 {% set sidebar_ml_active = request.endpoint == 'classwork_ml_insights.student_insights' %}
 {% set sidebar_report_active = request.endpoint == 'performance_reports.student_reports' %}
-{% set sidebar_class_picker_url = url_for('classroom.student_classes') %}
-{% set sidebar_ml_url = url_for('classwork_ml_insights.student_insights', class_id=sidebar_class_id) if sidebar_class_id else sidebar_class_picker_url %}
-{% set sidebar_report_url = url_for('performance_reports.student_reports', class_id=sidebar_class_id) if sidebar_class_id else sidebar_class_picker_url %}
+{% set sidebar_ml_url = url_for('classwork_ml_insights.student_insights', class_id=sidebar_class_id) if sidebar_class_id else url_for('classwork_ml_insights.student_insights_entry') %}
+{% set sidebar_report_url = url_for('performance_reports.student_reports', class_id=sidebar_class_id) if sidebar_class_id else url_for('classwork_ml_insights.student_reports_entry') %}
 
 <div class="nx-role-sidebar-shell nx-role-student">
     <aside class="nx-role-sidebar" id="studentSidebar" aria-label="Student navigation">
