@@ -1,6 +1,7 @@
-from flask import Blueprint,render_template,request,redirect,url_for,session,flash
+from flask import Blueprint,render_template,request,redirect,url_for,session,flash,current_app
 from app.Models.db import get_db_connection,using_postgres
 from app.Services.password_security import hash_password,verify_password
+from app.Services.notification_service import create_notification
 import re
 
 auth=Blueprint("auth",__name__)
@@ -123,6 +124,30 @@ def signup():
   finally:
    cur.close()
    conn.close()
+
+  account_label="student" if account_type=="student" else "supervisor"
+  try:
+   admin_conn=get_db_connection();admin_cur=admin_conn.cursor()
+   try:
+    admin_cur.execute("SELECT id FROM users WHERE role='admin' AND COALESCE(status,'active')<>'inactive'")
+    admin_ids=[row[0] for row in admin_cur.fetchall()]
+   finally:
+    admin_cur.close()
+    admin_conn.close()
+
+   for admin_id in admin_ids:
+    try:
+     create_notification(
+      admin_id,
+      "New account awaiting approval",
+      f"{username} ({email}) requested a {account_label} account.",
+      "system",
+      "/admin/users",
+     )
+    except Exception as exc:
+     current_app.logger.warning("Could not create signup notification for admin %s: %s",admin_id,exc)
+  except Exception as exc:
+   current_app.logger.warning("Could not load admins for signup notification: %s",exc)
 
   flash("Account created successfully. Wait for approval.","success")
   return redirect(url_for("auth.login"))
