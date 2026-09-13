@@ -165,7 +165,10 @@ def user_profile_picture(user_id):
  finally: conn.close()
  return send_from_directory(str(PROFILE_UPLOAD_FOLDER if filename else BASE_DIR/"resources"/"assets"/"images"),filename or "default_profile.png")
 @app.route("/favicon.ico")
-def favicon(): return send_from_directory(str(BASE_DIR/"resources"/"assets"/"images"),"Nexora.png",mimetype="image/png")
+def favicon():
+ role=session.get("role")
+ filename={"student":"nexora_logo_student.png","supervisor":"nexora_logo_supervisor.png","admin":"nexora_logo_admin.png"}.get(role,"nexora_logo_supervisor.png")
+ return send_from_directory(str(BASE_DIR/"resources"/"assets"/"images"),filename,mimetype="image/png")
 @app.route("/health")
 def health(): return {"status":"ok"},200
 
