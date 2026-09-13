@@ -46,23 +46,41 @@ body:has(.nx-role-sidebar-shell) {
         display: none !important;
     }
 
-    .nx-role-sidebar {
+    .nx-role-sidebar,
+    .nx-role-sidebar:hover,
+    .nx-role-sidebar:focus-within {
         position: fixed !important;
         inset: 0 auto 0 0 !important;
         width: 76px !important;
         height: auto !important;
+        max-height: 100dvh !important;
         min-height: 0 !important;
         margin: 0 !important;
-        padding: 22px 10px 0 !important;
-        overflow: visible !important;
+        padding: 22px 10px calc(18px + env(safe-area-inset-bottom)) !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        overscroll-behavior: contain !important;
+        scrollbar-width: none !important;
         box-shadow: 6px 0 20px var(--nx-sidebar-shadow) !important;
     }
 
-    .nx-role-sidebar-backdrop {
-        display: block !important;
+    .nx-role-sidebar::-webkit-scrollbar {
+        width: 0 !important;
+        height: 0 !important;
     }
 
-    .nx-role-brand {
+    .nx-role-sidebar-backdrop,
+    .nx-role-sidebar:hover + .nx-role-sidebar-backdrop,
+    .nx-role-sidebar:focus-within + .nx-role-sidebar-backdrop {
+        display: none !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+    }
+
+    .nx-role-brand,
+    .nx-role-sidebar:hover .nx-role-brand,
+    .nx-role-sidebar:focus-within .nx-role-brand {
         width: 56px !important;
         min-width: 56px !important;
         max-width: 56px !important;
@@ -74,6 +92,12 @@ body:has(.nx-role-sidebar-shell) {
         overflow: hidden !important;
     }
 
+    .nx-role-sidebar:hover .nx-role-logo,
+    .nx-role-sidebar:focus-within .nx-role-logo {
+        max-width: 44px !important;
+        max-height: 44px !important;
+    }
+
     .nx-role-brand-copy,
     .nx-role-profile-copy,
     .nx-role-nav-text,
@@ -82,11 +106,29 @@ body:has(.nx-role-sidebar-shell) {
     .nx-role-divider,
     .nx-role-section-label,
     .nx-role-footer,
-    .nx-role-submenu {
+    .nx-role-submenu,
+    .nx-role-sidebar:hover .nx-role-brand-copy,
+    .nx-role-sidebar:focus-within .nx-role-brand-copy,
+    .nx-role-sidebar:hover .nx-role-profile-copy,
+    .nx-role-sidebar:focus-within .nx-role-profile-copy,
+    .nx-role-sidebar:hover .nx-role-nav-text,
+    .nx-role-sidebar:focus-within .nx-role-nav-text,
+    .nx-role-sidebar:hover .nx-role-nav-arrow,
+    .nx-role-sidebar:focus-within .nx-role-nav-arrow,
+    .nx-role-sidebar:hover .nx-role-rule,
+    .nx-role-sidebar:focus-within .nx-role-rule,
+    .nx-role-sidebar:hover .nx-role-divider,
+    .nx-role-sidebar:focus-within .nx-role-divider,
+    .nx-role-sidebar:hover .nx-role-section-label,
+    .nx-role-sidebar:focus-within .nx-role-section-label,
+    .nx-role-sidebar:hover .nx-role-footer,
+    .nx-role-sidebar:focus-within .nx-role-footer {
         display: none !important;
     }
 
-    .nx-role-profile {
+    .nx-role-profile,
+    .nx-role-sidebar:hover .nx-role-profile,
+    .nx-role-sidebar:focus-within .nx-role-profile {
         width: 52px !important;
         min-width: 52px !important;
         max-width: 52px !important;
@@ -97,20 +139,36 @@ body:has(.nx-role-sidebar-shell) {
         gap: 0 !important;
     }
 
-    .nx-role-nav {
+    .nx-role-sidebar:hover .nx-role-profile img,
+    .nx-role-sidebar:focus-within .nx-role-profile img {
+        width: 46px !important;
+        min-width: 46px !important;
+        height: 46px !important;
+        flex-basis: 46px !important;
+    }
+
+    .nx-role-nav,
+    .nx-role-sidebar:hover .nx-role-nav,
+    .nx-role-sidebar:focus-within .nx-role-nav {
         width: 56px !important;
         margin: 0 auto !important;
         align-items: center !important;
         gap: 6px !important;
     }
 
-    .nx-role-nav-group {
+    .nx-role-nav-group,
+    .nx-role-sidebar:hover .nx-role-nav-group,
+    .nx-role-sidebar:focus-within .nx-role-nav-group {
         width: 44px !important;
         margin: 0 auto !important;
     }
 
     .nx-role-nav > a,
-    .nx-role-nav-parent {
+    .nx-role-nav-parent,
+    .nx-role-sidebar:hover .nx-role-nav > a,
+    .nx-role-sidebar:focus-within .nx-role-nav > a,
+    .nx-role-sidebar:hover .nx-role-nav-parent,
+    .nx-role-sidebar:focus-within .nx-role-nav-parent {
         width: 44px !important;
         min-width: 44px !important;
         max-width: 44px !important;
@@ -124,7 +182,9 @@ body:has(.nx-role-sidebar-shell) {
         font-size: 0 !important;
     }
 
-    .nx-role-icon {
+    .nx-role-icon,
+    .nx-role-sidebar:hover .nx-role-icon,
+    .nx-role-sidebar:focus-within .nx-role-icon {
         width: 44px !important;
         min-width: 44px !important;
         height: 44px !important;
@@ -132,6 +192,15 @@ body:has(.nx-role-sidebar-shell) {
         display: grid !important;
         place-items: center !important;
         font-size: 19px !important;
+    }
+
+    .nx-role-account-nav {
+        margin-bottom: 10px !important;
+        padding-bottom: 8px !important;
+    }
+
+    .nx-role-account-nav > a:last-child {
+        margin-bottom: 8px !important;
     }
 
     body:has(.nx-role-sidebar-shell) > main,
