@@ -38,6 +38,7 @@ from app.Http.Controllers.notifications import notifications_bp
 from scripts.init_db import initialize_database
 from app.Models.db import get_db_connection,using_postgres
 from app.Services.classroom_service import ensure_classroom_schema
+from app.Services.classroom_post_service import get_classroom_announcements
 from app.Services.classwork_submission_service import ensure_classwork_submission_schema
 from app.Services.classwork_score_schema import ensure_classwork_score_schema
 from app.Services.attendance_service import ensure_attendance_schema,get_ojt_progress
@@ -52,6 +53,7 @@ app.jinja_env.globals["get_ojt_progress"]=get_ojt_progress
 app.jinja_env.globals["get_daily_logbook_context"]=get_daily_logbook_context
 app.jinja_env.globals["get_session_daily_log"]=get_session_daily_log
 app.jinja_env.globals["get_logbook_photos"]=get_logbook_photos
+app.jinja_env.globals["get_classroom_announcements"]=get_classroom_announcements
 _secret=os.environ.get("SECRET_KEY")
 if not _secret:
  if os.environ.get("FLASK_ENV")=="production" or os.environ.get("NEXORA_ENV")=="production": raise RuntimeError("SECRET_KEY must be set in production")
