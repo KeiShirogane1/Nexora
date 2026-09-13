@@ -1,0 +1,199 @@
+{# Phase 12: read-only role-aware AI bridge for the existing Assistant shell. #}
+<script>
+(function () {
+    var FALLBACK_TEXT = 'I can navigate Nexora or open authorized message threads. Type /help to see available shortcuts.';
+
+    function bootAssistantAi() {
+        if (window.__nxAssistantAiBridgeReady) return;
+
+        var root = document.getElementById('nxAssistant');
+        var conversation = document.getElementById('nxAssistantConversation');
+        var input = document.getElementById('nxAssistantInput');
+        var send = document.getElementById('nxAssistantSend');
+        var body = document.getElementById('nxAssistantBody');
+
+        if (!root || !conversation || !input || !send || !body) return;
+
+        window.__nxAssistantAiBridgeReady = true;
+        var csrfToken = {{ csrf_token()|tojson }};
+
+        function scrollBottom() {
+            body.scrollTop = body.scrollHeight;
+        }
+
+        function appendMessage(kind, text) {
+            var row = document.createElement('div');
+            row.className = 'nx-assistant-message ' + (kind === 'user' ? 'is-user' : 'is-assistant');
+
+            var avatar = document.createElement('span');
+            avatar.textContent = kind === 'user' ? 'You' : 'N';
+
+            var message = document.createElement('p');
+            message.textContent = text;
+
+            row.appendChild(avatar);
+            row.appendChild(message);
+            conversation.appendChild(row);
+            scrollBottom();
+            return row;
+        }
+
+        function previousUserText(row) {
+            var current = row.previousElementSibling;
+            while (current) {
+                if (current.classList && current.classList.contains('nx-assistant-message') &&
+                    current.classList.contains('is-user')) {
+                    var text = current.querySelector('p');
+                    return text ? (text.textContent || '').trim() : '';
+                }
+                current = current.previousElementSibling;
+            }
+            return '';
+        }
+
+        function askAi(question, responseRow) {
+            var text = (question || '').trim();
+            if (!text) return;
+
+            var responseText = responseRow && responseRow.querySelector('p');
+            if (!responseText) {
+                responseRow = appendMessage('assistant', 'Thinking…');
+                responseText = responseRow.querySelector('p');
+            } else {
+                responseText.textContent = 'Thinking…';
+            }
+
+            send.disabled = true;
+
+            fetch('/assistant/ask', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({question: text})
+            }).then(function (response) {
+                return response.json().catch(function () {
+                    return {ok: false, error: 'Unexpected server response.'};
+                }).then(function (data) {
+                    if (!response.ok || data.ok === false) {
+                        throw new Error(data.error || 'AI request failed.');
+                    }
+                    return data;
+                });
+            }).then(function (data) {
+                responseText.textContent = data.answer || 'Nexora AI returned no answer.';
+            }).catch(function (error) {
+                responseText.textContent = error.message || 'Nexora AI is temporarily unavailable.';
+            }).finally(function () {
+                send.disabled = false;
+                input.focus();
+                scrollBottom();
+            });
+        }
+
+        function submitAskCommand(raw) {
+            var value = (raw || '').trim();
+            var question = value.replace(/^\/ask\b/i, '').trim();
+
+            input.value = '';
+            input.style.height = '';
+
+            if (!question) {
+                appendMessage('assistant', 'Use /ask followed by a Nexora or OJT question.');
+                return;
+            }
+
+            appendMessage('user', question);
+            askAi(question, null);
+        }
+
+        function isAskCommand(value) {
+            return /^\/ask(?:\s|$)/i.test((value || '').trim());
+        }
+
+        send.addEventListener('click', function (event) {
+            if (!isAskCommand(input.value)) return;
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            submitAskCommand(input.value);
+        }, true);
+
+        input.addEventListener('keydown', function (event) {
+            if (event.key !== 'Enter' || event.shiftKey || !isAskCommand(input.value)) return;
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            submitAskCommand(input.value);
+        }, true);
+
+        var shortcuts = root.querySelector('.nx-assistant-shortcuts');
+        if (shortcuts && !shortcuts.querySelector('[data-nx-ai-shortcut]')) {
+            var aiButton = document.createElement('button');
+            aiButton.type = 'button';
+            aiButton.setAttribute('data-nx-ai-shortcut', '1');
+
+            var command = document.createElement('strong');
+            command.textContent = '/ask';
+
+            var label = document.createElement('span');
+            label.textContent = 'Role-aware AI help';
+
+            aiButton.appendChild(command);
+            aiButton.appendChild(label);
+            aiButton.addEventListener('click', function () {
+                input.value = '/ask ';
+                input.focus();
+            });
+            shortcuts.appendChild(aiButton);
+        }
+
+        var welcomeCopy = root.querySelector('.nx-assistant-welcome p');
+        if (welcomeCopy) {
+            welcomeCopy.textContent = 'Open portal pages, message authorized contacts, or ask role-aware Nexora/OJT questions.';
+        }
+
+        var firstAssistant = conversation.querySelector('.nx-assistant-message.is-assistant p');
+        if (firstAssistant) {
+            firstAssistant.textContent = 'I can navigate Nexora, open authorized message threads, and use role-aware AI help when it is enabled. Try /ask followed by a question.';
+        }
+
+        function enhanceAssistantMessage(row) {
+            if (!row || !row.classList || !row.classList.contains('nx-assistant-message') ||
+                !row.classList.contains('is-assistant')) return;
+
+            var message = row.querySelector('p');
+            if (!message) return;
+
+            var text = (message.textContent || '').trim();
+
+            if (text === FALLBACK_TEXT) {
+                var question = previousUserText(row);
+                if (question) askAi(question, row);
+                return;
+            }
+
+            if (text.indexOf('Available navigation shortcuts:') === 0 &&
+                text.indexOf('AI help:') === -1) {
+                message.textContent = text + '\n\nAI help: use /ask <question> for role-aware Nexora or OJT guidance.';
+            }
+        }
+
+        var observer = new MutationObserver(function (mutations) {
+            mutations.forEach(function (mutation) {
+                mutation.addedNodes.forEach(function (node) {
+                    if (node.nodeType === 1) enhanceAssistantMessage(node);
+                });
+            });
+        });
+
+        observer.observe(conversation, {childList: true});
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bootAssistantAi, {once: true});
+    } else {
+        window.setTimeout(bootAssistantAi, 0);
+    }
+})();
+</script>
