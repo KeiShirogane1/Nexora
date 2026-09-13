@@ -16,6 +16,10 @@
 })();
 </script>
 
+{% set sidebar_class_id = request.view_args.get('class_id') if request.view_args else none %}
+{% set sidebar_ml_active = request.endpoint == 'classwork_ml_insights.student_insights' %}
+{% set sidebar_report_active = request.endpoint == 'performance_reports.student_reports' %}
+
 <div class="nx-role-sidebar-shell nx-role-student">
     <aside class="nx-role-sidebar" id="studentSidebar" aria-label="Student navigation">
         <a
@@ -76,9 +80,25 @@
             <a href="{{ url_for('student.student_dashboard') }}" aria-label="Dashboard" class="{% if request.path == '/student/dashboard' %}active{% endif %}">
                 <span class="nx-role-icon">▦</span><span class="nx-role-nav-text">Dashboard</span>
             </a>
-            <a href="{{ url_for('classroom.student_classes') }}" aria-label="Intern Classrooms" class="{% if request.path.startswith('/student/classes') %}active{% endif %}">
+            <a href="{{ url_for('classroom.student_classes') }}" aria-label="Intern Classrooms" class="{% if request.path.startswith('/student/classes') and not sidebar_ml_active and not sidebar_report_active %}active{% endif %}">
                 <span class="nx-role-icon">♙</span><span class="nx-role-nav-text">Intern Classrooms</span>
             </a>
+        </nav>
+
+        {% if sidebar_class_id %}
+            <div class="nx-role-divider"></div>
+            <div class="nx-role-section-label">Class Tools</div>
+            <nav class="nx-role-nav" aria-label="Current classroom tools">
+                <a href="{{ url_for('classwork_ml_insights.student_insights', class_id=sidebar_class_id) }}" aria-label="ML Insights" class="{% if sidebar_ml_active %}active{% endif %}">
+                    <span class="nx-role-icon">◈</span><span class="nx-role-nav-text">ML Insights</span>
+                </a>
+                <a href="{{ url_for('performance_reports.student_reports', class_id=sidebar_class_id) }}" aria-label="Report" class="{% if sidebar_report_active %}active{% endif %}">
+                    <span class="nx-role-icon">▥</span><span class="nx-role-nav-text">Report</span>
+                </a>
+            </nav>
+        {% endif %}
+
+        <nav class="nx-role-nav" aria-label="Student workspace tools">
             <a href="{{ url_for('student.logbook') }}" aria-label="Logbook" class="{% if request.path == '/student/logbook' %}active{% endif %}">
                 <span class="nx-role-icon">▤</span><span class="nx-role-nav-text">Logbook</span>
             </a>
