@@ -537,3 +537,93 @@ def student_insights(class_id):
         ml_recommendation=ml_recommendation,
         active_page="classes",
     )
+
+
+# ------------------------------------------------------------------ #
+# Student: global Class Tools entry points
+# ------------------------------------------------------------------ #
+def _resolve_student_class_tool_context(student_id):
+    """Resolve a safe classroom target for global Student Class Tools links."""
+    conn = get_db_connection()
+    try:
+        rows = conn.execute(
+            """
+            SELECT c.id,
+                   CASE
+                       WHEN COALESCE(c.classroom_type, 'classroom') = 'internship'
+                            OR cid.classroom_id IS NOT NULL
+                       THEN 1 ELSE 0
+                   END AS is_internship
+            FROM classroom_students cs
+            JOIN classrooms c ON c.id = cs.classroom_id
+            LEFT JOIN classroom_internship_details cid ON cid.classroom_id = c.id
+            WHERE cs.student_id = ?
+              AND COALESCE(c.archived, 0) = 0
+            ORDER BY cs.joined_at DESC, c.id DESC
+            """,
+            (student_id,),
+        ).fetchall()
+    finally:
+        conn.close()
+
+    all_ids = []
+    internship_ids = []
+    for row in rows:
+        class_id = int(_value(row, "id", 0, 0) or 0)
+        if not class_id:
+            continue
+        all_ids.append(class_id)
+        if bool(_value(row, "is_internship", 1, 0)):
+            internship_ids.append(class_id)
+
+    if len(internship_ids) == 1:
+        return {"status": "ok", "class_id": internship_ids[0]}
+    if len(internship_ids) > 1:
+        return {"status": "multiple", "class_id": None}
+    if len(all_ids) == 1:
+        return {"status": "ok", "class_id": all_ids[0]}
+    if not all_ids:
+        return {"status": "none", "class_id": None}
+    return {"status": "multiple", "class_id": None}
+
+
+@classwork_ml_insights.route("/student/ml-insights")
+@role_required("student")
+def student_insights_entry():
+    from flask import flash, redirect, url_for
+
+    target = _resolve_student_class_tool_context(session["user_id"])
+    if target["status"] == "ok":
+        return redirect(
+            url_for(
+                "classwork_ml_insights.student_insights",
+                class_id=target["class_id"],
+            )
+        )
+
+    if target["status"] == "none":
+        flash("Join an active Intern Classroom before opening ML Insights.", "warning")
+    else:
+        flash("Choose the Intern Classroom whose ML Insights you want to view.", "info")
+    return redirect(url_for("classroom.student_classes"))
+
+
+@classwork_ml_insights.route("/student/reports")
+@role_required("student")
+def student_reports_entry():
+    from flask import flash, redirect, url_for
+
+    target = _resolve_student_class_tool_context(session["user_id"])
+    if target["status"] == "ok":
+        return redirect(
+            url_for(
+                "performance_reports.student_reports",
+                class_id=target["class_id"],
+            )
+        )
+
+    if target["status"] == "none":
+        flash("Join an active Intern Classroom before opening Reports.", "warning")
+    else:
+        flash("Choose the Intern Classroom whose Report you want to view.", "info")
+    return redirect(url_for("classroom.student_classes"))
