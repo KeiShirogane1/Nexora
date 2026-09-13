@@ -277,7 +277,7 @@ def get_authorized_contacts(user_id, target_role=None):
                     WHERE mine.student_id = ?
                       AND peer.student_id = ?
                       AND COALESCE(c.archived, 0) = 0
-                    ORDER BY LOWER(c.name), c.id
+                    ORDER BY c.name, c.id
                     """,
                     (user_id, contact_id),
                 ).fetchall()
