@@ -7,20 +7,97 @@
 {% endif %}
 
 <style id="nx-assistant-ai-design">
+.nx-assistant .nx-assistant-panel { position: relative; }
 .nx-assistant .nx-assistant-body {
-    direction: rtl;
+    position: relative;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.nx-assistant .nx-assistant-body::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+}
+.nx-assistant .nx-assistant-panel.has-chat-rail .nx-assistant-body {
+    padding-left: 74px;
+}
+.nx-assistant .nx-assistant-chat-rail {
+    position: absolute;
+    top: 72px;
+    bottom: 70px;
+    left: 0;
+    z-index: 6;
+    width: 58px;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 7px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    box-sizing: border-box;
+    border-right: 1px solid #e3ebe7;
+    background: rgba(248, 250, 252, .97);
     scrollbar-width: thin;
-    scrollbar-color: var(--nx-assistant-accent) #dfe7e3;
+    scrollbar-color: #bcc9c2 transparent;
 }
-.nx-assistant .nx-assistant-body > * { direction: ltr; }
-.nx-assistant .nx-assistant-body::-webkit-scrollbar { width: 7px; }
-.nx-assistant .nx-assistant-body::-webkit-scrollbar-track {
-    background: #e8eeeb;
+.nx-assistant .nx-assistant-panel.has-chat-rail .nx-assistant-chat-rail { display: flex; }
+.nx-assistant.is-minimized .nx-assistant-chat-rail { display: none !important; }
+.nx-assistant .nx-assistant-chat-rail::-webkit-scrollbar { width: 4px; }
+.nx-assistant .nx-assistant-chat-rail::-webkit-scrollbar-track { background: transparent; }
+.nx-assistant .nx-assistant-chat-rail::-webkit-scrollbar-thumb {
     border-radius: 999px;
+    background: #bcc9c2;
 }
-.nx-assistant .nx-assistant-body::-webkit-scrollbar-thumb {
+.nx-assistant .nx-assistant-chat-head {
+    position: relative;
+    width: 42px;
+    min-width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+    padding: 0;
+    border: 2px solid transparent;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, .08);
+    cursor: pointer;
+    transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+.nx-assistant .nx-assistant-chat-head:hover,
+.nx-assistant .nx-assistant-chat-head:focus-visible {
+    outline: 0;
+    transform: translateY(-1px);
+    border-color: var(--nx-assistant-accent);
+    box-shadow: 0 7px 16px rgba(15, 23, 42, .13);
+}
+.nx-assistant .nx-assistant-chat-head.is-active {
+    border-color: var(--nx-assistant-accent);
+    box-shadow: 0 0 0 3px var(--nx-assistant-soft);
+}
+.nx-assistant .nx-assistant-chat-head img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    border-radius: 50%;
+    object-fit: cover;
+}
+.nx-assistant .nx-assistant-chat-head-badge {
+    position: absolute;
+    right: -4px;
+    bottom: -2px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    display: grid;
+    place-items: center;
+    box-sizing: border-box;
+    border: 2px solid #fff;
+    border-radius: 999px;
     background: var(--nx-assistant-accent);
-    border-radius: 999px;
+    color: #fff;
+    font-size: .52rem;
+    font-weight: 900;
+    line-height: 1;
 }
 .nx-assistant .nx-assistant-message {
     max-width: 96%;
@@ -142,6 +219,20 @@
     0%, 60%, 100% { opacity: .35; transform: translateY(0); }
     30% { opacity: 1; transform: translateY(-2px); }
 }
+@media (max-width: 760px) {
+    .nx-assistant .nx-assistant-chat-rail {
+        width: 54px;
+        bottom: 68px;
+        padding: 10px 6px;
+    }
+    .nx-assistant .nx-assistant-panel.has-chat-rail .nx-assistant-body { padding-left: 66px; }
+    .nx-assistant .nx-assistant-chat-head {
+        width: 38px;
+        min-width: 38px;
+        height: 38px;
+        flex-basis: 38px;
+    }
+}
 </style>
 
 <script>
@@ -152,18 +243,110 @@
         if (window.__nxAssistantAiBridgeReady) return;
 
         var root = document.getElementById('nxAssistant');
+        var panel = document.getElementById('nxAssistantPanel');
         var conversation = document.getElementById('nxAssistantConversation');
         var input = document.getElementById('nxAssistantInput');
         var send = document.getElementById('nxAssistantSend');
         var body = document.getElementById('nxAssistantBody');
 
-        if (!root || !conversation || !input || !send || !body) return;
+        if (!root || !panel || !conversation || !input || !send || !body) return;
 
         window.__nxAssistantAiBridgeReady = true;
         var csrfToken = {{ csrf_token()|tojson }};
+        var defaultAvatar = {{ url_for('static', filename='images/default_profile.png')|tojson }};
+        var chatRail = document.createElement('aside');
+        var railRefreshTimer = null;
+
+        chatRail.className = 'nx-assistant-chat-rail';
+        chatRail.id = 'nxAssistantChatRail';
+        chatRail.setAttribute('aria-label', 'Recent message conversations');
+        panel.insertBefore(chatRail, body);
 
         function scrollBottom() {
             body.scrollTop = body.scrollHeight;
+        }
+
+        function currentRailContactId(contacts) {
+            var stored = parseInt(window.sessionStorage.getItem('nxAssistantActiveContact') || '', 10);
+            if (stored > 0) return stored;
+
+            var placeholder = String(input.placeholder || '');
+            for (var i = 0; i < contacts.length; i++) {
+                if (placeholder === 'Message ' + contacts[i].display_name) return Number(contacts[i].id || 0);
+            }
+            return 0;
+        }
+
+        function renderChatRail(contacts) {
+            var recent = (contacts || []).filter(function (contact) {
+                return Number(contact.message_count || 0) > 0;
+            });
+
+            recent.sort(function (a, b) {
+                var aTime = Date.parse(a.last_message_at || '') || 0;
+                var bTime = Date.parse(b.last_message_at || '') || 0;
+                if (aTime !== bTime) return bTime - aTime;
+                return String(a.display_name || '').localeCompare(String(b.display_name || ''));
+            });
+
+            chatRail.innerHTML = '';
+            panel.classList.toggle('has-chat-rail', recent.length > 0);
+            if (!recent.length) return;
+
+            var activeId = currentRailContactId(recent);
+
+            recent.forEach(function (contact) {
+                var button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'nx-assistant-chat-head';
+                button.setAttribute('aria-label', 'Open chat with ' + (contact.display_name || contact.username || 'contact'));
+                button.title = (contact.display_name || contact.username || 'Contact') + ' · ' + (contact.role || 'contact');
+
+                if (Number(contact.id) === activeId) button.classList.add('is-active');
+
+                var image = document.createElement('img');
+                image.src = contact.avatar_url || defaultAvatar;
+                image.alt = '';
+                image.addEventListener('error', function () {
+                    if (image.src !== defaultAvatar) image.src = defaultAvatar;
+                }, {once: true});
+                button.appendChild(image);
+
+                var unread = Number(contact.unread_count || 0);
+                if (unread > 0) {
+                    var badge = document.createElement('span');
+                    badge.className = 'nx-assistant-chat-head-badge';
+                    badge.textContent = unread > 9 ? '9+' : String(unread);
+                    button.appendChild(badge);
+                }
+
+                button.addEventListener('click', function () {
+                    window.sessionStorage.setItem('nxAssistantActiveContact', String(contact.id));
+                    window.location.assign('/messages/open/' + encodeURIComponent(contact.id));
+                });
+
+                chatRail.appendChild(button);
+            });
+        }
+
+        function refreshChatRail() {
+            fetch('/messages/contacts', {
+                method: 'GET',
+                headers: {'Accept': 'application/json'}
+            }).then(function (response) {
+                if (!response.ok) throw new Error('Unable to load message contacts.');
+                return response.json();
+            }).then(function (data) {
+                renderChatRail(data.contacts || []);
+            }).catch(function () {
+                chatRail.innerHTML = '';
+                panel.classList.remove('has-chat-rail');
+            });
+        }
+
+        function scheduleChatRailRefresh() {
+            window.clearTimeout(railRefreshTimer);
+            railRefreshTimer = window.setTimeout(refreshChatRail, 650);
         }
 
         function appendInline(parent, text) {
@@ -417,14 +600,24 @@
         }
 
         var observer = new MutationObserver(function (mutations) {
+            var shouldRefreshRail = false;
             mutations.forEach(function (mutation) {
                 mutation.addedNodes.forEach(function (node) {
-                    if (node.nodeType === 1) enhanceAssistantMessage(node);
+                    if (node.nodeType !== 1) return;
+                    enhanceAssistantMessage(node);
+                    if (node.classList && (
+                        node.classList.contains('nx-assistant-message') ||
+                        node.classList.contains('nx-assistant-contact-list')
+                    )) {
+                        shouldRefreshRail = true;
+                    }
                 });
             });
+            if (shouldRefreshRail) scheduleChatRailRefresh();
         });
 
         observer.observe(conversation, {childList: true});
+        refreshChatRail();
     }
 
     if (document.readyState === 'loading') {
