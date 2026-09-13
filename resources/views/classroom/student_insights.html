@@ -454,21 +454,36 @@
             }
         } catch (error) {}
 
+        var aiEvidence = {
+            work_evidence: evidence.performance_evidence_available,
+            average: evidence.work_average_percentage,
+            minimum: evidence.minimum_work_score_percentage,
+            maximum: evidence.maximum_work_score_percentage,
+            completion: evidence.completion_rate_percentage,
+            reviewed: evidence.reviewed_work_count,
+            total: evidence.total_work_count,
+            work_label: evidence.work_performance_label,
+            priority: evidence.recommendation_priority,
+            feedback_evidence: evidence.feedback_evidence_available,
+            sentiment: evidence.sentiment,
+            competency: evidence.competency_signal,
+            confidence: evidence.ml_confidence,
+            feedback_label: evidence.feedback_classification,
+            naive_bayes: evidence.naive_bayes_prediction,
+            svm: evidence.svm_prediction
+        };
+
         var prompt = [
-            'Explain the following Nexora ML Insights evidence for the authenticated student.',
-            'Use ONLY the values provided below. Do not invent timelines, score drops, causes, missing assignments, behavior, or supervisor comments that are not directly supported.',
-            'Keep the explanation practical, concise, and student-friendly.',
-            'The Work performance label is gradebook-derived; Naive Bayes and SVM are feedback ML predictions; neither replaces the Official OJT Evaluation.',
-            'Return exactly these five labeled sections in plain text:',
+            "Explain this student's Nexora ML evidence using only the values below. Do not invent trends, score drops, causes, missing assignments, behavior, or feedback details.",
+            'Work label is gradebook-derived; Naive Bayes and SVM are feedback ML predictions. None replaces the Official OJT Evaluation.',
+            'Return exactly five concise labeled sections:',
             'OVERALL INTERPRETATION:',
             'WHAT HAPPENED:',
             'WHAT TO IMPROVE:',
             'FEEDBACK SIGNAL:',
             'NEXT FOCUS:',
-            'For NEXT FOCUS, give 2 to 4 short actions separated by semicolons.',
-            'If evidence for a section is unavailable, explicitly say that it is unavailable instead of guessing.',
-            'Evidence JSON:',
-            JSON.stringify(evidence)
+            'For NEXT FOCUS give 2-4 actions separated by semicolons. If evidence is missing, say unavailable.',
+            'Data: ' + JSON.stringify(aiEvidence)
         ].join('\n');
 
         fetch('/assistant/ask', {
