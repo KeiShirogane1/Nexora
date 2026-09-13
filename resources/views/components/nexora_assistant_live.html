@@ -1,0 +1,341 @@
+{# Live direct-message enhancement for the existing Nexora Assistant. #}
+<style id="nx-assistant-live-chat-styles">
+.nx-assistant .nx-assistant-live-chat-count {
+    display: none;
+    align-items: center;
+    gap: 4px;
+    margin-left: 6px;
+    padding: 4px 7px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.15);
+    color: #fff;
+    font-size: .58rem;
+    font-weight: 800;
+    line-height: 1;
+    white-space: nowrap;
+}
+.nx-assistant .nx-assistant-live-chat-count.is-visible { display: inline-flex; }
+.nx-assistant .nx-assistant-live-chat-count b {
+    min-width: 15px;
+    height: 15px;
+    display: grid;
+    place-items: center;
+    padding: 0 3px;
+    border-radius: 999px;
+    background: #fff;
+    color: var(--nx-assistant-accent);
+    font-size: .55rem;
+}
+.nx-assistant .nx-assistant-live-unread {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    z-index: 2;
+    min-width: 20px;
+    height: 20px;
+    display: none;
+    place-items: center;
+    padding: 0 5px;
+    box-sizing: border-box;
+    border: 2px solid #fff;
+    border-radius: 999px;
+    background: #ef4444;
+    color: #fff;
+    font-size: .62rem;
+    font-weight: 900;
+    line-height: 1;
+}
+.nx-assistant .nx-assistant-live-unread.is-visible { display: grid; }
+.nx-assistant .nx-assistant-message.is-contact-message > span {
+    background-color: #e2e8f0;
+    background-image: var(--nx-contact-avatar) !important;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover !important;
+}
+.nx-assistant .nx-assistant-message.is-contact-message > span::after { display: none; }
+.nx-assistant .nx-assistant-message.is-direct-message p { white-space: pre-wrap; }
+.nx-assistant .nx-assistant-message.is-thread-note {
+    max-width: 100%;
+    margin-bottom: 3px;
+}
+.nx-assistant .nx-assistant-message.is-thread-note p {
+    background: var(--nx-assistant-soft);
+    border-color: transparent;
+    color: #475569;
+    box-shadow: none;
+}
+</style>
+
+<script>
+(function () {
+    var POLL_MS = 3000;
+    var bootAttempts = 0;
+
+    function bootLiveChat() {
+        var root = document.getElementById('nxAssistant');
+        var panel = document.getElementById('nxAssistantPanel');
+        var body = document.getElementById('nxAssistantBody');
+        var conversation = document.getElementById('nxAssistantConversation');
+        var input = document.getElementById('nxAssistantInput');
+        var launcher = document.getElementById('nxAssistantLauncher');
+        var headerBrand = root && root.querySelector('.nx-assistant-brand');
+
+        if (!root || !panel || !body || !conversation || !input || !launcher || !headerBrand) {
+            if (bootAttempts++ < 10) window.setTimeout(bootLiveChat, 120);
+            return;
+        }
+        if (root.dataset.liveChatReady === '1') return;
+        root.dataset.liveChatReady = '1';
+
+        var defaultAvatar = {{ url_for('static', filename='images/default_profile.png')|tojson }};
+        var userAvatar = {{ nx_ai_user_avatar|default(url_for('static', filename='images/default_profile.png'))|tojson }};
+        var pollTimer = null;
+        var pollBusy = false;
+        var activeContactId = 0;
+        var activeContact = null;
+        var lastThreadSignature = '';
+
+        var chatCount = document.createElement('span');
+        chatCount.className = 'nx-assistant-live-chat-count';
+        chatCount.innerHTML = 'Chats <b>0</b>';
+        headerBrand.appendChild(chatCount);
+
+        var unreadBadge = document.createElement('span');
+        unreadBadge.className = 'nx-assistant-live-unread';
+        unreadBadge.setAttribute('aria-label', 'Unread chats');
+        launcher.appendChild(unreadBadge);
+
+        function requestJson(url) {
+            return fetch(url, {
+                method: 'GET',
+                headers: {'Accept': 'application/json'},
+                cache: 'no-store'
+            }).then(function (response) {
+                return response.json().catch(function () {
+                    return {ok: false, error: 'Unexpected server response.'};
+                }).then(function (data) {
+                    if (!response.ok || data.ok === false) throw new Error(data.error || 'Request failed.');
+                    return data;
+                });
+            });
+        }
+
+        function getRail() {
+            return document.getElementById('nxAssistantChatRail');
+        }
+
+        function recentContacts(contacts) {
+            return (contacts || []).filter(function (contact) {
+                return Number(contact.message_count || 0) > 0;
+            }).sort(function (a, b) {
+                var aTime = Date.parse(a.last_message_at || '') || 0;
+                var bTime = Date.parse(b.last_message_at || '') || 0;
+                if (aTime !== bTime) return bTime - aTime;
+                return String(a.display_name || '').localeCompare(String(b.display_name || ''));
+            });
+        }
+
+        function resolveActiveContact(contacts) {
+            var placeholder = String(input.placeholder || '');
+            if (placeholder.indexOf('Message ') !== 0) return null;
+            var name = placeholder.slice(8);
+            for (var i = 0; i < contacts.length; i++) {
+                if (String(contacts[i].display_name || '') === name) return contacts[i];
+            }
+            return null;
+        }
+
+        function updateCounts(contacts) {
+            var recent = recentContacts(contacts);
+            var unread = recent.reduce(function (sum, contact) {
+                return sum + Number(contact.unread_count || 0);
+            }, 0);
+
+            var countValue = chatCount.querySelector('b');
+            if (countValue) countValue.textContent = String(recent.length);
+            chatCount.classList.toggle('is-visible', recent.length > 0);
+
+            unreadBadge.textContent = unread > 99 ? '99+' : String(unread);
+            unreadBadge.classList.toggle('is-visible', unread > 0);
+            return recent;
+        }
+
+        function renderRail(contacts, activeId) {
+            var rail = getRail();
+            if (!rail) return;
+            var recent = recentContacts(contacts);
+            rail.innerHTML = '';
+            panel.classList.toggle('has-chat-rail', recent.length > 0);
+
+            recent.forEach(function (contact) {
+                var button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'nx-assistant-chat-head';
+                button.title = (contact.display_name || contact.username || 'Contact') + ' · ' + (contact.role || 'contact');
+                button.setAttribute('aria-label', 'Open chat with ' + (contact.display_name || contact.username || 'contact'));
+                if (Number(contact.id) === Number(activeId || 0)) button.classList.add('is-active');
+
+                var image = document.createElement('img');
+                image.src = contact.avatar_url || defaultAvatar;
+                image.alt = '';
+                image.addEventListener('error', function () {
+                    image.src = defaultAvatar;
+                }, {once: true});
+                button.appendChild(image);
+
+                var unread = Number(contact.unread_count || 0);
+                if (unread > 0) {
+                    var badge = document.createElement('span');
+                    badge.className = 'nx-assistant-chat-head-badge';
+                    badge.textContent = unread > 9 ? '9+' : String(unread);
+                    button.appendChild(badge);
+                }
+
+                button.addEventListener('click', function () {
+                    window.sessionStorage.setItem('nxAssistantActiveContact', String(contact.id));
+                    window.location.assign('/messages/open/' + encodeURIComponent(contact.id));
+                });
+                rail.appendChild(button);
+            });
+        }
+
+        function formatTimestamp(value) {
+            if (!value) return '';
+            var parsed = new Date(value);
+            if (Number.isNaN(parsed.getTime())) return String(value);
+            return parsed.toLocaleString([], {month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'});
+        }
+
+        function appendThreadRow(kind, text, timeText, contact) {
+            var row = document.createElement('div');
+            row.className = 'nx-assistant-message ' + (kind === 'user' ? 'is-user' : 'is-assistant') + ' is-direct-message';
+            if (kind !== 'user') row.classList.add('is-contact-message');
+
+            var avatar = document.createElement('span');
+            avatar.textContent = kind === 'user' ? 'You' : 'Contact';
+            if (kind !== 'user') {
+                var contactAvatar = (contact && contact.avatar_url) || defaultAvatar;
+                avatar.style.setProperty('--nx-contact-avatar', 'url("' + String(contactAvatar).replace(/"/g, '\\"') + '")');
+            } else {
+                avatar.style.backgroundImage = 'url("' + String(userAvatar).replace(/"/g, '\\"') + '")';
+            }
+
+            var message = document.createElement('p');
+            message.textContent = text || '';
+            if (timeText) {
+                var time = document.createElement('small');
+                time.className = 'nx-assistant-message-time';
+                time.textContent = timeText;
+                message.appendChild(time);
+            }
+
+            row.appendChild(avatar);
+            row.appendChild(message);
+            conversation.appendChild(row);
+        }
+
+        function renderThread(data) {
+            if (!data || !data.contact) return;
+            activeContact = data.contact;
+            activeContactId = Number(activeContact.id || 0);
+            window.sessionStorage.setItem('nxAssistantActiveContact', String(activeContactId));
+
+            conversation.innerHTML = '';
+
+            var note = document.createElement('div');
+            note.className = 'nx-assistant-message is-assistant is-thread-note';
+            var noteAvatar = document.createElement('span');
+            noteAvatar.textContent = 'N';
+            var noteText = document.createElement('p');
+            noteText.textContent = 'Live chat with ' + (activeContact.display_name || activeContact.username || 'contact') + '. New messages appear automatically.';
+            note.appendChild(noteAvatar);
+            note.appendChild(noteText);
+            conversation.appendChild(note);
+
+            (data.messages || []).forEach(function (message) {
+                appendThreadRow(
+                    message.mine ? 'user' : 'assistant',
+                    message.body,
+                    formatTimestamp(message.created_at),
+                    activeContact
+                );
+            });
+            body.scrollTop = body.scrollHeight;
+        }
+
+        function threadSignature(data) {
+            var messages = (data && data.messages) || [];
+            if (!messages.length) return String((data && data.contact && data.contact.id) || 0) + ':0';
+            var last = messages[messages.length - 1] || {};
+            return String((data.contact && data.contact.id) || 0) + ':' + messages.length + ':' + String(last.id || '') + ':' + String(last.body || '');
+        }
+
+        function refreshActiveThread(contact) {
+            if (!contact || !root.classList.contains('is-open')) {
+                activeContactId = 0;
+                activeContact = null;
+                lastThreadSignature = '';
+                window.sessionStorage.removeItem('nxAssistantActiveContact');
+                return Promise.resolve();
+            }
+
+            var contactId = Number(contact.id || 0);
+            if (!contactId) return Promise.resolve();
+            if (activeContactId !== contactId) lastThreadSignature = '';
+            activeContactId = contactId;
+            activeContact = contact;
+
+            return requestJson('/messages/thread/' + encodeURIComponent(contactId)).then(function (data) {
+                var signature = threadSignature(data);
+                if (signature !== lastThreadSignature) {
+                    lastThreadSignature = signature;
+                    renderThread(data);
+                }
+            });
+        }
+
+        function poll() {
+            if (pollBusy || document.hidden) return;
+            pollBusy = true;
+            requestJson('/messages/contacts').then(function (data) {
+                var contacts = data.contacts || [];
+                updateCounts(contacts);
+                var contact = resolveActiveContact(contacts);
+                renderRail(contacts, contact ? contact.id : 0);
+                return refreshActiveThread(contact);
+            }).catch(function () {
+                // Keep the current UI if a transient poll fails.
+            }).finally(function () {
+                pollBusy = false;
+            });
+        }
+
+        function startPolling() {
+            window.clearInterval(pollTimer);
+            poll();
+            pollTimer = window.setInterval(poll, POLL_MS);
+        }
+
+        document.addEventListener('visibilitychange', function () {
+            if (!document.hidden) poll();
+        });
+        window.addEventListener('focus', poll);
+
+        var observer = new MutationObserver(function () {
+            window.setTimeout(poll, 80);
+        });
+        observer.observe(conversation, {childList: true});
+
+        startPolling();
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function () {
+            window.setTimeout(bootLiveChat, 160);
+        }, {once: true});
+    } else {
+        window.setTimeout(bootLiveChat, 160);
+    }
+})();
+</script>
