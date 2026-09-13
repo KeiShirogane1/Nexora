@@ -105,7 +105,6 @@ def ensure_supervisor_profile_schema():
 
 
 def get_or_create_supervisor_profile(user_id):
-    ensure_supervisor_profile_schema()
     conn = get_db_connection()
     try:
         row = conn.execute("SELECT * FROM supervisor_profiles WHERE user_id = ?", (user_id,)).fetchone()
