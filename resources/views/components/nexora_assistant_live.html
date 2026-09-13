@@ -300,11 +300,22 @@
         }
 
         function resolveActiveContact(contacts) {
+            var storedId = Number(
+                activeContactId
+                || window.sessionStorage.getItem('nxAssistantActiveContact')
+                || 0
+            );
+            if (storedId) {
+                for (var i = 0; i < contacts.length; i++) {
+                    if (Number(contacts[i].id || 0) === storedId) return contacts[i];
+                }
+            }
+
             var placeholder = String(input.placeholder || '');
             if (placeholder.indexOf('Message ') !== 0) return null;
             var name = placeholder.slice(8);
-            for (var i = 0; i < contacts.length; i++) {
-                if (String(contacts[i].display_name || '') === name) return contacts[i];
+            for (var j = 0; j < contacts.length; j++) {
+                if (String(contacts[j].display_name || '') === name) return contacts[j];
             }
             return null;
         }
@@ -469,10 +480,11 @@
         }
 
         function refreshActiveThread(contact) {
-            if (!contact || !root.classList.contains('is-open')) {
+            if (!root.classList.contains('is-open')) {
                 clearActiveThreadState();
                 return Promise.resolve();
             }
+            if (!contact) return Promise.resolve();
 
             var contactId = Number(contact.id || 0);
             var messageCount = Number(contact.message_count || 0);
@@ -507,15 +519,17 @@
                 var contacts = data.contacts || [];
                 updateCounts(contacts);
                 var contact = resolveActiveContact(contacts);
-                updateThreadMode(contact);
-                renderRail(contacts, contact ? contact.id : 0);
-                return refreshActiveThread(contact);
+                var visibleContact = contact || activeContact;
+                updateThreadMode(visibleContact);
+                renderRail(contacts, visibleContact ? visibleContact.id : activeContactId);
+                return contact ? refreshActiveThread(contact) : Promise.resolve();
             }).catch(function () {
                 /* Keep the current UI if a transient poll fails. */
             }).finally(function () {
                 pollBusy = false;
             });
         }
+
         function startPolling() {
             window.clearInterval(pollTimer);
             poll();
@@ -526,11 +540,6 @@
             if (!document.hidden) poll();
         });
         window.addEventListener('focus', poll);
-
-        var observer = new MutationObserver(function () {
-            window.setTimeout(poll, 80);
-        });
-        observer.observe(conversation, {childList: true});
 
         startPolling();
     }

@@ -34,10 +34,12 @@ def _serialize_datetime(value):
     return str(value)
 
 
-def _user_record(user_id):
-    conn = get_db_connection()
+def _user_record(user_id, conn=None):
+    owns_connection = conn is None
+    if owns_connection:
+        conn = get_db_connection()
     try:
-        row = conn.execute(
+        return conn.execute(
             """
             SELECT id, username, role, COALESCE(status, 'active') AS status
             FROM users
@@ -46,12 +48,14 @@ def _user_record(user_id):
             (user_id,),
         ).fetchone()
     finally:
-        conn.close()
-    return row
+        if owns_connection:
+            conn.close()
 
 
-def _display_name(user_id, role, username):
-    conn = get_db_connection()
+def _display_name(user_id, role, username, conn=None):
+    owns_connection = conn is None
+    if owns_connection:
+        conn = get_db_connection()
     try:
         if role == "student":
             row = conn.execute(
@@ -68,7 +72,8 @@ def _display_name(user_id, role, username):
     except Exception:
         row = None
     finally:
-        conn.close()
+        if owns_connection:
+            conn.close()
 
     if row:
         parts = [
@@ -82,8 +87,10 @@ def _display_name(user_id, role, username):
     return username or role.title()
 
 
-def _profile_picture(user_id, role):
-    conn = get_db_connection()
+def _profile_picture(user_id, role, conn=None):
+    owns_connection = conn is None
+    if owns_connection:
+        conn = get_db_connection()
     try:
         # Student uploads are stored on student_profiles. Supervisor uploads and
         # account-level/Admin photos are stored on users.profile_picture.
@@ -104,10 +111,17 @@ def _profile_picture(user_id, role):
     except Exception:
         return ""
     finally:
-        conn.close()
+        if owns_connection:
+            conn.close()
 
 
-def _contact_from_row(row, unread_count=0, message_count=0, last_message_at=None):
+def _contact_from_row(
+    row,
+    unread_count=0,
+    message_count=0,
+    last_message_at=None,
+    conn=None,
+):
     user_id = int(_row_value(row, "id", 0, 0) or 0)
     username = str(_row_value(row, "username", 1, "") or "")
     role = str(_row_value(row, "role", 2, "") or "")
@@ -115,16 +129,18 @@ def _contact_from_row(row, unread_count=0, message_count=0, last_message_at=None
         "id": user_id,
         "username": username,
         "role": role,
-        "display_name": _display_name(user_id, role, username),
-        "profile_picture": _profile_picture(user_id, role),
+        "display_name": _display_name(user_id, role, username, conn=conn),
+        "profile_picture": _profile_picture(user_id, role, conn=conn),
         "unread_count": int(unread_count or 0),
         "message_count": int(message_count or 0),
         "last_message_at": _serialize_datetime(last_message_at),
     }
 
 
-def _authorized_contact_rows(user_id, role):
-    conn = get_db_connection()
+def _authorized_contact_rows(user_id, role, conn=None):
+    owns_connection = conn is None
+    if owns_connection:
+        conn = get_db_connection()
     try:
         if role == "student":
             rows = conn.execute(
@@ -220,23 +236,28 @@ def _authorized_contact_rows(user_id, role):
             rows = []
         return rows
     finally:
-        conn.close()
+        if owns_connection:
+            conn.close()
 
 
 def get_authorized_contacts(user_id, target_role=None):
     ensure_messaging_schema()
-    user = _user_record(user_id)
-    if not user or str(_row_value(user, "status", 3, "")) != "active":
-        return []
-
-    role = str(_row_value(user, "role", 2, "") or "")
-    rows = _authorized_contact_rows(user_id, role)
-    if target_role:
-        target_role = str(target_role).strip().lower()
-        rows = [row for row in rows if str(_row_value(row, "role", 2, "")) == target_role]
-
     conn = get_db_connection()
     try:
+        user = _user_record(user_id, conn=conn)
+        if not user or str(_row_value(user, "status", 3, "")) != "active":
+            return []
+
+        role = str(_row_value(user, "role", 2, "") or "")
+        rows = _authorized_contact_rows(user_id, role, conn=conn)
+        if target_role:
+            target_role = str(target_role).strip().lower()
+            rows = [
+                row
+                for row in rows
+                if str(_row_value(row, "role", 2, "")) == target_role
+            ]
+
         contacts = []
         for row in rows:
             contact_id = int(_row_value(row, "id", 0, 0) or 0)
@@ -264,6 +285,7 @@ def get_authorized_contacts(user_id, target_role=None):
                 int(_row_value(unread_row, "count", 0, 0) or 0),
                 int(_row_value(thread_row, "message_count", 0, 0) or 0),
                 _row_value(thread_row, "last_message_at", 1),
+                conn=conn,
             )
 
             if role == "student" and contact.get("role") == "student":
