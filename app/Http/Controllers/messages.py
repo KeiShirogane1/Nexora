@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, redirect, request, session, url_for
 
 from app.Http.Middleware.security import login_required
+from app.Models.db import get_db_connection
 from app.Services.messaging_schema import ensure_messaging_schema
 from app.Services.messaging_service import (
     get_authorized_contact,
@@ -17,9 +18,42 @@ def _ensure_schema(_state):
     ensure_messaging_schema()
 
 
+def _user_profile_picture(user_id):
+    try:
+        user_id = int(user_id)
+    except (TypeError, ValueError):
+        return ""
+
+    conn = get_db_connection()
+    try:
+        row = conn.execute(
+            "SELECT profile_picture FROM users WHERE id = ?",
+            (user_id,),
+        ).fetchone()
+    except Exception:
+        row = None
+    finally:
+        conn.close()
+
+    if not row:
+        return ""
+    try:
+        value = row["profile_picture"]
+    except Exception:
+        value = row[0] if len(row) else None
+    return str(value or "").strip()
+
+
 def _contact_payload(contact):
     payload = dict(contact or {})
     profile_picture = str(payload.pop("profile_picture", "") or "").strip()
+
+    # Student photos normally come from student_profiles. Supervisor uploads and
+    # generic/Admin profile photos are stored on users.profile_picture, so use
+    # that canonical account-level value whenever the role-specific lookup is empty.
+    if not profile_picture:
+        profile_picture = _user_profile_picture(payload.get("id"))
+
     if profile_picture:
         payload["avatar_url"] = url_for("profile_picture", filename=profile_picture)
     else:
