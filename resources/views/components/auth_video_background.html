@@ -41,12 +41,6 @@
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
     }
-
-    @media (prefers-reduced-motion: reduce) {
-        .nexora-auth-loop-bg video {
-            display: none;
-        }
-    }
 </style>
 
 <div class="nexora-auth-loop-bg" aria-hidden="true">
@@ -59,10 +53,6 @@
 (function () {
     var video = document.getElementById('nexoraAuthLoopVideo');
     if (!video) return;
-
-    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        return;
-    }
 
     video.muted = true;
     video.loop = true;
@@ -80,6 +70,9 @@
         keepPlaying();
     });
     video.addEventListener('canplay', keepPlaying, {once: true});
+    video.addEventListener('pause', function () {
+        if (!document.hidden) keepPlaying();
+    });
     document.addEventListener('visibilitychange', function () {
         if (!document.hidden) keepPlaying();
     });
