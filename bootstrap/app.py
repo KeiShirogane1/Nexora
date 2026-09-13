@@ -199,9 +199,9 @@ def enforce_single_supervisor_session():
  if current is not None and session.get("session_version")!=int(current):session.clear();session["login_error"]="You were signed out because this supervisor account logged in on another device.";return redirect(url_for("auth.login"))
 @app.context_processor
 def inject_notifications():
- defaults={"notifications":[],"recent_notifications":[],"unread_count":0,"sidebar_profile":None,"supervisor_classroom_pending_count":0,"supervisor_evaluation_pending_count":0,"supervisor_class_pending_counts":{}}
+ defaults={"notifications":[],"recent_notifications":[],"unread_count":0,"sidebar_profile":None,"supervisor_classroom_pending_count":0,"supervisor_evaluation_pending_count":0,"supervisor_class_pending_counts":{},"admin_pending_approval_count":0}
  if "user_id" not in session:return defaults
- uid=session["user_id"];sidebar=None;supervisor_class_pending_counts={};supervisor_classroom_pending_count=0;supervisor_evaluation_pending_count=0
+ uid=session["user_id"];sidebar=None;supervisor_class_pending_counts={};supervisor_classroom_pending_count=0;supervisor_evaluation_pending_count=0;admin_pending_approval_count=0
  try:
   conn=get_db_connection()
   try:
@@ -249,7 +249,10 @@ def inject_notifications():
         AND LOWER(COALESCE(e.status,'draft'))<>'submitted'
      """,(uid,)).fetchone()
      if evaluation_row:supervisor_evaluation_pending_count=int(evaluation_row["pending_count"] if "pending_count" in evaluation_row.keys() else evaluation_row[0] or 0)
+    elif user["role"]=="admin":
+     pending_approval_row=conn.execute("SELECT COUNT(*) FROM users WHERE role IN ('pending_student','pending_supervisor')").fetchone()
+     if pending_approval_row:admin_pending_approval_count=int(pending_approval_row[0] or 0)
   finally:conn.close()
-  return {"notifications":get_user_notifications(uid,limit=20),"recent_notifications":get_recent_notifications(uid,days=7,limit=10),"unread_count":get_unread_count(uid),"sidebar_profile":sidebar,"supervisor_classroom_pending_count":supervisor_classroom_pending_count,"supervisor_evaluation_pending_count":supervisor_evaluation_pending_count,"supervisor_class_pending_counts":supervisor_class_pending_counts}
+  return {"notifications":get_user_notifications(uid,limit=20),"recent_notifications":get_recent_notifications(uid,days=7,limit=10),"unread_count":get_unread_count(uid),"sidebar_profile":sidebar,"supervisor_classroom_pending_count":supervisor_classroom_pending_count,"supervisor_evaluation_pending_count":supervisor_evaluation_pending_count,"supervisor_class_pending_counts":supervisor_class_pending_counts,"admin_pending_approval_count":admin_pending_approval_count}
  except Exception as exc:print("inject_notifications failed:",exc);defaults["sidebar_profile"]=sidebar;return defaults
 if __name__=="__main__":app.run(debug=app.debug)
