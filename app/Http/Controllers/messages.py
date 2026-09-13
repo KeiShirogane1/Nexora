@@ -1,4 +1,7 @@
-from flask import Blueprint, jsonify, redirect, request, session, url_for
+import shutil
+from pathlib import Path
+
+from flask import Blueprint, current_app, jsonify, redirect, request, session, url_for
 
 from app.Http.Middleware.security import login_required
 from app.Models.db import get_db_connection
@@ -44,6 +47,59 @@ def _user_profile_picture(user_id):
     return str(value or "").strip()
 
 
+def _avatar_file_extension(path):
+    """Return the real supported image extension from the file signature."""
+    try:
+        with path.open("rb") as image_file:
+            header = image_file.read(12)
+    except OSError:
+        return ""
+
+    if header.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "png"
+    if header.startswith(b"\xff\xd8\xff"):
+        return "jpg"
+    if header.startswith((b"GIF87a", b"GIF89a")):
+        return "gif"
+    return ""
+
+
+def _chat_avatar_filename(filename):
+    """Return a browser-safe avatar filename for legacy/missing Render uploads."""
+    filename = str(filename or "").strip()
+    if not filename or Path(filename).name != filename:
+        return ""
+
+    upload_folder = current_app.config.get("PROFILE_UPLOAD_FOLDER")
+    if not upload_folder:
+        return ""
+
+    source = Path(upload_folder) / filename
+    if not source.is_file():
+        return ""
+
+    actual_ext = _avatar_file_extension(source)
+    if not actual_ext:
+        return filename
+
+    current_ext = source.suffix.lower().lstrip(".")
+    if current_ext == actual_ext or (actual_ext == "jpg" and current_ext == "jpeg"):
+        return filename
+
+    # Older Supervisor uploads were always named .jpg even when the uploaded
+    # bytes were PNG/GIF. With X-Content-Type-Options: nosniff, Render browsers
+    # can reject those responses. Keep the original file intact and create a
+    # correctly named copy on the persistent uploads disk for chat rendering.
+    corrected_name = f"{source.stem}.{actual_ext}"
+    corrected = source.with_name(corrected_name)
+    try:
+        if not corrected.is_file():
+            shutil.copyfile(source, corrected)
+    except OSError:
+        return ""
+    return corrected_name
+
+
 def _contact_payload(contact):
     payload = dict(contact or {})
     profile_picture = str(payload.pop("profile_picture", "") or "").strip()
@@ -54,6 +110,7 @@ def _contact_payload(contact):
     if not profile_picture:
         profile_picture = _user_profile_picture(payload.get("id"))
 
+    profile_picture = _chat_avatar_filename(profile_picture)
     if profile_picture:
         payload["avatar_url"] = url_for("profile_picture", filename=profile_picture)
     else:
