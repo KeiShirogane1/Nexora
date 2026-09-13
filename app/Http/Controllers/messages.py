@@ -6,7 +6,7 @@ from flask import Blueprint, current_app, jsonify, redirect, request, session, u
 from app.Http.Middleware.security import login_required
 from app.Models.db import get_db_connection
 from app.Services.messaging_schema import ensure_messaging_schema
-from app.Services.profile_image_storage import ensure_profile_picture_local
+from app.Services.profile_image_storage import profile_picture_cdn_url
 from app.Services.messaging_service import (
     get_authorized_contact,
     get_authorized_contacts,
@@ -66,7 +66,7 @@ def _avatar_file_extension(path):
 
 
 def _chat_avatar_filename(filename):
-    """Return a browser-safe avatar filename for legacy/missing Render uploads."""
+    """Return a browser-safe local avatar filename without remote I/O."""
     filename = str(filename or "").strip()
     if not filename or Path(filename).name != filename:
         return ""
@@ -76,8 +76,6 @@ def _chat_avatar_filename(filename):
         return ""
 
     source = Path(upload_folder) / filename
-    if not source.is_file():
-        ensure_profile_picture_local(filename, upload_folder)
     if not source.is_file():
         return ""
 
@@ -92,7 +90,7 @@ def _chat_avatar_filename(filename):
     # Older Supervisor uploads were always named .jpg even when the uploaded
     # bytes were PNG/GIF. With X-Content-Type-Options: nosniff, Render browsers
     # can reject those responses. Keep the original file intact and create a
-    # correctly named copy on the persistent uploads disk for chat rendering.
+    # correctly named copy on the uploads disk for chat rendering.
     corrected_name = f"{source.stem}.{actual_ext}"
     corrected = source.with_name(corrected_name)
     try:
@@ -113,9 +111,16 @@ def _contact_payload(contact):
     if not profile_picture:
         profile_picture = _user_profile_picture(payload.get("id"))
 
-    profile_picture = _chat_avatar_filename(profile_picture)
-    if profile_picture:
-        payload["avatar_url"] = url_for("profile_picture", filename=profile_picture)
+    local_avatar = _chat_avatar_filename(profile_picture)
+    if local_avatar:
+        payload["avatar_url"] = url_for("profile_picture", filename=local_avatar)
+    elif profile_picture:
+        # Keep the frequently-polled chat API fast: never download Cloudinary
+        # images here. Let the browser request the CDN image independently.
+        payload["avatar_url"] = (
+            profile_picture_cdn_url(profile_picture)
+            or url_for("static", filename="images/default_profile.png")
+        )
     else:
         payload["avatar_url"] = url_for("static", filename="images/default_profile.png")
     return payload

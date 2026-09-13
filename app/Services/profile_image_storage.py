@@ -77,6 +77,31 @@ def mirror_profile_picture(filename, upload_folder):
     return True
 
 
+def profile_picture_cdn_url(filename):
+    """Build the Cloudinary CDN URL for a stored profile filename without I/O."""
+    try:
+        safe_name = _safe_filename(filename)
+    except ProfileImageStorageError:
+        return ""
+
+    cloud_name = (os.environ.get("CLOUDINARY_CLOUD_NAME") or "").strip()
+    if not cloud_name:
+        return ""
+
+    try:
+        cloudinary.config(cloud_name=cloud_name, secure=True)
+        remote_url, _ = cloudinary_url(
+            _public_id(safe_name),
+            secure=True,
+            resource_type="image",
+            format="jpg",
+            quality="auto",
+        )
+        return str(remote_url or "")
+    except Exception:
+        return ""
+
+
 def ensure_profile_picture_local(filename, upload_folder):
     """Restore a missing Render-local profile picture from Cloudinary.
 
