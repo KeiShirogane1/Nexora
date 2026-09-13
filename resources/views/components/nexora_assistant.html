@@ -1,0 +1,75 @@
+{% set assistant_role = nx_topbar_role|default(session.get('role', 'student')) %}
+{% if assistant_role in ['student', 'supervisor', 'admin'] %}
+{% set assistant_logo = 'images/nexora_logo_student.png' if assistant_role == 'student' else 'images/nexora_logo_admin.png' if assistant_role == 'admin' else 'images/nexora_logo_supervisor.png' %}
+<div class="nx-assistant nx-assistant-{{ assistant_role }}" id="nxAssistant" data-role="{{ assistant_role }}">
+    <section class="nx-assistant-panel" id="nxAssistantPanel" aria-label="Nexora Assistant" aria-hidden="true">
+        <header class="nx-assistant-header">
+            <div class="nx-assistant-brand">
+                <img src="{{ url_for('static', filename=assistant_logo) }}" alt="" aria-hidden="true">
+                <div><strong>Nexora Assistant</strong><span>{{ assistant_role|title }} workspace</span></div>
+            </div>
+            <div class="nx-assistant-window-actions">
+                <button type="button" data-assistant-action="minimize" aria-label="Minimize Assistant">−</button>
+                <button type="button" data-assistant-action="expand" aria-label="Expand Assistant">□</button>
+                <button type="button" data-assistant-action="close" aria-label="Close Assistant">×</button>
+            </div>
+        </header>
+
+        <div class="nx-assistant-body">
+            <div class="nx-assistant-welcome">
+                <span class="nx-assistant-mark">◆</span>
+                <div>
+                    <strong>How can Nexora help?</strong>
+                    <p>Quick navigation, support shortcuts, and role-aware assistance will live here.</p>
+                </div>
+            </div>
+
+            <div class="nx-assistant-preview-label">Coming next</div>
+            <div class="nx-assistant-shortcuts" aria-label="Assistant shortcut preview">
+                {% if assistant_role == 'student' %}
+                    <span>@supervisor</span><span>@admin</span><span>/logbook</span><span>/classes</span><span>/tasks</span><span>/help</span>
+                {% elif assistant_role == 'supervisor' %}
+                    <span>@admin</span><span>/classes</span><span>/interns</span><span>/evaluations</span><span>/help</span>
+                {% else %}
+                    <span>/approvals</span><span>/students</span><span>/supervisors</span><span>/reports</span><span>/help</span>
+                {% endif %}
+            </div>
+
+            <div class="nx-assistant-placeholder-message">
+                <span>i</span>
+                <p>This phase adds the shared Assistant interface only. Navigation actions, role messaging, and AI responses are not connected yet.</p>
+            </div>
+        </div>
+
+        <footer class="nx-assistant-composer">
+            <textarea rows="1" placeholder="Type a message…" aria-label="Assistant message" disabled></textarea>
+            <button type="button" disabled aria-disabled="true" title="Assistant actions are connected in the next phase">Send</button>
+        </footer>
+    </section>
+
+    <button class="nx-assistant-launcher" id="nxAssistantLauncher" type="button" aria-label="Open Nexora Assistant" aria-expanded="false">
+        <img src="{{ url_for('static', filename=assistant_logo) }}" alt="" aria-hidden="true">
+        <span class="nx-assistant-launcher-dot" aria-hidden="true"></span>
+    </button>
+</div>
+
+<style id="nx-assistant-styles">
+.nx-assistant{--nx-assistant-accent:#2563eb;--nx-assistant-accent-dark:#1d4ed8;--nx-assistant-soft:#eff6ff;position:fixed;right:24px;bottom:24px;z-index:3200;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.nx-assistant-student{--nx-assistant-accent:#0a8f46;--nx-assistant-accent-dark:#08783b;--nx-assistant-soft:#e7f7ed}.nx-assistant-admin{--nx-assistant-accent:#f45125;--nx-assistant-accent-dark:#d9431c;--nx-assistant-soft:#fff1eb}.nx-assistant-launcher{position:relative;width:58px;height:58px;display:grid;place-items:center;margin-left:auto;border:0;border-radius:50%;background:var(--nx-assistant-accent);box-shadow:0 12px 30px rgba(15,23,42,.22);cursor:pointer;transition:transform .16s ease,box-shadow .16s ease}.nx-assistant-launcher:hover{transform:translateY(-2px);box-shadow:0 16px 36px rgba(15,23,42,.26)}.nx-assistant-launcher img{width:31px;height:31px;object-fit:contain}.nx-assistant-launcher-dot{position:absolute;top:3px;right:3px;width:12px;height:12px;border:3px solid #fff;border-radius:50%;background:#22c55e}.nx-assistant-panel{width:min(390px,calc(100vw - 32px));height:min(600px,calc(100vh - 110px));display:none;flex-direction:column;margin-bottom:12px;overflow:hidden;border:1px solid #e2e8f0;border-radius:18px;background:#fff;box-shadow:0 24px 70px rgba(15,23,42,.22)}.nx-assistant.is-open .nx-assistant-panel{display:flex}.nx-assistant.is-open .nx-assistant-launcher{display:none}.nx-assistant.is-expanded .nx-assistant-panel{width:min(680px,calc(100vw - 48px));height:min(760px,calc(100vh - 48px))}.nx-assistant.is-minimized .nx-assistant-panel{height:auto}.nx-assistant.is-minimized .nx-assistant-body,.nx-assistant.is-minimized .nx-assistant-composer{display:none}.nx-assistant-header{min-height:72px;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 14px 13px 16px;background:var(--nx-assistant-accent);color:#fff}.nx-assistant-brand{display:flex;align-items:center;gap:11px;min-width:0}.nx-assistant-brand img{width:38px;height:38px;flex:0 0 38px;object-fit:contain}.nx-assistant-brand strong,.nx-assistant-brand span{display:block}.nx-assistant-brand strong{font-size:.96rem;font-weight:800}.nx-assistant-brand span{margin-top:2px;font-size:.7rem;opacity:.82}.nx-assistant-window-actions{display:flex;align-items:center;gap:3px}.nx-assistant-window-actions button{width:31px;height:31px;border:0;border-radius:8px;background:rgba(255,255,255,.12);color:#fff;font-size:1rem;cursor:pointer}.nx-assistant-window-actions button:hover{background:rgba(255,255,255,.22)}.nx-assistant-body{flex:1;min-height:0;padding:18px;overflow-y:auto;background:#f8fafc}.nx-assistant-welcome{display:flex;gap:12px;padding:15px;border:1px solid #e7edf3;border-radius:14px;background:#fff}.nx-assistant-mark{width:34px;height:34px;flex:0 0 34px;display:grid;place-items:center;border-radius:10px;background:var(--nx-assistant-soft);color:var(--nx-assistant-accent);font-size:.88rem}.nx-assistant-welcome strong{color:#0f172a;font-size:.88rem}.nx-assistant-welcome p{margin:5px 0 0;color:#64748b;font-size:.76rem;line-height:1.45}.nx-assistant-preview-label{margin:20px 0 9px;color:#94a3b8;font-size:.65rem;font-weight:900;letter-spacing:.09em;text-transform:uppercase}.nx-assistant-shortcuts{display:flex;flex-wrap:wrap;gap:8px}.nx-assistant-shortcuts span{padding:7px 10px;border:1px solid #dfe7ee;border-radius:999px;background:#fff;color:#475569;font-size:.7rem;font-weight:800}.nx-assistant-placeholder-message{display:flex;align-items:flex-start;gap:10px;margin-top:18px;padding:13px;border-radius:12px;background:var(--nx-assistant-soft);color:#475569}.nx-assistant-placeholder-message>span{width:22px;height:22px;flex:0 0 22px;display:grid;place-items:center;border-radius:50%;background:var(--nx-assistant-accent);color:#fff;font-size:.7rem;font-weight:900}.nx-assistant-placeholder-message p{margin:0;font-size:.72rem;line-height:1.48}.nx-assistant-composer{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;padding:13px;border-top:1px solid #e8edf2;background:#fff}.nx-assistant-composer textarea{min-height:42px;max-height:96px;resize:none;padding:10px 12px;border:1px solid #dbe3ea;border-radius:11px;background:#f8fafc;color:#64748b;font:inherit;font-size:.78rem;outline:none}.nx-assistant-composer button{min-width:66px;border:0;border-radius:10px;background:var(--nx-assistant-accent);color:#fff;font-size:.75rem;font-weight:800;opacity:.48;cursor:not-allowed}@media(max-width:760px){.nx-assistant{right:14px;bottom:14px}.nx-assistant-panel,.nx-assistant.is-expanded .nx-assistant-panel{width:calc(100vw - 28px);height:min(620px,calc(100vh - 86px));border-radius:16px}.nx-assistant-launcher{width:54px;height:54px}.nx-assistant-launcher img{width:28px;height:28px}}
+</style>
+
+<script>
+(function(){
+    var root=document.getElementById('nxAssistant');
+    if(!root||root.dataset.ready==='1')return;
+    root.dataset.ready='1';
+    var panel=document.getElementById('nxAssistantPanel');
+    var launcher=document.getElementById('nxAssistantLauncher');
+    function setOpen(open){root.classList.toggle('is-open',open);if(!open){root.classList.remove('is-minimized','is-expanded')}launcher.setAttribute('aria-expanded',open?'true':'false');panel.setAttribute('aria-hidden',open?'false':'true')}
+    launcher.addEventListener('click',function(){setOpen(true)});
+    root.querySelector('[data-assistant-action="close"]').addEventListener('click',function(){setOpen(false)});
+    root.querySelector('[data-assistant-action="minimize"]').addEventListener('click',function(){root.classList.toggle('is-minimized');root.classList.remove('is-expanded')});
+    root.querySelector('[data-assistant-action="expand"]').addEventListener('click',function(){root.classList.toggle('is-expanded');root.classList.remove('is-minimized')});
+    document.addEventListener('keydown',function(event){if(event.key==='Escape'&&root.classList.contains('is-open'))setOpen(false)});
+})();
+</script>
+{% endif %}
