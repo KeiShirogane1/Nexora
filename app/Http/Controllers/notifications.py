@@ -200,6 +200,8 @@ def mark_read_json():
     return jsonify({"ok": True})
 
 
+from app.Http.Controllers.assistant import assistant_bp
 from app.Http.Controllers.messages import messages
 
 notifications_bp.register_blueprint(messages)
+notifications_bp.register_blueprint(assistant_bp)

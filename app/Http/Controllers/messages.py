@@ -82,8 +82,3 @@ def open_thread(contact_id):
         return "Unsupported account role.", 403
 
     return redirect(url_for(endpoint, assistant="messages", contact=contact_id))
-
-
-from app.Http.Controllers.assistant import assistant_bp
-
-messages.register_blueprint(assistant_bp)
