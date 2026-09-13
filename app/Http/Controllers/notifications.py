@@ -198,3 +198,8 @@ def mark_read_json():
     if not success:
         return jsonify({"ok": False, "error": "Not found"}), 404
     return jsonify({"ok": True})
+
+
+from app.Http.Controllers.messages import messages
+
+notifications_bp.register_blueprint(messages)
