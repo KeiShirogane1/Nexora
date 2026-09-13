@@ -7,6 +7,122 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
+    <style>
+        .student-insights-page .student-insights-workspace {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(300px, 0.95fr);
+            gap: 18px;
+            align-items: start;
+        }
+        .student-insights-page .student-insights-column {
+            display: grid;
+            gap: 18px;
+            min-width: 0;
+        }
+        .student-insights-page .student-insights-workspace .profile-section {
+            margin-bottom: 0;
+        }
+        .student-insights-page .student-insights-ai-card {
+            position: relative;
+            border-color: #d9eee5;
+            background: linear-gradient(180deg, #ffffff 0%, #fbfefc 100%);
+        }
+        .student-insights-page .student-insights-ai-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+        .student-insights-page .student-insights-ai-head h2 {
+            margin: 0;
+        }
+        .student-insights-page .student-insights-ai-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 34px;
+            height: 26px;
+            padding: 0 9px;
+            border-radius: 999px;
+            background: #dcfce7;
+            color: #166534;
+            font-size: 0.7rem;
+            font-weight: 900;
+            letter-spacing: 0.04em;
+        }
+        .student-insights-page .student-insights-ai-intro {
+            padding: 16px;
+            border: 1px solid #d9eee5;
+            border-radius: 14px;
+            background: #eefbf5;
+        }
+        .student-insights-page .student-insights-ai-intro strong {
+            display: block;
+            color: #14532d;
+            font-size: 0.95rem;
+        }
+        .student-insights-page .student-insights-ai-intro p {
+            margin: 5px 0 0;
+            color: #527062;
+            font-size: 0.82rem;
+            line-height: 1.55;
+        }
+        .student-insights-page .student-insights-ai-status {
+            margin: 14px 0 0;
+            color: #64748b;
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+        .student-insights-page .student-insights-ai-items {
+            display: grid;
+            gap: 0;
+            margin-top: 10px;
+        }
+        .student-insights-page .student-insights-ai-item {
+            padding: 15px 0;
+            border-bottom: 1px solid #edf2ef;
+        }
+        .student-insights-page .student-insights-ai-item:last-child {
+            border-bottom: 0;
+            padding-bottom: 0;
+        }
+        .student-insights-page .student-insights-ai-item h3 {
+            margin: 0 0 5px;
+            color: #0f172a;
+            font-size: 0.9rem;
+            font-weight: 800;
+        }
+        .student-insights-page .student-insights-ai-item p {
+            margin: 0;
+            color: #475569;
+            font-size: 0.82rem;
+            line-height: 1.62;
+            white-space: pre-line;
+        }
+        .student-insights-page .student-insights-evidence-card .student-document-guide {
+            margin-bottom: 12px;
+        }
+        .student-insights-page .student-insights-evidence-card .student-document-guide:last-child {
+            margin-bottom: 0;
+        }
+        @media (max-width: 1120px) {
+            .student-insights-page .student-insights-workspace {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+            .student-insights-page .student-insights-column.is-ai {
+                grid-column: 1 / -1;
+            }
+        }
+        @media (max-width: 760px) {
+            .student-insights-page .student-insights-workspace {
+                grid-template-columns: 1fr;
+            }
+            .student-insights-page .student-insights-column.is-ai {
+                grid-column: auto;
+            }
+        }
+    </style>
 </head>
 <body class="student-page nx-class-page student-insights-page">
     {% include 'components/student_sidebar.html' %}
@@ -34,7 +150,7 @@
                 <div>
                     <span class="student-section-eyebrow">Machine Learning</span>
                     <h1 id="insights-heading">ML Performance Insights</h1>
-                    <p>{{ classroom.section }} · {{ classroom.supervisor }} · Work evidence, feedback signals, model predictions, and ML-assisted recommendations.</p>
+                    <p>{{ classroom.section }} · {{ classroom.supervisor }} · Work evidence, feedback signals, model predictions, and personalized AI analysis.</p>
                     <div class="profile-actions">
                         {% if has_performance_data %}
                             <span class="student-insights-label {{ work_label_class }}">{{ numeric_performance_label }}</span>
@@ -52,38 +168,23 @@
                 </nav>
             </header>
 
-            <section class="student-document-guide" aria-label="ML decision support notice">
-                <div class="student-document-guide-icon" aria-hidden="true">i</div>
-                <div>
-                    <h2>ML insights are decision-support only</h2>
-                    <p>These insights use Work evidence and available supervisor feedback. They do not create, replace, or modify the Official OJT Evaluation.</p>
-                    <div class="student-document-tags">
-                        <span>Work label: gradebook-derived</span>
-                        <span>Naive Bayes: feedback ML</span>
-                        <span>SVM: feedback ML</span>
-                    </div>
-                </div>
-            </section>
-
             <section class="student-tasks-stats" aria-label="ML insight summary">
                 <article class="student-tasks-stat">
                     <div class="student-tasks-stat-icon" aria-hidden="true">↗</div>
                     <div class="student-tasks-stat-copy">
                         <span>Work Average</span>
                         <strong>{% if average_percentage is not none %}{{ "%.1f"|format(average_percentage) }}%{% else %}—{% endif %}</strong>
-                        <small>{% if has_performance_data %}Input to Work performance classification{% else %}No graded Work evidence yet{% endif %}</small>
+                        <small>{% if has_performance_data %}Gradebook-derived evidence{% else %}No graded Work evidence yet{% endif %}</small>
                     </div>
                 </article>
-
                 <article class="student-tasks-stat">
                     <div class="student-tasks-stat-icon" aria-hidden="true">%</div>
                     <div class="student-tasks-stat-copy">
-                        <span>Work Completion</span>
+                        <span>Completion Rate</span>
                         <strong>{{ "%.1f"|format(completion_rate) }}%</strong>
                         <small>{{ graded_count }} of {{ total_count }} Work item{% if total_count != 1 %}s{% endif %} reviewed</small>
                     </div>
                 </article>
-
                 <article class="student-tasks-stat">
                     <div class="student-tasks-stat-icon" aria-hidden="true">✓</div>
                     <div class="student-tasks-stat-copy">
@@ -92,180 +193,311 @@
                         <small>{{ manual_count }} manual · {{ imported_count }} imported</small>
                     </div>
                 </article>
-
                 <article class="student-tasks-stat">
                     <div class="student-tasks-stat-icon" aria-hidden="true">ML</div>
                     <div class="student-tasks-stat-copy">
-                        <span>Feedback Evidence</span>
-                        <strong>{% if has_feedback %}Available{% else %}None{% endif %}</strong>
-                        <small>{% if has_feedback %}Feedback ML outputs are available{% else %}No supervisor feedback to analyze{% endif %}</small>
+                        <span>Performance Label</span>
+                        <strong>{% if has_performance_data %}{{ numeric_performance_label }}{% else %}No Data{% endif %}</strong>
+                        <small>{% if has_performance_data %}Based on graded Work{% else %}Waiting for evidence{% endif %}</small>
                     </div>
                 </article>
             </section>
 
-            <section class="profile-info-grid" aria-label="Performance evidence and recommendation">
-                <article class="profile-section">
-                    <span class="student-section-eyebrow">Evidence Input</span>
-                    <h2>Work Performance Evidence</h2>
-                    <p class="student-classwork-detail-subtitle">Gradebook evidence used to derive your Work performance label.</p>
-
-                    <div class="student-classwork-submission-summary">
-                        <div>
-                            <span>Work Average</span>
-                            <strong>{% if average_percentage is not none %}{{ "%.1f"|format(average_percentage) }}%{% else %}—{% endif %}</strong>
-                        </div>
-                        <div>
-                            <span>Completion</span>
-                            <strong>{{ "%.1f"|format(completion_rate) }}%</strong>
-                        </div>
-                        <div>
-                            <span>Minimum Work Score</span>
-                            <strong>{% if min_percentage is not none %}{{ "%.1f"|format(min_percentage) }}%{% else %}—{% endif %}</strong>
-                        </div>
-                        <div>
-                            <span>Maximum Work Score</span>
-                            <strong>{% if max_percentage is not none %}{{ "%.1f"|format(max_percentage) }}%{% else %}—{% endif %}</strong>
-                        </div>
-                        <div>
-                            <span>Reviewed / Total</span>
-                            <strong>{{ graded_count }} / {{ total_count }}</strong>
-                        </div>
-                        <div>
-                            <span>Work Performance Label</span>
-                            <strong>{{ numeric_performance_label or 'No Data' }}</strong>
-                        </div>
-                        <div>
-                            <span>Manual Grades</span>
-                            <strong>{{ manual_count }}</strong>
-                        </div>
-                        <div>
-                            <span>Imported Grades</span>
-                            <strong>{{ imported_count }}</strong>
-                        </div>
-                    </div>
-
-                    {% if not has_performance_data %}
-                        <div class="student-document-guide">
-                            <div class="student-document-guide-icon" aria-hidden="true">—</div>
-                            <div>
-                                <h2>No Work performance data yet</h2>
-                                <p>A Work performance label and Work-based recommendation will appear after graded or imported Work evidence is available.</p>
-                            </div>
-                        </div>
-                    {% endif %}
-                </article>
-
-                <article class="profile-section">
-                    <span class="student-section-eyebrow">Decision Support</span>
-                    <h2>ML Recommendation</h2>
-                    <p class="student-classwork-detail-subtitle">A structured recommendation based on the Work evidence available to Nexora.</p>
-
-                    {% if has_performance_data and ml_recommendation and ml_recommendation.recommendation %}
+            <section class="student-insights-workspace" aria-label="ML insights dashboard">
+                <div class="student-insights-column">
+                    <article class="profile-section">
+                        <span class="student-section-eyebrow">Evidence Input</span>
+                        <h2>Performance Evidence</h2>
+                        <p class="student-classwork-detail-subtitle">Detailed gradebook evidence used to derive your Work performance label.</p>
                         <div class="student-classwork-submission-summary">
-                            <div>
-                                <span>Work Label Used</span>
-                                <strong>{{ ml_recommendation.performance_label }}</strong>
-                            </div>
-                            <div>
-                                <span>Priority</span>
-                                <strong>{{ ml_recommendation.priority|title }}</strong>
-                            </div>
-                            <div>
-                                <span>Average Used</span>
-                                <strong>{% if ml_recommendation.overall_percentage is not none %}{{ "%.1f"|format(ml_recommendation.overall_percentage) }}%{% else %}—{% endif %}</strong>
-                            </div>
-                            <div>
-                                <span>Completion Used</span>
-                                <strong>{{ "%.1f"|format(ml_recommendation.completion_rate) }}%</strong>
-                            </div>
+                            <div><span>Work Average</span><strong>{% if average_percentage is not none %}{{ "%.1f"|format(average_percentage) }}%{% else %}—{% endif %}</strong></div>
+                            <div><span>Minimum Score</span><strong>{% if min_percentage is not none %}{{ "%.1f"|format(min_percentage) }}%{% else %}—{% endif %}</strong></div>
+                            <div><span>Maximum Score</span><strong>{% if max_percentage is not none %}{{ "%.1f"|format(max_percentage) }}%{% else %}—{% endif %}</strong></div>
+                            <div><span>Completion Rate</span><strong>{{ "%.1f"|format(completion_rate) }}%</strong></div>
+                            <div><span>Graded / Total</span><strong>{{ graded_count }} / {{ total_count }}</strong></div>
+                            <div><span>Work Label</span><strong>{{ numeric_performance_label or 'No Data' }}</strong></div>
+                            <div><span>Manual Grades</span><strong>{{ manual_count }}</strong></div>
+                            <div><span>Imported Grades</span><strong>{{ imported_count }}</strong></div>
                         </div>
-
-                        <div class="student-classwork-feedback">
-                            <h3>Recommendation</h3>
-                            <p>{{ ml_recommendation.recommendation }}</p>
-                        </div>
-
-                        {% if ml_recommendation.basis %}
-                            <h3>Basis for this recommendation</h3>
-                            <div class="profile-check-grid">
-                                {% for item in ml_recommendation.basis %}
-                                    <div class="profile-check done">✓ {{ item }}</div>
-                                {% endfor %}
+                        {% if not has_performance_data %}
+                            <div class="student-document-guide">
+                                <div class="student-document-guide-icon" aria-hidden="true">—</div>
+                                <div>
+                                    <h2>No Work performance data yet</h2>
+                                    <p>A Work label and Work-based recommendation will appear after graded or imported Work evidence is available.</p>
+                                </div>
                             </div>
                         {% endif %}
-                    {% else %}
+                    </article>
+
+                    <article class="profile-section" aria-labelledby="feedback-intelligence-heading">
+                        <span class="student-section-eyebrow">Feedback Models</span>
+                        <h2 id="feedback-intelligence-heading">Feedback Intelligence</h2>
+                        <p class="student-classwork-detail-subtitle">Machine-learning analysis based only on available supervisor feedback text.</p>
+                        {% if has_feedback %}
+                            <div class="student-classwork-submission-summary">
+                                <div><span>Sentiment</span><strong>{{ sentiment or '—' }}</strong></div>
+                                <div><span>Competency Signal</span><strong>{{ competency or '—' }}</strong></div>
+                                <div><span>ML Confidence</span><strong>{{ "%.2f"|format(confidence) }}</strong></div>
+                                <div><span>Feedback Classification</span><strong>{{ feedback_analysis.performance_label or '—' }}</strong></div>
+                                <div><span>Naive Bayes</span><strong>{{ feedback_analysis.nb_prediction or '—' }}</strong></div>
+                                <div><span>SVM</span><strong>{{ feedback_analysis.svm_prediction or '—' }}</strong></div>
+                            </div>
+                            <div class="student-classwork-feedback">
+                                <h3>Feedback-based Recommendation</h3>
+                                <p>{{ recommendation or 'No feedback recommendation is available.' }}</p>
+                            </div>
+                        {% else %}
+                            <div class="student-document-guide">
+                                <div class="student-document-guide-icon" aria-hidden="true">ML</div>
+                                <div>
+                                    <h2>No feedback evidence available</h2>
+                                    <p>Sentiment, competency, confidence, Naive Bayes, SVM, and feedback classification remain unavailable until supervisor feedback exists.</p>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </article>
+                </div>
+
+                <div class="student-insights-column">
+                    <article class="profile-section">
+                        <span class="student-section-eyebrow">Decision Support</span>
+                        <h2>ML Recommendation</h2>
+                        <p class="student-classwork-detail-subtitle">Structured guidance based on the Work evidence currently available to Nexora.</p>
+                        {% if has_performance_data and ml_recommendation and ml_recommendation.recommendation %}
+                            <div class="student-classwork-submission-summary">
+                                <div><span>Work Label Used</span><strong>{{ ml_recommendation.performance_label }}</strong></div>
+                                <div><span>Priority</span><strong>{{ ml_recommendation.priority|title }}</strong></div>
+                                <div><span>Average Used</span><strong>{% if ml_recommendation.overall_percentage is not none %}{{ "%.1f"|format(ml_recommendation.overall_percentage) }}%{% else %}—{% endif %}</strong></div>
+                                <div><span>Completion Used</span><strong>{{ "%.1f"|format(ml_recommendation.completion_rate) }}%</strong></div>
+                            </div>
+                            <div class="student-classwork-feedback">
+                                <h3>Recommendation</h3>
+                                <p>{{ ml_recommendation.recommendation }}</p>
+                            </div>
+                            {% if ml_recommendation.basis %}
+                                <h3>Basis for this recommendation</h3>
+                                <div class="profile-check-grid">
+                                    {% for item in ml_recommendation.basis %}
+                                        <div class="profile-check done">✓ {{ item }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        {% else %}
+                            <div class="student-document-guide">
+                                <div class="student-document-guide-icon" aria-hidden="true">ML</div>
+                                <div>
+                                    <h2>No Work-based recommendation yet</h2>
+                                    <p>Nexora will generate a Work recommendation after graded Work evidence is available.</p>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </article>
+
+                    <article class="profile-section student-insights-evidence-card">
+                        <span class="student-section-eyebrow">Availability</span>
+                        <h2>Evidence Status</h2>
                         <div class="student-document-guide">
-                            <div class="student-document-guide-icon" aria-hidden="true">ML</div>
+                            <div class="student-document-guide-icon" aria-hidden="true">✓</div>
                             <div>
-                                <h2>No Work-based recommendation yet</h2>
-                                <p>Nexora will generate the Work recommendation after enough graded Work evidence is available. Feedback ML outputs can still appear separately when feedback exists.</p>
+                                <h2>Performance Evidence</h2>
+                                <p>{% if has_performance_data %}Available — graded Work data can support performance interpretation.{% else %}No Data — graded Work evidence is not available yet.{% endif %}</p>
                             </div>
                         </div>
-                    {% endif %}
-                </article>
-            </section>
+                        <div class="student-document-guide">
+                            <div class="student-document-guide-icon" aria-hidden="true">✓</div>
+                            <div>
+                                <h2>Feedback Evidence</h2>
+                                <p>{% if has_feedback %}Available — supervisor feedback can support feedback ML analysis.{% else %}No Feedback — feedback model outputs remain unavailable.{% endif %}</p>
+                            </div>
+                        </div>
+                        <div class="student-document-guide">
+                            <div class="student-document-guide-icon" aria-hidden="true">i</div>
+                            <div>
+                                <h2>Important Note</h2>
+                                <p>ML Insights and AI explanations are decision-support only and do not replace the Official OJT Evaluation.</p>
+                            </div>
+                        </div>
+                    </article>
+                </div>
 
-            <section class="profile-section" aria-labelledby="feedback-intelligence-heading">
-                <span class="student-section-eyebrow">Feedback Models</span>
-                <h2 id="feedback-intelligence-heading">Feedback Intelligence</h2>
-                <p class="student-classwork-detail-subtitle">Machine-learning analysis based only on available supervisor feedback text.</p>
+                <div class="student-insights-column is-ai">
+                    <article class="profile-section student-insights-ai-card" aria-labelledby="nexora-ai-analysis-heading">
+                        <div class="student-insights-ai-head">
+                            <div>
+                                <span class="student-section-eyebrow">Automatic Explanation</span>
+                                <h2 id="nexora-ai-analysis-heading">Nexora AI Analysis</h2>
+                                <p class="student-classwork-detail-subtitle">Automatically generated from the ML evidence already visible on this page.</p>
+                            </div>
+                            <span class="student-insights-ai-badge">AI</span>
+                        </div>
 
-                {% if has_feedback %}
-                    <div class="student-classwork-submission-summary">
-                        <div>
-                            <span>Sentiment</span>
-                            <strong>{{ sentiment or '—' }}</strong>
+                        <div class="student-insights-ai-intro">
+                            <strong>Your personalized performance explanation</strong>
+                            <p>Nexora AI explains what the current evidence means, what may be limiting progress, and what to focus on next. It cannot change grades or the Official OJT Evaluation.</p>
                         </div>
-                        <div>
-                            <span>Competency Signal</span>
-                            <strong>{{ competency or '—' }}</strong>
-                        </div>
-                        <div>
-                            <span>ML Confidence</span>
-                            <strong>{{ "%.2f"|format(confidence) }}</strong>
-                        </div>
-                        <div>
-                            <span>Feedback Classification</span>
-                            <strong>{{ feedback_analysis.performance_label or '—' }}</strong>
-                        </div>
-                        <div>
-                            <span>Naive Bayes Prediction</span>
-                            <strong>{{ feedback_analysis.nb_prediction or '—' }}</strong>
-                        </div>
-                        <div>
-                            <span>SVM Prediction</span>
-                            <strong>{{ feedback_analysis.svm_prediction or '—' }}</strong>
-                        </div>
-                    </div>
 
-                    <div class="student-classwork-feedback">
-                        <h3>Feedback-based Recommendation</h3>
-                        <p>{{ recommendation or 'No feedback recommendation is available.' }}</p>
-                    </div>
-                {% else %}
-                    <div class="student-document-guide">
-                        <div class="student-document-guide-icon" aria-hidden="true">ML</div>
-                        <div>
-                            <h2>No feedback evidence available</h2>
-                            <p>Sentiment, competency, confidence, Naive Bayes prediction, SVM prediction, and feedback classification are intentionally left blank until supervisor feedback exists.</p>
-                        </div>
-                    </div>
-                {% endif %}
-            </section>
-
-            <section class="student-document-guide" aria-labelledby="evidence-status-heading">
-                <div class="student-document-guide-icon" aria-hidden="true">✓</div>
-                <div>
-                    <h2 id="evidence-status-heading">Evidence Status</h2>
-                    <p>The Work performance label is deterministic and gradebook-derived. Naive Bayes and SVM are separate ML predictions based on feedback. Nexora keeps these signals separate instead of treating them as an Official OJT grade.</p>
-                    <div class="student-document-tags">
-                        <span>Performance evidence: {% if has_performance_data %}Available{% else %}No Data{% endif %}</span>
-                        <span>Feedback evidence: {% if has_feedback %}Available{% else %}No Feedback{% endif %}</span>
-                        <span>Official Evaluation: Separate</span>
-                    </div>
+                        {% if has_performance_data or has_feedback %}
+                            <p id="nxMlAiStatus" class="student-insights-ai-status">Analyzing your current ML evidence…</p>
+                            <div id="nxMlAiItems" class="student-insights-ai-items" hidden>
+                                <section class="student-insights-ai-item"><h3>Overall Interpretation</h3><p data-ai-section="overall"></p></section>
+                                <section class="student-insights-ai-item"><h3>What Happened</h3><p data-ai-section="happened"></p></section>
+                                <section class="student-insights-ai-item"><h3>What You Should Improve</h3><p data-ai-section="improve"></p></section>
+                                <section class="student-insights-ai-item"><h3>Feedback Signal</h3><p data-ai-section="feedback"></p></section>
+                                <section class="student-insights-ai-item"><h3>Next Focus</h3><p data-ai-section="next"></p></section>
+                            </div>
+                        {% else %}
+                            <div class="student-insights-ai-items">
+                                <section class="student-insights-ai-item">
+                                    <h3>Not enough evidence yet</h3>
+                                    <p>Nexora AI cannot explain your performance or suggest score-specific improvements until graded Work or supervisor feedback is available.</p>
+                                </section>
+                            </div>
+                        {% endif %}
+                    </article>
                 </div>
             </section>
         </div>
     </main>
+
+    {% if has_performance_data or has_feedback %}
+    <script>
+    (function () {
+        var status = document.getElementById('nxMlAiStatus');
+        var items = document.getElementById('nxMlAiItems');
+        if (!status || !items) return;
+
+        var evidence = {
+            performance_evidence_available: {{ has_performance_data|tojson }},
+            work_average_percentage: {{ average_percentage|tojson }},
+            minimum_work_score_percentage: {{ min_percentage|tojson }},
+            maximum_work_score_percentage: {{ max_percentage|tojson }},
+            completion_rate_percentage: {{ completion_rate|tojson }},
+            reviewed_work_count: {{ graded_count|tojson }},
+            total_work_count: {{ total_count|tojson }},
+            manual_grade_count: {{ manual_count|tojson }},
+            imported_grade_count: {{ imported_count|tojson }},
+            work_performance_label: {{ numeric_performance_label|tojson }},
+            work_recommendation: {{ (ml_recommendation.recommendation if ml_recommendation else none)|tojson }},
+            recommendation_priority: {{ (ml_recommendation.priority if ml_recommendation else none)|tojson }},
+            feedback_evidence_available: {{ has_feedback|tojson }},
+            sentiment: {{ sentiment|tojson }},
+            competency_signal: {{ competency|tojson }},
+            ml_confidence: {{ confidence|tojson }},
+            feedback_classification: {{ feedback_analysis.performance_label|tojson }},
+            naive_bayes_prediction: {{ feedback_analysis.nb_prediction|tojson }},
+            svm_prediction: {{ feedback_analysis.svm_prediction|tojson }},
+            feedback_recommendation: {{ recommendation|tojson }}
+        };
+
+        function setSection(name, value) {
+            var node = items.querySelector('[data-ai-section="' + name + '"]');
+            if (node) node.textContent = value || 'Not enough evidence is available for this part of the explanation.';
+        }
+
+        function showUnavailable(message) {
+            status.textContent = message || 'Nexora AI explanation is unavailable right now. Your ML evidence and recommendations above are still available.';
+            items.hidden = true;
+        }
+
+        function parseAnswer(answer) {
+            var text = String(answer || '').replace(/\r/g, '').trim();
+            var labels = [
+                ['overall', 'OVERALL INTERPRETATION'],
+                ['happened', 'WHAT HAPPENED'],
+                ['improve', 'WHAT TO IMPROVE'],
+                ['feedback', 'FEEDBACK SIGNAL'],
+                ['next', 'NEXT FOCUS']
+            ];
+            var found = [];
+
+            labels.forEach(function (entry) {
+                var label = entry[1];
+                var index = text.toUpperCase().indexOf(label + ':');
+                if (index >= 0) found.push({key: entry[0], label: label, index: index});
+            });
+
+            found.sort(function (a, b) { return a.index - b.index; });
+            if (!found.length) {
+                setSection('overall', text);
+                setSection('happened', 'See the overall interpretation above.');
+                setSection('improve', evidence.work_recommendation || 'Focus on the lowest-supported area shown in your current evidence.');
+                setSection('feedback', evidence.feedback_evidence_available ? 'Use the Feedback Intelligence panel for the current model signals.' : 'No supervisor feedback is available yet.');
+                setSection('next', 'Use the current ML recommendation and complete any unfinished Work first.');
+                return;
+            }
+
+            var values = {};
+            for (var i = 0; i < found.length; i++) {
+                var start = found[i].index + found[i].label.length + 1;
+                var end = i + 1 < found.length ? found[i + 1].index : text.length;
+                values[found[i].key] = text.slice(start, end).trim().replace(/^[-•]\s*/, '');
+            }
+            labels.forEach(function (entry) { setSection(entry[0], values[entry[0]]); });
+        }
+
+        function evidenceHash(value) {
+            var text = JSON.stringify(value);
+            var hash = 0;
+            for (var i = 0; i < text.length; i++) hash = ((hash << 5) - hash + text.charCodeAt(i)) | 0;
+            return String(hash);
+        }
+
+        var cacheKey = 'nxMlAiAnalysis:' + {{ classroom.id|tojson }} + ':' + evidenceHash(evidence);
+        try {
+            var cached = window.sessionStorage.getItem(cacheKey);
+            if (cached) {
+                parseAnswer(cached);
+                status.textContent = 'AI explanation generated from your current ML evidence.';
+                items.hidden = false;
+                return;
+            }
+        } catch (error) {}
+
+        var prompt = [
+            'Explain the following Nexora ML Insights evidence for the authenticated student.',
+            'Use ONLY the values provided below. Do not invent timelines, score drops, causes, missing assignments, behavior, or supervisor comments that are not directly supported.',
+            'Keep the explanation practical, concise, and student-friendly.',
+            'The Work performance label is gradebook-derived; Naive Bayes and SVM are feedback ML predictions; neither replaces the Official OJT Evaluation.',
+            'Return exactly these five labeled sections in plain text:',
+            'OVERALL INTERPRETATION:',
+            'WHAT HAPPENED:',
+            'WHAT TO IMPROVE:',
+            'FEEDBACK SIGNAL:',
+            'NEXT FOCUS:',
+            'For NEXT FOCUS, give 2 to 4 short actions separated by semicolons.',
+            'If evidence for a section is unavailable, explicitly say that it is unavailable instead of guessing.',
+            'Evidence JSON:',
+            JSON.stringify(evidence)
+        ].join('\n');
+
+        fetch('/assistant/ask', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-CSRFToken': {{ csrf_token()|tojson }}
+            },
+            body: JSON.stringify({question: prompt})
+        }).then(function (response) {
+            return response.json().then(function (data) {
+                if (!response.ok) throw new Error(data.error || 'AI request failed.');
+                return data;
+            });
+        }).then(function (data) {
+            if (!data.available || !data.answer) {
+                showUnavailable('Nexora AI is not enabled on this server yet. Your ML evidence and recommendations remain available above.');
+                return;
+            }
+            parseAnswer(data.answer);
+            status.textContent = 'AI explanation generated from your current ML evidence.';
+            items.hidden = false;
+            try { window.sessionStorage.setItem(cacheKey, data.answer); } catch (error) {}
+        }).catch(function () {
+            showUnavailable('Nexora AI explanation is temporarily unavailable. Your ML evidence and recommendations above are unaffected.');
+        });
+    })();
+    </script>
+    {% endif %}
 </body>
 </html>
