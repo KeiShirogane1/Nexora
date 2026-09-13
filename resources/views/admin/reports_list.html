@@ -1,2 +1,113 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Internship Reports - Nexora</title><link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}"><link rel="stylesheet" href="{{ url_for('static',filename='css/admin.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}"></head><body class="admin-page"><div>{% include 'components/admin_sidebar.html' %}</div><main class="admin-main nexora-app-main"><div class="nexora-page"><header class="ui-page-heading"><div><span class="ui-eyebrow">Internship Analytics</span><h1>Internship Reports</h1><p>Open an individual one-page overview for attendance, evaluation, performance, recommendations, and rendered hours.</p></div></header><section class="gradebook-card"><div class="gradebook-card-header"><h2>Intern Directory</h2><p>Select an intern to view their complete report.</p></div>{% if students %}<div class="table-responsive"><table class="gradebook-table"><thead><tr><th>Intern</th><th>Supervisor</th><th>Report</th></tr></thead><tbody>{% for student in students %}<tr><td><strong>{{ student[1] }}</strong></td><td>{{ student[2] or 'Not assigned' }}</td><td><a href="{{ url_for('admin_reports_overview.overview',student_id=student[0]) }}" class="ui-primary-btn" style="min-height:36px;padding:7px 12px;font-size:.72rem">View Report</a></td></tr>{% endfor %}</tbody></table></div>{% else %}<div class="student-classwork-empty"><div class="student-classwork-empty-icon">📊</div><h2>No internship reports yet</h2><p>Students will appear here once they are registered.</p></div>{% endif %}</section></div></main></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Internship Reports - Nexora</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
+    <style>
+        body.admin-reports-page {
+            --report-accent: #f45125;
+            --report-accent-dark: #d9471b;
+            --report-accent-soft: #fff1eb;
+            --report-border: #e5ebe9;
+            --report-text: #14251f;
+            --report-muted: #6e7e79;
+            background: #f6f9f9 !important;
+            color: var(--report-text);
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+        }
+        body.admin-reports-page .admin-main { padding-top: 0; }
+        .admin-report-page-shell { width: min(100%, 1180px); margin: 0 auto; padding: 30px 24px 48px; }
+        .admin-report-page-heading { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-bottom: 22px; }
+        .admin-report-eyebrow, .admin-report-card-kicker { display: block; color: var(--report-accent); font-size: .72rem; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
+        .admin-report-page-heading h1 { margin: 6px 0 5px; color: #11251f; font-size: 2rem; line-height: 1.12; font-weight: 850; letter-spacing: -.025em; }
+        .admin-report-page-heading p { max-width: 760px; margin: 0; color: var(--report-muted); font-size: .92rem; line-height: 1.55; }
+        .admin-report-heading-mark { width: 54px; height: 54px; flex: 0 0 54px; display: grid; place-items: center; border-radius: 15px; background: var(--report-accent-soft); color: var(--report-accent); font-size: 1.25rem; font-weight: 900; }
+        .admin-report-directory-card { border: 1px solid var(--report-border); border-radius: 16px; background: #fff; box-shadow: 0 8px 28px rgba(23, 51, 43, .05); overflow: hidden; }
+        .admin-report-directory-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; padding: 20px 22px 16px; border-bottom: 1px solid #edf1ef; }
+        .admin-report-directory-header h2 { margin: 4px 0 0; color: #173128; font-size: 1.08rem; font-weight: 850; }
+        .admin-report-directory-header p { margin: 4px 0 0; color: #7b8a85; font-size: .82rem; }
+        .admin-report-count { padding: 6px 10px; border-radius: 999px; background: var(--report-accent-soft); color: var(--report-accent-dark); font-size: .75rem; font-weight: 850; white-space: nowrap; }
+        .admin-report-table-wrap { overflow-x: auto; }
+        .admin-report-table { width: 100%; border-collapse: collapse; }
+        .admin-report-table th { padding: 12px 18px; background: #fafbfb; color: #62736d; font-size: .76rem; font-weight: 850; text-align: left; letter-spacing: .02em; }
+        .admin-report-table td { padding: 14px 18px; border-top: 1px solid #edf1ef; color: #40534d; font-size: .88rem; vertical-align: middle; }
+        .admin-report-table tbody tr:hover { background: #fffaf8; }
+        .admin-report-action-heading, .admin-report-action-cell { text-align: right !important; }
+        .admin-report-intern-cell { display: flex; align-items: center; gap: 11px; }
+        .admin-report-intern-avatar { width: 34px; height: 34px; flex: 0 0 34px; display: grid; place-items: center; border-radius: 10px; background: var(--report-accent-soft); color: var(--report-accent); font-size: .82rem; font-weight: 900; }
+        .admin-report-intern-cell strong { display: block; color: #263a33; font-size: .9rem; }
+        .admin-report-intern-cell small { display: block; margin-top: 2px; color: #8b9994; font-size: .72rem; }
+        .admin-report-supervisor { font-weight: 700; color: #42564f; }
+        .admin-report-supervisor.is-unassigned { color: #9a6b61; font-weight: 650; }
+        .admin-report-open-btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 38px; padding: 8px 13px; border: 1px solid var(--report-accent); border-radius: 10px; background: var(--report-accent); color: #fff !important; font-size: .78rem; font-weight: 850; text-decoration: none; box-shadow: 0 6px 15px rgba(244, 81, 37, .18); transition: .15s ease; }
+        .admin-report-open-btn:hover { background: var(--report-accent-dark); border-color: var(--report-accent-dark); transform: translateY(-1px); }
+        .admin-report-empty-state { padding: 56px 24px; text-align: center; }
+        .admin-report-empty-icon { width: 50px; height: 50px; margin: 0 auto 12px; display: grid; place-items: center; border-radius: 14px; background: var(--report-accent-soft); color: var(--report-accent); font-size: 1.25rem; }
+        .admin-report-empty-state h2 { margin: 0; color: #213a31; font-size: 1.05rem; }
+        .admin-report-empty-state p { margin: 7px 0 0; color: #82908b; font-size: .85rem; }
+        @media (max-width: 720px) {
+            .admin-report-page-shell { padding: 22px 16px 36px; }
+            .admin-report-page-heading { align-items: flex-start; flex-direction: column; }
+            .admin-report-heading-mark { display: none; }
+            .admin-report-page-heading h1 { font-size: 1.65rem; }
+            .admin-report-directory-header { padding: 17px 16px 14px; }
+            .admin-report-table th, .admin-report-table td { padding-left: 14px; padding-right: 14px; }
+        }
+    </style>
+</head>
+<body class="admin-page admin-reports-page">
+    {% include 'components/admin_sidebar.html' %}
+
+    <main class="admin-main nexora-app-main">
+        <div class="admin-report-page-shell">
+            <header class="admin-report-page-heading">
+                <div>
+                    <span class="admin-report-eyebrow">Internship Analytics</span>
+                    <h1>Internship Reports</h1>
+                    <p>Review each intern's attendance, evaluation, performance, recommendations, and rendered hours from one place.</p>
+                </div>
+                <div class="admin-report-heading-mark" aria-hidden="true">▤</div>
+            </header>
+
+            <section class="admin-report-directory-card" aria-labelledby="intern-directory-title">
+                <div class="admin-report-directory-header">
+                    <div>
+                        <span class="admin-report-card-kicker">REPORT DIRECTORY</span>
+                        <h2 id="intern-directory-title">Intern Directory</h2>
+                        <p>Select an intern to open their complete internship report.</p>
+                    </div>
+                    {% if students %}<span class="admin-report-count">{{ students|length }} intern{% if students|length != 1 %}s{% endif %}</span>{% endif %}
+                </div>
+
+                {% if students %}
+                    <div class="admin-report-table-wrap">
+                        <table class="admin-report-table">
+                            <thead><tr><th>Intern</th><th>Supervisor</th><th class="admin-report-action-heading">Report</th></tr></thead>
+                            <tbody>
+                                {% for student in students %}
+                                    <tr>
+                                        <td>
+                                            <div class="admin-report-intern-cell">
+                                                <span class="admin-report-intern-avatar" aria-hidden="true">{{ (student[1] or 'I')[0]|upper }}</span>
+                                                <span><strong>{{ student[1] }}</strong><small>Student account</small></span>
+                                            </div>
+                                        </td>
+                                        <td>{% if student[2] %}<span class="admin-report-supervisor">{{ student[2] }}</span>{% else %}<span class="admin-report-supervisor is-unassigned">Not assigned</span>{% endif %}</td>
+                                        <td class="admin-report-action-cell"><a href="{{ url_for('admin_reports_overview.overview', student_id=student[0]) }}" class="admin-report-open-btn">View Report <span aria-hidden="true">→</span></a></td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="admin-report-empty-state"><span class="admin-report-empty-icon" aria-hidden="true">▤</span><h2>No internship reports yet</h2><p>Students will appear here once they are registered.</p></div>
+                {% endif %}
+            </section>
+        </div>
+    </main>
+</body>
+</html>

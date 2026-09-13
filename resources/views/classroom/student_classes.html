@@ -334,7 +334,6 @@
             color: #8f1d14;
         }
 
-        /* Keep dropdown actions visually consistent even when global form/button rules apply. */
         .student-intern-menu-panel .student-intern-menu-item {
             min-height: 0 !important;
             padding: 9px 10px !important;
@@ -499,6 +498,87 @@
             color: #fff;
         }
 
+        .leave-intern-modal .nexora-modal {
+            max-width: 480px;
+        }
+
+        .leave-intern-modal .nexora-modal-header {
+            padding-right: 68px;
+        }
+
+        .leave-intern-modal .nexora-modal-header h2 {
+            color: #173d31;
+        }
+
+        .leave-intern-modal .nexora-modal-body {
+            gap: 12px;
+        }
+
+        .leave-intern-modal-copy {
+            display: flex;
+            align-items: flex-start;
+            gap: 13px;
+        }
+
+        .leave-intern-modal-icon {
+            width: 42px;
+            height: 42px;
+            flex: 0 0 42px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            background: #fff0f0;
+            color: #b42318;
+            font-size: 20px;
+            font-weight: 900;
+        }
+
+        .leave-intern-modal-copy p {
+            margin: 1px 0 0;
+            color: #55645f;
+            font-size: .9rem;
+            line-height: 1.55;
+        }
+
+        .leave-intern-class-name {
+            color: #173d31;
+            font-weight: 850;
+        }
+
+        .leave-intern-warning {
+            padding: 12px 14px;
+            border: 1px solid #f1d7d2;
+            border-radius: 11px;
+            background: #fff8f6;
+            color: #6d4c45;
+            font-size: .83rem;
+            line-height: 1.5;
+        }
+
+        .leave-intern-warning strong {
+            display: block;
+            margin-bottom: 3px;
+            color: #9f2f23;
+        }
+
+        .leave-intern-confirm {
+            height: 40px;
+            padding: 0 18px;
+            border: 1px solid #b42318;
+            border-radius: 10px;
+            background: #b42318;
+            color: #fff;
+            font-size: .9rem;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .leave-intern-confirm:hover {
+            background: #922018;
+            border-color: #922018;
+        }
+
         @media (max-width: 1000px) {
             .classes-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -618,12 +698,14 @@
                                                 </button>
 
                                                 <div class="student-intern-menu-divider"></div>
-                                                <form method="POST" action="{{ url_for('classroom.leave_class', class_id=c.id) }}" onsubmit='return confirm("Leave " + {{ c.name|tojson }} + "?\nYou will no longer have an active supervisor or receive new Work from this internship.\nYour completed attendance and Daily OJT history will remain preserved.");'>
-                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                    <button type="submit" class="student-intern-menu-item is-danger">
-                                                        <span aria-hidden="true">↪</span> Leave Intern Classroom
-                                                    </button>
-                                                </form>
+                                                <button
+                                                    type="button"
+                                                    class="student-intern-menu-item is-danger"
+                                                    data-leave-url="{{ url_for('classroom.leave_class', class_id=c.id) }}"
+                                                    data-class-name="{{ c.name }}"
+                                                    onclick="openLeaveInternModal(this, event)">
+                                                    <span aria-hidden="true">↪</span> Leave Intern Classroom
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
@@ -688,6 +770,35 @@
         </div>
     </main>
 
+    <div class="nexora-modal-overlay leave-intern-modal" id="leaveInternModal" aria-hidden="true">
+        <div class="nexora-modal" role="dialog" aria-modal="true" aria-labelledby="leaveInternModalTitle">
+            <div class="nexora-modal-header">
+                <h2 id="leaveInternModalTitle">Leave Intern Classroom?</h2>
+                <p>This changes your active internship enrollment.</p>
+                <button type="button" class="nexora-modal-close" aria-label="Close" onclick="closeLeaveInternModal()">×</button>
+            </div>
+
+            <div class="nexora-modal-body">
+                <div class="leave-intern-modal-copy">
+                    <span class="leave-intern-modal-icon" aria-hidden="true">↪</span>
+                    <p>You are about to leave <span class="leave-intern-class-name" id="leaveInternClassName">this internship classroom</span>.</p>
+                </div>
+                <div class="leave-intern-warning">
+                    <strong>What happens next</strong>
+                    You will no longer have an active supervisor or receive new Work from this internship. Your completed attendance and Daily OJT history will remain preserved.
+                </div>
+            </div>
+
+            <form method="POST" id="leaveInternForm">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="nexora-modal-footer">
+                    <button type="button" class="btn-nexora-secondary" onclick="closeLeaveInternModal()">Keep Classroom</button>
+                    <button type="submit" class="leave-intern-confirm">Leave Classroom</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         function closeStudentClassMenus(exceptId) {
             document.querySelectorAll('.student-intern-menu-panel.show').forEach(function (menu) {
@@ -722,6 +833,47 @@
             menu.addEventListener('click', function (event) {
                 event.stopPropagation();
             });
+        });
+
+        function openLeaveInternModal(button, event) {
+            if (event) event.stopPropagation();
+            var modal = document.getElementById('leaveInternModal');
+            var form = document.getElementById('leaveInternForm');
+            var name = document.getElementById('leaveInternClassName');
+            if (!modal || !form || !button) return;
+
+            var leaveUrl = button.dataset.leaveUrl || '';
+            if (!leaveUrl) return;
+
+            form.setAttribute('action', leaveUrl);
+            if (name) name.textContent = button.dataset.className || 'this internship classroom';
+            closeStudentClassMenus();
+            modal.classList.add('open');
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('modal-open');
+        }
+
+        function closeLeaveInternModal() {
+            var modal = document.getElementById('leaveInternModal');
+            var form = document.getElementById('leaveInternForm');
+            if (!modal) return;
+            modal.classList.remove('open');
+            modal.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('modal-open');
+            if (form) form.removeAttribute('action');
+        }
+
+        var leaveInternModal = document.getElementById('leaveInternModal');
+        if (leaveInternModal) {
+            leaveInternModal.addEventListener('click', function (event) {
+                if (event.target === leaveInternModal) closeLeaveInternModal();
+            });
+        }
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && leaveInternModal && leaveInternModal.classList.contains('open')) {
+                closeLeaveInternModal();
+            }
         });
 
         function copyStudentClassCode(button, event) {
