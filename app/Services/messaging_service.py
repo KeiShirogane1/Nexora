@@ -85,26 +85,26 @@ def _display_name(user_id, role, username):
 def _profile_picture(user_id, role):
     conn = get_db_connection()
     try:
+        # Student uploads are stored on student_profiles. Supervisor uploads and
+        # account-level/Admin photos are stored on users.profile_picture.
         if role == "student":
             row = conn.execute(
                 "SELECT profile_picture FROM student_profiles WHERE user_id = ?",
                 (user_id,),
             ).fetchone()
-        elif role == "supervisor":
-            row = conn.execute(
-                "SELECT profile_picture FROM supervisor_profiles WHERE user_id = ?",
-                (user_id,),
-            ).fetchone()
-        else:
-            row = None
+            profile_picture = str(_row_value(row, "profile_picture", 0, "") or "").strip()
+            if profile_picture:
+                return profile_picture
+
+        row = conn.execute(
+            "SELECT profile_picture FROM users WHERE id = ?",
+            (user_id,),
+        ).fetchone()
+        return str(_row_value(row, "profile_picture", 0, "") or "").strip()
     except Exception:
-        row = None
+        return ""
     finally:
         conn.close()
-
-    if not row:
-        return ""
-    return str(_row_value(row, "profile_picture", 0, "") or "").strip()
 
 
 def _contact_from_row(row, unread_count=0, message_count=0, last_message_at=None):
