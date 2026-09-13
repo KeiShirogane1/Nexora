@@ -1,4 +1,149 @@
 {# Phase 12: read-only role-aware AI bridge for the existing Assistant shell. #}
+{% set nx_ai_role = nx_topbar_role|default(session.get('role', 'student')) %}
+{% set nx_ai_logo = 'images/nexora_logo_student.png' if nx_ai_role == 'student' else 'images/nexora_logo_admin.png' if nx_ai_role == 'admin' else 'images/nexora_logo_supervisor.png' %}
+{% set nx_ai_user_avatar = url_for('static', filename='images/default_profile.png') %}
+{% if sidebar_profile is defined and sidebar_profile and sidebar_profile.profile_picture %}
+    {% set nx_ai_user_avatar = url_for('profile_picture', filename=sidebar_profile.profile_picture) %}
+{% endif %}
+
+<style id="nx-assistant-ai-design">
+.nx-assistant .nx-assistant-body {
+    direction: rtl;
+    scrollbar-width: thin;
+    scrollbar-color: var(--nx-assistant-accent) #dfe7e3;
+}
+.nx-assistant .nx-assistant-body > * { direction: ltr; }
+.nx-assistant .nx-assistant-body::-webkit-scrollbar { width: 7px; }
+.nx-assistant .nx-assistant-body::-webkit-scrollbar-track {
+    background: #e8eeeb;
+    border-radius: 999px;
+}
+.nx-assistant .nx-assistant-body::-webkit-scrollbar-thumb {
+    background: var(--nx-assistant-accent);
+    border-radius: 999px;
+}
+.nx-assistant .nx-assistant-message {
+    max-width: 96%;
+    gap: 10px;
+    align-items: flex-start;
+}
+.nx-assistant .nx-assistant-message > span {
+    position: relative;
+    width: 32px;
+    min-width: 32px;
+    height: 32px;
+    flex-basis: 32px;
+    overflow: visible;
+    border: 1px solid #dfe7e3;
+    border-radius: 50%;
+    background-position: center;
+    background-repeat: no-repeat;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, .09);
+    color: transparent;
+    font-size: 0;
+}
+.nx-assistant .nx-assistant-message.is-assistant > span {
+    background-color: #fff;
+    background-image: url({{ url_for('static', filename=nx_ai_logo)|tojson }});
+    background-size: 20px 20px;
+}
+.nx-assistant .nx-assistant-message.is-assistant > span::after {
+    content: "";
+    position: absolute;
+    right: -1px;
+    bottom: -1px;
+    width: 8px;
+    height: 8px;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    background: #22c55e;
+}
+.nx-assistant .nx-assistant-message.is-user > span {
+    background-color: #e2e8f0;
+    background-image: url({{ nx_ai_user_avatar|tojson }});
+    background-size: cover;
+}
+.nx-assistant .nx-assistant-message p {
+    max-width: calc(100% - 42px);
+    padding: 11px 13px;
+    border-radius: 5px 14px 14px 14px;
+    background: #fff;
+    color: #334155;
+    font-size: .76rem;
+    line-height: 1.62;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, .045);
+}
+.nx-assistant .nx-assistant-message.is-user p {
+    border-radius: 14px 5px 14px 14px;
+    background: var(--nx-assistant-accent);
+    color: #fff;
+    box-shadow: 0 5px 16px rgba(15, 23, 42, .09);
+}
+.nx-assistant .nx-assistant-message p strong {
+    color: #0f172a;
+    font-weight: 850;
+}
+.nx-assistant .nx-assistant-message.is-user p strong { color: inherit; }
+.nx-assistant .nx-assistant-message p code {
+    padding: 1px 5px;
+    border-radius: 5px;
+    background: #eef3f1;
+    color: #0f5132;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: .71rem;
+}
+.nx-assistant .nx-ai-line {
+    display: block;
+    margin: 0 0 4px;
+}
+.nx-assistant .nx-ai-line:last-child { margin-bottom: 0; }
+.nx-assistant .nx-ai-line.is-heading {
+    margin: 2px 0 6px;
+    color: #0f172a;
+    font-weight: 850;
+}
+.nx-assistant .nx-ai-line.is-bullet {
+    position: relative;
+    padding-left: 14px;
+}
+.nx-assistant .nx-ai-line.is-bullet::before {
+    content: "•";
+    position: absolute;
+    left: 1px;
+    color: var(--nx-assistant-accent);
+    font-weight: 900;
+}
+.nx-assistant .nx-ai-line.is-spacer {
+    height: 6px;
+    margin: 0;
+}
+.nx-assistant .nx-assistant-message.is-thinking p {
+    min-width: 104px;
+    color: #64748b;
+}
+.nx-assistant .nx-ai-thinking {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+}
+.nx-assistant .nx-ai-thinking-label { margin-right: 4px; }
+.nx-assistant .nx-ai-thinking-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--nx-assistant-accent);
+    animation: nxAssistantThinking 1s ease-in-out infinite;
+}
+.nx-assistant .nx-ai-thinking-dot:nth-child(3) { animation-delay: .14s; }
+.nx-assistant .nx-ai-thinking-dot:nth-child(4) { animation-delay: .28s; }
+@keyframes nxAssistantThinking {
+    0%, 60%, 100% { opacity: .35; transform: translateY(0); }
+    30% { opacity: 1; transform: translateY(-2px); }
+}
+</style>
+
 <script>
 (function () {
     var FALLBACK_TEXT = 'I can navigate Nexora or open authorized message threads. Type /help to see available shortcuts.';
@@ -21,6 +166,89 @@
             body.scrollTop = body.scrollHeight;
         }
 
+        function appendInline(parent, text) {
+            var value = String(text || '');
+            var pattern = /(\*\*[^*\n]+\*\*|__[^_\n]+__|`[^`\n]+`)/g;
+            var cursor = 0;
+            var match;
+
+            while ((match = pattern.exec(value)) !== null) {
+                if (match.index > cursor) {
+                    parent.appendChild(document.createTextNode(value.slice(cursor, match.index)));
+                }
+
+                var token = match[0];
+                var node;
+                if (token.indexOf('**') === 0 || token.indexOf('__') === 0) {
+                    node = document.createElement('strong');
+                    node.textContent = token.slice(2, -2);
+                } else {
+                    node = document.createElement('code');
+                    node.textContent = token.slice(1, -1);
+                }
+                parent.appendChild(node);
+                cursor = pattern.lastIndex;
+            }
+
+            if (cursor < value.length) {
+                parent.appendChild(document.createTextNode(value.slice(cursor)));
+            }
+        }
+
+        function renderAssistantText(element, text) {
+            if (!element) return;
+            element.textContent = '';
+
+            var lines = String(text || '').replace(/\r/g, '').split('\n');
+            lines.forEach(function (line) {
+                var trimmed = line.trim();
+                var lineNode = document.createElement('span');
+                lineNode.className = 'nx-ai-line';
+
+                if (!trimmed) {
+                    lineNode.classList.add('is-spacer');
+                    element.appendChild(lineNode);
+                    return;
+                }
+
+                var heading = trimmed.match(/^#{1,6}\s+(.+)$/);
+                var bullet = trimmed.match(/^[-*•]\s+(.+)$/);
+                var numbered = trimmed.match(/^(\d+[.)])\s+(.+)$/);
+
+                if (heading) {
+                    lineNode.classList.add('is-heading');
+                    appendInline(lineNode, heading[1]);
+                } else if (bullet) {
+                    lineNode.classList.add('is-bullet');
+                    appendInline(lineNode, bullet[1]);
+                } else if (numbered) {
+                    appendInline(lineNode, numbered[1] + ' ' + numbered[2]);
+                } else {
+                    appendInline(lineNode, trimmed);
+                }
+
+                element.appendChild(lineNode);
+            });
+        }
+
+        function renderThinking(element) {
+            element.textContent = '';
+            var wrap = document.createElement('span');
+            wrap.className = 'nx-ai-thinking';
+
+            var label = document.createElement('span');
+            label.className = 'nx-ai-thinking-label';
+            label.textContent = 'Thinking';
+            wrap.appendChild(label);
+
+            for (var i = 0; i < 3; i++) {
+                var dot = document.createElement('span');
+                dot.className = 'nx-ai-thinking-dot';
+                wrap.appendChild(dot);
+            }
+            element.appendChild(wrap);
+        }
+
         function appendMessage(kind, text) {
             var row = document.createElement('div');
             row.className = 'nx-assistant-message ' + (kind === 'user' ? 'is-user' : 'is-assistant');
@@ -29,7 +257,11 @@
             avatar.textContent = kind === 'user' ? 'You' : 'N';
 
             var message = document.createElement('p');
-            message.textContent = text;
+            if (kind === 'assistant') {
+                renderAssistantText(message, text);
+            } else {
+                message.textContent = text;
+            }
 
             row.appendChild(avatar);
             row.appendChild(message);
@@ -57,12 +289,12 @@
 
             var responseText = responseRow && responseRow.querySelector('p');
             if (!responseText) {
-                responseRow = appendMessage('assistant', 'Thinking…');
+                responseRow = appendMessage('assistant', '');
                 responseText = responseRow.querySelector('p');
-            } else {
-                responseText.textContent = 'Thinking…';
             }
 
+            responseRow.classList.add('is-thinking');
+            renderThinking(responseText);
             send.disabled = true;
 
             fetch('/assistant/ask', {
@@ -83,9 +315,11 @@
                     return data;
                 });
             }).then(function (data) {
-                responseText.textContent = data.answer || 'Nexora AI returned no answer.';
+                responseRow.classList.remove('is-thinking');
+                renderAssistantText(responseText, data.answer || 'Nexora AI returned no answer.');
             }).catch(function (error) {
-                responseText.textContent = error.message || 'Nexora AI is temporarily unavailable.';
+                responseRow.classList.remove('is-thinking');
+                renderAssistantText(responseText, error.message || 'Nexora AI is temporarily unavailable.');
             }).finally(function () {
                 send.disabled = false;
                 input.focus();
@@ -155,7 +389,7 @@
 
         var firstAssistant = conversation.querySelector('.nx-assistant-message.is-assistant p');
         if (firstAssistant) {
-            firstAssistant.textContent = 'I can navigate Nexora, open authorized message threads, and use role-aware AI help when it is enabled. Try /ask followed by a question.';
+            renderAssistantText(firstAssistant, 'I can navigate Nexora, open authorized message threads, and use role-aware AI help when it is enabled. Try /ask followed by a question.');
         }
 
         function enhanceAssistantMessage(row) {
@@ -175,7 +409,10 @@
 
             if (text.indexOf('Available navigation shortcuts:') === 0 &&
                 text.indexOf('AI help:') === -1) {
-                message.textContent = text + '\n\nAI help: use /ask <question> for role-aware Nexora or OJT guidance.';
+                renderAssistantText(
+                    message,
+                    text + '\n\nAI help: use /ask <question> for role-aware Nexora or OJT guidance.'
+                );
             }
         }
 
