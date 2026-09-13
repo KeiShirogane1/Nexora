@@ -1,0 +1,54 @@
+{# Shared looping background for Nexora authentication screens. #}
+<style>
+    body.general-page {
+        position: relative;
+        isolation: isolate;
+        overflow-x: hidden;
+    }
+
+    .nexora-auth-loop-bg {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        overflow: hidden;
+        pointer-events: none;
+        background: #071d17 url("{{ url_for('static', filename='images/Nexora Login.png') }}") center center / cover no-repeat;
+    }
+
+    .nexora-auth-loop-bg video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transform: scale(1.025);
+        filter: saturate(.9) brightness(.82) blur(1px);
+    }
+
+    .nexora-auth-loop-bg::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+            radial-gradient(circle at 50% 34%, rgba(11, 106, 72, .08), transparent 42%),
+            linear-gradient(180deg, rgba(2, 24, 17, .34), rgba(2, 21, 15, .58));
+    }
+
+    body.general-page > .login-container {
+        position: relative;
+        z-index: 2;
+        background: rgba(255, 255, 255, .965);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .nexora-auth-loop-bg video {
+            display: none;
+        }
+    }
+</style>
+
+<div class="nexora-auth-loop-bg" aria-hidden="true">
+    <video autoplay muted loop playsinline preload="metadata" poster="{{ url_for('static', filename='images/Nexora Login.png') }}">
+        <source src="{{ url_for('static', filename='videos/nexora_auth_background.mp4') }}" type="video/mp4">
+    </video>
+</div>
