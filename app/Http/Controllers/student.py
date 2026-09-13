@@ -1171,6 +1171,17 @@ def view_document(document_id):
         download_name=filename
     )
 
+def _is_valid_person_name(value):
+    # Accept Unicode letters, spaces, hyphens, apostrophes (incl. curly), and periods.
+    # Reject digits and unrelated symbols. Require at least one letter.
+    if not value:
+        return False
+    if not any(ch.isalpha() for ch in value):
+        return False
+    allowed = " .'-"
+    return all(ch.isalpha() or ch in allowed or ch == "\u2019" for ch in value)
+
+
 @student.route(
     "/student/profile/setup",
     methods=["GET", "POST"]
@@ -1181,65 +1192,151 @@ def profile_setup():
     conn = get_db_connection()
     cursor = conn.cursor()
 
+    # Load any existing partial profile (used for GET prefill and picture retention).
+    row = None
+    try:
+        cursor.execute(
+            """
+            SELECT
+                first_name,
+                middle_name,
+                last_name,
+                age,
+                student_id,
+                profile_picture,
+                phone_number,
+                home_address,
+                grade_year,
+                major_program
+            FROM student_profiles
+            WHERE user_id = ?
+            """,
+            (session["user_id"],),
+        )
+        row = cursor.fetchone()
+    except Exception:
+        row = None
+
+    def _empty_form():
+        return {
+            "first_name": "",
+            "middle_name": "",
+            "last_name": "",
+            "age": "",
+            "student_id": "",
+            "phone_number": "",
+            "home_address": "",
+            "grade_year": "",
+            "major_program": "",
+        }
 
     if request.method == "POST":
 
         # Server-side validation — never trust browser (profile_setup was missing this)
-        first_name = (request.form.get("first_name") or "").strip()
-        middle_name = (request.form.get("middle_name") or "").strip()
-        last_name = (request.form.get("last_name") or "").strip()
-        age_raw = (request.form.get("age") or "").strip()
+        form_data = {
+            "first_name": (request.form.get("first_name") or "").strip(),
+            "middle_name": (request.form.get("middle_name") or "").strip(),
+            "last_name": (request.form.get("last_name") or "").strip(),
+            "age": (request.form.get("age") or "").strip(),
+            "student_id": (request.form.get("student_id") or "").strip(),
+            "phone_number": (request.form.get("phone_number") or "").strip(),
+            "home_address": (request.form.get("home_address") or "").strip(),
+            "grade_year": (request.form.get("grade_year") or "").strip(),
+            "major_program": (request.form.get("major_program") or "").strip(),
+        }
+
+        first_name = form_data["first_name"]
+        middle_name = form_data["middle_name"]
+        last_name = form_data["last_name"]
+        age_raw = form_data["age"]
         age = age_raw
-        student_id = (request.form.get("student_id") or "").strip()
-        phone_number = (request.form.get("phone_number") or "").strip()
-        home_address = (request.form.get("home_address") or "").strip()
-        grade_year = (request.form.get("grade_year") or "").strip()
-        major_program = (request.form.get("major_program") or "").strip()
+        student_id = form_data["student_id"]
+        phone_number = form_data["phone_number"]
+        home_address = form_data["home_address"]
+        grade_year = form_data["grade_year"]
+        major_program = form_data["major_program"]
         errors = {}
-        if not first_name or not first_name.replace(" ", "").isalpha():
-            errors["first_name"] = "First name required, letters only."
-        if not last_name or not last_name.replace(" ", "").isalpha():
-            errors["last_name"] = "Last name required, letters only."
-        if middle_name and not middle_name.replace(" ", "").isalpha():
-            errors["middle_name"] = "Middle name letters only."
+
+        if not first_name:
+            errors["first_name"] = "First name is required."
+        elif not _is_valid_person_name(first_name):
+            errors["first_name"] = "First name may contain letters, spaces, hyphens, apostrophes, and periods."
+
+        if not last_name:
+            errors["last_name"] = "Last name is required."
+        elif not _is_valid_person_name(last_name):
+            errors["last_name"] = "Last name may contain letters, spaces, hyphens, apostrophes, and periods."
+
+        if middle_name and not _is_valid_person_name(middle_name):
+            errors["middle_name"] = "Middle name may contain letters, spaces, hyphens, apostrophes, and periods."
+
         if not student_id:
-            errors["student_id"] = "Student ID required."
+            errors["student_id"] = "Student ID is required."
+
         if not grade_year:
-            errors["grade_year"] = "Grade/year required."
+            errors["grade_year"] = "Grade/year is required."
+
         if not major_program:
-            errors["major_program"] = "Major/program required."
+            errors["major_program"] = "Major/program is required."
+
         if age_raw:
             try:
                 age_int = int(age_raw)
                 if age_int < 15 or age_int > 100:
-                    errors["age"] = "Age 15-100."
+                    errors["age"] = "Age must be between 15 and 100."
                 else:
                     age = age_int
-            except:
-                errors["age"] = "Age must be number."
+            except (TypeError, ValueError):
+                errors["age"] = "Age must be a number."
         else:
             age = None
+
         if phone_number and (not phone_number.isdigit() or len(phone_number) < 7 or len(phone_number) > 15):
-            errors["phone_number"] = "Phone 7-15 digits."
+            errors["phone_number"] = "Phone number must be 7-15 digits."
+
+        # Duplicate Student ID check (only if not already required-error).
+        duplicate_student_id = False
+        if not errors.get("student_id"):
+            dup = cursor.execute(
+                "SELECT 1 FROM student_profiles WHERE student_id = ? AND user_id != ?",
+                (student_id, session["user_id"]),
+            ).fetchone()
+            if dup:
+                duplicate_student_id = True
+                errors["student_id"] = "Student ID is already in use."
+
         if errors:
-            for f, msg in errors.items():
-                flash(f"{f}: {msg}", "danger")
+            for msg in errors.values():
+                flash(msg, "danger")
+
+            # Determine which step to reopen based on the fields that errored.
+            step1_fields = {"first_name", "middle_name", "last_name", "age", "student_id"}
+            step2_fields = {"phone_number", "home_address"}
+            step3_fields = {"grade_year", "major_program"}
+            if any(f in errors for f in step3_fields):
+                current_step = 3
+            elif any(f in errors for f in step2_fields):
+                current_step = 2
+            else:
+                current_step = 1
+
             conn.close()
-            return redirect("/student/profile/setup")
-
-
+            return render_template(
+                "student/profile_setup.html",
+                form_data=form_data,
+                current_step=current_step,
+            )
 
         # ==========================
         # PROFILE PICTURE
         # ==========================
 
-        profile_picture = None
-
+        # Retain the existing stored picture unless a new cropped image is provided.
+        profile_picture = row[5] if row else None
 
         cropped_image = request.form.get(
             "cropped_image"
         )
-
 
         if cropped_image:
             import base64
@@ -1284,19 +1381,14 @@ def profile_setup():
 
             profile_picture = filename
 
-
-
         # ==========================
         # UPDATE PROFILE
         # ==========================
 
-
         cursor.execute(
             """
             UPDATE student_profiles
-
             SET
-
             first_name = ?,
             middle_name = ?,
             last_name = ?,
@@ -1308,59 +1400,57 @@ def profile_setup():
             grade_year = ?,
             major_program = ?,
             profile_completed = 1
-
-
             WHERE user_id = ?
-
             """,
             (
-
                 first_name,
                 middle_name,
                 last_name,
-
                 age,
-
                 student_id,
-
                 profile_picture,
-
                 phone_number,
-
                 home_address,
-
                 grade_year,
-
                 major_program,
-
-                session["user_id"]
-
-            )
+                session["user_id"],
+            ),
         )
 
-
         conn.commit()
-
         conn.close()
-
 
         flash(
             "Profile completed successfully!",
             "success"
         )
 
-
         return redirect(
             "/student/dashboard"
         )
 
-
+    # GET — prefill from any existing partial profile row.
+    if row:
+        form_data = {
+            "first_name": row[0] or "",
+            "middle_name": row[1] or "",
+            "last_name": row[2] or "",
+            "age": row[3] if row[3] is not None else "",
+            "student_id": row[4] or "",
+            "phone_number": row[6] or "",
+            "home_address": row[7] or "",
+            "grade_year": row[8] or "",
+            "major_program": row[9] or "",
+        }
+    else:
+        form_data = _empty_form()
 
     conn.close()
 
-
     return render_template(
-        "student/profile_setup.html"
+        "student/profile_setup.html",
+        form_data=form_data,
+        current_step=1,
     )
 
 
