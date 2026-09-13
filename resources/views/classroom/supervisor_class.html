@@ -83,7 +83,21 @@
                     <div class="class-card">
                         <div class="class-card-header"><h6 class="mb-0">Recent announcements</h6></div>
                         <div class="class-card-body">
-                            {% if announcements and announcements|length>0 %}{% for a in announcements %}<div class="border-bottom pb-3 mb-3">{% if a.title %}<strong>{{ a.title }}</strong><br>{% endif %}<p class="mb-1">{{ a.body }}</p></div>{% endfor %}{% else %}<p class="text-muted mb-0">No announcements yet. Use the composer above.</p>{% endif %}
+                            {% set announcement_items = get_classroom_announcements(classroom.id) %}
+                            {% if announcement_items %}
+                                {% for a in announcement_items %}
+                                    <article class="border-bottom pb-3 mb-3">
+                                        <div class="d-flex flex-wrap justify-content-between gap-2">
+                                            <strong>{{ a.title or 'Announcement' }}</strong>
+                                            <span class="badge bg-light text-primary border">{{ a.post_type_label }}</span>
+                                        </div>
+                                        <div class="small text-muted mt-1 mb-2">Posted by {{ a.author_name }} · {{ a.author_role_label }} · {{ a.created_at_display }}</div>
+                                        <p class="mb-1">{{ a.body }}</p>
+                                    </article>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-muted mb-0">No announcements yet. Use the composer above.</p>
+                            {% endif %}
                         </div>
                     </div>
                     <div class="class-card">
