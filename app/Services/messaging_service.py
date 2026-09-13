@@ -152,11 +152,25 @@ def _authorized_contact_rows(user_id, role):
                         )
                       )
                     )
+                    OR (
+                      u.role = 'student'
+                      AND u.id <> ?
+                      AND EXISTS (
+                        SELECT 1
+                        FROM classroom_students mine
+                        JOIN classroom_students peer
+                          ON peer.classroom_id = mine.classroom_id
+                        JOIN classrooms c ON c.id = mine.classroom_id
+                        WHERE mine.student_id = ?
+                          AND peer.student_id = u.id
+                          AND COALESCE(c.archived, 0) = 0
+                      )
+                    )
                     OR u.role = 'admin'
                   )
                 ORDER BY u.role, LOWER(u.username), u.id
                 """,
-                (user_id, user_id),
+                (user_id, user_id, user_id, user_id),
             ).fetchall()
         elif role == "supervisor":
             rows = conn.execute(
@@ -245,14 +259,38 @@ def get_authorized_contacts(user_id, target_role=None):
                 """,
                 (user_id, contact_id, contact_id, user_id),
             ).fetchone()
-            contacts.append(
-                _contact_from_row(
-                    row,
-                    int(_row_value(unread_row, "count", 0, 0) or 0),
-                    int(_row_value(thread_row, "message_count", 0, 0) or 0),
-                    _row_value(thread_row, "last_message_at", 1),
-                )
+            contact = _contact_from_row(
+                row,
+                int(_row_value(unread_row, "count", 0, 0) or 0),
+                int(_row_value(thread_row, "message_count", 0, 0) or 0),
+                _row_value(thread_row, "last_message_at", 1),
             )
+
+            if role == "student" and contact.get("role") == "student":
+                classroom_rows = conn.execute(
+                    """
+                    SELECT DISTINCT c.id, c.name, c.section
+                    FROM classroom_students mine
+                    JOIN classroom_students peer
+                      ON peer.classroom_id = mine.classroom_id
+                    JOIN classrooms c ON c.id = mine.classroom_id
+                    WHERE mine.student_id = ?
+                      AND peer.student_id = ?
+                      AND COALESCE(c.archived, 0) = 0
+                    ORDER BY LOWER(c.name), c.id
+                    """,
+                    (user_id, contact_id),
+                ).fetchall()
+                contact["shared_classrooms"] = [
+                    {
+                        "id": int(_row_value(classroom_row, "id", 0, 0) or 0),
+                        "name": str(_row_value(classroom_row, "name", 1, "") or ""),
+                        "section": str(_row_value(classroom_row, "section", 2, "") or ""),
+                    }
+                    for classroom_row in classroom_rows
+                ]
+
+            contacts.append(contact)
         return contacts
     finally:
         conn.close()
