@@ -63,6 +63,21 @@
             font-weight: 800;
         }
 
+        .announcement-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: -1px 0 9px;
+            color: var(--nx-muted);
+            font-size: 11px;
+            line-height: 1.5;
+        }
+
+        .announcement-meta span + span::before {
+            content: "·";
+            margin-right: 6px;
+        }
+
         .announcement p {
             margin: 0;
             color: #4c5869;
@@ -210,10 +225,17 @@
                         </div>
                     </div>
 
-                    {% if announcements %}
-                        {% for a in announcements %}
+                    {% set announcement_items = get_classroom_announcements(classroom.id) %}
+                    {% if announcement_items %}
+                        {% for a in announcement_items %}
                             <article class="announcement">
                                 <h3>{{ a.title or 'Announcement' }}</h3>
+                                <div class="announcement-meta">
+                                    <span>Posted by {{ a.author_name }}</span>
+                                    <span>{{ a.author_role_label }}</span>
+                                    <span>{{ a.post_type_label }}</span>
+                                    <span>{{ a.created_at_display }}</span>
+                                </div>
                                 <p>{{ a.body }}</p>
                             </article>
                         {% endfor %}
