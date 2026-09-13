@@ -7,23 +7,78 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
+    <style>
+        body.student-logbook-review-page > .student-global-topbar {
+            display: flex !important;
+        }
+
+        body.student-logbook-review-page .student-tasks-content {
+            padding-top: 92px !important;
+        }
+
+        body.student-logbook-review-page .student-tasks-heading {
+            padding-top: 0 !important;
+            margin-top: 0 !important;
+            margin-bottom: 22px !important;
+        }
+
+        body.student-logbook-review-page .student-tasks-heading::before,
+        body.student-logbook-review-page .student-tasks-heading > div:first-child::before {
+            display: none !important;
+            content: none !important;
+        }
+
+        body.student-logbook-review-page .student-review-card {
+            border: 1px solid #e3eae5;
+            border-radius: 10px;
+            box-shadow: 0 6px 20px rgba(20, 52, 38, 0.035);
+            overflow: hidden;
+        }
+
+        body.student-logbook-review-page .student-review-card .card-header {
+            border-bottom-color: #e8eee9;
+        }
+
+        body.student-logbook-review-page .student-review-metric {
+            border-color: #e3eae5 !important;
+            background: #f8faf9;
+        }
+
+        body.student-logbook-review-page .student-review-copy {
+            border-color: #e3eae5 !important;
+            background: #f8faf9 !important;
+            color: #31453c;
+            white-space: pre-wrap;
+        }
+
+        body.student-logbook-review-page .student-review-rating {
+            color: #0a8f46 !important;
+        }
+
+        @media (max-width: 760px) {
+            body.student-logbook-review-page .student-tasks-content {
+                padding-top: 78px !important;
+            }
+        }
+    </style>
 </head>
-<body class="student-page">
+<body class="student-page student-logbook-review-page">
     {% include 'components/student_sidebar.html' %}
 
     <main class="student-tasks-main">
         <div class="student-tasks-content">
-            <div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-4">
+            <section class="student-tasks-heading student-section-heading" aria-labelledby="daily-review-heading">
                 <div>
                     <span class="student-section-eyebrow">Daily OJT Logbook</span>
-                    <h1 class="h3 fw-bold mb-1">Day {{ entry.day_number or '—' }} Review</h1>
-                    <p class="text-muted mb-0">{{ entry.company_name or entry.classroom_name }}{% if entry.section %} · {{ entry.section }}{% endif %} · {{ entry.date }}</p>
+                    <h1 id="daily-review-heading">Day {{ entry.day_number or '—' }} Review</h1>
+                    <p>{{ entry.company_name or entry.classroom_name }}{% if entry.section %} · {{ entry.section }}{% endif %} · {{ entry.date }}</p>
                 </div>
                 <div class="d-flex flex-wrap gap-2">
-                    <a class="btn btn-outline-secondary" href="{{ url_for('student.logbook', classroom_id=entry.classroom_id) }}">Back to Logbook</a>
-                    <a class="btn btn-outline-primary" href="{{ url_for('student.view_session', attendance_id=entry.attendance_id) }}">View Session</a>
+                    <a class="btn btn-outline-secondary" href="{{ url_for('student.logbook', classroom_id=entry.classroom_id) }}">← Back to Logbook</a>
+                    <a class="student-tasks-primary-button" href="{{ url_for('student.view_session', attendance_id=entry.attendance_id) }}">View Session</a>
                 </div>
-            </div>
+            </section>
 
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% for category, message in messages %}
@@ -31,22 +86,22 @@
                 {% endfor %}
             {% endwith %}
 
-            {% set badge = 'warning' if entry.review_status == 'pending' else 'success' if entry.review_status == 'approved' else 'danger' if entry.review_status == 'revision_requested' else 'primary' if entry.review_status == 'reviewed' else 'secondary' %}
-            <div class="row g-4 align-items-start">
+            {% set badge = 'warning' if entry.review_status == 'pending' else 'success' if entry.review_status == 'approved' else 'danger' if entry.review_status == 'revision_requested' else 'success' if entry.review_status == 'reviewed' else 'secondary' %}
+            <div class="row g-3 align-items-start">
                 <div class="col-xl-8">
-                    <section class="card shadow-sm mb-4">
-                        <div class="card-header bg-white d-flex flex-wrap align-items-start justify-content-between gap-3 py-3">
+                    <section class="card student-review-card mb-3">
+                        <div class="card-header bg-white d-flex flex-wrap align-items-start justify-content-between gap-3 py-3 px-4">
                             <div>
                                 <h2 class="h5 fw-bold mb-1">Daily OJT Entry</h2>
                                 <p class="text-muted small mb-0">Attendance-backed internship record</p>
                             </div>
                             <span class="badge text-bg-{{ badge }}">{{ entry.review_status_label }}</span>
                         </div>
-                        <div class="card-body">
+                        <div class="card-body p-4">
                             <div class="row g-3 mb-4">
-                                <div class="col-md-4"><div class="border rounded-3 p-3 h-100"><div class="text-muted small">Time In</div><div class="fw-bold">{{ entry.time_in or '—' }}</div></div></div>
-                                <div class="col-md-4"><div class="border rounded-3 p-3 h-100"><div class="text-muted small">Time Out</div><div class="fw-bold">{{ entry.time_out or '—' }}</div></div></div>
-                                <div class="col-md-4"><div class="border rounded-3 p-3 h-100"><div class="text-muted small">Hours Rendered</div><div class="fw-bold">{% if entry.hours_rendered is not none %}{{ '%.2f'|format(entry.hours_rendered) }} hrs{% else %}In progress{% endif %}</div></div></div>
+                                <div class="col-md-4"><div class="student-review-metric border rounded-3 p-3 h-100"><div class="text-muted small">Time In</div><div class="fw-bold mt-1">{{ entry.time_in or '—' }}</div></div></div>
+                                <div class="col-md-4"><div class="student-review-metric border rounded-3 p-3 h-100"><div class="text-muted small">Time Out</div><div class="fw-bold mt-1">{{ entry.time_out or '—' }}</div></div></div>
+                                <div class="col-md-4"><div class="student-review-metric border rounded-3 p-3 h-100"><div class="text-muted small">Hours Rendered</div><div class="fw-bold mt-1">{% if entry.hours_rendered is not none %}{{ '%.2f'|format(entry.hours_rendered) }} hrs{% else %}In progress{% endif %}</div></div></div>
                             </div>
 
                             {% if entry.can_revise %}
@@ -68,28 +123,28 @@
                                         </div>
                                     </div>
                                     <div class="d-flex justify-content-end mt-3">
-                                        <button class="btn btn-primary" type="submit">Submit Revision</button>
+                                        <button class="student-tasks-primary-button border-0" type="submit">Submit Revision</button>
                                     </div>
                                 </form>
                             {% else %}
-                                <div class="mb-3"><div class="text-muted small fw-bold text-uppercase mb-1">Daily accomplishment</div><div class="border rounded-3 p-3 bg-light-subtle">{{ entry.accomplishment }}</div></div>
-                                <div class="mb-3"><div class="text-muted small fw-bold text-uppercase mb-1">Learning / reflection</div><div class="border rounded-3 p-3 bg-light-subtle">{{ entry.reflection or 'No reflection recorded.' }}</div></div>
-                                <div class="mb-3"><div class="text-muted small fw-bold text-uppercase mb-1">Challenges / notes</div><div class="border rounded-3 p-3 bg-light-subtle">{{ entry.challenges or 'No challenges or notes recorded.' }}</div></div>
+                                <div class="mb-3"><div class="text-muted small fw-bold text-uppercase mb-1">Daily accomplishment</div><div class="student-review-copy border rounded-3 p-3">{{ entry.accomplishment }}</div></div>
+                                <div class="mb-3"><div class="text-muted small fw-bold text-uppercase mb-1">Learning / reflection</div><div class="student-review-copy border rounded-3 p-3">{{ entry.reflection or 'No reflection recorded.' }}</div></div>
+                                <div class="mb-3"><div class="text-muted small fw-bold text-uppercase mb-1">Challenges / notes</div><div class="student-review-copy border rounded-3 p-3">{{ entry.challenges or 'No challenges or notes recorded.' }}</div></div>
                             {% endif %}
 
-                            {% if entry.related_work_title %}<span class="badge rounded-pill text-bg-light">Related Work · {{ entry.related_work_title }}</span>{% endif %}
+                            {% if entry.related_work_title %}<span class="badge rounded-pill text-bg-light border">Related Work · {{ entry.related_work_title }}</span>{% endif %}
                         </div>
                     </section>
 
-                    <section class="card shadow-sm">
-                        <div class="card-header bg-white d-flex align-items-center justify-content-between gap-3 py-3"><div><h2 class="h6 fw-bold mb-1">Photo Evidence</h2><p class="text-muted small mb-0">Saved evidence remains read-only on the review page.</p></div><span class="badge text-bg-light">{{ photos|length }} / 5</span></div>
-                        <div class="card-body">
+                    <section class="card student-review-card">
+                        <div class="card-header bg-white d-flex align-items-center justify-content-between gap-3 py-3 px-4"><div><h2 class="h6 fw-bold mb-1">Photo Evidence</h2><p class="text-muted small mb-0">Saved evidence remains read-only on the review page.</p></div><span class="badge text-bg-light border">{{ photos|length }} / 5</span></div>
+                        <div class="card-body p-4">
                             {% if photos %}
                                 <div class="row g-3">
                                     {% for photo in photos %}
                                         <div class="col-6 col-md-4">
                                             <a class="d-block border rounded-3 overflow-hidden" href="{{ url_for('daily_logbook.view_photo', photo_id=photo.id) }}" target="_blank" rel="noopener"><img class="img-fluid w-100" src="{{ url_for('daily_logbook.view_photo', photo_id=photo.id) }}" alt="{{ photo.original_filename }}"></a>
-                                            <div class="d-flex align-items-center justify-content-between gap-2 mt-1">
+                                            <div class="d-flex align-items-center justify-content-between gap-2 mt-2">
                                                 <div class="text-muted small text-truncate" title="{{ photo.original_filename }}">{{ photo.original_filename }}</div>
                                                 <a class="btn btn-sm btn-outline-secondary flex-shrink-0" href="{{ url_for('daily_logbook.download_photo', photo_id=photo.id) }}">Download</a>
                                             </div>
@@ -97,27 +152,27 @@
                                     {% endfor %}
                                 </div>
                             {% else %}
-                                <div class="border rounded-3 p-3 text-muted small">No photo evidence was attached to this Daily OJT entry.</div>
+                                <div class="student-review-copy border rounded-3 p-3 text-muted small">No photo evidence was attached to this Daily OJT entry.</div>
                             {% endif %}
                         </div>
                     </section>
                 </div>
 
                 <div class="col-xl-4">
-                    <section class="card shadow-sm mb-4">
-                        <div class="card-header bg-white py-3"><h2 class="h6 fw-bold mb-0">Daily Performance</h2></div>
-                        <div class="card-body">
+                    <section class="card student-review-card mb-3">
+                        <div class="card-header bg-white py-3 px-4"><h2 class="h6 fw-bold mb-0">Daily Performance</h2></div>
+                        <div class="card-body p-4">
                             {% if daily_rating %}
                                 <div class="d-flex align-items-end gap-2 mb-3">
-                                    <div class="display-6 fw-bold text-primary lh-1">{{ '%.1f'|format(daily_rating.star_rating) }}</div>
-                                    <div class="fw-bold text-primary">★</div>
+                                    <div class="student-review-rating display-6 fw-bold lh-1">{{ '%.1f'|format(daily_rating.star_rating) }}</div>
+                                    <div class="student-review-rating fw-bold">★</div>
                                 </div>
-                                <div class="border rounded-3 p-3 bg-light-subtle mb-3">
+                                <div class="student-review-metric border rounded-3 p-3 mb-3">
                                     <div class="text-muted small">Converted percentage</div>
                                     <div class="fs-4 fw-bold">{{ '%.1f'|format(daily_rating.percentage) }}%</div>
                                 </div>
                                 {% if daily_rating.comment %}
-                                    <div><div class="text-muted small fw-bold mb-1">Performance comment</div><div class="border rounded-3 p-3 bg-light-subtle">{{ daily_rating.comment }}</div></div>
+                                    <div><div class="text-muted small fw-bold mb-1">Performance comment</div><div class="student-review-copy border rounded-3 p-3">{{ daily_rating.comment }}</div></div>
                                 {% else %}
                                     <div class="text-muted small">No performance comment was added.</div>
                                 {% endif %}
@@ -130,12 +185,12 @@
                         </div>
                     </section>
 
-                    <section class="card shadow-sm mb-4">
-                        <div class="card-header bg-white py-3"><h2 class="h6 fw-bold mb-0">Supervisor Review</h2></div>
-                        <div class="card-body">
+                    <section class="card student-review-card mb-3">
+                        <div class="card-header bg-white py-3 px-4"><h2 class="h6 fw-bold mb-0">Supervisor Review</h2></div>
+                        <div class="card-body p-4">
                             <div class="mb-3"><div class="text-muted small">Status</div><div class="mt-1"><span class="badge text-bg-{{ badge }}">{{ entry.review_status_label }}</span></div></div>
                             {% if entry.review_comments %}
-                                <div><div class="text-muted small fw-bold mb-1">Supervisor comment</div><div class="border rounded-3 p-3 bg-light-subtle">{{ entry.review_comments }}</div></div>
+                                <div><div class="text-muted small fw-bold mb-1">Supervisor comment</div><div class="student-review-copy border rounded-3 p-3">{{ entry.review_comments }}</div></div>
                             {% elif entry.review_status == 'pending' %}
                                 <div class="text-muted small">Your supervisor has not reviewed this closed Daily OJT entry yet.</div>
                             {% elif entry.review_status == 'in_progress' %}
@@ -146,8 +201,9 @@
                         </div>
                     </section>
 
-                    <section class="card shadow-sm">
-                        <div class="card-body">
+                    <section class="card student-review-card">
+                        <div class="card-body p-4">
+                            <span class="student-section-eyebrow mb-2">Record Protection</span>
                             <h2 class="h6 fw-bold">Review Safety</h2>
                             <p class="text-muted small mb-0">Supervisor review, text revisions, and daily performance ratings do not change Time In, Time Out, rendered hours, or attendance status.</p>
                         </div>
