@@ -17,6 +17,16 @@ def _ensure_schema(_state):
     ensure_messaging_schema()
 
 
+def _contact_payload(contact):
+    payload = dict(contact or {})
+    profile_picture = str(payload.pop("profile_picture", "") or "").strip()
+    if profile_picture:
+        payload["avatar_url"] = url_for("profile_picture", filename=profile_picture)
+    else:
+        payload["avatar_url"] = url_for("static", filename="images/default_profile.png")
+    return payload
+
+
 @messages.route("/messages/contacts")
 @login_required
 def contacts():
@@ -24,13 +34,14 @@ def contacts():
     if target_role and target_role not in {"student", "supervisor", "admin"}:
         return jsonify({"ok": False, "error": "Invalid contact role."}), 400
 
+    contacts_data = get_authorized_contacts(
+        session.get("user_id"),
+        target_role=target_role,
+    )
     return jsonify(
         {
             "ok": True,
-            "contacts": get_authorized_contacts(
-                session.get("user_id"),
-                target_role=target_role,
-            ),
+            "contacts": [_contact_payload(contact) for contact in contacts_data],
         }
     )
 
@@ -41,7 +52,10 @@ def thread(contact_id):
     data = get_thread(session.get("user_id"), contact_id)
     if not data:
         return jsonify({"ok": False, "error": "Contact not found or unauthorized."}), 403
-    return jsonify({"ok": True, **data})
+
+    payload = dict(data)
+    payload["contact"] = _contact_payload(data.get("contact"))
+    return jsonify({"ok": True, **payload})
 
 
 @messages.route("/messages/send", methods=["POST"])
