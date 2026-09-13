@@ -4,12 +4,15 @@ import json
 import os
 import re
 from urllib import error as urllib_error
+from urllib import parse as urllib_parse
 from urllib import request as urllib_request
 
 from app.Models.db import get_db_connection
 
-OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses"
-DEFAULT_MODEL = "gpt-5.6-luna"
+GEMINI_GENERATE_URL = (
+    "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+)
+DEFAULT_MODEL = "gemini-3.7-flash"
 MAX_QUESTION_LEN = 1200
 MAX_ANSWER_CHARS = 4000
 MAX_RESPONSE_BYTES = 1_000_000
@@ -41,6 +44,7 @@ MUTATION_RE = re.compile(
     r"create|archive|restore|reset|upload|save)\b",
     re.IGNORECASE,
 )
+MODEL_RE = re.compile(r"^[A-Za-z0-9._-]+$")
 
 
 class AIServiceError(RuntimeError):
@@ -108,23 +112,30 @@ def _instructions(role):
 
 
 def _extract_output_text(payload):
-    direct = payload.get("output_text")
-    if isinstance(direct, str) and direct.strip():
-        return direct.strip()
-
     parts = []
-    for item in payload.get("output") or []:
-        if not isinstance(item, dict):
+    for candidate in payload.get("candidates") or []:
+        if not isinstance(candidate, dict):
             continue
-        for content in item.get("content") or []:
-            if not isinstance(content, dict):
+        content = candidate.get("content") or {}
+        if not isinstance(content, dict):
+            continue
+        for part in content.get("parts") or []:
+            if not isinstance(part, dict):
                 continue
-            if content.get("type") == "output_text":
-                text = content.get("text")
-                if isinstance(text, str) and text.strip():
-                    parts.append(text.strip())
-
+            text = part.get("text")
+            if isinstance(text, str) and text.strip():
+                parts.append(text.strip())
     return "\n".join(parts).strip()
+
+
+def _provider_error_message(status_code):
+    if status_code in {401, 403}:
+        return "The Gemini API key was rejected."
+    if status_code == 404:
+        return "The configured Gemini model is unavailable."
+    if status_code == 429:
+        return "The Gemini API rate limit was reached."
+    return "The Gemini API rejected the request."
 
 
 def answer_role_question(user_id, question):
@@ -139,7 +150,7 @@ def answer_role_question(user_id, question):
 
     role = _active_role(user_id)
     enabled = _env_true("NEXORA_AI_ENABLED")
-    api_key = os.environ.get("OPENAI_API_KEY", "").strip()
+    api_key = os.environ.get("GEMINI_API_KEY", "").strip()
 
     if not enabled or not api_key:
         return {
@@ -152,19 +163,31 @@ def answer_role_question(user_id, question):
         }
 
     model = os.environ.get("NEXORA_AI_MODEL", DEFAULT_MODEL).strip() or DEFAULT_MODEL
+    if not MODEL_RE.fullmatch(model):
+        raise AIServiceError("The configured Gemini model name is invalid.")
+
     payload = {
-        "model": model,
-        "instructions": _instructions(role),
-        "input": question,
-        "max_output_tokens": 350,
-        "store": False,
+        "system_instruction": {
+            "parts": [{"text": _instructions(role)}],
+        },
+        "contents": [
+            {
+                "role": "user",
+                "parts": [{"text": question}],
+            }
+        ],
+        "generationConfig": {
+            "maxOutputTokens": 350,
+            "temperature": 0.3,
+        },
     }
 
+    model_path = urllib_parse.quote(model, safe="-._")
     request = urllib_request.Request(
-        OPENAI_RESPONSES_URL,
+        GEMINI_GENERATE_URL.format(model=model_path),
         data=json.dumps(payload).encode("utf-8"),
         headers={
-            "Authorization": f"Bearer {api_key}",
+            "x-goog-api-key": api_key,
             "Content-Type": "application/json",
             "Accept": "application/json",
         },
@@ -175,23 +198,23 @@ def answer_role_question(user_id, question):
         with urllib_request.urlopen(request, timeout=_timeout_seconds()) as response:
             raw = response.read(MAX_RESPONSE_BYTES + 1)
     except urllib_error.HTTPError as exc:
-        raise AIServiceError("The AI provider rejected the request.") from exc
+        raise AIServiceError(_provider_error_message(exc.code)) from exc
     except urllib_error.URLError as exc:
-        raise AIServiceError("The AI provider is temporarily unreachable.") from exc
+        raise AIServiceError("The Gemini API is temporarily unreachable.") from exc
     except TimeoutError as exc:
-        raise AIServiceError("The AI request timed out.") from exc
+        raise AIServiceError("The Gemini request timed out.") from exc
 
     if len(raw) > MAX_RESPONSE_BYTES:
-        raise AIServiceError("The AI provider returned an oversized response.")
+        raise AIServiceError("The Gemini API returned an oversized response.")
 
     try:
         response_payload = json.loads(raw.decode("utf-8"))
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
-        raise AIServiceError("The AI provider returned an invalid response.") from exc
+        raise AIServiceError("The Gemini API returned an invalid response.") from exc
 
     answer = _extract_output_text(response_payload)
     if not answer:
-        raise AIServiceError("The AI provider returned no answer.")
+        raise AIServiceError("The Gemini API returned no answer.")
 
     answer = answer[:MAX_ANSWER_CHARS].strip()
     if MUTATION_RE.search(question):
