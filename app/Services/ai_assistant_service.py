@@ -4,15 +4,12 @@ import json
 import os
 import re
 from urllib import error as urllib_error
-from urllib import parse as urllib_parse
 from urllib import request as urllib_request
 
 from app.Models.db import get_db_connection
 
-GEMINI_GENERATE_URL = (
-    "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
-)
-DEFAULT_MODEL = "gemini-3.7-flash"
+OPENROUTER_CHAT_URL = "https://openrouter.ai/api/v1/chat/completions"
+DEFAULT_MODEL = "openrouter/free"
 MAX_QUESTION_LEN = 1200
 MAX_ANSWER_CHARS = 4000
 MAX_RESPONSE_BYTES = 1_000_000
@@ -44,7 +41,7 @@ MUTATION_RE = re.compile(
     r"create|archive|restore|reset|upload|save)\b",
     re.IGNORECASE,
 )
-MODEL_RE = re.compile(r"^[A-Za-z0-9._-]+$")
+MODEL_RE = re.compile(r"^[A-Za-z0-9._:/-]+$")
 
 
 class AIServiceError(RuntimeError):
@@ -86,11 +83,11 @@ def _active_role(user_id):
 
 
 def _timeout_seconds():
-    raw = os.environ.get("NEXORA_AI_TIMEOUT_SECONDS", "20")
+    raw = os.environ.get("NEXORA_AI_TIMEOUT_SECONDS", "15")
     try:
         value = int(raw)
     except (TypeError, ValueError):
-        value = 20
+        value = 15
     return max(5, min(value, 30))
 
 
@@ -112,30 +109,38 @@ def _instructions(role):
 
 
 def _extract_output_text(payload):
+    choices = payload.get("choices") or []
+    if not choices or not isinstance(choices[0], dict):
+        return ""
+
+    message = choices[0].get("message") or {}
+    if not isinstance(message, dict):
+        return ""
+
+    content = message.get("content")
+    if isinstance(content, str):
+        return content.strip()
+
     parts = []
-    for candidate in payload.get("candidates") or []:
-        if not isinstance(candidate, dict):
-            continue
-        content = candidate.get("content") or {}
-        if not isinstance(content, dict):
-            continue
-        for part in content.get("parts") or []:
+    if isinstance(content, list):
+        for part in content:
             if not isinstance(part, dict):
                 continue
             text = part.get("text")
             if isinstance(text, str) and text.strip():
                 parts.append(text.strip())
+
     return "\n".join(parts).strip()
 
 
 def _provider_error_message(status_code):
     if status_code in {401, 403}:
-        return "The Gemini API key was rejected."
+        return "The OpenRouter API key was rejected."
     if status_code == 404:
-        return "The configured Gemini model is unavailable."
+        return "The configured OpenRouter model is unavailable."
     if status_code == 429:
-        return "The Gemini API rate limit was reached."
-    return "The Gemini API rejected the request."
+        return "The OpenRouter free-model rate limit was reached."
+    return "OpenRouter rejected the AI request."
 
 
 def answer_role_question(user_id, question):
@@ -150,7 +155,7 @@ def answer_role_question(user_id, question):
 
     role = _active_role(user_id)
     enabled = _env_true("NEXORA_AI_ENABLED")
-    api_key = os.environ.get("GEMINI_API_KEY", "").strip()
+    api_key = os.environ.get("OPENROUTER_API_KEY", "").strip()
 
     if not enabled or not api_key:
         return {
@@ -164,33 +169,32 @@ def answer_role_question(user_id, question):
 
     model = os.environ.get("NEXORA_AI_MODEL", DEFAULT_MODEL).strip() or DEFAULT_MODEL
     if not MODEL_RE.fullmatch(model):
-        raise AIServiceError("The configured Gemini model name is invalid.")
+        raise AIServiceError("The configured OpenRouter model name is invalid.")
 
     payload = {
-        "system_instruction": {
-            "parts": [{"text": _instructions(role)}],
-        },
-        "contents": [
-            {
-                "role": "user",
-                "parts": [{"text": question}],
-            }
+        "model": model,
+        "messages": [
+            {"role": "system", "content": _instructions(role)},
+            {"role": "user", "content": question},
         ],
-        "generationConfig": {
-            "maxOutputTokens": 350,
-            "temperature": 0.3,
-        },
+        "max_tokens": 350,
+        "temperature": 0.3,
     }
 
-    model_path = urllib_parse.quote(model, safe="-._")
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "X-Title": "Nexora",
+    }
+    site_url = os.environ.get("APP_BASE_URL", "").strip()
+    if site_url:
+        headers["HTTP-Referer"] = site_url
+
     request = urllib_request.Request(
-        GEMINI_GENERATE_URL.format(model=model_path),
+        OPENROUTER_CHAT_URL,
         data=json.dumps(payload).encode("utf-8"),
-        headers={
-            "x-goog-api-key": api_key,
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-        },
+        headers=headers,
         method="POST",
     )
 
@@ -200,21 +204,21 @@ def answer_role_question(user_id, question):
     except urllib_error.HTTPError as exc:
         raise AIServiceError(_provider_error_message(exc.code)) from exc
     except urllib_error.URLError as exc:
-        raise AIServiceError("The Gemini API is temporarily unreachable.") from exc
+        raise AIServiceError("OpenRouter is temporarily unreachable.") from exc
     except TimeoutError as exc:
-        raise AIServiceError("The Gemini request timed out.") from exc
+        raise AIServiceError("The OpenRouter request timed out.") from exc
 
     if len(raw) > MAX_RESPONSE_BYTES:
-        raise AIServiceError("The Gemini API returned an oversized response.")
+        raise AIServiceError("OpenRouter returned an oversized response.")
 
     try:
         response_payload = json.loads(raw.decode("utf-8"))
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
-        raise AIServiceError("The Gemini API returned an invalid response.") from exc
+        raise AIServiceError("OpenRouter returned an invalid response.") from exc
 
     answer = _extract_output_text(response_payload)
     if not answer:
-        raise AIServiceError("The Gemini API returned no answer.")
+        raise AIServiceError("OpenRouter returned no answer.")
 
     answer = answer[:MAX_ANSWER_CHARS].strip()
     if MUTATION_RE.search(question):
