@@ -30,32 +30,46 @@ def _value(row, key, index=0, default=None):
         return default
 
 
-def _get_latest_feedback_text(student_id):
-    """Return latest feedback comment for a student, or empty string."""
+def _get_latest_feedback_text(student_id, class_id):
+    """Return feedback that belongs to this classroom's evidence context."""
     conn = get_db_connection()
     try:
-        # Primary: feedback table (supervisor evaluations)
+        # Current Work feedback is scoped exactly through its assignment.
+        try:
+            sub = conn.execute(
+                """SELECT s.feedback
+                   FROM classwork_submissions s
+                   JOIN classroom_assignments a ON a.id = s.assignment_id
+                   WHERE s.student_id = ? AND a.classroom_id = ?
+                     AND s.feedback IS NOT NULL AND TRIM(s.feedback) != ''
+                   ORDER BY s.submitted_at DESC, s.id DESC LIMIT 1""",
+                (student_id, class_id),
+            ).fetchone()
+            if sub:
+                comment = _value(sub, "feedback", 0)
+                if comment and str(comment).strip():
+                    return str(comment).strip()
+        except Exception:
+            pass
+
+        # Legacy feedback has no classroom_id. Constrain it to the classroom
+        # owner so feedback from another supervisor is never pulled in.
         try:
             fb = conn.execute(
-                "SELECT comment FROM feedback WHERE student_id = ? ORDER BY created_at DESC LIMIT 1",
-                (student_id,),
+                """SELECT f.comment
+                   FROM feedback f
+                   WHERE f.student_id = ?
+                     AND f.supervisor_id = (
+                         SELECT supervisor_id FROM classrooms WHERE id = ?
+                     )
+                     AND f.comment IS NOT NULL AND TRIM(f.comment) != ''
+                   ORDER BY f.created_at DESC, f.id DESC LIMIT 1""",
+                (student_id, class_id),
             ).fetchone()
             if fb:
                 comment = _value(fb, "comment", 0)
                 if comment and str(comment).strip():
                     return str(comment).strip()
-        except Exception:
-            pass
-        # Fallback: classroom_submissions feedback (grading comments)
-        try:
-            sub = conn.execute(
-                "SELECT feedback FROM classroom_submissions WHERE student_id = ? AND feedback IS NOT NULL AND TRIM(feedback) != '' ORDER BY submitted_at DESC LIMIT 1",
-                (student_id,),
-            ).fetchone()
-            if sub:
-                fb2 = _value(sub, "feedback", 0)
-                if fb2 and str(fb2).strip():
-                    return str(fb2).strip()
         except Exception:
             pass
     finally:
@@ -64,6 +78,110 @@ def _get_latest_feedback_text(student_id):
         except Exception:
             pass
     return ""
+
+
+def _empty_feedback_analysis():
+    return {
+        "performance_label": None,
+        "nb_prediction": None,
+        "svm_prediction": None,
+        "sentiment": None,
+        "competency": None,
+        "recommendation": None,
+        "confidence": 0.0,
+        "is_empty": True,
+    }
+
+
+def _normalize_analysis_evidence(analysis):
+    """Keep missing evidence distinct from an actual performance result."""
+    features = analysis.get("features") or {}
+    feedback_analysis = analysis.get("feedback_analysis") or _empty_feedback_analysis()
+    has_performance_data = (
+        features.get("average_percentage") is not None
+        and int(features.get("graded_count", 0) or 0) > 0
+    )
+    has_feedback = not bool(feedback_analysis.get("is_empty", True))
+
+    analysis["features"] = features
+    analysis["feedback_analysis"] = feedback_analysis
+    analysis["has_performance_data"] = has_performance_data
+    if not has_performance_data:
+        analysis["numeric_performance_label"] = "No Data"
+        analysis["performance_label"] = "No Data"
+    if not has_feedback:
+        analysis["sentiment"] = None
+        analysis["competency"] = None
+        analysis["recommendation"] = None
+        analysis["confidence"] = 0.0
+    return analysis
+
+
+def _safe_ml_analysis(student_id, class_id, feedback_text):
+    try:
+        analysis = build_student_ml_analysis(
+            student_id,
+            class_id,
+            feedback_text=feedback_text,
+        )
+    except Exception:
+        # Preserve numeric evidence if the predictor fails, but do not invent
+        # feedback classifications, sentiment, competency, or recommendations.
+        features = build_student_performance_features(student_id, class_id)
+        numeric_label = classify_numeric_performance(features.get("average_percentage"))
+        analysis = {
+            "student_id": student_id,
+            "class_id": class_id,
+            "features": features,
+            "numeric_performance_label": numeric_label,
+            "feedback_analysis": _empty_feedback_analysis(),
+            "performance_label": numeric_label,
+            "sentiment": None,
+            "competency": None,
+            "recommendation": None,
+            "confidence": 0.0,
+        }
+    return _normalize_analysis_evidence(analysis)
+
+
+def _build_work_recommendation(analysis):
+    features = analysis.get("features") or {}
+    feedback_analysis = analysis.get("feedback_analysis") or _empty_feedback_analysis()
+    if not analysis.get("has_performance_data", False):
+        total = int(features.get("total_count", 0) or 0)
+        basis = ["performance label: No Data"]
+        basis.append("no assignments in this class" if total == 0 else "no grades yet")
+        if feedback_analysis.get("is_empty", True):
+            basis.append("no feedback text available")
+        return {
+            "performance_label": "No Data",
+            "overall_percentage": None,
+            "completion_rate": float(features.get("completion_rate", 0.0) or 0.0),
+            "graded_count": int(features.get("graded_count", 0) or 0),
+            "total_count": total,
+            "recommendation": "",
+            "priority": "none",
+            "basis": basis,
+            "has_feedback": not bool(feedback_analysis.get("is_empty", True)),
+            "feedback_label": feedback_analysis.get("performance_label"),
+            "sentiment": feedback_analysis.get("sentiment"),
+        }
+
+    try:
+        return build_recommendation_from_features(
+            features,
+            feedback_analysis,
+            performance_label=analysis.get("numeric_performance_label"),
+        )
+    except Exception:
+        return {
+            "performance_label": analysis.get("numeric_performance_label"),
+            "overall_percentage": features.get("average_percentage"),
+            "completion_rate": features.get("completion_rate", 0.0),
+            "recommendation": analysis.get("recommendation") or "",
+            "priority": "medium",
+            "basis": [],
+        }
 
 
 def _build_cohort_summary(class_id, supervisor_id, students):
@@ -218,50 +336,11 @@ def supervisor_insights(class_id):
     insights = []
     for student in students:
         student_id = int(_value(student, "id", 0))
-        feedback_text = _get_latest_feedback_text(student_id)
-        try:
-            analysis = build_student_ml_analysis(student_id, class_id, feedback_text=feedback_text)
-        except Exception:
-            # Fallback to features only if predictor fails
-            features = build_student_performance_features(student_id, class_id)
-            analysis = {
-                "student_id": student_id,
-                "class_id": class_id,
-                "features": features,
-                "numeric_performance_label": classify_numeric_performance(features.get("average_percentage")),
-                "feedback_analysis": {
-                    "performance_label": "Satisfactory",
-                    "nb_prediction": "Satisfactory",
-                    "svm_prediction": "Satisfactory",
-                    "sentiment": "Neutral",
-                    "competency": "Adequate Competency",
-                    "recommendation": "Continue monitoring performance.",
-                    "confidence": 0.0,
-                    "is_empty": True,
-                },
-                "performance_label": classify_numeric_performance(features.get("average_percentage")),
-                "sentiment": "Neutral",
-                "competency": "Adequate Competency",
-                "recommendation": "Continue monitoring performance.",
-                "confidence": 0.0,
-            }
-
+        feedback_text = _get_latest_feedback_text(student_id, class_id)
+        analysis = _safe_ml_analysis(student_id, class_id, feedback_text)
         features = analysis["features"]
         fb_analysis = analysis["feedback_analysis"]
-        # Integrated ML recommendation (numeric + feedback)
-        try:
-            ml_recommendation = build_recommendation_from_features(
-                features, fb_analysis, performance_label=analysis.get("numeric_performance_label")
-            )
-        except Exception:
-            ml_recommendation = {
-                "performance_label": analysis.get("numeric_performance_label", "Satisfactory"),
-                "overall_percentage": features.get("average_percentage"),
-                "completion_rate": features.get("completion_rate", 0.0),
-                "recommendation": analysis.get("recommendation", ""),
-                "priority": "medium",
-                "basis": [],
-            }
+        ml_recommendation = _build_work_recommendation(analysis)
         insights.append(
             {
                 "id": student_id,
@@ -269,6 +348,7 @@ def supervisor_insights(class_id):
                 "email": _value(student, "email", 2, ""),
                 "student_number": _value(student, "student_number", 3, ""),
                 "features": features,
+                "has_performance_data": analysis.get("has_performance_data", False),
                 "average_percentage": features.get("average_percentage"),
                 "min_percentage": features.get("min_percentage"),
                 "max_percentage": features.get("max_percentage"),
@@ -368,46 +448,11 @@ def supervisor_individual_insights(class_id, student_id):
     if not evaluation_context.get("ok"):
         abort(int(evaluation_context.get("status_code") or 404))
 
-    feedback_text = _get_latest_feedback_text(student_id)
-    try:
-        analysis = build_student_ml_analysis(student_id, class_id, feedback_text=feedback_text)
-    except Exception:
-        features = build_student_performance_features(student_id, class_id)
-        analysis = {
-            "features": features,
-            "numeric_performance_label": classify_numeric_performance(features.get("average_percentage")),
-            "feedback_analysis": {
-                "performance_label": "Satisfactory",
-                "nb_prediction": "Satisfactory",
-                "svm_prediction": "Satisfactory",
-                "sentiment": "Neutral",
-                "competency": "Adequate Competency",
-                "recommendation": "Continue monitoring performance.",
-                "confidence": 0.0,
-                "is_empty": True,
-            },
-            "sentiment": "Neutral",
-            "competency": "Adequate Competency",
-            "confidence": 0.0,
-        }
-
+    feedback_text = _get_latest_feedback_text(student_id, class_id)
+    analysis = _safe_ml_analysis(student_id, class_id, feedback_text)
     features = analysis.get("features") or {}
     feedback_analysis = analysis.get("feedback_analysis") or {}
-    try:
-        work_recommendation = build_recommendation_from_features(
-            features,
-            feedback_analysis,
-            performance_label=analysis.get("numeric_performance_label"),
-        )
-    except Exception:
-        work_recommendation = {
-            "performance_label": analysis.get("numeric_performance_label", "Satisfactory"),
-            "overall_percentage": features.get("average_percentage"),
-            "completion_rate": features.get("completion_rate", 0.0),
-            "recommendation": "",
-            "priority": "medium",
-            "basis": [],
-        }
+    work_recommendation = _build_work_recommendation(analysis)
 
     return render_template(
         "classroom/supervisor_individual_insights.html",
@@ -462,53 +507,17 @@ def student_insights(class_id):
     finally:
         conn.close()
 
-    feedback_text = _get_latest_feedback_text(student_id)
-    try:
-        analysis = build_student_ml_analysis(student_id, class_id, feedback_text=feedback_text)
-    except Exception:
-        features = build_student_performance_features(student_id, class_id)
-        analysis = {
-            "student_id": student_id,
-            "class_id": class_id,
-            "features": features,
-            "numeric_performance_label": classify_numeric_performance(features.get("average_percentage")),
-            "feedback_analysis": {
-                "performance_label": "Satisfactory",
-                "nb_prediction": "Satisfactory",
-                "svm_prediction": "Satisfactory",
-                "sentiment": "Neutral",
-                "competency": "Adequate Competency",
-                "recommendation": "Continue monitoring performance.",
-                "confidence": 0.0,
-                "is_empty": True,
-            },
-            "performance_label": classify_numeric_performance(features.get("average_percentage")),
-            "sentiment": "Neutral",
-            "competency": "Adequate Competency",
-            "recommendation": "Continue monitoring performance.",
-            "confidence": 0.0,
-        }
-
+    feedback_text = _get_latest_feedback_text(student_id, class_id)
+    analysis = _safe_ml_analysis(student_id, class_id, feedback_text)
     features = analysis["features"]
     fb_analysis = analysis["feedback_analysis"]
-    try:
-        ml_recommendation = build_recommendation_from_features(
-            features, fb_analysis, performance_label=analysis.get("numeric_performance_label")
-        )
-    except Exception:
-        ml_recommendation = {
-            "performance_label": analysis.get("numeric_performance_label", "Satisfactory"),
-            "overall_percentage": features.get("average_percentage"),
-            "completion_rate": features.get("completion_rate", 0.0),
-            "recommendation": analysis.get("recommendation", ""),
-            "priority": "medium",
-            "basis": [],
-        }
+    ml_recommendation = _build_work_recommendation(analysis)
 
     return render_template(
         "classroom/student_insights.html",
         classroom=classroom_data,
         features=features,
+        has_performance_data=analysis.get("has_performance_data", False),
         numeric_performance_label=analysis.get("numeric_performance_label"),
         performance_label=analysis.get("performance_label"),
         feedback_analysis=fb_analysis,

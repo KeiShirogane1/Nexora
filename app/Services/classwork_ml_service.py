@@ -18,7 +18,7 @@ def build_student_performance_features(student_id, class_id):
     try:
         total_row=conn.execute("SELECT COUNT(*) AS total_assignments FROM classroom_assignments WHERE classroom_id=?",(class_id,)).fetchone()
         total_assignments=int(_value(total_row,"total_assignments",0,0) or 0)
-        rows=conn.execute("""SELECT a.id,
+        rows=conn.execute("""SELECT a.id, a.points AS assignment_points,
                s.score, s.max_score, s.percentage, s.grading_method,
                (SELECT cs.grade FROM classwork_submissions cs WHERE cs.assignment_id=a.id AND cs.student_id=? AND cs.grade IS NOT NULL ORDER BY cs.attempt_no DESC, cs.id DESC LIMIT 1) AS submission_grade
             FROM classroom_assignments a
@@ -28,10 +28,12 @@ def build_student_performance_features(student_id, class_id):
 
     graded=[]; methods=[]
     for row in rows:
-        score=_value(row,"score",1); max_score=_value(row,"max_score",2); percentage=_value(row,"percentage",3); method=_value(row,"grading_method",4)
-        submission_grade=_value(row,"submission_grade",5)
+        assignment_points=_value(row,"assignment_points",1)
+        score=_value(row,"score",2); max_score=_value(row,"max_score",3); percentage=_value(row,"percentage",4); method=_value(row,"grading_method",5)
+        submission_grade=_value(row,"submission_grade",6)
         if score is None and submission_grade is not None:
-            score=float(submission_grade); max_score=max_score or None
+            score=submission_grade
+            max_score=max_score or assignment_points
         if score is None: continue
         if max_score is None: continue
         try:
@@ -63,4 +65,17 @@ def build_student_ml_analysis(student_id,class_id,feedback_text=""):
     features=build_student_performance_features(student_id,class_id)
     numeric_label=classify_numeric_performance(features["average_percentage"])
     feedback_analysis=analyze_feedback_detailed(feedback_text)
-    return {"student_id":student_id,"class_id":class_id,"features":features,"numeric_performance_label":numeric_label,"feedback_analysis":feedback_analysis,"performance_label":numeric_label,"sentiment":feedback_analysis["sentiment"],"competency":feedback_analysis["competency"],"recommendation":feedback_analysis["recommendation"],"confidence":feedback_analysis["confidence"]}
+    has_feedback=not bool(feedback_analysis.get("is_empty",True))
+    return {
+        "student_id":student_id,
+        "class_id":class_id,
+        "features":features,
+        "has_performance_data":features.get("average_percentage") is not None and int(features.get("graded_count",0) or 0)>0,
+        "numeric_performance_label":numeric_label,
+        "feedback_analysis":feedback_analysis,
+        "performance_label":numeric_label,
+        "sentiment":feedback_analysis.get("sentiment") if has_feedback else None,
+        "competency":feedback_analysis.get("competency") if has_feedback else None,
+        "recommendation":feedback_analysis.get("recommendation") if has_feedback else None,
+        "confidence":feedback_analysis.get("confidence",0.0) if has_feedback else 0.0,
+    }

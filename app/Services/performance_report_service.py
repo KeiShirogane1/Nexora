@@ -13,16 +13,31 @@ def _value(row,key,index=0,default=None):
     except (IndexError,KeyError,TypeError):return default
 
 
-def _get_latest_feedback_text(student_id):
+def _get_latest_feedback_text(student_id,class_id):
+    """Return feedback that belongs to this classroom's evidence context."""
     conn=get_db_connection()
     try:
+        # Current Work feedback is classroom-scoped through the assignment.
         try:
-            fb=conn.execute("SELECT comment FROM feedback WHERE student_id=? ORDER BY created_at DESC LIMIT 1",(student_id,)).fetchone()
-            if fb and _value(fb,"comment",0):return str(_value(fb,"comment",0)).strip()
-        except Exception:pass
-        try:
-            sub=conn.execute("SELECT feedback FROM classroom_submissions WHERE student_id=? AND feedback IS NOT NULL AND TRIM(feedback)!='' ORDER BY submitted_at DESC LIMIT 1",(student_id,)).fetchone()
+            sub=conn.execute("""SELECT s.feedback
+                FROM classwork_submissions s
+                JOIN classroom_assignments a ON a.id=s.assignment_id
+                WHERE s.student_id=? AND a.classroom_id=?
+                  AND s.feedback IS NOT NULL AND TRIM(s.feedback)!=''
+                ORDER BY s.submitted_at DESC,s.id DESC LIMIT 1""",(student_id,class_id)).fetchone()
             if sub and _value(sub,"feedback",0):return str(_value(sub,"feedback",0)).strip()
+        except Exception:pass
+
+        # Legacy feedback has no classroom_id, so constrain it to the owner
+        # of this classroom instead of accepting another supervisor's comment.
+        try:
+            fb=conn.execute("""SELECT f.comment
+                FROM feedback f
+                WHERE f.student_id=?
+                  AND f.supervisor_id=(SELECT supervisor_id FROM classrooms WHERE id=?)
+                  AND f.comment IS NOT NULL AND TRIM(f.comment)!=''
+                ORDER BY f.created_at DESC,f.id DESC LIMIT 1""",(student_id,class_id)).fetchone()
+            if fb and _value(fb,"comment",0):return str(_value(fb,"comment",0)).strip()
         except Exception:pass
     finally:conn.close()
     return ""
@@ -37,7 +52,7 @@ def _safe_float(v,default=None):
 
 
 def build_student_report(student_id,class_id,feedback_text=None):
-    if feedback_text is None:feedback_text=_get_latest_feedback_text(student_id)
+    if feedback_text is None:feedback_text=_get_latest_feedback_text(student_id,class_id)
     feedback_text=feedback_text or ""
     try:
         analysis=build_student_ml_analysis(student_id,class_id,feedback_text=feedback_text)
@@ -51,7 +66,9 @@ def build_student_report(student_id,class_id,feedback_text=None):
     features=analysis.get("features") or {}; feedback_analysis=analysis.get("feedback_analysis") or {}
     numeric_label=analysis.get("numeric_performance_label") or analysis.get("performance_label") or "Satisfactory"
     try: ml_reco=build_recommendation_from_features(features,feedback_analysis,performance_label=numeric_label)
-    except Exception: ml_reco={"performance_label":numeric_label,"overall_percentage":_safe_float(features.get("average_percentage")),"completion_rate":_safe_float(features.get("completion_rate"),0.0) or 0.0,"recommendation":feedback_analysis.get("recommendation","Continue monitoring performance."),"priority":"medium","basis":[]}
+    except Exception:
+        fallback_recommendation = "" if feedback_analysis.get("is_empty", True) else (feedback_analysis.get("recommendation") or "")
+        ml_reco={"performance_label":numeric_label,"overall_percentage":_safe_float(features.get("average_percentage")),"completion_rate":_safe_float(features.get("completion_rate"),0.0) or 0.0,"recommendation":fallback_recommendation,"priority":"medium","basis":[]}
 
     student={"id":student_id,"username":"Student","email":"","student_number":""}; class_info={"id":class_id,"name":"Class","section":"","code":""}; supervisor_info={"id":None,"username":"","email":""}; assignments=[]; strongest=None; weakest=None
     conn=get_db_connection()
@@ -79,7 +96,8 @@ def build_student_report(student_id,class_id,feedback_text=None):
     finally:conn.close()
 
     has_feedback=not bool(feedback_analysis.get("is_empty",True)) if isinstance(feedback_analysis,dict) else False
-    return {"student":student,"class":class_info,"supervisor":supervisor_info,"overall_percentage":_safe_float(features.get("average_percentage")),"completion_rate":_safe_float(features.get("completion_rate"),0.0) or 0.0,"graded_count":features.get("graded_count",0),"total_count":features.get("total_count",0),"performance_label":numeric_label,"performance_classification":numeric_label,"feedback_analysis":feedback_analysis if has_feedback else None,"sentiment":feedback_analysis.get("sentiment") if has_feedback else None,"competency":feedback_analysis.get("competency"),"has_feedback":has_feedback,"ml_recommendation":ml_reco,"recommendation":ml_reco.get("recommendation"),"priority":ml_reco.get("priority"),"basis":ml_reco.get("basis",[]),"strongest":strongest,"weakest":weakest,"assignments":assignments,"average_percentage":_safe_float(features.get("average_percentage")),"min_percentage":_safe_float(features.get("min_percentage")),"max_percentage":_safe_float(features.get("max_percentage")),"manual_count":features.get("manual_count",0),"imported_count":features.get("imported_count",0)}
+    has_performance_data=_safe_float(features.get("average_percentage")) is not None and int(features.get("graded_count",0) or 0)>0
+    return {"student":student,"class":class_info,"supervisor":supervisor_info,"overall_percentage":_safe_float(features.get("average_percentage")),"completion_rate":_safe_float(features.get("completion_rate"),0.0) or 0.0,"graded_count":features.get("graded_count",0),"total_count":features.get("total_count",0),"has_performance_data":has_performance_data,"performance_label":numeric_label,"performance_classification":numeric_label,"feedback_analysis":feedback_analysis if has_feedback else None,"sentiment":feedback_analysis.get("sentiment") if has_feedback else None,"competency":feedback_analysis.get("competency") if has_feedback else None,"has_feedback":has_feedback,"ml_recommendation":ml_reco,"recomendation":ml_reco.get("recommendation"),"priority":ml_reco.get("priority"),"basis":ml_reco.get("basis",[]),"strongest":strongest,"weakest":weakest,"assignments":assignments,"average_percentage":_safe_float(features.get("average_percentage"),"min_percentage":_safe_float(features.get("min_percentage"),"max_percentage":_safe_float(features.get("max_percentage"),"manual_count":features.get("manual_count",0),"imported_count":features.get("imported_count",0)}
 
 
 def build_class_reports(class_id):

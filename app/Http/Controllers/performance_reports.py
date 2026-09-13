@@ -28,6 +28,46 @@ def _value(row, key, index=0, default=None):
         return default
 
 
+def _normalize_report_evidence(report):
+    """Prevent no-evidence reports from presenting a real performance result."""
+    if not isinstance(report, dict):
+        return report
+
+    normalized = dict(report)
+    has_performance_data = (
+        normalized.get("overall_percentage") is not None
+        and int(normalized.get("graded_count", 0) or 0) > 0
+    )
+    normalized["has_performance_data"] = has_performance_data
+    if has_performance_data:
+        return normalized
+
+    normalized["performance_label"] = "No Data"
+    normalized["performance_classification"] = "No Data"
+    normalized["recommendation"] = ""
+    normalized["priority"] = "none"
+
+    basis = [
+        item for item in (normalized.get("basis") or [])
+        if not str(item).lower().startswith("performance label:")
+    ]
+    basis.insert(0, "performance label: No Data")
+    normalized["basis"] = basis
+
+    recommendation = dict(normalized.get("ml_recommendation") or {})
+    recommendation.update(
+        {
+            "performance_label": "No Data",
+            "overall_percentage": None,
+            "recommendation": "",
+            "priority": "none",
+            "basis": basis,
+        }
+    )
+    normalized["ml_recommendation"] = recommendation
+    return normalized
+
+
 # Supervisor: class reports listing
 @performance_reports.route("/supervisor/classes/<int:class_id>/reports")
 @role_required("supervisor")
@@ -52,7 +92,7 @@ def supervisor_reports(class_id):
     finally:
         conn.close()
 
-    reports = build_class_reports(class_id)
+    reports = [_normalize_report_evidence(report) for report in build_class_reports(class_id)]
 
     return render_template(
         "classroom/supervisor_reports.html",
@@ -90,7 +130,7 @@ def supervisor_student_report(class_id, student_id):
     finally:
         conn.close()
 
-    report = build_student_report(student_id, class_id)
+    report = _normalize_report_evidence(build_student_report(student_id, class_id))
     profile = get_supervisor_intern_profile(
         supervisor_id=supervisor_id,
         classroom_id=class_id,
@@ -136,7 +176,7 @@ def export_supervisor_reports(class_id):
     finally:
         conn.close()
 
-    reports = build_class_reports(class_id)
+    reports = [_normalize_report_evidence(report) for report in build_class_reports(class_id)]
 
     output = StringIO(newline="")
     writer = csv.writer(output, quoting=csv.QUOTE_MINIMAL)
@@ -205,7 +245,7 @@ def student_reports(class_id):
     finally:
         conn.close()
 
-    report = build_student_report(student_id, class_id)
+    report = _normalize_report_evidence(build_student_report(student_id, class_id))
 
     return render_template(
         "classroom/student_report.html",
