@@ -15,6 +15,61 @@
     favicon.href = "{{ url_for('static', filename='images/nexora_logo_student.png') }}";
 })();
 </script>
+<style>
+@media (min-width: 761px) {
+    .nx-role-student .nx-role-sidebar {
+        overflow: hidden !important;
+        padding-bottom: 14px !important;
+    }
+
+    .nx-role-student #studentSidebar > .nx-role-brand,
+    .nx-role-student #studentSidebar > .nx-role-profile,
+    .nx-role-student #studentSidebar > .nx-role-divider,
+    .nx-role-student #studentSidebar > .nx-role-section-label,
+    .nx-role-student #studentSidebar > .nx-role-account-nav,
+    .nx-role-student #studentSidebar > .nx-role-footer {
+        flex-shrink: 0 !important;
+    }
+
+    .nx-role-student #studentSidebar > .nx-role-student-scroll {
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        overscroll-behavior: contain;
+        scrollbar-width: none;
+    }
+
+    .nx-role-student #studentSidebar > .nx-role-student-scroll::-webkit-scrollbar {
+        width: 0;
+    }
+
+    .nx-role-student .nx-role-sidebar:hover > .nx-role-student-scroll,
+    .nx-role-student .nx-role-sidebar:focus-within > .nx-role-student-scroll {
+        padding-right: 4px !important;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(94, 229, 138, .42) transparent;
+    }
+
+    .nx-role-student .nx-role-sidebar:hover > .nx-role-student-scroll::-webkit-scrollbar,
+    .nx-role-student .nx-role-sidebar:focus-within > .nx-role-student-scroll::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .nx-role-student #studentSidebar > .nx-role-student-scroll::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .nx-role-student #studentSidebar > .nx-role-student-scroll::-webkit-scrollbar-thumb {
+        border-radius: 999px;
+        background: rgba(94, 229, 138, .38);
+    }
+
+    .nx-role-student #studentSidebar > .nx-role-student-scroll::-webkit-scrollbar-thumb:hover {
+        background: rgba(94, 229, 138, .58);
+    }
+}
+</style>
 
 {% set sidebar_class_id = request.view_args.get('class_id') if request.view_args else none %}
 {% set sidebar_ml_active = request.endpoint == 'classwork_ml_insights.student_insights' %}
@@ -73,46 +128,48 @@
             </span>
         </a>
 
-        <div class="nx-role-rule"></div>
-        <div class="nx-role-section-label">Menu</div>
+        <div class="nx-role-student-scroll">
+            <div class="nx-role-rule"></div>
+            <div class="nx-role-section-label">Menu</div>
 
-        <nav class="nx-role-nav" aria-label="Student menu">
-            <a href="{{ url_for('student.student_dashboard') }}" aria-label="Dashboard" class="{% if request.path == '/student/dashboard' %}active{% endif %}">
-                <span class="nx-role-icon">▦</span><span class="nx-role-nav-text">Dashboard</span>
-            </a>
-            <a href="{{ url_for('classroom.student_classes') }}" aria-label="Intern Classrooms" class="{% if request.path.startswith('/student/classes') and not sidebar_ml_active and not sidebar_report_active %}active{% endif %}">
-                <span class="nx-role-icon">♙</span><span class="nx-role-nav-text">Intern Classrooms</span>
-            </a>
-        </nav>
-
-        {% if sidebar_class_id %}
-            <div class="nx-role-divider"></div>
-            <div class="nx-role-section-label">Class Tools</div>
-            <nav class="nx-role-nav" aria-label="Current classroom tools">
-                <a href="{{ url_for('classwork_ml_insights.student_insights', class_id=sidebar_class_id) }}" aria-label="ML Insights" class="{% if sidebar_ml_active %}active{% endif %}">
-                    <span class="nx-role-icon">◈</span><span class="nx-role-nav-text">ML Insights</span>
+            <nav class="nx-role-nav" aria-label="Student menu">
+                <a href="{{ url_for('student.student_dashboard') }}" aria-label="Dashboard" class="{% if request.path == '/student/dashboard' %}active{% endif %}">
+                    <span class="nx-role-icon">▦</span><span class="nx-role-nav-text">Dashboard</span>
                 </a>
-                <a href="{{ url_for('performance_reports.student_reports', class_id=sidebar_class_id) }}" aria-label="Report" class="{% if sidebar_report_active %}active{% endif %}">
-                    <span class="nx-role-icon">▥</span><span class="nx-role-nav-text">Report</span>
+                <a href="{{ url_for('classroom.student_classes') }}" aria-label="Intern Classrooms" class="{% if request.path.startswith('/student/classes') and not sidebar_ml_active and not sidebar_report_active %}active{% endif %}">
+                    <span class="nx-role-icon">♙</span><span class="nx-role-nav-text">Intern Classrooms</span>
                 </a>
             </nav>
-        {% endif %}
 
-        <nav class="nx-role-nav" aria-label="Student workspace tools">
-            <a href="{{ url_for('student.logbook') }}" aria-label="Logbook" class="{% if request.path == '/student/logbook' %}active{% endif %}">
-                <span class="nx-role-icon">▤</span><span class="nx-role-nav-text">Logbook</span>
-            </a>
-            <a href="{{ url_for('student.tasks') }}" aria-label="Tasks" class="{% if request.path == '/student/tasks' %}active{% endif %}">
-                <span class="nx-role-icon">☑</span><span class="nx-role-nav-text">Tasks</span>
-            </a>
-            <a href="{{ url_for('student.documents') }}" aria-label="Documents" class="{% if request.path == '/student/documents' %}active{% endif %}">
-                <span class="nx-role-icon">▧</span><span class="nx-role-nav-text">Documents</span>
-            </a>
-            <a href="{{ url_for('notifications.notification_list') }}" aria-label="Notifications" class="{% if request.path == '/notifications' %}active{% endif %}">
-                <span class="nx-role-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg></span><span class="nx-role-nav-text">Notifications</span>
-                {% if unread_count|default(0) > 0 %}<span class="nx-role-badge">{{ unread_count }}</span>{% endif %}
-            </a>
-        </nav>
+            {% if sidebar_class_id %}
+                <div class="nx-role-divider"></div>
+                <div class="nx-role-section-label">Class Tools</div>
+                <nav class="nx-role-nav" aria-label="Current classroom tools">
+                    <a href="{{ url_for('classwork_ml_insights.student_insights', class_id=sidebar_class_id) }}" aria-label="ML Insights" class="{% if sidebar_ml_active %}active{% endif %}">
+                        <span class="nx-role-icon">◈</span><span class="nx-role-nav-text">ML Insights</span>
+                    </a>
+                    <a href="{{ url_for('performance_reports.student_reports', class_id=sidebar_class_id) }}" aria-label="Report" class="{% if sidebar_report_active %}active{% endif %}">
+                        <span class="nx-role-icon">▥</span><span class="nx-role-nav-text">Report</span>
+                    </a>
+                </nav>
+            {% endif %}
+
+            <nav class="nx-role-nav" aria-label="Student workspace tools">
+                <a href="{{ url_for('student.logbook') }}" aria-label="Logbook" class="{% if request.path == '/student/logbook' %}active{% endif %}">
+                    <span class="nx-role-icon">▤</span><span class="nx-role-nav-text">Logbook</span>
+                </a>
+                <a href="{{ url_for('student.tasks') }}" aria-label="Tasks" class="{% if request.path == '/student/tasks' %}active{% endif %}">
+                    <span class="nx-role-icon">☑</span><span class="nx-role-nav-text">Tasks</span>
+                </a>
+                <a href="{{ url_for('student.documents') }}" aria-label="Documents" class="{% if request.path == '/student/documents' %}active{% endif %}">
+                    <span class="nx-role-icon">▧</span><span class="nx-role-nav-text">Documents</span>
+                </a>
+                <a href="{{ url_for('notifications.notification_list') }}" aria-label="Notifications" class="{% if request.path == '/notifications' %}active{% endif %}">
+                    <span class="nx-role-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg></span><span class="nx-role-nav-text">Notifications</span>
+                    {% if unread_count|default(0) > 0 %}<span class="nx-role-badge">{{ unread_count }}</span>{% endif %}
+                </a>
+            </nav>
+        </div>
 
         <div class="nx-role-divider"></div>
         <div class="nx-role-section-label">Account</div>
