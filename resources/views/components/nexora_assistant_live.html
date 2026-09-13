@@ -1,4 +1,9 @@
 {# Live direct-message enhancement for the existing Nexora Assistant. #}
+{% set nx_live_user_avatar = url_for('static', filename='images/default_profile.png') %}
+{% if sidebar_profile is defined and sidebar_profile and sidebar_profile.profile_picture %}
+    {% set nx_live_user_avatar = url_for('profile_picture', filename=sidebar_profile.profile_picture) %}
+{% endif %}
+
 <style id="nx-assistant-live-chat-styles">
 .nx-assistant .nx-assistant-live-chat-count {
     display: none;
@@ -89,11 +94,12 @@
         root.dataset.liveChatReady = '1';
 
         var defaultAvatar = {{ url_for('static', filename='images/default_profile.png')|tojson }};
-        var userAvatar = {{ nx_ai_user_avatar|default(url_for('static', filename='images/default_profile.png'))|tojson }};
+        var userAvatar = {{ nx_live_user_avatar|tojson }};
         var pollTimer = null;
         var pollBusy = false;
         var activeContactId = 0;
         var activeContact = null;
+        var activeMessageCount = -1;
         var lastThreadSignature = '';
 
         var chatCount = document.createElement('span');
@@ -271,22 +277,37 @@
             return String((data.contact && data.contact.id) || 0) + ':' + messages.length + ':' + String(last.id || '') + ':' + String(last.body || '');
         }
 
+        function clearActiveThreadState() {
+            activeContactId = 0;
+            activeContact = null;
+            activeMessageCount = -1;
+            lastThreadSignature = '';
+            window.sessionStorage.removeItem('nxAssistantActiveContact');
+        }
+
         function refreshActiveThread(contact) {
             if (!contact || !root.classList.contains('is-open')) {
-                activeContactId = 0;
-                activeContact = null;
-                lastThreadSignature = '';
-                window.sessionStorage.removeItem('nxAssistantActiveContact');
+                clearActiveThreadState();
                 return Promise.resolve();
             }
 
             var contactId = Number(contact.id || 0);
+            var messageCount = Number(contact.message_count || 0);
             if (!contactId) return Promise.resolve();
-            if (activeContactId !== contactId) lastThreadSignature = '';
-            activeContactId = contactId;
+
+            if (activeContactId !== contactId) {
+                activeContactId = contactId;
+                activeMessageCount = -1;
+                lastThreadSignature = '';
+            }
+
             activeContact = contact;
+            if (activeMessageCount === messageCount && lastThreadSignature) {
+                return Promise.resolve();
+            }
 
             return requestJson('/messages/thread/' + encodeURIComponent(contactId)).then(function (data) {
+                activeMessageCount = messageCount;
                 var signature = threadSignature(data);
                 if (signature !== lastThreadSignature) {
                     lastThreadSignature = signature;
