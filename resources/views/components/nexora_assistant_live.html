@@ -5,16 +5,43 @@
 {% endif %}
 
 <style id="nx-assistant-live-chat-styles">
+.nx-assistant .nx-assistant-header {
+    padding-left: 14px;
+}
+.nx-assistant .nx-assistant-brand {
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: 9px;
+}
+.nx-assistant .nx-assistant-brand > img {
+    width: 32px;
+    height: 32px;
+    flex: 0 0 32px;
+}
+.nx-assistant .nx-assistant-brand > div {
+    min-width: 0;
+}
+.nx-assistant .nx-assistant-brand strong {
+    overflow: hidden;
+    font-size: .9rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.nx-assistant .nx-assistant-brand span {
+    font-size: .66rem;
+    white-space: nowrap;
+}
 .nx-assistant .nx-assistant-live-chat-count {
     display: none;
+    flex: 0 0 auto;
     align-items: center;
     gap: 4px;
-    margin-left: 6px;
+    margin-left: auto;
     padding: 4px 7px;
     border-radius: 999px;
     background: rgba(255,255,255,.15);
     color: #fff;
-    font-size: .58rem;
+    font-size: .56rem;
     font-weight: 800;
     line-height: 1;
     white-space: nowrap;
@@ -29,7 +56,7 @@
     border-radius: 999px;
     background: #fff;
     color: var(--nx-assistant-accent);
-    font-size: .55rem;
+    font-size: .54rem;
 }
 .nx-assistant .nx-assistant-live-unread {
     position: absolute;
@@ -51,6 +78,122 @@
     line-height: 1;
 }
 .nx-assistant .nx-assistant-live-unread.is-visible { display: grid; }
+
+/* Compact recent-conversation rail. The rail, not the message area, owns a visible scrollbar. */
+.nx-assistant .nx-assistant-chat-rail {
+    width: 46px;
+    gap: 8px;
+    padding: 10px 5px;
+    border-right-color: #e7ece9;
+    background: #f8fafc;
+    scrollbar-width: thin;
+    scrollbar-color: #c4cec9 transparent;
+}
+.nx-assistant .nx-assistant-chat-rail::-webkit-scrollbar { width: 3px; }
+.nx-assistant .nx-assistant-chat-rail::-webkit-scrollbar-track { background: transparent; }
+.nx-assistant .nx-assistant-chat-rail::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: #c4cec9;
+}
+.nx-assistant .nx-assistant-panel.has-chat-rail .nx-assistant-body {
+    padding-left: 58px;
+}
+.nx-assistant .nx-assistant-chat-head {
+    width: 34px;
+    min-width: 34px;
+    height: 34px;
+    flex-basis: 34px;
+    border-width: 2px;
+    box-shadow: 0 3px 9px rgba(15,23,42,.08);
+}
+.nx-assistant .nx-assistant-chat-head.is-active {
+    box-shadow: 0 0 0 2px var(--nx-assistant-soft);
+}
+.nx-assistant .nx-assistant-chat-head-badge {
+    right: -5px;
+    bottom: -3px;
+    min-width: 15px;
+    height: 15px;
+    padding: 0 3px;
+    font-size: .48rem;
+}
+
+/* A direct-message thread gets the full panel instead of sharing space with quick actions. */
+.nx-assistant .nx-assistant-panel.is-live-thread .nx-assistant-welcome,
+.nx-assistant .nx-assistant-panel.is-live-thread .nx-assistant-preview-label,
+.nx-assistant .nx-assistant-panel.is-live-thread .nx-assistant-shortcuts {
+    display: none !important;
+}
+.nx-assistant .nx-assistant-panel.is-live-thread .nx-assistant-body {
+    padding-top: 12px;
+    padding-bottom: 12px;
+}
+.nx-assistant .nx-assistant-panel.is-live-thread .nx-assistant-conversation {
+    margin-top: 0;
+    gap: 9px;
+}
+.nx-assistant .nx-live-thread-header {
+    position: sticky;
+    top: -12px;
+    z-index: 4;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin: 0 0 5px;
+    padding: 10px 10px 10px 8px;
+    border: 1px solid #e3e9e6;
+    border-radius: 12px;
+    background: rgba(255,255,255,.96);
+    box-shadow: 0 5px 14px rgba(15,23,42,.05);
+    backdrop-filter: blur(8px);
+}
+.nx-assistant .nx-live-thread-header img {
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    border: 1px solid #dde6e1;
+    border-radius: 50%;
+    background: #eef2f1;
+    object-fit: cover;
+}
+.nx-assistant .nx-live-thread-header-copy {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+.nx-assistant .nx-live-thread-header-copy strong,
+.nx-assistant .nx-live-thread-header-copy span {
+    display: block;
+}
+.nx-assistant .nx-live-thread-header-copy strong {
+    overflow: hidden;
+    color: #0f172a;
+    font-size: .77rem;
+    font-weight: 850;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.nx-assistant .nx-live-thread-header-copy span {
+    margin-top: 2px;
+    color: #64748b;
+    font-size: .62rem;
+}
+.nx-assistant .nx-live-thread-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex: 0 0 auto;
+    color: #15803d;
+    font-size: .58rem;
+    font-weight: 800;
+}
+.nx-assistant .nx-live-thread-status::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #22c55e;
+}
+
 .nx-assistant .nx-assistant-message.is-contact-message > span {
     background-color: #e2e8f0;
     background-image: var(--nx-contact-avatar) !important;
@@ -59,22 +202,36 @@
     background-size: cover !important;
 }
 .nx-assistant .nx-assistant-message.is-contact-message > span::after { display: none; }
-.nx-assistant .nx-assistant-message.is-direct-message p { white-space: pre-wrap; }
-.nx-assistant .nx-assistant-message.is-thread-note {
-    max-width: 100%;
-    margin-bottom: 3px;
+.nx-assistant .nx-assistant-message.is-direct-message {
+    max-width: 92%;
 }
-.nx-assistant .nx-assistant-message.is-thread-note p {
-    background: var(--nx-assistant-soft);
-    border-color: transparent;
-    color: #475569;
-    box-shadow: none;
+.nx-assistant .nx-assistant-message.is-direct-message p {
+    white-space: pre-wrap;
+}
+.nx-assistant .nx-assistant-panel.is-live-thread .nx-assistant-message p {
+    font-size: .74rem;
+    line-height: 1.55;
+}
+
+@media (max-width: 760px) {
+    .nx-assistant .nx-assistant-chat-rail {
+        width: 44px;
+        padding: 9px 5px;
+    }
+    .nx-assistant .nx-assistant-panel.has-chat-rail .nx-assistant-body { padding-left: 54px; }
+    .nx-assistant .nx-assistant-chat-head {
+        width: 32px;
+        min-width: 32px;
+        height: 32px;
+        flex-basis: 32px;
+    }
+    .nx-assistant .nx-assistant-live-chat-count { padding: 4px 6px; }
 }
 </style>
 
 <script>
 (function () {
-    var POLL_MS = 3000;
+    var POLL_MS = 2500;
     var bootAttempts = 0;
 
     function bootLiveChat() {
@@ -152,6 +309,10 @@
             return null;
         }
 
+        function updateThreadMode(contact) {
+            panel.classList.toggle('is-live-thread', !!contact);
+        }
+
         function updateCounts(contacts) {
             var recent = recentContacts(contacts);
             var unread = recent.reduce(function (sum, contact) {
@@ -186,7 +347,7 @@
                 image.src = contact.avatar_url || defaultAvatar;
                 image.alt = '';
                 image.addEventListener('error', function () {
-                    image.src = defaultAvatar;
+                    if (image.src !== defaultAvatar) image.src = defaultAvatar;
                 }, {once: true});
                 button.appendChild(image);
 
@@ -241,23 +402,45 @@
             conversation.appendChild(row);
         }
 
+        function appendThreadHeader(contact) {
+            var header = document.createElement('div');
+            header.className = 'nx-live-thread-header';
+
+            var avatar = document.createElement('img');
+            avatar.src = (contact && contact.avatar_url) || defaultAvatar;
+            avatar.alt = '';
+            avatar.addEventListener('error', function () {
+                if (avatar.src !== defaultAvatar) avatar.src = defaultAvatar;
+            }, {once: true});
+
+            var copy = document.createElement('div');
+            copy.className = 'nx-live-thread-header-copy';
+            var name = document.createElement('strong');
+            name.textContent = (contact && (contact.display_name || contact.username)) || 'Contact';
+            var detail = document.createElement('span');
+            detail.textContent = contact && contact.role ? contact.role.charAt(0).toUpperCase() + contact.role.slice(1) : 'Nexora contact';
+            copy.appendChild(name);
+            copy.appendChild(detail);
+
+            var status = document.createElement('span');
+            status.className = 'nx-live-thread-status';
+            status.textContent = 'Live';
+
+            header.appendChild(avatar);
+            header.appendChild(copy);
+            header.appendChild(status);
+            conversation.appendChild(header);
+        }
+
         function renderThread(data) {
             if (!data || !data.contact) return;
             activeContact = data.contact;
             activeContactId = Number(activeContact.id || 0);
             window.sessionStorage.setItem('nxAssistantActiveContact', String(activeContactId));
+            updateThreadMode(activeContact);
 
             conversation.innerHTML = '';
-
-            var note = document.createElement('div');
-            note.className = 'nx-assistant-message is-assistant is-thread-note';
-            var noteAvatar = document.createElement('span');
-            noteAvatar.textContent = 'N';
-            var noteText = document.createElement('p');
-            noteText.textContent = 'Live chat with ' + (activeContact.display_name || activeContact.username || 'contact') + '. New messages appear automatically.';
-            note.appendChild(noteAvatar);
-            note.appendChild(noteText);
-            conversation.appendChild(note);
+            appendThreadHeader(activeContact);
 
             (data.messages || []).forEach(function (message) {
                 appendThreadRow(
@@ -282,6 +465,7 @@
             activeContact = null;
             activeMessageCount = -1;
             lastThreadSignature = '';
+            updateThreadMode(null);
             window.sessionStorage.removeItem('nxAssistantActiveContact');
         }
 
@@ -302,6 +486,7 @@
             }
 
             activeContact = contact;
+            updateThreadMode(contact);
             if (activeMessageCount === messageCount && lastThreadSignature) {
                 return Promise.resolve();
             }
@@ -323,10 +508,11 @@
                 var contacts = data.contacts || [];
                 updateCounts(contacts);
                 var contact = resolveActiveContact(contacts);
+                updateThreadMode(contact);
                 renderRail(contacts, contact ? contact.id : 0);
                 return refreshActiveThread(contact);
             }).catch(function () {
-                // Keep the current UI if a transient poll fails.
+                /* Keep the current UI if a transient poll fails. */
             }).finally(function () {
                 pollBusy = false;
             });
