@@ -233,6 +233,30 @@
                     </section>
                 {% endif %}
 
+                {% set announcement_items = get_classroom_announcements(classroom.id) %}
+                <section class="nexora-card p-4 mt-3" aria-labelledby="announcements-heading">
+                    <div class="table-card-header px-0 pt-0">
+                        <div>
+                            <h3 id="announcements-heading">Announcements</h3>
+                            <span class="table-meta">{{ announcement_items|length }} post{% if announcement_items|length != 1 %}s{% endif %} · Read-only classroom stream</span>
+                        </div>
+                    </div>
+                    {% if announcement_items %}
+                        {% for a in announcement_items %}
+                            <article class="{% if not loop.last %}border-bottom pb-3 mb-3{% endif %}">
+                                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                                    <strong>{{ a.title or 'Announcement' }}</strong>
+                                    <span class="badge rounded-pill text-bg-light border">{{ a.post_type_label }}</span>
+                                </div>
+                                <div class="text-muted small mt-1 mb-2">Posted by {{ a.author_name }} · {{ a.author_role_label }} · {{ a.created_at_display }}</div>
+                                <p class="mb-0">{{ a.body }}</p>
+                            </article>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-muted small">No announcements have been posted in this classroom.</div>
+                    {% endif %}
+                </section>
+
                 <section class="nexora-card table-card mt-3" aria-labelledby="enrolled-heading">
                     <div class="table-card-header">
                         <div>
