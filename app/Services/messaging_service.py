@@ -101,7 +101,7 @@ def _authorized_contact_rows(user_id, role):
         if role == "student":
             rows = conn.execute(
                 """
-                SELECT DISTINCT u.id, u.username, u.role
+                SELECT u.id, u.username, u.role
                 FROM users u
                 WHERE COALESCE(u.status, 'active') = 'active'
                   AND (
@@ -133,7 +133,7 @@ def _authorized_contact_rows(user_id, role):
         elif role == "supervisor":
             rows = conn.execute(
                 """
-                SELECT DISTINCT u.id, u.username, u.role
+                SELECT u.id, u.username, u.role
                 FROM users u
                 WHERE COALESCE(u.status, 'active') = 'active'
                   AND (
