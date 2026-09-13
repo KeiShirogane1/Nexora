@@ -9,84 +9,709 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
     <style>
         .student-report-page {
-            background: #f8fafc;
+            background: #f7fbf9;
         }
 
         .student-report-shell {
-            max-width: 1100px;
+            max-width: 1320px;
             margin: 0 auto;
-            padding-bottom: 48px;
+            padding-bottom: 42px;
         }
 
-        .student-report-card {
-            padding: 22px;
-            border: 1px solid #e8eef7;
-            border-radius: 18px;
-            background: #fff;
-            box-shadow: 0 8px 28px rgba(15, 23, 42, 0.06);
-            margin-bottom: 18px;
+        .student-report-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 28px;
+            margin-bottom: 20px;
         }
 
-        .student-report-card h2 {
-            margin: 0 0 14px;
-            color: #0f172a;
-            font-size: 1.05rem;
-            font-weight: 800;
+        .student-report-header-copy {
+            min-width: 0;
         }
 
-        .student-report-label {
-            display: inline-block;
-            padding: 6px 10px;
-            border-radius: 999px;
-            font-size: 0.78rem;
-            font-weight: 800;
+        .student-report-header h1 {
+            margin: 4px 0 8px;
+            color: #10243c;
+            font-size: clamp(1.9rem, 3vw, 2.6rem);
+            line-height: 1.05;
+            font-weight: 850;
+            letter-spacing: -0.045em;
         }
 
-        .student-report-label.is-excellent {
-            background: #dcfce7;
-            color: #166534;
+        .student-report-header p {
+            max-width: 900px;
+            margin: 0;
+            color: #617084;
+            font-size: 0.9rem;
+            line-height: 1.65;
         }
 
-        .student-report-label.is-very-satisfactory {
-            background: #dbeafe;
-            color: #1e40af;
+        .student-report-context {
+            margin-top: 7px !important;
+            color: #7a8798 !important;
+            font-size: 0.78rem !important;
+            font-weight: 700;
         }
 
-        .student-report-label.is-satisfactory {
-            background: #fef3c7;
-            color: #92400e;
+        .student-report-status-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 0 0 auto;
+            min-width: 230px;
+            padding: 15px 17px;
+            border-radius: 16px;
+            border: 1px solid #dcefe5;
+            background: #effbf4;
         }
 
-        .student-report-label.is-fair {
-            background: #ffedd5;
-            color: #9a3412;
+        .student-report-status-card.is-empty {
+            border-color: #fecaca;
+            background: #fff1f2;
         }
 
-        .student-report-label.is-needs-improvement {
-            background: #fee2e2;
+        .student-report-status-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #16a34a;
+            color: #fff;
+            font-weight: 900;
+        }
+
+        .student-report-status-card.is-empty .student-report-status-icon {
+            background: #ef4444;
+        }
+
+        .student-report-status-copy strong,
+        .student-report-status-copy span {
+            display: block;
+        }
+
+        .student-report-status-copy strong {
+            color: #123b2b;
+            font-size: 0.82rem;
+            font-weight: 850;
+        }
+
+        .student-report-status-card.is-empty .student-report-status-copy strong {
             color: #991b1b;
         }
 
-        .student-report-table {
-            width: 100%;
-            border-collapse: collapse;
+        .student-report-status-copy span {
+            margin-top: 2px;
+            color: #708090;
+            font-size: 0.72rem;
         }
 
-        .student-report-table th,
-        .student-report-table td {
-            padding: 12px 14px;
-            border-bottom: 1px solid #f1f5f9;
-            text-align: left;
+        .student-report-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 0 8px;
+            border-bottom: 1px solid #dfe9e4;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        .student-report-tabs::-webkit-scrollbar {
+            display: none;
+        }
+
+        .student-report-tabs a {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            border-bottom: 2px solid transparent;
+            color: #526176;
+            font-size: 0.8rem;
+            font-weight: 800;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .student-report-tabs a:first-child,
+        .student-report-tabs a:hover {
+            border-bottom-color: #18b66f;
+            color: #0a8f55;
+        }
+
+        .student-report-overview-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.15fr) minmax(260px, 0.82fr) minmax(260px, 0.82fr);
+            gap: 16px;
+            align-items: stretch;
+        }
+
+        .student-report-lower-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+            gap: 16px;
+            margin-top: 16px;
+            align-items: stretch;
+        }
+
+        .student-report-card {
+            min-width: 0;
+            padding: 20px;
+            border: 1px solid #e3ebe7;
+            border-radius: 17px;
+            background: #fff;
+            box-shadow: 0 8px 24px rgba(15, 49, 38, 0.055);
+        }
+
+        .student-report-card-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 14px;
+            margin-bottom: 16px;
+        }
+
+        .student-report-card-title {
+            display: flex;
+            align-items: flex-start;
+            gap: 11px;
+            min-width: 0;
+        }
+
+        .student-report-card-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 auto;
+            width: 30px;
+            height: 30px;
+            border-radius: 10px;
+            background: #e8f9f0;
+            color: #0aa965;
+            font-size: 0.95rem;
+            font-weight: 900;
+        }
+
+        .student-report-card h2 {
+            margin: 1px 0 0;
+            color: #10243c;
+            font-size: 1rem;
+            line-height: 1.25;
+            font-weight: 850;
+        }
+
+        .student-report-card-subtitle {
+            margin: 4px 0 0;
+            color: #758397;
+            font-size: 0.74rem;
+            line-height: 1.45;
+        }
+
+        .student-report-summary-list {
+            display: grid;
+        }
+
+        .student-report-summary-row {
+            display: grid;
+            grid-template-columns: minmax(135px, 0.8fr) minmax(0, 1fr);
+            gap: 16px;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #edf2ef;
+        }
+
+        .student-report-summary-row:last-child {
+            border-bottom: 0;
+        }
+
+        .student-report-summary-row span {
+            color: #51627a;
+            font-size: 0.72rem;
+            font-weight: 850;
+            text-transform: uppercase;
+            letter-spacing: 0.045em;
+        }
+
+        .student-report-summary-row strong {
+            color: #12253e;
+            font-size: 0.84rem;
+            font-weight: 800;
+        }
+
+        .student-report-classification {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            margin-top: 14px;
+            padding: 13px 14px;
+            border-radius: 13px;
+            background: #ecfaf3;
+        }
+
+        .student-report-classification-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #d5f6e5;
+            color: #0ba661;
+            font-weight: 900;
+        }
+
+        .student-report-classification span,
+        .student-report-classification strong {
+            display: block;
+        }
+
+        .student-report-classification span {
+            color: #5e6f83;
+            font-size: 0.66rem;
+            font-weight: 850;
+            text-transform: uppercase;
+            letter-spacing: 0.045em;
+        }
+
+        .student-report-classification strong {
+            margin-top: 2px;
+            color: #10243c;
+            font-size: 0.82rem;
+        }
+
+        .student-report-ring-wrap {
+            display: grid;
+            justify-items: center;
+            gap: 16px;
+            padding-top: 3px;
+        }
+
+        .student-report-ring {
+            position: relative;
+            display: grid;
+            place-items: center;
+            width: 142px;
+            height: 142px;
+            border-radius: 50%;
+            background: conic-gradient(#14ad68 0 var(--completion), #e8eef1 var(--completion) 100%);
+        }
+
+        .student-report-ring::after {
+            content: '';
+            position: absolute;
+            inset: 15px;
+            border-radius: 50%;
+            background: #fff;
+        }
+
+        .student-report-ring-copy {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+        }
+
+        .student-report-ring-copy strong,
+        .student-report-ring-copy span {
+            display: block;
+        }
+
+        .student-report-ring-copy strong {
+            color: #10243c;
+            font-size: 1.75rem;
+            font-weight: 900;
+            letter-spacing: -0.04em;
+        }
+
+        .student-report-ring-copy span {
+            color: #65758a;
+            font-size: 0.72rem;
+        }
+
+        .student-report-ring-legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            width: 100%;
+            padding-top: 3px;
+            border-top: 1px solid #eef2f0;
+        }
+
+        .student-report-ring-legend div {
+            text-align: center;
+        }
+
+        .student-report-ring-legend span,
+        .student-report-ring-legend strong {
+            display: block;
+        }
+
+        .student-report-ring-legend span {
+            color: #718095;
+            font-size: 0.68rem;
+        }
+
+        .student-report-ring-legend strong {
+            margin-top: 3px;
+            color: #10243c;
             font-size: 0.84rem;
         }
 
-        .student-report-table th {
-            color: #64748b;
-            font-size: 0.7rem;
+        .student-report-grading-list {
+            display: grid;
+            gap: 0;
+        }
+
+        .student-report-grading-item {
+            display: grid;
+            grid-template-columns: 54px minmax(0, 1fr);
+            gap: 14px;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid #edf2ef;
+        }
+
+        .student-report-grading-item:last-child {
+            border-bottom: 0;
+        }
+
+        .student-report-grading-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 54px;
+            height: 54px;
+            border-radius: 16px;
+            background: #e4f8ed;
+            color: #0aa560;
+            font-size: 1.05rem;
+            font-weight: 900;
+        }
+
+        .student-report-grading-icon.is-pending {
+            background: #fff3df;
+            color: #f59e0b;
+        }
+
+        .student-report-grading-copy span,
+        .student-report-grading-copy strong,
+        .student-report-grading-copy small {
+            display: block;
+        }
+
+        .student-report-grading-copy span {
+            color: #25384f;
+            font-size: 0.76rem;
+            font-weight: 800;
+        }
+
+        .student-report-grading-copy strong {
+            margin-top: 2px;
+            color: #10243c;
+            font-size: 1.25rem;
+            font-weight: 900;
+        }
+
+        .student-report-grading-copy small {
+            margin-top: 2px;
+            color: #7a8798;
+            font-size: 0.68rem;
+        }
+
+        .student-report-empty {
+            display: grid;
+            justify-items: center;
+            gap: 6px;
+            min-height: 118px;
+            padding: 22px;
+            border: 1px solid #e7ecea;
+            border-radius: 14px;
+            background: #fbfdfc;
+            text-align: center;
+        }
+
+        .student-report-empty-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: #edf2f4;
+            color: #9aa8b7;
+            font-size: 1rem;
+            font-weight: 900;
+        }
+
+        .student-report-empty strong {
+            color: #26384d;
+            font-size: 0.8rem;
+        }
+
+        .student-report-empty p {
+            margin: 0;
+            color: #8290a1;
+            font-size: 0.72rem;
+            line-height: 1.5;
+        }
+
+        .student-report-feedback-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .student-report-signal {
+            padding: 13px;
+            border: 1px solid #e8eeeb;
+            border-radius: 12px;
+            background: #fbfdfc;
+        }
+
+        .student-report-signal span,
+        .student-report-signal strong {
+            display: block;
+        }
+
+        .student-report-signal span {
+            color: #718095;
+            font-size: 0.67rem;
             font-weight: 800;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
-            width: 260px;
+            letter-spacing: 0.04em;
+        }
+
+        .student-report-signal strong {
+            margin-top: 5px;
+            color: #10243c;
+            font-size: 0.88rem;
+        }
+
+        .student-report-recommendation {
+            padding: 15px;
+            border-radius: 14px;
+            background: #f4faf7;
+            color: #304456;
+            font-size: 0.79rem;
+            line-height: 1.65;
+        }
+
+        .student-report-priority {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: #fff4d8;
+            color: #a96200;
+            font-size: 0.68rem;
+            font-weight: 850;
+            text-transform: capitalize;
+            white-space: nowrap;
+        }
+
+        .student-report-basis {
+            display: grid;
+            gap: 7px;
+            margin-top: 12px;
+        }
+
+        .student-report-basis-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            color: #617084;
+            font-size: 0.72rem;
+            line-height: 1.45;
+        }
+
+        .student-report-basis-item::before {
+            content: '✓';
+            flex: 0 0 auto;
+            color: #11a864;
+            font-weight: 900;
+        }
+
+        .student-report-work-card {
+            margin-top: 16px;
+        }
+
+        .student-report-work-table-wrap {
+            overflow-x: auto;
+            border: 1px solid #e7ecea;
+            border-radius: 13px;
+        }
+
+        .student-report-work-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 620px;
+        }
+
+        .student-report-work-table th,
+        .student-report-work-table td {
+            padding: 11px 13px;
+            border-bottom: 1px solid #edf2ef;
+            text-align: left;
+            font-size: 0.77rem;
+        }
+
+        .student-report-work-table th {
+            background: #f8fbf9;
+            color: #5e6d80;
+            font-size: 0.67rem;
+            font-weight: 850;
+            letter-spacing: 0.045em;
+            text-transform: uppercase;
+        }
+
+        .student-report-work-table tr:last-child td {
+            border-bottom: 0;
+        }
+
+        .student-report-work-table td {
+            color: #31445a;
+        }
+
+        .student-report-work-table td:first-child {
+            color: #10243c;
+            font-weight: 750;
+        }
+
+        .student-report-result-strip {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .student-report-result {
+            padding: 12px 13px;
+            border: 1px solid #e7ecea;
+            border-radius: 12px;
+            background: #fbfdfc;
+        }
+
+        .student-report-result span,
+        .student-report-result strong,
+        .student-report-result small {
+            display: block;
+        }
+
+        .student-report-result span {
+            color: #718095;
+            font-size: 0.66rem;
+            font-weight: 850;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .student-report-result strong {
+            margin-top: 4px;
+            color: #10243c;
+            font-size: 0.8rem;
+        }
+
+        .student-report-result small {
+            margin-top: 2px;
+            color: #738196;
+            font-size: 0.7rem;
+        }
+
+        .student-report-note {
+            display: flex;
+            gap: 11px;
+            align-items: flex-start;
+            margin-top: 16px;
+            padding: 14px 16px;
+            border: 1px solid #cfe5ff;
+            border-radius: 13px;
+            background: #edf7ff;
+            color: #23618f;
+            font-size: 0.73rem;
+            line-height: 1.55;
+        }
+
+        .student-report-note strong {
+            color: #164f7a;
+        }
+
+        .student-report-note-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 auto;
+            width: 23px;
+            height: 23px;
+            border-radius: 50%;
+            background: #2d8be8;
+            color: #fff;
+            font-size: 0.72rem;
+            font-weight: 900;
+        }
+
+        .student-report-anchor {
+            scroll-margin-top: 92px;
+        }
+
+        @media (max-width: 1080px) {
+            .student-report-overview-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .student-report-overview-grid > :first-child {
+                grid-column: 1 / -1;
+            }
+
+            .student-report-feedback-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 820px) {
+            .student-report-header {
+                flex-direction: column;
+            }
+
+            .student-report-status-card {
+                width: 100%;
+                min-width: 0;
+                box-sizing: border-box;
+            }
+
+            .student-report-overview-grid,
+            .student-report-lower-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .student-report-overview-grid > :first-child {
+                grid-column: auto;
+            }
+        }
+
+        @media (max-width: 560px) {
+            .student-report-card {
+                padding: 17px;
+            }
+
+            .student-report-summary-row {
+                grid-template-columns: 1fr;
+                gap: 5px;
+            }
+
+            .student-report-feedback-grid,
+            .student-report-result-strip {
+                grid-template-columns: 1fr;
+            }
+
+            .student-report-tabs {
+                padding: 0;
+            }
+
+            .student-report-tabs a {
+                padding-inline: 12px;
+            }
         }
     </style>
 </head>
@@ -97,77 +722,227 @@
         {% set class_active_tab = 'report' %}
         {% include 'components/student_class_shell.html' %}
 
+        {% set pending_count = report.total_count - report.graded_count %}
+        {% if pending_count < 0 %}{% set pending_count = 0 %}{% endif %}
+
         <div class="class-wrap student-report-shell">
-            <header class="student-section-heading" aria-labelledby="report-heading">
-                <div>
+            <header class="student-report-header" aria-labelledby="report-heading">
+                <div class="student-report-header-copy">
                     <span class="student-section-eyebrow">Student Portal</span>
                     <h1 id="report-heading">Work Performance Report</h1>
-                    <p>{{ classroom.section }} · Supervisor: {{ classroom.supervisor }} · {{ report.student.username }}</p>
-                    <p class="text-muted small">This student report contains Work/gradebook scoring and Work-related feedback analytics only. Attendance/OJT Hours, Daily Performance, Logbook, and Official Evaluation are separate OJT evidence dimensions and are not combined into this result.</p>
+                    <p>This report contains Work/gradebook scoring and Work-related feedback analytics only. Attendance/OJT Hours, Daily Performance, Logbook, and Official Evaluation are separate OJT evidence dimensions and are not combined into this result.</p>
+                    <p class="student-report-context">{{ classroom.section }} · Supervisor: {{ classroom.supervisor }}{% if report.student and report.student.username %} · {{ report.student.username }}{% endif %}</p>
                 </div>
-                <div>
-                    {% if report.overall_percentage is none %}
-                        <span class="student-report-label is-needs-improvement">No Work Performance Data</span>
-                    {% else %}
-                        <span class="student-report-label {% if report.performance_label == 'Excellent' %}is-excellent{% elif report.performance_label == 'Very Satisfactory' %}is-very-satisfactory{% elif report.performance_label == 'Satisfactory' %}is-satisfactory{% elif report.performance_label == 'Fair' %}is-fair{% else %}is-needs-improvement{% endif %}">{{ report.performance_label }}</span>
-                    {% endif %}
+
+                <div class="student-report-status-card{% if report.overall_percentage is none %} is-empty{% endif %}">
+                    <span class="student-report-status-icon" aria-hidden="true">{% if report.overall_percentage is none %}!{% else %}✓{% endif %}</span>
+                    <span class="student-report-status-copy">
+                        <strong>{% if report.overall_percentage is none %}No Work Performance Data{% else %}{{ report.performance_label }}{% endif %}</strong>
+                        <span>{% if report.overall_percentage is none %}No graded Work evidence yet.{% else %}Based on current graded Work.{% endif %}</span>
+                    </span>
                 </div>
             </header>
 
-            <section class="student-report-card">
-                <h2>WORK PERFORMANCE SUMMARY</h2>
-                {% if report.total_count == 0 %}
-                    <div class="text-muted">No Work data available — no assignments in this class yet.</div>
-                {% elif report.graded_count == 0 %}
-                    <div class="text-muted">No Work data available — no grades recorded yet.</div>
-                {% endif %}
-                <table class="student-report-table">
-                    <tbody>
-                        <tr><th>Work average</th><td>{% if report.overall_percentage is not none %}{{ "%.1f"|format(report.overall_percentage) }}%{% else %}—{% endif %}</td></tr>
-                        <tr><th>Work completion</th><td>{{ "%.1f"|format(report.completion_rate) }}%</td></tr>
-                        <tr><th>Graded assignments</th><td>{{ report.graded_count }}</td></tr>
-                        <tr><th>Total assignments</th><td>{{ report.total_count }}</td></tr>
-                        <tr><th>Work performance classification</th><td>{% if report.overall_percentage is not none %}{{ report.performance_label }}{% else %}No Work Performance Data{% endif %}</td></tr>
-                    </tbody>
-                </table>
+            <nav class="student-report-tabs" aria-label="Report sections">
+                <a href="#report-overview"><span aria-hidden="true">▥</span>Overview</a>
+                <a href="#report-feedback"><span aria-hidden="true">▢</span>Feedback Analysis</a>
+                <a href="#report-work"><span aria-hidden="true">▤</span>Work Items</a>
+                <a href="#report-recommendation"><span aria-hidden="true">◇</span>Recommendation</a>
+            </nav>
+
+            <section id="report-overview" class="student-report-overview-grid student-report-anchor" aria-label="Report overview">
+                <article class="student-report-card">
+                    <div class="student-report-card-head">
+                        <div class="student-report-card-title">
+                            <span class="student-report-card-icon" aria-hidden="true">▥</span>
+                            <div>
+                                <h2>Performance Summary</h2>
+                                <p class="student-report-card-subtitle">Overview of your Work performance in this class.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="student-report-summary-list">
+                        <div class="student-report-summary-row">
+                            <span>Work Average</span>
+                            <strong>{% if report.overall_percentage is not none %}{{ "%.1f"|format(report.overall_percentage) }}%{% else %}—{% endif %}</strong>
+                        </div>
+                        <div class="student-report-summary-row">
+                            <span>Work Completion</span>
+                            <strong>{{ "%.1f"|format(report.completion_rate) }}%</strong>
+                        </div>
+                        <div class="student-report-summary-row">
+                            <span>Graded Assignments</span>
+                            <strong>{{ report.graded_count }}</strong>
+                        </div>
+                        <div class="student-report-summary-row">
+                            <span>Total Assignments</span>
+                            <strong>{{ report.total_count }}</strong>
+                        </div>
+                    </div>
+
+                    <div class="student-report-classification">
+                        <span class="student-report-classification-icon" aria-hidden="true">◎</span>
+                        <span>
+                            <span>Work Performance Classification</span>
+                            <strong>{% if report.overall_percentage is not none %}{{ report.performance_label }}{% else %}No Work Performance Data{% endif %}</strong>
+                        </span>
+                    </div>
+                </article>
+
+                <article class="student-report-card">
+                    <div class="student-report-card-head">
+                        <div class="student-report-card-title">
+                            <span class="student-report-card-icon" aria-hidden="true">◔</span>
+                            <div>
+                                <h2>Completion Progress</h2>
+                                <p class="student-report-card-subtitle">Reviewed Work compared with all assigned Work.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="student-report-ring-wrap">
+                        <div class="student-report-ring" style="--completion: {{ report.completion_rate }}%;" aria-label="{{ '%.1f'|format(report.completion_rate) }} percent completed">
+                            <div class="student-report-ring-copy">
+                                <strong>{{ "%.0f"|format(report.completion_rate) }}%</strong>
+                                <span>Completed</span>
+                            </div>
+                        </div>
+                        <div class="student-report-ring-legend">
+                            <div><span>Completed</span><strong>{{ report.graded_count }}</strong></div>
+                            <div><span>Remaining</span><strong>{{ pending_count }}</strong></div>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="student-report-card">
+                    <div class="student-report-card-head">
+                        <div class="student-report-card-title">
+                            <span class="student-report-card-icon" aria-hidden="true">▤</span>
+                            <div>
+                                <h2>Grading Status</h2>
+                                <p class="student-report-card-subtitle">Current reviewed and ungraded Work counts.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="student-report-grading-list">
+                        <div class="student-report-grading-item">
+                            <span class="student-report-grading-icon" aria-hidden="true">✓</span>
+                            <div class="student-report-grading-copy">
+                                <span>Graded Assignments</span>
+                                <strong>{{ report.graded_count }}</strong>
+                                <small>{% if report.graded_count %}Reviewed Work available{% else %}No graded Work yet{% endif %}</small>
+                            </div>
+                        </div>
+                        <div class="student-report-grading-item">
+                            <span class="student-report-grading-icon is-pending" aria-hidden="true">▤</span>
+                            <div class="student-report-grading-copy">
+                                <span>Pending / Ungraded</span>
+                                <strong>{{ pending_count }}</strong>
+                                <small>{% if pending_count %}Awaiting review or completion{% else %}No pending items{% endif %}</small>
+                            </div>
+                        </div>
+                    </div>
+                </article>
             </section>
 
-            <section class="student-report-card">
-                <h2>WORK FEEDBACK ANALYSIS</h2>
-                {% if not report.has_feedback %}
-                    <div class="text-muted small mb-2">No supervisor feedback evidence is available yet. Work feedback analysis will appear after feedback is recorded.</div>
-                {% else %}
-                    <table class="student-report-table">
-                        <tbody>
-                            <tr><th>Sentiment</th><td>{{ report.sentiment or '—' }}</td></tr>
-                            <tr><th>Competency</th><td>{{ report.competency or '—' }}</td></tr>
-                            <tr><th>Model-derived Work classification</th><td>{{ report.performance_label }}</td></tr>
-                        </tbody>
-                    </table>
-                {% endif %}
+            <section class="student-report-lower-grid" aria-label="Feedback and recommendation">
+                <article id="report-feedback" class="student-report-card student-report-anchor">
+                    <div class="student-report-card-head">
+                        <div class="student-report-card-title">
+                            <span class="student-report-card-icon" aria-hidden="true">▢</span>
+                            <div>
+                                <h2>Work Feedback Analysis</h2>
+                                <p class="student-report-card-subtitle">Available ML signals derived from supervisor feedback evidence.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if not report.has_feedback %}
+                        <div class="student-report-empty">
+                            <span class="student-report-empty-icon" aria-hidden="true">▢</span>
+                            <strong>No feedback yet</strong>
+                            <p>Your supervisor has not provided Work feedback evidence for this report yet.</p>
+                        </div>
+                    {% else %}
+                        <div class="student-report-feedback-grid">
+                            <div class="student-report-signal">
+                                <span>Sentiment</span>
+                                <strong>{{ report.sentiment or '—' }}</strong>
+                            </div>
+                            <div class="student-report-signal">
+                                <span>Competency</span>
+                                <strong>{{ report.competency or '—' }}</strong>
+                            </div>
+                            <div class="student-report-signal">
+                                <span>Work Classification</span>
+                                <strong>{{ report.performance_label or '—' }}</strong>
+                            </div>
+                        </div>
+                    {% endif %}
+                </article>
+
+                <article id="report-recommendation" class="student-report-card student-report-anchor">
+                    <div class="student-report-card-head">
+                        <div class="student-report-card-title">
+                            <span class="student-report-card-icon" aria-hidden="true">◇</span>
+                            <div>
+                                <h2>Work Recommendation</h2>
+                                <p class="student-report-card-subtitle">Decision-support guidance from available Work and feedback evidence.</p>
+                            </div>
+                        </div>
+                        {% if not (report.overall_percentage is none and not report.has_feedback) %}
+                            <span class="student-report-priority">Priority: {{ report.priority or 'none' }}</span>
+                        {% endif %}
+                    </div>
+
+                    {% if report.overall_percentage is none and not report.has_feedback %}
+                        <div class="student-report-empty">
+                            <span class="student-report-empty-icon" aria-hidden="true">◎</span>
+                            <strong>No recommendation yet</strong>
+                            <p>Reviewed Work or supervisor feedback is needed first.</p>
+                        </div>
+                    {% else %}
+                        <div class="student-report-recommendation">{{ report.recommendation or 'No recommendation is available yet.' }}</div>
+                        {% if report.basis %}
+                            <div class="student-report-basis" aria-label="Recommendation basis">
+                                {% for item in report.basis %}
+                                    <div class="student-report-basis-item">{{ item }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                </article>
             </section>
 
-            <section class="student-report-card">
-                <h2>WORK RECOMMENDATION</h2>
-                <p class="text-muted small">This recommendation is based on Work/gradebook and available feedback evidence. It is not an Official OJT Evaluation.</p>
-                <table class="student-report-table">
-                    <tbody>
-                        <tr><th>Recommendation text</th><td style="color:#334155;">{% if report.overall_percentage is none and not report.has_feedback %}No recommendation yet. Reviewed Work or supervisor feedback is needed first.{% else %}{{ report.recommendation }}{% endif %}</td></tr>
-                        <tr><th>Priority</th><td>{% if report.overall_percentage is none and not report.has_feedback %}—{% else %}<span class="student-report-label {% if report.priority == 'low' %}is-satisfactory{% elif report.priority == 'medium' %}is-very-satisfactory{% elif report.priority == 'high' %}is-fair{% else %}is-needs-improvement{% endif %}">{{ report.priority }}</span>{% endif %}</td></tr>
-                        <tr><th>Explainable Work basis</th><td style="color:#64748b;font-size:.82rem;">{% if report.basis %}{{ report.basis|join(" · ") }}{% else %}—{% endif %}</td></tr>
-                    </tbody>
-                </table>
-            </section>
+            <section id="report-work" class="student-report-card student-report-work-card student-report-anchor">
+                <div class="student-report-card-head">
+                    <div class="student-report-card-title">
+                        <span class="student-report-card-icon" aria-hidden="true">▤</span>
+                        <div>
+                            <h2>Work Items</h2>
+                            <p class="student-report-card-subtitle">Assignment scores currently included in this Work report.</p>
+                        </div>
+                    </div>
+                </div>
 
-            <section class="student-report-card">
-                <h2>WORK ITEMS</h2>
                 {% if not report.assignments %}
-                    <div class="text-muted">No data available — no assignments.</div>
+                    <div class="student-report-empty">
+                        <span class="student-report-empty-icon" aria-hidden="true">▤</span>
+                        <strong>No Work items yet</strong>
+                        <p>No assignments are available in this class yet.</p>
+                    </div>
                 {% else %}
-                    <div class="table-responsive">
-                        <table class="student-report-table">
+                    <div class="student-report-work-table-wrap">
+                        <table class="student-report-work-table">
                             <thead>
-                                <tr><th>Assignment</th><th>Score</th><th>Percentage</th></tr>
+                                <tr>
+                                    <th>Assignment</th>
+                                    <th>Score</th>
+                                    <th>Percentage</th>
+                                    <th>Status</th>
+                                </tr>
                             </thead>
                             <tbody>
                                 {% for a in report.assignments %}
@@ -175,38 +950,38 @@
                                         <td>{{ a.title }}</td>
                                         <td>{% if a.graded %}{{ "%.0f"|format(a.score) }} / {{ "%.0f"|format(a.max_score) }}{% else %}—{% endif %}</td>
                                         <td>{% if a.percentage is not none %}{{ "%.1f"|format(a.percentage) }}%{% else %}—{% endif %}</td>
+                                        <td>{% if a.graded %}Reviewed{% else %}Pending{% endif %}</td>
                                     </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
                     </div>
 
-                    {% if report.strongest and report.weakest %}
-                        <div class="mt-3" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                            <div style="padding:12px;border:1px solid #e8eef7;border-radius:12px;background:#f8fafc;">
-                                <small class="text-muted" style="font-weight:700;">strongest Work result / highest score</small>
-                                <div style="margin-top:4px;"><strong>{{ report.strongest.title }}</strong> — {{ "%.1f"|format(report.strongest.percentage) }}%</div>
-                            </div>
-                            <div style="padding:12px;border:1px solid #e8eef7;border-radius:12px;background:#f8fafc;">
-                                <small class="text-muted" style="font-weight:700;">weakest Work result / lowest score</small>
-                                <div style="margin-top:4px;"><strong>{{ report.weakest.title }}</strong> — {{ "%.1f"|format(report.weakest.percentage) }}%</div>
-                            </div>
+                    {% if report.strongest or report.weakest %}
+                        <div class="student-report-result-strip">
+                            {% if report.strongest %}
+                                <div class="student-report-result">
+                                    <span>Strongest Result</span>
+                                    <strong>{{ report.strongest.title }}</strong>
+                                    <small>{{ "%.1f"|format(report.strongest.percentage) }}%</small>
+                                </div>
+                            {% endif %}
+                            {% if report.weakest %}
+                                <div class="student-report-result">
+                                    <span>Needs Improvement</span>
+                                    <strong>{{ report.weakest.title }}</strong>
+                                    <small>{{ "%.1f"|format(report.weakest.percentage) }}%</small>
+                                </div>
+                            {% endif %}
                         </div>
-                    {% elif report.strongest %}
-                        <div class="mt-3" style="padding:12px;border:1px solid #e8eef7;border-radius:12px;background:#f8fafc;">
-                            <small class="text-muted">strongest Work result</small>
-                            <div><strong>{{ report.strongest.title }}</strong> — {{ "%.1f"|format(report.strongest.percentage) }}%</div>
-                        </div>
-                    {% else %}
-                        <div class="text-muted small mt-3">No graded assignments to determine strongest/weakest Work results.</div>
                     {% endif %}
                 {% endif %}
             </section>
 
-            <div class="student-report-card">
-                <strong>Evidence boundary:</strong>
-                <span class="text-muted small">This page does not calculate an overall OJT grade and does not generate an Official OJT Evaluation from Work analytics.</span>
-            </div>
+            <aside class="student-report-note" aria-label="Evidence boundary">
+                <span class="student-report-note-icon" aria-hidden="true">i</span>
+                <span><strong>Important Note:</strong> This page does not calculate an overall OJT grade and does not generate an Official OJT Evaluation from Work analytics. Attendance/OJT Hours, Daily Performance, Logbook, and Official Evaluation are separate evidence dimensions.</span>
+            </aside>
         </div>
     </main>
 </body>
