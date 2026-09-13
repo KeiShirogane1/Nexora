@@ -82,7 +82,32 @@ def _display_name(user_id, role, username):
     return username or role.title()
 
 
-def _contact_from_row(row, unread_count=0):
+def _profile_picture(user_id, role):
+    conn = get_db_connection()
+    try:
+        if role == "student":
+            row = conn.execute(
+                "SELECT profile_picture FROM student_profiles WHERE user_id = ?",
+                (user_id,),
+            ).fetchone()
+        elif role == "supervisor":
+            row = conn.execute(
+                "SELECT profile_picture FROM supervisor_profiles WHERE user_id = ?",
+                (user_id,),
+            ).fetchone()
+        else:
+            row = None
+    except Exception:
+        row = None
+    finally:
+        conn.close()
+
+    if not row:
+        return ""
+    return str(_row_value(row, "profile_picture", 0, "") or "").strip()
+
+
+def _contact_from_row(row, unread_count=0, message_count=0, last_message_at=None):
     user_id = int(_row_value(row, "id", 0, 0) or 0)
     username = str(_row_value(row, "username", 1, "") or "")
     role = str(_row_value(row, "role", 2, "") or "")
@@ -91,7 +116,10 @@ def _contact_from_row(row, unread_count=0):
         "username": username,
         "role": role,
         "display_name": _display_name(user_id, role, username),
+        "profile_picture": _profile_picture(user_id, role),
         "unread_count": int(unread_count or 0),
+        "message_count": int(message_count or 0),
+        "last_message_at": _serialize_datetime(last_message_at),
     }
 
 
@@ -208,7 +236,23 @@ def get_authorized_contacts(user_id, target_role=None):
                 """,
                 (contact_id, user_id),
             ).fetchone()
-            contacts.append(_contact_from_row(row, int(unread_row[0]) if unread_row else 0))
+            thread_row = conn.execute(
+                """
+                SELECT COUNT(*) AS message_count, MAX(created_at) AS last_message_at
+                FROM direct_messages
+                WHERE (sender_id = ? AND recipient_id = ?)
+                   OR (sender_id = ? AND recipient_id = ?)
+                """,
+                (user_id, contact_id, contact_id, user_id),
+            ).fetchone()
+            contacts.append(
+                _contact_from_row(
+                    row,
+                    int(_row_value(unread_row, "count", 0, 0) or 0),
+                    int(_row_value(thread_row, "message_count", 0, 0) or 0),
+                    _row_value(thread_row, "last_message_at", 1),
+                )
+            )
         return contacts
     finally:
         conn.close()
