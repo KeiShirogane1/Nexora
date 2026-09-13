@@ -6,6 +6,11 @@ from werkzeug.utils import secure_filename
 from app.Http.Middleware.security import role_required
 from app.Models.db import get_db_connection
 from app.Services.supervisor_profile_service import get_or_create_supervisor_profile
+from app.Services.profile_image_storage import (
+    ProfileImageStorageError,
+    ensure_profile_picture_local,
+    mirror_profile_picture,
+)
 
 supervisor_profile_photo = Blueprint("supervisor_profile_photo", __name__)
 
@@ -18,6 +23,97 @@ def _row_to_dict(row):
     if hasattr(row, "keys"):
         return {key: row[key] for key in row.keys()}
     return {}
+
+
+def _stored_profile_picture(user_id, role):
+    if user_id is None:
+        return ""
+    conn = get_db_connection()
+    try:
+        if role == "student":
+            row = conn.execute(
+                "SELECT profile_picture FROM student_profiles WHERE user_id = ?",
+                (user_id,),
+            ).fetchone()
+        else:
+            row = conn.execute(
+                "SELECT profile_picture FROM users WHERE id = ?",
+                (user_id,),
+            ).fetchone()
+    except Exception:
+        row = None
+    finally:
+        conn.close()
+
+    if not row:
+        return ""
+    try:
+        value = row["profile_picture"]
+    except Exception:
+        value = row[0] if len(row) else None
+    return str(value or "").strip()
+
+
+@supervisor_profile_photo.before_app_request
+def _restore_profile_picture_cache():
+    """Restore Cloudinary-backed avatars before existing file routes serve them."""
+    upload_folder = current_app.config.get("PROFILE_UPLOAD_FOLDER")
+    if not upload_folder:
+        return None
+
+    filename = ""
+    path = request.path or ""
+    profile_prefix = "/uploads/profile_pictures/"
+    if path.startswith(profile_prefix):
+        filename = path[len(profile_prefix):].strip()
+    elif path.startswith("/profile-picture/"):
+        try:
+            target_user_id = int(path.rstrip("/").rsplit("/", 1)[-1])
+        except (TypeError, ValueError):
+            target_user_id = None
+        if target_user_id is not None:
+            filename = _stored_profile_picture(target_user_id, "student")
+
+    if filename:
+        ensure_profile_picture_local(filename, upload_folder)
+    return None
+
+
+@supervisor_profile_photo.after_app_request
+def _persist_profile_picture_upload(response):
+    """Mirror successful Student/Supervisor profile uploads to Cloudinary."""
+    if request.method != "POST" or response.status_code >= 400:
+        return response
+
+    path = request.path.rstrip("/")
+    supported_paths = {
+        "/student/profile/setup",
+        "/student/profile/photo",
+        "/supervisor/profile/photo",
+    }
+    if path not in supported_paths:
+        return response
+    if path == "/student/profile/setup" and not request.form.get("cropped_image"):
+        return response
+
+    user_id = session.get("user_id")
+    role = (session.get("role") or "").strip().lower()
+    if user_id is None or role not in {"student", "supervisor", "admin"}:
+        return response
+
+    filename = _stored_profile_picture(user_id, role)
+    upload_folder = current_app.config.get("PROFILE_UPLOAD_FOLDER")
+    if not filename or not upload_folder:
+        return response
+
+    try:
+        mirror_profile_picture(filename, upload_folder)
+    except ProfileImageStorageError:
+        current_app.logger.exception(
+            "Unable to persist profile picture in Cloudinary for user %s",
+            user_id,
+        )
+    return response
 
 
 def _profile_payload(form):

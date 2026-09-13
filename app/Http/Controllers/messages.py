@@ -6,6 +6,7 @@ from flask import Blueprint, current_app, jsonify, redirect, request, session, u
 from app.Http.Middleware.security import login_required
 from app.Models.db import get_db_connection
 from app.Services.messaging_schema import ensure_messaging_schema
+from app.Services.profile_image_storage import ensure_profile_picture_local
 from app.Services.messaging_service import (
     get_authorized_contact,
     get_authorized_contacts,
@@ -75,6 +76,8 @@ def _chat_avatar_filename(filename):
         return ""
 
     source = Path(upload_folder) / filename
+    if not source.is_file():
+        ensure_profile_picture_local(filename, upload_folder)
     if not source.is_file():
         return ""
 
