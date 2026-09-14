@@ -29,7 +29,7 @@
                                 {% endfor %}
                             </select>
                         </div>
-                        <noscript><button type="submit" class="btn btn-primary">Open</button></noscript>
+                        <noscript><button type="submit" class="nx-supervisor-btn is-primary">Open</button></noscript>
                     </form>
                 {% endif %}
             </div>
@@ -38,29 +38,49 @@
                 <section class="supervisor-insights-card p-5 text-center">
                     <h2 class="h5 fw-bold">No Intern Classrooms yet</h2>
                     <p class="text-secondary mb-3">Create an Intern Classroom before report evidence can appear here.</p>
-                    <a href="{{ url_for('classroom.supervisor_classes') }}" class="btn btn-primary">Open Intern Classrooms</a>
+                    <a href="{{ url_for('classroom.supervisor_classes') }}" class="nx-supervisor-btn is-primary">Open Intern Classrooms</a>
                 </section>
             {% else %}
-                <section class="supervisor-insights-readiness mb-4" aria-label="Report summary">
-                    <article class="supervisor-insights-readiness-card">
-                        <span>Interns</span>
-                        <strong>{{ report_summary.total }}</strong>
-                        <small class="text-muted">Enrolled in {{ selected_classroom.name }}</small>
+                <section class="supervisor-insights-readiness nx-supervisor-kpi-grid" aria-label="Report summary">
+                    <article class="supervisor-insights-readiness-card nx-supervisor-kpi-card">
+                        <span class="nx-supervisor-kpi-icon is-blue" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                        </span>
+                        <div class="nx-supervisor-kpi-copy">
+                            <small>Interns</small>
+                            <strong>{{ report_summary.total }}</strong>
+                            <span>Enrolled in {{ selected_classroom.name }}</span>
+                        </div>
                     </article>
-                    <article class="supervisor-insights-readiness-card">
-                        <span>With Work Data</span>
-                        <strong>{{ report_summary.with_data }}</strong>
-                        <small class="text-muted">Reviewed numeric Work evidence</small>
+                    <article class="supervisor-insights-readiness-card nx-supervisor-kpi-card">
+                        <span class="nx-supervisor-kpi-icon is-green" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M9 15l2 2 4-4"></path></svg>
+                        </span>
+                        <div class="nx-supervisor-kpi-copy">
+                            <small>With Work Data</small>
+                            <strong>{{ report_summary.with_data }}</strong>
+                            <span>Reviewed numeric Work evidence</span>
+                        </div>
                     </article>
-                    <article class="supervisor-insights-readiness-card is-no-data">
-                        <span>No Work Data</span>
-                        <strong>{{ report_summary.no_data }}</strong>
-                        <small class="text-muted">Kept separate from real performance results</small>
+                    <article class="supervisor-insights-readiness-card is-no-data nx-supervisor-kpi-card">
+                        <span class="nx-supervisor-kpi-icon is-violet" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M9 15h6"></path></svg>
+                        </span>
+                        <div class="nx-supervisor-kpi-copy">
+                            <small>No Work Data</small>
+                            <strong>{{ report_summary.no_data }}</strong>
+                            <span>Kept separate from real performance results</span>
+                        </div>
                     </article>
-                    <article class="supervisor-insights-readiness-card{% if report_summary.needs_attention %} is-attention{% endif %}">
-                        <span>Needs Attention</span>
-                        <strong>{{ report_summary.needs_attention }}</strong>
-                        <small class="text-muted">Fair or Needs Improvement Work labels</small>
+                    <article class="supervisor-insights-readiness-card{% if report_summary.needs_attention %} is-attention{% endif %} nx-supervisor-kpi-card">
+                        <span class="nx-supervisor-kpi-icon is-amber" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>
+                        </span>
+                        <div class="nx-supervisor-kpi-copy">
+                            <small>Needs Attention</small>
+                            <strong>{{ report_summary.needs_attention }}</strong>
+                            <span>Fair or Needs Improvement Work labels</span>
+                        </div>
                     </article>
                 </section>
 
@@ -71,8 +91,8 @@
                             <span class="text-muted small d-block">{{ selected_classroom.section or 'No section' }} · {{ reports|length }} intern{{ '' if reports|length == 1 else 's' }}</span>
                         </div>
                         <div class="d-flex flex-wrap gap-2">
-                            <a class="btn btn-sm btn-outline-primary" href="{{ url_for('performance_reports.export_supervisor_reports', class_id=selected_classroom.id) }}">Export CSV</a>
-                            <a class="btn btn-sm btn-primary" href="{{ url_for('performance_reports.export_supervisor_reports_pdf', class_id=selected_classroom.id) }}">Export PDF</a>
+                            <a class="nx-supervisor-btn is-secondary is-compact" href="{{ url_for('performance_reports.export_supervisor_reports', class_id=selected_classroom.id) }}">Export CSV</a>
+                            <a class="nx-supervisor-btn is-primary is-compact" href="{{ url_for('performance_reports.export_supervisor_reports_pdf', class_id=selected_classroom.id) }}">Export PDF</a>
                         </div>
                     </div>
 
@@ -118,7 +138,7 @@
                                             </td>
                                             <td>{{ report.sentiment or report.competency or '—' }}</td>
                                             <td><span class="supervisor-reports-label {% if report.priority == 'high' %}is-fair{% elif report.priority == 'medium' %}is-very-satisfactory{% else %}is-satisfactory{% endif %}">{{ (report.priority or 'none')|title }}</span></td>
-                                            <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{{ url_for('performance_reports.supervisor_student_report', class_id=selected_classroom.id, student_id=report.student.id) }}">View Report</a></td>
+                                            <td class="text-end"><a class="nx-supervisor-btn is-secondary is-compact" href="{{ url_for('performance_reports.supervisor_student_report', class_id=selected_classroom.id, student_id=report.student.id) }}">View Report</a></td>
                                         </tr>
                                     {% endfor %}
                                 </tbody>
