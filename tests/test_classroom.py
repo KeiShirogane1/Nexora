@@ -683,13 +683,13 @@ def test_people_tab_shows_supervisor_and_classmates():
     # student view should show supervisor and classmates
     _login_as(client, 99011, "student")
     resp=client.get(f"/student/classes/{cid}")
-    assert b"People" in resp.data
+    assert b"Interns" in resp.data
     assert b"test_sup_cla" in resp.data  # supervisor username
     assert b"test_stu_cla2" in resp.data or b"test_stu_cla" in resp.data
     # supervisor view
     _login_as(client, 99001, "supervisor")
     resp2=client.get(f"/supervisor/classes/{cid}")
-    assert b"People" in resp2.data
+    assert b"Interns" in resp2.data
     assert b"test_stu_cla" in resp2.data
     _cleanup_classroom()
     conn=get_db_connection()
@@ -810,7 +810,7 @@ def test_archived_class_ui_and_block():
     assert resp.status_code in (302,303)
     resp2=client.get(f"/supervisor/classes/{cid}")
     assert b"archived" in resp2.data.lower()
-    assert b"Unarchive" in resp2.data
+    assert b"Restore Intern Classroom" in resp2.data
     # archived should block post and assignment
     resp3=client.post(f"/supervisor/classes/{cid}/post", data={"title":"t","body":"should be blocked because archived and long enough"})
     assert resp3.status_code in (302,303)
@@ -831,14 +831,14 @@ def test_classroom_navigation_tabs():
     _login_as(client, 99001, "supervisor")
     resp=client.get(f"/supervisor/classes/{cid}")
     assert b"Stream" in resp.data
-    assert b"Classwork" in resp.data
-    assert b"People" in resp.data
+    assert b"Work" in resp.data
+    assert b"Interns" in resp.data
     _login_as(client, 99011, "student")
     client.post("/student/classes/join", data={"class_code":code})
     resp2=client.get(f"/student/classes/{cid}")
     assert b"Stream" in resp2.data
-    assert b"Classwork" in resp2.data
-    assert b"People" in resp2.data
+    assert b"Work" in resp2.data
+    assert b"Interns" in resp2.data
     _cleanup_classroom()
     conn=get_db_connection()
     conn.execute("DELETE FROM notifications WHERE user_id=99001")

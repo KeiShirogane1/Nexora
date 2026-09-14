@@ -52,26 +52,22 @@ def test_polish_css_import_present_and_modals_untouched():
     assert pathlib.Path("resources/assets/css/supervisor.css").exists()
     assert pathlib.Path("resources/assets/css/admin.css").exists()
     assert pathlib.Path("resources/assets/css/modals.css").exists()
-    # Verify student sidebar CSS migrated correctly (unified green sidebar in student-sidebar.css, single source)
+    assert pathlib.Path("resources/assets/css/sidebars.css").exists()
+    # Shared role sidebar CSS is the single source for the current 76px/262px shell.
     student_css=pathlib.Path("resources/assets/css/student.css").read_text(encoding="utf-8")
-    sidebar_css=pathlib.Path("resources/assets/css/student-sidebar.css").read_text(encoding="utf-8")
-    # collapse toggle and shell now live in the unified sidebar file (single source of truth)
+    sidebar_css=pathlib.Path("resources/assets/css/sidebars.css").read_text(encoding="utf-8")
     assert ".nx-collapse-toggle" in sidebar_css
-    assert ".nx-student-shell" in sidebar_css
-    # Accept normal CSS formatting with optional whitespace around the declaration colon.
-    assert "width:262px" in sidebar_css.replace(" ", "")
-    # student.css must NOT contain duplicate white sidebar (migrated earlier, now removed for unification)
+    assert ".nx-role-sidebar-shell" in sidebar_css
+    assert ".nx-role-sidebar" in sidebar_css
+    assert "262px" in sidebar_css
+    # student.css must NOT contain the retired duplicate white sidebar implementation.
     assert "background:#fff;border-right" not in student_css or ".nx-sidebar" not in student_css
-    # mains should use unified 262px width (not 268) when present
-    assert ".nx-student-shell" not in student_css or "width:268px" not in student_css or "width:262px" in student_css
     # Verify student_sidebar.html no longer contains reusable sidebar <style> block
     sidebar_html=pathlib.Path("resources/views/components/student_sidebar.html").read_text(encoding="utf-8")
     assert "<style>" not in sidebar_html
-    # HTML should still contain the sidebar structure and collapse button
     assert 'nx-collapse-toggle' in sidebar_html
     assert 'id="studentSidebar"' in sidebar_html
     modals=pathlib.Path("resources/assets/css/modals.css").read_text(encoding="utf-8")
-    # ensure modals.css still contains original header
     assert ".nexora-modal-overlay" in modals
 
 def test_ml_files_unchanged():
@@ -234,6 +230,11 @@ def test_legacy_feedback_still_renders():
             m=MagicMock()
             m.fetchone.return_value=sec_row
             return m
+        compact=" ".join(sql.split())
+        if "SELECT COUNT(*) FROM attendance WHERE student_id = ?" in compact:
+            m=MagicMock(); m.fetchone.return_value=(0,); m.fetchall.return_value=[]; return m
+        if "SELECT COALESCE(SUM(hours_rendered), 0) FROM attendance WHERE student_id = ?" in compact:
+            m=MagicMock(); m.fetchone.return_value=(0,); m.fetchall.return_value=[]; return m
         m=MagicMock()
         if "SELECT id, username" in sql:
             m.fetchone.return_value=(30,"stu30")

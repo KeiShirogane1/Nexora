@@ -9,6 +9,20 @@ def _login_as(client, uid, role):
         sess["user_id"]=uid
         sess["role"]=role
 
+
+def _admin_report_aggregate(sql):
+    compact = " ".join(sql.split())
+    m = MagicMock()
+    if "SELECT COUNT(*) FROM attendance WHERE student_id = ?" in compact:
+        m.fetchone.return_value = (0,)
+        m.fetchall.return_value = []
+        return m
+    if "SELECT COALESCE(SUM(hours_rendered), 0) FROM attendance WHERE student_id = ?" in compact:
+        m.fetchone.return_value = (0,)
+        m.fetchall.return_value = []
+        return m
+    return None
+
 def test_all_important_templates_parse():
     env=Environment(loader=FileSystemLoader("resources/views"))
     important=[
@@ -78,14 +92,21 @@ def test_supervisor_pages_render():
     app.config["WTF_CSRF_ENABLED"]=False
     app.config["TESTING"]=True
     client=app.test_client()
-    _login_as(client,5,"supervisor")
+    _login_as(client,95005,"supervisor")
     mock_conn=MagicMock()
-    mock_conn.execute.return_value.fetchone.return_value={"status":"active"}
+    active=MagicMock(); active.fetchone.return_value={"status":"active"}; active.fetchall.return_value=[]
+    mock_conn.execute.return_value=active
     mock_cur=MagicMock()
-    mock_cur.fetchone.side_effect=[(2,),(1,)]
+    mock_cur.execute.return_value=mock_cur
+    mock_cur.fetchone.return_value=(0,)
     mock_cur.fetchall.return_value=[]
     mock_conn.cursor.return_value=mock_cur
-    with patch("app.Http.Controllers.supervisor.get_db_connection", return_value=mock_conn):
+    assigned_context={
+        "classrooms": [], "interns": [], "flat_interns": [], "legacy_interns": [],
+        "summary": {"total_interns":0,"classroom_count":0,"classroom_placements":0,"pending_reviews":0,"legacy_only":0},
+    }
+    with patch("app.Http.Controllers.supervisor.get_db_connection", return_value=mock_conn), \
+         patch("app.Services.assigned_interns_service.get_supervisor_assigned_interns", return_value=assigned_context):
         resp=client.get("/supervisor/dashboard")
         assert resp.status_code==200
 
@@ -122,7 +143,7 @@ def test_no_broken_url_for_endpoints():
                         continue
                     url_for(m)
                 except Exception as e:
-                    if any(k in str(e) for k in ("student_id","user_id","supervisor_id","date","filename","task_id","document_id")):
+                    if any(k in str(e) for k in ("student_id","user_id","supervisor_id","date","filename","task_id","document_id","attendance_id")):
                         continue
                     assert False, f"broken url_for {m}: {e}"
 
@@ -145,6 +166,9 @@ def test_ml_report_still_renders():
     _login_as(client,1,"admin")
     mock_conn=MagicMock()
     def exec_side(sql, params=None):
+        aggregate=_admin_report_aggregate(sql)
+        if aggregate is not None:
+            return aggregate
         m=MagicMock()
         if "SELECT id, username" in sql:
             m.fetchone.return_value=(1,"stu1")

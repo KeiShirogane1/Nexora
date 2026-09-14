@@ -271,8 +271,8 @@ def test_indexes_exist():
 
 def test_migration_repeatable():
     import pathlib, sys
-    sys.path.insert(0, str(pathlib.Path("scripts/migrate_phase3.py").resolve().parent.parent))
-    from scripts.migrate_phase3 import migrate
+    sys.path.insert(0, str(pathlib.Path("scripts/migrate_3.py").resolve().parent.parent))
+    from scripts.migrate_3 import migrate
     # Run twice, should not raise
     migrate()
     migrate()
@@ -286,7 +286,7 @@ def test_migration_no_duplicate():
         cursor.execute("SELECT COUNT(*) FROM student_assignments")
         before = cursor.fetchone()[0]
         # Run migration again via function
-        from scripts.migrate_phase3 import migrate
+        from scripts.migrate_3 import migrate
         migrate()
         cursor.execute("SELECT COUNT(*) FROM student_assignments")
         after = cursor.fetchone()[0]

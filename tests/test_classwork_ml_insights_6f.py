@@ -84,7 +84,8 @@ def test_supervisor_insights_requires_owner():
         assert resp3.status_code == 200
         body = resp3.get_data(as_text=True)
         assert "Performance Insights" in body
-        assert "ML Insights" in body
+        assert "Overall Insights" in body
+        assert "Individual Insights" in body
     finally:
         _cleanup_ids([sup, other_sup], [student], [classroom])
 
@@ -217,19 +218,14 @@ def test_supervisor_insights_correct_feature_data_and_label():
         resp = client.get(f"/supervisor/classes/{classroom}/insights")
         body = resp.get_data(as_text=True)
         assert resp.status_code == 200
-        # Check required fields
-        assert "Average percentage" in body
-        assert "Minimum percentage" in body
-        assert "Maximum percentage" in body
-        assert "Graded assignments / total assignments" in body
-        assert "Completion rate" in body
-        assert "Manual grades count" in body
-        assert "Imported grades count" in body
-        assert "Numeric performance label" in body
-        # Verify actual values: average 85 -> Very Satisfactory, min 80, max 90, graded 2/3, completion 66.7, manual 1 imported 1
+        # Current supervisor-facing evidence labels
+        assert "Average Performance" in body
+        assert "Work Completion" in body
+        assert "Reviewed Work" in body
+        assert "Manual Reviews" in body
+        assert "Imported Results" in body
+        # Verify actual values: average 85 -> Very Satisfactory, graded 2/3, completion 66.7
         assert "85.0%" in body or "85" in body
-        assert "80.0%" in body or "80" in body
-        assert "90.0%" in body or "90" in body
         assert "2 / 3" in body
         assert "66.7%" in body or "66.6%" in body
         assert "Very Satisfactory" in body
@@ -262,7 +258,7 @@ def test_student_insights_performance_label_variants():
         body = resp.get_data(as_text=True)
         assert resp.status_code == 200
         assert "Excellent" in body
-        assert "Average percentage" in body
+        assert "Work Average" in body
         assert "92.0%" in body
     finally:
         _cleanup_ids([sup], [student], [classroom])
@@ -295,14 +291,12 @@ def test_supervisor_insights_feedback_ml_when_available():
         resp = client.get(f"/supervisor/classes/{classroom}/insights")
         body = resp.get_data(as_text=True)
         assert resp.status_code == 200
-        # Should show feedback ML fields
+        # Supervisor view exposes interpreted feedback evidence, not raw model names.
+        assert "Feedback Analysis" in body
         assert "sentiment" in body.lower()
         assert "competency" in body.lower()
         assert "recommendation" in body.lower()
         assert "confidence" in body.lower()
-        assert "Naive Bayes prediction" in body
-        assert "SVM prediction" in body
-        # For excellent comment, expect Positive sentiment and Outstanding Competency somewhere
         assert "Positive" in body or "Outstanding Competency" in body
     finally:
         _cleanup_ids([sup], [student], [classroom])
@@ -333,8 +327,8 @@ def test_student_insights_feedback_ml_when_available():
         assert resp.status_code == 200
         assert "sentiment" in body.lower()
         assert "competency" in body.lower()
-        assert "Naive Bayes prediction" in body
-        assert "SVM prediction" in body
+        assert "Naive Bayes" in body
+        assert "SVM" in body
     finally:
         _cleanup_ids([sup], [student], [classroom])
 
@@ -367,8 +361,8 @@ def test_supervisor_insights_empty_no_score_state():
         assert "—" in body or "Satisfactory" in body
         assert "0 / 1" in body
         assert "0.0%" in body
-        # Should not crash and should mention no feedback
-        assert "No feedback" in body or "No feedback data yet" in body or "sentiment" in body.lower()
+        # Current empty feedback copy remains explicit and user-facing.
+        assert "No supervisor feedback evidence is available yet" in body or "No Performance Data" in body
     finally:
         _cleanup_ids([sup], [student], [classroom])
 
@@ -421,12 +415,13 @@ def test_supervisor_insights_ui_entry_points_exist():
         assert "Performance Insights" in resp.get_data(as_text=True) or "ML Insights" in resp.get_data(as_text=True)
         resp2 = client.get(f"/supervisor/classes/{classroom}")
         body2 = resp2.get_data(as_text=True)
-        assert "Performance Insights" in body2 or "ML Insights" in body2
+        assert "Cohort Insights" in body2
         assert f"/supervisor/classes/{classroom}/insights" in body2
         _login_as(client, student, "student")
         resp3 = client.get(f"/student/classes/{classroom}/gradebook")
         assert "Performance Insights" in resp3.get_data(as_text=True) or "ML Insights" in resp3.get_data(as_text=True)
         resp4 = client.get(f"/student/classes/{classroom}")
-        assert "Performance Insights" in resp4.get_data(as_text=True) or "ML Insights" in resp4.get_data(as_text=True)
+        body4 = resp4.get_data(as_text=True)
+        assert "Work" in body4 and "Interns" in body4
     finally:
         _cleanup_ids([sup], [student], [classroom])

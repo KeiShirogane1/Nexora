@@ -44,22 +44,23 @@ def test_supervisor_dashboard_ok_filtered():
     app.config["WTF_CSRF_ENABLED"] = False
     app.config["TESTING"] = True
     client = app.test_client()
-    _login_as(client, 5, "supervisor")
+    _login_as(client, 95005, "supervisor")
     mock_conn = MagicMock()
     mock_cursor = MagicMock()
-    # dashboard does 6 queries via cursor
-    mock_cursor.fetchone.side_effect = [(2,), (1,), (3,), (5,), (1,)]  # total_interns, active_sessions etc loops may consume more but we mock cursor.fetchall for others
-    mock_cursor.fetchall.side_effect = [
-        [( "intern1", "2026-01-01"),],  # active_interns
-        [("user1","content","2026-01-01", 20)],  # acts
-        [("Task A","user1","Pending","2026-01-01")],  # recent_tasks
-    ]
+    mock_cursor.execute.return_value = mock_cursor
+    mock_cursor.fetchone.return_value = (0,)
+    mock_cursor.fetchall.return_value = []
     mock_conn.cursor.return_value = mock_cursor
-    # before_request status check via execute
     mock_active = MagicMock()
     mock_active.fetchone.return_value = {"status": "active"}
+    mock_active.fetchall.return_value = []
     mock_conn.execute.return_value = mock_active
-    with patch("app.Http.Controllers.supervisor.get_db_connection", return_value=mock_conn):
+    assigned_context = {
+        "classrooms": [], "interns": [], "flat_interns": [], "legacy_interns": [],
+        "summary": {"total_interns":0,"classroom_count":0,"classroom_placements":0,"pending_reviews":0,"legacy_only":0},
+    }
+    with patch("app.Http.Controllers.supervisor.get_db_connection", return_value=mock_conn), \
+         patch("app.Services.assigned_interns_service.get_supervisor_assigned_interns", return_value=assigned_context):
         resp = client.get("/supervisor/dashboard")
         assert resp.status_code == 200
         assert b"Supervisor Dashboard" in resp.data
@@ -68,7 +69,7 @@ def test_inactive_supervisor_blocked():
     app.config["WTF_CSRF_ENABLED"] = False
     app.config["TESTING"] = True
     client = app.test_client()
-    _login_as(client, 5, "supervisor")
+    _login_as(client, 95006, "supervisor")
     mock_conn = MagicMock()
     mock_inactive = MagicMock()
     mock_inactive.fetchone.return_value = {"status": "inactive"}
@@ -84,34 +85,20 @@ def test_interns_shows_only_assigned():
     app.config["WTF_CSRF_ENABLED"] = False
     app.config["TESTING"] = True
     client = app.test_client()
-    _login_as(client, 5, "supervisor")
+    _login_as(client, 95007, "supervisor")
     mock_conn = MagicMock()
-    mock_cursor = MagicMock()
-    # interns query returns 2 assigned
-    mock_conn.cursor.return_value = mock_cursor
-    mock_conn.execute.return_value.fetchone.return_value = {"status": "active"}
-    # But view_interns uses conn.execute directly, not cursor
-    mock_conn.execute.return_value.fetchall.return_value = [(20, "studentA", "BSIT", "1st Year", "Company X", "Intern", "Active"), (21, "studentB", None, None, None, None, None)]
-    # Need to handle before_request execute vs view execute; split side_effect
-    # before_request first call returns status active, second call (interns) returns rows
-    call_count = {"n":0}
-    def exec_side(sql, params=None):
-        m = MagicMock()
-        if "SELECT status" in sql:
-            m.fetchone.return_value = {"status": "active"}
-            m.fetchall.return_value = []
-        elif "FROM users" in sql and "student_assignments" in sql:
-            m.fetchall.return_value = [(20, "studentA", "BSIT", "1st Year", "Company X", "Intern", "Active")]
-            m.fetchone.return_value = None
-        else:
-            m.fetchone.return_value = None
-            m.fetchall.return_value = []
-        return m
-    mock_conn.execute.side_effect = exec_side
-    with patch("app.Http.Controllers.supervisor.get_db_connection", return_value=mock_conn):
+    active = MagicMock()
+    active.fetchone.return_value = {"status": "active"}
+    mock_conn.execute.return_value = active
+    assigned_context = {
+        "classrooms": [], "interns": [], "flat_interns": [], "legacy_interns": [],
+        "summary": {"total_interns":0,"classroom_count":0,"classroom_placements":0,"pending_reviews":0,"legacy_only":0},
+    }
+    with patch("app.Http.Controllers.supervisor.get_db_connection", return_value=mock_conn), \
+         patch("app.Services.assigned_interns_service.get_supervisor_assigned_interns", return_value=assigned_context):
         resp = client.get("/supervisor/interns")
         assert resp.status_code == 200
-        assert b"Assigned Students" in resp.data
+        assert b"Assigned Interns" in resp.data
 
 # 3 & 4. student profile assigned vs unassigned
 def test_assigned_student_profile_ok():

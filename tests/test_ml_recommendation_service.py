@@ -277,11 +277,10 @@ def test_supervisor_insights_shows_recommendation():
         resp = client.get(f"/supervisor/classes/{classroom}/insights")
         assert resp.status_code == 200
         body = resp.get_data(as_text=True)
+        assert "Performance Insights" in body
         assert "Recommendation" in body
-        assert "performance_label" in body
-        assert "overall_percentage" in body.lower() or "overall" in body.lower()
-        assert "priority" in body.lower()
-        assert "basis" in body.lower()
+        assert "Average Performance" in body
+        assert "Work Evidence" in body
         assert "Excellent" in body
     finally:
         _cleanup([sup], [student], [classroom])

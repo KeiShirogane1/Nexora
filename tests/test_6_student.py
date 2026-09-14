@@ -32,49 +32,30 @@ def test_dashboard_isolation_no_other_student():
     app.config["WTF_CSRF_ENABLED"] = False
     app.config["TESTING"] = True
     client = app.test_client()
-    _login_as(client, 10, "student")
-    mock_conn = MagicMock()
-    mock_cursor = MagicMock()
-    # profile with grade_year not None to pass gate
-    mock_cursor.fetchone.side_effect = [
-        ("John","M","Doe",20,"S1","pic.jpg","09123","Addr","2nd","BSIT"), # profile
-        ("Company","Pos","Sup","2026-01-01","2026-06-01",486,0,"Active"), # internship
-        (5,), (2,), (1,), (3,), (2,), # counts
-    ]
-    mock_conn.cursor.return_value = mock_cursor
-    # before_request
-    mock_conn.execute.return_value.fetchone.return_value = {"status":"active"}
-    # for second connection (recent) use execute fallback
-    # recent activity executed via conn.execute(...).fetchall() not cursor? Actually dashboard recents use conn.execute via cursor? The code uses cursor.execute for first half and conn.execute for recents? Check student.py 286 uses cursor.execute(...).fetchall() but second conn separate
-    # Simplify: mock both cursor and execute to return empty recents
-    def exec_side(sql, params=None):
-        m = MagicMock()
-        if "SELECT status" in sql:
-            m.fetchone.return_value = {"status":"active"}
-        elif "SELECT *" in sql and "FROM logs" in sql:
-            m.fetchall.return_value = []
-            m.fetchone.return_value = None
-        else:
-            m.fetchone.return_value = None
-            m.fetchall.return_value = []
-        return m
-    mock_conn.execute.side_effect = exec_side
-    with patch("app.Http.Controllers.student.get_db_connection", return_value=mock_conn):
+    _login_as(client, 95110, "student")
+    context = {
+        "profile_ready": True,
+        "profile": {"first_name":"John","last_name":"Doe","student_id":"S1","major_program":"BSIT","grade_year":"2nd"},
+        "internship": None,
+        "log_count": 0,
+        "task_total": 0,
+        "task_completed": 0,
+        "document_count": 0,
+        "attendance_count": 0,
+        "recent_logs": [],
+        "recent_tasks": [],
+        "recent_documents": [],
+        "recent_attendance": [],
+        "dashboard_classrooms": [],
+        "open_attendance": None,
+        "logbook_review_status": {},
+        "dashboard_performance": {},
+        "dashboard_competencies": [],
+    }
+    with patch("app.Services.student_dashboard_service.get_student_dashboard_context", return_value=context) as get_context:
         resp = client.get("/student/dashboard")
-        # Should not be 403 and should use session user 10 only - verify queries used 10
-        # Check that at least one cursor execute was with session 10
         assert resp.status_code == 200
-        # ensure no leakage: the mock should have been called with 10 not 11
-        found = False
-        for call in mock_cursor.execute.call_args_list + mock_conn.execute.call_args_list:
-            try:
-                args = call[0]
-                if str(10) in str(args):
-                    found = True
-            except:
-                pass
-        # at least one query filtered by 10
-        assert found or True  # mock isolation verified via code review
+        get_context.assert_called_once_with(95110)
 
 def test_dashboard_requires_login():
     app.config["WTF_CSRF_ENABLED"] = False
@@ -118,12 +99,9 @@ def test_profile_setup_requires_validation():
     mock_conn.execute.side_effect = exec_side
     mock_conn.cursor.return_value = mock_cursor
     with patch("app.Http.Controllers.student.get_db_connection", return_value=mock_conn):
-        # empty first_name should be rejected (flash + redirect)
+        # invalid input is re-rendered in place with validation feedback
         resp = client.post("/student/profile/setup", data={"first_name":"", "last_name":"Doe", "middle_name":"M", "age":"20", "student_id":"S123", "phone_number":"09123", "home_address":"Addr", "grade_year":"2nd", "major_program":"BSIT"}, follow_redirects=False)
-        assert resp.status_code in (302,303)
-        # ensure UPDATE not called with empty first_name (no insert)
-        # The profile_setup UPDATE should not be executed when errors
-        # Check that cursor.execute not called with UPDATE student_profiles
+        assert resp.status_code == 200
         updates = [str(c) for c in mock_cursor.execute.call_args_list if "UPDATE student_profiles" in str(c)]
         assert len(updates)==0
 
@@ -148,35 +126,9 @@ def test_internship_isolation():
     app.config["TESTING"] = True
     client = app.test_client()
     _login_as(client, 10, "student")
-    mock_conn = MagicMock()
-    mock_cursor = MagicMock()
-    # profile exists
-    mock_cursor.fetchone.side_effect = [("John","M","Doe",20,"S1","pic.jpg","09123","Addr","2nd","BSIT"), ("Company","Pos","Sup","2026-01-01","2026-06-01",486,0,"Active")]  # we need to handle internship as second fetch? Actually dashboard does profile then internship as two fetches on same cursor
-    # But our side_effect list may conflict; instead mock execute path
-    def exec_side(sql, params=None):
-        m = MagicMock()
-        if "SELECT status" in sql:
-            m.fetchone.return_value = {"status":"active"}
-        elif "FROM student_profiles" in sql:
-            m.fetchone.return_value = ("John","M","Doe",20,"S1","pic.jpg","09123","Addr","2nd","BSIT")
-        elif "FROM internships" in sql:
-            # ensure WHERE u.id = ? uses session 10
-            if params and 10 in params:
-                m.fetchone.return_value = ("Company","Pos","Sup","2026-01-01","2026-06-01",486,0,"Active")
-            else:
-                m.fetchone.return_value = None
-            m.fetchone.return_value = ("Company","Pos","Sup","2026-01-01","2026-06-01",486,0,"Active")
-        else:
-            m.fetchone.return_value = (0,)
-            m.fetchall.return_value = []
-        return m
-    mock_conn.execute.side_effect = exec_side
-    mock_conn.cursor.return_value = mock_cursor
-    # Use proper mock for cursor fetches
-    mock_cursor.fetchone.side_effect = None
-    # We'll just check template isolation via code review: internship query filters by session user
+    # Active Intern Classroom lookup must remain scoped to the session student.
     txt = pathlib.Path("app/Http/Controllers/student.py").read_text(encoding="utf-8")
-    assert "WHERE u.id = ?" in txt
+    assert "WHERE cs.student_id = ?" in txt
     assert 'session["user_id"]' in txt
 
 # 6 clock-in
@@ -239,8 +191,8 @@ def test_clock_out_rollup():
     _login_as(client, 10, "student")
     mock_conn = MagicMock()
     mock_cursor = MagicMock()
-    # clock_in time
-    mock_cursor.fetchone.side_effect = [(1, "2026-01-01T08:00:00"), (10,), (0,)]  # attendance row, total_hours, etc
+    # Current attendance row includes classroom_id as the third value.
+    mock_cursor.fetchone.side_effect = [(1, "2026-01-01T08:00:00", None), (10,), (0,)]
     mock_conn.cursor.return_value = mock_cursor
     mock_conn.execute.return_value.fetchone.return_value = {"status":"active"}
     def exec_side(sql, params=None):
@@ -248,17 +200,15 @@ def test_clock_out_rollup():
         if "SELECT status" in sql:
             m.fetchone.return_value = {"status":"active"}
         elif "SELECT id" in sql and "attendance" in sql:
-            m.fetchone.return_value = (1, "2026-01-01T08:00:00")
+            m.fetchone.return_value = (1, "2026-01-01T08:00:00", None)
         else:
             m.fetchone.return_value = (5,)
         return m
     mock_conn.execute.side_effect = exec_side
-    # Patch cursor fetch for clock_out
-    mock_cursor.fetchone.return_value = (1, "2026-01-01T08:00:00")
+    mock_cursor.fetchone.return_value = (1, "2026-01-01T08:00:00", None)
     with patch("app.Http.Controllers.student.get_db_connection", return_value=mock_conn):
         resp = client.post("/student/clock-out")
         assert resp.status_code in (302,303)
-        # check rollup UPDATE internships called
         txt = pathlib.Path("app/Http/Controllers/student.py").read_text(encoding="utf-8")
         assert "UPDATE internships SET completed_hours" in txt
 
@@ -310,7 +260,6 @@ def test_edit_log_ownership():
     with patch("app.Http.Controllers.student.get_db_connection", return_value=mock_conn):
         resp = client.get("/student/log/999/edit")
         assert resp.status_code == 404
-        # update should have student_id predicate
         txt = pathlib.Path("app/Http/Controllers/student.py").read_text(encoding="utf-8")
         assert "UPDATE logs" in txt and "student_id" in txt
 
@@ -496,9 +445,11 @@ def test_document_view_isolation_and_traversal():
 
 # 10 notification CSRF
 def test_notification_bell_csrf_header():
-    txt = pathlib.Path("resources/views/components/notification_bell.html").read_text(encoding="utf-8")
+    txt = pathlib.Path("resources/views/components/role_notification_bell.html").read_text(encoding="utf-8")
     assert 'X-CSRFToken' in txt
     assert 'csrf_token' in txt
+    wrapper = pathlib.Path("resources/views/components/student_notification_bell.html").read_text(encoding="utf-8")
+    assert "role_notification_bell.html" in wrapper
 
 # 11 inactive student blocked
 def test_inactive_student_blocked():
@@ -600,7 +551,6 @@ def test_student_cannot_access_other_student_task():
 def test_documents_template_csrf_and_routes():
     # ensure all student POST forms have csrf
     views = list(pathlib.Path("resources/views/student").rglob("*.html"))
-    from pathlib import Path
     missing = []
     for p in views:
         txt = p.read_text(encoding="utf-8")
@@ -608,9 +558,13 @@ def test_documents_template_csrf_and_routes():
             if 'csrf_token' not in txt.lower():
                 missing.append(str(p))
     assert missing == [], f"Missing CSRF {missing}"
-    # ensure href="#" not present for student dead routes
+    # The document preview anchor is intentionally a JS-populated placeholder;
+    # no other student templates should use href="#" as a dead route.
+    placeholders = []
     for p in views:
         txt = p.read_text(encoding="utf-8")
         if 'href="#"' in txt:
-            # allow if it's JS placeholder but check student
-            assert False, f"href=\"#\" found in {p}"
+            placeholders.append((str(p), txt.count('href="#"')))
+    assert placeholders == [(str(pathlib.Path("resources/views/student/documents.html")), 1)]
+    documents = pathlib.Path("resources/views/student/documents.html").read_text(encoding="utf-8")
+    assert 'id="document-preview-open" href="#"' in documents

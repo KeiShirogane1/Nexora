@@ -9,6 +9,15 @@ def _login_as(client, user_id, role):
         sess["user_id"] = user_id
         sess["role"] = role
 
+
+def _admin_report_aggregate(sql):
+    compact = " ".join(sql.split())
+    if "SELECT COUNT(*) FROM attendance WHERE student_id = ?" in compact:
+        m = MagicMock(); m.fetchone.return_value = (0,); m.fetchall.return_value = []; return m
+    if "SELECT COALESCE(SUM(hours_rendered), 0) FROM attendance WHERE student_id = ?" in compact:
+        m = MagicMock(); m.fetchone.return_value = (0,); m.fetchall.return_value = []; return m
+    return None
+
 # 1 Dashboard loads
 def test_dashboard_loads():
     app.config["WTF_CSRF_ENABLED"] = False
@@ -392,6 +401,9 @@ def test_student_report_works():
     _login_as(client, 1, "admin")
     mock_conn = MagicMock()
     def exec_side(sql, params=None):
+        aggregate = _admin_report_aggregate(sql)
+        if aggregate is not None:
+            return aggregate
         m = MagicMock()
         if "SELECT id, username" in sql and "FROM users" in sql:
             m.fetchone.return_value = (1, "stu1")
@@ -447,6 +459,9 @@ def test_existing_phase8_ml_report_still_works():
     _login_as(client, 1, "admin")
     fb_rows = [("c","2026-01-01 10:00:00","Excellent","sup1","Excellent","Positive","Outstanding Competency","rec","Excellent",0.9)]
     def exec_side(sql, params=None):
+        aggregate = _admin_report_aggregate(sql)
+        if aggregate is not None:
+            return aggregate
         m = MagicMock()
         if "SELECT id, username" in sql:
             m.fetchone.return_value = (20, "stu20")

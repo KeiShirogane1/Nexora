@@ -52,7 +52,12 @@ def test_role_redirects(monkeypatch):
         mock_user = {"id": 1, "username": "u1", "email": "a@b.com", "password": hash_password("Pass12345"), "role": role, "status": "active"}
         mock_conn = MagicMock()
         mock_cursor = MagicMock()
-        mock_cursor.fetchone.return_value = mock_user
+        if role == "supervisor":
+            # Login reads the user first, then reads the incremented
+            # session_version for the single-session supervisor guard.
+            mock_cursor.fetchone.side_effect = [mock_user, (1,)]
+        else:
+            mock_cursor.fetchone.return_value = mock_user
         mock_conn.cursor.return_value = mock_cursor
         with patch("app.Http.Controllers.auth.get_db_connection", return_value=mock_conn):
             client = app.test_client()

@@ -12,6 +12,24 @@ def _login_as(client, user_id, role):
         sess["user_id"] = user_id
         sess["role"] = role
 
+
+def _with_admin_report_aggregates(handler):
+    """Return numeric rows for the current attendance summary queries."""
+    def wrapped(sql, params=None):
+        compact = " ".join(sql.split())
+        if "SELECT COUNT(*) FROM attendance WHERE student_id = ?" in compact:
+            m = MagicMock()
+            m.fetchone.return_value = (0,)
+            m.fetchall.return_value = []
+            return m
+        if "SELECT COALESCE(SUM(hours_rendered), 0) FROM attendance WHERE student_id = ?" in compact:
+            m = MagicMock()
+            m.fetchone.return_value = (0,)
+            m.fetchall.return_value = []
+            return m
+        return handler(sql, params)
+    return wrapped
+
 def _mock_admin_report_conn(feedback_rows=None):
     """feedback_rows: list of tuples matching new 10-col enriched feedback"""
     mock_conn = MagicMock()
@@ -38,7 +56,7 @@ def _mock_admin_report_conn(feedback_rows=None):
             m.fetchone.return_value = None
             m.fetchall.return_value = []
         return m
-    mock_conn.execute.side_effect = exec_side
+    mock_conn.execute.side_effect = _with_admin_report_aggregates(exec_side)
     mock_conn.cursor.return_value = MagicMock()
     return mock_conn
 
@@ -80,7 +98,7 @@ def test_report_with_no_feedback_does_not_crash():
             m.fetchone.return_value = (0,) if "COUNT" in sql else None
             m.fetchall.return_value = []
         return m
-    mock_conn.execute.side_effect = exec2
+    mock_conn.execute.side_effect = _with_admin_report_aggregates(exec2)
     with patch("app.Http.Controllers.admin.get_db_connection", return_value=mock_conn):
         resp = client.get("/admin/reports/student/5")
         assert resp.status_code == 200
@@ -138,7 +156,7 @@ def test_performance_distribution_calculated_correctly():
             m.fetchone.return_value = None
         return m
     mock_conn = MagicMock()
-    mock_conn.execute.side_effect = exec_perf
+    mock_conn.execute.side_effect = _with_admin_report_aggregates(exec_perf)
     with patch("app.Http.Controllers.admin.get_db_connection", return_value=mock_conn):
         resp = client.get("/admin/reports/student/10")
         assert resp.status_code == 200
@@ -170,7 +188,7 @@ def test_sentiment_distribution_calculated_correctly():
             m.fetchone.return_value = None
         return m
     mock_conn = MagicMock()
-    mock_conn.execute.side_effect = exec_side
+    mock_conn.execute.side_effect = _with_admin_report_aggregates(exec_side)
     with patch("app.Http.Controllers.admin.get_db_connection", return_value=mock_conn):
         resp = client.get("/admin/reports/student/11")
         assert resp.status_code == 200
@@ -201,7 +219,7 @@ def test_competency_distribution_correctly():
             m.fetchone.return_value = None
         return m
     mock_conn = MagicMock()
-    mock_conn.execute.side_effect = exec_side
+    mock_conn.execute.side_effect = _with_admin_report_aggregates(exec_side)
     with patch("app.Http.Controllers.admin.get_db_connection", return_value=mock_conn):
         resp = client.get("/admin/reports/student/12")
         assert resp.status_code == 200
@@ -228,7 +246,7 @@ def test_recommendations_present_when_feedback_exists():
             m.fetchone.return_value = None
         return m
     mock_conn = MagicMock()
-    mock_conn.execute.side_effect = exec_side
+    mock_conn.execute.side_effect = _with_admin_report_aggregates(exec_side)
     with patch("app.Http.Controllers.admin.get_db_connection", return_value=mock_conn):
         resp = client.get("/admin/reports/student/13")
         assert resp.status_code == 200
@@ -256,7 +274,7 @@ def test_stored_ml_values_are_used():
             m.fetchone.return_value = None
         return m
     mock_conn = MagicMock()
-    mock_conn.execute.side_effect = exec_side
+    mock_conn.execute.side_effect = _with_admin_report_aggregates(exec_side)
     with patch("app.Http.Controllers.admin.get_db_connection", return_value=mock_conn):
         # patch predictor to ensure fallback not altering stored
         with patch("app.Http.Controllers.admin.analyze_feedback_detailed") as mock_afd:
@@ -293,7 +311,7 @@ def test_legacy_feedback_without_ml_values_does_not_crash():
             m.fetchone.return_value = None
         return m
     mock_conn = MagicMock()
-    mock_conn.execute.side_effect = exec_side
+    mock_conn.execute.side_effect = _with_admin_report_aggregates(exec_side)
     with patch("app.Http.Controllers.admin.get_db_connection", return_value=mock_conn):
         resp = client.get("/admin/reports/student/15")
         assert resp.status_code == 200
@@ -321,7 +339,7 @@ def test_average_confidence_handles_null_values():
             m.fetchone.return_value = None
         return m
     mock_conn = MagicMock()
-    mock_conn.execute.side_effect = exec_side
+    mock_conn.execute.side_effect = _with_admin_report_aggregates(exec_side)
     with patch("app.Http.Controllers.admin.get_db_connection", return_value=mock_conn):
         resp = client.get("/admin/reports/student/16")
         assert resp.status_code == 200
@@ -349,7 +367,7 @@ def test_nb_svm_results_handled_correctly():
             m.fetchone.return_value = None
         return m
     mock_conn = MagicMock()
-    mock_conn.execute.side_effect = exec_side
+    mock_conn.execute.side_effect = _with_admin_report_aggregates(exec_side)
     with patch("app.Http.Controllers.admin.get_db_connection", return_value=mock_conn):
         resp = client.get("/admin/reports/student/17")
         assert resp.status_code == 200

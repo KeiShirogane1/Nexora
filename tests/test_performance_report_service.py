@@ -310,7 +310,7 @@ def test_supervisor_report_access():
     resp = client.get(f"/supervisor/classes/{cid}/reports")
     assert resp.status_code == 200
     body = resp.get_data(as_text=True)
-    assert "Performance Reports" in body
+    assert "Work Report Overview" in body
     assert "85.0%" in body or "85" in body
     assert "Very Satisfactory" in body
     _cleanup([sup], [stu], [cid])
@@ -353,10 +353,10 @@ def test_supervisor_individual_student_report():
     resp = client.get(f"/supervisor/classes/{cid}/reports/{stu}")
     assert resp.status_code == 200
     body = resp.get_data(as_text=True)
-    assert "PERFORMANCE SUMMARY" in body
-    assert "ML ANALYSIS" in body
+    assert "OJT EVIDENCE SNAPSHOT" in body
+    assert "WORK FEEDBACK ANALYSIS" in body
     assert "RECOMMENDATION" in body
-    assert "ACADEMIC PERFORMANCE" in body
+    assert "WORK PERFORMANCE SUMMARY" in body
     assert "92.0%" in body
     assert "Excellent" in body
     # student not in class should 404
@@ -449,7 +449,7 @@ def test_csv_export_authorization_and_content():
     # BOM check (first char is BOM when decoded)
     assert body.startswith("\ufeff") or "Student Number" in body
     assert "Student Number" in body
-    assert "Overall %" in body
+    assert "Work Average %" in body
     assert "Performance" in body
     assert "Recommendation" in body
     assert "Priority" in body
