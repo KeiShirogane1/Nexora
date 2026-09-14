@@ -310,7 +310,7 @@ def test_supervisor_report_access():
     resp = client.get(f"/supervisor/classes/{cid}/reports")
     assert resp.status_code == 200
     body = resp.get_data(as_text=True)
-    assert "Work Report Overview" in body
+    assert "<h1>Reports</h1>" in body
     assert "85.0%" in body or "85" in body
     assert "Very Satisfactory" in body
     _cleanup([sup], [stu], [cid])
@@ -353,7 +353,7 @@ def test_supervisor_individual_student_report():
     resp = client.get(f"/supervisor/classes/{cid}/reports/{stu}")
     assert resp.status_code == 200
     body = resp.get_data(as_text=True)
-    assert "OJT EVIDENCE SNAPSHOT" in body
+    assert "Individual Performance Report" in body
     assert "WORK FEEDBACK ANALYSIS" in body
     assert "RECOMMENDATION" in body
     assert "WORK PERFORMANCE SUMMARY" in body
