@@ -52,3 +52,26 @@ body:has(.nx-role-sidebar-shell) .nx-role-topbar .nx-quick-search-control > inpu
     appearance: none !important;
 }
 </style>
+<script>
+(function () {
+    function forceQuickSearchVisualReset() {
+        document.querySelectorAll('input[data-nx-quick-search-input]').forEach(function (input) {
+            input.style.setProperty('border', '0', 'important');
+            input.style.setProperty('outline', '0', 'important');
+            input.style.setProperty('box-shadow', 'none', 'important');
+            input.style.setProperty('background', 'transparent', 'important');
+            input.style.setProperty('background-color', 'transparent', 'important');
+            input.style.setProperty('border-radius', '0', 'important');
+            input.style.setProperty('padding', '0', 'important');
+            input.style.setProperty('-webkit-appearance', 'none', 'important');
+            input.style.setProperty('appearance', 'none', 'important');
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', forceQuickSearchVisualReset, {once: true});
+    } else {
+        forceQuickSearchVisualReset();
+    }
+})();
+</script>
