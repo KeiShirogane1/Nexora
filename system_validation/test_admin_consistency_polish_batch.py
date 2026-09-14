@@ -33,6 +33,16 @@ def test_admin_student_program_choices_are_database_driven_and_saved_canonical()
     assert '<option value="bscs">BSCS</option>' not in template
     assert '<option value="other">Other</option>' not in template
     assert 'program === "other"' not in template
+    assert "program_abbreviations" in template
+    assert "'bachelor of science in information technology': 'BSIT'" in template
+    assert "'bachelor of science in computer science': 'BSCS'" in template
+    assert "'bachelor of science in information systems': 'BSIS'" in template
+    assert "'bachelor of science in computer engineering': 'BSCPE'" in template
+    assert 'data-full-program="{{ student.major_program or \'\' }}"' in template
+    assert 'class="table-meta text-nowrap"' in template
+    assert 'title="{{ student.major_program }}"' in template
+    assert "program_label[:25] ~ '…'" in template
+    assert 'cells[5].getAttribute("data-full-program")' in template
 
     shell = _read("resources/views/components/admin_sidebar.html")
     assert "nxProgramDatabase" in shell
