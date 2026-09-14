@@ -25,6 +25,15 @@ def test_admin_student_program_choices_are_database_driven_and_saved_canonical()
     assert "program = normalize_program_name(" in source
     assert "SELECT DISTINCT major_program FROM student_profiles" in source
 
+    template = _read("resources/views/admin/students.html")
+    assert 'id="programFilter"' in template
+    assert 'data-nx-program-database="true"' in template
+    assert "{% for program in programs %}" in template
+    assert '<option value="bsit">BSIT</option>' not in template
+    assert '<option value="bscs">BSCS</option>' not in template
+    assert '<option value="other">Other</option>' not in template
+    assert 'program === "other"' not in template
+
     shell = _read("resources/views/components/admin_sidebar.html")
     assert "nxProgramDatabase" in shell
     assert "programFilter" in shell
@@ -113,13 +122,20 @@ def test_username_copy_control_is_subtle_and_accessible():
     assert "Username copied." in shared
 
 
-def test_modal_close_buttons_keep_role_specific_hover_accents():
-    shared = _read("resources/views/components/nexora_people_actions.html")
-    assert ".nexora-modal-close,.nexora-logout-close,.admin-notification-close" in shared
-    assert "nx-role-sidebar-shell.nx-role-admin" in shared
-    assert "border-color:#f45125!important" in shared
-    assert "nx-role-sidebar-shell.nx-role-supervisor" in shared
-    assert "border-color:#2563eb!important" in shared
+def test_modal_close_buttons_are_transparent_with_red_interaction_states():
+    css = _read("resources/assets/css/modals.css")
+    assert "SHARED CLOSE CONTROLS" in css
+    assert ".nexora-modal-close.nexora-modal-close" in css
+    assert ".nexora-logout-close.nexora-logout-close" in css
+    assert ".crop-close.crop-close" in css
+    assert ".modal-close.modal-close" in css
+    assert ".admin-notification-close.admin-notification-close" in css
+    assert "#nxDocumentViewerClose#nxDocumentViewerClose" in css
+    assert "background: transparent !important" in css
+    assert "border: 0 !important" in css
+    assert "color: #dc2626 !important" in css
+    assert "color: #991b1b !important" in css
+    assert ":focus-visible" in css
 
 
 def test_admin_shell_removes_only_literal_legacy_back_to_controls():
