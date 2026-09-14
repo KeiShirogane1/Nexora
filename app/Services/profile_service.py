@@ -1,6 +1,34 @@
 from app.Models.db import get_db_connection
 
 
+PROGRAM_ALIASES = {
+    "bsit": "Bachelor of Science in Information Technology",
+    "bs information technology": "Bachelor of Science in Information Technology",
+    "bs in information technology": "Bachelor of Science in Information Technology",
+    "bachelor of science in information technology": "Bachelor of Science in Information Technology",
+    "bscs": "Bachelor of Science in Computer Science",
+    "bs computer science": "Bachelor of Science in Computer Science",
+    "bs in computer science": "Bachelor of Science in Computer Science",
+    "bachelor of science in computer science": "Bachelor of Science in Computer Science",
+    "bsis": "Bachelor of Science in Information Systems",
+    "bs information systems": "Bachelor of Science in Information Systems",
+    "bs in information systems": "Bachelor of Science in Information Systems",
+    "bachelor of science in information systems": "Bachelor of Science in Information Systems",
+    "bscpe": "Bachelor of Science in Computer Engineering",
+    "bscpe.": "Bachelor of Science in Computer Engineering",
+    "bs computer engineering": "Bachelor of Science in Computer Engineering",
+    "bs in computer engineering": "Bachelor of Science in Computer Engineering",
+    "bachelor of science in computer engineering": "Bachelor of Science in Computer Engineering",
+}
+
+
+def normalize_program_name(value):
+    """Expand known course abbreviations while preserving valid custom programs."""
+    program = str(value or "").strip()
+    if not program:
+        return program
+    return PROGRAM_ALIASES.get(program.lower(), program)
+
 
 def update_student_profile(student_id, data):
 
@@ -58,7 +86,7 @@ def update_student_profile(student_id, data):
 
             data.get("grade_year"),
 
-            data.get("major_program"),
+            normalize_program_name(data.get("major_program")),
 
 
             data.get("emergency_name"),
@@ -123,7 +151,7 @@ def get_student_profile_data(form):
 
 
         "major_program":
-            form.get("major_program"),
+            normalize_program_name(form.get("major_program")),
 
 
         "emergency_name":
