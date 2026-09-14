@@ -156,6 +156,75 @@
     candidates.forEach(runAnalysis);
   }
 
+  function rememberAssignedInsightsTarget(trigger) {
+    const modal = document.getElementById("assignedInsightsModal");
+    if (!modal || !trigger) return;
+    modal.dataset.overallInsightsUrl = trigger.dataset.overallUrl || "";
+    modal.dataset.individualInsightsUrl = trigger.dataset.individualUrl || "";
+    modal.dataset.initialInsightsView = trigger.dataset.insightsView || "overall";
+  }
+
+  function parseExportTarget(url, individual) {
+    const text = String(url || "");
+    const match = individual
+      ? text.match(/\/supervisor\/classes\/(\d+)\/insights\/(\d+)/)
+      : text.match(/\/supervisor\/classes\/(\d+)\/(?:performance|ml-insights|insights)/);
+    if (!match) return null;
+    if (individual) {
+      return {
+        csv: `/supervisor/classes/${match[1]}/insights/${match[2]}/export.csv`,
+        pdf: `/supervisor/classes/${match[1]}/insights/${match[2]}/export.pdf`,
+      };
+    }
+    return {
+      csv: `/supervisor/classes/${match[1]}/insights/export.csv`,
+      pdf: `/supervisor/classes/${match[1]}/insights/export.pdf`,
+    };
+  }
+
+  function updateAssignedInsightsExports() {
+    const modal = document.getElementById("assignedInsightsModal");
+    const csvLink = document.getElementById("assignedInsightsExportLink");
+    if (!modal || !csvLink) return;
+
+    const individualTab = document.getElementById("assignedInsightsIndividualTab");
+    const individual = individualTab && individualTab.getAttribute("aria-selected") === "true";
+    const target = parseExportTarget(
+      individual ? modal.dataset.individualInsightsUrl : modal.dataset.overallInsightsUrl,
+      individual,
+    );
+    if (!target) return;
+
+    csvLink.href = target.csv;
+    csvLink.textContent = "Export CSV";
+
+    let pdfLink = document.getElementById("assignedInsightsPdfLink");
+    if (!pdfLink) {
+      pdfLink = document.createElement("a");
+      pdfLink.id = "assignedInsightsPdfLink";
+      pdfLink.className = "btn btn-sm btn-outline-primary";
+      pdfLink.textContent = "Export PDF";
+      csvLink.insertAdjacentElement("afterend", pdfLink);
+    }
+    pdfLink.href = target.pdf;
+  }
+
   window.initSupervisorInsightsAi = init;
-  document.addEventListener("DOMContentLoaded", () => init(document));
+
+  document.addEventListener("click", (event) => {
+    const trigger = event.target.closest("[data-insights-modal-open]");
+    if (trigger) {
+      rememberAssignedInsightsTarget(trigger);
+      window.setTimeout(updateAssignedInsightsExports, 0);
+      return;
+    }
+    if (event.target.closest("#assignedInsightsOverallTab, #assignedInsightsIndividualTab")) {
+      window.setTimeout(updateAssignedInsightsExports, 0);
+    }
+  }, true);
+
+  document.addEventListener("DOMContentLoaded", () => {
+    init(document);
+    updateAssignedInsightsExports();
+  });
 })();
