@@ -158,6 +158,12 @@ td:has(.dropdown-menu-nexora.show),
         if(!container||container.querySelector('.nx-quick-chat-btn'))return;
         var link=chatLink(userId);if(link)container.appendChild(link);
     }
+    function authorizedContact(targetRole,userId){
+        var id=parseInt(userId,10);if(!id)return Promise.resolve(null);
+        return fetch('/messages/contacts?role='+encodeURIComponent(targetRole),{headers:{Accept:'application/json'},cache:'no-store'})
+            .then(function(response){return response.ok?response.json():Promise.reject();})
+            .then(function(data){return (data.contacts||[]).find(function(contact){return parseInt(contact.id,10)===id;})||null;});
+    }
 
     function expandProgramText(){
         var walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,{acceptNode:function(node){
@@ -198,14 +204,37 @@ td:has(.dropdown-menu-nexora.show),
         var adminSupervisor=path.match(/^\/admin\/supervisor\/(\d+)\/?$/)||path.match(/^\/admin\/users\/supervisors\/(\d+)\/?$/);
         var supervisorStudent=path.match(/^\/supervisor\/student\/(\d+)\/?$/);
         if(adminStudent){var actions=document.querySelector('.profile-actions');appendChat(actions,adminStudent[1]);}
-        if(adminSupervisor){var supActions=document.querySelector('.profile-actions');appendChat(supActions,adminSupervisor[1]);}
+        if(adminSupervisor){
+            var supActions=document.querySelector('.profile-actions');appendChat(supActions,adminSupervisor[1]);
+            var adminSupHeading=document.querySelector('.profile-title h2');
+            authorizedContact('supervisor',adminSupervisor[1]).then(function(contact){
+                if(contact&&adminSupHeading&&contact.display_name)adminSupHeading.textContent=contact.display_name;
+            }).catch(function(){});
+        }
         if(supervisorStudent){
             var legacyH2=document.querySelector('.profile-info h2');
-            if(legacyH2&&!legacyH2.parentElement.querySelector('.nx-username-line')){
-                var legacyName=String(legacyH2.textContent||'').trim();legacyH2.insertAdjacentElement('afterend',usernameLine(legacyName));
-                var hardcoded=legacyH2.parentElement.querySelector('p.text-muted');if(hardcoded&&/BSIT|Arellano University/i.test(hardcoded.textContent||''))hardcoded.remove();
-            }
-            var profileInfo=document.querySelector('.profile-info');if(profileInfo&&!profileInfo.querySelector('.nx-profile-quick-actions')){var quick=document.createElement('div');quick.className='nx-profile-quick-actions';appendChat(quick,supervisorStudent[1]);profileInfo.appendChild(quick);}
+            var profileInfo=document.querySelector('.profile-info');
+            var fallbackUsername=legacyH2?String(legacyH2.textContent||'').trim():'';
+            var legacyMeta=legacyH2&&legacyH2.parentElement?legacyH2.parentElement.querySelector('p.text-muted'):null;
+            if(legacyMeta&&/BSIT|Arellano University/i.test(legacyMeta.textContent||''))legacyMeta.remove();
+            if(legacyH2&&!legacyH2.parentElement.querySelector('.nx-username-line')&&fallbackUsername)legacyH2.insertAdjacentElement('afterend',usernameLine(fallbackUsername));
+            if(profileInfo&&!profileInfo.querySelector('.nx-profile-quick-actions')){var quick=document.createElement('div');quick.className='nx-profile-quick-actions';appendChat(quick,supervisorStudent[1]);profileInfo.appendChild(quick);}
+            authorizedContact('student',supervisorStudent[1]).then(function(contact){
+                if(!contact||!legacyH2)return;
+                legacyH2.textContent=contact.display_name||contact.username||fallbackUsername;
+                var usernameRow=legacyH2.parentElement.querySelector('.nx-username-line');
+                if(usernameRow)usernameRow.remove();
+                var actualUsername=contact.username||fallbackUsername;
+                if(actualUsername)legacyH2.insertAdjacentElement('afterend',usernameLine(actualUsername));
+                var program=normalizeProgram(contact.major_program||'');
+                var currentProgram=legacyH2.parentElement.querySelector('.nx-student-program');
+                if(currentProgram)currentProgram.remove();
+                if(program){
+                    var programLine=document.createElement('p');programLine.className='text-muted mb-0 nx-student-program';programLine.textContent=program;
+                    var usernameElement=legacyH2.parentElement.querySelector('.nx-username-line');
+                    (usernameElement||legacyH2).insertAdjacentElement('afterend',programLine);
+                }
+            }).catch(function(){});
         }
 
         var classmate=path.match(/^\/student\/classes\/\d+\/people\/(\d+)\/?$/);
@@ -273,12 +302,14 @@ td:has(.dropdown-menu-nexora.show),
 
     function setupSupervisorExport(){
         if(window.location.pathname!=='/admin/users/supervisors')return;
-        var trigger=document.getElementById('exportSupervisorsBtn');if(!trigger||trigger.dataset.nxExportReady==='1')return;trigger.dataset.nxExportReady='1';trigger.title='Export visible supervisors';
+        var originalTrigger=document.getElementById('exportSupervisorsBtn');if(!originalTrigger||originalTrigger.dataset.nxExportReady==='1')return;
+        /* Replace the legacy trigger node so its old CSV listener cannot fire alongside the new modal flow. */
+        var trigger=originalTrigger.cloneNode(true);originalTrigger.replaceWith(trigger);trigger.dataset.nxExportReady='1';trigger.title='Export visible supervisors';
         var overlay=document.createElement('div');overlay.className='nexora-modal-overlay nx-export-modal';overlay.id='nxSupervisorExportModal';overlay.setAttribute('aria-hidden','true');overlay.innerHTML='<div class="nexora-modal" role="dialog" aria-modal="true" aria-labelledby="nxExportTitle"><div class="nexora-modal-header"><h2 id="nxExportTitle">Export Supervisor List</h2><p>Choose a file format. Only supervisors currently visible in the filtered directory will be exported.</p><button type="button" class="nexora-modal-close" data-nx-export-close aria-label="Close">×</button></div><div class="nexora-modal-body"><div class="nx-export-grid"><button type="button" class="nx-export-choice" data-format="csv"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6M8 13h8M8 17h8"></path></svg><strong>CSV</strong><small>Supervisor-List.csv</small></button><button type="button" class="nx-export-choice" data-format="xlsx"><svg viewBox="0 0 24 24"><path d="M4 3h16v18H4zM4 9h16M10 9v12"></path></svg><strong>Excel</strong><small>Supervisor-List.xlsx</small></button><button type="button" class="nx-export-choice" data-format="pdf"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6M8 13h8M8 17h5"></path></svg><strong>PDF</strong><small>Supervisor-List.pdf</small></button></div><p class="nx-export-note">CSV is best for simple data exchange, Excel preserves a spreadsheet workbook, and PDF creates a formatted read-only directory report.</p></div><div class="nexora-modal-footer"><button type="button" class="btn-nexora-secondary" data-nx-export-close>Cancel</button></div></div>';
         document.body.appendChild(overlay);
         function open(){overlay.classList.add('open');overlay.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';}
         function close(){overlay.classList.remove('open');overlay.setAttribute('aria-hidden','true');document.body.style.overflow='';}
-        trigger.addEventListener('click',function(event){event.preventDefault();event.stopImmediatePropagation();open();},true);
+        trigger.addEventListener('click',function(event){event.preventDefault();open();});
         overlay.querySelectorAll('[data-nx-export-close]').forEach(function(btn){btn.addEventListener('click',close);});overlay.addEventListener('click',function(e){if(e.target===overlay)close();});
         overlay.querySelectorAll('[data-format]').forEach(function(btn){btn.addEventListener('click',function(){var data=visibleSupervisorRows();if(!data.rows.length){if(window.showToast)window.showToast('No visible supervisors to export.','warning');return;}var format=btn.dataset.format;var original=btn.innerHTML;btn.disabled=true;if(format==='csv'){exportSupervisorsCsv(data);btn.disabled=false;close();return;}var job=format==='xlsx'?exportSupervisorsXlsx(data):exportSupervisorsPdf(data);job.then(function(){close();}).catch(function(){if(window.showToast)window.showToast('Unable to create that export. Please check your connection and try again.','error');}).finally(function(){btn.disabled=false;btn.innerHTML=original;});});});
     }
