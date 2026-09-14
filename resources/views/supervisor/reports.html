@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports - Nexora</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">
+</head>
+<body class="supervisor-page supervisor-reports-page">
+    {% include 'components/supervisor_sidebar.html' %}
+
+    <main class="page-content nexora-app-main">
+        <div class="nexora-page supervisor-reports-shell">
+            <div class="supervisor-classwork-heading">
+                <div>
+                    <span class="text-primary fw-bold text-uppercase small">Supervisor Workspace</span>
+                    <h1>Reports</h1>
+                    <p>Review classroom and intern evidence from one place. Reports keep OJT Hours, Daily Performance, Logbook, Work analytics, and Official Evaluation separate.</p>
+                </div>
+                {% if classrooms %}
+                    <form method="GET" action="{{ url_for('performance_reports.supervisor_reports_directory') }}" class="d-flex align-items-end gap-2 flex-wrap">
+                        <div>
+                            <label class="form-label small fw-bold mb-1" for="report-classroom">Intern Classroom</label>
+                            <select class="form-select" id="report-classroom" name="class_id" onchange="this.form.submit()">
+                                {% for item in classrooms %}
+                                    <option value="{{ item.id }}" {% if selected_classroom and item.id == selected_classroom.id %}selected{% endif %}>{{ item.name }}{% if item.section %} · {{ item.section }}{% endif %}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <noscript><button type="submit" class="btn btn-primary">Open</button></noscript>
+                    </form>
+                {% endif %}
+            </div>
+
+            {% if not classrooms %}
+                <section class="supervisor-insights-card p-5 text-center">
+                    <h2 class="h5 fw-bold">No Intern Classrooms yet</h2>
+                    <p class="text-secondary mb-3">Create an Intern Classroom before report evidence can appear here.</p>
+                    <a href="{{ url_for('classroom.supervisor_classes') }}" class="btn btn-primary">Open Intern Classrooms</a>
+                </section>
+            {% else %}
+                <section class="supervisor-insights-readiness mb-4" aria-label="Report summary">
+                    <article class="supervisor-insights-readiness-card">
+                        <span>Interns</span>
+                        <strong>{{ report_summary.total }}</strong>
+                        <small class="text-muted">Enrolled in {{ selected_classroom.name }}</small>
+                    </article>
+                    <article class="supervisor-insights-readiness-card">
+                        <span>With Work Data</span>
+                        <strong>{{ report_summary.with_data }}</strong>
+                        <small class="text-muted">Reviewed numeric Work evidence</small>
+                    </article>
+                    <article class="supervisor-insights-readiness-card is-no-data">
+                        <span>No Work Data</span>
+                        <strong>{{ report_summary.no_data }}</strong>
+                        <small class="text-muted">Kept separate from real performance results</small>
+                    </article>
+                    <article class="supervisor-insights-readiness-card{% if report_summary.needs_attention %} is-attention{% endif %}">
+                        <span>Needs Attention</span>
+                        <strong>{{ report_summary.needs_attention }}</strong>
+                        <small class="text-muted">Fair or Needs Improvement Work labels</small>
+                    </article>
+                </section>
+
+                <section class="supervisor-reports-card">
+                    <div class="supervisor-reports-toolbar d-flex flex-wrap align-items-center justify-content-between gap-3">
+                        <div>
+                            <strong>{{ selected_classroom.name }}</strong>
+                            <span class="text-muted small d-block">{{ selected_classroom.section or 'No section' }} · {{ reports|length }} intern{{ '' if reports|length == 1 else 's' }}</span>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2">
+                            <a class="btn btn-sm btn-outline-primary" href="{{ url_for('performance_reports.export_supervisor_reports', class_id=selected_classroom.id) }}">Export CSV</a>
+                            <a class="btn btn-sm btn-primary" href="{{ url_for('performance_reports.export_supervisor_reports_pdf', class_id=selected_classroom.id) }}">Export PDF</a>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-light border rounded-0 border-start-0 border-end-0 mb-0" role="note">
+                        Work/feedback analytics are decision-support evidence only. They do not calculate or replace the Official OJT Evaluation.
+                    </div>
+
+                    {% if not reports %}
+                        <div class="supervisor-reports-empty">
+                            <h2>No interns enrolled</h2>
+                            <p>Intern reports appear after students join this Intern Classroom.</p>
+                        </div>
+                    {% else %}
+                        <div class="supervisor-reports-wrap">
+                            <table class="table supervisor-reports-table align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th class="supervisor-reports-student">Intern</th>
+                                        <th>Work Average</th>
+                                        <th>Completion</th>
+                                        <th>Work Classification</th>
+                                        <th>Feedback Signal</th>
+                                        <th>Priority</th>
+                                        <th class="text-end">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for report in reports %}
+                                        <tr>
+                                            <td class="supervisor-reports-student">
+                                                <strong>{{ report.student.username }}</strong>
+                                                <small class="text-muted d-block">{{ report.student.student_number or report.student.email or 'Intern' }}</small>
+                                            </td>
+                                            <td>{% if report.overall_percentage is not none %}{{ '%.1f'|format(report.overall_percentage) }}%{% else %}—{% endif %}</td>
+                                            <td>{{ '%.1f'|format(report.completion_rate or 0) }}%</td>
+                                            <td>
+                                                {% if report.overall_percentage is none %}
+                                                    <span class="supervisor-reports-label is-no-data">No Data</span>
+                                                {% else %}
+                                                    {% set label = report.performance_label %}
+                                                    <span class="supervisor-reports-label {% if label == 'Excellent' %}is-excellent{% elif label == 'Very Satisfactory' %}is-very-satisfactory{% elif label == 'Satisfactory' %}is-satisfactory{% elif label == 'Fair' %}is-fair{% else %}is-needs-improvement{% endif %}">{{ label }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ report.sentiment or report.competency or '—' }}</td>
+                                            <td><span class="supervisor-reports-label {% if report.priority == 'high' %}is-fair{% elif report.priority == 'medium' %}is-very-satisfactory{% else %}is-satisfactory{% endif %}">{{ (report.priority or 'none')|title }}</span></td>
+                                            <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{{ url_for('performance_reports.supervisor_student_report', class_id=selected_classroom.id, student_id=report.student.id) }}">View Report</a></td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endif %}
+                </section>
+            {% endif %}
+        </div>
+    </main>
+</body>
+</html>
