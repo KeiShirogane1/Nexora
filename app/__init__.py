@@ -1,13 +1,18 @@
 """
 app/__init__.py
 Laravel-inspired app package.
-Exposes `app` for backward compatibility: `from app import app`.
-Actual Flask app lives in bootstrap/app.py to keep factory clean.
+
+The actual Flask application lives in bootstrap/app.py. Keep `from app import app`
+working for backward compatibility without importing bootstrap.app during normal
+package imports such as `app.Models.db`.
 """
 
-# Re-export for compatibility; bootstrap/app.py is source of truth
-try:
-    from bootstrap.app import app  # noqa: F401
-except Exception:
-    # During initial import before bootstrap is ready, expose placeholder
-    app = None
+__all__ = ["app"]
+
+
+def __getattr__(name):
+    if name == "app":
+        from bootstrap.app import app as flask_app
+
+        return flask_app
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
