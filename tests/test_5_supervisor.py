@@ -19,8 +19,13 @@ def _create_test_supervisor(prefix):
             "INSERT INTO users (username,email,password,role,status) VALUES (?,?,?,?,?) RETURNING id",
             (username, f"{username}@example.com", hash_password("pass12345"), "supervisor", "active"),
         ).fetchone()
+        uid = row[0]
+        conn.execute(
+            "INSERT INTO supervisor_profiles (user_id,first_name,last_name,job_title,department) VALUES (?,?,?,?,?)",
+            (uid, "Test", "Supervisor", "Test Lead", "Testing"),
+        )
         conn.commit()
-        return row[0]
+        return uid
     finally:
         conn.close()
 
