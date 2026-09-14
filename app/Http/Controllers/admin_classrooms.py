@@ -1,10 +1,13 @@
 import os
+from collections import Counter
 from datetime import datetime
 
 from flask import Blueprint, abort, current_app, render_template, request, send_file
 
 from app.Http.Middleware.security import role_required
 from app.Models.db import get_db_connection
+from app.Services.performance_report_service import build_class_reports
+from app.Services.profile_service import normalize_program_name
 
 
 admin_classrooms = Blueprint("admin_classrooms", __name__)
@@ -104,6 +107,13 @@ def _is_safe_upload_path(filepath):
         return False
 
 
+def _average(values):
+    clean = [float(value) for value in values if value is not None]
+    if not clean:
+        return None
+    return round(sum(clean) / len(clean), 1)
+
+
 @admin_classrooms.route("/admin/classrooms")
 @role_required("admin")
 def classrooms():
@@ -122,12 +132,10 @@ def classrooms():
     if classroom_type in {"classroom", "internship"}:
         filters.append("COALESCE(c.classroom_type, 'classroom') = ?")
         params.append(classroom_type)
-
     if status == "active":
         filters.append("COALESCE(c.archived, 0) = 0")
     elif status == "archived":
         filters.append("COALESCE(c.archived, 0) = 1")
-
     if search:
         term = f"%{search}%"
         filters.append(
@@ -167,19 +175,13 @@ def classrooms():
                     WHERE ca.classroom_id = c.id
                 ) AS classwork_count
             FROM classrooms c
-            JOIN users supervisor
-              ON supervisor.id = c.supervisor_id
-            LEFT JOIN classroom_internship_details cid
-              ON cid.classroom_id = c.id
+            JOIN users supervisor ON supervisor.id = c.supervisor_id
+            LEFT JOIN classroom_internship_details cid ON cid.classroom_id = c.id
             WHERE {' AND '.join(filters)}
-            ORDER BY
-                COALESCE(c.archived, 0) ASC,
-                c.created_at DESC,
-                c.id DESC
+            ORDER BY COALESCE(c.archived, 0) ASC, c.created_at DESC, c.id DESC
             """,
             tuple(params),
         ).fetchall()
-
         summary_row = conn.execute(
             """
             SELECT
@@ -200,7 +202,6 @@ def classrooms():
         "internship": int(_value(summary_row, "internship_count", 2, 0) or 0),
         "archived": int(_value(summary_row, "archived_count", 3, 0) or 0),
     }
-
     return render_template(
         "admin/classrooms.html",
         classrooms=classroom_rows,
@@ -247,16 +248,13 @@ def classroom_detail(classroom_id):
                 COALESCE(cid.company_description, '') AS company_description,
                 COALESCE(cid.internship_description, '') AS internship_description
             FROM classrooms c
-            JOIN users supervisor
-              ON supervisor.id = c.supervisor_id
-            LEFT JOIN classroom_internship_details cid
-              ON cid.classroom_id = c.id
+            JOIN users supervisor ON supervisor.id = c.supervisor_id
+            LEFT JOIN classroom_internship_details cid ON cid.classroom_id = c.id
             WHERE c.id = ?
             LIMIT 1
             """,
             (classroom_id,),
         ).fetchone()
-
         if not row:
             abort(404)
 
@@ -266,6 +264,7 @@ def classroom_detail(classroom_id):
                 u.id,
                 u.username,
                 u.email,
+                u.status,
                 COALESCE(sp.first_name, '') AS first_name,
                 COALESCE(sp.middle_name, '') AS middle_name,
                 COALESCE(sp.last_name, '') AS last_name,
@@ -273,25 +272,60 @@ def classroom_detail(classroom_id):
                 COALESCE(sp.major_program, '') AS major_program,
                 cs.joined_at
             FROM classroom_students cs
-            JOIN users u
-              ON u.id = cs.student_id
-            LEFT JOIN student_profiles sp
-              ON sp.user_id = u.id
+            JOIN users u ON u.id = cs.student_id
+            LEFT JOIN student_profiles sp ON sp.user_id = u.id
             WHERE cs.classroom_id = ?
             ORDER BY cs.joined_at DESC, u.username ASC
             """,
             (classroom_id,),
         ).fetchall()
 
-        classwork_count = conn.execute(
-            "SELECT COUNT(*) FROM classroom_assignments WHERE classroom_id = ?",
-            (classroom_id,),
-        ).fetchone()[0]
+        classwork_count = int(
+            conn.execute(
+                "SELECT COUNT(*) FROM classroom_assignments WHERE classroom_id = ?",
+                (classroom_id,),
+            ).fetchone()[0]
+            or 0
+        )
+        post_count = int(
+            conn.execute(
+                "SELECT COUNT(*) FROM classroom_posts WHERE classroom_id = ?",
+                (classroom_id,),
+            ).fetchone()[0]
+            or 0
+        )
+        document_count = int(
+            conn.execute(
+                """
+                SELECT COUNT(*)
+                FROM documents d
+                JOIN classroom_students cs ON cs.student_id = d.student_id
+                WHERE cs.classroom_id = ?
+                """,
+                (classroom_id,),
+            ).fetchone()[0]
+            or 0
+        )
 
-        post_count = conn.execute(
-            "SELECT COUNT(*) FROM classroom_posts WHERE classroom_id = ?",
-            (classroom_id,),
-        ).fetchone()[0]
+        evaluation_total = 0
+        evaluation_submitted = 0
+        try:
+            evaluation_row = conn.execute(
+                """
+                SELECT
+                    COUNT(*) AS total_count,
+                    SUM(CASE WHEN status = 'submitted' THEN 1 ELSE 0 END) AS submitted_count
+                FROM ojt_evaluations
+                WHERE classroom_id = ?
+                """,
+                (classroom_id,),
+            ).fetchone()
+            evaluation_total = int(_value(evaluation_row, "total_count", 0, 0) or 0)
+            evaluation_submitted = int(_value(evaluation_row, "submitted_count", 1, 0) or 0)
+        except Exception:
+            # Older local databases may not yet have the Phase 17 evaluation tables.
+            evaluation_total = 0
+            evaluation_submitted = 0
 
         responsibilities = []
         qualifications = []
@@ -344,9 +378,9 @@ def classroom_detail(classroom_id):
         "hours_mode": _value(row, "hours_mode", 16, "") or "",
         "compensation": _value(row, "compensation", 17, "") or "",
         "location": _value(row, "location", 18, "") or "",
-        "start_date": _value(row, "start_date", 19, "") or "",
-        "end_date": _value(row, "end_date", 20, "") or "",
-        "enrollment_deadline": _value(row, "enrollment_deadline", 21, "") or "",
+        "start_date": _format_date(_value(row, "start_date", 19, "")),
+        "end_date": _format_date(_value(row, "end_date", 20, "")),
+        "enrollment_deadline": _format_date(_value(row, "enrollment_deadline", 21, "")),
         "required_hours": int(_value(row, "required_hours", 22, 0) or 0),
         "company_website": _value(row, "company_website", 23, "") or "",
         "company_description": _value(row, "company_description", 24, "") or "",
@@ -355,31 +389,72 @@ def classroom_detail(classroom_id):
 
     students = []
     for student_row in student_rows:
-        first_name = _value(student_row, "first_name", 3, "") or ""
-        middle_name = _value(student_row, "middle_name", 4, "") or ""
-        last_name = _value(student_row, "last_name", 5, "") or ""
         username = _value(student_row, "username", 1, "") or ""
-        full_name = " ".join(
-            part for part in (first_name, middle_name, last_name) if part
-        ) or username
         students.append(
             {
                 "id": int(_value(student_row, "id", 0, 0) or 0),
                 "username": username,
                 "email": _value(student_row, "email", 2, "") or "",
-                "display_name": full_name,
-                "student_number": _value(student_row, "student_number", 6, "") or "",
-                "major_program": _value(student_row, "major_program", 7, "") or "",
-                "joined_at": _format_date(_value(student_row, "joined_at", 8, None)),
+                "status": _value(student_row, "status", 3, "active") or "active",
+                "display_name": _student_display_name(
+                    _value(student_row, "first_name", 4, "") or "",
+                    _value(student_row, "middle_name", 5, "") or "",
+                    _value(student_row, "last_name", 6, "") or "",
+                    username,
+                ),
+                "student_number": _value(student_row, "student_number", 7, "") or "",
+                "major_program": normalize_program_name(
+                    _value(student_row, "major_program", 8, "") or ""
+                ),
+                "joined_at": _format_date(_value(student_row, "joined_at", 9, None)),
             }
         )
+
+    try:
+        class_reports = build_class_reports(classroom_id)
+    except Exception:
+        class_reports = []
+
+    distribution = Counter()
+    work_values = []
+    completion_values = []
+    performance_data_count = 0
+    needs_attention = 0
+    for report in class_reports:
+        work_value = report.get("overall_percentage")
+        completion_value = report.get("completion_rate")
+        label = report.get("performance_label") or "No Data"
+        distribution[label] += 1
+        if work_value is not None:
+            performance_data_count += 1
+            work_values.append(work_value)
+        if completion_value is not None:
+            completion_values.append(completion_value)
+        if str(report.get("priority") or "").lower() in {"high", "medium"}:
+            needs_attention += 1
+
+    overall_insights = {
+        "work_average": _average(work_values),
+        "completion_average": _average(completion_values),
+        "performance_data_count": performance_data_count,
+        "needs_attention": needs_attention,
+        "no_data_count": max(len(students) - performance_data_count, 0),
+        "distribution": dict(distribution),
+    }
+    activity = {
+        "classwork_count": classwork_count,
+        "post_count": post_count,
+        "document_count": document_count,
+        "evaluation_total": evaluation_total,
+        "evaluation_submitted": evaluation_submitted,
+    }
 
     return render_template(
         "admin/classroom_detail.html",
         classroom=classroom,
         students=students,
-        classwork_count=int(classwork_count or 0),
-        post_count=int(post_count or 0),
+        activity=activity,
+        overall_insights=overall_insights,
         responsibilities=responsibilities,
         qualifications=qualifications,
         active_page="classrooms",
@@ -390,11 +465,7 @@ def classroom_detail(classroom_id):
 @role_required("admin")
 def student_documents():
     search = (request.args.get("search") or "").strip().lower()
-    classroom_type = (request.args.get("type") or "all").strip().lower()
     document_state = (request.args.get("documents") or "all").strip().lower()
-
-    if classroom_type not in {"all", "classroom", "internship"}:
-        classroom_type = "all"
     if document_state not in {"all", "with", "without"}:
         document_state = "all"
 
@@ -414,7 +485,6 @@ def student_documents():
                 (SELECT COUNT(*) FROM classrooms) AS total_classrooms
             """
         ).fetchone()
-
         placement_rows = conn.execute(
             """
             SELECT
@@ -438,14 +508,10 @@ def student_documents():
                 COALESCE(sp.major_program, '') AS major_program,
                 COALESCE(sp.grade_year, '') AS grade_year,
                 (
-                    SELECT COUNT(*)
-                    FROM documents d
-                    WHERE d.student_id = student.id
+                    SELECT COUNT(*) FROM documents d WHERE d.student_id = student.id
                 ) AS document_count,
                 (
-                    SELECT MAX(d.uploaded_at)
-                    FROM documents d
-                    WHERE d.student_id = student.id
+                    SELECT MAX(d.uploaded_at) FROM documents d WHERE d.student_id = student.id
                 ) AS last_upload
             FROM classroom_students cs
             JOIN classrooms c ON c.id = cs.classroom_id
@@ -455,16 +521,11 @@ def student_documents():
             LEFT JOIN supervisor_profiles sup_profile ON sup_profile.user_id = supervisor.id
             LEFT JOIN classroom_internship_details cid ON cid.classroom_id = c.id
             WHERE student.role = 'student'
-            ORDER BY
-                COALESCE(c.archived, 0) ASC,
-                c.created_at DESC,
-                c.id DESC,
-                COALESCE(sp.last_name, '') ASC,
-                COALESCE(sp.first_name, '') ASC,
-                student.username ASC
+            ORDER BY COALESCE(c.archived, 0) ASC, c.created_at DESC, c.id DESC,
+                     COALESCE(sp.last_name, '') ASC, COALESCE(sp.first_name, '') ASC,
+                     student.username ASC
             """
         ).fetchall()
-
         unassigned_rows = conn.execute(
             """
             SELECT
@@ -478,30 +539,21 @@ def student_documents():
                 COALESCE(sp.major_program, '') AS major_program,
                 COALESCE(sp.grade_year, '') AS grade_year,
                 (
-                    SELECT COUNT(*)
-                    FROM documents d
-                    WHERE d.student_id = student.id
+                    SELECT COUNT(*) FROM documents d WHERE d.student_id = student.id
                 ) AS document_count,
                 (
-                    SELECT MAX(d.uploaded_at)
-                    FROM documents d
-                    WHERE d.student_id = student.id
+                    SELECT MAX(d.uploaded_at) FROM documents d WHERE d.student_id = student.id
                 ) AS last_upload
             FROM users student
             LEFT JOIN student_profiles sp ON sp.user_id = student.id
             WHERE student.role = 'student'
               AND NOT EXISTS (
-                  SELECT 1
-                  FROM classroom_students cs
-                  WHERE cs.student_id = student.id
+                  SELECT 1 FROM classroom_students cs WHERE cs.student_id = student.id
               )
-            ORDER BY
-                COALESCE(sp.last_name, '') ASC,
-                COALESCE(sp.first_name, '') ASC,
-                student.username ASC
+            ORDER BY COALESCE(sp.last_name, '') ASC, COALESCE(sp.first_name, '') ASC,
+                     student.username ASC
             """
         ).fetchall()
-
         latest_rows = conn.execute(
             """
             SELECT
@@ -526,8 +578,8 @@ def student_documents():
     finally:
         conn.close()
 
-    def student_from_row(row, offset=10):
-        if offset == 10:
+    def student_from_row(row, placed=True):
+        if placed:
             student_id = int(_value(row, "student_id", 10, 0) or 0)
             username = _value(row, "username", 11, "") or ""
             email = _value(row, "email", 12, "") or ""
@@ -551,19 +603,16 @@ def student_documents():
             grade_year = _value(row, "grade_year", 8, "") or ""
             document_count = int(_value(row, "document_count", 9, 0) or 0)
             last_upload_raw = _value(row, "last_upload", 10, None)
-
-        display_name = _student_display_name(first_name, middle_name, last_name, username)
         return {
             "id": student_id,
             "username": username,
             "email": email,
-            "display_name": display_name,
+            "display_name": _student_display_name(first_name, middle_name, last_name, username),
             "student_number": student_number,
-            "major_program": major_program,
+            "major_program": normalize_program_name(major_program),
             "grade_year": grade_year,
             "document_count": document_count,
             "last_upload": _format_datetime(last_upload_raw),
-            "last_upload_raw": str(last_upload_raw or ""),
         }
 
     def passes_student_filters(student, classroom_search_text=""):
@@ -574,12 +623,8 @@ def student_documents():
         if search:
             searchable = " ".join(
                 [
-                    student["display_name"],
-                    student["username"],
-                    student["email"],
-                    student["student_number"],
-                    student["major_program"],
-                    student["grade_year"],
+                    student["display_name"], student["username"], student["email"],
+                    student["student_number"], student["major_program"], student["grade_year"],
                     classroom_search_text,
                 ]
             ).lower()
@@ -589,45 +634,33 @@ def student_documents():
 
     grouped = {}
     classroom_order = []
-
     for row in placement_rows:
-        row_type = (_value(row, "classroom_type", 3, "classroom") or "classroom").lower()
-        if classroom_type != "all" and row_type != classroom_type:
-            continue
-
         classroom_id = int(_value(row, "classroom_id", 0, 0) or 0)
         supervisor_username = _value(row, "supervisor_username", 5, "") or "Unknown Supervisor"
-        supervisor_name = _student_display_name(
-            _value(row, "supervisor_first_name", 6, "") or "",
-            "",
-            _value(row, "supervisor_last_name", 7, "") or "",
-            supervisor_username,
-        )
         classroom = grouped.get(classroom_id)
         if classroom is None:
             classroom = {
                 "id": classroom_id,
                 "name": _value(row, "classroom_name", 1, "") or "Classroom",
                 "section": _value(row, "section", 2, "") or "",
-                "classroom_type": row_type,
+                "classroom_type": _value(row, "classroom_type", 3, "classroom") or "classroom",
                 "archived": bool(int(_value(row, "archived", 4, 0) or 0)),
-                "supervisor_name": supervisor_name,
+                "supervisor_name": _student_display_name(
+                    _value(row, "supervisor_first_name", 6, "") or "",
+                    "",
+                    _value(row, "supervisor_last_name", 7, "") or "",
+                    supervisor_username,
+                ),
                 "company_name": _value(row, "company_name", 8, "") or "",
                 "internship_title": _value(row, "internship_title", 9, "") or "",
                 "students": [],
             }
             grouped[classroom_id] = classroom
             classroom_order.append(classroom_id)
-
-        student = student_from_row(row, offset=10)
+        student = student_from_row(row, placed=True)
         classroom_search_text = " ".join(
-            [
-                classroom["name"],
-                classroom["section"],
-                classroom["supervisor_name"],
-                classroom["company_name"],
-                classroom["internship_title"],
-            ]
+            [classroom["name"], classroom["section"], classroom["supervisor_name"],
+             classroom["company_name"], classroom["internship_title"]]
         )
         if passes_student_filters(student, classroom_search_text):
             classroom["students"].append(student)
@@ -637,33 +670,33 @@ def student_documents():
         for classroom_id in classroom_order
         if grouped[classroom_id]["students"]
     ]
-
     unassigned_students = []
-    if classroom_type == "all":
-        for row in unassigned_rows:
-            student = student_from_row(row, offset=0)
-            if passes_student_filters(student, "Not enrolled in a classroom"):
-                unassigned_students.append(student)
+    for row in unassigned_rows:
+        student = student_from_row(row, placed=False)
+        if passes_student_filters(student, "Not enrolled in a classroom"):
+            unassigned_students.append(student)
 
     latest_uploads = []
     for row in latest_rows:
         student_id = int(_value(row, "student_id", 1, 0) or 0)
         username = _value(row, "username", 4, "") or ""
-        display_name = _student_display_name(
-            _value(row, "first_name", 5, "") or "",
-            _value(row, "middle_name", 6, "") or "",
-            _value(row, "last_name", 7, "") or "",
-            username,
-        )
-        filename = _value(row, "filename", 2, "") or "Document"
         latest_uploads.append(
             {
                 "document_id": int(_value(row, "document_id", 0, 0) or 0),
                 "student_id": student_id,
-                "student_name": display_name,
+                "student_name": _student_display_name(
+                    _value(row, "first_name", 5, "") or "",
+                    _value(row, "middle_name", 6, "") or "",
+                    _value(row, "last_name", 7, "") or "",
+                    username,
+                ),
                 "student_number": _value(row, "student_number", 8, "") or "",
-                "major_program": _value(row, "major_program", 9, "") or "",
-                "filename": _document_display_name(filename, student_id),
+                "major_program": normalize_program_name(
+                    _value(row, "major_program", 9, "") or ""
+                ),
+                "filename": _document_display_name(
+                    _value(row, "filename", 2, "") or "Document", student_id
+                ),
                 "uploaded_at": _format_datetime(_value(row, "uploaded_at", 3, None)),
             }
         )
@@ -674,9 +707,7 @@ def student_documents():
         "total_documents": int(_value(summary_row, "total_documents", 2, 0) or 0),
         "total_classrooms": int(_value(summary_row, "total_classrooms", 3, 0) or 0),
     }
-
     shown_students = sum(len(group["students"]) for group in classroom_groups) + len(unassigned_students)
-
     return render_template(
         "admin/student_documents.html",
         classroom_groups=classroom_groups,
@@ -685,7 +716,6 @@ def student_documents():
         summary=summary,
         shown_students=shown_students,
         search=request.args.get("search", ""),
-        classroom_type=classroom_type,
         document_state=document_state,
         active_page="student_documents",
     )
@@ -703,12 +733,24 @@ def student_document_folder(student_id):
                 u.username,
                 u.email,
                 u.status,
+                u.role,
                 COALESCE(sp.first_name, '') AS first_name,
                 COALESCE(sp.middle_name, '') AS middle_name,
                 COALESCE(sp.last_name, '') AS last_name,
+                sp.age,
                 COALESCE(sp.student_id, '') AS student_number,
+                COALESCE(sp.profile_picture, '') AS profile_picture,
+                COALESCE(sp.school_email, '') AS school_email,
+                COALESCE(sp.phone_number, '') AS phone_number,
+                COALESCE(sp.home_address, '') AS home_address,
+                COALESCE(sp.grade_year, '') AS grade_year,
                 COALESCE(sp.major_program, '') AS major_program,
-                COALESCE(sp.grade_year, '') AS grade_year
+                COALESCE(sp.emergency_name, '') AS emergency_name,
+                COALESCE(sp.emergency_relationship, '') AS emergency_relationship,
+                COALESCE(sp.emergency_phone, '') AS emergency_phone,
+                COALESCE(sp.emergency_email, '') AS emergency_email,
+                COALESCE(sp.profile_completed, 0) AS profile_completed,
+                sp.created_at AS profile_created_at
             FROM users u
             LEFT JOIN student_profiles sp ON sp.user_id = u.id
             WHERE u.id = ? AND u.role = 'student'
@@ -716,7 +758,6 @@ def student_document_folder(student_id):
             """,
             (student_id,),
         ).fetchone()
-
         if not student_row:
             abort(404)
 
@@ -729,7 +770,6 @@ def student_document_folder(student_id):
             """,
             (student_id,),
         ).fetchall()
-
         membership_rows = conn.execute(
             """
             SELECT
@@ -762,16 +802,30 @@ def student_document_folder(student_id):
         "username": username,
         "email": _value(student_row, "email", 2, "") or "",
         "status": _value(student_row, "status", 3, "active") or "active",
-        "display_name": _student_display_name(
-            _value(student_row, "first_name", 4, "") or "",
-            _value(student_row, "middle_name", 5, "") or "",
-            _value(student_row, "last_name", 6, "") or "",
-            username,
+        "role": _value(student_row, "role", 4, "student") or "student",
+        "first_name": _value(student_row, "first_name", 5, "") or "",
+        "middle_name": _value(student_row, "middle_name", 6, "") or "",
+        "last_name": _value(student_row, "last_name", 7, "") or "",
+        "age": _value(student_row, "age", 8, None),
+        "student_number": _value(student_row, "student_number", 9, "") or "",
+        "profile_picture": _value(student_row, "profile_picture", 10, "") or "",
+        "school_email": _value(student_row, "school_email", 11, "") or "",
+        "phone_number": _value(student_row, "phone_number", 12, "") or "",
+        "home_address": _value(student_row, "home_address", 13, "") or "",
+        "grade_year": _value(student_row, "grade_year", 14, "") or "",
+        "major_program": normalize_program_name(
+            _value(student_row, "major_program", 15, "") or ""
         ),
-        "student_number": _value(student_row, "student_number", 7, "") or "",
-        "major_program": _value(student_row, "major_program", 8, "") or "",
-        "grade_year": _value(student_row, "grade_year", 9, "") or "",
+        "emergency_name": _value(student_row, "emergency_name", 16, "") or "",
+        "emergency_relationship": _value(student_row, "emergency_relationship", 17, "") or "",
+        "emergency_phone": _value(student_row, "emergency_phone", 18, "") or "",
+        "emergency_email": _value(student_row, "emergency_email", 19, "") or "",
+        "profile_completed": bool(int(_value(student_row, "profile_completed", 20, 0) or 0)),
+        "profile_created_at": _format_datetime(_value(student_row, "profile_created_at", 21, None)),
     }
+    student["display_name"] = _student_display_name(
+        student["first_name"], student["middle_name"], student["last_name"], username
+    )
 
     documents = []
     extensions = set()
@@ -801,7 +855,7 @@ def student_document_folder(student_id):
                 "size": _format_file_size(size),
                 "uploaded_at": _format_datetime(uploaded_raw),
                 "available": available,
-                "is_image": extension in {"png", "jpg", "jpeg", "gif"},
+                "is_image": extension in {"png", "jpg", "jpeg", "gif", "webp"},
             }
         )
 
@@ -866,8 +920,9 @@ def view_student_document(student_id, document_id):
     if not os.path.isfile(filepath):
         abort(404)
 
+    download_requested = request.args.get("download") == "1"
     return send_file(
         filepath,
-        as_attachment=False,
+        as_attachment=download_requested,
         download_name=_document_display_name(filename, student_id),
     )

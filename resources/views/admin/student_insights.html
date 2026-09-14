@@ -12,111 +12,116 @@
     {% include 'components/admin_sidebar.html' %}
 
     <main class="admin-main nexora-app-main">
-        <div class="nexora-page">
-            <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
+        <div class="nexora-page admin-insights-page">
+            <header class="admin-polish-header">
                 <div>
-                    <span class="text-danger fw-bold text-uppercase small">Read-only administration</span>
-                    <h1 class="h2 fw-bold mb-1">Student Insights</h1>
-                    <p class="text-secondary mb-0">Review classroom-scoped evidence and ML decision support without changing supervisor records or the Official OJT Evaluation.</p>
+                    <div class="admin-polish-eyebrow">ADMIN PORTAL / READ-ONLY ADMINISTRATION</div>
+                    <h1>Student Insights</h1>
+                    <p>Review one intern's classroom-scoped Work, ML, attendance, daily performance, logbook, and formal evaluation evidence without changing supervisor records.</p>
                 </div>
-                <form method="GET" action="{{ url_for('admin_reports_overview.student_insights') }}" class="d-flex flex-wrap align-items-end gap-2">
-                    <div>
-                        <label class="form-label small fw-bold mb-1" for="admin-insights-student">Student</label>
-                        <select class="form-select" id="admin-insights-student" name="student_id" onchange="this.form.class_id.value=''; this.form.submit()">
+            </header>
+
+            <section class="admin-polish-panel admin-insights-selector" aria-label="Insight selection">
+                <form method="GET" action="{{ url_for('admin_reports_overview.student_insights') }}" class="admin-filter-grid">
+                    <div class="admin-filter-field">
+                        <label for="admin-insights-student">Student</label>
+                        <select id="admin-insights-student" name="student_id" onchange="this.form.class_id.value=''; this.form.submit()">
                             <option value="">Choose student</option>
                             {% for student in students %}
                                 <option value="{{ student.id }}" {% if selected_student and selected_student.id == student.id %}selected{% endif %}>{{ student.display_name }}{% if student.student_number %} · {{ student.student_number }}{% endif %}</option>
                             {% endfor %}
                         </select>
                     </div>
-                    <div>
-                        <label class="form-label small fw-bold mb-1" for="admin-insights-classroom">Intern Classroom</label>
-                        <select class="form-select" id="admin-insights-classroom" name="class_id" onchange="this.form.submit()" {% if not selected_student %}disabled{% endif %}>
+                    <div class="admin-filter-field">
+                        <label for="admin-insights-classroom">Intern Classroom</label>
+                        <select id="admin-insights-classroom" name="class_id" onchange="this.form.submit()" {% if not selected_student %}disabled{% endif %}>
                             <option value="">{% if classrooms|length > 1 %}Choose classroom{% else %}Classroom{% endif %}</option>
                             {% for classroom in classrooms %}
                                 <option value="{{ classroom.id }}" {% if selected_classroom and selected_classroom.id == classroom.id %}selected{% endif %}>{{ classroom.name }}{% if classroom.section %} · {{ classroom.section }}{% endif %}{% if classroom.archived %} · Archived{% endif %}</option>
                             {% endfor %}
                         </select>
                     </div>
-                    <noscript><button type="submit" class="btn btn-danger">View</button></noscript>
+                    <noscript><button type="submit" class="admin-primary-button">View Insights</button></noscript>
                 </form>
-            </div>
+            </section>
 
             {% if not students %}
-                <section class="card border-0 shadow-sm"><div class="card-body text-center py-5"><h2 class="h5 fw-bold">No classroom-scoped student evidence yet</h2><p class="text-secondary mb-0">Students appear here after they enroll in a classroom.</p></div></section>
+                <section class="admin-polish-empty"><div class="admin-polish-empty-icon">◎</div><h2>No classroom-scoped student evidence yet</h2><p>Students will appear here after they enroll in a classroom.</p></section>
             {% elif not selected_student %}
-                <section class="card border-0 shadow-sm"><div class="card-body text-center py-5"><h2 class="h5 fw-bold">Choose a student</h2><p class="text-secondary mb-0">Select a student above to see the Intern Classrooms that contain their evidence.</p></div></section>
+                <section class="admin-polish-empty"><div class="admin-polish-empty-icon">⌕</div><h2>Choose a student</h2><p>Select a student above to review the evidence available in their Intern Classroom.</p></section>
             {% elif classrooms|length > 1 and not selected_classroom %}
-                <section class="card border-0 shadow-sm"><div class="card-body text-center py-5"><h2 class="h5 fw-bold">Choose the evidence context</h2><p class="text-secondary mb-3">{{ selected_student.display_name }} belongs to multiple classrooms. Select the classroom whose insights you want to review.</p><div class="d-flex flex-wrap justify-content-center gap-2">{% for classroom in classrooms %}<a class="btn btn-outline-danger" href="{{ url_for('admin_reports_overview.student_insights', student_id=selected_student.id, class_id=classroom.id) }}">{{ classroom.name }}{% if classroom.section %} · {{ classroom.section }}{% endif %}</a>{% endfor %}</div></div></section>
+                <section class="admin-polish-empty">
+                    <div class="admin-polish-empty-icon">▦</div><h2>Choose the evidence context</h2>
+                    <p>{{ selected_student.display_name }} belongs to multiple classrooms. Choose the classroom whose evidence you want to review.</p>
+                    <div class="admin-inline-actions">{% for classroom in classrooms %}<a class="admin-secondary-button" href="{{ url_for('admin_reports_overview.student_insights', student_id=selected_student.id, class_id=classroom.id) }}">{{ classroom.name }}{% if classroom.section %} · {{ classroom.section }}{% endif %}</a>{% endfor %}</div>
+                </section>
             {% elif selected_classroom and insights %}
-                {% set report = insights.report %}
-                {% set attendance = insights.attendance %}
-                {% set daily = insights.daily_performance %}
-                {% set logbook = insights.logbook %}
+                {% set report = insights.report or {} %}
+                {% set attendance = insights.attendance or {} %}
+                {% set daily = insights.daily_performance or {} %}
+                {% set daily_summary = daily.summary or {} %}
+                {% set logbook = insights.logbook or {} %}
                 {% set evaluation = insights.official_evaluation %}
 
-                <section class="alert alert-warning border-0 shadow-sm mb-4" role="note">
-                    Admin view is read-only. Attendance/OJT Hours, Daily Performance, Logbook, Work analytics, feedback ML, and Official Evaluation remain separate evidence dimensions. No combined OJT grade is calculated here.
+                <section class="admin-insights-context">
+                    <div><span class="admin-status-pill">Read-only</span><h2>{{ selected_student.display_name }}</h2><p>{{ selected_student.student_number or selected_student.username }}{% if selected_student.major_program %} · {{ selected_student.major_program }}{% endif %}</p></div>
+                    <div class="admin-insights-class-meta"><strong>{{ selected_classroom.name }}</strong><span>{% if selected_classroom.section %}{{ selected_classroom.section }} · {% endif %}Supervisor: {{ selected_classroom.supervisor_name or '—' }}</span></div>
                 </section>
 
-                <div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-3">
-                    <div>
-                        <h2 class="h4 fw-bold mb-1">{{ selected_student.display_name }}</h2>
-                        <p class="text-secondary mb-0">{{ selected_student.student_number or selected_student.username }}{% if selected_student.major_program %} · {{ selected_student.major_program }}{% endif %} · {{ selected_classroom.name }}{% if selected_classroom.section %} · {{ selected_classroom.section }}{% endif %}</p>
-                    </div>
-                    <span class="badge rounded-pill text-bg-light border text-secondary px-3 py-2">Supervisor: {{ selected_classroom.supervisor_name or '—' }}</span>
-                </div>
+                <section class="admin-polish-notice" role="note">These are separate evidence dimensions. Official OJT Evaluation is manually entered by the supervisor and is not merged with ML, Work, attendance, Daily Performance, or Logbook data.</section>
 
-                <section class="row row-cols-1 row-cols-md-2 row-cols-xl-5 g-3 mb-4" aria-label="Student evidence dimensions">
-                    <div class="col"><article class="card h-100 border-0 shadow-sm"><div class="card-body"><div class="text-secondary small">Attendance & OJT Hours</div><div class="fs-4 fw-bold text-danger">{{ '%.2f'|format(attendance.rendered_hours or 0) }}</div><div class="text-secondary small">{% if attendance.required_hours is not none %}{{ '%.1f'|format(attendance.progress_percentage or 0) }}% of {{ '%.0f'|format(attendance.required_hours) }} required hours{% else %}Required hours not specified{% endif %}</div></div></article></div>
-                    <div class="col"><article class="card h-100 border-0 shadow-sm"><div class="card-body"><div class="text-secondary small">Daily Performance</div><div class="fs-4 fw-bold">{% if daily.summary.average_percentage is not none %}{{ '%.1f'|format(daily.summary.average_percentage) }}%{% else %}—{% endif %}</div><div class="text-secondary small">{{ daily.summary.rated_days or 0 }} rated of {{ daily.summary.closed_days or 0 }} completed days</div></div></article></div>
-                    <div class="col"><article class="card h-100 border-0 shadow-sm"><div class="card-body"><div class="text-secondary small">Daily Logbook</div><div class="fs-4 fw-bold">{{ logbook.total or 0 }}</div><div class="text-secondary small">{{ logbook.approved or 0 }} approved · {{ logbook.pending or 0 }} pending</div></div></article></div>
-                    <div class="col"><article class="card h-100 border-0 shadow-sm"><div class="card-body"><div class="text-secondary small">Work</div><div class="fs-4 fw-bold">{% if report.overall_percentage is not none %}{{ '%.1f'|format(report.overall_percentage) }}%{% else %}—{% endif %}</div><div class="text-secondary small">{{ report.graded_count or 0 }} reviewed of {{ report.total_count or 0 }} assigned · {{ report.performance_label or 'No Data' }}</div></div></article></div>
-                    <div class="col"><article class="card h-100 border-0 shadow-sm"><div class="card-body"><div class="text-secondary small">Official Evaluation</div><div class="fs-5 fw-bold">{% if evaluation %}{{ evaluation.status|title }}{% else %}Not started{% endif %}</div><div class="text-secondary small">{% if evaluation and evaluation.overall_score is not none %}Manual overall score: {{ '%g'|format(evaluation.overall_score) }}{% else %}Separate formal record{% endif %}</div></div></article></div>
+                <section class="admin-kpi-grid admin-insights-kpis" aria-label="Student insight summary">
+                    <article class="admin-kpi-card"><span>Work Average</span><strong>{% if report.average_percentage is not none %}{{ '%.1f'|format(report.average_percentage) }}%{% else %}—{% endif %}</strong><small>{{ report.performance_label or 'No Data' }}</small></article>
+                    <article class="admin-kpi-card"><span>Work Completion</span><strong>{% if report.total_count %}{{ '%.1f'|format(report.completion_rate or 0) }}%{% else %}—{% endif %}</strong><small>{{ report.graded_count or 0 }} reviewed / {{ report.total_count or 0 }} assigned</small></article>
+                    <article class="admin-kpi-card"><span>OJT Hours</span><strong>{{ '%.2f'|format(attendance.rendered_hours or 0) }}</strong><small>{% if attendance.required_hours is not none %}{{ '%.1f'|format(attendance.progress_percentage or 0) }}% of {{ '%g'|format(attendance.required_hours) }} required{% else %}Required hours not specified{% endif %}</small></article>
+                    <article class="admin-kpi-card"><span>Logbook Evidence</span><strong>{{ logbook.total or 0 }}</strong><small>{{ logbook.approved or 0 }} approved · {{ logbook.pending or 0 }} pending</small></article>
+                    <article class="admin-kpi-card"><span>Official Evaluation</span><strong>{% if evaluation %}{{ evaluation.status|title }}{% else %}Not started{% endif %}</strong><small>{% if evaluation and evaluation.overall_score is not none %}Manual score: {{ '%g'|format(evaluation.overall_score) }}{% else %}Separate formal record{% endif %}</small></article>
                 </section>
 
-                <div class="row g-4 align-items-start">
-                    <div class="col-xl-7">
-                        <section class="card border-0 shadow-sm mb-4">
-                            <div class="card-header bg-white py-3"><span class="text-danger fw-bold text-uppercase small">Evidence Input</span><h2 class="h6 fw-bold mb-1 mt-1">Work Performance Evidence</h2><p class="text-secondary small mb-0">Gradebook evidence only. Other OJT dimensions are not mixed into this Work result.</p></div>
-                            <div class="card-body">
-                                <div class="row g-3">
-                                    <div class="col-sm-6 col-lg-3"><div class="border rounded-3 p-3 h-100"><span class="text-secondary small d-block">Work Average</span><strong>{% if report.overall_percentage is not none %}{{ '%.1f'|format(report.overall_percentage) }}%{% else %}—{% endif %}</strong></div></div>
-                                    <div class="col-sm-6 col-lg-3"><div class="border rounded-3 p-3 h-100"><span class="text-secondary small d-block">Completion</span><strong>{{ '%.1f'|format(report.completion_rate or 0) }}%</strong></div></div>
-                                    <div class="col-sm-6 col-lg-3"><div class="border rounded-3 p-3 h-100"><span class="text-secondary small d-block">Reviewed Work</span><strong>{{ report.graded_count or 0 }} / {{ report.total_count or 0 }}</strong></div></div>
-                                    <div class="col-sm-6 col-lg-3"><div class="border rounded-3 p-3 h-100"><span class="text-secondary small d-block">Classification</span><strong>{{ report.performance_label or 'No Data' }}</strong></div></div>
-                                </div>
+                <div class="admin-insights-grid">
+                    <div class="admin-insights-stack">
+                        <section class="admin-polish-panel">
+                            <div class="admin-section-heading"><div><span>WORK EVIDENCE</span><h3>Work Performance</h3></div><span class="admin-metric-tag">{{ report.performance_label or 'No Data' }}</span></div>
+                            <div class="admin-evidence-grid">
+                                <div><span>Average</span><strong>{% if report.average_percentage is not none %}{{ '%.1f'|format(report.average_percentage) }}%{% else %}—{% endif %}</strong></div>
+                                <div><span>Completion</span><strong>{% if report.total_count %}{{ '%.1f'|format(report.completion_rate or 0) }}%{% else %}—{% endif %}</strong></div>
+                                <div><span>Reviewed</span><strong>{{ report.graded_count or 0 }} / {{ report.total_count or 0 }}</strong></div>
+                                <div><span>Strongest</span><strong>{% if report.strongest %}{{ report.strongest.title }}{% else %}—{% endif %}</strong></div>
+                                <div><span>Needs focus</span><strong>{% if report.weakest %}{{ report.weakest.title }}{% else %}—{% endif %}</strong></div>
                             </div>
+                            {% if report.assignments %}
+                                <div class="admin-compact-table-wrap"><table class="admin-compact-table"><thead><tr><th>Classwork</th><th>Review</th><th>Score</th></tr></thead><tbody>
+                                    {% for assignment in report.assignments[:6] %}<tr><td>{{ assignment.title or 'Classwork' }}</td><td>{{ 'Reviewed' if assignment.graded else 'Not reviewed' }}</td><td>{% if assignment.percentage is not none %}{{ '%.1f'|format(assignment.percentage) }}%{% else %}—{% endif %}</td></tr>{% endfor %}
+                                </tbody></table></div>
+                            {% endif %}
                         </section>
 
-                        <section class="card border-0 shadow-sm mb-4">
-                            <div class="card-header bg-white py-3"><span class="text-danger fw-bold text-uppercase small">Manual Evidence</span><h2 class="h6 fw-bold mb-1 mt-1">Recent Daily Performance</h2><p class="text-secondary small mb-0">Supervisor-entered day ratings, displayed read-only.</p></div>
-                            {% if daily.history %}
-                                <div class="list-group list-group-flush">{% for item in daily.history[:5] %}<div class="list-group-item d-flex justify-content-between gap-3 py-3"><div><strong>Day {{ item.day_number }}</strong><div class="text-secondary small">{{ item.date }}</div>{% if item.comment %}<div class="small mt-1">{{ item.comment }}</div>{% endif %}</div><div class="text-end">{% if item.is_rated %}<strong>{{ '%.1f'|format(item.star_rating) }} ★</strong><div class="text-secondary small">{{ '%.1f'|format(item.percentage) }}%</div>{% else %}<span class="badge text-bg-light border">Not rated</span>{% endif %}</div></div>{% endfor %}</div>
-                            {% else %}<div class="card-body text-secondary small">No completed OJT days are available yet.</div>{% endif %}
+                        <section class="admin-polish-panel">
+                            <div class="admin-section-heading"><div><span>SUPERVISOR-ENTERED EVIDENCE</span><h3>Daily Performance</h3></div></div>
+                            <div class="admin-evidence-grid"><div><span>Average</span><strong>{% if daily_summary.average_percentage is not none %}{{ '%.1f'|format(daily_summary.average_percentage) }}%{% else %}—{% endif %}</strong></div><div><span>Rated days</span><strong>{{ daily_summary.rated_days or 0 }}</strong></div><div><span>Completed days</span><strong>{{ daily_summary.closed_days or 0 }}</strong></div></div>
+                            {% if daily.history %}<div class="admin-evidence-list">{% for item in daily.history[:5] %}<div class="admin-evidence-row"><div><strong>Day {{ item.day_number }}</strong><span>{{ item.date or '—' }}</span>{% if item.comment %}<p>{{ item.comment }}</p>{% endif %}</div><div class="admin-evidence-value">{% if item.is_rated %}{{ '%.1f'|format(item.percentage or 0) }}%{% else %}Not rated{% endif %}</div></div>{% endfor %}</div>{% else %}<p class="admin-empty-copy">No completed OJT days are available yet.</p>{% endif %}
+                        </section>
+
+                        <section class="admin-polish-panel">
+                            <div class="admin-section-heading"><div><span>OJT RECORDS</span><h3>Attendance &amp; Logbook</h3></div></div>
+                            <div class="admin-evidence-grid"><div><span>Rendered hours</span><strong>{{ '%.2f'|format(attendance.rendered_hours or 0) }}</strong></div><div><span>Required hours</span><strong>{% if attendance.required_hours is not none %}{{ '%g'|format(attendance.required_hours) }}{% else %}—{% endif %}</strong></div><div><span>Progress</span><strong>{% if attendance.required_hours is not none %}{{ '%.1f'|format(attendance.progress_percentage or 0) }}%{% else %}—{% endif %}</strong></div><div><span>Logbook entries</span><strong>{{ logbook.total or 0 }}</strong></div><div><span>Approved</span><strong>{{ logbook.approved or 0 }}</strong></div><div><span>Pending</span><strong>{{ logbook.pending or 0 }}</strong></div></div>
                         </section>
                     </div>
 
-                    <div class="col-xl-5">
-                        <section class="card border-0 shadow-sm mb-4">
-                            <div class="card-header bg-white py-3"><span class="text-danger fw-bold text-uppercase small">Feedback Models</span><h2 class="h6 fw-bold mb-1 mt-1">Feedback Intelligence</h2><p class="text-secondary small mb-0">Machine-learning signals from available supervisor feedback.</p></div>
-                            <div class="card-body">
-                                {% if report.has_feedback %}
-                                    <dl class="row mb-0 small"><dt class="col-5 text-secondary">Sentiment</dt><dd class="col-7">{{ report.sentiment or '—' }}</dd><dt class="col-5 text-secondary">Competency</dt><dd class="col-7">{{ report.competency or '—' }}</dd>{% if report.feedback_analysis %}<dt class="col-5 text-secondary">Naive Bayes</dt><dd class="col-7">{{ report.feedback_analysis.nb_prediction or '—' }}</dd><dt class="col-5 text-secondary">SVM</dt><dd class="col-7">{{ report.feedback_analysis.svm_prediction or '—' }}</dd><dt class="col-5 text-secondary">Confidence</dt><dd class="col-7">{{ '%.2f'|format(report.feedback_analysis.confidence or 0) }}</dd>{% endif %}</dl>
-                                {% else %}<p class="text-secondary small mb-0">No feedback evidence is available yet.</p>{% endif %}
-                            </div>
+                    <div class="admin-insights-stack">
+                        <section class="admin-polish-panel">
+                            <div class="admin-section-heading"><div><span>FEEDBACK INTELLIGENCE</span><h3>ML Signals</h3></div><span class="admin-status-pill">Decision support</span></div>
+                            {% if report.has_feedback %}<dl class="admin-definition-list"><div><dt>Sentiment</dt><dd>{{ report.sentiment or '—' }}</dd></div><div><dt>Competency</dt><dd>{{ report.competency or '—' }}</dd></div>{% if report.feedback_analysis %}<div><dt>Naive Bayes</dt><dd>{{ report.feedback_analysis.nb_prediction or '—' }}</dd></div><div><dt>SVM</dt><dd>{{ report.feedback_analysis.svm_prediction or '—' }}</dd></div><div><dt>Confidence</dt><dd>{{ '%.2f'|format(report.feedback_analysis.confidence or 0) }}</dd></div>{% endif %}</dl>{% else %}<p class="admin-empty-copy">No supervisor feedback is available for ML analysis yet.</p>{% endif %}
                         </section>
 
-                        <section class="card border-0 shadow-sm mb-4">
-                            <div class="card-header bg-white py-3"><span class="text-danger fw-bold text-uppercase small">AI / ML Decision Support</span><h2 class="h6 fw-bold mb-1 mt-1">ML Recommendation</h2><p class="text-secondary small mb-0">Structured guidance generated from existing Work evidence; Admin cannot edit it here.</p></div>
-                            <div class="card-body">
-                                {% if report.recommendation %}<p class="mb-2">{{ report.recommendation }}</p><span class="badge rounded-pill text-bg-light border text-secondary">Priority: {{ (report.priority or 'none')|title }}</span>{% if report.basis %}<div class="d-grid gap-2 mt-3">{% for item in report.basis %}<div class="small text-secondary">✓ {{ item }}</div>{% endfor %}</div>{% endif %}{% else %}<p class="text-secondary small mb-0">No Work-based recommendation is available yet.</p>{% endif %}
-                            </div>
+                        <section class="admin-polish-panel">
+                            <div class="admin-section-heading"><div><span>DECISION SUPPORT</span><h3>Recommendation</h3></div></div>
+                            {% if report.recommendation %}<p class="admin-recommendation-copy">{{ report.recommendation }}</p><span class="admin-metric-tag">Priority: {{ (report.priority or 'none')|title }}</span>{% if report.basis %}<div class="admin-basis-list">{% for item in report.basis %}<span>✓ {{ item }}</span>{% endfor %}</div>{% endif %}{% else %}<p class="admin-empty-copy">No Work-based recommendation is available yet.</p>{% endif %}
                         </section>
 
-                        <section class="card border-0 shadow-sm">
-                            <div class="card-header bg-white py-3"><span class="text-danger fw-bold text-uppercase small">Formal Record · Read Only</span><h2 class="h6 fw-bold mb-1 mt-1">Official OJT Evaluation</h2></div>
-                            <div class="card-body">{% if evaluation %}<div class="d-flex flex-wrap align-items-center gap-2 mb-2"><span class="badge {% if evaluation.status == 'submitted' %}text-bg-success{% else %}text-bg-warning{% endif %}">{{ evaluation.status|title }}</span>{% if evaluation.overall_score is not none %}<strong>Manual overall score: {{ '%g'|format(evaluation.overall_score) }}</strong>{% endif %}</div><p class="small mb-0">{{ evaluation.remarks or 'No overall remarks saved.' }}</p>{% else %}<p class="text-secondary small mb-0">No Official OJT Evaluation has been started for this classroom context.</p>{% endif %}</div>
+                        <section class="admin-polish-panel admin-official-evaluation-panel">
+                            <div class="admin-section-heading"><div><span>FORMAL RECORD / MANUAL</span><h3>Official OJT Evaluation</h3></div></div>
+                            {% if evaluation %}<div class="admin-evaluation-status"><span class="admin-status-pill {% if evaluation.status == 'submitted' %}is-success{% endif %}">{{ evaluation.status|title }}</span>{% if evaluation.overall_score is not none %}<strong>Manual overall score: {{ '%g'|format(evaluation.overall_score) }}</strong>{% endif %}</div><p>{{ evaluation.remarks or 'No overall remarks saved.' }}</p>{% else %}<p class="admin-empty-copy">No Official OJT Evaluation has been started for this classroom context.</p>{% endif %}
                         </section>
                     </div>
                 </div>

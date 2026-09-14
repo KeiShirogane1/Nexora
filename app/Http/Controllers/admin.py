@@ -6,7 +6,8 @@ from app.Services.email_service import (
 )
 from app.Services.profile_service import (
     update_student_profile,
-    get_student_profile_data
+    get_student_profile_data,
+    normalize_program_name
 )
 from app.Services.profile_history_service import (
     log_profile_change,
@@ -385,13 +386,15 @@ def admin_students():
         students = cursor.fetchall()
 
 
-        # Fetch real supervisors and programs for modal dropdowns (no fake data)
+        # Fetch only real database values for the Admin program selector.
         cursor.execute("SELECT id, username FROM users WHERE role='supervisor' ORDER BY username")
         supervisors_list = cursor.fetchall()
         cursor.execute("SELECT DISTINCT major_program FROM student_profiles WHERE major_program IS NOT NULL AND major_program != ''")
         programs_raw = [r[0] for r in cursor.fetchall() if r[0]]
-        # Use real values plus common defaults, deduplicated
-        programs = sorted(set(programs_raw + ["BSIT", "BS Information Technology", "BSCS"]), key=lambda x: x.lower())
+        programs = sorted(
+            {normalize_program_name(value) for value in programs_raw if value},
+            key=str.casefold,
+        )
 
         return render_template(
             "admin/students.html",
@@ -419,7 +422,7 @@ def create_student():
     full_name = (data.get("full_name") or "").strip()
     username = (data.get("username") or "").strip()
     email = (data.get("email") or "").strip().lower()
-    program = (data.get("program") or "").strip()
+    program = normalize_program_name(data.get("program"))
     supervisor_id = (data.get("supervisor_id") or data.get("supervisor") or "").strip()
     password = data.get("password") or ""
     confirm_password = data.get("confirm_password") or data.get("confirmPassword") or ""

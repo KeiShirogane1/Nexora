@@ -3,314 +3,149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ classroom.name }} - Nexora Admin</title>
+    <title>{{ classroom.name }} - Admin Classroom - Nexora</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
-    {% include 'components/admin_classroom_styles.html' %}
 </head>
-<body class="nexora-admin-body admin-page admin-classroom-detail-page">
+<body class="nexora-admin-body">
     {% include 'components/admin_sidebar.html' %}
 
     <main class="admin-main nexora-app-main">
-        <div class="nexora-page">
-            <div class="compact-dashboard compact-dashboard-flush">
-                <div class="students-page-header">
-                    <div>
-                        <a href="{{ url_for('admin_classrooms.classrooms') }}" class="text-decoration-none small">← Back to Classrooms</a>
-                        <h1 class="mt-2">{{ classroom.name }}</h1>
-                        <p>
-                            {{ classroom.section }}
-                            ·
-                            {% if classroom.classroom_type == 'internship' %}Intern Classroom{% else %}Classroom{% endif %}
-                            ·
-                            {{ 'Archived' if classroom.archived else 'Active' }}
-                        </p>
+        <div class="nexora-page admin-classroom-detail-page">
+            <nav class="admin-breadcrumb" aria-label="Breadcrumb"><a href="{{ url_for('admin_classrooms.classrooms') }}">Classrooms</a><span>/</span><span>{{ classroom.name }}</span></nav>
+
+            <header class="admin-classroom-hero admin-polish-panel">
+                <div>
+                    <div class="admin-doc-badges">
+                        <span class="admin-status-pill">{{ 'Intern Classroom' if classroom.classroom_type == 'internship' else 'Classroom' }}</span>
+                        <span class="admin-status-pill {% if classroom.archived %}is-muted{% else %}is-success{% endif %}">{{ 'Archived' if classroom.archived else 'Active' }}</span>
+                        <span class="admin-status-pill">Read-only</span>
                     </div>
+                    <h1>{{ classroom.internship_title or classroom.name }}</h1>
+                    {% if classroom.internship_title %}<p class="admin-classroom-course-name">{{ classroom.name }}</p>{% endif %}
+                    <p>{{ classroom.description or 'No classroom description provided.' }}</p>
                 </div>
+                <div class="admin-classroom-code-card"><span>Classroom Code</span><strong>{{ classroom.code or '—' }}</strong><small>Created {{ classroom.created_at }}</small></div>
+            </header>
 
-                <div class="summary-grid">
-                    <div class="summary-card">
-                        <div class="summary-icon total">♟</div>
-                        <div class="summary-content">
-                            <span class="summary-label">Enrolled</span>
-                            <span class="summary-value">{{ students|length }}</span>
-                        </div>
-                    </div>
-                    <div class="summary-card">
-                        <div class="summary-icon assigned">▤</div>
-                        <div class="summary-content">
-                            <span class="summary-label">Classwork</span>
-                            <span class="summary-value">{{ classwork_count }}</span>
-                        </div>
-                    </div>
-                    <div class="summary-card">
-                        <div class="summary-icon active">◌</div>
-                        <div class="summary-content">
-                            <span class="summary-label">Posts</span>
-                            <span class="summary-value">{{ post_count }}</span>
-                        </div>
-                    </div>
-                    <div class="summary-card">
-                        <div class="summary-icon pending">{{ '□' if classroom.archived else '✓' }}</div>
-                        <div class="summary-content">
-                            <span class="summary-label">Status</span>
-                            <span class="summary-value fs-6">{{ 'Archived' if classroom.archived else 'Active' }}</span>
-                        </div>
-                    </div>
-                </div>
+            <section class="admin-kpi-grid admin-classroom-kpis" aria-label="Classroom activity summary">
+                <article class="admin-kpi-card"><span>Enrolled Interns</span><strong>{{ students|length }}</strong><small>Current classroom roster</small></article>
+                <article class="admin-kpi-card"><span>Classwork</span><strong>{{ activity.classwork_count }}</strong><small>Classroom-scoped work items</small></article>
+                <article class="admin-kpi-card"><span>Posts</span><strong>{{ activity.post_count }}</strong><small>Classroom posts</small></article>
+                <article class="admin-kpi-card"><span>Student Documents</span><strong>{{ activity.document_count }}</strong><small>Files owned by enrolled students</small></article>
+                <article class="admin-kpi-card"><span>Required OJT Hours</span><strong>{% if classroom.required_hours %}{{ classroom.required_hours }}{% else %}—{% endif %}</strong><small>Per-intern classroom requirement</small></article>
+                <article class="admin-kpi-card"><span>Official Evaluations</span><strong>{{ activity.evaluation_total }}</strong><small>{{ activity.evaluation_submitted }} submitted</small></article>
+            </section>
 
-                <div class="row g-3">
-                    <div class="col-lg-7">
-                        <section class="nexora-card p-4 h-100" aria-labelledby="classroom-info-heading">
-                            <div class="table-card-header px-0 pt-0">
-                                <div>
-                                    <h3 id="classroom-info-heading">Classroom Information</h3>
-                                    <span class="table-meta">Current classroom record</span>
-                                </div>
-                            </div>
-                            <dl class="row mb-0">
-                                <dt class="col-sm-4">Section</dt>
-                                <dd class="col-sm-8">{{ classroom.section or '—' }}</dd>
-
-                                <dt class="col-sm-4">Class Code</dt>
-                                <dd class="col-sm-8"><code>{{ classroom.code or '—' }}</code></dd>
-
-                                <dt class="col-sm-4">Supervisor</dt>
-                                <dd class="col-sm-8">
-                                    {{ classroom.supervisor_name }}
-                                    {% if classroom.supervisor_email %}
-                                        <div class="text-muted small">{{ classroom.supervisor_email }}</div>
-                                    {% endif %}
-                                </dd>
-
-                                <dt class="col-sm-4">Created</dt>
-                                <dd class="col-sm-8">{{ classroom.created_at }}</dd>
-
-                                <dt class="col-sm-4">Type</dt>
-                                <dd class="col-sm-8">
-                                    {% if classroom.classroom_type == 'internship' %}
-                                        <span class="badge rounded-pill text-bg-warning">Intern Classroom</span>
-                                    {% else %}
-                                        <span class="badge rounded-pill text-bg-secondary">Classroom</span>
-                                    {% endif %}
-                                </dd>
-
-                                <dt class="col-sm-4">Status</dt>
-                                <dd class="col-sm-8">
-                                    {% if classroom.archived %}
-                                        <span class="status-badge status-inactive"><span class="status-dot"></span> Archived</span>
-                                    {% else %}
-                                        <span class="status-badge status-active"><span class="status-dot"></span> Active</span>
-                                    {% endif %}
-                                </dd>
-
-                                <dt class="col-sm-4">Description</dt>
-                                <dd class="col-sm-8">{{ classroom.description or 'No description provided.' }}</dd>
-                            </dl>
-                        </section>
-                    </div>
-
-                    <div class="col-lg-5">
-                        <section class="nexora-card p-4 h-100" aria-labelledby="supervisor-heading">
-                            <div class="table-card-header px-0 pt-0">
-                                <div>
-                                    <h3 id="supervisor-heading">Supervisor</h3>
-                                    <span class="table-meta">Classroom owner</span>
-                                </div>
-                            </div>
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="avatar-sm">{{ classroom.supervisor_name[0]|upper if classroom.supervisor_name else 'S' }}</div>
-                                <div>
-                                    <strong>{{ classroom.supervisor_name }}</strong>
-                                    <div class="text-muted small">{{ classroom.supervisor_email or 'No email available' }}</div>
-                                </div>
-                            </div>
-                        </section>
-                    </div>
-                </div>
-
-                {% if classroom.classroom_type == 'internship' %}
-                    <section class="nexora-card p-4 mt-3" aria-labelledby="internship-info-heading">
-                        <div class="table-card-header px-0 pt-0">
-                            <div>
-                                <h3 id="internship-info-heading">Internship Details</h3>
-                                <span class="table-meta">Supervisor-provided Internship Classroom information</span>
-                            </div>
-                        </div>
-
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <dl class="row mb-0">
-                                    <dt class="col-sm-5">Title</dt>
-                                    <dd class="col-sm-7">{{ classroom.internship_title or '—' }}</dd>
-
-                                    <dt class="col-sm-5">Company</dt>
-                                    <dd class="col-sm-7">{{ classroom.company_name or '—' }}</dd>
-
-                                    <dt class="col-sm-5">Industry</dt>
-                                    <dd class="col-sm-7">{{ classroom.industry or '—' }}</dd>
-
-                                    <dt class="col-sm-5">Arrangement</dt>
-                                    <dd class="col-sm-7">{{ classroom.work_arrangement or '—' }}</dd>
-
-                                    <dt class="col-sm-5">Compensation</dt>
-                                    <dd class="col-sm-7">{{ classroom.compensation or '—' }}</dd>
-
-                                    <dt class="col-sm-5">Location</dt>
-                                    <dd class="col-sm-7">{{ classroom.location or '—' }}</dd>
-                                </dl>
-                            </div>
-                            <div class="col-md-6">
-                                <dl class="row mb-0">
-                                    <dt class="col-sm-5">Schedule</dt>
-                                    <dd class="col-sm-7">{{ classroom.schedule_type|replace('_', ' ')|title if classroom.schedule_type else '—' }}</dd>
-
-                                    <dt class="col-sm-5">Hours Mode</dt>
-                                    <dd class="col-sm-7">{{ classroom.hours_mode|replace('_', ' ')|title if classroom.hours_mode else '—' }}</dd>
-
-                                    <dt class="col-sm-5">Required Hours</dt>
-                                    <dd class="col-sm-7">{{ classroom.required_hours }}</dd>
-
-                                    <dt class="col-sm-5">Start Date</dt>
-                                    <dd class="col-sm-7">{{ classroom.start_date or '—' }}</dd>
-
-                                    <dt class="col-sm-5">End Date</dt>
-                                    <dd class="col-sm-7">{{ classroom.end_date or '—' }}</dd>
-
-                                    <dt class="col-sm-5">Deadline</dt>
-                                    <dd class="col-sm-7">{{ classroom.enrollment_deadline or '—' }}</dd>
-                                </dl>
-                            </div>
-                        </div>
-
-                        {% if classroom.company_website %}
-                            <div class="mt-3">
-                                <strong>Company Website</strong>
-                                <div class="text-muted">{{ classroom.company_website }}</div>
-                            </div>
-                        {% endif %}
-
-                        {% if classroom.company_description %}
-                            <div class="mt-3">
-                                <strong>Company Description</strong>
-                                <p class="mb-0 mt-1">{{ classroom.company_description }}</p>
-                            </div>
-                        {% endif %}
-
-                        {% if classroom.internship_description %}
-                            <div class="mt-3">
-                                <strong>Internship Description</strong>
-                                <p class="mb-0 mt-1">{{ classroom.internship_description }}</p>
-                            </div>
-                        {% endif %}
-
-                        {% if responsibilities or qualifications %}
-                            <div class="row g-3 mt-1">
-                                <div class="col-md-6">
-                                    <strong>Responsibilities</strong>
-                                    {% if responsibilities %}
-                                        <ul class="mb-0 mt-2">
-                                            {% for item in responsibilities %}<li>{{ item }}</li>{% endfor %}
-                                        </ul>
-                                    {% else %}
-                                        <div class="text-muted small mt-2">No responsibilities listed.</div>
-                                    {% endif %}
-                                </div>
-                                <div class="col-md-6">
-                                    <strong>Qualifications</strong>
-                                    {% if qualifications %}
-                                        <ul class="mb-0 mt-2">
-                                            {% for item in qualifications %}<li>{{ item }}</li>{% endfor %}
-                                        </ul>
-                                    {% else %}
-                                        <div class="text-muted small mt-2">No qualifications listed.</div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        {% endif %}
+            <div class="admin-classroom-main-grid">
+                <div class="admin-insights-stack">
+                    <section class="admin-polish-panel">
+                        <div class="admin-section-heading"><div><span>CLASSROOM</span><h2>Classroom Information</h2></div></div>
+                        <dl class="admin-definition-list admin-definition-grid">
+                            <div><dt>Name</dt><dd>{{ classroom.name or '—' }}</dd></div>
+                            <div><dt>Section</dt><dd>{{ classroom.section or '—' }}</dd></div>
+                            <div><dt>Code</dt><dd>{{ classroom.code or '—' }}</dd></div>
+                            <div><dt>Type</dt><dd>{{ 'Intern Classroom' if classroom.classroom_type == 'internship' else 'Classroom' }}</dd></div>
+                            <div><dt>Status</dt><dd>{{ 'Archived' if classroom.archived else 'Active' }}</dd></div>
+                            <div><dt>Created</dt><dd>{{ classroom.created_at or '—' }}</dd></div>
+                            <div class="is-wide"><dt>Description</dt><dd>{{ classroom.description or '—' }}</dd></div>
+                        </dl>
                     </section>
-                {% endif %}
 
-                {% set announcement_items = get_classroom_announcements(classroom.id) %}
-                <section class="nexora-card p-4 mt-3" aria-labelledby="announcements-heading">
-                    <div class="table-card-header px-0 pt-0">
-                        <div>
-                            <h3 id="announcements-heading">Announcements</h3>
-                            <span class="table-meta">{{ announcement_items|length }} post{% if announcement_items|length != 1 %}s{% endif %} · Read-only classroom stream</span>
+                    {% if classroom.classroom_type == 'internship' %}
+                    <section class="admin-polish-panel">
+                        <div class="admin-section-heading"><div><span>PLACEMENT</span><h2>Internship Details</h2></div></div>
+                        <dl class="admin-definition-list admin-definition-grid">
+                            <div><dt>Company</dt><dd>{{ classroom.company_name or '—' }}</dd></div>
+                            <div><dt>Category / Industry</dt><dd>{{ classroom.industry or '—' }}</dd></div>
+                            <div><dt>Work Arrangement</dt><dd>{{ classroom.work_arrangement or '—' }}</dd></div>
+                            <div><dt>Location</dt><dd>{{ classroom.location or '—' }}</dd></div>
+                            <div><dt>Compensation</dt><dd>{{ classroom.compensation or '—' }}</dd></div>
+                            <div><dt>Schedule Type</dt><dd>{{ classroom.schedule_type or '—' }}</dd></div>
+                            <div><dt>Hours Mode</dt><dd>{{ classroom.hours_mode or '—' }}</dd></div>
+                            <div><dt>Required Hours</dt><dd>{% if classroom.required_hours %}{{ classroom.required_hours }} hours{% else %}—{% endif %}</dd></div>
+                            <div><dt>Start Date</dt><dd>{{ classroom.start_date or '—' }}</dd></div>
+                            <div><dt>End Date</dt><dd>{{ classroom.end_date or '—' }}</dd></div>
+                            <div><dt>Enrollment Deadline</dt><dd>{{ classroom.enrollment_deadline or '—' }}</dd></div>
+                            <div><dt>Company Website</dt><dd>{% if classroom.company_website %}<a href="{{ classroom.company_website }}" target="_blank" rel="noopener">{{ classroom.company_website }}</a>{% else %}—{% endif %}</dd></div>
+                            <div class="is-wide"><dt>Company Description</dt><dd>{{ classroom.company_description or '—' }}</dd></div>
+                            <div class="is-wide"><dt>Internship Description</dt><dd>{{ classroom.internship_description or '—' }}</dd></div>
+                        </dl>
+                        <div class="admin-detail-columns">
+                            <div><h3>Responsibilities</h3>{% if responsibilities %}<ul>{% for item in responsibilities %}<li>{{ item }}</li>{% endfor %}</ul>{% else %}<p class="admin-empty-copy">—</p>{% endif %}</div>
+                            <div><h3>Qualifications</h3>{% if qualifications %}<ul>{% for item in qualifications %}<li>{{ item }}</li>{% endfor %}</ul>{% else %}<p class="admin-empty-copy">—</p>{% endif %}</div>
                         </div>
-                    </div>
-                    {% if announcement_items %}
-                        {% for a in announcement_items %}
-                            <article class="{% if not loop.last %}border-bottom pb-3 mb-3{% endif %}">
-                                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
-                                    <strong>{{ a.title or 'Announcement' }}</strong>
-                                    <span class="badge rounded-pill text-bg-light border">{{ a.post_type_label }}</span>
-                                </div>
-                                <div class="text-muted small mt-1 mb-2">Posted by {{ a.author_name }} · {{ a.author_role_label }} · {{ a.created_at_display }}</div>
-                                <p class="mb-0">{{ a.body }}</p>
-                            </article>
-                        {% endfor %}
-                    {% else %}
-                        <div class="text-muted small">No announcements have been posted in this classroom.</div>
+                    </section>
                     {% endif %}
-                </section>
+                </div>
 
-                <section class="nexora-card table-card mt-3" aria-labelledby="enrolled-heading">
-                    <div class="table-card-header">
-                        <div>
-                            <h3 id="enrolled-heading">Enrolled Students</h3>
-                            <span class="table-meta">{{ students|length }} student{% if students|length != 1 %}s{% endif %}</span>
+                <div class="admin-insights-stack">
+                    <section class="admin-polish-panel">
+                        <div class="admin-section-heading"><div><span>OWNER</span><h2>Supervisor</h2></div></div>
+                        <div class="admin-supervisor-card">
+                            <div class="admin-doc-student-avatar" aria-hidden="true">{{ (classroom.supervisor_name or '?')[:1]|upper }}</div>
+                            <div><strong>{{ classroom.supervisor_name or 'Unknown Supervisor' }}</strong><span>{{ classroom.supervisor_email or '—' }}</span></div>
+                            <a class="admin-compact-action" href="{{ url_for('admin.supervisor_profile', supervisor_id=classroom.supervisor_id) }}">View Profile</a>
                         </div>
-                    </div>
-                    <div class="table-responsive">
-                        <table class="table nexora-table align-middle">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Student</th>
-                                    <th>Student ID</th>
-                                    <th>Program</th>
-                                    <th>Email</th>
-                                    <th>Joined</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for student in students %}
-                                    <tr>
-                                        <td class="text-muted table-index-cell">{{ loop.index }}</td>
-                                        <td>
-                                            <strong>{{ student.display_name }}</strong>
-                                            {% if student.username != student.display_name %}
-                                                <div class="text-muted small">@{{ student.username }}</div>
-                                            {% endif %}
-                                        </td>
-                                        <td>{{ student.student_number or '—' }}</td>
-                                        <td>{{ student.major_program or '—' }}</td>
-                                        <td>{{ student.email or '—' }}</td>
-                                        <td>{{ student.joined_at }}</td>
-                                    </tr>
-                                {% else %}
-                                    <tr>
-                                        <td colspan="6">
-                                            <div class="empty-state">
-                                                <div class="icon">♙</div>
-                                                <div class="empty-state-title">No enrolled students</div>
-                                                <div class="empty-state-copy">No students are currently enrolled in this classroom.</div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </section>
+                    </section>
 
-                <div class="alert alert-light border mt-3 mb-0" role="note">
-                    Read-only Admin visibility: no classroom ownership, enrollment, classwork, or archive data can be changed from this page.
+                    <section class="admin-polish-panel admin-overall-insights-panel">
+                        <div class="admin-section-heading"><div><span>CLASSROOM-SCOPED WORK EVIDENCE</span><h2>Overall Insights</h2></div><span class="admin-status-pill">No combined score</span></div>
+                        <div class="admin-insight-bars">
+                            <div class="admin-insight-bar-row">
+                                <div><span>Work Average</span><strong>{% if overall_insights.work_average is not none %}{{ '%.1f'|format(overall_insights.work_average) }}%{% else %}No data yet{% endif %}</strong></div>
+                                <progress max="100" value="{{ overall_insights.work_average or 0 }}"></progress>
+                            </div>
+                            <div class="admin-insight-bar-row">
+                                <div><span>Work Completion</span><strong>{% if overall_insights.completion_average is not none %}{{ '%.1f'|format(overall_insights.completion_average) }}%{% else %}No data yet{% endif %}</strong></div>
+                                <progress max="100" value="{{ overall_insights.completion_average or 0 }}"></progress>
+                            </div>
+                        </div>
+                        <p class="admin-evidence-note">OJT rendered-hour progress remains an individual intern evidence dimension in Student Insights instead of being collapsed into this classroom Work summary. The classroom's per-intern required-hours target remains visible above.</p>
+                        <div class="admin-evidence-grid admin-classroom-evidence-summary">
+                            <div><span>With performance data</span><strong>{{ overall_insights.performance_data_count }}</strong></div>
+                            <div><span>Needs attention</span><strong>{{ overall_insights.needs_attention }}</strong></div>
+                            <div><span>No Work data</span><strong>{{ overall_insights.no_data_count }}</strong></div>
+                        </div>
+                        <div class="admin-performance-distribution">
+                            <h3>Performance Distribution</h3>
+                            {% set labels = ['Excellent', 'Very Satisfactory', 'Satisfactory', 'Fair', 'Needs Improvement', 'No Data'] %}
+                            {% for label in labels %}
+                                {% set count = overall_insights.distribution.get(label, 0) %}
+                                <div><span>{{ label }}</span><strong>{{ count }}</strong></div>
+                            {% endfor %}
+                        </div>
+                    </section>
+
+                    <section class="admin-polish-panel">
+                        <div class="admin-section-heading"><div><span>FORMAL RECORDS</span><h2>Official OJT Evaluation</h2></div></div>
+                        <div class="admin-evidence-grid">
+                            <div><span>Evaluation records</span><strong>{{ activity.evaluation_total }}</strong></div>
+                            <div><span>Submitted</span><strong>{{ activity.evaluation_submitted }}</strong></div>
+                            <div><span>Pending / Draft</span><strong>{{ activity.evaluation_total - activity.evaluation_submitted }}</strong></div>
+                        </div>
+                        <p class="admin-empty-copy">Official Evaluation is a separate manual supervisor-entered record and is not included in Work, ML, attendance, or logbook metrics.</p>
+                    </section>
                 </div>
             </div>
+
+            <section class="admin-polish-panel admin-roster-panel">
+                <div class="admin-section-heading"><div><span>INTERN / ROSTER</span><h2>Enrolled Students</h2></div><span class="admin-count-chip">{{ students|length }}</span></div>
+                {% if students %}
+                    <div class="admin-doc-student-list">
+                        {% for student in students %}
+                            <article class="admin-doc-student-row">
+                                <div class="admin-doc-student-avatar" aria-hidden="true">{{ (student.display_name or student.username or '?')[:1]|upper }}</div>
+                                <div class="admin-doc-student-main"><strong>{{ student.display_name }}</strong><span>@{{ student.username }}{% if student.student_number %} · {{ student.student_number }}{% endif %}</span><small>{{ student.major_program or 'Program not provided' }} · Joined {{ student.joined_at }}</small></div>
+                                <span class="admin-status-pill {% if student.status == 'inactive' %}is-muted{% else %}is-success{% endif %}">{{ student.status|title }}</span>
+                                <a class="admin-compact-action" href="{{ url_for('admin.student_profile', student_id=student.id) }}">Profile</a>
+                                <a class="admin-compact-action" href="{{ url_for('admin_reports_overview.student_insights', student_id=student.id, class_id=classroom.id) }}">Insights</a>
+                            </article>
+                        {% endfor %}
+                    </div>
+                {% else %}<div class="admin-polish-empty admin-polish-empty-compact"><h3>No enrolled students</h3><p>This classroom does not have a roster yet.</p></div>{% endif %}
+            </section>
         </div>
     </main>
 </body>
