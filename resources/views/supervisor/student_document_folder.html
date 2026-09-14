@@ -15,7 +15,7 @@
 
     <main class="page-content supervisor-document-folder-page">
         <div class="nexora-page supervisor-document-folder-shell">
-            <a class="supervisor-doc-back" href="{{ url_for('supervisor_documents.student_documents') }}">← Back to Student Documents</a>
+            <a class="supervisor-doc-back nx-supervisor-btn is-secondary is-compact" href="{{ url_for('supervisor_documents.student_documents') }}">← Back to Student Documents</a>
 
             <header class="sp-heading supervisor-doc-folder-heading">
                 <div>
@@ -38,7 +38,7 @@
                     <h2>Your Classroom Memberships ({{ memberships|length }})</h2>
                     {% for classroom in memberships %}
                         <div class="supervisor-doc-membership-row">
-                            <span>▧</span>
+                            <span class="supervisor-doc-membership-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h5l2 2h11v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"></path><path d="M3 7V5a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v2"></path></svg></span>
                             <div><strong>{{ classroom.name }}{% if classroom.section %} - {{ classroom.section }}{% endif %}</strong><small>{% if classroom.company_name %}{{ classroom.company_name }} · {% endif %}{{ 'Archived' if classroom.archived else 'Active' }}</small></div>
                         </div>
                     {% endfor %}
@@ -60,15 +60,15 @@
                                     <tr>
                                         <td>{{ loop.index }}</td>
                                         <td><strong>{{ document.filename }}</strong></td>
-                                        <td>{{ document.extension|upper }}</td>
+                                        <td><span class="supervisor-doc-file-type"><span class="supervisor-doc-file-icon">{{ document.extension|upper }}</span><span>{{ document.extension|upper }} file</span></span></td>
                                         <td>{{ document.size }}</td>
                                         <td>{{ document.uploaded_at }}</td>
                                         <td>
                                             {% if document.available %}
                                                 {% if document.preview_type %}
-                                                    <button type="button" class="supervisor-doc-view-button js-supervisor-doc-preview" data-preview-url="{{ document_url }}" data-preview-name="{{ document.filename }}" data-preview-type="{{ document.preview_type }}">Preview</button>
+                                                    <button type="button" class="supervisor-doc-view-button nx-supervisor-btn is-secondary is-compact js-supervisor-doc-preview" data-preview-url="{{ document_url }}" data-preview-name="{{ document.filename }}" data-preview-type="{{ document.preview_type }}">Preview</button>
                                                 {% else %}
-                                                    <a class="supervisor-doc-view-button" href="{{ document_url }}" target="_blank" rel="noopener">Open</a>
+                                                    <a class="supervisor-doc-view-button nx-supervisor-btn is-secondary is-compact" href="{{ document_url }}" target="_blank" rel="noopener">Open</a>
                                                 {% endif %}
                                             {% else %}
                                                 <span class="supervisor-doc-unavailable">Unavailable</span>
@@ -80,7 +80,10 @@
                             </table>
                         </div>
                     {% else %}
-                        <div class="supervisor-doc-empty"><strong>No documents yet</strong><span>This student has not uploaded any files.</span></div>
+                        <div class="supervisor-doc-empty">
+                            <span class="supervisor-doc-classroom-icon mx-auto mb-2" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M9 15h6"></path></svg></span>
+                            <strong>No documents yet</strong><span>This student has not uploaded any files.</span>
+                        </div>
                     {% endif %}
                 </article>
 
@@ -88,13 +91,13 @@
                     <div class="supervisor-doc-card-heading"><div><span class="ui-eyebrow">Preview</span><h2>Document Preview</h2></div></div>
                     <button type="button" class="supervisor-doc-preview-body" id="supervisorDocPreviewBody" disabled aria-label="Open document fullscreen">
                         <div class="supervisor-doc-preview-placeholder" id="supervisorDocPreviewPlaceholder">
-                            <span class="supervisor-doc-preview-icon">▤</span>
+                            <span class="supervisor-doc-preview-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M8 13h8"></path><path d="M8 17h6"></path></svg></span>
                             <strong>Select a document to preview</strong>
                             <small>Images, PDFs, and text files can open fullscreen.</small>
                         </div>
                         <img id="supervisorDocPreviewImage" class="supervisor-doc-preview-image" alt="Student document preview" hidden>
                         <div id="supervisorDocPreviewFile" class="supervisor-doc-preview-file" hidden>
-                            <span>▤</span><strong id="supervisorDocPreviewName"></strong><small>Click to open fullscreen</small>
+                            <span aria-hidden="true"><svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M8 13h8"></path><path d="M8 17h6"></path></svg></span><strong id="supervisorDocPreviewName"></strong><small>Click to open fullscreen</small>
                         </div>
                     </button>
                 </aside>
