@@ -8,423 +8,138 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
-    <style>
-        body.admin-document-folder-page {
-            --docs-accent: #f45125;
-            --docs-accent-dark: #d9471b;
-            --docs-accent-soft: #fff0ea;
-            --docs-border: #e6ebef;
-            --docs-text: #152338;
-            --docs-muted: #728094;
-            background: #f6f8fb !important;
-        }
-        .admin-document-folder-page .admin-main { padding: 0 !important; }
-        .admin-document-folder-page .admin-document-content {
-            width: min(100%, 1320px);
-            margin: 0 auto;
-            padding: 20px 28px 44px;
-        }
-        .admin-document-folder-page .admin-document-breadcrumb {
-            margin-bottom: 8px;
-            color: #8290a0;
-            font-size: 9px;
-            font-weight: 650;
-        }
-        .admin-document-folder-page .admin-document-breadcrumb a { color: #617084; text-decoration: none; }
-        .admin-document-folder-page .admin-document-breadcrumb span { margin: 0 5px; color: #b0b8c2; }
-        .admin-document-folder-page .admin-document-back {
-            min-height: 31px;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            margin-bottom: 10px;
-            padding: 0 10px;
-            border: 1px solid #dce3e8;
-            border-radius: 7px;
-            background: #fff;
-            color: #3f5064;
-            font-size: 8px;
-            font-weight: 800;
-            text-decoration: none;
-        }
-        .admin-document-folder-page .admin-student-overview {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) minmax(330px, .72fr);
-            gap: 14px;
-            align-items: stretch;
-            margin-bottom: 10px;
-        }
-        .admin-document-folder-page .admin-student-profile,
-        .admin-document-folder-page .admin-memberships-card {
-            border: 1px solid var(--docs-border);
-            border-radius: 11px;
-            background: #fff;
-            box-shadow: 0 4px 15px rgba(22,35,48,.035);
-        }
-        .admin-document-folder-page .admin-student-profile {
-            display: flex;
-            align-items: center;
-            gap: 17px;
-            min-height: 116px;
-            padding: 18px;
-        }
-        .admin-document-folder-page .admin-profile-avatar {
-            width: 62px;
-            height: 62px;
-            display: grid;
-            place-items: center;
-            flex: 0 0 62px;
-            border-radius: 50%;
-            background: #dfe8f2;
-            color: #32475e;
-            font-size: 19px;
-            font-weight: 900;
-        }
-        .admin-document-folder-page .admin-profile-title-row { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
-        .admin-document-folder-page .admin-profile-title-row h1 {
-            margin: 0;
-            color: #15253a;
-            font-size: 24px;
-            line-height: 1.1;
-            font-weight: 900;
-            letter-spacing: -.02em;
-        }
-        .admin-document-folder-page .admin-profile-status {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            padding: 4px 10px;
-            border-radius: 999px;
-            background: #e6f7ed;
-            color: #16784b;
-            font-size: 8px;
-            font-weight: 850;
-        }
-        .admin-document-folder-page .admin-profile-status.inactive { background: #eef1f4; color: #687587; }
-        .admin-document-folder-page .admin-profile-meta {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin-top: 8px;
-            color: #66768a;
-            font-size: 9px;
-        }
-        .admin-document-folder-page .admin-profile-meta span + span::before { content: "•"; margin-right: 8px; color: #9aa5b1; }
-        .admin-document-folder-page .admin-profile-email { margin-top: 6px; color: #94a0ad; font-size: 8px; }
-        .admin-document-folder-page .admin-memberships-card { padding: 13px 15px; }
-        .admin-document-folder-page .admin-memberships-card h2 { margin: 0 0 7px; color: #223146; font-size: 10px; font-weight: 850; }
-        .admin-document-folder-page .admin-membership-row {
-            display: flex;
-            align-items: center;
-            gap: 9px;
-            padding: 8px 0;
-            border-top: 1px solid #edf0f3;
-        }
-        .admin-document-folder-page .admin-membership-row:first-of-type { border-top: 0; }
-        .admin-document-folder-page .admin-membership-icon {
-            width: 30px;
-            height: 30px;
-            display: grid;
-            place-items: center;
-            flex: 0 0 30px;
-            border-radius: 8px;
-            background: var(--docs-accent-soft);
-            color: var(--docs-accent);
-            font-weight: 900;
-        }
-        .admin-document-folder-page .admin-membership-copy { min-width: 0; }
-        .admin-document-folder-page .admin-membership-name { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-        .admin-document-folder-page .admin-membership-name strong { color: #26364a; font-size: 8px; font-weight: 850; }
-        .admin-document-folder-page .admin-membership-chip {
-            padding: 3px 7px;
-            border-radius: 999px;
-            background: #eaf3ff;
-            color: #2d67a9;
-            font-size: 7px;
-            font-weight: 800;
-        }
-        .admin-document-folder-page .admin-membership-copy small { display: block; margin-top: 3px; color: #8290a0; font-size: 7px; }
-        .admin-document-folder-page .admin-document-tabs { display: flex; align-items: flex-end; gap: 4px; margin-bottom: 0; border-bottom: 1px solid #e2e7eb; }
-        .admin-document-folder-page .admin-document-tab {
-            min-height: 36px;
-            padding: 0 13px;
-            border: 0;
-            border-bottom: 2px solid transparent;
-            background: transparent;
-            color: #59697c;
-            font-size: 8px;
-            font-weight: 850;
-            cursor: pointer;
-        }
-        .admin-document-folder-page .admin-document-tab.active { border-bottom-color: var(--docs-accent); color: var(--docs-accent-dark); background: #fff8f5; }
-        .admin-document-folder-page .admin-tab-panel[hidden] { display: none !important; }
-        .admin-document-folder-page .admin-document-layout {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) 360px;
-            gap: 14px;
-            margin-top: 10px;
-        }
-        .admin-document-folder-page .admin-document-table-card,
-        .admin-document-folder-page .admin-document-preview-card,
-        .admin-document-folder-page .admin-student-information-card {
-            border: 1px solid var(--docs-border);
-            border-radius: 11px;
-            background: #fff;
-            box-shadow: 0 4px 15px rgba(22,35,48,.035);
-        }
-        .admin-document-folder-page .admin-document-table-card { overflow: hidden; }
-        .admin-document-folder-page .admin-document-table { width: 100%; border-collapse: collapse; }
-        .admin-document-folder-page .admin-document-table th {
-            padding: 9px 12px;
-            border-bottom: 1px solid #e5e9ed;
-            background: #fafbfc;
-            color: #56657a;
-            font-size: 8px;
-            font-weight: 850;
-            text-transform: uppercase;
-            letter-spacing: .03em;
-        }
-        .admin-document-folder-page .admin-document-table td { padding: 9px 12px; border-bottom: 1px solid #edf0f3; color: #425267; font-size: 8px; vertical-align: middle; }
-        .admin-document-folder-page .admin-document-table tbody tr:last-child td { border-bottom: 0; }
-        .admin-document-folder-page .admin-file-cell { display: flex; align-items: center; gap: 8px; min-width: 185px; }
-        .admin-document-folder-page .admin-file-icon {
-            width: 26px;
-            height: 30px;
-            display: grid;
-            place-items: center;
-            flex: 0 0 26px;
-            border-radius: 6px;
-            background: #edf3f7;
-            color: #506277;
-            font-size: 7px;
-            font-weight: 900;
-            text-transform: uppercase;
-        }
-        .admin-document-folder-page .admin-file-icon.pdf { background: #ffe8e6; color: #d43e31; }
-        .admin-document-folder-page .admin-file-icon.jpg,
-        .admin-document-folder-page .admin-file-icon.jpeg,
-        .admin-document-folder-page .admin-file-icon.png,
-        .admin-document-folder-page .admin-file-icon.gif { background: #e8f7ed; color: #1c9156; }
-        .admin-document-folder-page .admin-file-icon.doc,
-        .admin-document-folder-page .admin-file-icon.docx { background: #e8f1ff; color: #2d70c8; }
-        .admin-document-folder-page .admin-file-cell strong {
-            max-width: 260px;
-            overflow: hidden;
-            color: #1e2d40;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            font-size: 9px;
-            font-weight: 800;
-        }
-        .admin-document-folder-page .admin-file-action {
-            min-height: 27px;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            padding: 0 9px;
-            border: 1px solid #b9c5d2;
-            border-radius: 6px;
-            background: #fff;
-            color: #31465c;
-            font-size: 8px;
-            font-weight: 800;
-            text-decoration: none;
-            cursor: pointer;
-        }
-        .admin-document-folder-page .admin-file-action:hover { border-color: var(--docs-accent); color: var(--docs-accent-dark); }
-        .admin-document-folder-page .admin-file-action[disabled] { opacity: .45; cursor: not-allowed; }
-        .admin-document-folder-page .admin-document-preview-card { min-height: 330px; display: flex; flex-direction: column; overflow: hidden; }
-        .admin-document-folder-page .admin-preview-heading { padding: 12px 14px; border-bottom: 1px solid #edf0f3; color: #26364a; font-size: 10px; font-weight: 850; }
-        .admin-document-folder-page .admin-preview-body {
-            width: 100%;
-            flex: 1;
-            min-height: 280px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 16px;
-            border: 0;
-            background: #fbfcfd;
-            color: inherit;
-            font: inherit;
-            text-align: center;
-            cursor: pointer;
-        }
-        .admin-document-folder-page .admin-preview-body:not(:disabled):hover { background: #fff7f3; }
-        .admin-document-folder-page .admin-preview-body:disabled { cursor: default; }
-        .admin-document-folder-page .admin-preview-placeholder { max-width: 250px; text-align: center; color: #8793a1; }
-        .admin-document-folder-page .admin-preview-placeholder-icon {
-            width: 48px;
-            height: 56px;
-            display: grid;
-            place-items: center;
-            margin: 0 auto 11px;
-            border: 3px solid #9aa7b4;
-            border-radius: 8px;
-            color: #9aa7b4;
-            font-size: 19px;
-            font-weight: 900;
-        }
-        .admin-document-folder-page .admin-preview-placeholder strong,
-        .admin-document-folder-page .admin-preview-file strong { display: block; color: #344458; font-size: 9px; font-weight: 850; }
-        .admin-document-folder-page .admin-preview-placeholder span,
-        .admin-document-folder-page .admin-preview-file span { display: block; margin-top: 5px; font-size: 7px; line-height: 1.5; color: #8793a1; }
-        .admin-document-folder-page .admin-preview-file-icon { display: block; margin-bottom: 10px; color: var(--docs-accent); font-size: 34px; }
-        .admin-document-folder-page .admin-preview-image { width: 100%; max-height: 310px; object-fit: contain; border-radius: 7px; }
-        .admin-document-folder-page .admin-student-information-card { margin-top: 10px; padding: 16px; }
-        .admin-document-folder-page .admin-student-info-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-        .admin-document-folder-page .admin-student-info-item { padding: 12px; border: 1px solid #edf0f3; border-radius: 8px; background: #fafbfc; }
-        .admin-document-folder-page .admin-student-info-item span { display: block; color: #8b96a4; font-size: 7px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
-        .admin-document-folder-page .admin-student-info-item strong { display: block; margin-top: 5px; color: #25364a; font-size: 9px; font-weight: 850; word-break: break-word; }
-        .admin-document-folder-page .admin-document-empty { padding: 34px 18px; text-align: center; color: #8793a1; font-size: 9px; }
-        @media (max-width: 1100px) {
-            .admin-document-folder-page .admin-student-overview,
-            .admin-document-folder-page .admin-document-layout { grid-template-columns: 1fr; }
-            .admin-document-folder-page .admin-document-preview-card { min-height: 260px; }
-            .admin-document-folder-page .admin-student-info-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
-        }
-        @media (max-width: 760px) {
-            .admin-document-folder-page .admin-document-content { padding: 16px 14px 32px; }
-            .admin-document-folder-page .admin-student-profile { align-items: flex-start; }
-            .admin-document-folder-page .admin-profile-title-row h1 { font-size: 21px; }
-            .admin-document-folder-page .admin-student-info-grid { grid-template-columns: 1fr; }
-        }
-    </style>
+    {% include 'components/supervisor_document_styles.html' %}
 </head>
-<body class="nexora-admin-body admin-page admin-document-folder-page">
+<body class="nexora-admin-body supervisor-student-document-folder-page admin-documents-role admin-student-document-folder-page">
     {% include 'components/admin_sidebar.html' %}
     {% include 'components/admin_topbar.html' %}
 
-    <main class="admin-main nexora-app-main">
-        <div class="admin-document-content">
-            <div class="admin-document-breadcrumb"><a href="{{ url_for('admin_classrooms.student_documents') }}">Student Documents</a><span>/</span>{{ student.display_name }}</div>
-            <a href="{{ url_for('admin_classrooms.student_documents') }}" class="admin-document-back">← Back to Student Documents</a>
+    <main class="admin-main nexora-app-main supervisor-document-folder-page">
+        <div class="nexora-page supervisor-document-folder-shell">
+            <header class="admin-doc-page-heading supervisor-doc-folder-heading">
+                <div>
+                    <span class="admin-role-eyebrow">Student Document Management</span>
+                    <h1>{{ student.display_name }}</h1>
+                    <p>{{ student.student_number or student.username }}{% if student.major_program %} · {{ student.major_program }}{% endif %}{% if student.grade_year %} · {{ student.grade_year }}{% endif %}</p>
+                </div>
+            </header>
 
-            <section class="admin-student-overview">
-                <article class="admin-student-profile">
-                    <div class="admin-profile-avatar">{{ (student.display_name[:2] or 'ST')|upper }}</div>
+            <section class="supervisor-doc-folder-overview">
+                <article class="supervisor-doc-student-card">
+                    <div class="supervisor-doc-avatar">{{ (student.display_name[:2] or 'ST')|upper }}</div>
                     <div>
-                        <div class="admin-profile-title-row">
-                            <h1>{{ student.display_name }}</h1>
-                            <span class="admin-profile-status{% if student.status == 'inactive' %} inactive{% endif %}">{{ 'Inactive' if student.status == 'inactive' else 'Active' }}</span>
-                        </div>
-                        <div class="admin-profile-meta">
-                            <span>{{ student.student_number or student.username }}</span>
-                            <span>{{ student.major_program or 'No program' }}</span>
-                            <span>{{ student.grade_year or 'Year not set' }}</span>
-                        </div>
-                        <div class="admin-profile-email">{{ student.email or 'No email provided' }}</div>
+                        <strong>{{ student.display_name }}</strong>
+                        <span>@{{ student.username }} · {{ student.email or 'No email provided' }}</span>
+                        <small>{{ documents|length }} document{% if documents|length != 1 %}s{% endif %} · {{ memberships|length }} classroom{% if memberships|length != 1 %}s{% endif %} · {{ student.status|title }}</small>
                     </div>
                 </article>
-
-                <aside class="admin-memberships-card">
+                <article class="supervisor-doc-memberships-card">
                     <h2>Classroom Memberships ({{ memberships|length }})</h2>
                     {% for classroom in memberships %}
-                        <div class="admin-membership-row">
-                            <span class="admin-membership-icon">▧</span>
-                            <div class="admin-membership-copy">
-                                <div class="admin-membership-name">
-                                    <strong>{{ classroom.name }}{% if classroom.section %} - {{ classroom.section }}{% endif %}</strong>
-                                    <span class="admin-membership-chip">{{ 'Intern Classroom' if classroom.classroom_type == 'internship' else 'Classroom' }}</span>
-                                </div>
-                                <small>{% if classroom.company_name %}{{ classroom.company_name }} · {% endif %}{{ classroom.supervisor_name }}{% if classroom.archived %} · Archived{% endif %}</small>
+                        <div class="supervisor-doc-membership-row">
+                            <span aria-hidden="true">▧</span>
+                            <div>
+                                <strong>{{ classroom.name }}{% if classroom.section %} - {{ classroom.section }}{% endif %}</strong>
+                                <small>{% if classroom.company_name %}{{ classroom.company_name }} · {% endif %}{{ classroom.supervisor_name }} · {{ 'Archived' if classroom.archived else 'Active' }}</small>
                             </div>
                         </div>
                     {% else %}
-                        <div class="text-muted small">This student is not currently enrolled in a classroom.</div>
+                        <div class="supervisor-doc-membership-row"><div><strong>No classroom membership</strong><small>This student is not currently enrolled in a classroom.</small></div></div>
                     {% endfor %}
-                </aside>
+                </article>
             </section>
 
-            <div class="admin-document-tabs" role="tablist" aria-label="Student document folder sections">
-                <button type="button" class="admin-document-tab active" data-tab="documents" role="tab" aria-selected="true">▤ Documents ({{ documents|length }})</button>
-                <button type="button" class="admin-document-tab" data-tab="student-info" role="tab" aria-selected="false">♟ Student Information</button>
-            </div>
+            <nav class="admin-doc-tabs" aria-label="Student document folder sections">
+                <button type="button" class="admin-doc-tab is-active" data-admin-doc-tab="documents" aria-selected="true">Documents ({{ documents|length }})</button>
+                <button type="button" class="admin-doc-tab" data-admin-doc-tab="student-info" aria-selected="false">Student Information</button>
+            </nav>
 
-            <section class="admin-tab-panel" data-panel="documents">
-                <div class="admin-document-layout">
-                    <article class="admin-document-table-card">
+            <section class="admin-doc-tab-panel" data-admin-doc-panel="documents">
+                <div class="supervisor-doc-folder-layout">
+                    <article class="supervisor-doc-files-card">
+                        <div class="supervisor-doc-card-heading">
+                            <div><span class="ui-eyebrow">Student Files</span><h2>Documents ({{ documents|length }})</h2></div>
+                        </div>
                         {% if documents %}
                             <div class="table-responsive">
-                                <table class="admin-document-table">
-                                    <thead><tr><th>#</th><th>Document</th><th>File Type</th><th>Size</th><th>Uploaded On</th><th>Actions</th></tr></thead>
+                                <table class="supervisor-doc-table supervisor-doc-folder-table">
+                                    <thead><tr><th>#</th><th>Document</th><th>Type</th><th>Size</th><th>Uploaded</th><th>Actions</th></tr></thead>
                                     <tbody>
-                                        {% for document in documents %}
-                                            {% set document_url = url_for('admin_classrooms.view_student_document', student_id=student.id, document_id=document.id) %}
-                                            {% set ext = document.extension|lower %}
-                                            {% if document.is_image %}
-                                                {% set preview_type = 'image' %}
-                                            {% elif ext == 'pdf' %}
-                                                {% set preview_type = 'pdf' %}
-                                            {% elif ext == 'txt' %}
-                                                {% set preview_type = 'text' %}
-                                            {% else %}
-                                                {% set preview_type = '' %}
-                                            {% endif %}
-                                            <tr>
-                                                <td>{{ loop.index }}</td>
-                                                <td>
-                                                    <div class="admin-file-cell">
-                                                        <span class="admin-file-icon {{ ext }}">{{ document.extension[:4] }}</span>
-                                                        <strong title="{{ document.filename }}">{{ document.filename }}</strong>
-                                                    </div>
-                                                </td>
-                                                <td>{{ document.extension|upper }}</td>
-                                                <td>{{ document.size }}</td>
-                                                <td>{{ document.uploaded_at }}</td>
-                                                <td>
-                                                    {% if document.available %}
-                                                        {% if preview_type %}
-                                                            <button type="button" class="admin-file-action js-admin-doc-preview" data-preview-url="{{ document_url }}" data-preview-name="{{ document.filename }}" data-preview-type="{{ preview_type }}">◉ Preview</button>
-                                                        {% else %}
-                                                            <a class="admin-file-action" href="{{ document_url }}" target="_blank" rel="noopener">↧ Open</a>
-                                                        {% endif %}
+                                    {% for document in documents %}
+                                        {% set document_url = url_for('admin_classrooms.view_student_document', student_id=student.id, document_id=document.id) %}
+                                        <tr>
+                                            <td>{{ loop.index }}</td>
+                                            <td><strong>{{ document.filename }}</strong></td>
+                                            <td><span class="supervisor-doc-file-type">{{ document.extension|upper }}</span></td>
+                                            <td>{{ document.size }}</td>
+                                            <td>{{ document.uploaded_at }}</td>
+                                            <td>
+                                                {% if document.available %}
+                                                    {% if document.is_image %}
+                                                        <button type="button" class="admin-doc-action-button js-admin-image-preview" data-preview-url="{{ document_url }}" data-preview-name="{{ document.filename }}">Preview</button>
+                                                    {% elif document.extension == 'pdf' %}
+                                                        <a class="admin-doc-action-button" href="{{ document_url }}" target="_blank" rel="noopener">Open PDF</a>
+                                                    {% elif document.extension == 'txt' %}
+                                                        <a class="admin-doc-action-button" href="{{ url_for('admin_classrooms.view_student_document', student_id=student.id, document_id=document.id, download=1) }}" download>Download TXT</a>
                                                     {% else %}
-                                                        <button type="button" class="admin-file-action" disabled>Unavailable</button>
+                                                        <a class="admin-doc-action-button" href="{{ document_url }}" target="_blank" rel="noopener">Open</a>
                                                     {% endif %}
-                                                </td>
-                                            </tr>
-                                        {% endfor %}
+                                                {% else %}
+                                                    <span class="supervisor-doc-unavailable">Unavailable</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
                                     </tbody>
                                 </table>
                             </div>
                         {% else %}
-                            <div class="admin-document-empty">No documents have been uploaded by this student yet.</div>
+                            <div class="supervisor-doc-empty">
+                                <span class="supervisor-doc-classroom-icon mx-auto mb-2" aria-hidden="true">▤</span>
+                                <strong>No documents yet</strong><span>This student has not uploaded any files.</span>
+                            </div>
                         {% endif %}
                     </article>
 
-                    <aside class="admin-document-preview-card">
-                        <div class="admin-preview-heading">Document Preview</div>
-                        <button type="button" class="admin-preview-body" id="adminPreviewBody" disabled aria-label="Open document fullscreen">
-                            <div class="admin-preview-placeholder" id="adminPreviewPlaceholder">
-                                <div class="admin-preview-placeholder-icon">▤</div>
-                                <strong>Select a document to preview</strong>
-                                <span>Images, PDFs, and text files can open fullscreen.</span>
+                    <aside class="supervisor-doc-preview-card">
+                        <div class="supervisor-doc-card-heading"><div><span class="ui-eyebrow">Preview</span><h2>Image Preview</h2></div></div>
+                        <button type="button" class="supervisor-doc-preview-body" id="adminDocPreviewBody" disabled aria-label="Open selected image fullscreen">
+                            <div class="supervisor-doc-preview-placeholder" id="adminDocPreviewPlaceholder">
+                                <span class="supervisor-doc-preview-icon" aria-hidden="true">▧</span>
+                                <strong>Select an image to preview</strong>
+                                <small>PDF files open in a new tab. TXT files download directly.</small>
                             </div>
-                            <img class="admin-preview-image" id="adminPreviewImage" alt="Student document preview" hidden>
-                            <div class="admin-preview-file" id="adminPreviewFile" hidden>
-                                <span class="admin-preview-file-icon">▤</span>
-                                <strong id="adminPreviewFileName"></strong>
-                                <span>Click to open fullscreen</span>
-                            </div>
+                            <img id="adminDocPreviewImage" class="supervisor-doc-preview-image" alt="Student document preview" hidden>
                         </button>
                     </aside>
                 </div>
             </section>
 
-            <section class="admin-tab-panel" data-panel="student-info" hidden>
-                <article class="admin-student-information-card">
+            <section class="admin-doc-tab-panel" data-admin-doc-panel="student-info" hidden>
+                <article class="admin-student-info-card">
+                    <div class="supervisor-doc-card-heading">
+                        <div><span class="ui-eyebrow">Student Profile</span><h2>Complete Student Information</h2></div>
+                    </div>
                     <div class="admin-student-info-grid">
-                        <div class="admin-student-info-item"><span>Student Name</span><strong>{{ student.display_name }}</strong></div>
-                        <div class="admin-student-info-item"><span>Student Number</span><strong>{{ student.student_number or '—' }}</strong></div>
-                        <div class="admin-student-info-item"><span>Email</span><strong>{{ student.email or '—' }}</strong></div>
-                        <div class="admin-student-info-item"><span>Program</span><strong>{{ student.major_program or '—' }}</strong></div>
-                        <div class="admin-student-info-item"><span>Year</span><strong>{{ student.grade_year or '—' }}</strong></div>
-                        <div class="admin-student-info-item"><span>Status</span><strong>{{ 'Inactive' if student.status == 'inactive' else 'Active' }}</strong></div>
-                        <div class="admin-student-info-item"><span>Classrooms</span><strong>{{ memberships|length }}</strong></div>
-                        <div class="admin-student-info-item"><span>Documents</span><strong>{{ documents|length }}</strong></div>
-                        <div class="admin-student-info-item"><span>Latest Upload</span><strong>{{ latest_upload }}</strong></div>
+                        <div class="admin-student-info-field"><b>Full Name</b><span>{{ student.display_name or '—' }}</span></div>
+                        <div class="admin-student-info-field"><b>Username</b><span>@{{ student.username }}</span></div>
+                        <div class="admin-student-info-field"><b>Email</b><span>{{ student.email or '—' }}</span></div>
+                        <div class="admin-student-info-field"><b>Student Number</b><span>{{ student.student_number or '—' }}</span></div>
+                        <div class="admin-student-info-field"><b>Age</b><span>{{ student.age if student.age is not none else '—' }}</span></div>
+                        <div class="admin-student-info-field"><b>Program</b><span>{{ student.major_program or '—' }}</span></div>
+                        <div class="admin-student-info-field"><b>Year Level</b><span>{{ student.grade_year or '—' }}</span></div>
+                        <div class="admin-student-info-field"><b>Phone Number</b><span>{{ student.phone_number or '—' }}</span></div>
+                        <div class="admin-student-info-field"><b>Home Address</b><span>{{ student.home_address or '—' }}</span></div>
+                        <div class="admin-student-info-field"><b>Account Status</b><span>{{ student.status|title }}</span></div>
+                        <div class="admin-student-info-field"><b>Profile Completed</b><span>{{ 'Yes' if student.profile_completed else 'No' }}</span></div>
+                        <div class="admin-student-info-field"><b>Classrooms</b><span>{{ memberships|length }}</span></div>
+                        <div class="admin-student-info-field"><b>Documents</b><span>{{ documents|length }}</span></div>
+                        <div class="admin-student-info-field"><b>Latest Upload</b><span>{{ latest_upload }}</span></div>
+                        <div class="admin-student-info-field"><b>File Types</b><span>{{ file_type_count }}</span></div>
+                        <div class="admin-student-info-field"><b>Emergency Contact</b><span>{{ student.emergency_name or '—' }}</span></div>
+                        <div class="admin-student-info-field"><b>Relationship</b><span>{{ student.emergency_relationship or '—' }}</span></div>
+                        <div class="admin-student-info-field"><b>Emergency Phone</b><span>{{ student.emergency_phone or '—' }}</span></div>
+                        <div class="admin-student-info-field"><b>Emergency Email</b><span>{{ student.emergency_email or '—' }}</span></div>
                     </div>
                 </article>
             </section>
@@ -434,55 +149,40 @@
     {% include 'components/document_fullscreen_viewer.html' %}
     <script>
     (function () {
-        var tabs = document.querySelectorAll('[data-tab]');
-        var panels = document.querySelectorAll('[data-panel]');
+        var tabs = document.querySelectorAll('[data-admin-doc-tab]');
+        var panels = document.querySelectorAll('[data-admin-doc-panel]');
         tabs.forEach(function (tab) {
             tab.addEventListener('click', function () {
-                var target = tab.dataset.tab;
+                var name = tab.dataset.adminDocTab;
                 tabs.forEach(function (item) {
                     var active = item === tab;
-                    item.classList.toggle('active', active);
-                    item.setAttribute('aria-selected', String(active));
+                    item.classList.toggle('is-active', active);
+                    item.setAttribute('aria-selected', active ? 'true' : 'false');
                 });
-                panels.forEach(function (panel) { panel.hidden = panel.dataset.panel !== target; });
+                panels.forEach(function (panel) { panel.hidden = panel.dataset.adminDocPanel !== name; });
             });
         });
 
-        var previewBody = document.getElementById('adminPreviewBody');
-        var previewImage = document.getElementById('adminPreviewImage');
-        var previewPlaceholder = document.getElementById('adminPreviewPlaceholder');
-        var previewFile = document.getElementById('adminPreviewFile');
-        var previewFileName = document.getElementById('adminPreviewFileName');
+        var previewBody = document.getElementById('adminDocPreviewBody');
+        var placeholder = document.getElementById('adminDocPreviewPlaceholder');
+        var image = document.getElementById('adminDocPreviewImage');
         var current = null;
-
-        function selectPreview(button) {
-            current = {
-                url: button.dataset.previewUrl,
-                name: button.dataset.previewName || 'Student document preview',
-                type: button.dataset.previewType || 'file'
-            };
-            previewPlaceholder.hidden = true;
-            previewImage.hidden = true;
-            previewFile.hidden = true;
-            if (current.type === 'image') {
-                previewImage.src = current.url;
-                previewImage.alt = current.name;
-                previewImage.hidden = false;
-            } else {
-                previewFileName.textContent = current.name;
-                previewFile.hidden = false;
-            }
-            previewBody.disabled = false;
-            previewBody.title = 'Open ' + current.name + ' fullscreen';
+        document.querySelectorAll('.js-admin-image-preview').forEach(function (button) {
+            button.addEventListener('click', function () {
+                current = {url: button.dataset.previewUrl, name: button.dataset.previewName || 'Image', type: 'image'};
+                placeholder.hidden = true;
+                image.src = current.url;
+                image.alt = current.name;
+                image.hidden = false;
+                previewBody.disabled = false;
+                previewBody.title = 'Open ' + current.name + ' fullscreen';
+            });
+        });
+        if (previewBody) {
+            previewBody.addEventListener('click', function () {
+                if (current && window.NexoraDocumentViewer) window.NexoraDocumentViewer.open(current);
+            });
         }
-
-        document.querySelectorAll('.js-admin-doc-preview').forEach(function (button) {
-            button.addEventListener('click', function () { selectPreview(button); });
-        });
-        previewBody.addEventListener('click', function () {
-            if (!current || !window.NexoraDocumentViewer) return;
-            window.NexoraDocumentViewer.open(current);
-        });
     })();
     </script>
 </body>
