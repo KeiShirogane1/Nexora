@@ -858,3 +858,128 @@ Force all legacy role widths to the real 76px rail.
     mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='8' cy='8' r='4'/%3E%3Cpath d='M1 21a7 7 0 0 1 14 0'/%3E%3Cpath d='M19 8v6'/%3E%3Cpath d='M16 11h6'/%3E%3C/svg%3E");
   }
 }
+
+/* =========================================================
+PHASE 1 — GLOBAL PORTAL VISUAL FOUNDATION
+Role-tinted page canvases, stronger form controls, and centered
+small icon controls shared across Student, Supervisor, and Admin.
+========================================================= */
+body:has(.nx-role-student) {
+  --nx-role-page-bg: linear-gradient(135deg, #f2faf5 0%, #edf8f1 50%, #f7fbf8 100%);
+  --nx-role-field-focus: #16a34a;
+  --nx-role-field-ring: rgba(22, 163, 74, 0.16);
+}
+body:has(.nx-role-supervisor) {
+  --nx-role-page-bg: linear-gradient(135deg, #eef6ff 0%, #f5f8fc 50%, #edf5ff 100%);
+  --nx-role-field-focus: #2563eb;
+  --nx-role-field-ring: rgba(37, 99, 235, 0.16);
+}
+body:has(.nx-role-admin) {
+  --nx-role-page-bg: linear-gradient(135deg, #fff5f0 0%, #f9f5f3 50%, #fff7f3 100%);
+  --nx-role-field-focus: #c2410c;
+  --nx-role-field-ring: rgba(194, 65, 12, 0.16);
+}
+
+body:has(.nx-role-sidebar-shell) {
+  background: var(--nx-role-page-bg) !important;
+}
+body:has(.nx-role-sidebar-shell) > main,
+body:has(.nx-role-sidebar-shell) > .page-content,
+body:has(.nx-role-sidebar-shell) .nexora-app-main,
+body:has(.nx-role-sidebar-shell) .student-main-content,
+body:has(.nx-role-sidebar-shell) .student-tasks-main,
+body:has(.nx-role-sidebar-shell) .student-logbook-main,
+body:has(.nx-role-sidebar-shell) .class-main,
+body:has(.nx-role-sidebar-shell) .classes-main,
+body:has(.nx-role-sidebar-shell) .admin-main,
+body:has(.nx-role-sidebar-shell) .supervisor-classes-main {
+  background: var(--nx-role-page-bg) !important;
+}
+
+body:has(.nx-role-sidebar-shell)
+  :is(
+    .form-control,
+    .form-select,
+    .nexora-form-control,
+    input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="submit"]):not([type="button"]):not([type="reset"]):not([type="range"]):not([type="color"]),
+    textarea,
+    select
+  ) {
+  border: 1.5px solid #b8c4d4 !important;
+  background-color: #fff !important;
+  color: #1f2937 !important;
+  font-weight: 500;
+  box-shadow: inset 0 0 0 0.25px rgba(15, 23, 42, 0.06);
+}
+body:has(.nx-role-sidebar-shell)
+  :is(.form-control, .nexora-form-control, input, textarea)::placeholder {
+  color: #667085 !important;
+  opacity: 1 !important;
+  font-weight: 500;
+}
+body:has(.nx-role-sidebar-shell)
+  :is(
+    .form-control,
+    .form-select,
+    .nexora-form-control,
+    input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="submit"]):not([type="button"]):not([type="reset"]):not([type="range"]):not([type="color"]),
+    textarea,
+    select
+  ):focus {
+  border-color: var(--nx-role-field-focus) !important;
+  outline: none !important;
+  box-shadow: 0 0 0 3px var(--nx-role-field-ring) !important;
+}
+
+body:has(.nx-role-sidebar-shell)
+  :is(
+    .nexora-modal-close,
+    .nexora-logout-close,
+    .modal-close,
+    .crop-close,
+    button[data-classroom-toggle],
+    .class-action-secondary
+  ) {
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  font-weight: 800 !important;
+}
+body:has(.nx-role-sidebar-shell)
+  :is(.nexora-modal-close, .nexora-logout-close, .modal-close, .crop-close) {
+  display: inline-grid !important;
+  place-items: center !important;
+  padding: 0 !important;
+  border-width: 1.5px !important;
+  border-color: #cbd5e1 !important;
+  color: #334155 !important;
+}
+body:has(.nx-role-sidebar-shell)
+  :is(.nexora-modal-close, .nexora-logout-close, .modal-close)::before {
+  content: "×";
+  display: block;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1;
+  transform: translateY(-1px);
+}
+body:has(.nx-role-sidebar-shell)
+  :is(.nexora-modal-close, .nexora-logout-close, .modal-close) {
+  font-size: 0 !important;
+}
+body:has(.nx-role-sidebar-shell) button[data-classroom-toggle] {
+  display: inline-grid !important;
+  place-items: center !important;
+  font-weight: 900 !important;
+}
+body:has(.nx-role-sidebar-shell)
+  button[data-classroom-toggle] > span[aria-hidden="true"] {
+  display: grid !important;
+  width: 1em;
+  height: 1em;
+  place-items: center !important;
+  font-family: Arial, Helvetica, sans-serif;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+}
