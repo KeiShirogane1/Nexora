@@ -2,8 +2,10 @@ import os
 import pathlib
 import sys
 import tempfile
+from contextlib import contextmanager
 
 import pytest
+from flask.testing import FlaskClient
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 
@@ -27,6 +29,39 @@ db_module.SQLITE_PATH = _TEST_DB_PATH
 
 from bootstrap.app import app
 from app.Models.db import get_db_connection
+
+
+class NexoraTestClient(FlaskClient):
+    @contextmanager
+    def session_transaction(self, *args, **kwargs):
+        with super().session_transaction(*args, **kwargs) as sess:
+            yield sess
+
+            if (
+                sess.get("role") != "supervisor"
+                or not sess.get("user_id")
+                or "session_version" in sess
+            ):
+                return
+
+            conn = get_db_connection()
+            try:
+                row = conn.execute(
+                    "SELECT session_version FROM users WHERE id = ?",
+                    (sess["user_id"],),
+                ).fetchone()
+            finally:
+                conn.close()
+
+            if row is not None:
+                try:
+                    version = row["session_version"]
+                except Exception:
+                    version = row[0]
+                sess["session_version"] = int(version or 0)
+
+
+app.test_client_class = NexoraTestClient
 
 
 @pytest.fixture
