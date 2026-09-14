@@ -1,0 +1,265 @@
+{# Shared opt-in select enhancement. Add data-nx-select to a native <select>. #}
+<style id="nx-select-control-styles">
+.nx-select-shell {
+    --nx-select-accent: #0a8f46;
+    --nx-select-ring: rgba(10, 143, 70, .12);
+    position: relative;
+    width: 100%;
+    min-width: 0;
+}
+body:has(.nx-role-sidebar-shell.nx-role-supervisor) .nx-select-shell {
+    --nx-select-accent: #2563eb;
+    --nx-select-ring: rgba(37, 99, 235, .12);
+}
+body:has(.nx-role-sidebar-shell.nx-role-admin) .nx-select-shell {
+    --nx-select-accent: #f45125;
+    --nx-select-ring: rgba(244, 81, 37, .12);
+}
+.nx-select-native {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+.nx-select-trigger {
+    width: 100%;
+    min-height: 42px;
+    padding: 0 12px 0 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border: 1.5px solid #b8c4d4;
+    border-radius: 10px;
+    background: #fff;
+    color: #243247;
+    box-shadow: inset 0 0 0 .25px rgba(15, 23, 42, .05);
+    font: inherit;
+    font-size: .82rem;
+    font-weight: 650;
+    line-height: 1.2;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+}
+.nx-select-trigger:hover { border-color: #94a3b8; }
+.nx-select-trigger:focus-visible,
+.nx-select-shell.is-open .nx-select-trigger {
+    outline: 0;
+    border-color: var(--nx-select-accent);
+    box-shadow: 0 0 0 3px var(--nx-select-ring);
+}
+.nx-select-trigger-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.nx-select-chevron {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+    display: grid;
+    place-items: center;
+    color: #64748b;
+    transition: transform .15s ease, color .15s ease;
+}
+.nx-select-chevron svg {
+    width: 16px;
+    height: 16px;
+    display: block;
+}
+.nx-select-shell.is-open .nx-select-chevron {
+    transform: rotate(180deg);
+    color: var(--nx-select-accent);
+}
+.nx-select-menu {
+    position: absolute;
+    top: calc(100% + 7px);
+    left: 0;
+    z-index: 2600;
+    width: 100%;
+    min-width: 180px;
+    max-height: 260px;
+    overflow-y: auto;
+    padding: 6px;
+    border: 1px solid #dfe6ee;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 18px 42px rgba(15, 23, 42, .16), 0 3px 10px rgba(15, 23, 42, .05);
+}
+.nx-select-menu[hidden] { display: none !important; }
+.nx-select-option {
+    width: 100%;
+    min-height: 38px;
+    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #334155;
+    font: inherit;
+    font-size: .8rem;
+    font-weight: 650;
+    text-align: left;
+    cursor: pointer;
+}
+.nx-select-option:hover,
+.nx-select-option:focus-visible,
+.nx-select-option.is-selected {
+    outline: 0;
+    background: color-mix(in srgb, var(--nx-select-accent) 9%, white);
+    color: var(--nx-select-accent);
+}
+.nx-select-option.is-selected::after {
+    content: "";
+    width: 15px;
+    height: 15px;
+    flex: 0 0 15px;
+    background: currentColor;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='m9.55 18-5.7-5.7 1.4-1.4 4.3 4.3 9.2-9.2 1.4 1.4z'/%3E%3C/svg%3E") center/contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='m9.55 18-5.7-5.7 1.4-1.4 4.3 4.3 9.2-9.2 1.4 1.4z'/%3E%3C/svg%3E") center/contain no-repeat;
+}
+.nx-select-option:disabled {
+    color: #a3afbf;
+    cursor: not-allowed;
+}
+</style>
+<script>
+(function () {
+    function enhance(select) {
+        if (!select || select.dataset.nxSelectReady === '1') return;
+        select.dataset.nxSelectReady = '1';
+
+        var shell = document.createElement('div');
+        shell.className = 'nx-select-shell';
+        select.parentNode.insertBefore(shell, select);
+        shell.appendChild(select);
+        select.classList.add('nx-select-native');
+
+        var trigger = document.createElement('button');
+        trigger.type = 'button';
+        trigger.className = 'nx-select-trigger';
+        trigger.setAttribute('aria-haspopup', 'listbox');
+        trigger.setAttribute('aria-expanded', 'false');
+        trigger.innerHTML = '<span class="nx-select-trigger-label"></span><span class="nx-select-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m7 10 5 5 5-5"></path></svg></span>';
+
+        var menu = document.createElement('div');
+        menu.className = 'nx-select-menu';
+        menu.setAttribute('role', 'listbox');
+        menu.hidden = true;
+
+        shell.appendChild(trigger);
+        shell.appendChild(menu);
+
+        function selectedOption() {
+            return select.options[select.selectedIndex] || select.options[0] || null;
+        }
+
+        function syncLabel() {
+            var option = selectedOption();
+            trigger.querySelector('.nx-select-trigger-label').textContent = option ? option.textContent : '';
+            menu.querySelectorAll('.nx-select-option').forEach(function (item) {
+                item.classList.toggle('is-selected', item.dataset.value === select.value);
+                item.setAttribute('aria-selected', item.dataset.value === select.value ? 'true' : 'false');
+            });
+        }
+
+        function close() {
+            shell.classList.remove('is-open');
+            menu.hidden = true;
+            trigger.setAttribute('aria-expanded', 'false');
+        }
+
+        function open() {
+            document.querySelectorAll('.nx-select-shell.is-open').forEach(function (other) {
+                if (other === shell) return;
+                other.classList.remove('is-open');
+                var otherMenu = other.querySelector('.nx-select-menu');
+                var otherTrigger = other.querySelector('.nx-select-trigger');
+                if (otherMenu) otherMenu.hidden = true;
+                if (otherTrigger) otherTrigger.setAttribute('aria-expanded', 'false');
+            });
+            shell.classList.add('is-open');
+            menu.hidden = false;
+            trigger.setAttribute('aria-expanded', 'true');
+            var current = menu.querySelector('.nx-select-option.is-selected') || menu.querySelector('.nx-select-option:not(:disabled)');
+            if (current) window.requestAnimationFrame(function () { current.focus(); });
+        }
+
+        function rebuild() {
+            menu.innerHTML = '';
+            Array.prototype.forEach.call(select.options, function (option) {
+                var item = document.createElement('button');
+                item.type = 'button';
+                item.className = 'nx-select-option';
+                item.setAttribute('role', 'option');
+                item.dataset.value = option.value;
+                item.textContent = option.textContent;
+                item.disabled = option.disabled;
+                item.addEventListener('click', function () {
+                    if (item.disabled) return;
+                    select.value = item.dataset.value;
+                    select.dispatchEvent(new Event('change', {bubbles: true}));
+                    syncLabel();
+                    close();
+                    trigger.focus();
+                });
+                menu.appendChild(item);
+            });
+            syncLabel();
+        }
+
+        trigger.addEventListener('click', function () {
+            if (menu.hidden) open(); else close();
+        });
+        trigger.addEventListener('keydown', function (event) {
+            if (event.key === 'ArrowDown' || event.key === 'ArrowUp' || event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                open();
+            }
+        });
+        menu.addEventListener('keydown', function (event) {
+            var options = Array.prototype.filter.call(menu.querySelectorAll('.nx-select-option'), function (item) { return !item.disabled; });
+            var index = options.indexOf(document.activeElement);
+            if (event.key === 'Escape') {
+                event.preventDefault(); close(); trigger.focus(); return;
+            }
+            if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                event.preventDefault();
+                var delta = event.key === 'ArrowDown' ? 1 : -1;
+                var next = Math.max(0, Math.min(options.length - 1, index + delta));
+                if (options[next]) options[next].focus();
+            }
+        });
+        select.addEventListener('change', syncLabel);
+        new MutationObserver(rebuild).observe(select, {childList: true, subtree: true, attributes: true});
+        rebuild();
+    }
+
+    function boot() {
+        document.querySelectorAll('select[data-nx-select]').forEach(enhance);
+        document.addEventListener('click', function (event) {
+            document.querySelectorAll('.nx-select-shell.is-open').forEach(function (shell) {
+                if (shell.contains(event.target)) return;
+                shell.classList.remove('is-open');
+                var menu = shell.querySelector('.nx-select-menu');
+                var trigger = shell.querySelector('.nx-select-trigger');
+                if (menu) menu.hidden = true;
+                if (trigger) trigger.setAttribute('aria-expanded', 'false');
+            });
+        });
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, {once: true});
+    else boot();
+})();
+</script>
