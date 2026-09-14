@@ -1,5 +1,6 @@
 import shutil
 from pathlib import Path
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from flask import Blueprint, current_app, jsonify, redirect, request, session, url_for
 
@@ -226,5 +227,36 @@ def open_thread(contact_id):
     }.get(role)
     if not endpoint:
         return "Unsupported account role.", 403
+
+    # Keep list/profile Chat actions on the page where they were clicked. The
+    # Nexora Assistant already consumes these query parameters and opens the
+    # authorized live thread. Only trust a same-origin referrer; otherwise keep
+    # the existing dashboard fallback.
+    referrer = str(request.referrer or "").strip()
+    if referrer:
+        parsed = urlsplit(referrer)
+        same_origin = (
+            parsed.scheme in {"http", "https"}
+            and parsed.netloc == request.host
+            and parsed.path.startswith("/")
+        )
+        is_message_open = parsed.path.startswith("/messages/open/")
+        if same_origin and not is_message_open:
+            query_pairs = [
+                (key, value)
+                for key, value in parse_qsl(parsed.query, keep_blank_values=True)
+                if key not in {"assistant", "contact"}
+            ]
+            query_pairs.extend(
+                [
+                    ("assistant", "messages"),
+                    ("contact", str(contact_id)),
+                ]
+            )
+            return redirect(
+                urlunsplit(
+                    ("", "", parsed.path, urlencode(query_pairs), parsed.fragment)
+                )
+            )
 
     return redirect(url_for(endpoint, assistant="messages", contact=contact_id))
