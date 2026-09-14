@@ -138,12 +138,13 @@
                 <span class="nx-role-icon">▤</span><span class="nx-role-nav-text">Student Documents</span>
             </a>
 
-            <div class="nx-role-nav-group {% if request.path.startswith('/admin/reports') %}open{% endif %}">
-                <button class="nx-role-nav-parent {% if request.path.startswith('/admin/reports') %}active-parent{% endif %}" type="button" aria-label="Reports" onclick="this.parentElement.classList.toggle('open')">
+            <div class="nx-role-nav-group {% if request.path.startswith('/admin/reports') or request.path == '/admin/insights' %}open{% endif %}">
+                <button class="nx-role-nav-parent {% if request.path.startswith('/admin/reports') or request.path == '/admin/insights' %}active-parent{% endif %}" type="button" aria-label="Reports" onclick="this.parentElement.classList.toggle('open')">
                     <span class="nx-role-icon">▥</span><span class="nx-role-nav-text">Reports</span><span class="nx-role-nav-arrow">›</span>
                 </button>
                 <div class="nx-role-submenu">
                     <a href="{{ url_for('admin.admin_reports_list') }}" class="{% if request.path == '/admin/reports' %}active{% endif %}"><span class="nx-role-icon">▤</span><span>Overview</span></a>
+                    <a href="{{ url_for('admin_reports_overview.student_insights') }}" class="{% if request.path == '/admin/insights' %}active{% endif %}"><span class="nx-role-icon">◇</span><span>Student Insights</span></a>
                 </div>
             </div>
 
