@@ -115,7 +115,7 @@
                     <div class="card-header bg-white d-flex flex-wrap align-items-start justify-content-between gap-2 px-3 py-2">
                         <div>
                             <h3 class="h6 fw-bold mb-1">Official Rubric Criteria</h3>
-                            <p class="text-muted small mb-0">Rate each criterion from 1 to 5 stars using the exact criteria from the official evaluation form.</p>
+                            <p class="text-muted small mb-0">Four default criteria are prefilled for faster evaluation. Remove or add criteria to match the official evaluation form, then rate each criterion from 1 to 5 stars.</p>
                         </div>
                         <button
                             type="button"
@@ -182,6 +182,38 @@
                                                     </div>
                                                 </td>
                                                 <td><input class="form-control form-control-sm" type="text" name="item_comments" maxlength="2000" value="{{ item.comments }}"></td>
+                                                <td class="pe-3"><button type="button" class="btn btn-sm btn-outline-danger" data-evaluation-remove-row onmousedown="setTimeout(()=>{ const form=this.closest('form'); if(form) form.dispatchEvent(new Event('input',{bubbles:true})); },0);" onkeydown="if(event.key==='Enter'||event.key===' '){ setTimeout(()=>{ const form=this.closest('form'); if(form) form.dispatchEvent(new Event('input',{bubbles:true})); },0); }">Remove</button></td>
+                                            </tr>
+                                        {% endfor %}
+                                    {% elif not evaluation %}
+                                        {% set default_criteria = [('Work Quality', 40), ('Attendance', 20), ('Communication', 20), ('Professionalism', 20)] %}
+                                        {% for criterion_name, criterion_weight in default_criteria %}
+                                            <tr data-evaluation-row>
+                                                <td class="ps-3"><input class="form-control form-control-sm" type="text" name="criterion_name" maxlength="200" value="{{ criterion_name }}" required></td>
+                                                <td>
+                                                    <div class="d-inline-flex align-items-center gap-1" data-evaluation-star-group>
+                                                        <input type="hidden" name="rating_value" value="" data-evaluation-rating-value>
+                                                        <input type="hidden" name="max_value" value="5">
+                                                        {% for star in range(1, 6) %}
+                                                            <button
+                                                                type="button"
+                                                                class="btn btn-link btn-sm p-0 border-0 text-decoration-none fs-4 lh-1 text-secondary"
+                                                                data-evaluation-star
+                                                                data-rating-value="{{ star }}"
+                                                                aria-label="Rate {{ star }} out of 5 stars"
+                                                                aria-pressed="false"
+                                                                onclick="const group=this.closest('[data-evaluation-star-group]'); const input=group ? group.querySelector('[data-evaluation-rating-value]') : null; if(input){ input.value=this.dataset.ratingValue; input.dispatchEvent(new Event('input',{bubbles:true})); }">★</button>
+                                                        {% endfor %}
+                                                    </div>
+                                                    <div class="text-muted small mt-1">1–5 stars</div>
+                                                </td>
+                                                <td>
+                                                    <div class="input-group input-group-sm">
+                                                        <input class="form-control{% if loop.last %} bg-light{% endif %}" type="number" name="weight" min="0" max="100" step="0.01" value="{{ criterion_weight }}" data-evaluation-weight {% if loop.last %}readonly title="Automatically calculated so all criterion weights total 100%."{% endif %}>
+                                                        <span class="input-group-text">%</span>
+                                                    </div>
+                                                </td>
+                                                <td><input class="form-control form-control-sm" type="text" name="item_comments" maxlength="2000"></td>
                                                 <td class="pe-3"><button type="button" class="btn btn-sm btn-outline-danger" data-evaluation-remove-row onmousedown="setTimeout(()=>{ const form=this.closest('form'); if(form) form.dispatchEvent(new Event('input',{bubbles:true})); },0);" onkeydown="if(event.key==='Enter'||event.key===' '){ setTimeout(()=>{ const form=this.closest('form'); if(form) form.dispatchEvent(new Event('input',{bubbles:true})); },0); }">Remove</button></td>
                                             </tr>
                                         {% endfor %}
