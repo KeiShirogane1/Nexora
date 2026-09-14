@@ -1,9 +1,28 @@
-from flask import Blueprint, abort, render_template
+from flask import Blueprint, abort, render_template, request
 from app.Http.Middleware.security import role_required
 from app.Models.db import get_db_connection
+from app.Services.intern_profile_service import get_supervisor_intern_profile
+from app.Services.ojt_evaluation_service import get_supervisor_evaluation_context
 from app.Services.performance_report_service import build_student_report
 
 admin_reports_overview = Blueprint("admin_reports_overview", __name__)
+
+
+def _value(row, key, index=0, default=None):
+    if row is None:
+        return default
+    try:
+        if key in row.keys():
+            value = row[key]
+            return default if value is None else value
+    except AttributeError:
+        pass
+    try:
+        value = row[index]
+        return default if value is None else value
+    except (IndexError, KeyError, TypeError):
+        return default
+
 
 @admin_reports_overview.route("/admin/reports/student/<int:student_id>/overview")
 @role_required("admin")
@@ -26,5 +45,128 @@ def overview(student_id):
         report=dict(reports[0]); report.update({"assignments":assignments,"graded_count":len(graded),"total_count":len(assignments),"average_percentage":sum(percentages)/len(percentages) if percentages else None,"min_percentage":min(percentages) if percentages else None,"max_percentage":max(percentages) if percentages else None,"completion_rate":len(graded)/len(assignments)*100 if assignments else 0.0})
         if percentages: report["strongest"]=max(graded,key=lambda x:x["percentage"]); report["weakest"]=min(graded,key=lambda x:x["percentage"])
     else:
-        report={"performance_label":"Satisfactory","average_percentage":None,"min_percentage":None,"max_percentage":None,"completion_rate":0.0,"graded_count":0,"total_count":0,"assignments":[],"priority":"medium","recommendation":"Continue monitoring performance and completing upcoming internship work.","sentiment":None,"competency":None}
+        report={"performance_label":"No Data","average_percentage":None,"min_percentage":None,"max_percentage":None,"completion_rate":0.0,"graded_count":0,"total_count":0,"assignments":[],"priority":"none","recommendation":"","sentiment":None,"competency":None}
     return render_template("admin/reports/student_overview.html",student=student,report=report,attendance=attendance,feedback=feedback,total_hours=total_hours,sessions=sessions,completed_sessions=completed,active_page="reports")
+
+
+@admin_reports_overview.route("/admin/insights")
+@role_required("admin")
+def student_insights():
+    """Read-only, classroom-scoped student insights for administrators."""
+    requested_student_id = request.args.get("student_id", type=int)
+    requested_class_id = request.args.get("class_id", type=int)
+
+    conn = get_db_connection()
+    try:
+        student_rows = conn.execute(
+            """
+            SELECT DISTINCT u.id, u.username, u.email,
+                   COALESCE(sp.first_name, '') AS first_name,
+                   COALESCE(sp.last_name, '') AS last_name,
+                   COALESCE(sp.student_id, '') AS student_number,
+                   COALESCE(sp.major_program, '') AS major_program
+            FROM users u
+            JOIN classroom_students cs ON cs.student_id = u.id
+            LEFT JOIN student_profiles sp ON sp.user_id = u.id
+            WHERE u.role = 'student'
+            ORDER BY LOWER(COALESCE(NULLIF(sp.first_name, ''), u.username)),
+                     LOWER(COALESCE(NULLIF(sp.last_name, ''), u.email)), u.id
+            """
+        ).fetchall()
+        students = [
+            {
+                "id": int(_value(row, "id", 0, 0)),
+                "username": _value(row, "username", 1, ""),
+                "email": _value(row, "email", 2, "") or "",
+                "first_name": _value(row, "first_name", 3, "") or "",
+                "last_name": _value(row, "last_name", 4, "") or "",
+                "student_number": _value(row, "student_number", 5, "") or "",
+                "major_program": _value(row, "major_program", 6, "") or "",
+            }
+            for row in student_rows
+        ]
+        for item in students:
+            item["display_name"] = (
+                " ".join(part for part in (item["first_name"], item["last_name"]) if part).strip()
+                or item["username"]
+                or "Student"
+            )
+
+        selected_student = None
+        if requested_student_id is not None:
+            selected_student = next((item for item in students if item["id"] == requested_student_id), None)
+            if selected_student is None:
+                abort(404)
+
+        classrooms = []
+        if selected_student:
+            rows = conn.execute(
+                """
+                SELECT c.id, c.name, c.section, c.code, c.supervisor_id,
+                       COALESCE(su.username, '') AS supervisor_name,
+                       COALESCE(c.archived, 0) AS archived
+                FROM classroom_students cs
+                JOIN classrooms c ON c.id = cs.classroom_id
+                LEFT JOIN users su ON su.id = c.supervisor_id
+                WHERE cs.student_id = ?
+                ORDER BY COALESCE(c.archived, 0), LOWER(c.name), LOWER(c.section), c.id
+                """,
+                (selected_student["id"],),
+            ).fetchall()
+            classrooms = [
+                {
+                    "id": int(_value(row, "id", 0, 0)),
+                    "name": _value(row, "name", 1, "Intern Classroom"),
+                    "section": _value(row, "section", 2, "") or "",
+                    "code": _value(row, "code", 3, "") or "",
+                    "supervisor_id": int(_value(row, "supervisor_id", 4, 0) or 0),
+                    "supervisor_name": _value(row, "supervisor_name", 5, "") or "",
+                    "archived": bool(_value(row, "archived", 6, 0)),
+                }
+                for row in rows
+            ]
+    finally:
+        conn.close()
+
+    selected_classroom = None
+    if requested_class_id is not None:
+        selected_classroom = next((item for item in classrooms if item["id"] == requested_class_id), None)
+        if selected_student and selected_classroom is None:
+            abort(404)
+    elif len(classrooms) == 1:
+        selected_classroom = classrooms[0]
+
+    context = None
+    if selected_student and selected_classroom:
+        report = build_student_report(selected_student["id"], selected_classroom["id"])
+        profile = get_supervisor_intern_profile(
+            supervisor_id=selected_classroom["supervisor_id"],
+            classroom_id=selected_classroom["id"],
+            student_id=selected_student["id"],
+        )
+        if not profile.get("ok"):
+            abort(int(profile.get("status_code") or 404))
+        evaluation_context = get_supervisor_evaluation_context(
+            supervisor_id=selected_classroom["supervisor_id"],
+            classroom_id=selected_classroom["id"],
+            student_id=selected_student["id"],
+        )
+        if not evaluation_context.get("ok"):
+            abort(int(evaluation_context.get("status_code") or 404))
+        context = {
+            "report": report,
+            "attendance": profile.get("attendance_summary") or {},
+            "daily_performance": profile.get("daily_performance") or {"history": [], "summary": {}},
+            "logbook": profile.get("logbook_summary") or {},
+            "official_evaluation": evaluation_context.get("evaluation"),
+        }
+
+    return render_template(
+        "admin/student_insights.html",
+        students=students,
+        selected_student=selected_student,
+        classrooms=classrooms,
+        selected_classroom=selected_classroom,
+        insights=context,
+        active_page="reports",
+    )
