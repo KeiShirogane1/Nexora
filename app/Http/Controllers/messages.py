@@ -7,6 +7,7 @@ from app.Http.Middleware.security import login_required
 from app.Models.db import get_db_connection
 from app.Services.messaging_schema import ensure_messaging_schema
 from app.Services.profile_image_storage import profile_picture_cdn_url
+from app.Services.profile_service import normalize_program_name
 from app.Services.messaging_service import (
     get_authorized_contact,
     get_authorized_contacts,
@@ -46,6 +47,32 @@ def _user_profile_picture(user_id):
     except Exception:
         value = row[0] if len(row) else None
     return str(value or "").strip()
+
+
+def _student_major_program(user_id):
+    try:
+        user_id = int(user_id)
+    except (TypeError, ValueError):
+        return ""
+
+    conn = get_db_connection()
+    try:
+        row = conn.execute(
+            "SELECT major_program FROM student_profiles WHERE user_id = ?",
+            (user_id,),
+        ).fetchone()
+    except Exception:
+        row = None
+    finally:
+        conn.close()
+
+    if not row:
+        return ""
+    try:
+        value = row["major_program"]
+    except Exception:
+        value = row[0] if len(row) else None
+    return normalize_program_name(value)
 
 
 def _avatar_file_extension(path):
@@ -110,6 +137,12 @@ def _contact_payload(contact):
     # that canonical account-level value whenever the role-specific lookup is empty.
     if not profile_picture:
         profile_picture = _user_profile_picture(payload.get("id"))
+
+    # Profile UI consumers may reuse this already-authorized contact payload.
+    # Only student contacts receive their stored academic program, normalized for
+    # legacy abbreviations; messaging authorization still decides who appears here.
+    if payload.get("role") == "student":
+        payload["major_program"] = _student_major_program(payload.get("id"))
 
     local_avatar = _chat_avatar_filename(profile_picture)
     if local_avatar:
