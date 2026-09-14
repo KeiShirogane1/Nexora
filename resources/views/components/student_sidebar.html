@@ -142,7 +142,7 @@
                 <span class="nx-role-icon">▦</span><span class="nx-role-nav-text">Dashboard</span>
             </a>
             <a href="{{ url_for('classroom.student_classes') }}" aria-label="Intern Classrooms" class="{% if request.path.startswith('/student/classes') and not sidebar_ml_active and not sidebar_report_active %}active{% endif %}">
-                <span class="nx-role-icon">♙</span><span class="nx-role-nav-text">Intern Classrooms</span>
+                <span class="nx-role-icon">♙</span><span class="nx-role-nav-text">Intern Classroom</span>
             </a>
 
             <div class="nx-role-divider"></div>
@@ -210,6 +210,21 @@
             heading.style.setProperty('font-weight', '800', 'important');
             heading.style.setProperty('letter-spacing', '-0.03em', 'important');
         });
+    }
+
+    function resolveInternClassroomEntry() {
+        if (window.location.pathname !== '/student/classes' && window.location.pathname !== '/student/classes/') return;
+
+        var classroomLinks = Array.from(document.querySelectorAll('a.student-intern-open-btn[href]'));
+        if (classroomLinks.length === 1) {
+            window.location.replace(classroomLinks[0].href);
+            return;
+        }
+
+        if (classroomLinks.length === 0) {
+            var joinLink = document.querySelector('a.empty-join[href], a.join-btn[href*="/student/classes/join"]');
+            if (joinLink) window.location.replace(joinLink.href);
+        }
     }
 
     function enhanceStudentDocumentsPage() {
@@ -302,6 +317,7 @@
 
     function applyStudentShellEnhancements() {
         applyCanonicalStudentHeading();
+        resolveInternClassroomEntry();
         enhanceStudentDocumentsPage();
     }
 
