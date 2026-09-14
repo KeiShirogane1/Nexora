@@ -66,16 +66,18 @@ def test_admin_classroom_landing_removes_type_filter_but_keeps_type_display():
 
 
 def test_admin_shared_shell_matches_dashboard_heading_and_gutters():
+    css = _read("resources/assets/css/admin.css")
     shared = _read("resources/views/components/admin_topbar.html")
-    assert 'id="nx-admin-dashboard-aligned-ui"' in shared
-    assert "--nx-admin-ui-shell-max: 1480px" in shared
-    assert "--nx-admin-ui-gutter: 28px" in shared
-    assert "font-size: clamp(2rem, 3vw, 2.7rem)" in shared
-    assert "letter-spacing: -0.045em" in shared
-    assert 'content: "ADMIN PORTAL"' in shared
-    assert "font-size: 0.93rem" in shared
-    assert ":not(.admin-dashboard-page) .admin-main" in shared
-    assert "grid-template-columns: minmax(260px, 1fr) 190px auto" in shared
+    assert "ADMIN SHARED DASHBOARD-ALIGNED PAGE SHELL" in css
+    assert "--nx-admin-ui-shell-max: 1480px" in css
+    assert "--nx-admin-ui-gutter: 28px" in css
+    assert "font-size: clamp(2rem, 3vw, 2.7rem)" in css
+    assert "letter-spacing: -0.045em" in css
+    assert 'content: "ADMIN PORTAL"' in css
+    assert "font-size: 0.93rem" in css
+    assert ":not(.admin-dashboard-page) .admin-main" in css
+    assert "grid-template-columns: minmax(260px, 1fr) 190px auto" in css
+    assert 'id="nx-admin-dashboard-aligned-ui"' not in shared
 
 
 def test_admin_document_route_remains_protected_and_txt_can_download():
@@ -105,7 +107,7 @@ def test_admin_document_folder_has_explicit_image_pdf_txt_action_matrix():
 def test_admin_classroom_detail_keeps_work_and_official_evaluation_separate():
     source = _read("app/Http/Controllers/admin_classrooms.py")
     template = _read("resources/views/admin/classroom_detail.html")
-    shared = _read("resources/views/components/admin_topbar.html")
+    css = _read("resources/assets/css/admin.css")
     assert "build_class_reports(classroom_id)" in source
     assert "ojt_evaluations" in source
     assert "<progress" in template
@@ -115,8 +117,8 @@ def test_admin_classroom_detail_keeps_work_and_official_evaluation_separate():
     assert "separate manual supervisor-entered record" in template
     assert "not included in Work, ML, attendance, or logbook metrics" in template
     assert "admin-evaluation-note" in template
-    assert ".admin-evaluation-note" in shared
-    assert "padding: 0 16px 18px" in shared
+    assert ".admin-evaluation-note" in css
+    assert "padding: 0 16px 18px" in css
     assert "required_hours" in template
 
 
