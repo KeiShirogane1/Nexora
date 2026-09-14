@@ -52,6 +52,32 @@ def test_admin_student_documents_landing_has_no_obsolete_classroom_type_filter()
     assert 'name="search"' in template
 
 
+def test_admin_classroom_landing_removes_type_filter_but_keeps_type_display():
+    template = _read("resources/views/admin/classrooms.html")
+    assert 'id="classroomType"' not in template
+    assert 'name="type"' not in template
+    assert ">All Types<" not in template
+    assert '<th>Type</th>' in template
+    assert "Intern Classroom" in template
+    assert 'name="search"' in template
+    assert 'name="status"' in template
+    assert ">Reset<" in template
+    assert ">Apply<" in template
+
+
+def test_admin_shared_shell_matches_dashboard_heading_and_gutters():
+    shared = _read("resources/views/components/admin_topbar.html")
+    assert 'id="nx-admin-dashboard-aligned-ui"' in shared
+    assert "--nx-admin-ui-shell-max: 1480px" in shared
+    assert "--nx-admin-ui-gutter: 28px" in shared
+    assert "font-size: clamp(2rem, 3vw, 2.7rem)" in shared
+    assert "letter-spacing: -0.045em" in shared
+    assert 'content: "ADMIN PORTAL"' in shared
+    assert "font-size: 0.93rem" in shared
+    assert ":not(.admin-dashboard-page) .admin-main" in shared
+    assert "grid-template-columns: minmax(260px, 1fr) 190px auto" in shared
+
+
 def test_admin_document_route_remains_protected_and_txt_can_download():
     source = _read("app/Http/Controllers/admin_classrooms.py")
     assert '@role_required("admin")' in source
@@ -79,6 +105,7 @@ def test_admin_document_folder_has_explicit_image_pdf_txt_action_matrix():
 def test_admin_classroom_detail_keeps_work_and_official_evaluation_separate():
     source = _read("app/Http/Controllers/admin_classrooms.py")
     template = _read("resources/views/admin/classroom_detail.html")
+    shared = _read("resources/views/components/admin_topbar.html")
     assert "build_class_reports(classroom_id)" in source
     assert "ojt_evaluations" in source
     assert "<progress" in template
@@ -87,6 +114,9 @@ def test_admin_classroom_detail_keeps_work_and_official_evaluation_separate():
     assert "Official OJT Evaluation" in template
     assert "separate manual supervisor-entered record" in template
     assert "not included in Work, ML, attendance, or logbook metrics" in template
+    assert "admin-evaluation-note" in template
+    assert ".admin-evaluation-note" in shared
+    assert "padding: 0 16px 18px" in shared
     assert "required_hours" in template
 
 
