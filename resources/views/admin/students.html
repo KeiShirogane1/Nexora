@@ -58,11 +58,11 @@
                             </div>
                             <div>
                                 <label for="programFilter">Program</label>
-                                <select id="programFilter" class="form-select">
+                                <select id="programFilter" class="form-select" data-nx-program-database="true">
                                     <option value="all">All Programs</option>
-                                    <option value="bsit">BSIT</option>
-                                    <option value="bscs">BSCS</option>
-                                    <option value="other">Other</option>
+                                    {% for program in programs %}
+                                        <option value="{{ program|lower }}">{{ program }}</option>
+                                    {% endfor %}
                                 </select>
                             </div>
                             <div class="filter-actions filter-actions-end">
@@ -187,10 +187,6 @@
                         </div>
                     </div>
 
-                    <a href="{{ url_for('admin.admin_users') }}" class="btn-nexora-secondary mt-2 back-to-users-link">
-                        ← Back to Users
-                    </a>
-
                 </div>
 
             </div>
@@ -224,7 +220,7 @@
                         </div>
                         <div class="nexora-form-group">
                             <label for="studentProgram">Program <span class="req">*</span></label>
-                            <select id="studentProgram" name="program" class="nexora-form-control" required>
+                            <select id="studentProgram" name="program" class="nexora-form-control" data-nx-program-database="true" required>
                                 <option value="" disabled selected>Select Program</option>
                                 {% for prog in programs %}
                                     <option value="{{ prog }}">{{ prog }}</option>
@@ -380,12 +376,7 @@
                             if (supervisor === "assigned" && !rowSupervisor) show = false;
                             if (supervisor === "unassigned" && rowSupervisor) show = false;
                         }
-                        if (program !== "all") {
-                            if (program === "other") {
-                                if (!rowProgram || ["bsit", "bscs"].includes(rowProgram))
-                                    show = false;
-                            } else if (rowProgram !== program) show = false;
-                        }
+                        if (program !== "all" && rowProgram !== program) show = false;
                         row.style.display = show ? "" : "none";
                         if (!show) {
                             const cb = row.querySelector(".row-checkbox");
@@ -742,7 +733,6 @@
 
                         if (hasError) return;
 
-                        // Disable submit, prevent duplicate
                         const originalText = submitBtn.textContent;
                         submitBtn.disabled = true;
                         submitBtn.textContent = "Creating...";
@@ -774,7 +764,6 @@
                             const data = await resp.json();
                             if (resp.ok && data.success) {
                                 closeModal();
-                                // Show success and reload to show new student
                                 if (window.showToast)
                                     showToast(
                                         data.message || "Student created successfully.",
@@ -787,7 +776,6 @@
                                     generalError.style.display = "block";
                                 }
                                 for (const [field, msg] of Object.entries(errors)) {
-                                    // Map backend field names to input ids
                                     const fieldMap = {
                                         full_name: "studentFullName",
                                         username: "studentUsername",
@@ -822,4 +810,3 @@
 
     </body>
 </html>
-
