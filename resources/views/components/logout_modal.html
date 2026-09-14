@@ -78,6 +78,32 @@ button[aria-label^="Close "]:focus-visible {
     height: 1em !important;
     display: block !important;
 }
+
+/* Admin document pages reuse the Supervisor document geometry, not its blue page tint. */
+body.admin-documents-role,
+body.admin-documents-role .supervisor-documents-page,
+body.admin-documents-role .supervisor-document-folder-page {
+    background: #fff8f5 !important;
+}
+body.admin-documents-role .supervisor-doc-filter-grid {
+    grid-template-columns: minmax(260px, 1fr) 210px auto !important;
+}
+@media (max-width: 1050px) {
+    body.admin-documents-role .supervisor-doc-filter-grid {
+        grid-template-columns: 1fr 1fr !important;
+    }
+    body.admin-documents-role .supervisor-doc-filter-grid input {
+        grid-column: 1 / -1 !important;
+    }
+}
+@media (max-width: 760px) {
+    body.admin-documents-role .supervisor-doc-filter-grid {
+        grid-template-columns: 1fr !important;
+    }
+    body.admin-documents-role .supervisor-doc-filter-grid input {
+        grid-column: auto !important;
+    }
+}
 </style>
 
 <div id="nexora-logout-overlay" class="nexora-logout-overlay" role="dialog" aria-modal="true" aria-labelledby="logout-title">
@@ -116,10 +142,86 @@ button[aria-label^="Close "]:focus-visible {
         });
     }
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', removeDuplicateClassInfoMenuAction);
-    } else {
+    function normalizeKnownProgram(value) {
+        var text = String(value || '').trim();
+        var aliases = {
+            'bsit': 'Bachelor of Science in Information Technology',
+            'bs information technology': 'Bachelor of Science in Information Technology',
+            'bs in information technology': 'Bachelor of Science in Information Technology',
+            'bachelor of science in information technology': 'Bachelor of Science in Information Technology',
+            'bscs': 'Bachelor of Science in Computer Science',
+            'bs computer science': 'Bachelor of Science in Computer Science',
+            'bs in computer science': 'Bachelor of Science in Computer Science',
+            'bachelor of science in computer science': 'Bachelor of Science in Computer Science',
+            'bsis': 'Bachelor of Science in Information Systems',
+            'bs information systems': 'Bachelor of Science in Information Systems',
+            'bs in information systems': 'Bachelor of Science in Information Systems',
+            'bachelor of science in information systems': 'Bachelor of Science in Information Systems',
+            'bscpe': 'Bachelor of Science in Computer Engineering',
+            'bscpe.': 'Bachelor of Science in Computer Engineering',
+            'bs computer engineering': 'Bachelor of Science in Computer Engineering',
+            'bs in computer engineering': 'Bachelor of Science in Computer Engineering',
+            'bachelor of science in computer engineering': 'Bachelor of Science in Computer Engineering'
+        };
+        return aliases[text.toLowerCase()] || text;
+    }
+
+    function preserveActualAdminProgramLabels() {
+        if (window.location.pathname !== '/admin/users/students') return;
+        window.setTimeout(function () {
+            var rows = Array.from(document.querySelectorAll('#studentsTable tbody tr[data-program]'));
+            var programs = [];
+            rows.forEach(function (row) {
+                var cells = row.querySelectorAll('td');
+                var raw = cells.length > 5 ? String(cells[5].textContent || '').trim() : '';
+                if (!raw || raw === '—') return;
+                var program = normalizeKnownProgram(raw);
+                row.setAttribute('data-program', program.toLowerCase());
+                if (!programs.some(function (item) { return item.toLowerCase() === program.toLowerCase(); })) programs.push(program);
+            });
+            programs.sort(function (a, b) { return a.localeCompare(b); });
+
+            var filter = document.getElementById('programFilter');
+            if (filter) {
+                filter.innerHTML = '<option value="all">All Programs</option>';
+                programs.forEach(function (program) {
+                    var option = document.createElement('option');
+                    option.value = program.toLowerCase();
+                    option.textContent = program;
+                    filter.appendChild(option);
+                });
+            }
+
+            var createSelect = document.getElementById('studentProgram');
+            if (createSelect) {
+                var custom = Array.from(createSelect.options).find(function (option) { return option.value === '__custom__'; });
+                createSelect.innerHTML = '<option value="" disabled selected>Select Program</option>';
+                programs.forEach(function (program) {
+                    var option = document.createElement('option');
+                    option.value = program;
+                    option.textContent = program;
+                    createSelect.appendChild(option);
+                });
+                if (custom) createSelect.appendChild(custom);
+                else {
+                    var customOption = document.createElement('option');
+                    customOption.value = '__custom__';
+                    customOption.textContent = 'Other / Specify Program';
+                    createSelect.appendChild(customOption);
+                }
+            }
+        }, 0);
+    }
+
+    function applySharedPolish() {
         removeDuplicateClassInfoMenuAction();
+        preserveActualAdminProgramLabels();
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', applySharedPolish);
+    } else {
+        applySharedPolish();
     }
 })();
 </script>
