@@ -1,26 +1,54 @@
 <style id="nx-quick-search-input-fix">
-body:has(.nx-role-sidebar-shell) .nx-quick-search .nx-quick-search-control input[data-nx-quick-search-input] {
+/*
+ * The global portal form-control pass intentionally strengthens normal inputs.
+ * Quick Search is the exception: its rounded shell is the control, so the
+ * nested search input must remain visually transparent and borderless.
+ */
+body:has(.nx-role-sidebar-shell) .nx-role-topbar .nx-quick-search-control > input[type="search"][data-nx-quick-search-input] {
+    all: unset !important;
+    box-sizing: border-box !important;
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
     height: auto !important;
     min-height: 0 !important;
+    display: block !important;
     padding: 0 !important;
+    margin: 0 !important;
     border: 0 !important;
     border-radius: 0 !important;
     outline: 0 !important;
     background: transparent !important;
+    background-color: transparent !important;
     box-shadow: none !important;
     color: var(--nx-topbar-ink) !important;
+    font-family: inherit !important;
+    font-size: 12px !important;
     font-weight: 500 !important;
+    line-height: 1.35 !important;
+    -webkit-appearance: none !important;
+    appearance: none !important;
 }
 
-body:has(.nx-role-sidebar-shell) .nx-quick-search .nx-quick-search-control input[data-nx-quick-search-input]:focus {
+body:has(.nx-role-sidebar-shell) .nx-role-topbar .nx-quick-search-control > input[type="search"][data-nx-quick-search-input]:focus,
+body:has(.nx-role-sidebar-shell) .nx-role-topbar .nx-quick-search-control > input[type="search"][data-nx-quick-search-input]:focus-visible {
     border: 0 !important;
     outline: 0 !important;
+    background: transparent !important;
     box-shadow: none !important;
 }
 
-body:has(.nx-role-sidebar-shell) .nx-quick-search .nx-quick-search-control input[data-nx-quick-search-input]::placeholder {
+body:has(.nx-role-sidebar-shell) .nx-role-topbar .nx-quick-search-control > input[type="search"][data-nx-quick-search-input]::placeholder {
     color: #92a0ae !important;
     opacity: 1 !important;
     font-weight: 500 !important;
+}
+
+body:has(.nx-role-sidebar-shell) .nx-role-topbar .nx-quick-search-control > input[type="search"][data-nx-quick-search-input]::-webkit-search-decoration,
+body:has(.nx-role-sidebar-shell) .nx-role-topbar .nx-quick-search-control > input[type="search"][data-nx-quick-search-input]::-webkit-search-cancel-button,
+body:has(.nx-role-sidebar-shell) .nx-role-topbar .nx-quick-search-control > input[type="search"][data-nx-quick-search-input]::-webkit-search-results-button,
+body:has(.nx-role-sidebar-shell) .nx-role-topbar .nx-quick-search-control > input[type="search"][data-nx-quick-search-input]::-webkit-search-results-decoration {
+    -webkit-appearance: none !important;
+    appearance: none !important;
 }
 </style>
