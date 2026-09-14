@@ -1,12 +1,36 @@
+import uuid
 import pathlib, sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 from unittest.mock import MagicMock, patch
 from bootstrap.app import app
+from app.Models.db import get_db_connection
+from app.Services.password_security import hash_password
 
 def _login_as(client, user_id, role):
     with client.session_transaction() as sess:
         sess["user_id"] = user_id
         sess["role"] = role
+
+def _create_test_supervisor(prefix):
+    username = f"{prefix}_{uuid.uuid4().hex[:10]}"
+    conn = get_db_connection()
+    try:
+        row = conn.execute(
+            "INSERT INTO users (username,email,password,role,status) VALUES (?,?,?,?,?) RETURNING id",
+            (username, f"{username}@example.com", hash_password("pass12345"), "supervisor", "active"),
+        ).fetchone()
+        conn.commit()
+        return row[0]
+    finally:
+        conn.close()
+
+def _delete_test_user(user_id):
+    conn = get_db_connection()
+    try:
+        conn.execute("DELETE FROM users WHERE id = ?", (user_id,))
+        conn.commit()
+    finally:
+        conn.close()
 
 def _mock_active_supervisor_conn(mock_conn=None, mock_cursor=None):
     """Helper to return mock that treats supervisor as active for before_request."""
@@ -44,41 +68,49 @@ def test_supervisor_dashboard_ok_filtered():
     app.config["WTF_CSRF_ENABLED"] = False
     app.config["TESTING"] = True
     client = app.test_client()
-    _login_as(client, 95007, "supervisor")
-    mock_conn = MagicMock()
-    mock_cursor = MagicMock()
-    mock_cursor.execute.return_value = mock_cursor
-    mock_cursor.fetchone.return_value = (0,)
-    mock_cursor.fetchall.return_value = []
-    mock_conn.cursor.return_value = mock_cursor
-    mock_active = MagicMock()
-    mock_active.fetchone.return_value = {"status": "active"}
-    mock_active.fetchall.return_value = []
-    mock_conn.execute.return_value = mock_active
-    assigned_context = {
-        "classrooms": [], "interns": [], "flat_interns": [], "legacy_interns": [],
-        "summary": {"total_interns":0,"classroom_count":0,"classroom_placements":0,"pending_reviews":0,"legacy_only":0},
-    }
-    with patch("app.Http.Controllers.supervisor.get_db_connection", return_value=mock_conn), \
-         patch("app.Services.assigned_interns_service.get_supervisor_assigned_interns", return_value=assigned_context):
-        resp = client.get("/supervisor/dashboard")
-        assert resp.status_code == 200
-        assert b"Supervisor Dashboard" in resp.data
+    supervisor_id = _create_test_supervisor("sup_dashboard")
+    try:
+        _login_as(client, supervisor_id, "supervisor")
+        mock_conn = MagicMock()
+        mock_cursor = MagicMock()
+        mock_cursor.execute.return_value = mock_cursor
+        mock_cursor.fetchone.return_value = (0,)
+        mock_cursor.fetchall.return_value = []
+        mock_conn.cursor.return_value = mock_cursor
+        mock_active = MagicMock()
+        mock_active.fetchone.return_value = {"status": "active"}
+        mock_active.fetchall.return_value = []
+        mock_conn.execute.return_value = mock_active
+        assigned_context = {
+            "classrooms": [], "interns": [], "flat_interns": [], "legacy_interns": [],
+            "summary": {"total_interns":0,"classroom_count":0,"classroom_placements":0,"pending_reviews":0,"legacy_only":0},
+        }
+        with patch("app.Http.Controllers.supervisor.get_db_connection", return_value=mock_conn), \
+             patch("app.Services.assigned_interns_service.get_supervisor_assigned_interns", return_value=assigned_context):
+            resp = client.get("/supervisor/dashboard")
+            assert resp.status_code == 200
+            assert b"Supervisor Dashboard" in resp.data
+    finally:
+        _delete_test_user(supervisor_id)
 
 def test_inactive_supervisor_blocked():
     app.config["WTF_CSRF_ENABLED"] = False
     app.config["TESTING"] = True
     client = app.test_client()
-    _login_as(client, 95007, "supervisor")
-    mock_conn = MagicMock()
-    mock_inactive = MagicMock()
-    mock_inactive.fetchone.return_value = {"status": "inactive"}
-    mock_conn.execute.return_value = mock_inactive
-    mock_conn.cursor.return_value = MagicMock()
-    with patch("app.Http.Controllers.supervisor.get_db_connection", return_value=mock_conn):
-        resp = client.get("/supervisor/dashboard")
-        assert resp.status_code == 403
-        assert b"deactivated" in resp.data.lower()
+    supervisor_id = _create_test_supervisor("sup_inactive")
+    try:
+        _login_as(client, supervisor_id, "supervisor")
+        mock_conn = MagicMock()
+        mock_inactive = MagicMock()
+        mock_inactive.fetchone.return_value = {"status": "inactive"}
+        mock_conn.execute.return_value = mock_inactive
+        mock_conn.cursor.return_value = MagicMock()
+        with patch("app.Http.Controllers.supervisor.get_db_connection", return_value=mock_conn):
+            resp = client.get("/supervisor/dashboard")
+            assert resp.status_code == 403
+            assert b"deactivated" in resp.data.lower()
+    finally:
+        _delete_test_user(supervisor_id)
 
 # 2. intern list ownership
 def test_interns_shows_only_assigned():
