@@ -78,6 +78,12 @@ def test_admin_shared_shell_matches_dashboard_heading_and_gutters():
     assert ":not(.admin-dashboard-page) .admin-main" in css
     assert "grid-template-columns: minmax(260px, 1fr) 190px auto" in css
     assert 'id="nx-admin-dashboard-aligned-ui"' not in shared
+    assert 'id="nx-admin-compact-topbar-reserve-fix"' in shared
+    assert "padding-top: 68px !important" in shared
+    assert "padding-top: 64px !important" in shared
+    assert ":not(.admin-dashboard-page) .admin-main > :first-child" in shared
+    assert "margin-top: 24px !important" in shared
+    assert "margin-top: 20px !important" in shared
 
 
 def test_admin_document_route_remains_protected_and_txt_can_download():
