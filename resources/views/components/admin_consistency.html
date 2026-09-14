@@ -1,0 +1,432 @@
+{# Shared Admin-only UI consistency layer. Keep role behavior and routes unchanged. #}
+<style id="nx-admin-consistency-styles">
+:root {
+    --nx-admin-accent: #f4512c;
+    --nx-admin-accent-dark: #c73f20;
+    --nx-admin-accent-soft: #fff0ea;
+    --nx-admin-ink: #13261f;
+    --nx-admin-muted: #74827d;
+    --nx-admin-line: #e7ece9;
+}
+
+/* Supervisor document layout reused for Admin, with Admin role colors. */
+body.admin-documents-role .supervisor-doc-summary-icon,
+body.admin-documents-role .supervisor-doc-classroom-icon,
+body.admin-documents-role .supervisor-doc-avatar {
+    background: var(--nx-admin-accent-soft) !important;
+    color: var(--nx-admin-accent-dark) !important;
+}
+body.admin-documents-role .supervisor-doc-type-pill,
+body.admin-documents-role .supervisor-doc-card-heading .ui-eyebrow,
+body.admin-documents-role .supervisor-doc-membership-row > span,
+body.admin-documents-role .supervisor-doc-preview-icon,
+body.admin-documents-role .supervisor-doc-preview-file > span {
+    color: var(--nx-admin-accent-dark) !important;
+}
+body.admin-documents-role .supervisor-doc-type-pill {
+    background: var(--nx-admin-accent-soft) !important;
+}
+body.admin-documents-role .supervisor-doc-filter-grid input:focus,
+body.admin-documents-role .supervisor-doc-filter-grid select:focus {
+    border-color: var(--nx-admin-accent) !important;
+    box-shadow: 0 0 0 3px rgba(244, 81, 44, .10) !important;
+}
+body.admin-documents-role .supervisor-doc-filter-actions button,
+body.admin-documents-role .supervisor-doc-view-button:hover,
+body.admin-documents-role .supervisor-doc-view-button:focus-visible {
+    border-color: var(--nx-admin-accent) !important;
+    background: var(--nx-admin-accent) !important;
+    color: #fff !important;
+}
+body.admin-documents-role .supervisor-doc-filter-actions a,
+body.admin-documents-role .supervisor-doc-view-button,
+body.admin-documents-role .admin-doc-action-button {
+    border-color: #efc4b8 !important;
+    color: var(--nx-admin-accent-dark) !important;
+}
+body.admin-documents-role .supervisor-doc-filter-actions a:hover,
+body.admin-documents-role .admin-doc-action-button:hover {
+    background: var(--nx-admin-accent-soft) !important;
+    color: var(--nx-admin-accent-dark) !important;
+}
+.admin-doc-page-heading,
+.admin-insights-heading,
+.admin-classroom-detail-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 18px;
+}
+.admin-doc-page-heading h1,
+.admin-insights-heading h1,
+.admin-classroom-detail-heading h1 {
+    margin: 0;
+    color: var(--nx-admin-ink);
+    font-size: 1.9rem;
+    font-weight: 900;
+    letter-spacing: -.035em;
+}
+.admin-doc-page-heading p,
+.admin-insights-heading p,
+.admin-classroom-detail-heading p {
+    margin: 6px 0 0;
+    color: var(--nx-admin-muted);
+    font-size: .88rem;
+}
+.admin-role-eyebrow {
+    display: inline-block;
+    margin-bottom: 7px;
+    color: var(--nx-admin-accent-dark);
+    font-size: .68rem;
+    font-weight: 900;
+    letter-spacing: .10em;
+    text-transform: uppercase;
+}
+
+/* Admin Insights */
+body.admin-insights-page { background: #fff8f5 !important; }
+.admin-insights-shell {
+    width: min(100%, 1440px);
+    margin: 0 auto;
+}
+.admin-insights-filter-card,
+.admin-insights-context,
+.admin-insights-card,
+.admin-insights-kpi,
+.admin-insights-empty,
+.admin-classroom-card,
+.admin-classroom-kpi,
+.admin-classroom-panel,
+.admin-student-info-card {
+    border: 1px solid var(--nx-admin-line);
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 6px 22px rgba(52, 32, 26, .045);
+}
+.admin-insights-filter-card { padding: 14px; margin-bottom: 16px; }
+.admin-insights-filter-grid {
+    display: grid;
+    grid-template-columns: minmax(260px, 1fr) minmax(260px, 1fr) auto;
+    gap: 12px;
+    align-items: end;
+}
+.admin-insights-filter-grid label {
+    display: block;
+    margin-bottom: 6px;
+    color: #5c6964;
+    font-size: .72rem;
+    font-weight: 850;
+}
+.admin-insights-filter-grid select {
+    width: 100%;
+    height: 42px;
+    border: 1px solid #dbe3df;
+    border-radius: 10px;
+    background: #fff;
+    padding: 0 12px;
+    color: #243832;
+    font: inherit;
+    font-size: .82rem;
+}
+.admin-insights-filter-grid select:focus {
+    outline: none;
+    border-color: var(--nx-admin-accent);
+    box-shadow: 0 0 0 3px rgba(244,81,44,.10);
+}
+.admin-insights-context {
+    display: flex;
+    justify-content: space-between;
+    gap: 18px;
+    align-items: center;
+    padding: 16px 18px;
+    margin-bottom: 14px;
+}
+.admin-insights-context h2 { margin: 0; color: var(--nx-admin-ink); font-size: 1.15rem; font-weight: 900; }
+.admin-insights-context p { margin: 5px 0 0; color: var(--nx-admin-muted); font-size: .78rem; }
+.admin-insights-readonly {
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: var(--nx-admin-accent-soft);
+    color: var(--nx-admin-accent-dark);
+    font-size: .68rem;
+    font-weight: 900;
+    white-space: nowrap;
+}
+.admin-insights-kpis {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 14px;
+}
+.admin-insights-kpi { padding: 15px; }
+.admin-insights-kpi span { display: block; color: var(--nx-admin-muted); font-size: .7rem; font-weight: 800; }
+.admin-insights-kpi strong { display: block; margin: 6px 0 3px; color: var(--nx-admin-ink); font-size: 1.45rem; line-height: 1; }
+.admin-insights-kpi small { color: #87948f; font-size: .66rem; line-height: 1.35; }
+.admin-insights-workspace {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(340px, .9fr);
+    gap: 14px;
+    align-items: start;
+}
+.admin-insights-column { display: grid; gap: 14px; }
+.admin-insights-card { padding: 18px; }
+.admin-insights-card h3 { margin: 0; color: var(--nx-admin-ink); font-size: .98rem; font-weight: 900; }
+.admin-insights-card > p { margin: 5px 0 14px; color: var(--nx-admin-muted); font-size: .75rem; line-height: 1.5; }
+.admin-insights-metrics {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+.admin-insights-metric {
+    padding: 12px;
+    border: 1px solid #eef1ef;
+    border-radius: 11px;
+    background: #fcfdfc;
+}
+.admin-insights-metric span { display: block; color: #7b8984; font-size: .66rem; font-weight: 800; }
+.admin-insights-metric strong { display: block; margin-top: 4px; color: #233831; font-size: .9rem; }
+.admin-insights-progress-row { margin-top: 11px; }
+.admin-insights-progress-row:first-child { margin-top: 0; }
+.admin-insights-progress-head { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 6px; color: #4c5f58; font-size: .7rem; font-weight: 800; }
+.admin-insights-progress { width: 100%; height: 9px; accent-color: var(--nx-admin-accent); }
+.admin-insights-history { display: grid; gap: 8px; }
+.admin-insights-history-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 0;
+    border-top: 1px solid #eef1ef;
+}
+.admin-insights-history-row:first-child { border-top: 0; padding-top: 0; }
+.admin-insights-history-row strong { color: #263a34; font-size: .78rem; }
+.admin-insights-history-row small { display: block; margin-top: 3px; color: #8b9793; font-size: .67rem; }
+.admin-insights-note {
+    padding: 12px 13px;
+    border: 1px solid #f5d7cd;
+    border-radius: 11px;
+    background: #fff8f5;
+    color: #75564d;
+    font-size: .72rem;
+    line-height: 1.55;
+}
+.admin-insights-empty { padding: 44px 20px; text-align: center; }
+.admin-insights-empty h2 { margin: 0; color: #263a34; font-size: 1rem; font-weight: 900; }
+.admin-insights-empty p { margin: 7px 0 0; color: #899590; font-size: .78rem; }
+
+/* Admin classroom detail */
+body.admin-classroom-detail-page { background: #fff8f5 !important; }
+.admin-classroom-detail-shell { width: min(100%, 1440px); margin: 0 auto; }
+.admin-classroom-status {
+    padding: 7px 11px;
+    border-radius: 999px;
+    background: #e8f8ef;
+    color: #16834c;
+    font-size: .68rem;
+    font-weight: 900;
+}
+.admin-classroom-status.is-archived { background: #eef1f4; color: #64748b; }
+.admin-classroom-kpis {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0,1fr));
+    gap: 12px;
+    margin-bottom: 14px;
+}
+.admin-classroom-kpi { padding: 15px; }
+.admin-classroom-kpi span { display: block; color: var(--nx-admin-muted); font-size: .68rem; font-weight: 850; }
+.admin-classroom-kpi strong { display: block; margin-top: 5px; color: var(--nx-admin-ink); font-size: 1.35rem; }
+.admin-classroom-layout { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(320px, .65fr); gap: 14px; align-items: start; }
+.admin-classroom-column { display: grid; gap: 14px; }
+.admin-classroom-panel { padding: 18px; }
+.admin-classroom-panel h2 { margin: 0 0 4px; color: var(--nx-admin-ink); font-size: .95rem; font-weight: 900; }
+.admin-classroom-panel > p { margin: 0 0 14px; color: var(--nx-admin-muted); font-size: .72rem; }
+.admin-classroom-info-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 9px; }
+.admin-classroom-field { padding: 11px 12px; border: 1px solid #edf0ee; border-radius: 10px; background: #fcfdfc; min-width: 0; }
+.admin-classroom-field b { display: block; color: #89958f; font-size: .62rem; letter-spacing: .05em; text-transform: uppercase; }
+.admin-classroom-field span,
+.admin-classroom-field a { display: block; margin-top: 4px; color: #2f433c; font-size: .76rem; font-weight: 800; overflow-wrap: anywhere; text-decoration: none; }
+.admin-classroom-prose { margin: 0; padding: 12px 13px; border: 1px solid #edf0ee; border-radius: 10px; background: #fcfdfc; color: #4f605a; font-size: .74rem; line-height: 1.6; white-space: pre-wrap; }
+.admin-classroom-list { margin: 0; padding-left: 18px; color: #4f605a; font-size: .74rem; line-height: 1.6; }
+.admin-classroom-insight-row { margin-top: 11px; }
+.admin-classroom-insight-row:first-child { margin-top: 0; }
+.admin-classroom-insight-head { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 5px; color: #4c5d57; font-size: .7rem; font-weight: 800; }
+.admin-classroom-insight-row progress { width: 100%; height: 9px; accent-color: var(--nx-admin-accent); }
+.admin-classroom-insight-meta { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; margin-top: 12px; }
+.admin-classroom-roster { width: 100%; border-collapse: collapse; }
+.admin-classroom-roster th { padding: 9px 10px; border-bottom: 1px solid #e9edeb; background: #fafbfa; color: #718079; font-size: .64rem; text-transform: uppercase; letter-spacing: .04em; }
+.admin-classroom-roster td { padding: 10px; border-bottom: 1px solid #eef1ef; color: #40534c; font-size: .72rem; vertical-align: middle; }
+.admin-classroom-roster td strong { display: block; color: #20362e; }
+.admin-classroom-roster td small { display: block; margin-top: 2px; color: #909c97; }
+.admin-classroom-action { min-height: 32px; padding: 0 10px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #efc4b8; border-radius: 8px; background: #fff; color: var(--nx-admin-accent-dark); font-size: .68rem; font-weight: 850; text-decoration: none; }
+.admin-classroom-action:hover { background: var(--nx-admin-accent-soft); color: var(--nx-admin-accent-dark); }
+
+/* Student document folder extra information */
+.admin-doc-tabs { display: flex; gap: 5px; margin: 14px 0; border-bottom: 1px solid #e7ece9; }
+.admin-doc-tab { padding: 10px 13px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: #6f7c77; font: inherit; font-size: .74rem; font-weight: 850; cursor: pointer; }
+.admin-doc-tab.is-active { color: var(--nx-admin-accent-dark); border-bottom-color: var(--nx-admin-accent); }
+.admin-doc-tab-panel[hidden] { display: none !important; }
+.admin-student-info-card { padding: 16px; }
+.admin-student-info-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 9px; }
+.admin-student-info-field { padding: 11px 12px; border: 1px solid #edf1ef; border-radius: 10px; background: #fcfdfc; min-width: 0; }
+.admin-student-info-field b { display: block; color: #8b9792; font-size: .61rem; letter-spacing: .05em; text-transform: uppercase; }
+.admin-student-info-field span { display: block; margin-top: 4px; color: #2f433c; font-size: .75rem; font-weight: 800; overflow-wrap: anywhere; }
+.admin-doc-action-button { min-height: 34px; padding: 0 11px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #efc4b8; border-radius: 8px; background: #fff; color: var(--nx-admin-accent-dark); font: inherit; font-size: .7rem; font-weight: 850; text-decoration: none; cursor: pointer; }
+
+/* Custom program entry shown only when requested. */
+.nx-admin-custom-program { margin-top: 8px; }
+.nx-admin-custom-program[hidden] { display: none !important; }
+.nx-admin-custom-program input { width: 100%; min-height: 40px; padding: 0 11px; border: 1px solid #dbe3df; border-radius: 9px; font: inherit; font-size: .82rem; }
+
+@media (max-width: 1120px) {
+    .admin-insights-kpis { grid-template-columns: repeat(3,minmax(0,1fr)); }
+    .admin-classroom-kpis { grid-template-columns: repeat(2,minmax(0,1fr)); }
+    .admin-classroom-layout,
+    .admin-insights-workspace { grid-template-columns: 1fr; }
+}
+@media (max-width: 760px) {
+    .admin-doc-page-heading,
+    .admin-insights-heading,
+    .admin-classroom-detail-heading,
+    .admin-insights-context { flex-direction: column; align-items: flex-start; }
+    .admin-insights-filter-grid,
+    .admin-insights-kpis,
+    .admin-classroom-kpis,
+    .admin-classroom-info-grid,
+    .admin-student-info-grid { grid-template-columns: 1fr; }
+    .admin-insights-metrics { grid-template-columns: 1fr; }
+}
+</style>
+
+<script>
+(function () {
+    'use strict';
+
+    var programAliases = {
+        'bsit': 'Bachelor of Science in Information Technology',
+        'bs information technology': 'Bachelor of Science in Information Technology',
+        'bs in information technology': 'Bachelor of Science in Information Technology',
+        'bachelor of science in information technology': 'Bachelor of Science in Information Technology',
+        'bscs': 'Bachelor of Science in Computer Science',
+        'bs computer science': 'Bachelor of Science in Computer Science',
+        'bs in computer science': 'Bachelor of Science in Computer Science',
+        'bachelor of science in computer science': 'Bachelor of Science in Computer Science',
+        'bsis': 'Bachelor of Science in Information Systems',
+        'bs information systems': 'Bachelor of Science in Information Systems',
+        'bs in information systems': 'Bachelor of Science in Information Systems',
+        'bachelor of science in information systems': 'Bachelor of Science in Information Systems',
+        'bscpe': 'Bachelor of Science in Computer Engineering',
+        'bscpe.': 'Bachelor of Science in Computer Engineering',
+        'bs computer engineering': 'Bachelor of Science in Computer Engineering',
+        'bs in computer engineering': 'Bachelor of Science in Computer Engineering',
+        'bachelor of science in computer engineering': 'Bachelor of Science in Computer Engineering'
+    };
+
+    function normalizeProgram(value) {
+        var text = String(value || '').trim();
+        if (!text) return '';
+        return programAliases[text.toLowerCase()] || text;
+    }
+
+    function removeAdminBackControls() {
+        document.querySelectorAll('main a, main button').forEach(function (node) {
+            var text = String(node.textContent || '').replace(/\s+/g, ' ').trim();
+            if (/^(?:←|‹|«)?\s*Back(?:\s+to\b|\b)/i.test(text)) node.remove();
+        });
+    }
+
+    function actualProgramsFromDirectory() {
+        var programs = [];
+        document.querySelectorAll('#studentsTable tbody tr[data-program]').forEach(function (row) {
+            var value = normalizeProgram(row.getAttribute('data-program'));
+            if (value && !programs.some(function (item) { return item.toLowerCase() === value.toLowerCase(); })) programs.push(value);
+        });
+        programs.sort(function (a, b) { return a.localeCompare(b); });
+        return programs;
+    }
+
+    function rebuildProgramControls() {
+        if (location.pathname !== '/admin/users/students') return;
+        var programs = actualProgramsFromDirectory();
+        var filter = document.getElementById('programFilter');
+        if (filter) {
+            var previous = normalizeProgram(filter.value);
+            filter.innerHTML = '';
+            var all = document.createElement('option');
+            all.value = 'all';
+            all.textContent = 'All Programs';
+            filter.appendChild(all);
+            programs.forEach(function (program) {
+                var option = document.createElement('option');
+                option.value = program.toLowerCase();
+                option.textContent = program;
+                filter.appendChild(option);
+            });
+            if (previous && previous !== 'all') {
+                var match = Array.from(filter.options).find(function (option) { return option.value === previous.toLowerCase(); });
+                if (match) filter.value = match.value;
+            }
+            document.querySelectorAll('#studentsTable tbody tr[data-program]').forEach(function (row) {
+                row.setAttribute('data-program', normalizeProgram(row.getAttribute('data-program')).toLowerCase());
+            });
+        }
+
+        var select = document.getElementById('studentProgram');
+        var form = document.getElementById('createStudentForm');
+        if (!select || !form) return;
+        var placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.disabled = true;
+        placeholder.selected = true;
+        placeholder.textContent = 'Select Program';
+        select.innerHTML = '';
+        select.appendChild(placeholder);
+        programs.forEach(function (program) {
+            var option = document.createElement('option');
+            option.value = program;
+            option.textContent = program;
+            select.appendChild(option);
+        });
+        var customOption = document.createElement('option');
+        customOption.value = '__custom__';
+        customOption.textContent = 'Other / Specify Program';
+        select.appendChild(customOption);
+
+        var customWrap = document.createElement('div');
+        customWrap.className = 'nx-admin-custom-program';
+        customWrap.hidden = true;
+        var customInput = document.createElement('input');
+        customInput.type = 'text';
+        customInput.placeholder = 'Enter program or abbreviation (example: BSIT)';
+        customInput.autocomplete = 'off';
+        customWrap.appendChild(customInput);
+        select.insertAdjacentElement('afterend', customWrap);
+
+        select.addEventListener('change', function () {
+            customWrap.hidden = select.value !== '__custom__';
+            if (!customWrap.hidden) customInput.focus();
+        });
+        form.addEventListener('submit', function () {
+            var value = select.value === '__custom__' ? customInput.value : select.value;
+            value = normalizeProgram(value);
+            if (!value) return;
+            var existing = Array.from(select.options).find(function (option) { return option.value === value; });
+            if (!existing) {
+                existing = document.createElement('option');
+                existing.value = value;
+                existing.textContent = value;
+                select.appendChild(existing);
+            }
+            select.value = value;
+        }, true);
+    }
+
+    function boot() {
+        removeAdminBackControls();
+        rebuildProgramControls();
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+    else boot();
+})();
+</script>
