@@ -35,6 +35,7 @@ from app.Http.Controllers.admin_reports_overview import admin_reports_overview
 from app.Http.Controllers.admin_trash import admin_trash
 from app.Http.Controllers.supervisor_profile_photo import supervisor_profile_photo
 from app.Http.Controllers.notifications import notifications_bp
+from app.Http.Controllers.messages import messages
 from scripts.init_db import initialize_database
 from app.Models.db import get_db_connection,using_postgres
 from app.Services.classroom_service import ensure_classroom_schema
@@ -194,7 +195,7 @@ def repair_missing_student_profiles():
  except Exception as exc:conn.rollback();print("student profile repair skipped:",exc)
  finally:cur.close();conn.close()
 initialize_database();ensure_supervisor_profile_schema();ensure_classroom_schema();ensure_classwork_submission_schema();ensure_classwork_score_schema();ensure_attendance_schema();ensure_logbook_schema();ensure_logbook_photo_schema();ensure_logbook_review_schema();ensure_daily_performance_rating_schema();ensure_ojt_evaluation_schema();ensure_session_schema();repair_missing_student_profiles()
-for bp in (auth,password,student,daily_logbook,logbook_review,daily_performance_history,intern_profile,ojt_evaluation,needs_attention,student_classwork,student_gradebook,student_classmates,supervisor,supervisor_documents,admin,admin_assigned_interns,classroom,internship_classroom,classwork,classwork_submissions,classwork_grading,classwork_scores,classwork_gradebook,classwork_gradebook_export,classwork_ml_insights,performance_reports,admin_classrooms,admin_reports_overview,admin_trash,supervisor_profile_photo,notifications_bp):app.register_blueprint(bp)
+for bp in (auth,password,student,daily_logbook,logbook_review,daily_performance_history,intern_profile,ojt_evaluation,needs_attention,student_classwork,student_gradebook,student_classmates,supervisor,supervisor_documents,admin,admin_assigned_interns,classroom,internship_classroom,classwork,classwork_submissions,classwork_grading,classwork_scores,classwork_gradebook,classwork_gradebook_export,classwork_ml_insights,performance_reports,admin_classrooms,admin_reports_overview,admin_trash,supervisor_profile_photo,notifications_bp,messages):app.register_blueprint(bp)
 @app.before_request
 def enforce_single_supervisor_session():
  if session.get("role")!="supervisor" or not session.get("user_id") or request.path in ("/login","/logout","/signup","/") or request.path.startswith("/static/"):return None
