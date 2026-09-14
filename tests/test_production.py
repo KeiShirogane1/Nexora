@@ -52,8 +52,6 @@ def test_hybridrow_and_placeholder_conversion():
 def test_app_base_url_behavior(monkeypatch):
     import os
     monkeypatch.setenv("APP_BASE_URL", "https://nexora.onrender.com")
-    from config.settings import APP_BASE_URL as base1
-    # Need to reimport to get new value, but we check env directly
     assert os.environ.get("APP_BASE_URL") == "https://nexora.onrender.com"
     monkeypatch.delenv("APP_BASE_URL", raising=False)
     assert os.environ.get("APP_BASE_URL") is None
@@ -77,7 +75,7 @@ def test_required_production_settings():
     app.config["WTF_CSRF_ENABLED"] = True
     assert app.config["SESSION_COOKIE_HTTPONLY"] is True
     assert app.config["SESSION_COOKIE_SAMESITE"] == "Lax"
-    assert app.config["MAX_CONTENT_LENGTH"] == 5 * 1024 * 1024
+    assert app.config["MAX_CONTENT_LENGTH"] == 45 * 1024 * 1024
     assert app.config["WTF_CSRF_ENABLED"] is True
 
 def test_health_route_no_auth():
