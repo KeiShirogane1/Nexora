@@ -71,9 +71,19 @@
                                     {% for item in evaluation_items %}
                                         <tr>
                                             <td class="fw-bold">{{ item.criterion_name }}</td>
-                                            <td>{{ item.rating_value }}</td>
+                                            <td>
+                                                {% if item.max_value == 5 and item.rating_value >= 1 and item.rating_value <= 5 %}
+                                                    <span class="d-inline-flex gap-1" aria-label="{{ item.rating_value }} out of 5 stars">
+                                                        {% for star in range(1, 6) %}
+                                                            <span class="{{ 'text-warning' if star <= item.rating_value else 'text-secondary' }}" aria-hidden="true">★</span>
+                                                        {% endfor %}
+                                                    </span>
+                                                {% else %}
+                                                    {{ item.rating_value }} / {{ item.max_value }}
+                                                {% endif %}
+                                            </td>
                                             <td>{{ item.max_value }}</td>
-                                            <td>{% if item.weight is not none %}{{ item.weight }}{% else %}—{% endif %}</td>
+                                            <td>{% if item.weight is not none %}{{ item.weight }}%{% else %}—{% endif %}</td>
                                             <td>{{ item.comments or '—' }}</td>
                                         </tr>
                                     {% endfor %}
@@ -91,7 +101,12 @@
                 <button type="button" class="btn btn-sm btn-secondary" data-evaluation-modal-close>Close</button>
             </div>
         {% else %}
-            <form method="POST" action="{{ url_for('ojt_evaluation.supervisor_evaluations', class_id=classroom.id) }}" data-evaluation-modal-form>
+            <form
+                method="POST"
+                action="{{ url_for('ojt_evaluation.supervisor_evaluations', class_id=classroom.id) }}"
+                data-evaluation-modal-form
+                oninput="const rows=[...this.querySelectorAll('[data-evaluation-row]')]; rows.forEach((row)=>{ const maxField=row.querySelector('input[name=max_value]'); if(maxField) maxField.value='5'; const ratingField=row.querySelector('[data-evaluation-rating-value]'); const rating=ratingField ? Number(ratingField.value || 0) : 0; row.querySelectorAll('[data-evaluation-star]').forEach((star)=>{ const active=Number(star.dataset.ratingValue)<=rating; star.classList.toggle('text-warning',active); star.classList.toggle('text-secondary',!active); star.setAttribute('aria-pressed',Number(star.dataset.ratingValue)===rating ? 'true' : 'false'); }); }); const weights=rows.map((row)=>row.querySelector('[data-evaluation-weight]')).filter(Boolean); weights.forEach((field,index)=>{ const isLast=index===weights.length-1; field.readOnly=isLast; field.classList.toggle('bg-light',isLast); field.title=isLast ? 'Automatically calculated so all criterion weights total 100%.' : ''; if(!isLast && field.value==='') field.value='0'; }); const manualTotal=weights.slice(0,-1).reduce((sum,field)=>sum+(Number(field.value)||0),0); const lastWeight=weights[weights.length-1]; if(lastWeight) lastWeight.value=String(Math.max(0,Math.round((100-manualTotal)*100)/100)); const weightError=this.querySelector('[data-evaluation-weight-error]'); if(weightError) weightError.classList.toggle('d-none',manualTotal<=100);"
+                onsubmit="const rows=[...this.querySelectorAll('[data-evaluation-row]')]; const missingRating=rows.find((row)=>{ const name=row.querySelector('input[name=criterion_name]'); const rating=row.querySelector('[data-evaluation-rating-value]'); return name && name.value.trim() && rating && !rating.value; }); if(missingRating){ event.preventDefault(); alert('Choose a 1–5 star rating for every criterion.'); const firstStar=missingRating.querySelector('[data-evaluation-star]'); if(firstStar) firstStar.focus(); return false; } const weights=rows.map((row)=>row.querySelector('[data-evaluation-weight]')).filter(Boolean); const manualTotal=weights.slice(0,-1).reduce((sum,field)=>sum+(Number(field.value)||0),0); if(manualTotal>100){ event.preventDefault(); alert('Weights before the last criterion cannot exceed 100%.'); const firstWeight=weights.find((field,index)=>index<weights.length-1 && Number(field.value)>0); if(firstWeight) firstWeight.focus(); return false; } return true;">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="student_id" value="{{ selected_student.id }}">
                 <input type="hidden" name="return_to" value="directory">
@@ -100,9 +115,13 @@
                     <div class="card-header bg-white d-flex flex-wrap align-items-start justify-content-between gap-2 px-3 py-2">
                         <div>
                             <h3 class="h6 fw-bold mb-1">Official Rubric Criteria</h3>
-                            <p class="text-muted small mb-0">Use the exact criteria and scoring scale from the official evaluation form.</p>
+                            <p class="text-muted small mb-0">Rate each criterion from 1 to 5 stars using the exact criteria from the official evaluation form.</p>
                         </div>
-                        <button type="button" class="btn btn-sm btn-outline-primary" data-evaluation-add-criterion>+ Add Criterion</button>
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-outline-primary"
+                            data-evaluation-add-criterion
+                            onclick="setTimeout(()=>{ const form=this.closest('form'); if(form) form.dispatchEvent(new Event('input',{bubbles:true})); },0);">+ Add Criterion</button>
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
@@ -111,36 +130,97 @@
                                     <tr>
                                         <th class="ps-3 w-25">Criterion</th>
                                         <th>Rating</th>
-                                        <th>Maximum</th>
-                                        <th>Weight <span class="text-muted fw-normal">(optional)</span></th>
+                                        <th>
+                                            Weight
+                                            <span
+                                                class="badge rounded-circle text-bg-primary ms-1"
+                                                role="img"
+                                                tabindex="0"
+                                                aria-label="Weight information: all criterion weights total 100 percent. Enter the weights for each criterion except the last one. Nexora automatically calculates the last criterion weight."
+                                                title="All criterion weights total 100%. Enter each weight except the last one; Nexora automatically calculates the last criterion weight.">i</span>
+                                        </th>
                                         <th class="w-25">Comments <span class="text-muted fw-normal">(optional)</span></th>
                                         <th class="pe-3"><span class="visually-hidden">Remove</span></th>
                                     </tr>
                                 </thead>
                                 <tbody data-evaluation-criteria-body>
                                     {% if evaluation_items %}
+                                        {% set weight_state = namespace(manual_total=0) %}
                                         {% for item in evaluation_items %}
+                                            {% set stored_weight = item.weight if item.weight is not none else 0 %}
+                                            {% if loop.last %}
+                                                {% set displayed_weight = 100 - weight_state.manual_total %}
+                                                {% if displayed_weight < 0 %}{% set displayed_weight = 0 %}{% endif %}
+                                            {% else %}
+                                                {% set displayed_weight = stored_weight %}
+                                                {% set weight_state.manual_total = weight_state.manual_total + stored_weight %}
+                                            {% endif %}
+                                            {% set star_rating = item.rating_value|int if item.max_value == 5 and item.rating_value >= 1 and item.rating_value <= 5 else 0 %}
                                             <tr data-evaluation-row>
                                                 <td class="ps-3"><input class="form-control form-control-sm" type="text" name="criterion_name" maxlength="200" value="{{ item.criterion_name }}" required></td>
-                                                <td><input class="form-control form-control-sm" type="number" name="rating_value" min="0" step="any" value="{{ item.rating_value }}" required></td>
-                                                <td><input class="form-control form-control-sm" type="number" name="max_value" min="0.0001" step="any" value="{{ item.max_value }}" required></td>
-                                                <td><input class="form-control form-control-sm" type="number" name="weight" min="0" step="any" value="{% if item.weight is not none %}{{ item.weight }}{% endif %}"></td>
+                                                <td>
+                                                    <div class="d-inline-flex align-items-center gap-1" data-evaluation-star-group>
+                                                        <input type="hidden" name="rating_value" value="{{ star_rating if star_rating else '' }}" data-evaluation-rating-value>
+                                                        <input type="hidden" name="max_value" value="5">
+                                                        {% for star in range(1, 6) %}
+                                                            <button
+                                                                type="button"
+                                                                class="btn btn-link btn-sm p-0 border-0 text-decoration-none fs-4 lh-1 {{ 'text-warning' if star <= star_rating else 'text-secondary' }}"
+                                                                data-evaluation-star
+                                                                data-rating-value="{{ star }}"
+                                                                aria-label="Rate {{ star }} out of 5 stars"
+                                                                aria-pressed="{{ 'true' if star == star_rating else 'false' }}"
+                                                                onclick="const group=this.closest('[data-evaluation-star-group]'); const input=group ? group.querySelector('[data-evaluation-rating-value]') : null; if(input){ input.value=this.dataset.ratingValue; input.dispatchEvent(new Event('input',{bubbles:true})); }">★</button>
+                                                        {% endfor %}
+                                                    </div>
+                                                    <div class="text-muted small mt-1">1–5 stars</div>
+                                                </td>
+                                                <td>
+                                                    <div class="input-group input-group-sm">
+                                                        <input class="form-control" type="number" name="weight" min="0" max="100" step="0.01" value="{{ displayed_weight }}" data-evaluation-weight {% if loop.last %}readonly title="Automatically calculated so all criterion weights total 100%."{% endif %}>
+                                                        <span class="input-group-text">%</span>
+                                                    </div>
+                                                </td>
                                                 <td><input class="form-control form-control-sm" type="text" name="item_comments" maxlength="2000" value="{{ item.comments }}"></td>
-                                                <td class="pe-3"><button type="button" class="btn btn-sm btn-outline-danger" data-evaluation-remove-row>Remove</button></td>
+                                                <td class="pe-3"><button type="button" class="btn btn-sm btn-outline-danger" data-evaluation-remove-row onmousedown="setTimeout(()=>{ const form=this.closest('form'); if(form) form.dispatchEvent(new Event('input',{bubbles:true})); },0);" onkeydown="if(event.key==='Enter'||event.key===' '){ setTimeout(()=>{ const form=this.closest('form'); if(form) form.dispatchEvent(new Event('input',{bubbles:true})); },0); }">Remove</button></td>
                                             </tr>
                                         {% endfor %}
                                     {% else %}
                                         <tr data-evaluation-row>
                                             <td class="ps-3"><input class="form-control form-control-sm" type="text" name="criterion_name" maxlength="200" required></td>
-                                            <td><input class="form-control form-control-sm" type="number" name="rating_value" min="0" step="any" required></td>
-                                            <td><input class="form-control form-control-sm" type="number" name="max_value" min="0.0001" step="any" required></td>
-                                            <td><input class="form-control form-control-sm" type="number" name="weight" min="0" step="any"></td>
+                                            <td>
+                                                <div class="d-inline-flex align-items-center gap-1" data-evaluation-star-group>
+                                                    <input type="hidden" name="rating_value" value="" data-evaluation-rating-value>
+                                                    <input type="hidden" name="max_value" value="5">
+                                                    {% for star in range(1, 6) %}
+                                                        <button
+                                                            type="button"
+                                                            class="btn btn-link btn-sm p-0 border-0 text-decoration-none fs-4 lh-1 text-secondary"
+                                                            data-evaluation-star
+                                                            data-rating-value="{{ star }}"
+                                                            aria-label="Rate {{ star }} out of 5 stars"
+                                                            aria-pressed="false"
+                                                            onclick="const group=this.closest('[data-evaluation-star-group]'); const input=group ? group.querySelector('[data-evaluation-rating-value]') : null; if(input){ input.value=this.dataset.ratingValue; input.dispatchEvent(new Event('input',{bubbles:true})); }">★</button>
+                                                    {% endfor %}
+                                                </div>
+                                                <div class="text-muted small mt-1">1–5 stars</div>
+                                            </td>
+                                            <td>
+                                                <div class="input-group input-group-sm">
+                                                    <input class="form-control bg-light" type="number" name="weight" min="0" max="100" step="0.01" value="100" data-evaluation-weight readonly title="Automatically calculated so all criterion weights total 100%.">
+                                                    <span class="input-group-text">%</span>
+                                                </div>
+                                            </td>
                                             <td><input class="form-control form-control-sm" type="text" name="item_comments" maxlength="2000"></td>
-                                            <td class="pe-3"><button type="button" class="btn btn-sm btn-outline-danger" data-evaluation-remove-row>Remove</button></td>
+                                            <td class="pe-3"><button type="button" class="btn btn-sm btn-outline-danger" data-evaluation-remove-row onmousedown="setTimeout(()=>{ const form=this.closest('form'); if(form) form.dispatchEvent(new Event('input',{bubbles:true})); },0);" onkeydown="if(event.key==='Enter'||event.key===' '){ setTimeout(()=>{ const form=this.closest('form'); if(form) form.dispatchEvent(new Event('input',{bubbles:true})); },0); }">Remove</button></td>
                                         </tr>
                                     {% endif %}
                                 </tbody>
                             </table>
+                        </div>
+                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 border-top bg-light px-3 py-2">
+                            <span class="small text-secondary">Weights always total <strong>100%</strong>. Enter each weight except the last one; the last criterion is calculated automatically.</span>
+                            <span class="small text-danger fw-bold d-none" data-evaluation-weight-error>Weights before the last criterion cannot exceed 100%.</span>
                         </div>
                     </div>
                 </section>
@@ -171,11 +251,31 @@
             <template data-evaluation-criterion-template>
                 <tr data-evaluation-row>
                     <td class="ps-3"><input class="form-control form-control-sm" type="text" name="criterion_name" maxlength="200" required></td>
-                    <td><input class="form-control form-control-sm" type="number" name="rating_value" min="0" step="any" required></td>
-                    <td><input class="form-control form-control-sm" type="number" name="max_value" min="0.0001" step="any" required></td>
-                    <td><input class="form-control form-control-sm" type="number" name="weight" min="0" step="any"></td>
+                    <td>
+                        <div class="d-inline-flex align-items-center gap-1" data-evaluation-star-group>
+                            <input type="hidden" name="rating_value" value="" data-evaluation-rating-value>
+                            <input type="hidden" name="max_value" value="5">
+                            {% for star in range(1, 6) %}
+                                <button
+                                    type="button"
+                                    class="btn btn-link btn-sm p-0 border-0 text-decoration-none fs-4 lh-1 text-secondary"
+                                    data-evaluation-star
+                                    data-rating-value="{{ star }}"
+                                    aria-label="Rate {{ star }} out of 5 stars"
+                                    aria-pressed="false"
+                                    onclick="const group=this.closest('[data-evaluation-star-group]'); const input=group ? group.querySelector('[data-evaluation-rating-value]') : null; if(input){ input.value=this.dataset.ratingValue; input.dispatchEvent(new Event('input',{bubbles:true})); }">★</button>
+                            {% endfor %}
+                        </div>
+                        <div class="text-muted small mt-1">1–5 stars</div>
+                    </td>
+                    <td>
+                        <div class="input-group input-group-sm">
+                            <input class="form-control bg-light" type="number" name="weight" min="0" max="100" step="0.01" value="0" data-evaluation-weight readonly title="Automatically calculated so all criterion weights total 100%.">
+                            <span class="input-group-text">%</span>
+                        </div>
+                    </td>
                     <td><input class="form-control form-control-sm" type="text" name="item_comments" maxlength="2000"></td>
-                    <td class="pe-3"><button type="button" class="btn btn-sm btn-outline-danger" data-evaluation-remove-row>Remove</button></td>
+                    <td class="pe-3"><button type="button" class="btn btn-sm btn-outline-danger" data-evaluation-remove-row onmousedown="setTimeout(()=>{ const form=this.closest('form'); if(form) form.dispatchEvent(new Event('input',{bubbles:true})); },0);" onkeydown="if(event.key==='Enter'||event.key===' '){ setTimeout(()=>{ const form=this.closest('form'); if(form) form.dispatchEvent(new Event('input',{bubbles:true})); },0); }">Remove</button></td>
                 </tr>
             </template>
         {% endif %}
