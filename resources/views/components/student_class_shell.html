@@ -130,6 +130,44 @@
         line-height: 1.55;
     }
 
+    .class-internship-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 15px;
+    }
+
+    .class-internship-meta[hidden],
+    .class-internship-meta-item[hidden],
+    .class-info-row[hidden] {
+        display: none !important;
+    }
+
+    .class-internship-meta-item {
+        min-height: 34px;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 7px 10px;
+        border: 1px solid #dce8e3;
+        border-radius: 10px;
+        background: #f8fcfa;
+        color: #38594f;
+        font-size: 11px;
+        line-height: 1.25;
+    }
+
+    .class-internship-meta-item b {
+        color: var(--nx-green-dark);
+        font-size: 10px;
+        font-weight: 850;
+        letter-spacing: .02em;
+    }
+
+    .class-internship-meta-item span {
+        font-weight: 700;
+    }
+
     .class-code {
         display: flex;
         min-height: 78px;
@@ -294,6 +332,16 @@
             padding: 20px;
         }
 
+        .class-internship-meta {
+            display: grid;
+            grid-template-columns: 1fr;
+        }
+
+        .class-internship-meta-item {
+            width: 100%;
+            box-sizing: border-box;
+        }
+
         .class-code {
             width: 100%;
             flex-wrap: wrap;
@@ -315,7 +363,7 @@
 
     <div class="class-wrap">
         <div class="class-breadcrumb">
-            <a href="{{ url_for('classroom.student_classes') }}">Intern Classrooms</a>
+            <a href="{{ url_for('classroom.student_classes') }}">Intern Classroom</a>
             <span>›</span>
             <span>{{ classroom.name }}</span>
         </div>
@@ -329,6 +377,11 @@
                     </span>
                     <h1>{{ classroom.name }}</h1>
                     <p class="class-description">{{ class_description or 'Your internship classroom.' }}</p>
+                    <div class="class-internship-meta" id="studentClassInternshipMeta" hidden aria-label="Internship classroom details">
+                        <span class="class-internship-meta-item" data-class-detail="company" hidden><b>Company</b><span></span></span>
+                        <span class="class-internship-meta-item" data-class-detail="arrangement" hidden><b>Arrangement / Location</b><span></span></span>
+                        <span class="class-internship-meta-item" data-class-detail="hours" hidden><b>Required Hours</b><span></span></span>
+                    </div>
                 </div>
 
                 <div class="class-code">
@@ -371,6 +424,9 @@
                     <div class="class-info-row"><b>Intern Classroom</b><span>{{ classroom.name }}</span></div>
                     <div class="class-info-row"><b>Section</b><span>{{ classroom.section }}</span></div>
                     <div class="class-info-row"><b>Supervisor</b><span>{{ classroom.supervisor }}</span></div>
+                    <div class="class-info-row" data-class-info="company" hidden><b>Company</b><span></span></div>
+                    <div class="class-info-row" data-class-info="arrangement" hidden><b>Arrangement / Location</b><span></span></div>
+                    <div class="class-info-row" data-class-info="hours" hidden><b>Required Hours</b><span></span></div>
                     <div class="class-info-row"><b>Code</b><span>{{ class_code or '—' }}</span></div>
                     <div class="class-info-row"><b>Status</b><span>{{ class_status }}</span></div>
                 </div>
@@ -406,5 +462,86 @@
                 ta.remove();
             }
         }
+
+        (function hydrateStudentInternshipHero() {
+            const classId = String({{ classroom.id|tojson }});
+            const cacheKey = 'nexora:student-class-detail:' + classId;
+            const metaRoot = document.getElementById('studentClassInternshipMeta');
+            if (!metaRoot) return;
+
+            function clean(value) {
+                return String(value || '').replace(/\s+/g, ' ').trim();
+            }
+
+            function setValue(key, value) {
+                value = clean(value);
+                if (!value) return false;
+
+                const chip = metaRoot.querySelector('[data-class-detail="' + key + '"]');
+                if (chip) {
+                    const valueNode = chip.querySelector('span');
+                    if (valueNode) valueNode.textContent = value;
+                    chip.hidden = false;
+                }
+
+                const infoRow = document.querySelector('[data-class-info="' + key + '"]');
+                if (infoRow) {
+                    const valueNode = infoRow.querySelector('span');
+                    if (valueNode) valueNode.textContent = value;
+                    infoRow.hidden = false;
+                }
+                return true;
+            }
+
+            function applyDetails(details) {
+                if (!details || typeof details !== 'object') return;
+                const shown = [
+                    setValue('company', details.company),
+                    setValue('arrangement', details.arrangement),
+                    setValue('hours', details.hours)
+                ].some(Boolean);
+                if (shown) metaRoot.hidden = false;
+            }
+
+            try {
+                const cached = sessionStorage.getItem(cacheKey);
+                if (cached) {
+                    applyDetails(JSON.parse(cached));
+                    return;
+                }
+            } catch (error) {}
+
+            fetch({{ url_for('classroom.student_classes')|tojson }}, {credentials: 'same-origin'})
+                .then((response) => response.ok ? response.text() : Promise.reject(new Error('Unable to load classroom details')))
+                .then((html) => {
+                    const doc = new DOMParser().parseFromString(html, 'text/html');
+                    const links = Array.from(doc.querySelectorAll('a.student-intern-open-btn[href]'));
+                    const targetLink = links.find((link) => {
+                        try {
+                            const url = new URL(link.getAttribute('href'), window.location.origin);
+                            return url.pathname === '/student/classes/' + classId;
+                        } catch (error) {
+                            return false;
+                        }
+                    });
+                    const card = targetLink ? targetLink.closest('.student-intern-card') : null;
+                    if (!card) return;
+
+                    const details = {company: '', arrangement: '', hours: ''};
+                    card.querySelectorAll('.student-intern-meta-row').forEach((row) => {
+                        const icon = clean(row.querySelector('.student-intern-meta-icon')?.textContent);
+                        const text = clean(row.textContent).replace(icon, '').trim();
+                        if (icon === '🏢') details.company = text.replace(/^Company:\s*/i, '');
+                        if (icon === '📍') details.arrangement = text;
+                        if (icon === '⏱') details.hours = text.replace(/\s*required\s+hrs?$/i, ' hrs');
+                    });
+
+                    try {
+                        sessionStorage.setItem(cacheKey, JSON.stringify(details));
+                    } catch (error) {}
+                    applyDetails(details);
+                })
+                .catch(() => {});
+        })();
     </script>
 {% endif %}
