@@ -1,4 +1,4 @@
-{# Shared opt-in select enhancement. Add data-nx-select to a native <select>. #}
+{# Shared select enhancement. Filter selects are upgraded automatically; other selects can opt in with data-nx-select. #}
 <style id="nx-select-control-styles">
 .nx-select-shell {
     --nx-select-accent: #0a8f46;
@@ -136,7 +136,7 @@ body:has(.nx-role-sidebar-shell.nx-role-admin) .nx-select-shell {
 <script>
 (function () {
     function enhance(select) {
-        if (!select || select.dataset.nxSelectReady === '1') return;
+        if (!select || select.dataset.nxSelectReady === '1' || select.multiple || select.size > 1) return;
         select.dataset.nxSelectReady = '1';
 
         var shell = document.createElement('div');
@@ -246,7 +246,13 @@ body:has(.nx-role-sidebar-shell.nx-role-admin) .nx-select-shell {
     }
 
     function boot() {
-        document.querySelectorAll('select[data-nx-select]').forEach(enhance);
+        document.querySelectorAll([
+            'select[data-nx-select]',
+            'form[class*="filter"] select',
+            '[class*="filter"] > select',
+            '[class*="filters"] select'
+        ].join(',')).forEach(enhance);
+
         document.addEventListener('click', function (event) {
             document.querySelectorAll('.nx-select-shell.is-open').forEach(function (shell) {
                 if (shell.contains(event.target)) return;
