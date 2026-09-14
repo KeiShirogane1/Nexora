@@ -9,33 +9,344 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
     <style>
-        /* Admin dashboard readability pass. Scoped here to avoid changing other Admin pages. */
-        body.admin-dashboard-page .admin-search input { font-size: 13px !important; }
-        body.admin-dashboard-page .admin-topbar-user strong { font-size: 12px !important; }
-        body.admin-dashboard-page .admin-topbar-user small { font-size: 10px !important; }
-        body.admin-dashboard-page .admin-breadcrumb { font-size: 12px !important; }
-        body.admin-dashboard-page .admin-eyebrow,
-        body.admin-dashboard-page .admin-card-kicker { font-size: 10px !important; }
-        body.admin-dashboard-page .admin-hero-copy p { font-size: 13px !important; }
-        body.admin-dashboard-page .admin-hero-status strong { font-size: 12px !important; }
-        body.admin-dashboard-page .admin-hero-status small { font-size: 10px !important; line-height: 1.35; }
-        body.admin-dashboard-page .admin-metric-copy span { font-size: 11px !important; }
-        body.admin-dashboard-page .admin-metric-copy strong { font-size: 24px !important; }
-        body.admin-dashboard-page .admin-metric-copy small { font-size: 9px !important; line-height: 1.25; }
-        body.admin-dashboard-page .admin-card-heading h2 { font-size: 16px !important; }
-        body.admin-dashboard-page .admin-card-heading p { font-size: 11px !important; line-height: 1.4; }
-        body.admin-dashboard-page .admin-text-link { font-size: 11px !important; }
-        body.admin-dashboard-page .admin-stat-top span { font-size: 11px !important; }
-        body.admin-dashboard-page .admin-overview-stat small { font-size: 9px !important; }
-        body.admin-dashboard-page .admin-health-label { font-size: 10px !important; }
-        body.admin-dashboard-page .admin-system-item span { font-size: 11px !important; }
-        body.admin-dashboard-page .admin-system-item strong { font-size: 10px !important; }
-        body.admin-dashboard-page .admin-action-tile strong { font-size: 11px !important; }
-        body.admin-dashboard-page .admin-action-tile small { font-size: 9px !important; line-height: 1.35; }
-        body.admin-dashboard-page .admin-activity-list strong { font-size: 11px !important; }
-        body.admin-dashboard-page .admin-activity-list small { font-size: 9px !important; line-height: 1.35; }
-        body.admin-dashboard-page .admin-report-list a strong { font-size: 11px !important; }
-        body.admin-dashboard-page .admin-report-list a small { font-size: 9px !important; }
+        body.admin-dashboard-page {
+            --acc-red: #ef3f3f;
+            --acc-orange: #f45125;
+            --acc-orange-dark: #d9471b;
+            --acc-ink: #10213a;
+            --acc-muted: #6f8098;
+            --acc-border: #e4e9ef;
+            --acc-soft: #fff8f5;
+            --acc-card-shadow: 0 8px 24px rgba(30, 41, 59, .055);
+            background: #fff8f5 !important;
+        }
+        body.admin-dashboard-page .admin-main { background: transparent !important; }
+        .admin-command-center {
+            width: min(100%, 1480px);
+            margin: 0 auto;
+            padding: 24px 28px 48px;
+        }
+        .acc-hero {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 24px;
+            margin-bottom: 18px;
+        }
+        .acc-eyebrow,
+        .acc-section-kicker {
+            display: block;
+            color: var(--acc-orange);
+            font-size: .7rem;
+            font-weight: 900;
+            letter-spacing: .11em;
+            text-transform: uppercase;
+        }
+        .acc-hero h1 {
+            margin: 7px 0 5px;
+            color: var(--acc-ink);
+            font-size: clamp(2rem, 3vw, 2.7rem);
+            line-height: 1;
+            font-weight: 900;
+            letter-spacing: -.045em;
+        }
+        .acc-hero p {
+            margin: 0;
+            color: var(--acc-muted);
+            font-size: .93rem;
+        }
+        .acc-runtime-strip {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(150px, 1fr));
+            gap: 10px;
+            min-width: min(100%, 570px);
+        }
+        .acc-runtime-pill {
+            min-height: 58px;
+            padding: 10px 13px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid var(--acc-border);
+            border-radius: 13px;
+            background: rgba(255,255,255,.92);
+            box-shadow: 0 5px 18px rgba(30,41,59,.04);
+        }
+        .acc-runtime-icon,
+        .acc-kpi-icon,
+        .acc-service-icon,
+        .acc-engine-icon,
+        .acc-action-icon {
+            display: grid;
+            place-items: center;
+            flex: 0 0 auto;
+            border-radius: 12px;
+        }
+        .acc-runtime-icon { width: 36px; height: 36px; }
+        .acc-runtime-icon svg { width: 19px; height: 19px; }
+        .acc-runtime-copy { min-width: 0; }
+        .acc-runtime-copy small {
+            display: block;
+            color: #8a98aa;
+            font-size: .62rem;
+            font-weight: 750;
+        }
+        .acc-runtime-copy strong {
+            display: block;
+            margin-top: 2px;
+            color: var(--acc-ink);
+            font-size: .8rem;
+            font-weight: 900;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .acc-tone-red { background: #fff0ef; color: #ef4444; }
+        .acc-tone-blue { background: #edf5ff; color: #2563eb; }
+        .acc-tone-green { background: #e9f9f0; color: #16a34a; }
+        .acc-tone-amber { background: #fff4df; color: #d97706; }
+        .acc-tone-violet { background: #f1ebff; color: #7c3aed; }
+        .acc-tone-slate { background: #edf3f3; color: #42746c; }
+        .acc-status-dot {
+            width: 7px;
+            height: 7px;
+            display: inline-block;
+            margin-left: 5px;
+            border-radius: 50%;
+            background: #16a34a;
+            box-shadow: 0 0 0 3px rgba(22,163,74,.1);
+            vertical-align: middle;
+        }
+        .acc-alert-stack { display: grid; gap: 10px; margin-bottom: 16px; }
+        .acc-alert {
+            padding: 11px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            border: 1px solid #fed7aa;
+            border-radius: 12px;
+            background: #fff7ed;
+            color: #9a3412;
+            font-size: .78rem;
+        }
+        .acc-alert.is-danger { border-color: #fecaca; background: #fff1f2; color: #b91c1c; }
+        .acc-alert strong { color: inherit; }
+        .acc-alert a { color: inherit; font-weight: 850; text-decoration: none; white-space: nowrap; }
+        .acc-kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 14px;
+            margin-bottom: 14px;
+        }
+        .acc-kpi-card {
+            position: relative;
+            min-width: 0;
+            min-height: 112px;
+            padding: 18px 20px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            border: 1px solid var(--acc-border);
+            border-radius: 16px;
+            background: #fff;
+            box-shadow: var(--acc-card-shadow);
+        }
+        .acc-kpi-icon { width: 50px; height: 50px; }
+        .acc-kpi-icon svg { width: 25px; height: 25px; }
+        .acc-kpi-copy { min-width: 0; }
+        .acc-kpi-copy span,
+        .acc-kpi-copy small { display: block; color: var(--acc-muted); }
+        .acc-kpi-copy span { font-size: .72rem; font-weight: 850; color: #53627a; }
+        .acc-kpi-copy strong {
+            display: block;
+            margin: 4px 0 5px;
+            color: var(--acc-ink);
+            font-size: 1.65rem;
+            line-height: 1;
+            font-weight: 900;
+            letter-spacing: -.03em;
+        }
+        .acc-kpi-copy small { font-size: .66rem; line-height: 1.35; }
+        .acc-main-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.45fr) minmax(360px, .9fr);
+            gap: 16px;
+            margin-top: 16px;
+        }
+        .acc-card {
+            border: 1px solid var(--acc-border);
+            border-radius: 16px;
+            background: #fff;
+            box-shadow: var(--acc-card-shadow);
+        }
+        .acc-card-head {
+            padding: 19px 20px 14px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+        }
+        .acc-card-head h2 {
+            margin: 4px 0 3px;
+            color: var(--acc-ink);
+            font-size: 1.08rem;
+            font-weight: 900;
+        }
+        .acc-card-head p { margin: 0; color: var(--acc-muted); font-size: .7rem; }
+        .acc-text-link {
+            color: var(--acc-orange);
+            font-size: .7rem;
+            font-weight: 850;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+        .acc-overview-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+            padding: 0 20px 18px;
+        }
+        .acc-overview-stat {
+            min-height: 106px;
+            padding: 13px 14px;
+            border: 1px solid #e8edf2;
+            border-radius: 12px;
+            background: #fbfcfd;
+        }
+        .acc-overview-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        .acc-overview-top span { color: #53627a; font-size: .72rem; font-weight: 750; }
+        .acc-overview-top strong { color: var(--acc-ink); font-size: 1.1rem; font-weight: 900; }
+        .acc-track { height: 4px; margin: 12px 0 14px; overflow: hidden; border-radius: 999px; background: #e9eef2; }
+        .acc-track span { display: block; height: 100%; border-radius: inherit; }
+        .acc-overview-stat:nth-child(1) .acc-track span { width: 34%; background: #f59e0b; }
+        .acc-overview-stat:nth-child(2) .acc-track span { width: 72%; background: var(--acc-orange); }
+        .acc-overview-stat:nth-child(3) .acc-track span { width: 48%; background: #16a34a; }
+        .acc-overview-stat small { color: #8b98aa; font-size: .64rem; }
+        .acc-activity-preview {
+            margin: 0 20px 20px;
+            padding-top: 15px;
+            border-top: 1px solid #edf1f5;
+        }
+        .acc-activity-preview h3 { margin: 0 0 8px; color: var(--acc-ink); font-size: .78rem; font-weight: 850; }
+        .acc-activity-row {
+            min-height: 42px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-top: 1px solid #f0f3f6;
+        }
+        .acc-activity-row:first-of-type { border-top: 0; }
+        .acc-activity-bullet { width: 8px; height: 8px; flex: 0 0 8px; border-radius: 50%; background: var(--acc-orange); }
+        .acc-activity-row strong { display: block; color: #334155; font-size: .7rem; }
+        .acc-activity-row small { display: block; margin-top: 2px; color: #8b98aa; font-size: .62rem; }
+        .acc-service-list { padding: 0 14px 14px; }
+        .acc-service-row {
+            min-height: 58px;
+            padding: 8px 10px;
+            display: grid;
+            grid-template-columns: 38px minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 11px;
+            border-top: 1px solid #edf1f5;
+        }
+        .acc-service-row:first-child { border-top: 0; }
+        .acc-service-icon { width: 38px; height: 38px; }
+        .acc-service-icon svg { width: 20px; height: 20px; }
+        .acc-service-copy { min-width: 0; }
+        .acc-service-copy strong { display: block; color: var(--acc-ink); font-size: .73rem; font-weight: 850; }
+        .acc-service-copy small { display: block; margin-top: 3px; color: #8997a9; font-size: .62rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .acc-service-status {
+            padding: 5px 8px;
+            border-radius: 999px;
+            background: #e8f8ef;
+            color: #118448;
+            font-size: .6rem;
+            font-weight: 850;
+            white-space: nowrap;
+        }
+        .acc-service-status.is-neutral { background: #edf2f7; color: #64748b; }
+        .acc-service-status.is-warning { background: #fff4df; color: #b45309; }
+        .acc-engines-card { margin-top: 16px; }
+        .acc-engine-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+            padding: 0 20px 20px;
+        }
+        .acc-engine {
+            min-height: 82px;
+            padding: 12px;
+            display: grid;
+            grid-template-columns: 42px minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 11px;
+            border: 1px solid #e8edf2;
+            border-radius: 12px;
+            background: #fbfcfd;
+        }
+        .acc-engine-icon { width: 42px; height: 42px; }
+        .acc-engine-icon svg { width: 22px; height: 22px; }
+        .acc-engine strong { display: block; color: var(--acc-ink); font-size: .73rem; font-weight: 850; }
+        .acc-engine small { display: block; margin-top: 3px; color: #8795a8; font-size: .61rem; line-height: 1.4; }
+        .acc-lower-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.25fr) minmax(340px, .75fr);
+            gap: 16px;
+            margin-top: 16px;
+        }
+        .acc-action-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; padding: 0 20px 20px; }
+        .acc-action {
+            min-height: 66px;
+            padding: 10px 12px;
+            display: grid;
+            grid-template-columns: 38px minmax(0,1fr) auto;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid #e8edf2;
+            border-radius: 12px;
+            color: inherit;
+            text-decoration: none;
+            background: #fff;
+            transition: border-color .15s ease, transform .15s ease, box-shadow .15s ease;
+        }
+        .acc-action:hover { transform: translateY(-1px); border-color: #f6b7a3; box-shadow: 0 8px 18px rgba(244,81,37,.08); }
+        .acc-action-icon { width: 38px; height: 38px; background: #fff0ea; color: var(--acc-orange); }
+        .acc-action-icon svg { width: 19px; height: 19px; }
+        .acc-action strong { display: block; color: #23334b; font-size: .69rem; font-weight: 850; }
+        .acc-action small { display: block; margin-top: 2px; color: #8a97a8; font-size: .6rem; }
+        .acc-action > b { color: var(--acc-orange); font-size: .8rem; }
+        .acc-report-list { padding: 0 20px 18px; }
+        .acc-report-link {
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            border-top: 1px solid #edf1f5;
+            color: #334155;
+            text-decoration: none;
+            font-size: .7rem;
+            font-weight: 800;
+        }
+        .acc-report-link:first-child { border-top: 0; }
+        .acc-report-link span:last-child { color: var(--acc-orange); }
+        @media (max-width: 1180px) {
+            .acc-hero { align-items: flex-start; flex-direction: column; }
+            .acc-runtime-strip { width: 100%; min-width: 0; }
+            .acc-main-grid, .acc-lower-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 900px) {
+            .acc-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .acc-engine-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 700px) {
+            .admin-command-center { padding: 20px 14px 34px; }
+            .acc-runtime-strip, .acc-kpi-grid, .acc-overview-grid, .acc-action-grid { grid-template-columns: 1fr; }
+            .acc-card-head { flex-direction: column; }
+            .acc-service-row { grid-template-columns: 38px minmax(0,1fr); }
+            .acc-service-status { grid-column: 2; justify-self: start; }
+        }
     </style>
 </head>
 <body class="nexora-admin-body admin-dashboard-page">
@@ -48,102 +359,114 @@
     {% set recent_activities = actionable_metrics.get('recent_activities', []) %}
     {% set system_status = actionable_metrics.get('system_status', {'database_status': 'Not verified', 'database_engine': 'Not verified', 'email_status': 'Not configured', 'email_configured': false}) %}
     {% set pending_approvals = admin_pending_approval_count|default(pending_students|default(0))|int %}
+    {% set local_runtime = request.host.split(':')[0] in ['127.0.0.1', 'localhost'] %}
     {% include 'components/admin_topbar.html' %}
+
     <main class="admin-main nexora-app-main">
-        <div class="admin-dashboard-content">
-            <div class="admin-breadcrumb">Dashboard <span>/</span> Admin</div>
-            <section class="admin-hero-card" aria-labelledby="admin-dashboard-title">
-                <div class="admin-hero-copy">
-                    <span class="admin-eyebrow">ADMINISTRATOR OVERVIEW</span>
-                    <h1 id="admin-dashboard-title">Admin Dashboard</h1>
-                    <p>Welcome back, Administrator.</p>
-                    <p class="admin-hero-description">Monitor internship operations, student progress, and system activity from one place.</p>
+        <div class="admin-command-center">
+            <header class="acc-hero">
+                <div>
+                    <span class="acc-eyebrow">ADMIN PORTAL</span>
+                    <h1>Platform Command Center</h1>
+                    <p>Monitor users, internship operations, system health, and connected Nexora services.</p>
                 </div>
-                <div class="admin-hero-status"><span class="admin-status-pulse"></span><div><strong>Database {{ system_status.database_status }}</strong><small>{{ system_status.database_engine }} connection used for dashboard data</small></div></div>
-            </section>
-
-            {% if pending_approvals > 0 %}
-                <section class="alert alert-warning d-flex align-items-center justify-content-between gap-3 flex-wrap mb-3" role="alert" aria-label="Pending account approvals">
-                    <div>
-                        <strong>{{ pending_approvals }} account{% if pending_approvals != 1 %}s{% endif %} awaiting approval.</strong>
-                        <span class="d-block small">Review pending student and supervisor registrations so approved users can continue into Nexora.</span>
+                <div class="acc-runtime-strip" aria-label="Platform runtime summary">
+                    <div class="acc-runtime-pill">
+                        <span class="acc-runtime-icon acc-tone-red" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="3"></rect><path d="M9 12h6M12 9v6"></path></svg></span>
+                        <div class="acc-runtime-copy"><small>Environment</small><strong>{{ 'LOCAL' if local_runtime else 'DEPLOYED' }}</strong></div>
                     </div>
-                    <a href="{{ url_for('admin.admin_users') }}" class="btn btn-warning btn-sm fw-semibold text-nowrap">Review approvals →</a>
-                </section>
+                    <div class="acc-runtime-pill">
+                        <span class="acc-runtime-icon acc-tone-blue" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="7" ry="3"></ellipse><path d="M5 5v6c0 1.7 3.1 3 7 3s7-1.3 7-3V5M5 11v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"></path></svg></span>
+                        <div class="acc-runtime-copy"><small>Database</small><strong>{{ system_status.database_engine }}</strong></div>
+                    </div>
+                    <div class="acc-runtime-pill">
+                        <span class="acc-runtime-icon acc-tone-green" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l2-7 4 14 2-7h6"></path></svg></span>
+                        <div class="acc-runtime-copy"><small>System Status</small><strong>{{ system_status.database_status }} <i class="acc-status-dot"></i></strong></div>
+                    </div>
+                </div>
+            </header>
+
+            {% if pending_approvals > 0 or actionable_metrics.trash_expiring_soon|default(0)|int > 0 %}
+            <div class="acc-alert-stack">
+                {% if pending_approvals > 0 %}
+                <div class="acc-alert"><span><strong>{{ pending_approvals }} account{% if pending_approvals != 1 %}s{% endif %} awaiting approval.</strong> Review pending registrations so approved users can continue into Nexora.</span><a href="{{ url_for('admin.admin_users') }}">Review approvals →</a></div>
+                {% endif %}
+                {% if actionable_metrics.trash_expiring_soon|default(0)|int > 0 %}
+                <div class="acc-alert is-danger"><span><strong>{{ actionable_metrics.trash_expiring_soon }} account{% if actionable_metrics.trash_expiring_soon != 1 %}s{% endif %} nearing Trash expiry.</strong> Restore anything that should remain available.</span><a href="{{ url_for('admin_trash.trash') }}">Open Trash →</a></div>
+                {% endif %}
+            </div>
             {% endif %}
 
-            {% if actionable_metrics.trash_expiring_soon|default(0)|int > 0 %}
-                <section class="alert alert-danger d-flex align-items-center justify-content-between gap-3 flex-wrap mb-3" role="alert" aria-label="Trash expiry warning">
-                    <div>
-                        <strong>{{ actionable_metrics.trash_expiring_soon }} account{% if actionable_metrics.trash_expiring_soon != 1 %}s{% endif %} will expire from Trash within 7 days.</strong>
-                        <span class="d-block small">Restore anything that should remain available before the 30-day retention period ends.</span>
-                    </div>
-                    <a href="{{ url_for('admin_trash.trash') }}" class="alert-link text-nowrap">Open Trash →</a>
-                </section>
-            {% endif %}
+            <section class="acc-kpi-grid" aria-label="Primary platform statistics">
+                <article class="acc-kpi-card"><span class="acc-kpi-icon acc-tone-red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path></svg></span><div class="acc-kpi-copy"><span>Students</span><strong>{{ students_count }}</strong><small>Registered accounts</small></div></article>
+                <article class="acc-kpi-card"><span class="acc-kpi-icon acc-tone-red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 10 9-5 9 5-9 5-9-5Z"></path><path d="m7 12.5v4.3c2.7 2.1 7.3 2.1 10 0v-4.3"></path></svg></span><div class="acc-kpi-copy"><span>Supervisors</span><strong>{{ supervisors_count }}</strong><small>Registered accounts</small></div></article>
+                <article class="acc-kpi-card"><span class="acc-kpi-icon acc-tone-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="13" rx="2"></rect><path d="M8 7V5h8v2M3 12h18"></path></svg></span><div class="acc-kpi-copy"><span>Internship Assignments</span><strong>{{ assignments_count }}</strong><small>Current assignments</small></div></article>
+                <article class="acc-kpi-card"><span class="acc-kpi-icon acc-tone-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6M8 13h8M8 17h6"></path></svg></span><div class="acc-kpi-copy"><span>Pending Actions</span><strong>{{ pending_approvals }}</strong><small>Requires administrator attention</small></div></article>
+            </section>
 
-            <section class="admin-metric-grid" aria-label="Dashboard statistics">
-                <article class="admin-metric-card"><div class="admin-metric-icon admin-icon-orange">♟</div><div class="admin-metric-copy"><span>Students</span><strong>{{ students_count }}</strong><small>Registered accounts</small></div></article>
-                <article class="admin-metric-card"><div class="admin-metric-icon admin-icon-red">▣</div><div class="admin-metric-copy"><span>Not Enrolled</span><strong>{{ actionable_metrics.unenrolled_students }}</strong><small>No active Intern Classroom</small></div></article>
-                <article class="admin-metric-card"><div class="admin-metric-icon admin-icon-amber">♙</div><div class="admin-metric-copy"><span>Supervisors</span><strong>{{ supervisors_count }}</strong><small>Registered accounts</small></div></article>
-                <article class="admin-metric-card"><div class="admin-metric-icon admin-icon-red">▣</div><div class="admin-metric-copy"><span>Internship Assignments</span><strong>{{ assignments_count }}</strong><small>Current assignments</small></div></article>
-                <article class="admin-metric-card"><div class="admin-metric-icon admin-icon-slate">◎</div><div class="admin-metric-copy"><span>Online Interns</span><strong>{{ online_interns }}</strong><small>Currently online</small></div></article>
-                <article class="admin-metric-card"><div class="admin-metric-icon admin-icon-purple">◌</div><div class="admin-metric-copy"><span>Feedback Entries</span><strong>{{ feedback_count }}</strong><small>Submitted entries</small></div></article>
-                <article class="admin-metric-card"><div class="admin-metric-icon admin-icon-blue">◷</div><div class="admin-metric-copy"><span>Total Hours</span><strong>{{ total_hours }}</strong><small>Tracked internship hours</small></div></article>
+            <section class="acc-kpi-grid" aria-label="Secondary platform statistics">
+                <article class="acc-kpi-card"><span class="acc-kpi-icon acc-tone-violet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"></circle><path d="M5 21a7 7 0 0 1 14 0"></path></svg></span><div class="acc-kpi-copy"><span>Not Enrolled</span><strong>{{ actionable_metrics.unenrolled_students }}</strong><small>No active Intern Classroom</small></div></article>
+                <article class="acc-kpi-card"><span class="acc-kpi-icon acc-tone-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l2-4 4 8 2-4h6"></path></svg></span><div class="acc-kpi-copy"><span>Online Interns</span><strong>{{ online_interns }}</strong><small>Currently clocked in</small></div></article>
+                <article class="acc-kpi-card"><span class="acc-kpi-icon acc-tone-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg></span><div class="acc-kpi-copy"><span>Total Hours</span><strong>{{ total_hours }}</strong><small>Tracked internship hours</small></div></article>
+                <article class="acc-kpi-card"><span class="acc-kpi-icon acc-tone-red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path></svg></span><div class="acc-kpi-copy"><span>Feedback Entries</span><strong>{{ feedback_count }}</strong><small>Submitted entries</small></div></article>
             </section>
-            <section class="admin-dashboard-grid admin-dashboard-grid-main">
-                <article class="admin-surface-card admin-overview-card">
-                    <div class="admin-card-heading"><div><span class="admin-card-kicker">INTERNSHIP MANAGEMENT</span><h2>Internship Overview</h2><p>Current internship activity across the platform.</p></div><a href="{{ url_for('admin.internship_assign') }}" class="admin-text-link">Manage assignments <span>→</span></a></div>
-                    <div class="admin-overview-stats">
-                        <div class="admin-overview-stat admin-overview-pending"><div class="admin-stat-top"><span>Pending Approval</span><b>{{ pending_approvals }}</b></div><div class="admin-mini-track"><span></span></div><small>Accounts awaiting review</small></div>
-                        <div class="admin-overview-stat admin-overview-active"><div class="admin-stat-top"><span>Active Internship</span><b>{{ active_internships }}</b></div><div class="admin-mini-track"><span></span></div><small>Currently in progress</small></div>
-                        <div class="admin-overview-stat admin-overview-complete"><div class="admin-stat-top"><span>Completed</span><b>{{ completed_internships }}</b></div><div class="admin-mini-track"><span></span></div><small>Finished internships</small></div>
+
+            <section class="acc-main-grid">
+                <article class="acc-card">
+                    <div class="acc-card-head"><div><span class="acc-section-kicker">INTERNSHIP OPERATIONS</span><h2>Internship Overview</h2><p>Current internship activity across the platform.</p></div><a href="{{ url_for('admin.internship_assign') }}" class="acc-text-link">Manage assignments →</a></div>
+                    <div class="acc-overview-grid">
+                        <div class="acc-overview-stat"><div class="acc-overview-top"><span>Pending Approval</span><strong>{{ pending_approvals }}</strong></div><div class="acc-track"><span></span></div><small>Accounts awaiting review</small></div>
+                        <div class="acc-overview-stat"><div class="acc-overview-top"><span>Active Internship</span><strong>{{ active_internships }}</strong></div><div class="acc-track"><span></span></div><small>Currently in progress</small></div>
+                        <div class="acc-overview-stat"><div class="acc-overview-top"><span>Completed</span><strong>{{ completed_internships }}</strong></div><div class="acc-track"><span></span></div><small>Finished internships</small></div>
                     </div>
-                </article>
-                <article class="admin-surface-card admin-system-card">
-                    <div class="admin-card-heading"><div><span class="admin-card-kicker">PLATFORM STATUS</span><h2>System Monitoring</h2></div><span class="admin-health-label"><i></i> Database {{ system_status.database_status|lower }}</span></div>
-                    <div class="admin-system-list">
-                        <div class="admin-system-item"><span><i></i>Database Status</span><strong>{{ system_status.database_status }}</strong></div>
-                        <div class="admin-system-item"><span><i></i>Database Engine</span><strong>{{ system_status.database_engine }}</strong></div>
-                        <div class="admin-system-item"><span><i{% if not system_status.email_configured %} class="neutral"{% endif %}></i>Email Configuration</span><strong>{{ system_status.email_status }}</strong></div>
-                    </div>
-                </article>
-            </section>
-            <section class="admin-surface-card admin-actions-card">
-                <div class="admin-card-heading admin-actions-heading"><div><span class="admin-card-kicker">ADMIN TOOLS</span><h2>Quick Actions</h2><p>Common administrative tasks.</p></div></div>
-                <div class="admin-action-grid">
-                    <a href="{{ url_for('admin.admin_users') }}" class="admin-action-tile"><span class="admin-action-icon">✓</span><span><strong>Review Account Approvals</strong><small>Review pending student and supervisor requests</small></span><b>→</b></a>
-                    <a href="{{ url_for('admin.admin_users') }}" class="admin-action-tile"><span class="admin-action-icon">♟</span><span><strong>Manage Users</strong><small>Manage platform accounts</small></span><b>→</b></a>
-                    <a href="{{ url_for('admin.internship_assign') }}" class="admin-action-tile"><span class="admin-action-icon">▣</span><span><strong>Assign Internships</strong><small>Create or update assignments</small></span><b>→</b></a>
-                    <a href="{{ url_for('admin.admin_reports_list') }}" class="admin-action-tile"><span class="admin-action-icon">▤</span><span><strong>View Reports</strong><small>Open administrative reports</small></span><b>→</b></a>
-                </div>
-            </section>
-            <section class="admin-dashboard-grid admin-dashboard-grid-lower">
-                <article class="admin-surface-card admin-activity-card">
-                    <div class="admin-card-heading"><div><span class="admin-card-kicker">LATEST ACTIVITY</span><h2>Recent Activities</h2><p>Latest timestamped activity across the system.</p></div></div>
-                    <ul class="admin-activity-list">
-                        {% for activity in recent_activities %}
-                            <li>
-                                <span class="admin-activity-icon {{ activity.tone }}">{{ activity.icon }}</span>
-                                <span>
-                                    <strong>{{ activity.title }}</strong>
-                                    <small>{{ activity.context }} · {{ activity.timestamp }}</small>
-                                </span>
-                            </li>
+                    <div class="acc-activity-preview">
+                        <h3>Latest Activity</h3>
+                        {% for activity in recent_activities[:4] %}
+                        <div class="acc-activity-row"><span class="acc-activity-bullet"></span><span><strong>{{ activity.title }}</strong><small>{{ activity.context }} · {{ activity.timestamp }}</small></span></div>
                         {% else %}
-                            <li>
-                                <span class="admin-activity-icon orange">◷</span>
-                                <span><strong>No recent timestamped activity</strong><small>No supported activity events are available yet.</small></span>
-                            </li>
+                        <div class="acc-activity-row"><span class="acc-activity-bullet"></span><span><strong>No recent timestamped activity</strong><small>New supported platform events will appear here.</small></span></div>
                         {% endfor %}
-                    </ul>
+                    </div>
                 </article>
-                <article class="admin-surface-card admin-reports-card">
-                    <div class="admin-card-heading"><div><span class="admin-card-kicker">REPORTING</span><h2>Reports Center</h2><p>Access key administrative reports.</p></div><a href="{{ url_for('admin.admin_reports_list') }}" class="admin-text-link">All reports <span>→</span></a></div>
-                    <div class="admin-report-list">
-                        <a href="{{ url_for('admin.attendance_report') }}"><span class="admin-report-icon blue">▤</span><span><strong>Attendance &amp; Logbook</strong><small>Open report</small></span><b>→</b></a>
-                        <a href="{{ url_for('admin.admin_reports_list') }}"><span class="admin-report-icon purple">▥</span><span><strong>Supervisor Evaluation</strong><small>Open report</small></span><b>→</b></a>
-                        <a href="{{ url_for('admin.admin_reports_list') }}"><span class="admin-report-icon orange">▦</span><span><strong>Internship Progress</strong><small>Open report</small></span><b>→</b></a>
+
+                <article class="acc-card">
+                    <div class="acc-card-head"><div><span class="acc-section-kicker">PLATFORM &amp; INTEGRATIONS</span><h2>System Monitoring</h2><p>Services and engines available to Nexora.</p></div><span class="acc-service-status">{{ system_status.database_status }}</span></div>
+                    <div class="acc-service-list">
+                        <div class="acc-service-row"><span class="acc-service-icon acc-tone-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="7" ry="3"></ellipse><path d="M5 5v6c0 1.7 3.1 3 7 3s7-1.3 7-3V5M5 11v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"></path></svg></span><div class="acc-service-copy"><strong>Database</strong><small>{{ system_status.database_engine }}</small></div><span class="acc-service-status">{{ system_status.database_status }}</span></div>
+                        <div class="acc-service-row"><span class="acc-service-icon acc-tone-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 18h10a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.3 8.5 4.5 4.5 0 0 0 7 18Z"></path></svg></span><div class="acc-service-copy"><strong>Render Runtime</strong><small>{{ 'Local development · Render deployment target' if local_runtime else 'Deployed web runtime · /health endpoint' }}</small></div><span class="acc-service-status {{ 'is-neutral' if local_runtime else '' }}">{{ 'Local' if local_runtime else 'Active' }}</span></div>
+                        <div class="acc-service-row"><span class="acc-service-icon acc-tone-violet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3a3 3 0 0 0-3 3v12a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3ZM15 3a3 3 0 0 1 3 3v12a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3Z"></path><path d="M6 9h6M12 15h6"></path></svg></span><div class="acc-service-copy"><strong>OpenRouter AI</strong><small>Role-aware read-only assistant integration</small></div><span class="acc-service-status is-neutral">Available</span></div>
+                        <div class="acc-service-row"><span class="acc-service-icon acc-tone-red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m3 7 9 6 9-6"></path></svg></span><div class="acc-service-copy"><strong>Brevo Email</strong><small>Transactional account and notification email</small></div><span class="acc-service-status {% if not system_status.email_configured %}is-warning{% endif %}">{{ system_status.email_status }}</span></div>
+                        <div class="acc-service-row"><span class="acc-service-icon acc-tone-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-5-5L5 21"></path></svg></span><div class="acc-service-copy"><strong>Cloudinary</strong><small>Profile image storage integration</small></div><span class="acc-service-status is-neutral">Available</span></div>
+                        <div class="acc-service-row"><span class="acc-service-icon acc-tone-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h6l2 2h10v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><path d="M3 7V5a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v2"></path></svg></span><div class="acc-service-copy"><strong>Upload Storage</strong><small>Render persistent disk / local upload storage</small></div><span class="acc-service-status">Available</span></div>
+                    </div>
+                </article>
+            </section>
+
+            <section class="acc-card acc-engines-card">
+                <div class="acc-card-head"><div><span class="acc-section-kicker">APPLICATION ENGINES</span><h2>Nexora Core Engines</h2><p>Installed engines used by reporting and performance intelligence.</p></div></div>
+                <div class="acc-engine-grid">
+                    <div class="acc-engine"><span class="acc-engine-icon acc-tone-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="7" width="10" height="10" rx="2"></rect><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"></path></svg></span><div><strong>ML Engine</strong><small>scikit-learn · student performance intelligence</small></div><span class="acc-service-status">Ready</span></div>
+                    <div class="acc-engine"><span class="acc-engine-icon acc-tone-red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6M8 13h8M8 17h6"></path></svg></span><div><strong>PDF Reports</strong><small>ReportLab · formatted insights and performance exports</small></div><span class="acc-service-status">Ready</span></div>
+                    <div class="acc-engine"><span class="acc-engine-icon acc-tone-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M8 3v18M3 9h18M3 15h18"></path></svg></span><div><strong>Spreadsheet Engine</strong><small>OpenPyXL · spreadsheet import and export support</small></div><span class="acc-service-status">Ready</span></div>
+                </div>
+            </section>
+
+            <section class="acc-lower-grid">
+                <article class="acc-card">
+                    <div class="acc-card-head"><div><span class="acc-section-kicker">ADMIN TOOLS</span><h2>Quick Actions</h2><p>Common administrator workflows.</p></div></div>
+                    <div class="acc-action-grid">
+                        <a href="{{ url_for('admin.admin_users') }}" class="acc-action"><span class="acc-action-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 4 4L19 6"></path></svg></span><span><strong>Review Account Approvals</strong><small>Pending student and supervisor requests</small></span><b>→</b></a>
+                        <a href="{{ url_for('admin.admin_users') }}" class="acc-action"><span class="acc-action-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path></svg></span><span><strong>Manage Users</strong><small>Manage platform accounts</small></span><b>→</b></a>
+                        <a href="{{ url_for('admin.internship_assign') }}" class="acc-action"><span class="acc-action-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="13" rx="2"></rect><path d="M8 7V5h8v2M3 12h18"></path></svg></span><span><strong>Assign Internships</strong><small>Create or update assignments</small></span><b>→</b></a>
+                        <a href="{{ url_for('admin.admin_reports_list') }}" class="acc-action"><span class="acc-action-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V9M10 19V5M16 19v-7M22 19V3"></path></svg></span><span><strong>View Reports</strong><small>Open administrative reports</small></span><b>→</b></a>
+                    </div>
+                </article>
+                <article class="acc-card">
+                    <div class="acc-card-head"><div><span class="acc-section-kicker">REPORTING</span><h2>Reports Center</h2><p>Open key administrative reports.</p></div><a href="{{ url_for('admin.admin_reports_list') }}" class="acc-text-link">All reports →</a></div>
+                    <div class="acc-report-list">
+                        <a class="acc-report-link" href="{{ url_for('admin.attendance_report') }}"><span>Attendance &amp; Logbook</span><span>→</span></a>
+                        <a class="acc-report-link" href="{{ url_for('admin.admin_reports_list') }}"><span>Supervisor Evaluation</span><span>→</span></a>
+                        <a class="acc-report-link" href="{{ url_for('admin.admin_reports_list') }}"><span>Internship Progress</span><span>→</span></a>
                     </div>
                 </article>
             </section>
