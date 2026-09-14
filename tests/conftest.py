@@ -75,15 +75,6 @@ def _ensure_manual_test_identity(sess):
                 (role, user_id),
             )
 
-        if role == "student":
-            conn.execute(
-                """
-                INSERT OR IGNORE INTO student_profiles (user_id, profile_completed)
-                VALUES (?, 1)
-                """,
-                (user_id,),
-            )
-
         conn.commit()
         return conn.execute(
             "SELECT id, username, role, status, session_version FROM users WHERE id = ?",
