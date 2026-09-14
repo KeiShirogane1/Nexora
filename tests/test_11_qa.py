@@ -66,7 +66,7 @@ def test_polish_css_import_present_and_modals_untouched():
     sidebar_html=pathlib.Path("resources/views/components/student_sidebar.html").read_text(encoding="utf-8")
     assert ".nx-role-sidebar-shell {" not in sidebar_html
     assert ".nx-role-student .nx-role-sidebar" in sidebar_html
-    assert 'nx-collapse-toggle' in sidebar_html
+    assert 'nx-role-sidebar-shell nx-role-student' in sidebar_html
     assert 'id="studentSidebar"' in sidebar_html
     modals=pathlib.Path("resources/assets/css/modals.css").read_text(encoding="utf-8")
     assert ".nexora-modal-overlay" in modals

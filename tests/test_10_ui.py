@@ -92,7 +92,7 @@ def test_supervisor_pages_render():
     app.config["WTF_CSRF_ENABLED"]=False
     app.config["TESTING"]=True
     client=app.test_client()
-    _login_as(client,5,"supervisor")
+    _login_as(client,95007,"supervisor")
     mock_conn=MagicMock()
     active=MagicMock(); active.fetchone.return_value={"status":"active"}; active.fetchall.return_value=[]
     mock_conn.execute.return_value=active
