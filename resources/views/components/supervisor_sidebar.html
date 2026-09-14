@@ -6,6 +6,331 @@
 #}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebars.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
+<style id="nx-supervisor-ui-consistency">
+@media (min-width: 761px) {
+    .nx-role-supervisor .nx-role-sidebar {
+        overflow: hidden !important;
+        padding-bottom: 0 !important;
+    }
+
+    .nx-role-supervisor #supervisorSidebar > .nx-role-brand,
+    .nx-role-supervisor #supervisorSidebar > .nx-role-profile,
+    .nx-role-supervisor #supervisorSidebar > .nx-role-rule,
+    .nx-role-supervisor #supervisorSidebar > .nx-role-section-label,
+    .nx-role-supervisor #supervisorSidebar > .nx-role-account-nav,
+    .nx-role-supervisor #supervisorSidebar > .nx-role-footer {
+        flex-shrink: 0 !important;
+    }
+
+    .nx-role-supervisor #supervisorSidebar > .nx-role-nav[aria-label="Supervisor menu"] {
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        overscroll-behavior: contain;
+        scrollbar-width: none;
+    }
+
+    .nx-role-supervisor #supervisorSidebar > .nx-role-nav[aria-label="Supervisor menu"]::-webkit-scrollbar {
+        width: 0;
+    }
+
+    .nx-role-supervisor .nx-role-sidebar:hover > .nx-role-nav[aria-label="Supervisor menu"],
+    .nx-role-supervisor .nx-role-sidebar:focus-within > .nx-role-nav[aria-label="Supervisor menu"] {
+        padding-right: 4px !important;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(96, 165, 250, .42) transparent;
+    }
+
+    .nx-role-supervisor .nx-role-sidebar:hover > .nx-role-nav[aria-label="Supervisor menu"]::-webkit-scrollbar,
+    .nx-role-supervisor .nx-role-sidebar:focus-within > .nx-role-nav[aria-label="Supervisor menu"]::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .nx-role-supervisor #supervisorSidebar > .nx-role-nav[aria-label="Supervisor menu"]::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .nx-role-supervisor #supervisorSidebar > .nx-role-nav[aria-label="Supervisor menu"]::-webkit-scrollbar-thumb {
+        border-radius: 999px;
+        background: rgba(96, 165, 250, .38);
+    }
+
+    .nx-role-supervisor #supervisorSidebar > .nx-role-nav[aria-label="Supervisor menu"]::-webkit-scrollbar-thumb:hover {
+        background: rgba(96, 165, 250, .58);
+    }
+
+    .nx-role-supervisor #supervisorSidebar > .nx-role-account-nav {
+        margin: 8px 0 16px !important;
+    }
+}
+
+.nx-supervisor-kpi-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 14px !important;
+    margin-bottom: 18px !important;
+}
+
+.nx-supervisor-kpi-card,
+.nx-supervisor-kpi-card.is-no-data,
+.nx-supervisor-kpi-card.is-attention {
+    position: relative;
+    min-width: 0;
+    min-height: 112px;
+    padding: 18px 20px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 14px !important;
+    border: 1px solid #dfe7f1 !important;
+    border-radius: 16px !important;
+    background: #fff !important;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, .055) !important;
+    color: #0f172a !important;
+}
+
+.nx-supervisor-kpi-icon {
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
+    flex: 0 0 48px !important;
+    display: grid !important;
+    place-items: center !important;
+    border-radius: 14px !important;
+}
+
+.nx-supervisor-kpi-icon svg {
+    width: 24px;
+    height: 24px;
+    display: block;
+}
+
+.nx-supervisor-kpi-icon.is-blue {
+    background: #eaf2ff !important;
+    color: #2563eb !important;
+}
+
+.nx-supervisor-kpi-icon.is-green {
+    background: #e9f9f0 !important;
+    color: #16a34a !important;
+}
+
+.nx-supervisor-kpi-icon.is-violet {
+    background: #f1ebff !important;
+    color: #7c3aed !important;
+}
+
+.nx-supervisor-kpi-icon.is-amber {
+    background: #fff4df !important;
+    color: #d97706 !important;
+}
+
+.nx-supervisor-kpi-copy {
+    min-width: 0;
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.nx-supervisor-kpi-copy > small,
+.nx-supervisor-kpi-copy > span {
+    display: block !important;
+    margin: 0 !important;
+    color: #64748b !important;
+    font-size: .72rem !important;
+    line-height: 1.35 !important;
+}
+
+.nx-supervisor-kpi-copy > small:first-child {
+    color: #475569 !important;
+    font-size: .71rem !important;
+    font-weight: 800 !important;
+}
+
+.nx-supervisor-kpi-copy > strong {
+    display: block !important;
+    margin: 5px 0 6px !important;
+    color: #0f172a !important;
+    font-size: 1.62rem !important;
+    line-height: 1 !important;
+    font-weight: 900 !important;
+    letter-spacing: -.03em !important;
+}
+
+.nx-supervisor-kpi-arrow {
+    position: absolute;
+    top: 15px;
+    right: 16px;
+    display: inline-grid;
+    place-items: center;
+    color: #94a3b8;
+}
+
+.nx-supervisor-kpi-arrow svg {
+    width: 16px;
+    height: 16px;
+}
+
+.nx-supervisor-btn {
+    min-height: 40px;
+    padding: 0 15px;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 7px;
+    border: 1px solid #2563eb !important;
+    border-radius: 10px !important;
+    font: inherit;
+    font-size: .76rem !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+    text-decoration: none !important;
+    cursor: pointer;
+    transition: background .15s ease, border-color .15s ease, color .15s ease, transform .15s ease, box-shadow .15s ease;
+}
+
+.nx-supervisor-btn.is-primary {
+    background: #2563eb !important;
+    color: #fff !important;
+    box-shadow: 0 6px 14px rgba(37, 99, 235, .16);
+}
+
+.nx-supervisor-btn.is-primary:hover,
+.nx-supervisor-btn.is-primary:focus-visible {
+    border-color: #1d4ed8 !important;
+    background: #1d4ed8 !important;
+    color: #fff !important;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgba(37, 99, 235, .22);
+}
+
+.nx-supervisor-btn.is-secondary {
+    background: #fff !important;
+    color: #2563eb !important;
+}
+
+.nx-supervisor-btn.is-secondary:hover,
+.nx-supervisor-btn.is-secondary:focus-visible {
+    background: #eff6ff !important;
+    color: #1d4ed8 !important;
+}
+
+.nx-supervisor-btn.is-compact {
+    min-height: 36px;
+    padding: 0 13px;
+    border-radius: 9px !important;
+    font-size: .73rem !important;
+}
+
+.supervisor-doc-count {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+
+.supervisor-doc-count-icon,
+.supervisor-doc-membership-icon {
+    width: 20px;
+    height: 20px;
+    display: inline-grid !important;
+    place-items: center !important;
+    flex: 0 0 20px;
+    color: #2563eb !important;
+}
+
+.supervisor-doc-count-icon svg,
+.supervisor-doc-membership-icon svg {
+    width: 17px;
+    height: 17px;
+    display: block;
+}
+
+.supervisor-doc-file-type {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #475569;
+    font-weight: 750;
+}
+
+.supervisor-doc-file-icon {
+    min-width: 34px;
+    height: 30px;
+    padding: 0 6px;
+    display: inline-grid;
+    place-items: center;
+    border-radius: 8px;
+    background: #eaf2ff;
+    color: #1d4ed8;
+    font-size: .61rem;
+    font-weight: 900;
+    letter-spacing: .02em;
+}
+
+.supervisor-student-documents-page .supervisor-doc-table tbody tr,
+.supervisor-student-document-folder-page .supervisor-doc-table tbody tr {
+    transition: background .15s ease;
+}
+
+.supervisor-student-documents-page .supervisor-doc-table tbody tr:hover,
+.supervisor-student-document-folder-page .supervisor-doc-table tbody tr:hover {
+    background: #f8fbff;
+}
+
+[data-classroom-toggle] {
+    width: 38px !important;
+    min-width: 38px !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    padding: 0 !important;
+    display: inline-grid !important;
+    place-items: center !important;
+    border-radius: 10px !important;
+}
+
+[data-classroom-toggle] > span[aria-hidden="true"] {
+    width: 18px;
+    height: 18px;
+    display: grid !important;
+    place-items: center !important;
+    font-size: 0 !important;
+    line-height: 1 !important;
+}
+
+[data-classroom-toggle] > span[aria-hidden="true"]::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(-135deg);
+    transform-origin: center;
+}
+
+[data-classroom-toggle][aria-expanded="false"] > span[aria-hidden="true"]::before {
+    transform: rotate(45deg);
+}
+
+@media (max-width: 1100px) {
+    .nx-supervisor-kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (max-width: 640px) {
+    .nx-supervisor-kpi-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .nx-supervisor-kpi-card,
+    .nx-supervisor-kpi-card.is-no-data,
+    .nx-supervisor-kpi-card.is-attention {
+        min-height: 100px;
+        padding: 16px !important;
+    }
+}
+</style>
 <script>
 (function () {
     var favicon = document.querySelector('link[rel~="icon"]');
