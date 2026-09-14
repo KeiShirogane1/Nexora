@@ -14,3 +14,135 @@
 {% include 'components/role_page_heading.html' %}
 {% include 'components/sidebar_viewport_fix.html' %}
 {% include 'components/nexora_assistant.html' %}
+
+<script id="nx-supervisor-people-surface-completion">
+(function () {
+    'use strict';
+
+    var chatSvg = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path></svg>';
+    var copySvg = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M15 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h3"></path></svg>';
+
+    function chatLink(userId) {
+        var id = parseInt(userId, 10);
+        if (!id) return null;
+        var link = document.createElement('a');
+        link.className = 'nx-quick-chat-btn';
+        link.href = '/messages/open/' + encodeURIComponent(id);
+        link.innerHTML = chatSvg + '<span>Chat</span>';
+        link.setAttribute('aria-label', 'Open quick chat');
+        return link;
+    }
+
+    function showCopied() {
+        if (typeof window.showToast === 'function') {
+            window.showToast('Username copied.');
+        }
+    }
+
+    function copyUsername(username) {
+        var text = String(username || '').replace(/^@/, '').trim();
+        if (!text) return;
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(text).then(showCopied).catch(function () {
+                fallbackCopy(text);
+            });
+            return;
+        }
+        fallbackCopy(text);
+    }
+
+    function fallbackCopy(text) {
+        var area = document.createElement('textarea');
+        area.value = text;
+        area.setAttribute('readonly', '');
+        area.style.position = 'fixed';
+        area.style.opacity = '0';
+        document.body.appendChild(area);
+        area.select();
+        try {
+            document.execCommand('copy');
+            showCopied();
+        } catch (error) {}
+        area.remove();
+    }
+
+    function usernameLine(username) {
+        username = String(username || '').replace(/^@/, '').trim();
+        if (!username) return null;
+        var line = document.createElement('div');
+        line.className = 'nx-username-line';
+        line.dataset.nxUsername = username;
+        var text = document.createElement('span');
+        text.className = 'nx-username-text';
+        text.textContent = '@' + username;
+        var copy = document.createElement('button');
+        copy.type = 'button';
+        copy.className = 'nx-copy-username';
+        copy.title = 'Copy username';
+        copy.setAttribute('aria-label', 'Copy @' + username);
+        copy.innerHTML = copySvg;
+        copy.addEventListener('click', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            copyUsername(username);
+        });
+        line.appendChild(text);
+        line.appendChild(copy);
+        return line;
+    }
+
+    function completeClassroomRosterActions(path) {
+        if (!/^\/supervisor\/classes\/\d+\/?$/.test(path)) return;
+        document.querySelectorAll('.supervisor-intern-actions a[href*="/interns/"]').forEach(function (view) {
+            if (String(view.textContent || '').trim() !== 'View Profile') return;
+            var match = String(view.getAttribute('href') || '').match(/\/supervisor\/classes\/\d+\/interns\/(\d+)/);
+            var actions = view.parentElement;
+            if (!match || !actions || actions.querySelector('.nx-quick-chat-btn')) return;
+            var link = chatLink(match[1]);
+            if (link) view.insertAdjacentElement('afterend', link);
+        });
+    }
+
+    function completeInternProfileActions(path) {
+        var match = path.match(/^\/supervisor\/classes\/\d+\/interns\/(\d+)\/?$/);
+        if (!match) return;
+
+        var heading = document.querySelector('.nexora-page h1.h3.fw-bold');
+        if (!heading) return;
+
+        var username = '';
+        document.querySelectorAll('.nexora-page .text-muted.small').forEach(function (node) {
+            var text = String(node.textContent || '').trim();
+            if (!username && /^Nexora account:/i.test(text)) {
+                username = text.replace(/^Nexora account:\s*/i, '').trim();
+            }
+        });
+        if (username && !heading.parentElement.querySelector('.nx-username-line')) {
+            heading.insertAdjacentElement('afterend', usernameLine(username));
+        }
+
+        var headerRow = heading.closest('.d-flex.flex-wrap.align-items-start.justify-content-between');
+        var actions = headerRow ? headerRow.querySelector('.d-flex.flex-wrap.gap-2') : null;
+        if (!actions || actions.querySelector('.nx-quick-chat-btn')) return;
+        var link = chatLink(match[1]);
+        if (!link) return;
+        var back = Array.from(actions.querySelectorAll('a')).find(function (item) {
+            return /^Back to Interns$/i.test(String(item.textContent || '').trim());
+        });
+        if (back) back.insertAdjacentElement('beforebegin', link);
+        else actions.appendChild(link);
+    }
+
+    function boot() {
+        var path = window.location.pathname;
+        completeClassroomRosterActions(path);
+        completeInternProfileActions(path);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', boot, { once: true });
+    } else {
+        boot();
+    }
+})();
+</script>
