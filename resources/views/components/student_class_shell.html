@@ -55,46 +55,96 @@
     }
 
     .class-cover {
+        position: relative;
         height: 138px;
         border-bottom: 1px solid var(--nx-line);
         background: linear-gradient(135deg, #93c5fd 0%, #dbeafe 100%);
     }
 
-    .class-cover--blue {
-        background: linear-gradient(135deg, #93c5fd 0%, #dbeafe 100%);
+    .class-cover--blue { background: linear-gradient(135deg, #93c5fd 0%, #dbeafe 100%); }
+    .class-cover--navy { background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); }
+    .class-cover--green { background: linear-gradient(135deg, #6ee7b7 0%, #d1fae5 100%); }
+    .class-cover--teal { background: linear-gradient(135deg, #5eead4 0%, #ccfbf1 100%); }
+    .class-cover--purple { background: linear-gradient(135deg, #c4b5fd 0%, #ede9fe 100%); }
+    .class-cover--orange { background: linear-gradient(135deg, #fdba74 0%, #ffedd5 100%); }
+    .class-cover--amber { background: linear-gradient(135deg, #fcd34d 0%, #fef3c7 100%); }
+    .class-cover--rose { background: linear-gradient(135deg, #fda4af 0%, #ffe4e6 100%); }
+    .class-cover--slate { background: linear-gradient(135deg, #94a3b8 0%, #e2e8f0 100%); }
+
+    .class-banner-menu {
+        position: absolute;
+        top: 18px;
+        right: 20px;
+        z-index: 25;
     }
 
-    .class-cover--navy {
-        background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+    .class-banner-menu-button {
+        width: 40px;
+        height: 40px;
+        display: inline-grid;
+        place-items: center;
+        padding: 0;
+        border: 1px solid rgba(255, 255, 255, .78);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, .88);
+        color: #17352c;
+        box-shadow: 0 8px 22px rgba(15, 23, 42, .12);
+        font-size: 22px;
+        font-weight: 900;
+        line-height: 1;
+        cursor: pointer;
+        backdrop-filter: blur(8px);
     }
 
-    .class-cover--green {
-        background: linear-gradient(135deg, #6ee7b7 0%, #d1fae5 100%);
+    .class-banner-menu-button:hover,
+    .class-banner-menu-button[aria-expanded="true"] {
+        background: #fff;
+        border-color: rgba(18, 168, 121, .42);
+        color: var(--nx-green-dark);
     }
 
-    .class-cover--teal {
-        background: linear-gradient(135deg, #5eead4 0%, #ccfbf1 100%);
+    .class-banner-menu-panel {
+        position: absolute;
+        top: 48px;
+        right: 0;
+        width: 230px;
+        display: none;
+        padding: 7px;
+        border: 1px solid #dfe7e4;
+        border-radius: 13px;
+        background: #fff;
+        box-shadow: 0 16px 38px rgba(15, 23, 42, .18);
     }
 
-    .class-cover--purple {
-        background: linear-gradient(135deg, #c4b5fd 0%, #ede9fe 100%);
+    .class-banner-menu-panel.show { display: block; }
+
+    .class-banner-menu-item {
+        width: 100%;
+        min-height: 40px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 10px;
+        border: 0;
+        border-radius: 9px;
+        background: transparent;
+        color: #334155;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 800;
+        text-align: left;
+        cursor: pointer;
     }
 
-    .class-cover--orange {
-        background: linear-gradient(135deg, #fdba74 0%, #ffedd5 100%);
+    .class-banner-menu-item:hover {
+        background: #eefaf5;
+        color: var(--nx-green-dark);
     }
 
-    .class-cover--amber {
-        background: linear-gradient(135deg, #fcd34d 0%, #fef3c7 100%);
-    }
-
-    .class-cover--rose {
-        background: linear-gradient(135deg, #fda4af 0%, #ffe4e6 100%);
-    }
-
-    .class-cover--slate {
-        background: linear-gradient(135deg, #94a3b8 0%, #e2e8f0 100%);
-    }
+    .class-banner-menu-item.is-danger { color: #b42318; }
+    .class-banner-menu-item.is-danger:hover { background: #fff1f1; color: #922018; }
+    .class-banner-menu-divider { height: 1px; margin: 5px 4px; background: #edf1ef; }
+    .class-banner-menu-icon { width: 18px; flex: 0 0 18px; text-align: center; }
 
     .class-hero-body {
         display: grid;
@@ -138,8 +188,7 @@
     }
 
     .class-internship-meta[hidden],
-    .class-internship-meta-item[hidden],
-    .class-info-row[hidden] {
+    .class-internship-meta-item[hidden] {
         display: none !important;
     }
 
@@ -164,9 +213,7 @@
         letter-spacing: .02em;
     }
 
-    .class-internship-meta-item span {
-        font-weight: 700;
-    }
+    .class-internship-meta-item span { font-weight: 700; }
 
     .class-code {
         display: flex;
@@ -180,7 +227,7 @@
         box-sizing: border-box;
     }
 
-    .class-code span {
+    .class-code > span {
         color: var(--nx-muted);
         font-size: 10px;
         font-weight: 800;
@@ -196,10 +243,7 @@
         white-space: nowrap;
     }
 
-    .class-code-actions {
-        display: flex;
-        gap: 7px;
-    }
+    .class-code-actions { display: flex; gap: 7px; }
 
     .class-code button {
         min-height: 38px;
@@ -215,10 +259,7 @@
         white-space: nowrap;
     }
 
-    .class-code button:hover {
-        border-color: var(--nx-green);
-        color: var(--nx-green-dark);
-    }
+    .class-code button:hover { border-color: var(--nx-green); color: var(--nx-green-dark); }
 
     .class-tabs {
         display: flex;
@@ -248,108 +289,298 @@
         cursor: pointer;
     }
 
-    .class-tab:hover {
+    .class-tab:hover { color: var(--nx-green-dark); text-decoration: none; }
+    .class-tab.active { color: var(--nx-green-dark); border-bottom-color: var(--nx-green); }
+
+    .student-class-info-modal .nexora-modal {
+        width: min(900px, calc(100vw - 34px));
+        max-width: 900px;
+        max-height: min(860px, calc(100vh - 44px));
+        overflow: hidden;
+    }
+
+    .student-class-info-modal .nexora-modal-header {
+        padding: 24px 28px 18px;
+        border-bottom: 1px solid var(--nx-line);
+    }
+
+    .student-class-info-modal .nexora-modal-header h2 {
+        margin: 0;
+        color: #173d31;
+        font-size: 25px;
+        line-height: 1.15;
+        letter-spacing: -.025em;
+    }
+
+    .student-class-info-modal .nexora-modal-header p {
+        margin: 7px 0 0;
+        color: var(--nx-muted);
+        font-size: 12px;
+    }
+
+    .student-class-info-modal .nexora-modal-body {
+        display: block;
+        max-height: calc(100vh - 190px);
+        overflow-y: auto;
+        padding: 20px 28px 26px;
+    }
+
+    .class-info-summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 17px 18px;
+        border: 1px solid #dce9e4;
+        border-radius: 15px;
+        background: #f7fcfa;
+    }
+
+    .class-info-summary-copy { min-width: 0; }
+    .class-info-summary-copy span {
+        display: block;
         color: var(--nx-green-dark);
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+    }
+    .class-info-summary-copy strong {
+        display: block;
+        margin-top: 5px;
+        color: #17352c;
+        font-size: 20px;
+        line-height: 1.2;
+    }
+    .class-info-summary-copy small {
+        display: block;
+        margin-top: 4px;
+        color: var(--nx-muted);
+        font-size: 12px;
+    }
+
+    .class-info-status {
+        flex: 0 0 auto;
+        padding: 7px 11px;
+        border-radius: 999px;
+        background: #dcfce7;
+        color: #166534;
+        font-size: 11px;
+        font-weight: 900;
+    }
+
+    .class-info-status.is-archived { background: #f1f5f9; color: #64748b; }
+
+    .class-info-section {
+        margin-top: 18px;
+        padding-top: 18px;
+        border-top: 1px solid #edf1ef;
+    }
+
+    .class-info-section h3 {
+        margin: 0 0 11px;
+        color: #315046;
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: .09em;
+        text-transform: uppercase;
+    }
+
+    .class-info-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .class-info-field {
+        min-width: 0;
+        padding: 12px 13px;
+        border: 1px solid #e4ebe8;
+        border-radius: 11px;
+        background: #fff;
+    }
+
+    .class-info-field b {
+        display: block;
+        color: #718078;
+        font-size: 9px;
+        font-weight: 900;
+        letter-spacing: .07em;
+        text-transform: uppercase;
+    }
+
+    .class-info-field span,
+    .class-info-field a {
+        display: block;
+        margin-top: 5px;
+        overflow-wrap: anywhere;
+        color: #203b32;
+        font-size: 12px;
+        font-weight: 800;
+        line-height: 1.45;
         text-decoration: none;
     }
 
-    .class-tab.active {
+    .class-info-field a:hover { color: var(--nx-green-dark); text-decoration: underline; }
+
+    .class-info-prose {
+        margin: 0;
+        padding: 14px 15px;
+        border: 1px solid #e4ebe8;
+        border-radius: 11px;
+        background: #fff;
+        color: #455c54;
+        font-size: 12px;
+        line-height: 1.65;
+        white-space: pre-wrap;
+    }
+
+    .class-info-two-column {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .class-info-list-card {
+        padding: 14px 15px;
+        border: 1px solid #e4ebe8;
+        border-radius: 12px;
+        background: #fff;
+    }
+
+    .class-info-list-card h4 {
+        margin: 0 0 9px;
+        color: #24483c;
+        font-size: 12px;
+        font-weight: 900;
+    }
+
+    .class-info-list-card ul {
+        display: grid;
+        gap: 7px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .class-info-list-card li {
+        position: relative;
+        padding-left: 15px;
+        color: #50645d;
+        font-size: 12px;
+        line-height: 1.5;
+    }
+
+    .class-info-list-card li::before {
+        content: '•';
+        position: absolute;
+        left: 1px;
+        color: var(--nx-green);
+        font-weight: 900;
+    }
+
+    .class-info-code-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        margin-top: 18px;
+        padding: 14px 16px;
+        border: 1px solid #dce9e4;
+        border-radius: 12px;
+        background: #f8fcfa;
+    }
+
+    .class-info-code-row span {
+        color: #718078;
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }
+    .class-info-code-row strong {
+        margin-left: auto;
+        color: #173d31;
+        font-size: 15px;
+        letter-spacing: .08em;
+    }
+    .class-info-code-row button {
+        min-height: 36px;
+        padding: 0 12px;
+        border: 1px solid #cfe0d9;
+        border-radius: 9px;
+        background: #fff;
         color: var(--nx-green-dark);
-        border-bottom-color: var(--nx-green);
+        font-size: 11px;
+        font-weight: 850;
+        cursor: pointer;
+    }
+
+    .student-leave-modal .nexora-modal { max-width: 500px; }
+    .student-leave-copy { margin: 0; color: #53665f; font-size: 13px; line-height: 1.6; }
+    .student-leave-warning {
+        margin-top: 14px;
+        padding: 12px 13px;
+        border: 1px solid #f1d7d2;
+        border-radius: 11px;
+        background: #fff8f6;
+        color: #6d4c45;
+        font-size: 12px;
+        line-height: 1.55;
+    }
+    .student-leave-submit {
+        min-height: 40px;
+        padding: 0 16px;
+        border: 1px solid #b42318;
+        border-radius: 10px;
+        background: #b42318;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 850;
+        cursor: pointer;
     }
 
     .modal-actions {
         display: flex;
+        justify-content: flex-end;
         gap: 8px;
         margin-top: 20px;
     }
 
     .modal-actions button {
+        min-height: 38px;
         border: 1px solid var(--nx-line);
         border-radius: 9px;
         background: #fff;
-        padding: 8px 12px;
+        padding: 0 13px;
         font-size: 12px;
         font-weight: 800;
         cursor: pointer;
     }
 
-    .class-info-list {
-        display: grid;
-    }
-
-    .class-info-row {
-        display: flex;
-        justify-content: space-between;
-        gap: 20px;
-        padding: 13px 0;
-        border-bottom: 1px solid var(--nx-line);
-        font-size: 13px;
-    }
-
-    .class-info-row:last-child {
-        border-bottom: 0;
-    }
-
-    .class-info-row b {
-        color: var(--nx-muted);
-        font-size: 11px;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-    }
-
-    .class-info-row span {
-        text-align: right;
-        font-weight: 700;
-    }
-
     @media (max-width: 900px) {
-        .class-main {
-            margin-left: 0;
-            padding: 78px 18px 30px;
-        }
-
-        .class-hero-body {
-            grid-template-columns: 1fr;
-        }
-
-        .class-code {
-            justify-self: start;
-        }
+        .class-main { margin-left: 0; padding: 78px 18px 30px; }
+        .class-hero-body { grid-template-columns: 1fr; }
+        .class-code { justify-self: start; }
+        .class-info-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
 
     @media (max-width: 600px) {
-        .class-cover {
-            height: 92px;
-        }
-
-        .class-hero h1 {
-            font-size: 27px;
-        }
-
-        .class-hero-body {
-            gap: 20px;
-            padding: 20px;
-        }
-
-        .class-internship-meta {
-            display: grid;
-            grid-template-columns: 1fr;
-        }
-
-        .class-internship-meta-item {
-            width: 100%;
-            box-sizing: border-box;
-        }
-
-        .class-code {
-            width: 100%;
-            flex-wrap: wrap;
-        }
-
-        .class-tabs {
-            margin-top: 16px;
-        }
+        .class-cover { height: 92px; }
+        .class-banner-menu { top: 12px; right: 12px; }
+        .class-hero h1 { font-size: 27px; }
+        .class-hero-body { gap: 20px; padding: 20px; }
+        .class-internship-meta { display: grid; grid-template-columns: 1fr; }
+        .class-internship-meta-item { width: 100%; box-sizing: border-box; }
+        .class-code { width: 100%; flex-wrap: wrap; }
+        .class-tabs { margin-top: 16px; }
+        .student-class-info-modal .nexora-modal-header { padding: 20px 20px 16px; }
+        .student-class-info-modal .nexora-modal-body { padding: 16px 20px 22px; }
+        .class-info-summary { align-items: flex-start; flex-direction: column; }
+        .class-info-grid,
+        .class-info-two-column { grid-template-columns: 1fr; }
+        .class-info-code-row { align-items: flex-start; flex-wrap: wrap; }
+        .class-info-code-row strong { margin-left: 0; }
     }
 </style>
 
@@ -369,7 +600,33 @@
         </div>
 
         <section class="class-hero">
-            <div class="class-cover class-cover--{{ active_banner_theme }}"></div>
+            <div class="class-cover class-cover--{{ active_banner_theme }}">
+                <div class="class-banner-menu">
+                    <button
+                        type="button"
+                        class="class-banner-menu-button"
+                        id="studentClassMenuButton"
+                        aria-label="Intern Classroom options"
+                        aria-expanded="false"
+                        onclick="toggleStudentClassMenu(event)">⋮</button>
+                    <div class="class-banner-menu-panel" id="studentClassMenuPanel" role="menu">
+                        <button type="button" class="class-banner-menu-item" onclick="openStudentClassInfo(event)">
+                            <span class="class-banner-menu-icon" aria-hidden="true">ⓘ</span>
+                            Classroom Information
+                        </button>
+                        <button type="button" class="class-banner-menu-item" onclick="copyStudentCode(event)">
+                            <span class="class-banner-menu-icon" aria-hidden="true">▣</span>
+                            Copy Classroom Code
+                        </button>
+                        <div class="class-banner-menu-divider"></div>
+                        <button type="button" class="class-banner-menu-item is-danger" onclick="openStudentLeaveModal(event)">
+                            <span class="class-banner-menu-icon" aria-hidden="true">↪</span>
+                            Leave Intern Classroom
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <div class="class-hero-body">
                 <div>
                     <span class="class-eyebrow">
@@ -386,10 +643,10 @@
 
                 <div class="class-code">
                     <span>Classroom code</span>
-                    <strong>{{ class_code or '—' }}</strong>
+                    <strong id="studentClassCode">{{ class_code or '—' }}</strong>
                     <div class="class-code-actions">
-                        <button type="button" onclick="copyStudentCode()"{% if not class_code %} disabled{% endif %}>Copy</button>
-                        <button type="button" onclick="document.getElementById('studentInfoModal').classList.add('open')">Classroom Info</button>
+                        <button type="button" onclick="copyStudentCode(event)">Copy</button>
+                        <button type="button" onclick="openStudentClassInfo(event)">Classroom Info</button>
                     </div>
                 </div>
             </div>
@@ -412,42 +669,176 @@
         </nav>
     </div>
 
-    <div id="studentInfoModal" class="nexora-modal-overlay" onclick="if(event.target===this)this.classList.remove('open')">
-        <div class="nexora-modal">
+    <div id="studentInfoModal" class="nexora-modal-overlay student-class-info-modal" aria-hidden="true" onclick="if(event.target===this)closeStudentClassInfo()">
+        <div class="nexora-modal" role="dialog" aria-modal="true" aria-labelledby="studentInfoModalTitle">
             <div class="nexora-modal-header">
-                <h2>Intern Classroom Information</h2>
-                <p>Internship workspace details</p>
-                <button type="button" class="nexora-modal-close" onclick="document.getElementById('studentInfoModal').classList.remove('open')">×</button>
+                <h2 id="studentInfoModalTitle">Intern Classroom Information</h2>
+                <p>Complete internship workspace, placement, schedule, and eligibility details.</p>
+                <button type="button" class="nexora-modal-close" aria-label="Close" onclick="closeStudentClassInfo()">×</button>
             </div>
             <div class="nexora-modal-body">
-                <div class="class-info-list">
-                    <div class="class-info-row"><b>Intern Classroom</b><span>{{ classroom.name }}</span></div>
-                    <div class="class-info-row"><b>Section</b><span>{{ classroom.section }}</span></div>
-                    <div class="class-info-row"><b>Supervisor</b><span>{{ classroom.supervisor }}</span></div>
-                    <div class="class-info-row" data-class-info="company" hidden><b>Company</b><span></span></div>
-                    <div class="class-info-row" data-class-info="arrangement" hidden><b>Arrangement / Location</b><span></span></div>
-                    <div class="class-info-row" data-class-info="hours" hidden><b>Required Hours</b><span></span></div>
-                    <div class="class-info-row"><b>Code</b><span>{{ class_code or '—' }}</span></div>
-                    <div class="class-info-row"><b>Status</b><span>{{ class_status }}</span></div>
+                <div class="class-info-summary">
+                    <div class="class-info-summary-copy">
+                        <span>Intern Classroom</span>
+                        <strong id="studentInfoTitle">{{ classroom.name }}</strong>
+                        <small id="studentInfoSummary">{{ classroom.section }}{% if classroom.supervisor %} · {{ classroom.supervisor }}{% endif %}</small>
+                    </div>
+                    <span class="class-info-status{% if class_status == 'Archived' %} is-archived{% endif %}" id="studentInfoStatus">{{ class_status }}</span>
                 </div>
+
+                <section class="class-info-section" aria-labelledby="studentInfoOverviewHeading">
+                    <h3 id="studentInfoOverviewHeading">Overview</h3>
+                    <div class="class-info-grid">
+                        <div class="class-info-field"><b>Internship Title</b><span id="studentInfoInternshipTitle">{{ classroom.name }}</span></div>
+                        <div class="class-info-field"><b>Section</b><span id="studentInfoSection">{{ classroom.section }}</span></div>
+                        <div class="class-info-field"><b>Supervisor</b><span id="studentInfoSupervisor">{{ classroom.supervisor|default('Supervisor', true) }}</span></div>
+                    </div>
+                </section>
+
+                <section class="class-info-section" aria-labelledby="studentInfoPlacementHeading">
+                    <h3 id="studentInfoPlacementHeading">Placement</h3>
+                    <div class="class-info-grid">
+                        <div class="class-info-field"><b>Company / Organization</b><span id="studentInfoCompany">Loading…</span></div>
+                        <div class="class-info-field"><b>Category / Industry</b><span id="studentInfoIndustry">Loading…</span></div>
+                        <div class="class-info-field"><b>Work Arrangement</b><span id="studentInfoArrangement">Loading…</span></div>
+                        <div class="class-info-field"><b>Location</b><span id="studentInfoLocation">Loading…</span></div>
+                        <div class="class-info-field"><b>Compensation</b><span id="studentInfoCompensation">Loading…</span></div>
+                    </div>
+                </section>
+
+                <section class="class-info-section" aria-labelledby="studentInfoScheduleHeading">
+                    <h3 id="studentInfoScheduleHeading">Schedule & OJT Requirement</h3>
+                    <div class="class-info-grid">
+                        <div class="class-info-field"><b>Schedule</b><span id="studentInfoSchedule">Loading…</span></div>
+                        <div class="class-info-field"><b>Start Date</b><span id="studentInfoStart">Loading…</span></div>
+                        <div class="class-info-field"><b>End Date</b><span id="studentInfoEnd">Loading…</span></div>
+                        <div class="class-info-field"><b>Enrollment Deadline</b><span id="studentInfoDeadline">Loading…</span></div>
+                        <div class="class-info-field"><b>Required Hours</b><span id="studentInfoHours">Loading…</span></div>
+                    </div>
+                </section>
+
+                <section class="class-info-section" aria-labelledby="studentInfoCompanyHeading">
+                    <h3 id="studentInfoCompanyHeading">Company</h3>
+                    <div class="class-info-field">
+                        <b>Website</b>
+                        <a id="studentInfoWebsite" href="#" target="_blank" rel="noopener">Loading…</a>
+                    </div>
+                    <p class="class-info-prose" id="studentInfoCompanyDescription">Loading company description…</p>
+                </section>
+
+                <section class="class-info-section" aria-labelledby="studentInfoInternshipHeading">
+                    <h3 id="studentInfoInternshipHeading">Internship Details</h3>
+                    <p class="class-info-prose" id="studentInfoDescription">Loading internship description…</p>
+                </section>
+
+                <section class="class-info-section" aria-label="Responsibilities and eligibility">
+                    <div class="class-info-two-column">
+                        <div class="class-info-list-card">
+                            <h4>Responsibilities</h4>
+                            <ul id="studentInfoResponsibilities"><li>Loading…</li></ul>
+                        </div>
+                        <div class="class-info-list-card">
+                            <h4>Eligibility / Qualifications</h4>
+                            <ul id="studentInfoQualifications"><li>Loading…</li></ul>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="class-info-code-row">
+                    <span>Classroom Code</span>
+                    <strong id="studentInfoCode">{{ class_code or '—' }}</strong>
+                    <button type="button" onclick="copyStudentCode(event)">Copy Code</button>
+                </div>
+
                 <div class="modal-actions">
-                    <button type="button" onclick="document.getElementById('studentInfoModal').classList.remove('open')">Close</button>
+                    <button type="button" onclick="closeStudentClassInfo()">Close</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <script>
-        function copyStudentCode() {
-            const code = {{ class_code|tojson }};
-            if (!code) return;
+    <div id="studentLeaveModal" class="nexora-modal-overlay student-leave-modal" aria-hidden="true" onclick="if(event.target===this)closeStudentLeaveModal()">
+        <div class="nexora-modal" role="dialog" aria-modal="true" aria-labelledby="studentLeaveModalTitle">
+            <div class="nexora-modal-header">
+                <h2 id="studentLeaveModalTitle">Leave Intern Classroom?</h2>
+                <p>This changes your active internship enrollment.</p>
+                <button type="button" class="nexora-modal-close" aria-label="Close" onclick="closeStudentLeaveModal()">×</button>
+            </div>
+            <div class="nexora-modal-body">
+                <p class="student-leave-copy">You are about to leave <strong>{{ classroom.name }}</strong>.</p>
+                <div class="student-leave-warning">You will stop receiving new Work from this internship. Your completed attendance and Daily OJT history remain preserved.</div>
+                <form method="POST" action="{{ url_for('classroom.leave_class', class_id=classroom.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="modal-actions">
+                        <button type="button" onclick="closeStudentLeaveModal()">Keep Classroom</button>
+                        <button type="submit" class="student-leave-submit">Leave Classroom</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
-            const done = () => window.showToast && showToast('Classroom code copied.');
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(code).then(done).catch(() => fallbackCopy(code));
-            } else {
-                fallbackCopy(code);
+    <script>
+        let studentClassCodeValue = {{ class_code|tojson }} || '';
+        let studentClassInfoPromise = null;
+        const studentClassInfoUrl = {{ url_for('student_classmates.classroom_info', class_id=classroom.id)|tojson }};
+
+        function closeStudentClassMenu() {
+            const panel = document.getElementById('studentClassMenuPanel');
+            const button = document.getElementById('studentClassMenuButton');
+            if (panel) panel.classList.remove('show');
+            if (button) button.setAttribute('aria-expanded', 'false');
+        }
+
+        function toggleStudentClassMenu(event) {
+            if (event) event.stopPropagation();
+            const panel = document.getElementById('studentClassMenuPanel');
+            const button = document.getElementById('studentClassMenuButton');
+            if (!panel || !button) return;
+            const opening = !panel.classList.contains('show');
+            panel.classList.toggle('show', opening);
+            button.setAttribute('aria-expanded', opening ? 'true' : 'false');
+        }
+
+        function openStudentClassInfo(event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
             }
+            closeStudentClassMenu();
+            const modal = document.getElementById('studentInfoModal');
+            if (modal) {
+                modal.classList.add('open');
+                modal.setAttribute('aria-hidden', 'false');
+            }
+            ensureStudentClassInfo();
+        }
+
+        function closeStudentClassInfo() {
+            const modal = document.getElementById('studentInfoModal');
+            if (!modal) return;
+            modal.classList.remove('open');
+            modal.setAttribute('aria-hidden', 'true');
+        }
+
+        function openStudentLeaveModal(event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            closeStudentClassMenu();
+            const modal = document.getElementById('studentLeaveModal');
+            if (modal) {
+                modal.classList.add('open');
+                modal.setAttribute('aria-hidden', 'false');
+            }
+        }
+
+        function closeStudentLeaveModal() {
+            const modal = document.getElementById('studentLeaveModal');
+            if (!modal) return;
+            modal.classList.remove('open');
+            modal.setAttribute('aria-hidden', 'true');
         }
 
         function fallbackCopy(code) {
@@ -463,85 +854,186 @@
             }
         }
 
-        (function hydrateStudentInternshipHero() {
-            const classId = String({{ classroom.id|tojson }});
-            const cacheKey = 'nexora:student-class-detail:' + classId;
-            const metaRoot = document.getElementById('studentClassInternshipMeta');
-            if (!metaRoot) return;
+        function copyResolvedStudentCode() {
+            const code = String(studentClassCodeValue || '').trim();
+            if (!code) {
+                if (window.showToast) showToast('Classroom code is unavailable.');
+                return;
+            }
+            const done = () => window.showToast && showToast('Classroom code copied.');
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(done).catch(() => fallbackCopy(code));
+            } else {
+                fallbackCopy(code);
+            }
+        }
 
-            function clean(value) {
-                return String(value || '').replace(/\s+/g, ' ').trim();
+        function copyStudentCode(event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            closeStudentClassMenu();
+            if (studentClassCodeValue) {
+                copyResolvedStudentCode();
+                return;
+            }
+            ensureStudentClassInfo().then(copyResolvedStudentCode).catch(() => {});
+        }
+
+        function infoText(id, value, fallback) {
+            const node = document.getElementById(id);
+            if (!node) return;
+            const text = String(value == null ? '' : value).trim();
+            node.textContent = text || fallback || 'Not specified';
+        }
+
+        function formatInfoOption(value) {
+            const text = String(value || '').trim();
+            if (!text) return 'Not specified';
+            return text.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
+        }
+
+        function formatInfoDate(value) {
+            const text = String(value || '').trim();
+            if (!text) return 'Not specified';
+            const parsed = new Date(text + (text.length === 10 ? 'T00:00:00' : ''));
+            if (Number.isNaN(parsed.getTime())) return text;
+            return parsed.toLocaleDateString([], {year: 'numeric', month: 'short', day: 'numeric'});
+        }
+
+        function renderInfoList(id, values) {
+            const list = document.getElementById(id);
+            if (!list) return;
+            list.innerHTML = '';
+            const items = Array.isArray(values) ? values.filter((value) => String(value || '').trim()) : [];
+            (items.length ? items : ['Not specified']).forEach((value) => {
+                const item = document.createElement('li');
+                item.textContent = value;
+                list.appendChild(item);
+            });
+        }
+
+        function setHeroChip(key, value) {
+            const root = document.getElementById('studentClassInternshipMeta');
+            if (!root) return false;
+            const chip = root.querySelector('[data-class-detail="' + key + '"]');
+            const clean = String(value || '').trim();
+            if (!chip || !clean) return false;
+            const valueNode = chip.querySelector('span');
+            if (valueNode) valueNode.textContent = clean;
+            chip.hidden = false;
+            root.hidden = false;
+            return true;
+        }
+
+        function applyStudentClassInfo(data) {
+            if (!data || typeof data !== 'object') return;
+
+            studentClassCodeValue = String(data.code || studentClassCodeValue || '').trim();
+            infoText('studentClassCode', studentClassCodeValue, '—');
+            infoText('studentInfoCode', studentClassCodeValue, '—');
+            infoText('studentInfoTitle', data.internship_title || data.name, {{ classroom.name|tojson }});
+            infoText('studentInfoInternshipTitle', data.internship_title || data.name, {{ classroom.name|tojson }});
+            infoText('studentInfoSection', data.section, 'Not specified');
+            infoText('studentInfoSupervisor', data.supervisor, 'Supervisor');
+            infoText('studentInfoCompany', data.company_name, 'Not specified');
+            infoText('studentInfoIndustry', data.industry, 'Not specified');
+            infoText('studentInfoArrangement', data.work_arrangement, 'Not specified');
+            infoText('studentInfoLocation', data.location, 'Not specified');
+            infoText('studentInfoCompensation', data.compensation, 'Not specified');
+            infoText('studentInfoSchedule', formatInfoOption(data.schedule_type), 'Not specified');
+            infoText('studentInfoStart', formatInfoDate(data.start_date), 'Not specified');
+            infoText('studentInfoEnd', formatInfoDate(data.end_date), 'Not specified');
+            infoText('studentInfoDeadline', formatInfoDate(data.enrollment_deadline), 'Not specified');
+
+            const hours = data.hours_mode === 'specified' && Number(data.required_hours) > 0
+                ? String(data.required_hours) + ' hrs'
+                : 'Not specified';
+            infoText('studentInfoHours', hours, 'Not specified');
+            infoText('studentInfoCompanyDescription', data.company_description, 'No company description provided.');
+            infoText('studentInfoDescription', data.internship_description || data.description, 'No internship description provided.');
+
+            const summary = [data.section, data.supervisor].filter(Boolean).join(' · ');
+            infoText('studentInfoSummary', summary, 'Internship workspace');
+            const status = document.getElementById('studentInfoStatus');
+            if (status) {
+                status.textContent = data.status || 'Active';
+                status.classList.toggle('is-archived', String(data.status || '').toLowerCase() === 'archived');
             }
 
-            function setValue(key, value) {
-                value = clean(value);
-                if (!value) return false;
-
-                const chip = metaRoot.querySelector('[data-class-detail="' + key + '"]');
-                if (chip) {
-                    const valueNode = chip.querySelector('span');
-                    if (valueNode) valueNode.textContent = value;
-                    chip.hidden = false;
+            const website = document.getElementById('studentInfoWebsite');
+            if (website) {
+                const url = String(data.company_website || '').trim();
+                if (url) {
+                    website.href = url;
+                    website.textContent = url;
+                    website.removeAttribute('aria-disabled');
+                } else {
+                    website.removeAttribute('href');
+                    website.textContent = 'Not specified';
+                    website.setAttribute('aria-disabled', 'true');
                 }
-
-                const infoRow = document.querySelector('[data-class-info="' + key + '"]');
-                if (infoRow) {
-                    const valueNode = infoRow.querySelector('span');
-                    if (valueNode) valueNode.textContent = value;
-                    infoRow.hidden = false;
-                }
-                return true;
             }
 
-            function applyDetails(details) {
-                if (!details || typeof details !== 'object') return;
-                const shown = [
-                    setValue('company', details.company),
-                    setValue('arrangement', details.arrangement),
-                    setValue('hours', details.hours)
-                ].some(Boolean);
-                if (shown) metaRoot.hidden = false;
-            }
+            renderInfoList('studentInfoResponsibilities', data.responsibilities);
+            renderInfoList('studentInfoQualifications', data.qualifications);
 
-            try {
-                const cached = sessionStorage.getItem(cacheKey);
-                if (cached) {
-                    applyDetails(JSON.parse(cached));
-                    return;
-                }
-            } catch (error) {}
+            setHeroChip('company', data.company_name);
+            const arrangement = [data.work_arrangement, data.location].filter(Boolean).join(' · ');
+            setHeroChip('arrangement', arrangement);
+            if (hours !== 'Not specified') setHeroChip('hours', hours);
+        }
 
-            fetch({{ url_for('classroom.student_classes')|tojson }}, {credentials: 'same-origin'})
-                .then((response) => response.ok ? response.text() : Promise.reject(new Error('Unable to load classroom details')))
-                .then((html) => {
-                    const doc = new DOMParser().parseFromString(html, 'text/html');
-                    const links = Array.from(doc.querySelectorAll('a.student-intern-open-btn[href]'));
-                    const targetLink = links.find((link) => {
-                        try {
-                            const url = new URL(link.getAttribute('href'), window.location.origin);
-                            return url.pathname === '/student/classes/' + classId;
-                        } catch (error) {
-                            return false;
-                        }
-                    });
-                    const card = targetLink ? targetLink.closest('.student-intern-card') : null;
-                    if (!card) return;
-
-                    const details = {company: '', arrangement: '', hours: ''};
-                    card.querySelectorAll('.student-intern-meta-row').forEach((row) => {
-                        const icon = clean(row.querySelector('.student-intern-meta-icon')?.textContent);
-                        const text = clean(row.textContent).replace(icon, '').trim();
-                        if (icon === '🏢') details.company = text.replace(/^Company:\s*/i, '');
-                        if (icon === '📍') details.arrangement = text;
-                        if (icon === '⏱') details.hours = text.replace(/\s*required\s+hrs?$/i, ' hrs');
-                    });
-
-                    try {
-                        sessionStorage.setItem(cacheKey, JSON.stringify(details));
-                    } catch (error) {}
-                    applyDetails(details);
+        function ensureStudentClassInfo() {
+            if (studentClassInfoPromise) return studentClassInfoPromise;
+            studentClassInfoPromise = fetch(studentClassInfoUrl, {
+                credentials: 'same-origin',
+                headers: {Accept: 'application/json'},
+                cache: 'no-store'
+            })
+                .then((response) => response.json().catch(() => ({ok: false, error: 'Unexpected server response.'})).then((data) => {
+                    if (!response.ok || data.ok === false) throw new Error(data.error || 'Unable to load classroom information.');
+                    return data.classroom || {};
+                }))
+                .then((data) => {
+                    applyStudentClassInfo(data);
+                    return data;
                 })
-                .catch(() => {});
-        })();
+                .catch((error) => {
+                    studentClassInfoPromise = null;
+                    infoText('studentInfoCompany', '', 'Not specified');
+                    infoText('studentInfoIndustry', '', 'Not specified');
+                    infoText('studentInfoArrangement', '', 'Not specified');
+                    infoText('studentInfoLocation', '', 'Not specified');
+                    infoText('studentInfoCompensation', '', 'Not specified');
+                    infoText('studentInfoSchedule', '', 'Not specified');
+                    infoText('studentInfoStart', '', 'Not specified');
+                    infoText('studentInfoEnd', '', 'Not specified');
+                    infoText('studentInfoDeadline', '', 'Not specified');
+                    infoText('studentInfoHours', '', 'Not specified');
+                    infoText('studentInfoCompanyDescription', '', 'Unable to load company details.');
+                    infoText('studentInfoDescription', '', 'Unable to load internship details.');
+                    renderInfoList('studentInfoResponsibilities', []);
+                    renderInfoList('studentInfoQualifications', []);
+                    if (window.showToast) showToast(error.message || 'Unable to load classroom information.');
+                    throw error;
+                });
+            return studentClassInfoPromise;
+        }
+
+        const studentClassMenuPanel = document.getElementById('studentClassMenuPanel');
+        if (studentClassMenuPanel) {
+            studentClassMenuPanel.addEventListener('click', (event) => event.stopPropagation());
+        }
+        document.addEventListener('click', closeStudentClassMenu);
+        document.addEventListener('keydown', (event) => {
+            if (event.key !== 'Escape') return;
+            closeStudentClassMenu();
+            closeStudentClassInfo();
+            closeStudentLeaveModal();
+        });
+
+        ensureStudentClassInfo().catch(() => {});
     </script>
 {% endif %}

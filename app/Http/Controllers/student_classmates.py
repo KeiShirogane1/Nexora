@@ -1,4 +1,4 @@
-from flask import Blueprint, abort, render_template, session
+from flask import Blueprint, abort, jsonify, render_template, session
 from app.Http.Middleware.security import role_required
 from app.Models.db import get_db_connection
 from app.Services.supervisor_profile_service import get_or_create_supervisor_profile
@@ -13,6 +13,106 @@ def _member(conn, class_id, student_id):
 def _profile(conn, student_id):
     return conn.execute("""SELECT u.id,u.username,u.email,p.first_name,p.middle_name,p.last_name,p.profile_picture,p.student_id,p.grade_year,p.major_program,p.phone_number,p.home_address
         FROM users u LEFT JOIN student_profiles p ON p.user_id=u.id WHERE u.id=? AND u.role='student'""", (student_id,)).fetchone()
+
+
+def _row_value(row, key, index=0, default=None):
+    if row is None:
+        return default
+    try:
+        if key in row.keys():
+            value = row[key]
+            return default if value is None else value
+    except AttributeError:
+        pass
+    try:
+        value = row[index]
+        return default if value is None else value
+    except (IndexError, KeyError, TypeError):
+        return default
+
+
+@student_classmates.route("/student/classes/<int:class_id>/info")
+@role_required("student")
+def classroom_info(class_id):
+    viewer_id = session["user_id"]
+    conn = get_db_connection()
+    try:
+        if not _member(conn, class_id, viewer_id):
+            abort(404)
+
+        classroom = conn.execute(
+            """SELECT c.id, c.name, c.section, c.description, c.code, c.archived,
+                      c.supervisor_id, u.username AS supervisor_name
+               FROM classrooms c
+               JOIN users u ON u.id = c.supervisor_id
+               WHERE c.id = ?""",
+            (class_id,),
+        ).fetchone()
+        if not classroom:
+            abort(404)
+
+        details = conn.execute(
+            """SELECT internship_title, company_name, industry, work_arrangement,
+                      schedule_type, hours_mode, compensation, location, start_date,
+                      end_date, enrollment_deadline, required_hours, company_website,
+                      company_description, internship_description
+               FROM classroom_internship_details
+               WHERE classroom_id = ?""",
+            (class_id,),
+        ).fetchone()
+        responsibility_rows = conn.execute(
+            """SELECT responsibility
+               FROM classroom_internship_responsibilities
+               WHERE classroom_id = ?
+               ORDER BY sort_order, id""",
+            (class_id,),
+        ).fetchall()
+        qualification_rows = conn.execute(
+            """SELECT qualification
+               FROM classroom_internship_qualifications
+               WHERE classroom_id = ?
+               ORDER BY sort_order, id""",
+            (class_id,),
+        ).fetchall()
+    finally:
+        conn.close()
+
+    archived = bool(_row_value(classroom, "archived", 5, 0))
+    payload = {
+        "id": _row_value(classroom, "id", 0),
+        "name": _row_value(classroom, "name", 1, ""),
+        "section": _row_value(classroom, "section", 2, ""),
+        "description": _row_value(classroom, "description", 3, ""),
+        "code": _row_value(classroom, "code", 4, ""),
+        "status": "Archived" if archived else "Active",
+        "supervisor": _row_value(classroom, "supervisor_name", 7, "Supervisor"),
+        "internship_title": _row_value(details, "internship_title", 0, _row_value(classroom, "name", 1, "")),
+        "company_name": _row_value(details, "company_name", 1, ""),
+        "industry": _row_value(details, "industry", 2, ""),
+        "work_arrangement": _row_value(details, "work_arrangement", 3, ""),
+        "schedule_type": _row_value(details, "schedule_type", 4, "not_specified"),
+        "hours_mode": _row_value(details, "hours_mode", 5, "not_specified"),
+        "compensation": _row_value(details, "compensation", 6, "Not Specified"),
+        "location": _row_value(details, "location", 7, ""),
+        "start_date": _row_value(details, "start_date", 8, ""),
+        "end_date": _row_value(details, "end_date", 9, ""),
+        "enrollment_deadline": _row_value(details, "enrollment_deadline", 10, ""),
+        "required_hours": _row_value(details, "required_hours", 11, 0),
+        "company_website": _row_value(details, "company_website", 12, ""),
+        "company_description": _row_value(details, "company_description", 13, ""),
+        "internship_description": _row_value(details, "internship_description", 14, ""),
+        "responsibilities": [
+            _row_value(row, "responsibility", 0, "")
+            for row in responsibility_rows
+            if _row_value(row, "responsibility", 0, "")
+        ],
+        "qualifications": [
+            _row_value(row, "qualification", 0, "")
+            for row in qualification_rows
+            if _row_value(row, "qualification", 0, "")
+        ],
+    }
+    return jsonify({"ok": True, "classroom": payload})
 
 
 @student_classmates.route("/student/classes/<int:class_id>/people/<int:student_id>")
