@@ -36,8 +36,9 @@ def test_supervisor_dashboard_student_forbidden():
     app.config["TESTING"] = True
     client = app.test_client()
     _login_as(client, 10, "student")
-    resp = client.get("/supervisor/dashboard")
-    assert resp.status_code == 403
+    resp = client.get("/supervisor/dashboard", follow_redirects=False)
+    assert resp.status_code in (302, 303)
+    assert resp.headers.get("Location", "").endswith("/student/dashboard")
 
 def test_supervisor_dashboard_ok_filtered():
     app.config["WTF_CSRF_ENABLED"] = False
@@ -621,13 +622,15 @@ def test_admin_cannot_access_supervisor():
     app.config["TESTING"] = True
     client = app.test_client()
     _login_as(client, 1, "admin")
-    resp = client.get("/supervisor/dashboard")
-    assert resp.status_code == 403
+    resp = client.get("/supervisor/dashboard", follow_redirects=False)
+    assert resp.status_code in (302, 303)
+    assert resp.headers.get("Location", "").endswith("/admin/dashboard")
 
 def test_student_cannot_access_supervisor():
     app.config["WTF_CSRF_ENABLED"] = False
     app.config["TESTING"] = True
     client = app.test_client()
     _login_as(client, 10, "student")
-    resp = client.get("/supervisor/interns")
-    assert resp.status_code == 403
+    resp = client.get("/supervisor/interns", follow_redirects=False)
+    assert resp.status_code in (302, 303)
+    assert resp.headers.get("Location", "").endswith("/student/dashboard")

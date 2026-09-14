@@ -84,8 +84,9 @@ def test_bulk_requires_admin():
     app.config["TESTING"] = True
     client = app.test_client()
     _login_as(client, 2, "student")
-    resp = client.post("/admin/users/bulk", json={"ids": [3], "action": "activate"})
-    assert resp.status_code == 403
+    resp = client.post("/admin/users/bulk", json={"ids": [3], "action": "activate"}, follow_redirects=False)
+    assert resp.status_code in (302, 303)
+    assert resp.headers.get("Location", "").endswith("/student/dashboard")
 
 def test_bulk_requires_csrf():
     app.config["WTF_CSRF_ENABLED"] = True

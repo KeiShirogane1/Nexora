@@ -246,10 +246,11 @@ def test_announcement_ownership():
     _login_as(client, 99002, "supervisor")
     resp2=client.post(f"/supervisor/classes/{cid}/post", data={"title":"Hack","body":"Should not work"})
     assert resp2.status_code==403
-    # student should be forbidden (no route for student post, but try supervisor endpoint as student)
+    # student should be redirected to the student dashboard
     _login_as(client, 99011, "student")
-    resp3=client.post(f"/supervisor/classes/{cid}/post", data={"title":"Hack","body":"student hack"})
-    assert resp3.status_code==403
+    resp3=client.post(f"/supervisor/classes/{cid}/post", data={"title":"Hack","body":"student hack"}, follow_redirects=False)
+    assert resp3.status_code in (302,303)
+    assert resp3.headers.get("Location", "").endswith("/student/dashboard")
     # archived class should not allow new posts
     _login_as(client, 99001, "supervisor")
     client.post(f"/supervisor/classes/{cid}/archive")
@@ -287,13 +288,15 @@ def test_unauthorized_access():
     assert resp.status_code in (302,303)
     resp2=client.get("/student/classes")
     assert resp2.status_code in (302,303)
-    # student trying supervisor
+    # wrong-role users are sent back to their actual role dashboard
     _login_as(client, 99011, "student")
-    resp3=client.get("/supervisor/classes")
-    assert resp3.status_code==403
+    resp3=client.get("/supervisor/classes", follow_redirects=False)
+    assert resp3.status_code in (302,303)
+    assert resp3.headers.get("Location", "").endswith("/student/dashboard")
     _login_as(client, 99001, "supervisor")
-    resp4=client.get("/student/classes")
-    assert resp4.status_code==403
+    resp4=client.get("/student/classes", follow_redirects=False)
+    assert resp4.status_code in (302,303)
+    assert resp4.headers.get("Location", "").endswith("/supervisor/dashboard")
 
 def test_csrf_protection():
     app.config["WTF_CSRF_ENABLED"]=True
@@ -651,9 +654,10 @@ def test_announcements_stream_and_authorization():
     client.post("/student/classes/join", data={"class_code":code})
     resp3=client.get(f"/student/classes/{cid}")
     assert b"Welcome to class!" in resp3.data
-    # student cannot post via supervisor endpoint
-    resp4=client.post(f"/supervisor/classes/{cid}/post", data={"title":"hack","body":"student hack"})
-    assert resp4.status_code==403
+    # student cannot post via supervisor endpoint; middleware redirects by actual role
+    resp4=client.post(f"/supervisor/classes/{cid}/post", data={"title":"hack","body":"student hack"}, follow_redirects=False)
+    assert resp4.status_code in (302,303)
+    assert resp4.headers.get("Location", "").endswith("/student/dashboard")
     # other supervisor cannot post
     _login_as(client, 99002, "supervisor")
     resp5=client.post(f"/supervisor/classes/{cid}/post", data={"title":"hack2","body":"other sup"})
@@ -740,10 +744,11 @@ def test_remove_authorization_and_idor():
     _login_as(client, 99002, "supervisor")
     resp=client.post(f"/supervisor/classes/{cid}/students/99011/remove")
     assert resp.status_code==403
-    # student cannot remove
+    # student cannot use a supervisor route; middleware redirects by actual role
     _login_as(client, 99011, "student")
-    resp2=client.post(f"/supervisor/classes/{cid}/students/99011/remove")
-    assert resp2.status_code==403
+    resp2=client.post(f"/supervisor/classes/{cid}/students/99011/remove", follow_redirects=False)
+    assert resp2.status_code in (302,303)
+    assert resp2.headers.get("Location", "").endswith("/student/dashboard")
     _cleanup_classroom()
 
 def test_class_code_copy_and_regeneration():

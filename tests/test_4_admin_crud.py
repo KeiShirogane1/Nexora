@@ -15,8 +15,9 @@ def test_reset_password_requires_admin():
     app.config["TESTING"] = True
     client = app.test_client()
     _login_as(client, 2, "student")
-    resp = client.post("/student/2/reset-password", data={})
-    assert resp.status_code == 403
+    resp = client.post("/student/2/reset-password", data={}, follow_redirects=False)
+    assert resp.status_code in (302, 303)
+    assert resp.headers.get("Location", "").endswith("/student/dashboard")
 
 def test_reset_password_get_does_not_mutate():
     app.config["WTF_CSRF_ENABLED"] = False
@@ -64,8 +65,9 @@ def test_assign_role_requires_admin():
     app.config["TESTING"] = True
     client = app.test_client()
     _login_as(client, 2, "student")
-    resp = client.post("/admin/assign-role", data={"user_id": "2", "role": "student"})
-    assert resp.status_code == 403
+    resp = client.post("/admin/assign-role", data={"user_id": "2", "role": "student"}, follow_redirects=False)
+    assert resp.status_code in (302, 303)
+    assert resp.headers.get("Location", "").endswith("/student/dashboard")
 
 def test_activate_requires_post():
     app.config["WTF_CSRF_ENABLED"] = False
@@ -136,8 +138,9 @@ def test_supervisor_profile_requires_admin():
     app.config["TESTING"] = True
     client = app.test_client()
     _login_as(client, 2, "student")
-    resp = client.get("/admin/supervisor/5")
-    assert resp.status_code == 403
+    resp = client.get("/admin/supervisor/5", follow_redirects=False)
+    assert resp.status_code in (302, 303)
+    assert resp.headers.get("Location", "").endswith("/student/dashboard")
 
 def test_supervisor_assigned_count():
     # Check template now uses assignment_counts

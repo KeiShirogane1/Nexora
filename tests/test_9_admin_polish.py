@@ -273,11 +273,13 @@ def test_bulk_requires_admin_authorization():
     app.config["TESTING"] = True
     client = app.test_client()
     _login_as(client, 10, "student")
-    resp = client.post("/admin/users/bulk", json={"ids":[20],"action":"activate"})
-    assert resp.status_code == 403
+    resp = client.post("/admin/users/bulk", json={"ids":[20],"action":"activate"}, follow_redirects=False)
+    assert resp.status_code in (302,303)
+    assert resp.headers.get("Location", "").endswith("/student/dashboard")
     _login_as(client, 5, "supervisor")
-    resp2 = client.post("/admin/users/bulk", json={"ids":[20],"action":"activate"})
-    assert resp2.status_code == 403
+    resp2 = client.post("/admin/users/bulk", json={"ids":[20],"action":"activate"}, follow_redirects=False)
+    assert resp2.status_code in (302,303)
+    assert resp2.headers.get("Location", "").endswith("/supervisor/dashboard")
 
 # 15 Bulk rejects invalid action
 def test_bulk_rejects_invalid_action():

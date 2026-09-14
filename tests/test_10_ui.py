@@ -191,11 +191,13 @@ def test_no_authorization_regression():
     app.config["TESTING"]=True
     client=app.test_client()
     _login_as(client,10,"student")
-    resp=client.get("/admin/dashboard")
-    assert resp.status_code==403
+    resp=client.get("/admin/dashboard", follow_redirects=False)
+    assert resp.status_code in (302,303)
+    assert resp.headers.get("Location", "").endswith("/student/dashboard")
     _login_as(client,5,"supervisor")
-    resp2=client.get("/admin/dashboard")
-    assert resp2.status_code==403
+    resp2=client.get("/admin/dashboard", follow_redirects=False)
+    assert resp2.status_code in (302,303)
+    assert resp2.headers.get("Location", "").endswith("/supervisor/dashboard")
 
 def test_no_ml_files_changed():
     import pathlib

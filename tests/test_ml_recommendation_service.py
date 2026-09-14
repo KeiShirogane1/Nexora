@@ -344,9 +344,10 @@ def test_student_cannot_access_another_students_recommendation():
         body2 = resp2.get_data(as_text=True)
         assert "90.0%" in body2
         # Should not contain other student's recommendation disclosure beyond own
-        # Supervisor endpoint should be forbidden for student
-        resp3 = client.get(f"/supervisor/classes/{classroom}/insights")
-        assert resp3.status_code == 403
+        # Supervisor endpoint should redirect a student to their own dashboard
+        resp3 = client.get(f"/supervisor/classes/{classroom}/insights", follow_redirects=False)
+        assert resp3.status_code in (302, 303)
+        assert resp3.headers.get("Location", "").endswith("/student/dashboard")
     finally:
         _cleanup([sup], [stu_a, stu_b], [classroom])
 

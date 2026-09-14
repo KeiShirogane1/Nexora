@@ -16,7 +16,8 @@ def test_admin_only_routes_block_student():
     _login_as(client, 1, "student")
     for url in ["/admin/dashboard", "/admin/users", "/admin/users/students", "/admin/users/supervisors", "/admin/internship-assign", "/admin/reports"]:
         resp = client.get(url, follow_redirects=False)
-        assert resp.status_code == 403, f"{url} should be 403 for student, got {resp.status_code}"
+        assert resp.status_code in (302, 303), f"{url} should redirect student to the student dashboard, got {resp.status_code}"
+        assert resp.headers.get("Location", "").endswith("/student/dashboard")
     # Cleanup
     with client.session_transaction() as sess:
         sess.clear()
@@ -28,7 +29,8 @@ def test_student_only_routes_block_admin():
     _login_as(client, 1, "admin")
     for url in ["/student/dashboard", "/student/logbook", "/student/tasks"]:
         resp = client.get(url, follow_redirects=False)
-        assert resp.status_code == 403, f"{url} should be 403 for admin"
+        assert resp.status_code in (302, 303), f"{url} should redirect admin to the admin dashboard"
+        assert resp.headers.get("Location", "").endswith("/admin/dashboard")
     with client.session_transaction() as sess:
         sess.clear()
 
@@ -39,7 +41,8 @@ def test_supervisor_only_routes_block_student():
     _login_as(client, 1, "student")
     for url in ["/supervisor/dashboard", "/supervisor/interns"]:
         resp = client.get(url, follow_redirects=False)
-        assert resp.status_code == 403, f"{url} should be 403 for student"
+        assert resp.status_code in (302, 303), f"{url} should redirect student to the student dashboard"
+        assert resp.headers.get("Location", "").endswith("/student/dashboard")
     with client.session_transaction() as sess:
         sess.clear()
 

@@ -254,8 +254,9 @@ def test_authentication_regression():
     resp=client.get("/change-password", follow_redirects=False)
     assert resp.status_code in (302,303)
     assert "/login" in resp.headers.get("Location","")
-    # student cannot access admin
+    # student cannot access admin; current middleware redirects by database role
     _ensure_user(99140, "chg_user40", "student")
     _login_as(client, 99140, "student")
-    resp2=client.get("/admin/dashboard")
-    assert resp2.status_code==403
+    resp2=client.get("/admin/dashboard", follow_redirects=False)
+    assert resp2.status_code in (302,303)
+    assert resp2.headers.get("Location", "").endswith("/student/dashboard")

@@ -413,8 +413,10 @@ def test_student_cannot_view_another_student():
     assert resp2.status_code == 200
     assert "90.0%" in resp2.get_data(as_text=True)
     assert "50.0%" not in resp2.get_data(as_text=True)
-    # attempt supervisor report as student should be 403
-    assert client.get(f"/supervisor/classes/{cid}/reports").status_code == 403
+    # attempt supervisor report as student should redirect to the student dashboard
+    cross_role = client.get(f"/supervisor/classes/{cid}/reports", follow_redirects=False)
+    assert cross_role.status_code in (302, 303)
+    assert cross_role.headers.get("Location", "").endswith("/student/dashboard")
     _cleanup([sup], [stu_a, stu_b], [cid])
 
 
@@ -435,7 +437,9 @@ def test_csv_export_authorization_and_content():
     _login_as(client, sup_other, "supervisor")
     assert client.get(f"/supervisor/classes/{cid}/reports/export.csv").status_code == 404
     _login_as(client, stu, "student")
-    assert client.get(f"/supervisor/classes/{cid}/reports/export.csv").status_code == 403
+    student_export = client.get(f"/supervisor/classes/{cid}/reports/export.csv", follow_redirects=False)
+    assert student_export.status_code in (302, 303)
+    assert student_export.headers.get("Location", "").endswith("/student/dashboard")
     _login_as(client, sup, "supervisor")
     resp = client.get(f"/supervisor/classes/{cid}/reports/export.csv")
     assert resp.status_code == 200

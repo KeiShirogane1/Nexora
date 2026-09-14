@@ -371,11 +371,13 @@ def test_non_admin_cannot_access_admin_report():
     app.config["TESTING"] = True
     client = app.test_client()
     _login_as(client, 10, "student")
-    resp = client.get("/admin/reports/student/1")
-    assert resp.status_code == 403
+    resp = client.get("/admin/reports/student/1", follow_redirects=False)
+    assert resp.status_code in (302,303)
+    assert resp.headers.get("Location", "").endswith("/student/dashboard")
     _login_as(client, 5, "supervisor")
-    resp2 = client.get("/admin/reports/student/1")
-    assert resp2.status_code == 403
+    resp2 = client.get("/admin/reports/student/1", follow_redirects=False)
+    assert resp2.status_code in (302,303)
+    assert resp2.headers.get("Location", "").endswith("/supervisor/dashboard")
 
 def test_existing_supervisor_feedback_still_stores_ml():
     app.config["WTF_CSRF_ENABLED"] = False

@@ -76,8 +76,9 @@ def test_supervisor_insights_requires_owner():
         resp = client.get(f"/supervisor/classes/{classroom}/insights")
         assert resp.status_code == 404, "other supervisor should get 404"
         _login_as(client, student, "student")
-        resp2 = client.get(f"/supervisor/classes/{classroom}/insights")
-        assert resp2.status_code == 403, "student should be forbidden from supervisor insights"
+        resp2 = client.get(f"/supervisor/classes/{classroom}/insights", follow_redirects=False)
+        assert resp2.status_code in (302, 303)
+        assert resp2.headers.get("Location", "").endswith("/student/dashboard")
         _login_as(client, sup, "supervisor")
         resp3 = client.get(f"/supervisor/classes/{classroom}/insights")
         assert resp3.status_code == 200
@@ -135,8 +136,9 @@ def test_student_insights_requires_membership():
         resp = client.get(f"/student/classes/{classroom}/insights")
         assert resp.status_code == 404
         _login_as(client, sup, "supervisor")
-        resp2 = client.get(f"/student/classes/{classroom}/insights")
-        assert resp2.status_code == 403  # supervisor cannot access student insights (role mismatch)
+        resp2 = client.get(f"/student/classes/{classroom}/insights", follow_redirects=False)
+        assert resp2.status_code in (302, 303)
+        assert resp2.headers.get("Location", "").endswith("/supervisor/dashboard")
         _login_as(client, student, "student")
         resp3 = client.get(f"/student/classes/{classroom}/insights")
         assert resp3.status_code == 200
