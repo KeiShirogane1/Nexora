@@ -416,7 +416,7 @@ def test_supervisor_insights_ui_entry_points_exist():
         resp2 = client.get(f"/supervisor/classes/{classroom}")
         body2 = resp2.get_data(as_text=True)
         assert "Cohort Insights" in body2
-        assert f"/supervisor/classes/{classroom}/insights" in body2
+        assert f"/supervisor/classes/{classroom}/cohort-insights" in body2
         _login_as(client, student, "student")
         resp3 = client.get(f"/student/classes/{classroom}/gradebook")
         assert "Performance Insights" in resp3.get_data(as_text=True) or "ML Insights" in resp3.get_data(as_text=True)

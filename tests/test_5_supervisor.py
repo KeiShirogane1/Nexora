@@ -44,7 +44,7 @@ def test_supervisor_dashboard_ok_filtered():
     app.config["WTF_CSRF_ENABLED"] = False
     app.config["TESTING"] = True
     client = app.test_client()
-    _login_as(client, 95005, "supervisor")
+    _login_as(client, 5, "supervisor")
     mock_conn = MagicMock()
     mock_cursor = MagicMock()
     mock_cursor.execute.return_value = mock_cursor
@@ -69,7 +69,7 @@ def test_inactive_supervisor_blocked():
     app.config["WTF_CSRF_ENABLED"] = False
     app.config["TESTING"] = True
     client = app.test_client()
-    _login_as(client, 95006, "supervisor")
+    _login_as(client, 5, "supervisor")
     mock_conn = MagicMock()
     mock_inactive = MagicMock()
     mock_inactive.fetchone.return_value = {"status": "inactive"}

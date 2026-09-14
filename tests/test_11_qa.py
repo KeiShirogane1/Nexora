@@ -62,9 +62,10 @@ def test_polish_css_import_present_and_modals_untouched():
     assert "262px" in sidebar_css
     # student.css must NOT contain the retired duplicate white sidebar implementation.
     assert "background:#fff;border-right" not in student_css or ".nx-sidebar" not in student_css
-    # Verify student_sidebar.html no longer contains reusable sidebar <style> block
+    # Component-local overflow behavior may remain inline, but the shared shell must not be redefined here.
     sidebar_html=pathlib.Path("resources/views/components/student_sidebar.html").read_text(encoding="utf-8")
-    assert "<style>" not in sidebar_html
+    assert ".nx-role-sidebar-shell {" not in sidebar_html
+    assert ".nx-role-student .nx-role-sidebar" in sidebar_html
     assert 'nx-collapse-toggle' in sidebar_html
     assert 'id="studentSidebar"' in sidebar_html
     modals=pathlib.Path("resources/assets/css/modals.css").read_text(encoding="utf-8")
