@@ -1,3 +1,85 @@
+{% if session.get('role') == 'admin' %}
+    {% include 'components/admin_consistency.html' %}
+{% endif %}
+
+<style id="nx-global-close-copy-consistency">
+/* Global close buttons: show only the X, no permanent box. */
+.nexora-modal-close,
+.modal-close,
+.nexora-logout-close,
+.crop-close,
+#nxDocumentViewerClose,
+button[aria-label="Close"],
+button[aria-label^="Close "] {
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: #64748b !important;
+}
+.nexora-modal-close:hover,
+.modal-close:hover,
+.nexora-logout-close:hover,
+.crop-close:hover,
+#nxDocumentViewerClose:hover,
+button[aria-label="Close"]:hover,
+button[aria-label^="Close "]:hover {
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: #dc2626 !important;
+}
+.nexora-modal-close:active,
+.modal-close:active,
+.nexora-logout-close:active,
+.crop-close:active,
+#nxDocumentViewerClose:active,
+button[aria-label="Close"]:active,
+button[aria-label^="Close "]:active {
+    background: transparent !important;
+    color: #991b1b !important;
+}
+.nexora-modal-close:focus-visible,
+.modal-close:focus-visible,
+.nexora-logout-close:focus-visible,
+.crop-close:focus-visible,
+#nxDocumentViewerClose:focus-visible,
+button[aria-label="Close"]:focus-visible,
+button[aria-label^="Close "]:focus-visible {
+    outline: 2px solid rgba(220, 38, 38, .32) !important;
+    outline-offset: 2px !important;
+}
+
+/* Username copy control: icon-only and visually aligned with username text. */
+.nx-copy-username {
+    width: auto !important;
+    height: auto !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    padding: 0 1px !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: inherit !important;
+    display: inline-grid !important;
+    place-items: center !important;
+    line-height: 1 !important;
+    vertical-align: middle !important;
+}
+.nx-copy-username:hover {
+    border: 0 !important;
+    background: transparent !important;
+    color: inherit !important;
+    opacity: .72;
+}
+.nx-copy-username:active { opacity: .5; }
+.nx-copy-username svg {
+    width: 1em !important;
+    height: 1em !important;
+    display: block !important;
+}
+</style>
+
 <div id="nexora-logout-overlay" class="nexora-logout-overlay" role="dialog" aria-modal="true" aria-labelledby="logout-title">
     <div class="nexora-logout-modal" role="document">
         <div class="nexora-logout-header">
@@ -26,5 +108,18 @@
         const overlay = document.getElementById("nexora-logout-overlay");
         if (overlay && e.target === overlay) closeLogoutModal();
     });
+
+    function removeDuplicateClassInfoMenuAction() {
+        document.querySelectorAll('.class-banner-menu-panel .class-banner-menu-item').forEach(function (button) {
+            var label = String(button.textContent || '').replace(/\s+/g, ' ').trim();
+            if (label === 'ⓘ Classroom Information' || label === 'Classroom Information') button.remove();
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', removeDuplicateClassInfoMenuAction);
+    } else {
+        removeDuplicateClassInfoMenuAction();
+    }
 })();
 </script>
