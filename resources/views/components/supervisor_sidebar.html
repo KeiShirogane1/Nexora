@@ -102,3 +102,10 @@
 
 {% include 'components/logout_modal.html' %}
 {% include 'components/toast.html' %}
+
+{% if request.path == '/supervisor/dashboard' %}
+<script defer src="{{ url_for('static', filename='js/supervisor_dashboard_activity.js') }}"></script>
+{% endif %}
+{% if request.path == '/supervisor/interns' or '/insights' in request.path or request.path.endswith('/performance') or request.path.endswith('/ml-insights') %}
+<script defer src="{{ url_for('static', filename='js/supervisor_insights_ai.js') }}"></script>
+{% endif %}
