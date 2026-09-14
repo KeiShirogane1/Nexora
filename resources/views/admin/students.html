@@ -109,6 +109,16 @@
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    {% set program_abbreviations = {
+                                        'bsit': 'BSIT',
+                                        'bachelor of science in information technology': 'BSIT',
+                                        'bscs': 'BSCS',
+                                        'bachelor of science in computer science': 'BSCS',
+                                        'bsis': 'BSIS',
+                                        'bachelor of science in information systems': 'BSIS',
+                                        'bscpe': 'BSCPE',
+                                        'bachelor of science in computer engineering': 'BSCPE'
+                                    } %}
                                     {% for student in students %}
                                         <tr data-username="{{ student.username|lower }}" data-email="{{ (student.email|lower) if student.email else '' }}" data-name="{{ student.username|lower }}" data-status="{{ 'pending' if student.role == 'pending_student' else 'active' }}" data-program="{{ (student.major_program|lower) if student.major_program else '' }}" data-supervisor="{{ (student.supervisor_name|lower) if student.supervisor_name else '' }}" data-id="{{ student.id }}">
                                             <td><input type="checkbox" class="custom-checkbox row-checkbox" value="{{ student.id }}"></td>
@@ -127,7 +137,17 @@
                                                     <span class="text-muted-placeholder">No email</span>
                                                 {% endif %}
                                             </td>
-                                            <td>{% if student.major_program %}{{ student.major_program }}{% else %}<span class="text-muted-placeholder">—</span>{% endif %}</td>
+                                            <td data-full-program="{{ student.major_program or '' }}">
+                                                {% if student.major_program %}
+                                                    {% set program_key = student.major_program|lower %}
+                                                    {% set program_label = program_abbreviations.get(program_key, student.major_program) %}
+                                                    <span class="table-meta text-nowrap" title="{{ student.major_program }}">
+                                                        {{ program_label if program_label|length <= 28 else program_label[:25] ~ '…' }}
+                                                    </span>
+                                                {% else %}
+                                                    <span class="text-muted-placeholder">—</span>
+                                                {% endif %}
+                                            </td>
                                             <td>{% if student.supervisor_name %}{{ student.supervisor_name }}{% else %}<span class="text-muted-placeholder">Not Assigned</span>{% endif %}</td>
                                             <td>
                                                 {% if student.role == "pending_student" %}
@@ -573,7 +593,9 @@
                                 .replace(/,/g, " ");
                             const username = cells[3].innerText.trim();
                             const email = cells[4].innerText.trim();
-                            const program = cells[5].innerText.trim();
+                            const program =
+                                cells[5].getAttribute("data-full-program") ||
+                                cells[5].innerText.trim();
                             const supervisor = cells[6].innerText.trim();
                             const status = cells[7].innerText.trim().replace(/\n/g, " ");
                             const joined = cells[8].innerText.trim();
