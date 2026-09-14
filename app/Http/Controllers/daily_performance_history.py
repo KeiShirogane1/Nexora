@@ -21,12 +21,24 @@ def supervisor_history(class_id):
     if not context.get("ok"):
         abort(int(context.get("status_code") or 404))
 
+    template_context = {
+        "classroom": context["classroom"],
+        "roster": context["roster"],
+        "selected_student": context["selected_student"],
+        "history": context["history"],
+        "summary": context["summary"],
+        "active_page": "classes",
+    }
+
+    if (request.args.get("modal") or "").strip() == "1":
+        if not student_id or not context["selected_student"]:
+            abort(404)
+        return render_template(
+            "components/supervisor_daily_performance_modal_content.html",
+            **template_context,
+        )
+
     return render_template(
         "classroom/supervisor_daily_performance_history.html",
-        classroom=context["classroom"],
-        roster=context["roster"],
-        selected_student=context["selected_student"],
-        history=context["history"],
-        summary=context["summary"],
-        active_page="classes",
+        **template_context,
     )
