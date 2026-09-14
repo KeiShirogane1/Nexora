@@ -1,6 +1,9 @@
 (function () {
   "use strict";
 
+  if (window.__nexoraSupervisorInsightsUiLoaded) return;
+  window.__nexoraSupervisorInsightsUiLoaded = true;
+
   const sectionLabels = [
     ["overall", "OVERALL INTERPRETATION"],
     ["happened", "WHAT HAPPENED"],
@@ -182,6 +185,65 @@
     };
   }
 
+  function ensureExportLink(container, kind, href, primary) {
+    if (!container) return null;
+    let link = container.querySelector(`[data-nexora-insights-export="${kind}"]`);
+    if (!link) {
+      link = document.createElement("a");
+      link.dataset.nexoraInsightsExport = kind;
+      container.appendChild(link);
+    }
+    link.href = href;
+    link.textContent = kind === "pdf" ? "Export PDF" : "Export CSV";
+    link.className = primary ? "btn btn-sm btn-primary" : "btn btn-sm btn-outline-primary";
+    return link;
+  }
+
+  function configureStandaloneInsightsControls() {
+    const path = window.location.pathname;
+    const overallMatch = path.match(/^\/supervisor\/classes\/(\d+)\/(?:performance|ml-insights|insights)\/?$/);
+    if (overallMatch) {
+      const controls = document.querySelector("body.supervisor-insights-page .supervisor-insights-view-tabs .ms-auto");
+      if (controls) {
+        controls.querySelectorAll("a").forEach((link) => {
+          const href = link.getAttribute("href") || "";
+          const label = (link.textContent || "").trim().toLowerCase();
+          if (label === "reports" || /\/reports(?:$|\?)/.test(href)) link.remove();
+        });
+        const classId = overallMatch[1];
+        const existingCsv = Array.from(controls.querySelectorAll("a")).find((link) => /export csv/i.test(link.textContent || ""));
+        if (existingCsv) {
+          existingCsv.dataset.nexoraInsightsExport = "csv";
+          existingCsv.href = `/supervisor/classes/${classId}/insights/export.csv`;
+          existingCsv.textContent = "Export CSV";
+          existingCsv.className = "btn btn-sm btn-outline-primary";
+        } else {
+          ensureExportLink(controls, "csv", `/supervisor/classes/${classId}/insights/export.csv`, false);
+        }
+        ensureExportLink(controls, "pdf", `/supervisor/classes/${classId}/insights/export.pdf`, true);
+      }
+    }
+
+    const individualMatch = path.match(/^\/supervisor\/classes\/(\d+)\/insights\/(\d+)\/?$/);
+    if (individualMatch) {
+      const actions = document.querySelector("main .nexora-page > .d-flex.flex-wrap.align-items-start.justify-content-between.gap-3.mb-4 > .d-flex.flex-wrap.gap-2");
+      if (actions) {
+        actions.querySelectorAll("a").forEach((link) => {
+          const href = link.getAttribute("href") || "";
+          const label = (link.textContent || "").trim().toLowerCase();
+          if (label === "work report" || /\/reports\/\d+/.test(href)) link.remove();
+        });
+        const classId = individualMatch[1];
+        const studentId = individualMatch[2];
+        ensureExportLink(actions, "csv", `/supervisor/classes/${classId}/insights/${studentId}/export.csv`, false);
+        ensureExportLink(actions, "pdf", `/supervisor/classes/${classId}/insights/${studentId}/export.pdf`, false);
+      }
+    }
+
+    const reports = document.getElementById("assignedInsightsReportsLink");
+    if (reports) reports.remove();
+  }
+
   function updateAssignedInsightsExports() {
     const modal = document.getElementById("assignedInsightsModal");
     const csvLink = document.getElementById("assignedInsightsExportLink");
@@ -197,12 +259,13 @@
 
     csvLink.href = target.csv;
     csvLink.textContent = "Export CSV";
+    csvLink.className = "btn btn-sm btn-outline-primary";
 
     let pdfLink = document.getElementById("assignedInsightsPdfLink");
     if (!pdfLink) {
       pdfLink = document.createElement("a");
       pdfLink.id = "assignedInsightsPdfLink";
-      pdfLink.className = "btn btn-sm btn-outline-primary";
+      pdfLink.className = "btn btn-sm btn-primary";
       pdfLink.textContent = "Export PDF";
       csvLink.insertAdjacentElement("afterend", pdfLink);
     }
@@ -224,6 +287,7 @@
   }, true);
 
   document.addEventListener("DOMContentLoaded", () => {
+    configureStandaloneInsightsControls();
     init(document);
     updateAssignedInsightsExports();
   });
