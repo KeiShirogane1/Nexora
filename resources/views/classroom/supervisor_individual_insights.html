@@ -7,6 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">
+    <script defer src="{{ url_for('static', filename='js/supervisor_insights_ai.js') }}"></script>
 </head>
 <body class="supervisor-page">
     {% include 'components/supervisor_sidebar.html' %}
@@ -33,200 +34,234 @@
                 </div>
             </div>
 
-            <div class="alert alert-primary border-0 shadow-sm mb-4" role="note">
-                These are five separate evidence dimensions. Nexora does not combine them into an overall OJT grade, and Work analytics do not create or replace the Official OJT Evaluation.
-            </div>
+            <div id="supervisorIndividualInsightsContent">
+                <div class="alert alert-primary border-0 shadow-sm mb-4" role="note">
+                    These are five separate evidence dimensions. Nexora does not combine them into an overall OJT grade, and Work analytics do not create or replace the Official OJT Evaluation.
+                </div>
 
-            <section class="row row-cols-1 row-cols-md-2 row-cols-xl-5 g-3 mb-4" aria-label="Individual evidence dimensions">
-                <div class="col">
-                    <article class="card h-100 shadow-sm">
-                        <div class="card-body">
-                            <div class="text-muted small">Attendance & OJT Hours</div>
-                            <div class="fs-4 fw-bold text-primary">{{ '%.2f'|format(attendance_summary.rendered_hours) }}</div>
+                <section class="supervisor-insights-readiness mb-4" aria-label="Individual evidence dimensions">
+                    <article class="supervisor-insights-readiness-card">
+                        <span>Attendance & OJT Hours</span>
+                        <strong>{{ '%.2f'|format(attendance_summary.rendered_hours) }}</strong>
+                        <small class="text-muted">
                             {% if attendance_summary.required_hours is not none %}
-                                <div class="small">{{ '%.1f'|format(attendance_summary.progress_percentage or 0) }}% of {{ '%.0f'|format(attendance_summary.required_hours) }} required hours</div>
+                                {{ '%.1f'|format(attendance_summary.progress_percentage or 0) }}% of {{ '%.0f'|format(attendance_summary.required_hours) }} required hours
                             {% else %}
-                                <div class="text-muted small">Required hours not specified</div>
+                                Required hours not specified
                             {% endif %}
-                        </div>
+                        </small>
                     </article>
-                </div>
+                    <article class="supervisor-insights-readiness-card">
+                        <span>Daily Performance</span>
+                        <strong>{% if daily_performance.summary.average_star is not none %}{{ '%.1f'|format(daily_performance.summary.average_star) }} ★{% else %}—{% endif %}</strong>
+                        <small class="text-muted">
+                            {% if daily_performance.summary.average_percentage is not none %}{{ '%.1f'|format(daily_performance.summary.average_percentage) }}% manual day average · {{ daily_performance.summary.rated_days }} rated{% else %}No manual day ratings yet{% endif %}
+                        </small>
+                    </article>
+                    <article class="supervisor-insights-readiness-card">
+                        <span>Daily Logbook</span>
+                        <strong>{{ logbook_summary.total }}</strong>
+                        <small class="text-muted">{{ logbook_summary.approved }} approved · {{ logbook_summary.pending }} pending{% if logbook_summary.revision_requested %} · {{ logbook_summary.revision_requested }} revision{% endif %}</small>
+                    </article>
+                    <article class="supervisor-insights-readiness-card">
+                        <span>Work</span>
+                        <strong>{% if work_summary.average_percentage is not none %}{{ '%.1f'|format(work_summary.average_percentage) }}%{% else %}—{% endif %}</strong>
+                        <small class="text-muted">{{ work_summary.graded_count }} reviewed of {{ work_summary.assigned_count }} assigned · {{ work_performance_label }}</small>
+                    </article>
+                    <article class="supervisor-insights-readiness-card{% if not official_evaluation %} is-no-data{% endif %}">
+                        <span>Official Evaluation</span>
+                        <strong>{% if official_evaluation %}{{ official_evaluation.status|title }}{% else %}Not started{% endif %}</strong>
+                        <small class="text-muted">{% if official_evaluation and official_evaluation.overall_score is not none %}Manual overall score: {{ '%g'|format(official_evaluation.overall_score) }}{% elif official_evaluation %}No manual overall score{% else %}No official evaluation saved{% endif %}</small>
+                    </article>
+                </section>
 
-                <div class="col">
-                    <article class="card h-100 shadow-sm">
-                        <div class="card-body">
-                            <div class="text-muted small">Daily Performance</div>
-                            <div class="fs-4 fw-bold">
-                                {% if daily_performance.summary.average_star is not none %}{{ '%.1f'|format(daily_performance.summary.average_star) }} ★{% else %}—{% endif %}
+                <div class="row g-4 align-items-start">
+                    <div class="col-xl-7">
+                        <section class="supervisor-insights-card mb-4">
+                            <div class="p-4 border-bottom bg-white">
+                                <span class="text-primary fw-bold text-uppercase small">Evidence Input</span>
+                                <h2 class="h6 fw-bold mb-1 mt-1">Work Performance Insight</h2>
+                                <p class="text-muted small mb-0">This section uses Work/gradebook evidence only. It does not include OJT Hours, Daily Performance, Logbook, or Official Evaluation.</p>
                             </div>
-                            <div class="text-muted small">
-                                {% if daily_performance.summary.average_percentage is not none %}{{ '%.1f'|format(daily_performance.summary.average_percentage) }}% manual day average · {{ daily_performance.summary.rated_days }} rated{% else %}No manual day ratings yet{% endif %}
-                            </div>
-                        </div>
-                    </article>
-                </div>
-
-                <div class="col">
-                    <article class="card h-100 shadow-sm">
-                        <div class="card-body">
-                            <div class="text-muted small">Daily Logbook</div>
-                            <div class="fs-4 fw-bold">{{ logbook_summary.total }}</div>
-                            <div class="text-muted small">{{ logbook_summary.approved }} approved · {{ logbook_summary.pending }} pending{% if logbook_summary.revision_requested %} · {{ logbook_summary.revision_requested }} revision{% endif %}</div>
-                        </div>
-                    </article>
-                </div>
-
-                <div class="col">
-                    <article class="card h-100 shadow-sm">
-                        <div class="card-body">
-                            <div class="text-muted small">Work</div>
-                            <div class="fs-4 fw-bold">{% if work_summary.average_percentage is not none %}{{ '%.1f'|format(work_summary.average_percentage) }}%{% else %}—{% endif %}</div>
-                            <div class="text-muted small">{{ work_summary.graded_count }} reviewed of {{ work_summary.assigned_count }} assigned · {{ work_performance_label }}</div>
-                        </div>
-                    </article>
-                </div>
-
-                <div class="col">
-                    <article class="card h-100 shadow-sm">
-                        <div class="card-body">
-                            <div class="text-muted small">Official Evaluation</div>
-                            {% if official_evaluation %}
-                                <div class="fs-5 fw-bold text-capitalize">{{ official_evaluation.status }}</div>
-                                <div class="text-muted small">{% if official_evaluation.overall_score is not none %}Manual overall score: {{ '%g'|format(official_evaluation.overall_score) }}{% else %}No manual overall score{% endif %}</div>
-                            {% else %}
-                                <div class="fs-5 fw-bold">Not started</div>
-                                <div class="text-muted small">No official evaluation saved</div>
-                            {% endif %}
-                        </div>
-                    </article>
-                </div>
-            </section>
-
-            <div class="row g-4 align-items-start">
-                <div class="col-xl-7">
-                    <section class="card shadow-sm mb-4">
-                        <div class="card-header bg-white py-3">
-                            <h2 class="h6 fw-bold mb-1">Work Performance Insight</h2>
-                            <p class="text-muted small mb-0">This section uses Work/gradebook evidence only. It does not include OJT Hours, Daily Performance, Logbook, or Official Evaluation.</p>
-                        </div>
-                        <div class="card-body">
-                            <div class="row g-3 mb-3">
-                                <div class="col-sm-6 col-lg-3">
-                                    <div class="border rounded-3 p-3 h-100">
-                                        <div class="text-muted small">Work Average</div>
-                                        <strong>{% if work_features.average_percentage is not none %}{{ '%.1f'|format(work_features.average_percentage) }}%{% else %}—{% endif %}</strong>
+                            <div class="p-4">
+                                <div class="row g-3 mb-3">
+                                    <div class="col-sm-6 col-lg-3">
+                                        <div class="border rounded-3 p-3 h-100">
+                                            <div class="text-muted small">Work Average</div>
+                                            <strong>{% if work_features.average_percentage is not none %}{{ '%.1f'|format(work_features.average_percentage) }}%{% else %}—{% endif %}</strong>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6 col-lg-3">
+                                        <div class="border rounded-3 p-3 h-100">
+                                            <div class="text-muted small">Work Completion</div>
+                                            <strong>{{ '%.1f'|format(work_features.completion_rate or 0) }}%</strong>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6 col-lg-3">
+                                        <div class="border rounded-3 p-3 h-100">
+                                            <div class="text-muted small">Reviewed Work</div>
+                                            <strong>{{ work_features.graded_count or 0 }} / {{ work_features.total_count or 0 }}</strong>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6 col-lg-3">
+                                        <div class="border rounded-3 p-3 h-100">
+                                            <div class="text-muted small">Work Classification</div>
+                                            <strong>{{ work_performance_label }}</strong>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="col-sm-6 col-lg-3">
-                                    <div class="border rounded-3 p-3 h-100">
-                                        <div class="text-muted small">Work Completion</div>
-                                        <strong>{{ '%.1f'|format(work_features.completion_rate or 0) }}%</strong>
-                                    </div>
-                                </div>
-                                <div class="col-sm-6 col-lg-3">
-                                    <div class="border rounded-3 p-3 h-100">
-                                        <div class="text-muted small">Reviewed Work</div>
-                                        <strong>{{ work_features.graded_count or 0 }} / {{ work_features.total_count or 0 }}</strong>
-                                    </div>
-                                </div>
-                                <div class="col-sm-6 col-lg-3">
-                                    <div class="border rounded-3 p-3 h-100">
-                                        <div class="text-muted small">Work Classification</div>
-                                        <strong>{{ work_performance_label }}</strong>
-                                    </div>
+
+                                <div class="border rounded-3 p-3 bg-light">
+                                    <div class="text-primary small fw-bold text-uppercase mb-1">Decision Support · ML Recommendation</div>
+                                    <p class="mb-1">{% if work_recommendation and work_recommendation.recommendation %}{{ work_recommendation.recommendation }}{% else %}No Work recommendation is available yet.{% endif %}</p>
+                                    {% if work_recommendation and work_recommendation.basis %}
+                                        <div class="text-muted small">Basis: {{ work_recommendation.basis|join(' · ') }}</div>
+                                    {% endif %}
                                 </div>
                             </div>
+                        </section>
 
-                            <div class="border rounded-3 p-3 bg-light">
-                                <div class="text-muted small fw-bold text-uppercase mb-1">Work-based recommendation</div>
-                                <p class="mb-1">{% if work_recommendation and work_recommendation.recommendation %}{{ work_recommendation.recommendation }}{% else %}No Work recommendation is available yet.{% endif %}</p>
-                                {% if work_recommendation and work_recommendation.basis %}
-                                    <div class="text-muted small">Basis: {{ work_recommendation.basis|join(' · ') }}</div>
+                        <section class="supervisor-insights-card mb-4">
+                            <div class="p-4 border-bottom bg-white d-flex flex-wrap align-items-start justify-content-between gap-2">
+                                <div>
+                                    <span class="text-primary fw-bold text-uppercase small">Manual Evidence</span>
+                                    <h2 class="h6 fw-bold mb-1 mt-1">Recent Daily Performance</h2>
+                                    <p class="text-muted small mb-0">Manual supervisor day ratings, kept separate from Work scoring.</p>
+                                </div>
+                                <a class="btn btn-sm btn-outline-primary" href="{{ url_for('daily_performance_history.supervisor_history', class_id=classroom.id, student_id=student.id) }}">Open Performance History</a>
+                            </div>
+                            <div class="p-0">
+                                {% if daily_performance.history %}
+                                    <div class="list-group list-group-flush">
+                                        {% for item in daily_performance.history[:4] %}
+                                            <div class="list-group-item d-flex justify-content-between gap-3 py-3 px-4">
+                                                <div>
+                                                    <strong>Day {{ item.day_number }}</strong>
+                                                    <div class="text-muted small">{{ item.date }}</div>
+                                                    {% if item.comment %}<div class="small mt-1">{{ item.comment }}</div>{% endif %}
+                                                </div>
+                                                <div class="text-end">
+                                                    {% if item.is_rated %}
+                                                        <strong>{{ '%.1f'|format(item.star_rating) }} ★</strong>
+                                                        <div class="text-muted small">{{ '%.1f'|format(item.percentage) }}%</div>
+                                                    {% else %}
+                                                        <span class="badge text-bg-light">Not rated</span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <div class="p-4 text-muted small">No completed OJT days are available yet.</div>
                                 {% endif %}
                             </div>
-                        </div>
-                    </section>
+                        </section>
+                    </div>
 
-                    <section class="card shadow-sm mb-4">
-                        <div class="card-header bg-white py-3">
-                            <h2 class="h6 fw-bold mb-1">Recent Daily Performance</h2>
-                            <p class="text-muted small mb-0">Manual supervisor day ratings, kept separate from Work scoring.</p>
-                        </div>
-                        <div class="card-body p-0">
-                            {% if daily_performance.history %}
-                                <div class="list-group list-group-flush">
-                                    {% for item in daily_performance.history[:4] %}
-                                        <div class="list-group-item d-flex justify-content-between gap-3 py-3">
-                                            <div>
-                                                <strong>Day {{ item.day_number }}</strong>
-                                                <div class="text-muted small">{{ item.date }}</div>
-                                                {% if item.comment %}<div class="small mt-1">{{ item.comment }}</div>{% endif %}
-                                            </div>
-                                            <div class="text-end">
-                                                {% if item.is_rated %}
-                                                    <strong>{{ '%.1f'|format(item.star_rating) }} ★</strong>
-                                                    <div class="text-muted small">{{ '%.1f'|format(item.percentage) }}%</div>
-                                                {% else %}
-                                                    <span class="badge text-bg-light">Not rated</span>
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                    {% endfor %}
-                                </div>
-                            {% else %}
-                                <div class="p-3 text-muted small">No completed OJT days are available yet.</div>
-                            {% endif %}
-                        </div>
-                    </section>
-                </div>
-
-                <div class="col-xl-5">
-                    <section class="card shadow-sm mb-4">
-                        <div class="card-header bg-white py-3">
-                            <h2 class="h6 fw-bold mb-1">Feedback Analysis</h2>
-                            <p class="text-muted small mb-0">Feedback signal only; this is not the Official OJT Evaluation.</p>
-                        </div>
-                        <div class="card-body">
-                            {% if has_feedback %}
-                                <dl class="row mb-0 small">
-                                    <dt class="col-5 text-muted">Sentiment</dt><dd class="col-7">{{ sentiment or '—' }}</dd>
-                                    <dt class="col-5 text-muted">Competency signal</dt><dd class="col-7">{{ competency or '—' }}</dd>
-                                    <dt class="col-5 text-muted">Confidence</dt><dd class="col-7">{{ '%.2f'|format(confidence or 0) }}</dd>
-                                </dl>
-                            {% else %}
-                                <p class="text-muted small mb-0">No feedback evidence is available yet.</p>
-                            {% endif %}
-                        </div>
-                    </section>
-
-                    <section class="card shadow-sm mb-4">
-                        <div class="card-header bg-white d-flex flex-wrap align-items-start justify-content-between gap-2 py-3">
-                            <div>
-                                <h2 class="h6 fw-bold mb-1">Official OJT Evaluation</h2>
-                                <p class="text-muted small mb-0">Formal supervisor-entered evidence only.</p>
+                    <div class="col-xl-5">
+                        <section class="supervisor-insights-card mb-4">
+                            <div class="p-4 border-bottom bg-white">
+                                <span class="text-primary fw-bold text-uppercase small">Feedback Models</span>
+                                <h2 class="h6 fw-bold mb-1 mt-1">Feedback Analysis</h2>
+                                <p class="text-muted small mb-0">Feedback signal only; this is not the Official OJT Evaluation.</p>
                             </div>
-                            <a class="btn btn-sm btn-outline-primary" href="{{ url_for('ojt_evaluation.supervisor_evaluations', class_id=classroom.id, student_id=student.id) }}">Open</a>
-                        </div>
-                        <div class="card-body">
-                            {% if official_evaluation %}
-                                <div class="d-flex flex-wrap gap-2 align-items-center mb-2">
-                                    <span class="badge {% if official_evaluation.status == 'submitted' %}text-bg-success{% else %}text-bg-warning{% endif %} text-capitalize">{{ official_evaluation.status }}</span>
-                                    {% if official_evaluation.overall_score is not none %}<strong>Manual overall score: {{ '%g'|format(official_evaluation.overall_score) }}</strong>{% endif %}
-                                </div>
-                                <p class="small mb-0">{{ official_evaluation.remarks or 'No overall remarks saved.' }}</p>
-                            {% else %}
-                                <p class="text-muted small mb-0">No Official OJT Evaluation has been started for this intern.</p>
-                            {% endif %}
-                        </div>
-                    </section>
+                            <div class="p-4">
+                                {% if has_feedback %}
+                                    <dl class="row mb-0 small">
+                                        <dt class="col-5 text-muted">Sentiment</dt><dd class="col-7">{{ sentiment or '—' }}</dd>
+                                        <dt class="col-5 text-muted">Competency signal</dt><dd class="col-7">{{ competency or '—' }}</dd>
+                                        <dt class="col-5 text-muted">Confidence</dt><dd class="col-7">{{ '%.2f'|format(confidence or 0) }}</dd>
+                                    </dl>
+                                {% else %}
+                                    <p class="text-muted small mb-0">No feedback evidence is available yet.</p>
+                                {% endif %}
+                            </div>
+                        </section>
 
-                    <section class="card shadow-sm">
-                        <div class="card-body">
-                            <h2 class="h6 fw-bold mb-2">Evidence Boundary</h2>
-                            <p class="text-muted small mb-0">Attendance/OJT Hours measure time and completion. Daily Performance contains manual day ratings. Work contains task scores and Work-based analytics. Logbook contains submitted evidence and review state. Official Evaluation is the separate formal supervisor-entered evaluation. No combined OJT grade is calculated here.</p>
-                        </div>
-                    </section>
+                        <section class="supervisor-insights-card mb-4">
+                            <div class="p-4 border-bottom bg-white d-flex flex-wrap align-items-start justify-content-between gap-2">
+                                <div>
+                                    <span class="text-primary fw-bold text-uppercase small">Formal Record</span>
+                                    <h2 class="h6 fw-bold mb-1 mt-1">Official OJT Evaluation</h2>
+                                    <p class="text-muted small mb-0">Formal supervisor-entered evidence only.</p>
+                                </div>
+                                <a class="btn btn-sm btn-outline-primary" href="{{ url_for('ojt_evaluation.supervisor_evaluations', class_id=classroom.id, student_id=student.id) }}">Open</a>
+                            </div>
+                            <div class="p-4">
+                                {% if official_evaluation %}
+                                    <div class="d-flex flex-wrap gap-2 align-items-center mb-2">
+                                        <span class="badge {% if official_evaluation.status == 'submitted' %}text-bg-success{% else %}text-bg-warning{% endif %} text-capitalize">{{ official_evaluation.status }}</span>
+                                        {% if official_evaluation.overall_score is not none %}<strong>Manual overall score: {{ '%g'|format(official_evaluation.overall_score) }}</strong>{% endif %}
+                                    </div>
+                                    <p class="small mb-0">{{ official_evaluation.remarks or 'No overall remarks saved.' }}</p>
+                                {% else %}
+                                    <p class="text-muted small mb-0">No Official OJT Evaluation has been started for this intern.</p>
+                                {% endif %}
+                            </div>
+                        </section>
+
+                        <section class="supervisor-insights-card mb-4">
+                            <div class="p-4">
+                                <span class="text-primary fw-bold text-uppercase small">Availability</span>
+                                <h2 class="h6 fw-bold mb-2 mt-1">Evidence Boundary</h2>
+                                <p class="text-muted small mb-0">Attendance/OJT Hours measure time and completion. Daily Performance contains manual day ratings. Work contains task scores and Work-based analytics. Logbook contains submitted evidence and review state. Official Evaluation is the separate formal supervisor-entered evaluation. No combined OJT grade is calculated here.</p>
+                            </div>
+                        </section>
+                    </div>
                 </div>
+
+                <section
+                    class="supervisor-insights-card mb-4"
+                    data-supervisor-insights-ai
+                    data-ai-endpoint="{{ url_for('assistant_bp.ask') }}"
+                    data-csrf-token="{{ csrf_token() }}"
+                    data-classroom-id="{{ classroom.id }}"
+                    data-student-id="{{ student.id }}">
+                    <div class="p-4 border-bottom bg-primary-subtle d-flex flex-wrap align-items-start justify-content-between gap-3">
+                        <div>
+                            <span class="text-primary fw-bold text-uppercase small">Automatic Explanation</span>
+                            <h2 class="h5 fw-bold mb-1 mt-1">Nexora AI Analysis</h2>
+                            <p class="text-secondary small mb-0">A read-only explanation generated from the evidence already shown above.</p>
+                        </div>
+                        <span class="badge rounded-pill text-bg-primary px-3 py-2">AI</span>
+                    </div>
+                    <div class="p-4">
+                        <div class="alert alert-primary mb-3" role="note">
+                            Nexora AI explains the current evidence for decision support only. It cannot change grades, attendance, ratings, or the Official OJT Evaluation.
+                        </div>
+                        <p class="text-secondary small mb-3" data-ai-status>Analyzing the current evidence…</p>
+                        <div class="row g-3" data-ai-items hidden>
+                            <div class="col-md-6"><section class="border rounded-3 p-3 h-100"><h3 class="h6 fw-bold">Overall Interpretation</h3><p class="small text-secondary mb-0" data-ai-section="overall"></p></section></div>
+                            <div class="col-md-6"><section class="border rounded-3 p-3 h-100"><h3 class="h6 fw-bold">What Happened</h3><p class="small text-secondary mb-0" data-ai-section="happened"></p></section></div>
+                            <div class="col-md-6"><section class="border rounded-3 p-3 h-100"><h3 class="h6 fw-bold">What to Improve</h3><p class="small text-secondary mb-0" data-ai-section="improve"></p></section></div>
+                            <div class="col-md-6"><section class="border rounded-3 p-3 h-100"><h3 class="h6 fw-bold">Feedback Signal</h3><p class="small text-secondary mb-0" data-ai-section="feedback"></p></section></div>
+                            <div class="col-12"><section class="border rounded-3 p-3"><h3 class="h6 fw-bold">Next Focus</h3><p class="small text-secondary mb-0" data-ai-section="next"></p></section></div>
+                        </div>
+                        <script type="application/json" data-supervisor-insights-ai-evidence>{{ {
+                            'work_evidence': work_features.get('average_percentage') is not none,
+                            'work_average': work_features.get('average_percentage'),
+                            'work_min': work_features.get('min_percentage'),
+                            'work_max': work_features.get('max_percentage'),
+                            'work_completion': work_features.get('completion_rate'),
+                            'work_reviewed': work_features.get('graded_count', 0),
+                            'work_total': work_features.get('total_count', 0),
+                            'work_label': work_performance_label,
+                            'feedback_evidence': has_feedback,
+                            'sentiment': sentiment,
+                            'competency': competency,
+                            'confidence': confidence,
+                            'daily_average': daily_performance.summary.average_percentage,
+                            'daily_rated_days': daily_performance.summary.rated_days,
+                            'attendance_hours': attendance_summary.rendered_hours,
+                            'required_hours': attendance_summary.required_hours,
+                            'hour_progress': attendance_summary.progress_percentage,
+                            'logbook_total': logbook_summary.total,
+                            'logbook_approved': logbook_summary.approved,
+                            'official_status': official_evaluation.status if official_evaluation else none,
+                            'official_score': official_evaluation.overall_score if official_evaluation else none
+                        }|tojson }}</script>
+                    </div>
+                </section>
             </div>
         </div>
     </main>
