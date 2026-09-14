@@ -1,4 +1,6 @@
-from flask import Blueprint, abort, render_template, request
+from datetime import datetime, timedelta
+
+from flask import Blueprint, abort, jsonify, render_template, request, session
 from app.Http.Middleware.security import role_required
 from app.Models.db import get_db_connection
 from app.Services.intern_profile_service import get_supervisor_intern_profile
@@ -22,6 +24,17 @@ def _value(row, key, index=0, default=None):
         return default if value is None else value
     except (IndexError, KeyError, TypeError):
         return default
+
+
+def _as_datetime(value):
+    if not value:
+        return None
+    if isinstance(value, datetime):
+        return value
+    try:
+        return datetime.fromisoformat(str(value))
+    except (TypeError, ValueError):
+        return None
 
 
 @admin_reports_overview.route("/admin/reports/student/<int:student_id>/overview")
@@ -169,4 +182,78 @@ def student_insights():
         selected_classroom=selected_classroom,
         insights=context,
         active_page="reports",
+    )
+
+
+@admin_reports_overview.route("/supervisor/dashboard/activity-chart")
+@role_required("supervisor")
+def supervisor_activity_chart():
+    """Return a portable date-bucketed activity series for the dashboard chart."""
+    days = request.args.get("days", default=7, type=int)
+    if days not in {1, 7, 14, 21, 30}:
+        days = 7
+
+    supervisor_id = session["user_id"]
+    now = datetime.now()
+    chart_days = [
+        (now - timedelta(days=offset)).date()
+        for offset in range(days - 1, -1, -1)
+    ]
+    chart_start = datetime.combine(chart_days[0], datetime.min.time())
+    chart_index = {day: index for index, day in enumerate(chart_days)}
+
+    conn = get_db_connection()
+    try:
+        log_rows = conn.execute(
+            """
+            SELECT COALESCE(l.updated_at, l.created_at) AS activity_at
+            FROM logs l
+            JOIN attendance a ON a.id = l.attendance_id
+            JOIN classrooms c ON c.id = a.classroom_id
+            WHERE l.entry_type = 'daily'
+              AND c.supervisor_id = ?
+              AND COALESCE(l.updated_at, l.created_at) >= ?
+            """,
+            (supervisor_id, chart_start),
+        ).fetchall()
+        work_rows = conn.execute(
+            """
+            SELECT s.submitted_at
+            FROM classwork_submissions s
+            JOIN classroom_assignments a ON a.id = s.assignment_id
+            JOIN classrooms c ON c.id = a.classroom_id
+            WHERE c.supervisor_id = ?
+              AND s.submitted_at >= ?
+            """,
+            (supervisor_id, chart_start),
+        ).fetchall()
+        evaluation_rows = conn.execute(
+            """
+            SELECT COALESCE(e.submitted_at, e.updated_at, e.created_at) AS activity_at
+            FROM ojt_evaluations e
+            WHERE e.supervisor_id = ?
+              AND COALESCE(e.submitted_at, e.updated_at, e.created_at) >= ?
+            """,
+            (supervisor_id, chart_start),
+        ).fetchall()
+    finally:
+        conn.close()
+
+    def bucket(rows, key, index=0):
+        counts = [0] * len(chart_days)
+        for row in rows:
+            dt = _as_datetime(_value(row, key, index, None))
+            if dt and dt.date() in chart_index:
+                counts[chart_index[dt.date()]] += 1
+        return counts
+
+    return jsonify(
+        {
+            "days": days,
+            "label": "Today" if days == 1 else f"Last {days} Days",
+            "labels": [f"{day.strftime('%b')} {day.day}" for day in chart_days],
+            "logbook": bucket(log_rows, "activity_at"),
+            "work": bucket(work_rows, "submitted_at"),
+            "evaluations": bucket(evaluation_rows, "activity_at"),
+        }
     )
