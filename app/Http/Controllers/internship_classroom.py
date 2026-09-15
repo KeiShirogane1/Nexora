@@ -1,3 +1,4 @@
+import math
 import os
 import shutil
 from datetime import datetime
@@ -7,12 +8,20 @@ from flask import Blueprint, current_app, flash, redirect, render_template, requ
 from app.Http.Controllers.classroom import _generate_code
 from app.Http.Middleware.security import role_required
 from app.Models.db import get_db_connection
+from app.Services.internship_schedule_service import (
+    DEFAULT_ATTENDANCE_DAYS,
+    DEFAULT_END_TIME,
+    DEFAULT_HOURS_PER_DAY,
+    DEFAULT_START_TIME,
+    ensure_internship_schedule_schema,
+    ensure_supervisor_completion_notifications,
+    get_student_schedule_state,
+    normalize_attendance_days,
+)
 
 
 internship_classroom = Blueprint("internship_classroom", __name__)
 
-_SCHEDULE_TYPES = {"fixed_dates", "flexible", "not_specified"}
-_HOURS_MODES = {"specified", "not_specified"}
 _WORK_ARRANGEMENTS = {"On-site", "Hybrid", "Remote"}
 _BANNER_THEMES = {"blue", "navy", "green", "teal", "purple", "orange", "amber", "rose", "slate"}
 
@@ -23,6 +32,13 @@ def _valid_date(value):
         return True
     except (TypeError, ValueError):
         return False
+
+
+def _valid_time(value):
+    try:
+        return datetime.strptime(value, "%H:%M")
+    except (TypeError, ValueError):
+        return None
 
 
 def _row_value(row, key, index=0, default=None):
@@ -62,23 +78,45 @@ def _get_classroom_banner_theme(class_id):
 
 
 @internship_classroom.app_context_processor
-def inject_classroom_banner_theme():
-    return {"classroom_banner_theme": _get_classroom_banner_theme}
+def inject_internship_helpers():
+    return {
+        "classroom_banner_theme": _get_classroom_banner_theme,
+        "get_student_schedule_state": get_student_schedule_state,
+    }
 
 
-def _render_form(errors, responsibilities, qualifications):
+@internship_classroom.before_app_request
+def notify_supervisor_when_internship_finishes():
+    if request.method != "GET" or session.get("role") != "supervisor" or not session.get("user_id"):
+        return None
+    if request.path.startswith("/static/"):
+        return None
+    try:
+        ensure_supervisor_completion_notifications(session["user_id"])
+    except Exception:
+        current_app.logger.warning("Intern Classroom completion notification check failed", exc_info=True)
+    return None
+
+
+def _selected_days_from_request():
+    selected = normalize_attendance_days(request.form.getlist("attendance_days"))
+    return selected or list(DEFAULT_ATTENDANCE_DAYS)
+
+
+def _render_form(errors, responsibilities, qualifications, selected_days=None):
     return render_template(
         "classroom/create_class.html",
         errors=errors,
         form=request.form,
         responsibilities=responsibilities or [""],
         qualifications=qualifications or [""],
+        selected_days=selected_days or _selected_days_from_request(),
         initial_view="internship",
         active_page="classes",
     )
 
 
-def _render_edit_form(class_id, form, errors, responsibilities, qualifications):
+def _render_edit_form(class_id, form, errors, responsibilities, qualifications, selected_days=None):
     return render_template(
         "classroom/edit_intern_class.html",
         class_id=class_id,
@@ -86,38 +124,70 @@ def _render_edit_form(class_id, form, errors, responsibilities, qualifications):
         form=form,
         responsibilities=responsibilities or [""],
         qualifications=qualifications or [""],
+        selected_days=selected_days or list(DEFAULT_ATTENDANCE_DAYS),
         active_page="classes",
     )
 
 
-@internship_classroom.route("/supervisor/classes/create/internship", methods=["POST"])
-@role_required("supervisor")
-def create_internship_classroom():
-    internship_title = (request.form.get("internship_title") or "").strip()
-    company_name = (request.form.get("company_name") or "").strip()
-    section = (request.form.get("internship_section") or "").strip()
-    industry = (request.form.get("industry") or "").strip()
-    work_arrangement = (request.form.get("work_arrangement") or "On-site").strip()
-    location = (request.form.get("location") or "").strip()
-    schedule_type = (request.form.get("schedule_type") or "fixed_dates").strip().lower()
-    hours_mode = (request.form.get("hours_mode") or "specified").strip().lower()
-    start_date = (request.form.get("start_date") or "").strip() or None
-    end_date = (request.form.get("end_date") or "").strip() or None
-    deadline = (request.form.get("deadline") or "").strip() or None
-    required_hours_raw = (request.form.get("required_hours") or "").strip()
-    company_website = (request.form.get("company_website") or "").strip()
-    company_description = (request.form.get("company_description") or "").strip()
-    internship_description = (request.form.get("internship_description") or "").strip()
-    responsibilities = [
-        item.strip() for item in request.form.getlist("responsibilities[]") if item.strip()
-    ]
-    qualifications = [
-        item.strip() for item in request.form.getlist("qualifications[]") if item.strip()
-    ]
+def _read_schedule_form(errors):
+    program = (request.form.get("program") or "").strip()
+    hours_per_day_raw = (request.form.get("hours_per_day") or "").strip()
+    required_days_raw = (request.form.get("required_days") or "").strip()
+    shift_start_time = (request.form.get("shift_start_time") or DEFAULT_START_TIME).strip()
+    shift_end_time = (request.form.get("shift_end_time") or DEFAULT_END_TIME).strip()
+    selected_days = _selected_days_from_request()
 
-    errors = {}
+    if not program or len(program) > 150:
+        errors["program"] = "Program is required (1-150 chars)."
+
+    hours_per_day = 0
+    try:
+        hours_per_day = int(hours_per_day_raw)
+        if hours_per_day < 1 or hours_per_day > 24:
+            raise ValueError()
+    except (TypeError, ValueError):
+        errors["hours_per_day"] = "Hours per day must be between 1 and 24."
+
+    required_days = 0
+    try:
+        required_days = int(required_days_raw)
+        if required_days < 1 or required_days > 3650:
+            raise ValueError()
+    except (TypeError, ValueError):
+        errors["required_days"] = "Number of OJT days must be between 1 and 3,650."
+
+    if not selected_days:
+        errors["attendance_days"] = "Choose at least one attendance day."
+
+    start_dt = _valid_time(shift_start_time)
+    end_dt = _valid_time(shift_end_time)
+    if not start_dt:
+        errors["shift_start_time"] = "Choose a valid start time."
+    if not end_dt:
+        errors["shift_end_time"] = "Choose a valid end time."
+    if start_dt and end_dt:
+        window_hours = (end_dt - start_dt).total_seconds() / 3600
+        if window_hours <= 0:
+            errors["shift_end_time"] = "End time must be after the start time."
+        elif hours_per_day and hours_per_day > window_hours:
+            errors["hours_per_day"] = "Hours per day cannot be longer than the daily schedule window."
+
+    required_hours = hours_per_day * required_days if hours_per_day and required_days else 0
+    return {
+        "program": program,
+        "hours_per_day": hours_per_day,
+        "required_days": required_days,
+        "required_hours": required_hours,
+        "attendance_days": selected_days,
+        "attendance_days_text": ",".join(selected_days),
+        "shift_start_time": shift_start_time,
+        "shift_end_time": shift_end_time,
+    }
+
+
+def _validate_common_fields(errors, internship_title, company_name, section, industry, work_arrangement, location, deadline, company_website, company_description, internship_description, responsibilities, qualifications):
     if not internship_title or len(internship_title) < 3 or len(internship_title) > 150:
-        errors["internship_title"] = "Internship title is required (3-150 chars)."
+        errors["internship_title"] = "Intern Classroom name is required (3-150 chars)."
     if not company_name or len(company_name) < 2 or len(company_name) > 150:
         errors["company_name"] = "Company / organization is required (2-150 chars)."
     if not section or len(section) > 100:
@@ -128,39 +198,8 @@ def create_internship_classroom():
         errors["work_arrangement"] = "Choose a valid work arrangement."
     if len(location) > 200:
         errors["location"] = "Location max 200 chars."
-
-    if schedule_type not in _SCHEDULE_TYPES:
-        errors["schedule_type"] = "Choose a valid schedule option."
-    elif schedule_type == "not_specified":
-        start_date = None
-        end_date = None
-    else:
-        if schedule_type == "fixed_dates":
-            if not start_date:
-                errors["start_date"] = "Start date is required for a fixed schedule."
-            if not end_date:
-                errors["end_date"] = "End date is required for a fixed schedule."
-        for field_name, value in (("start_date", start_date), ("end_date", end_date)):
-            if value and not _valid_date(value):
-                errors[field_name] = "Enter a valid date."
-        if start_date and end_date and _valid_date(start_date) and _valid_date(end_date):
-            if datetime.strptime(end_date, "%Y-%m-%d") < datetime.strptime(start_date, "%Y-%m-%d"):
-                errors["end_date"] = "End date cannot be before the start date."
-
     if deadline and not _valid_date(deadline):
-        errors["deadline"] = "Enter a valid date."
-
-    required_hours = 0
-    if hours_mode not in _HOURS_MODES:
-        errors["hours_mode"] = "Choose a valid OJT hours option."
-    elif hours_mode == "specified":
-        try:
-            required_hours = int(required_hours_raw)
-            if required_hours < 1 or required_hours > 10000:
-                raise ValueError()
-        except (TypeError, ValueError):
-            errors["required_hours"] = "Required hours must be between 1 and 10,000."
-
+        errors["deadline"] = "Enter a valid enrollment deadline."
     if company_website:
         if len(company_website) > 500:
             errors["company_website"] = "Company website max 500 chars."
@@ -179,8 +218,45 @@ def create_internship_classroom():
     elif len(qualifications) > 20 or any(len(item) > 500 for item in qualifications):
         errors["qualifications"] = "Use up to 20 qualifications, max 500 chars each."
 
+
+@internship_classroom.route("/supervisor/classes/create/internship", methods=["POST"])
+@role_required("supervisor")
+def create_internship_classroom():
+    ensure_internship_schedule_schema()
+
+    internship_title = (request.form.get("internship_title") or "").strip()
+    company_name = (request.form.get("company_name") or "").strip()
+    section = (request.form.get("internship_section") or "").strip()
+    industry = (request.form.get("industry") or "").strip()
+    work_arrangement = (request.form.get("work_arrangement") or "On-site").strip()
+    location = (request.form.get("location") or "").strip()
+    deadline = (request.form.get("deadline") or "").strip() or None
+    company_website = (request.form.get("company_website") or "").strip()
+    company_description = (request.form.get("company_description") or "").strip()
+    internship_description = (request.form.get("internship_description") or "").strip()
+    responsibilities = [item.strip() for item in request.form.getlist("responsibilities[]") if item.strip()]
+    qualifications = [item.strip() for item in request.form.getlist("qualifications[]") if item.strip()]
+
+    errors = {}
+    _validate_common_fields(
+        errors,
+        internship_title,
+        company_name,
+        section,
+        industry,
+        work_arrangement,
+        location,
+        deadline,
+        company_website,
+        company_description,
+        internship_description,
+        responsibilities,
+        qualifications,
+    )
+    schedule = _read_schedule_form(errors)
+
     if errors:
-        return _render_form(errors, responsibilities, qualifications)
+        return _render_form(errors, responsibilities, qualifications, schedule["attendance_days"])
 
     conn = get_db_connection()
     cursor = None
@@ -200,35 +276,35 @@ def create_internship_classroom():
         classroom_row = cursor.fetchone()
         if not classroom_row:
             raise RuntimeError("Failed to resolve newly created classroom.")
-        try:
-            classroom_id = classroom_row["id"]
-        except Exception:
-            classroom_id = classroom_row[0]
+        classroom_id = _row_value(classroom_row, "id", 0)
 
         cursor.execute(
             """
             INSERT INTO classroom_internship_details (
-                classroom_id, internship_title, company_name, industry,
+                classroom_id, internship_title, program, company_name, industry,
                 work_arrangement, schedule_type, hours_mode, compensation,
                 location, start_date, end_date, enrollment_deadline,
-                required_hours, company_website, company_description,
-                internship_description
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                hours_per_day, required_days, attendance_days,
+                shift_start_time, shift_end_time, required_hours,
+                company_website, company_description, internship_description
+            ) VALUES (?, ?, ?, ?, ?, ?, 'weekly', 'specified', ?, ?, NULL, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 classroom_id,
                 internship_title,
+                schedule["program"],
                 company_name,
                 industry or None,
                 work_arrangement,
-                schedule_type,
-                hours_mode,
                 "Not Specified",
                 location or None,
-                start_date,
-                end_date,
                 deadline,
-                required_hours,
+                schedule["hours_per_day"],
+                schedule["required_days"],
+                schedule["attendance_days_text"],
+                schedule["shift_start_time"],
+                schedule["shift_end_time"],
+                schedule["required_hours"],
                 company_website or None,
                 company_description or None,
                 internship_description,
@@ -247,10 +323,7 @@ def create_internship_classroom():
             )
 
         conn.commit()
-        flash(
-            f"Internship Classroom '{internship_title}' created with code {code}.",
-            "success",
-        )
+        flash(f"Intern Classroom '{internship_title}' created with code {code}.", "success")
         return redirect(url_for("classroom.supervisor_classes"))
     except Exception:
         try:
@@ -259,7 +332,7 @@ def create_internship_classroom():
             pass
         current_app.logger.exception("Failed to create internship classroom")
         flash("Failed to create internship classroom. Please try again.", "danger")
-        return _render_form({}, responsibilities, qualifications)
+        return _render_form({}, responsibilities, qualifications, schedule["attendance_days"])
     finally:
         try:
             if cursor:
@@ -272,6 +345,7 @@ def create_internship_classroom():
 @internship_classroom.route("/supervisor/classes/<int:class_id>/edit", methods=["GET", "POST"])
 @role_required("supervisor")
 def edit_intern_classroom(class_id):
+    ensure_internship_schedule_schema()
     supervisor_id = session["user_id"]
     conn = get_db_connection()
     try:
@@ -283,12 +357,16 @@ def edit_intern_classroom(class_id):
             return "Class not found", 404
         if int(_row_value(classroom, "supervisor_id", 1, 0)) != int(supervisor_id):
             return "Forbidden", 403
+
         details = conn.execute(
-            """SELECT internship_title, company_name, industry, work_arrangement,
-                      schedule_type, hours_mode, location, start_date, end_date,
-                      enrollment_deadline, required_hours, company_website,
-                      company_description, internship_description
-               FROM classroom_internship_details WHERE classroom_id = ?""",
+            """
+            SELECT internship_title, program, company_name, industry, work_arrangement,
+                   schedule_type, hours_mode, location, start_date, end_date,
+                   enrollment_deadline, required_hours, hours_per_day, required_days,
+                   attendance_days, shift_start_time, shift_end_time,
+                   company_website, company_description, internship_description
+            FROM classroom_internship_details WHERE classroom_id = ?
+            """,
             (class_id,),
         ).fetchone()
         if not details:
@@ -304,26 +382,34 @@ def edit_intern_classroom(class_id):
                 "SELECT qualification FROM classroom_internship_qualifications WHERE classroom_id = ? ORDER BY sort_order, id",
                 (class_id,),
             ).fetchall()
+
+            legacy_required_hours = int(_row_value(details, "required_hours", 11, 0) or 0)
+            hours_per_day = int(_row_value(details, "hours_per_day", 12, DEFAULT_HOURS_PER_DAY) or DEFAULT_HOURS_PER_DAY)
+            required_days = int(_row_value(details, "required_days", 13, 0) or 0)
+            if required_days <= 0 and legacy_required_hours > 0:
+                required_days = max(1, int(math.ceil(legacy_required_hours / max(hours_per_day, 1))))
+
             form = {
                 "internship_title": _row_value(details, "internship_title", 0, ""),
-                "company_name": _row_value(details, "company_name", 1, ""),
+                "program": _row_value(details, "program", 1, "") or _row_value(classroom, "section", 3, ""),
+                "company_name": _row_value(details, "company_name", 2, ""),
                 "internship_section": _row_value(classroom, "section", 3, ""),
-                "industry": _row_value(details, "industry", 2, ""),
-                "work_arrangement": _row_value(details, "work_arrangement", 3, "On-site"),
-                "schedule_type": _row_value(details, "schedule_type", 4, "fixed_dates"),
-                "hours_mode": _row_value(details, "hours_mode", 5, "specified"),
-                "location": _row_value(details, "location", 6, ""),
-                "start_date": _row_value(details, "start_date", 7, ""),
-                "end_date": _row_value(details, "end_date", 8, ""),
-                "deadline": _row_value(details, "enrollment_deadline", 9, ""),
-                "required_hours": _row_value(details, "required_hours", 10, ""),
-                "company_website": _row_value(details, "company_website", 11, ""),
-                "company_description": _row_value(details, "company_description", 12, ""),
-                "internship_description": _row_value(details, "internship_description", 13, ""),
+                "industry": _row_value(details, "industry", 3, ""),
+                "work_arrangement": _row_value(details, "work_arrangement", 4, "On-site"),
+                "location": _row_value(details, "location", 7, ""),
+                "deadline": _row_value(details, "enrollment_deadline", 10, ""),
+                "hours_per_day": hours_per_day,
+                "required_days": required_days or 60,
+                "shift_start_time": _row_value(details, "shift_start_time", 15, DEFAULT_START_TIME),
+                "shift_end_time": _row_value(details, "shift_end_time", 16, DEFAULT_END_TIME),
+                "company_website": _row_value(details, "company_website", 17, ""),
+                "company_description": _row_value(details, "company_description", 18, ""),
+                "internship_description": _row_value(details, "internship_description", 19, ""),
             }
+            selected_days = normalize_attendance_days(_row_value(details, "attendance_days", 14, "")) or list(DEFAULT_ATTENDANCE_DAYS)
             responsibilities = [_row_value(row, "responsibility", 0, "") for row in responsibility_rows]
             qualifications = [_row_value(row, "qualification", 0, "") for row in qualification_rows]
-            return _render_edit_form(class_id, form, {}, responsibilities, qualifications)
+            return _render_edit_form(class_id, form, {}, responsibilities, qualifications, selected_days)
 
         internship_title = (request.form.get("internship_title") or "").strip()
         company_name = (request.form.get("company_name") or "").strip()
@@ -331,12 +417,7 @@ def edit_intern_classroom(class_id):
         industry = (request.form.get("industry") or "").strip()
         work_arrangement = (request.form.get("work_arrangement") or "On-site").strip()
         location = (request.form.get("location") or "").strip()
-        schedule_type = (request.form.get("schedule_type") or "fixed_dates").strip().lower()
-        hours_mode = (request.form.get("hours_mode") or "specified").strip().lower()
-        start_date = (request.form.get("start_date") or "").strip() or None
-        end_date = (request.form.get("end_date") or "").strip() or None
         deadline = (request.form.get("deadline") or "").strip() or None
-        required_hours_raw = (request.form.get("required_hours") or "").strip()
         company_website = (request.form.get("company_website") or "").strip()
         company_description = (request.form.get("company_description") or "").strip()
         internship_description = (request.form.get("internship_description") or "").strip()
@@ -344,70 +425,24 @@ def edit_intern_classroom(class_id):
         qualifications = [item.strip() for item in request.form.getlist("qualifications[]") if item.strip()]
 
         errors = {}
-        if not internship_title or len(internship_title) < 3 or len(internship_title) > 150:
-            errors["internship_title"] = "Internship title is required (3-150 chars)."
-        if not company_name or len(company_name) < 2 or len(company_name) > 150:
-            errors["company_name"] = "Company / organization is required (2-150 chars)."
-        if not section or len(section) > 100:
-            errors["internship_section"] = "Section is required (1-100 chars)."
-        if len(industry) > 100:
-            errors["industry"] = "Category / industry max 100 chars."
-        if work_arrangement not in _WORK_ARRANGEMENTS:
-            errors["work_arrangement"] = "Choose a valid work arrangement."
-        if len(location) > 200:
-            errors["location"] = "Location max 200 chars."
-
-        if schedule_type not in _SCHEDULE_TYPES:
-            errors["schedule_type"] = "Choose a valid schedule option."
-        elif schedule_type == "not_specified":
-            start_date = None
-            end_date = None
-        else:
-            if schedule_type == "fixed_dates":
-                if not start_date:
-                    errors["start_date"] = "Start date is required for a fixed schedule."
-                if not end_date:
-                    errors["end_date"] = "End date is required for a fixed schedule."
-            for field_name, value in (("start_date", start_date), ("end_date", end_date)):
-                if value and not _valid_date(value):
-                    errors[field_name] = "Enter a valid date."
-            if start_date and end_date and _valid_date(start_date) and _valid_date(end_date):
-                if datetime.strptime(end_date, "%Y-%m-%d") < datetime.strptime(start_date, "%Y-%m-%d"):
-                    errors["end_date"] = "End date cannot be before the start date."
-        if deadline and not _valid_date(deadline):
-            errors["deadline"] = "Enter a valid date."
-
-        required_hours = 0
-        if hours_mode not in _HOURS_MODES:
-            errors["hours_mode"] = "Choose a valid OJT hours option."
-        elif hours_mode == "specified":
-            try:
-                required_hours = int(required_hours_raw)
-                if required_hours < 1 or required_hours > 10000:
-                    raise ValueError()
-            except (TypeError, ValueError):
-                errors["required_hours"] = "Required hours must be between 1 and 10,000."
-
-        if company_website:
-            if len(company_website) > 500:
-                errors["company_website"] = "Company website max 500 chars."
-            elif not company_website.lower().startswith(("http://", "https://")):
-                errors["company_website"] = "Company website must start with http:// or https://."
-        if len(company_description) > 5000:
-            errors["company_description"] = "Company description max 5000 chars."
-        if not internship_description or len(internship_description) < 10 or len(internship_description) > 10000:
-            errors["internship_description"] = "Internship description is required (10-10,000 chars)."
-        if not responsibilities:
-            errors["responsibilities"] = "Add at least one responsibility."
-        elif len(responsibilities) > 20 or any(len(item) > 500 for item in responsibilities):
-            errors["responsibilities"] = "Use up to 20 responsibilities, max 500 chars each."
-        if not qualifications:
-            errors["qualifications"] = "Add at least one qualification."
-        elif len(qualifications) > 20 or any(len(item) > 500 for item in qualifications):
-            errors["qualifications"] = "Use up to 20 qualifications, max 500 chars each."
-
+        _validate_common_fields(
+            errors,
+            internship_title,
+            company_name,
+            section,
+            industry,
+            work_arrangement,
+            location,
+            deadline,
+            company_website,
+            company_description,
+            internship_description,
+            responsibilities,
+            qualifications,
+        )
+        schedule = _read_schedule_form(errors)
         if errors:
-            return _render_edit_form(class_id, request.form, errors, responsibilities, qualifications)
+            return _render_edit_form(class_id, request.form, errors, responsibilities, qualifications, schedule["attendance_days"])
 
         parent_description = f"Internship classroom for {company_name}"
         conn.execute(
@@ -415,24 +450,29 @@ def edit_intern_classroom(class_id):
             (internship_title, section, parent_description, class_id, supervisor_id),
         )
         conn.execute(
-            """UPDATE classroom_internship_details
-               SET internship_title = ?, company_name = ?, industry = ?, work_arrangement = ?,
-                   schedule_type = ?, hours_mode = ?, location = ?, start_date = ?, end_date = ?,
-                   enrollment_deadline = ?, required_hours = ?, company_website = ?,
-                   company_description = ?, internship_description = ?, updated_at = CURRENT_TIMESTAMP
-               WHERE classroom_id = ?""",
+            """
+            UPDATE classroom_internship_details
+            SET internship_title = ?, program = ?, company_name = ?, industry = ?, work_arrangement = ?,
+                schedule_type = 'weekly', hours_mode = 'specified', location = ?,
+                enrollment_deadline = ?, hours_per_day = ?, required_days = ?, attendance_days = ?,
+                shift_start_time = ?, shift_end_time = ?, required_hours = ?, company_website = ?,
+                company_description = ?, internship_description = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE classroom_id = ?
+            """,
             (
                 internship_title,
+                schedule["program"],
                 company_name,
                 industry or None,
                 work_arrangement,
-                schedule_type,
-                hours_mode,
                 location or None,
-                start_date,
-                end_date,
                 deadline,
-                required_hours,
+                schedule["hours_per_day"],
+                schedule["required_days"],
+                schedule["attendance_days_text"],
+                schedule["shift_start_time"],
+                schedule["shift_end_time"],
+                schedule["required_hours"],
                 company_website or None,
                 company_description or None,
                 internship_description,
@@ -464,7 +504,7 @@ def edit_intern_classroom(class_id):
         if request.method == "POST":
             responsibilities = [item.strip() for item in request.form.getlist("responsibilities[]") if item.strip()]
             qualifications = [item.strip() for item in request.form.getlist("qualifications[]") if item.strip()]
-            return _render_edit_form(class_id, request.form, {}, responsibilities, qualifications)
+            return _render_edit_form(class_id, request.form, {}, responsibilities, qualifications, _selected_days_from_request())
         return redirect(url_for("classroom.supervisor_class", class_id=class_id))
     finally:
         conn.close()
@@ -488,10 +528,7 @@ def update_classroom_banner_theme(class_id):
 
     conn = get_db_connection()
     try:
-        classroom = conn.execute(
-            "SELECT supervisor_id FROM classrooms WHERE id = ?",
-            (class_id,),
-        ).fetchone()
+        classroom = conn.execute("SELECT supervisor_id FROM classrooms WHERE id = ?", (class_id,)).fetchone()
         if not classroom:
             return "Class not found", 404
         if int(_row_value(classroom, "supervisor_id", 0, 0)) != int(supervisor_id):
@@ -512,7 +549,6 @@ def update_classroom_banner_theme(class_id):
         flash("Failed to update the class banner color. Please try again.", "danger")
     finally:
         conn.close()
-
     return _redirect_after_update()
 
 
@@ -524,10 +560,7 @@ def delete_classroom(class_id):
     legacy_files = []
     class_name = "Class"
     try:
-        classroom = conn.execute(
-            "SELECT supervisor_id, name FROM classrooms WHERE id = ?",
-            (class_id,),
-        ).fetchone()
+        classroom = conn.execute("SELECT supervisor_id, name FROM classrooms WHERE id = ?", (class_id,)).fetchone()
         if not classroom:
             return "Class not found", 404
         if int(_row_value(classroom, "supervisor_id", 0, 0)) != int(supervisor_id):
