@@ -67,7 +67,9 @@ body.student-logbook-page .student-logbook-daily-modal .nx-daily-accomplishment 
 
 {% set sidebar_route_class_id = request.view_args.get('class_id') if request.view_args else none %}
 {% set sidebar_query_class_id = request.args.get('classroom_id', type=int) %}
-{% set sidebar_class_id = sidebar_route_class_id or sidebar_query_class_id %}
+{% set sidebar_requested_class_id = sidebar_route_class_id or sidebar_query_class_id %}
+{% set sidebar_schedule_state = get_student_schedule_state(session.get('user_id'), sidebar_requested_class_id) %}
+{% set sidebar_class_id = sidebar_requested_class_id or sidebar_schedule_state.classroom_id %}
 {% set sidebar_ml_active = request.endpoint == 'classwork_ml_insights.student_insights' %}
 {% set sidebar_report_active = request.endpoint == 'performance_reports.student_reports' %}
 {% set sidebar_work_active = request.endpoint in ['student_classwork.index', 'student_classwork.detail'] %}
@@ -81,6 +83,9 @@ body.student-logbook-page .student-logbook-daily-modal .nx-daily-accomplishment 
     {% endfor %}
 {% endif %}
 {% set sidebar_pending_work_count = ([sidebar_work_context.work_options|length - sidebar_completed_work.ids|length, 0]|max) if sidebar_work_context else 0 %}
+{% set sidebar_logbook_attention = sidebar_schedule_state.attention_count|default(0) %}
+{% set sidebar_logbook_reason = sidebar_schedule_state.attention_reason|default(none) %}
+{% set sidebar_logbook_title = 'Time to check in for today\'s OJT schedule.' if sidebar_logbook_reason == 'check_in' else ('Complete today\'s Daily OJT Entry and clock out.' if sidebar_logbook_reason == 'logbook_and_clock_out' else ('Today\'s Daily OJT Entry is saved. Time to clock out.' if sidebar_logbook_reason == 'clock_out' else 'Daily OJT Logbook')) %}
 
 <div class="nx-role-sidebar-shell nx-role-student">
     <aside class="nx-role-sidebar" id="studentSidebar" aria-label="Student navigation">
@@ -94,10 +99,10 @@ body.student-logbook-page .student-logbook-daily-modal .nx-daily-accomplishment 
             <a href="{{ url_for('student.student_dashboard') }}" aria-label="Dashboard" class="{% if request.path == '/student/dashboard' %}active{% endif %}"><span class="nx-role-icon">▦</span><span class="nx-role-nav-text">Dashboard</span></a>
             <a href="{{ url_for('classroom.student_classes') }}" aria-label="Intern Classrooms" class="{% if request.path.startswith('/student/classes') and not sidebar_ml_active and not sidebar_report_active and not sidebar_work_active %}active{% endif %}"><span class="nx-role-icon">♙</span><span class="nx-role-nav-text">Intern Classroom</span></a>
             <div class="nx-role-divider"></div><div class="nx-role-section-label">Class Tools</div>
-            {% if sidebar_class_id %}<a href="{{ url_for('student_classwork.index', class_id=sidebar_class_id) }}" aria-label="Work" class="{% if sidebar_work_active %}active{% endif %}"><span class="nx-role-icon">▣</span><span class="nx-role-nav-text">Work</span>{% if sidebar_pending_work_count > 0 %}<span class="nx-role-badge">{{ sidebar_pending_work_count }}</span>{% endif %}</a>{% endif %}
+            {% if sidebar_class_id %}<a href="{{ url_for('student_classwork.index', class_id=sidebar_class_id) }}" aria-label="Work{% if sidebar_pending_work_count > 0 %}: {{ sidebar_pending_work_count }} unfinished{% endif %}" class="{% if sidebar_work_active %}active{% endif %}"><span class="nx-role-icon">▣</span><span class="nx-role-nav-text">Work</span>{% if sidebar_pending_work_count > 0 %}<span class="nx-role-badge">{{ sidebar_pending_work_count }}</span>{% endif %}</a>{% endif %}
             <a href="{{ sidebar_ml_url }}" aria-label="ML Insights" class="{% if sidebar_ml_active %}active{% endif %}"><span class="nx-role-icon">◈</span><span class="nx-role-nav-text">ML Insights</span></a>
             <a href="{{ sidebar_report_url }}" aria-label="Report" class="{% if sidebar_report_active %}active{% endif %}"><span class="nx-role-icon">▥</span><span class="nx-role-nav-text">Report</span></a>
-            <a href="{{ url_for('student.logbook', classroom_id=sidebar_class_id) if sidebar_class_id else url_for('student.logbook') }}" aria-label="Logbook" class="{% if request.path == '/student/logbook' %}active{% endif %}"><span class="nx-role-icon">▤</span><span class="nx-role-nav-text">Logbook</span></a>
+            <a id="studentSidebarLogbookLink" href="{{ url_for('student.logbook', classroom_id=sidebar_class_id) if sidebar_class_id else url_for('student.logbook') }}" aria-label="{{ sidebar_logbook_title }}" title="{{ sidebar_logbook_title }}" class="{% if request.path == '/student/logbook' %}active{% endif %}"><span class="nx-role-icon">▤</span><span class="nx-role-nav-text">Logbook</span><span id="studentSidebarLogbookBadge" class="nx-role-badge"{% if sidebar_logbook_attention <= 0 %} hidden{% endif %}>1</span></a>
             <a href="{{ url_for('student.tasks') }}" aria-label="Tasks" class="{% if request.path == '/student/tasks' %}active{% endif %}"><span class="nx-role-icon">☑</span><span class="nx-role-nav-text">Tasks</span></a>
             <a href="{{ url_for('student.documents') }}" aria-label="Documents" class="{% if request.path == '/student/documents' %}active{% endif %}"><span class="nx-role-icon">▧</span><span class="nx-role-nav-text">Documents</span></a>
             <a href="{{ url_for('notifications.notification_list') }}" aria-label="Notifications" class="{% if request.path == '/notifications' %}active{% endif %}"><span class="nx-role-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg></span><span class="nx-role-nav-text">Notifications</span>{% if unread_count|default(0) > 0 %}<span class="nx-role-badge">{{ unread_count }}</span>{% endif %}</a>
@@ -129,7 +134,18 @@ body.student-logbook-page .student-logbook-daily-modal .nx-daily-accomplishment 
         var select=document.getElementById('daily-related-work');
         if(select&&requestedWork){var option=Array.from(select.options).find(function(item){return String(item.value)===String(requestedWork);});if(option){select.value=String(requestedWork);if(storageKey){try{sessionStorage.removeItem(storageKey);}catch(error){}}if(typeof window.openLogbookModal==='function'){window.setTimeout(function(){window.openLogbookModal('dailyEntryModal');},60);}}}
     }
-    function applyStudentShellEnhancements(){applyCanonicalStudentHeading();resolveInternClassroomEntry();enhanceStudentDocumentsPage();enhanceDailyLogbookWorkFlow();}
+    function armLogbookAttentionBadge(){
+        var seconds={{ sidebar_schedule_state.seconds_until_attention|default(none)|tojson }};
+        var hasOpen={{ sidebar_schedule_state.has_open_attendance|default(false)|tojson }};
+        if(seconds===null||seconds===undefined||Number(seconds)<=0)return;
+        window.setTimeout(function(){
+            var badge=document.getElementById('studentSidebarLogbookBadge');
+            var link=document.getElementById('studentSidebarLogbookLink');
+            if(badge){badge.hidden=false;badge.textContent='1';}
+            if(link){var message=hasOpen?'Complete today\'s Daily OJT Entry and clock out.':'Time to check in for today\'s OJT schedule.';link.setAttribute('title',message);link.setAttribute('aria-label',message);}
+        },Math.min(Number(seconds)*1000,2147483000));
+    }
+    function applyStudentShellEnhancements(){applyCanonicalStudentHeading();resolveInternClassroomEntry();enhanceStudentDocumentsPage();enhanceDailyLogbookWorkFlow();armLogbookAttentionBadge();}
     if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',applyStudentShellEnhancements);}else{applyStudentShellEnhancements();}
 })();
 </script>
