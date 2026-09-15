@@ -11,230 +11,289 @@
 <body class="supervisor-create-space-page">
     {% include 'components/supervisor_sidebar.html' %}
 
+    {% set selected_arrangement = form.get('work_arrangement', 'On-site') %}
+    {% set chosen_days = selected_days|default(['mon','tue','wed','thu','fri','sat'], true) %}
+    {% set responsibility_items = responsibilities if responsibilities else ['', ''] %}
+    {% set qualification_items = qualifications if qualifications else ['', ''] %}
+    {% set supervisor_display = ((sidebar_profile.first_name ~ ' ' ~ (sidebar_profile.last_name or ''))|trim) if sidebar_profile and sidebar_profile.first_name else (sidebar_profile.username if sidebar_profile else 'Supervisor') %}
+
     <main class="page-content nexora-app-main create-space-main">
         <div class="create-space-shell">
-            <section id="create-space-internship" class="create-space-view" aria-labelledby="create-internship-title">
-                <div class="create-space-form-card">
-                    <header class="create-space-form-head">
-                        <span class="create-space-eyebrow">Create Intern Classroom</span>
-                        <h1 id="create-internship-title">Set up a supervised internship placement</h1>
-                        <p>Provide enough information so students clearly understand the company, work arrangement, schedule, requirements, expected responsibilities, and eligibility.</p>
-                    </header>
+            <header class="create-space-header">
+                <span class="create-space-eyebrow">Supervisor Portal</span>
+                <h1>Create Intern Classroom</h1>
+                <p>Set up the internship classroom, company details, attendance schedule, student workflow, and completion requirements in one place.</p>
+            </header>
 
-                    <form method="POST" action="{{ url_for('internship_classroom.create_internship_classroom') }}" novalidate class="create-space-form-body">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <input type="hidden" name="form_type" value="internship">
-                        {% set selected_arrangement = form.get('work_arrangement', 'On-site') %}
-                        {% set selected_schedule_type = form.get('schedule_type', 'fixed_dates') %}
-                        {% set selected_hours_mode = form.get('hours_mode', 'specified') %}
-                        {% set responsibility_items = responsibilities if responsibilities else ['', ''] %}
-                        {% set qualification_items = qualifications if qualifications else ['', ''] %}
+            <form method="POST" action="{{ url_for('internship_classroom.create_internship_classroom') }}" novalidate>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="form_type" value="internship">
 
-                        <section class="create-space-section">
-                            <div class="create-space-section-title">
-                                <h2>Basic Internship Details</h2>
-                                <p>Identify the placement and how the internship is arranged.</p>
-                            </div>
-
-                            <div class="create-space-fields">
-                                <div class="create-space-field">
-                                    <label for="internship_title">Internship Title <span class="create-space-required">*</span></label>
-                                    <input type="text" id="internship_title" name="internship_title" maxlength="150" placeholder="Example: Visual Data Collection Intern" value="{{ form.get('internship_title', '') }}" required>
-                                    {% if errors and errors.internship_title %}<div class="create-space-error">{{ errors.internship_title }}</div>{% endif %}
-                                </div>
-                                <div class="create-space-field">
-                                    <label for="company_name">Company / Organization <span class="create-space-required">*</span></label>
-                                    <input type="text" id="company_name" name="company_name" maxlength="150" placeholder="Example: GIG Rewards" value="{{ form.get('company_name', '') }}" required>
-                                    {% if errors and errors.company_name %}<div class="create-space-error">{{ errors.company_name }}</div>{% endif %}
-                                </div>
-                                <div class="create-space-field">
-                                    <label for="internship_section">Section <span class="create-space-required">*</span></label>
-                                    <input type="text" id="internship_section" name="internship_section" maxlength="100" placeholder="Example: BSIT 3A" value="{{ form.get('internship_section', '') }}" required>
-                                    {% if errors and errors.internship_section %}<div class="create-space-error">{{ errors.internship_section }}</div>{% endif %}
-                                </div>
-                                <div class="create-space-field">
-                                    <label for="industry">Category / Industry</label>
-                                    <input type="text" id="industry" name="industry" maxlength="100" placeholder="Example: Telecom / Tech" value="{{ form.get('industry', '') }}">
-                                    {% if errors and errors.industry %}<div class="create-space-error">{{ errors.industry }}</div>{% endif %}
-                                </div>
-                                <div class="create-space-field">
-                                    <span class="create-space-option-label">Work Arrangement</span>
-                                    <div class="create-space-option-row">
-                                        <label class="create-space-option"><input type="radio" name="work_arrangement" value="On-site" {% if selected_arrangement == 'On-site' %}checked{% endif %}><span>On-site</span></label>
-                                        <label class="create-space-option"><input type="radio" name="work_arrangement" value="Hybrid" {% if selected_arrangement == 'Hybrid' %}checked{% endif %}><span>Hybrid</span></label>
-                                        <label class="create-space-option"><input type="radio" name="work_arrangement" value="Remote" {% if selected_arrangement == 'Remote' %}checked{% endif %}><span>Remote</span></label>
+                <div class="row g-4 align-items-start">
+                    <div class="col-xl-8">
+                        <div class="create-space-form-card">
+                            <div class="create-space-form-body">
+                                <section class="create-space-section">
+                                    <div class="d-flex align-items-start gap-3 mb-4">
+                                        <span class="badge rounded-pill text-bg-primary fs-6">1</span>
+                                        <div class="create-space-section-title mb-0">
+                                            <h2>Classroom Basics</h2>
+                                            <p>Identify the internship classroom, program, company, section, work arrangement, and worksite.</p>
+                                        </div>
                                     </div>
-                                    {% if errors and errors.work_arrangement %}<div class="create-space-error">{{ errors.work_arrangement }}</div>{% endif %}
-                                </div>
-                                <div class="create-space-field">
-                                    <label for="location">Location</label>
-                                    <input type="text" id="location" name="location" maxlength="200" placeholder="Example: Makati City" value="{{ form.get('location', '') }}">
-                                    {% if errors and errors.location %}<div class="create-space-error">{{ errors.location }}</div>{% endif %}
-                                </div>
-                            </div>
-                        </section>
 
-                        <section class="create-space-section">
-                            <div class="create-space-section-title">
-                                <h2>Internship Schedule</h2>
-                                <p>Choose how specific the internship timeline and OJT hour requirement should be.</p>
-                            </div>
-
-                            <div class="create-space-fields">
-                                <div class="create-space-field is-full">
-                                    <span class="create-space-option-label">Schedule Type</span>
-                                    <div class="create-space-option-row">
-                                        <label class="create-space-option"><input type="radio" name="schedule_type" value="fixed_dates" {% if selected_schedule_type == 'fixed_dates' %}checked{% endif %}><span>Fixed Dates</span></label>
-                                        <label class="create-space-option"><input type="radio" name="schedule_type" value="flexible" {% if selected_schedule_type == 'flexible' %}checked{% endif %}><span>Flexible</span></label>
-                                        <label class="create-space-option"><input type="radio" name="schedule_type" value="not_specified" {% if selected_schedule_type == 'not_specified' %}checked{% endif %}><span>Not Specified</span></label>
+                                    <div class="create-space-fields">
+                                        <div class="create-space-field">
+                                            <label for="internship_title">Intern Classroom Name <span class="create-space-required">*</span></label>
+                                            <input type="text" id="internship_title" name="internship_title" maxlength="150" placeholder="e.g. BSIT OJT 2026 - Nexora" value="{{ form.get('internship_title', '') }}" required>
+                                            {% if errors and errors.internship_title %}<div class="create-space-error">{{ errors.internship_title }}</div>{% endif %}
+                                        </div>
+                                        <div class="create-space-field">
+                                            <label for="program">Program <span class="create-space-required">*</span></label>
+                                            <input type="text" id="program" name="program" maxlength="150" placeholder="e.g. BSIT" value="{{ form.get('program', '') }}" required>
+                                            {% if errors and errors.program %}<div class="create-space-error">{{ errors.program }}</div>{% endif %}
+                                        </div>
+                                        <div class="create-space-field">
+                                            <label for="company_name">Company / Organization <span class="create-space-required">*</span></label>
+                                            <input type="text" id="company_name" name="company_name" maxlength="150" placeholder="e.g. Nexora" value="{{ form.get('company_name', '') }}" required>
+                                            {% if errors and errors.company_name %}<div class="create-space-error">{{ errors.company_name }}</div>{% endif %}
+                                        </div>
+                                        <div class="create-space-field">
+                                            <label for="internship_section">Section <span class="create-space-required">*</span></label>
+                                            <input type="text" id="internship_section" name="internship_section" maxlength="100" placeholder="e.g. 4A" value="{{ form.get('internship_section', '') }}" required>
+                                            {% if errors and errors.internship_section %}<div class="create-space-error">{{ errors.internship_section }}</div>{% endif %}
+                                        </div>
+                                        <div class="create-space-field">
+                                            <label for="industry">Category / Industry</label>
+                                            <input type="text" id="industry" name="industry" maxlength="100" placeholder="e.g. Information Technology" value="{{ form.get('industry', '') }}">
+                                            {% if errors and errors.industry %}<div class="create-space-error">{{ errors.industry }}</div>{% endif %}
+                                        </div>
+                                        <div class="create-space-field">
+                                            <label for="location">Location / Worksite</label>
+                                            <input type="text" id="location" name="location" maxlength="200" placeholder="e.g. Makati City" value="{{ form.get('location', '') }}">
+                                            {% if errors and errors.location %}<div class="create-space-error">{{ errors.location }}</div>{% endif %}
+                                        </div>
+                                        <div class="create-space-field is-full">
+                                            <span class="create-space-option-label">Work Arrangement</span>
+                                            <div class="create-space-option-row">
+                                                {% for value in ['On-site','Hybrid','Remote'] %}
+                                                    <label class="create-space-option"><input type="radio" name="work_arrangement" value="{{ value }}" {% if selected_arrangement == value %}checked{% endif %}><span>{{ value }}</span></label>
+                                                {% endfor %}
+                                            </div>
+                                            {% if errors and errors.work_arrangement %}<div class="create-space-error">{{ errors.work_arrangement }}</div>{% endif %}
+                                        </div>
                                     </div>
-                                    <small>Fixed dates require both dates. Flexible dates are optional. Not Specified hides the date fields.</small>
-                                    {% if errors and errors.schedule_type %}<div class="create-space-error">{{ errors.schedule_type }}</div>{% endif %}
-                                </div>
+                                </section>
 
-                                <div class="create-space-field" data-schedule-date-field>
-                                    <label for="start_date">Start Date</label>
-                                    <input type="date" id="start_date" name="start_date" value="{{ form.get('start_date', '') }}">
-                                    {% if errors and errors.start_date %}<div class="create-space-error">{{ errors.start_date }}</div>{% endif %}
-                                </div>
-                                <div class="create-space-field" data-schedule-date-field>
-                                    <label for="end_date">End Date</label>
-                                    <input type="date" id="end_date" name="end_date" value="{{ form.get('end_date', '') }}">
-                                    {% if errors and errors.end_date %}<div class="create-space-error">{{ errors.end_date }}</div>{% endif %}
-                                </div>
-
-                                <div class="create-space-field is-full">
-                                    <label for="deadline">Application / Enrollment Deadline</label>
-                                    <input type="date" id="deadline" name="deadline" value="{{ form.get('deadline', '') }}">
-                                    <small>Optional. Leave blank if there is no enrollment deadline yet.</small>
-                                    {% if errors and errors.deadline %}<div class="create-space-error">{{ errors.deadline }}</div>{% endif %}
-                                </div>
-
-                                <div class="create-space-field is-full">
-                                    <span class="create-space-option-label">OJT Hours</span>
-                                    <div class="create-space-option-row is-two">
-                                        <label class="create-space-option"><input type="radio" name="hours_mode" value="specified" {% if selected_hours_mode == 'specified' %}checked{% endif %}><span>Specify Hours</span></label>
-                                        <label class="create-space-option"><input type="radio" name="hours_mode" value="not_specified" {% if selected_hours_mode == 'not_specified' %}checked{% endif %}><span>Not Specified</span></label>
+                                <section class="create-space-section">
+                                    <div class="d-flex align-items-start gap-3 mb-4">
+                                        <span class="badge rounded-pill text-bg-primary fs-6">2</span>
+                                        <div class="create-space-section-title mb-0">
+                                            <h2>Internship Schedule</h2>
+                                            <p>Configure the repeating OJT attendance schedule. Monday to Saturday is selected by default; Sunday is a free day.</p>
+                                        </div>
                                     </div>
-                                    {% if errors and errors.hours_mode %}<div class="create-space-error">{{ errors.hours_mode }}</div>{% endif %}
+
+                                    <div class="create-space-fields">
+                                        <div class="create-space-field">
+                                            <label for="hours_per_day">Hours per Day <span class="create-space-required">*</span></label>
+                                            <input type="number" id="hours_per_day" name="hours_per_day" min="1" max="24" step="1" value="{{ form.get('hours_per_day', 8) }}" required>
+                                            {% if errors and errors.hours_per_day %}<div class="create-space-error">{{ errors.hours_per_day }}</div>{% endif %}
+                                        </div>
+                                        <div class="create-space-field">
+                                            <label for="required_days">Number of OJT Days <span class="create-space-required">*</span></label>
+                                            <input type="number" id="required_days" name="required_days" min="1" max="3650" step="1" value="{{ form.get('required_days', 60) }}" required>
+                                            {% if errors and errors.required_days %}<div class="create-space-error">{{ errors.required_days }}</div>{% endif %}
+                                        </div>
+
+                                        <div class="create-space-field is-full">
+                                            <span class="create-space-option-label">Attendance Days <span class="create-space-required">*</span></span>
+                                            <div class="d-flex flex-wrap gap-2" id="attendanceDayChoices">
+                                                {% for key, label in [('mon','MON'),('tue','TUE'),('wed','WED'),('thu','THU'),('fri','FRI'),('sat','SAT'),('sun','SUN')] %}
+                                                    <input class="btn-check" type="checkbox" name="attendance_days" value="{{ key }}" id="attendance-{{ key }}" autocomplete="off" {% if key in chosen_days %}checked{% endif %}>
+                                                    <label class="btn btn-outline-primary fw-bold" for="attendance-{{ key }}">{{ label }}</label>
+                                                {% endfor %}
+                                            </div>
+                                            <small>Default: Monday to Saturday. Leave Sunday unchecked for the default free day.</small>
+                                            {% if errors and errors.attendance_days %}<div class="create-space-error">{{ errors.attendance_days }}</div>{% endif %}
+                                        </div>
+
+                                        <div class="create-space-field">
+                                            <label for="shift_start_time">Daily Start Time <span class="create-space-required">*</span></label>
+                                            <input type="time" id="shift_start_time" name="shift_start_time" value="{{ form.get('shift_start_time', '09:00') }}" required>
+                                            {% if errors and errors.shift_start_time %}<div class="create-space-error">{{ errors.shift_start_time }}</div>{% endif %}
+                                        </div>
+                                        <div class="create-space-field">
+                                            <label for="shift_end_time">Daily End Time <span class="create-space-required">*</span></label>
+                                            <input type="time" id="shift_end_time" name="shift_end_time" value="{{ form.get('shift_end_time', '17:00') }}" required>
+                                            {% if errors and errors.shift_end_time %}<div class="create-space-error">{{ errors.shift_end_time }}</div>{% endif %}
+                                        </div>
+
+                                        <div class="create-space-field is-full">
+                                            <label for="deadline">Application / Enrollment Deadline</label>
+                                            <input type="date" id="deadline" name="deadline" value="{{ form.get('deadline', '') }}">
+                                            <small>Optional. This does not control daily attendance.</small>
+                                            {% if errors and errors.deadline %}<div class="create-space-error">{{ errors.deadline }}</div>{% endif %}
+                                        </div>
+                                    </div>
+
+                                    <div class="alert alert-primary mt-3 mb-0">
+                                        <strong>Total required OJT hours:</strong>
+                                        <span id="totalRequiredHours">480 hours</span>
+                                        <div class="small mt-1">Students receive Logbook reminders for scheduled check-in and for Daily OJT Entry / clock-out when the daily schedule is complete.</div>
+                                    </div>
+                                </section>
+
+                                <section class="create-space-section">
+                                    <div class="create-space-section-title">
+                                        <h2>Company Information</h2>
+                                        <p>Information students can review from Classroom Info.</p>
+                                    </div>
+                                    <div class="create-space-fields">
+                                        <div class="create-space-field is-full">
+                                            <label for="company_website">Company Website</label>
+                                            <input type="url" id="company_website" name="company_website" maxlength="500" placeholder="https://example.com" value="{{ form.get('company_website', '') }}">
+                                            {% if errors and errors.company_website %}<div class="create-space-error">{{ errors.company_website }}</div>{% endif %}
+                                        </div>
+                                        <div class="create-space-field is-full">
+                                            <label for="company_description">Company Description</label>
+                                            <textarea id="company_description" name="company_description" maxlength="5000" placeholder="Describe the company and work environment.">{{ form.get('company_description', '') }}</textarea>
+                                            {% if errors and errors.company_description %}<div class="create-space-error">{{ errors.company_description }}</div>{% endif %}
+                                        </div>
+                                    </div>
+                                </section>
+
+                                <section class="create-space-section">
+                                    <div class="create-space-section-title">
+                                        <h2>Internship Information</h2>
+                                        <p>Describe the work, learning outcomes, responsibilities, and eligibility.</p>
+                                    </div>
+                                    <div class="create-space-field">
+                                        <label for="internship_description">Detailed Internship Description <span class="create-space-required">*</span></label>
+                                        <textarea id="internship_description" name="internship_description" maxlength="10000" placeholder="Describe the internship experience, expected work, supervision, and learning outcomes." required>{{ form.get('internship_description', '') }}</textarea>
+                                        {% if errors and errors.internship_description %}<div class="create-space-error">{{ errors.internship_description }}</div>{% endif %}
+                                    </div>
+                                </section>
+
+                                <section class="create-space-section">
+                                    <div class="create-space-section-title"><h2>Responsibilities</h2><p>Add the work students are expected to perform.</p></div>
+                                    <div id="responsibility-list" class="create-space-repeat-list">
+                                        {% for item in responsibility_items %}
+                                            <div class="create-space-repeat-row"><input type="text" name="responsibilities[]" maxlength="500" value="{{ item }}" placeholder="Example: Complete assigned company work and document it in Daily OJT Logbook."><button type="button" class="create-space-remove-button" aria-label="Remove responsibility">×</button></div>
+                                        {% endfor %}
+                                    </div>
+                                    {% if errors and errors.responsibilities %}<div class="create-space-error">{{ errors.responsibilities }}</div>{% endif %}
+                                    <button type="button" class="create-space-add-button" data-add-row="responsibility-list" data-input-name="responsibilities[]" data-placeholder="Add another responsibility">+ Add Responsibility</button>
+                                </section>
+
+                                <section class="create-space-section">
+                                    <div class="create-space-section-title"><h2>Eligibility / Qualifications</h2><p>List the requirements for students joining this internship.</p></div>
+                                    <div id="qualification-list" class="create-space-repeat-list">
+                                        {% for item in qualification_items %}
+                                            <div class="create-space-repeat-row"><input type="text" name="qualifications[]" maxlength="500" value="{{ item }}" placeholder="Example: Currently enrolled in the required OJT/practicum program."><button type="button" class="create-space-remove-button" aria-label="Remove qualification">×</button></div>
+                                        {% endfor %}
+                                    </div>
+                                    {% if errors and errors.qualifications %}<div class="create-space-error">{{ errors.qualifications }}</div>{% endif %}
+                                    <button type="button" class="create-space-add-button" data-add-row="qualification-list" data-input-name="qualifications[]" data-placeholder="Add another qualification">+ Add Qualification</button>
+                                </section>
+
+                                <div class="create-space-footer">
+                                    <button type="button" class="create-space-secondary-button" onclick="window.location.href='{{ url_for('classroom.supervisor_classes') }}'">Cancel</button>
+                                    <button type="submit" class="create-space-primary-button">Create Intern Classroom</button>
                                 </div>
-
-                                <div class="create-space-field is-full" data-hours-field>
-                                    <label for="required_hours">Required Internship Hours</label>
-                                    <input type="number" id="required_hours" name="required_hours" min="1" max="10000" step="1" placeholder="Example: 500" value="{{ form.get('required_hours', '') }}">
-                                    <small>Only required when Specify Hours is selected.</small>
-                                    {% if errors and errors.required_hours %}<div class="create-space-error">{{ errors.required_hours }}</div>{% endif %}
-                                </div>
                             </div>
-                        </section>
-
-                        <section class="create-space-section">
-                            <div class="create-space-section-title">
-                                <h2>About the Company</h2>
-                                <p>Add context about the organization hosting the internship.</p>
-                            </div>
-                            <div class="create-space-fields">
-                                <div class="create-space-field is-full">
-                                    <label for="company_website">Company Website</label>
-                                    <input type="url" id="company_website" name="company_website" maxlength="500" placeholder="https://example.com" value="{{ form.get('company_website', '') }}">
-                                    {% if errors and errors.company_website %}<div class="create-space-error">{{ errors.company_website }}</div>{% endif %}
-                                </div>
-                                <div class="create-space-field is-full">
-                                    <label for="company_description">Company Description</label>
-                                    <textarea id="company_description" name="company_description" maxlength="5000" placeholder="Describe the company, its industry, and the environment students will work in.">{{ form.get('company_description', '') }}</textarea>
-                                    {% if errors and errors.company_description %}<div class="create-space-error">{{ errors.company_description }}</div>{% endif %}
-                                </div>
-                            </div>
-                        </section>
-
-                        <section class="create-space-section">
-                            <div class="create-space-section-title">
-                                <h2>About the Internship</h2>
-                                <p>Explain what students will work on, what they will learn, and how the internship will operate.</p>
-                            </div>
-                            <div class="create-space-field">
-                                <label for="internship_description">Internship Description <span class="create-space-required">*</span></label>
-                                <textarea id="internship_description" name="internship_description" maxlength="10000" placeholder="Describe the internship experience, expected work, supervision, and learning outcomes." required>{{ form.get('internship_description', '') }}</textarea>
-                                {% if errors and errors.internship_description %}<div class="create-space-error">{{ errors.internship_description }}</div>{% endif %}
-                            </div>
-                        </section>
-
-                        <section class="create-space-section">
-                            <div class="create-space-section-title">
-                                <h2>Responsibilities</h2>
-                                <p>Add clear, individual responsibilities instead of placing everything in one description.</p>
-                            </div>
-                            <div id="responsibility-list" class="create-space-repeat-list">
-                                {% for item in responsibility_items %}
-                                    <div class="create-space-repeat-row"><input type="text" name="responsibilities[]" maxlength="500" value="{{ item }}" placeholder="Example: Record and submit assigned data collection tasks."><button type="button" class="create-space-remove-button" aria-label="Remove responsibility">×</button></div>
-                                {% endfor %}
-                            </div>
-                            {% if errors and errors.responsibilities %}<div class="create-space-error">{{ errors.responsibilities }}</div>{% endif %}
-                            <button type="button" class="create-space-add-button" data-add-row="responsibility-list" data-input-name="responsibilities[]" data-placeholder="Add another responsibility">+ Add Responsibility</button>
-                        </section>
-
-                        <section class="create-space-section">
-                            <div class="create-space-section-title">
-                                <h2>Eligibility / Qualifications</h2>
-                                <p>Add the requirements students must meet before joining this internship classroom.</p>
-                            </div>
-                            <div id="qualification-list" class="create-space-repeat-list">
-                                {% for item in qualification_items %}
-                                    <div class="create-space-repeat-row"><input type="text" name="qualifications[]" maxlength="500" value="{{ item }}" placeholder="Example: Currently enrolled in a degree program requiring OJT/practicum hours."><button type="button" class="create-space-remove-button" aria-label="Remove qualification">×</button></div>
-                                {% endfor %}
-                            </div>
-                            {% if errors and errors.qualifications %}<div class="create-space-error">{{ errors.qualifications }}</div>{% endif %}
-                            <button type="button" class="create-space-add-button" data-add-row="qualification-list" data-input-name="qualifications[]" data-placeholder="Add another qualification">+ Add Qualification</button>
-                        </section>
-
-                        <div class="create-space-notice" role="note">
-                            Intern Classroom information is stored separately from each student's existing internship record. Creating this classroom will not overwrite or reassign any student's current internship.
                         </div>
+                    </div>
 
-                        <div class="create-space-footer">
-                            <button type="button" class="create-space-secondary-button" onclick="window.location.href='{{ url_for('classroom.supervisor_classes') }}'">Cancel</button>
-                            <button type="submit" class="create-space-primary-button">Create Intern Classroom</button>
+                    <aside class="col-xl-4">
+                        <div class="d-grid gap-4 sticky-xl-top">
+                            <section class="create-space-form-card">
+                                <div class="create-space-form-body">
+                                    <div class="d-flex align-items-start gap-3 mb-3">
+                                        <span class="badge rounded-pill text-bg-primary fs-6">3</span>
+                                        <div class="create-space-section-title mb-0"><h2>Student Workflow / Notifications</h2><p>What students will see after joining.</p></div>
+                                    </div>
+                                    <div class="alert alert-primary">
+                                        <strong>Work badge</strong>
+                                        <div class="small mt-1">New assigned Work adds a badge on the Student sidebar. It disappears after that Work is linked to a saved Daily OJT entry.</div>
+                                    </div>
+                                    <div class="alert alert-success mb-0">
+                                        <strong>Logbook reminders</strong>
+                                        <div class="small mt-1">A Logbook badge appears when scheduled check-in is due and again when the daily OJT schedule is complete and the student must finish the Daily OJT Entry / clock out.</div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <section class="create-space-form-card">
+                                <div class="create-space-form-body">
+                                    <div class="d-flex align-items-start gap-3 mb-3">
+                                        <span class="badge rounded-pill text-bg-primary fs-6">4</span>
+                                        <div class="create-space-section-title mb-0"><h2>Review & Publish</h2><p>Live summary of the classroom configuration.</p></div>
+                                    </div>
+                                    <div class="d-grid gap-2 small">
+                                        <div class="d-flex justify-content-between gap-3"><strong>Supervisor</strong><span class="text-end">{{ supervisor_display }}</span></div>
+                                        <div class="d-flex justify-content-between gap-3"><strong>Program</strong><span class="text-end" id="reviewProgram">—</span></div>
+                                        <div class="d-flex justify-content-between gap-3"><strong>Active Days</strong><span class="text-end" id="reviewDays">Mon–Sat</span></div>
+                                        <div class="d-flex justify-content-between gap-3"><strong>Hours / Day</strong><span class="text-end" id="reviewHoursDay">8 hours</span></div>
+                                        <div class="d-flex justify-content-between gap-3"><strong>Daily Schedule</strong><span class="text-end" id="reviewShift">9:00 AM – 5:00 PM</span></div>
+                                        <div class="d-flex justify-content-between gap-3"><strong>Required Days</strong><span class="text-end" id="reviewRequiredDays">60 days</span></div>
+                                        <div class="d-flex justify-content-between gap-3"><strong>Total Hours</strong><span class="text-end fw-bold text-primary" id="reviewTotalHours">480 hours</span></div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <section class="create-space-form-card">
+                                <div class="create-space-form-body">
+                                    <span class="create-space-eyebrow">Formal Records</span>
+                                    <h2 class="fs-6 fw-bold">Official OJT Evaluation</h2>
+                                    <p class="small text-secondary mb-2">Official Evaluation remains a separate manual supervisor-entered record. Work, ML, attendance, and Logbook do not automatically determine the official score.</p>
+                                    <div class="alert alert-warning mb-0 small">
+                                        When every enrolled intern completes the configured OJT days and total required hours, Nexora will notify the supervisor that Official OJT Evaluations are ready to complete.
+                                    </div>
+                                </div>
+                            </section>
                         </div>
-                    </form>
+                    </aside>
                 </div>
-            </section>
+            </form>
         </div>
     </main>
 
     <script>
         (function () {
-            function syncInternshipOptions() {
-                const scheduleType = document.querySelector('input[name="schedule_type"]:checked');
-                const scheduleValue = scheduleType ? scheduleType.value : 'fixed_dates';
-                const showDates = scheduleValue !== 'not_specified';
-                const datesRequired = scheduleValue === 'fixed_dates';
+            const dayLabels = {mon:'Mon', tue:'Tue', wed:'Wed', thu:'Thu', fri:'Fri', sat:'Sat', sun:'Sun'};
 
-                document.querySelectorAll('[data-schedule-date-field]').forEach(function (field) {
-                    const input = field.querySelector('input');
-                    field.hidden = !showDates;
-                    if (input) {
-                        input.disabled = !showDates;
-                        input.required = showDates && datesRequired;
-                        if (!showDates) input.value = '';
-                    }
-                });
-
-                const hoursMode = document.querySelector('input[name="hours_mode"]:checked');
-                const showHours = !hoursMode || hoursMode.value === 'specified';
-                const hoursField = document.querySelector('[data-hours-field]');
-                if (hoursField) {
-                    const hoursInput = hoursField.querySelector('input[name="required_hours"]');
-                    hoursField.hidden = !showHours;
-                    if (hoursInput) {
-                        hoursInput.disabled = !showHours;
-                        hoursInput.required = showHours;
-                        if (!showHours) hoursInput.value = '';
-                    }
-                }
+            function formatTime(value) {
+                if (!value) return '—';
+                const parts = value.split(':');
+                let hour = Number(parts[0]);
+                const minute = parts[1] || '00';
+                const suffix = hour >= 12 ? 'PM' : 'AM';
+                hour = hour % 12 || 12;
+                return hour + ':' + minute + ' ' + suffix;
             }
 
-            document.querySelectorAll('input[name="schedule_type"], input[name="hours_mode"]').forEach(function (input) {
-                input.addEventListener('change', syncInternshipOptions);
+            function updateSummary() {
+                const hours = Math.max(0, Number(document.getElementById('hours_per_day')?.value || 0));
+                const days = Math.max(0, Number(document.getElementById('required_days')?.value || 0));
+                const total = hours * days;
+                const program = document.getElementById('program')?.value.trim() || '—';
+                const start = document.getElementById('shift_start_time')?.value || '';
+                const end = document.getElementById('shift_end_time')?.value || '';
+                const checkedDays = Array.from(document.querySelectorAll('input[name="attendance_days"]:checked')).map((input) => dayLabels[input.value] || input.value);
+
+                document.getElementById('totalRequiredHours').textContent = total + ' hours';
+                document.getElementById('reviewProgram').textContent = program;
+                document.getElementById('reviewHoursDay').textContent = hours + (hours === 1 ? ' hour' : ' hours');
+                document.getElementById('reviewRequiredDays').textContent = days + (days === 1 ? ' day' : ' days');
+                document.getElementById('reviewTotalHours').textContent = total + ' hours';
+                document.getElementById('reviewShift').textContent = formatTime(start) + ' – ' + formatTime(end);
+                document.getElementById('reviewDays').textContent = checkedDays.length ? checkedDays.join(', ') : 'None selected';
+            }
+
+            document.querySelectorAll('#hours_per_day, #required_days, #program, #shift_start_time, #shift_end_time, input[name="attendance_days"]').forEach(function (input) {
+                input.addEventListener('input', updateSummary);
+                input.addEventListener('change', updateSummary);
             });
 
             document.querySelectorAll('[data-add-row]').forEach(function (button) {
@@ -242,10 +301,8 @@
                     const list = document.getElementById(button.getAttribute('data-add-row'));
                     if (!list || list.children.length >= 20) return;
                     const row = document.createElement('div');
-                    const inputName = button.getAttribute('data-input-name') || '';
-                    const placeholder = button.getAttribute('data-placeholder') || '';
                     row.className = 'create-space-repeat-row';
-                    row.innerHTML = '<input type="text" name="' + inputName + '" maxlength="500" placeholder="' + placeholder + '"><button type="button" class="create-space-remove-button" aria-label="Remove item">×</button>';
+                    row.innerHTML = '<input type="text" name="' + button.getAttribute('data-input-name') + '" maxlength="500" placeholder="' + (button.getAttribute('data-placeholder') || '') + '"><button type="button" class="create-space-remove-button" aria-label="Remove item">×</button>';
                     list.appendChild(row);
                 });
             });
@@ -258,7 +315,7 @@
                 if (list && row && list.children.length > 1) row.remove();
             });
 
-            syncInternshipOptions();
+            updateSummary();
         })();
     </script>
 </body>
