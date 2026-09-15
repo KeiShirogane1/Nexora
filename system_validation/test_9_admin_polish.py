@@ -66,7 +66,7 @@ def _HM(mapping):
         if isinstance(k, int):
             return list(mapping.values())[k]
         return mapping[k]
-    m.__getitem__ = getitem
+    m.__getitem__.side_effect = getitem
     m.keys = lambda: mapping.keys()
     m.__contains__ = lambda k: k in mapping
     m.get = lambda k, d=None: mapping.get(k, d)
