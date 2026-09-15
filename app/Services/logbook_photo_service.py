@@ -1,5 +1,6 @@
 """Private photo evidence storage for structured Daily OJT Logbook entries."""
 from datetime import datetime
+from io import BytesIO
 from pathlib import Path
 import secrets
 
@@ -31,7 +32,7 @@ def _row_value(row, key, index=0, default=None):
 
 
 def ensure_logbook_photo_schema():
-    """Create the additive private photo-evidence table for Daily OJT logs."""
+    """Create/update the private photo-evidence table for Daily OJT logs."""
     conn = get_db_connection()
     try:
         if using_postgres():
@@ -45,9 +46,13 @@ def ensure_logbook_photo_schema():
                     relative_path TEXT NOT NULL,
                     mime_type TEXT NOT NULL,
                     size_bytes INTEGER NOT NULL,
+                    file_data BYTEA,
                     uploaded_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
                 )
                 """
+            )
+            conn.execute(
+                "ALTER TABLE logbook_photos ADD COLUMN IF NOT EXISTS file_data BYTEA"
             )
         else:
             conn.execute(
@@ -60,15 +65,21 @@ def ensure_logbook_photo_schema():
                     relative_path TEXT NOT NULL,
                     mime_type TEXT NOT NULL,
                     size_bytes INTEGER NOT NULL,
+                    file_data BLOB,
                     uploaded_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
                 )
                 """
             )
+            columns = [
+                row[1]
+                for row in conn.execute("PRAGMA table_info(logbook_photos)").fetchall()
+            ]
+            if "file_data" not in columns:
+                conn.execute("ALTER TABLE logbook_photos ADD COLUMN file_data BLOB")
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_logbook_photos_log_id ON logbook_photos(log_id)"
         )
         conn.commit()
-        PHOTO_ROOT.mkdir(parents=True, exist_ok=True)
     except Exception:
         try:
             conn.rollback()
@@ -77,6 +88,11 @@ def ensure_logbook_photo_schema():
         raise
     finally:
         conn.close()
+
+    try:
+        PHOTO_ROOT.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        pass
 
 
 def _owned_daily_log(conn, student_id, log_id, require_open=False):
@@ -166,6 +182,49 @@ def _safe_photo_path(relative_path):
     return candidate
 
 
+def _photo_payload(conn, row):
+    """Return an authorized photo as an in-memory file, with legacy disk fallback."""
+    if not row:
+        return None
+
+    photo_id = int(_row_value(row, "id", 0, 0))
+    relative_path = _row_value(row, "relative_path", 1, "")
+    original_filename = _row_value(row, "original_filename", 2, "photo")
+    mime_type = _row_value(row, "mime_type", 3, "image/jpeg")
+    stored_data = _row_value(row, "file_data", 4, None)
+
+    data = bytes(stored_data) if stored_data is not None else b""
+    if not data:
+        path = _safe_photo_path(relative_path)
+        if path is None or not path.is_file():
+            return None
+        try:
+            data = path.read_bytes()
+        except OSError:
+            return None
+        if not data:
+            return None
+
+        try:
+            conn.execute(
+                "UPDATE logbook_photos SET file_data = ? WHERE id = ? AND file_data IS NULL",
+                (data, photo_id),
+            )
+            conn.commit()
+        except Exception:
+            try:
+                conn.rollback()
+            except Exception:
+                pass
+
+    return {
+        "id": photo_id,
+        "path": BytesIO(data),
+        "original_filename": original_filename,
+        "mime_type": mime_type,
+    }
+
+
 def _save_photos_for_log(student_id, log_row, files):
     uploaded = [item for item in (files or []) if item and getattr(item, "filename", "")]
     if not uploaded:
@@ -225,8 +284,6 @@ def _save_photos_for_log(student_id, log_row, files):
                 }
             validated.append(photo)
 
-        folder = PHOTO_ROOT / str(int(student_id)) / str(log_id)
-        folder.mkdir(parents=True, exist_ok=True)
         now = datetime.now()
 
         for photo in validated:
@@ -236,8 +293,13 @@ def _save_photos_for_log(student_id, log_row, files):
             if destination is None:
                 raise RuntimeError("Invalid logbook photo storage path.")
 
-            destination.write_bytes(photo["data"])
-            written_paths.append(destination)
+            try:
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                destination.write_bytes(photo["data"])
+                written_paths.append(destination)
+            except OSError:
+                pass
+
             conn.execute(
                 """
                 INSERT INTO logbook_photos (
@@ -247,8 +309,9 @@ def _save_photos_for_log(student_id, log_row, files):
                     relative_path,
                     mime_type,
                     size_bytes,
+                    file_data,
                     uploaded_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     log_id,
@@ -257,6 +320,7 @@ def _save_photos_for_log(student_id, log_row, files):
                     str(relative_path),
                     photo["mime_type"],
                     photo["size_bytes"],
+                    photo["data"],
                     now,
                 ),
             )
@@ -376,7 +440,7 @@ def get_photo_for_student(student_id, photo_id):
     try:
         row = conn.execute(
             """
-            SELECT p.id, p.relative_path, p.original_filename, p.mime_type
+            SELECT p.id, p.relative_path, p.original_filename, p.mime_type, p.file_data
             FROM logbook_photos p
             JOIN logs l ON l.id = p.log_id
             JOIN attendance a ON a.id = l.attendance_id
@@ -388,18 +452,37 @@ def get_photo_for_student(student_id, photo_id):
             """,
             (photo_id, student_id, student_id),
         ).fetchone()
-        if not row:
-            return None
+        return _photo_payload(conn, row)
+    finally:
+        conn.close()
 
-        path = _safe_photo_path(_row_value(row, "relative_path", 1, ""))
-        if path is None or not path.is_file():
-            return None
-        return {
-            "id": int(_row_value(row, "id", 0, 0)),
-            "path": path,
-            "original_filename": _row_value(row, "original_filename", 2, "photo"),
-            "mime_type": _row_value(row, "mime_type", 3, "image/jpeg"),
-        }
+
+def get_photo_for_supervisor(supervisor_id, classroom_id, photo_id):
+    try:
+        supervisor_id = int(supervisor_id)
+        classroom_id = int(classroom_id)
+        photo_id = int(photo_id)
+    except (TypeError, ValueError):
+        return None
+
+    conn = get_db_connection()
+    try:
+        row = conn.execute(
+            """
+            SELECT p.id, p.relative_path, p.original_filename, p.mime_type, p.file_data
+            FROM logbook_photos p
+            JOIN logs l ON l.id = p.log_id
+            JOIN attendance a ON a.id = l.attendance_id
+            JOIN classrooms c ON c.id = a.classroom_id
+            WHERE p.id = ?
+              AND l.entry_type = 'daily'
+              AND a.classroom_id = ?
+              AND c.supervisor_id = ?
+            LIMIT 1
+            """,
+            (photo_id, classroom_id, supervisor_id),
+        ).fetchone()
+        return _photo_payload(conn, row)
     finally:
         conn.close()
 
