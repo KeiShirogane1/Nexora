@@ -220,7 +220,7 @@
         } else {
           ensureExportLink(controls, "csv", `/supervisor/classes/${classId}/insights/export.csv`, false);
         }
-        ensureExportLink(controls, "pdf", `/supervisor/classes/${classId}/insights/export.pdf`, true);
+        ensureExportLink(controls, "pdf", `/supervisor/classes/${classId}/insights/export.pdf`, false);
       }
     }
 
@@ -265,7 +265,7 @@
     if (!pdfLink) {
       pdfLink = document.createElement("a");
       pdfLink.id = "assignedInsightsPdfLink";
-      pdfLink.className = "btn btn-sm btn-primary";
+      pdfLink.className = "btn btn-sm btn-outline-primary";
       pdfLink.textContent = "Export PDF";
       csvLink.insertAdjacentElement("afterend", pdfLink);
     }
