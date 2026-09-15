@@ -1,369 +1,189 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Work - {{ classroom.name }} - Nexora</title>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">
-    </head>
-    <body class="supervisor-classwork-page">
-        {% include 'components/supervisor_sidebar.html' %}
-        <main class="page-content nexora-app-main">
-            <div class="nexora-page supervisor-classwork-shell">
-                {% set supervisor_class_active_tab = 'work' %}
-                {% include 'components/supervisor_class_context.html' %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Work - {{ classroom.name }} - Nexora</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">
+</head>
+<body class="supervisor-classwork-page">
+    {% include 'components/supervisor_sidebar.html' %}
 
-                <div class="supervisor-classwork-heading">
-                    <div>
-                        <h1>Work</h1>
-                        <p>{% if classroom.company_name %}{{ classroom.company_name }} · {% endif %}{{ classroom.section }} · Create and manage tasks, projects, resources, and other OJT work for your interns.</p>
-                    </div>
-                    <div class="d-flex align-items-center gap-2 flex-wrap">
-                        {% if classroom.archived %}
-                            <span class="supervisor-classwork-archived">Archived Intern Classroom</span>
-                        {% endif %}
-                        <button
-                            type="button"
-                            class="btn btn-primary d-inline-flex align-items-center gap-2"
-                            aria-controls="createWorkModal"
-                            onclick="openCreateWorkModal()"
-                            {% if classroom.archived %}disabled{% endif %}>
-                            <span aria-hidden="true">＋</span>
-                            <span>Create Work</span>
-                        </button>
-                    </div>
+    <main class="page-content nexora-app-main">
+        <div class="nexora-page supervisor-classwork-shell">
+            {% set supervisor_class_active_tab = 'work' %}
+            {% include 'components/supervisor_class_context.html' %}
+
+            <div class="supervisor-classwork-heading">
+                <div>
+                    <h1>Work</h1>
+                    <p>{% if classroom.company_name %}{{ classroom.company_name }} · {% endif %}{{ classroom.section }} · Assign OJT work and resources. Interns document completed Work in their Daily OJT Logbook.</p>
                 </div>
-
-                {% with messages = get_flashed_messages(with_categories=true) %}
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ 'danger' if category == 'danger' else 'success' if category == 'success' else 'warning' if category == 'warning' else 'info' }}" role="alert">{{ message }}</div>
-                    {% endfor %}
-                {% endwith %}
-
-                <div class="supervisor-classwork-grid d-block">
-                    <aside class="supervisor-classwork-list-card">
-                        <div class="supervisor-classwork-card-heading">
-                            <div>
-                                <span class="supervisor-classwork-eyebrow">WORK</span>
-                                <h2>Work items</h2>
-                            </div>
-                            <span class="supervisor-classwork-count">{{ assignments|length }}</span>
-                        </div>
-
-                        {% if assignments %}
-                            <div class="supervisor-classwork-items">
-                                {% for item in assignments %}
-                                    <article class="supervisor-classwork-item">
-                                        <div class="supervisor-classwork-item-top">
-                                            <div>
-                                                <span class="supervisor-classwork-type">{{ activity_types.get(item.activity_type, 'Task') }}</span>
-                                                <h3>{{ item.title }}</h3>
-                                            </div>
-                                            <span class="supervisor-classwork-points">{{ item.points }} pts</span>
-                                        </div>
-                                        {% if item.description %}<p>{{ item.description[:150] }}{% if item.description|length > 150 %}…{% endif %}</p>{% endif %}
-                                        <div class="supervisor-classwork-item-meta">
-                                            {% if item.due_at %}<span>Due {{ item.due_at }}</span>{% else %}<span>No due date</span>{% endif %}
-                                            {% if item.activity_type == 'group_project' and item.recipient_count %}
-                                                <span>{% if item.team_name %}{{ item.team_name }} · {% else %}Team · {% endif %}{{ item.recipient_count }} members</span>
-                                                <span>{% if item.submission_mode == 'shared' %}Shared team submission{% else %}Individual submissions{% endif %}</span>
-                                            {% elif item.recipient_count %}
-                                                <span>Selected · {{ item.recipient_count }} intern{% if item.recipient_count != 1 %}s{% endif %}</span>
-                                            {% else %}
-                                                <span>Entire classroom</span>
-                                            {% endif %}
-                                            {% if item.group_mode and item.activity_type != 'group_project' %}<span>Collaborative · max {{ item.max_group_size }}</span>{% endif %}
-                                            {% if item.allow_file_upload %}<span>Intern submissions</span>{% endif %}
-                                        </div>
-                                        <div class="supervisor-classwork-resource-links">
-                                            {% if item.external_url %}<a href="{{ item.external_url }}" target="_blank" rel="noopener noreferrer">{{ item.resource_label or 'Open link' }} ↗</a>{% endif %}
-                                            {% if item.resource_filepath %}<a href="{{ url_for('uploaded_file', filename=item.resource_filepath) }}" target="_blank" rel="noopener noreferrer">{{ item.resource_filename or 'Open file' }} ↗</a>{% endif %}
-                                            <a href="{{ url_for('classwork_submissions.supervisor_submissions', class_id=classroom.id, assignment_id=item.id) }}" class="supervisor-view-submissions">View submissions</a>
-                                            {% if item.activity_type == 'google_form' or item.external_url %}
-                                                <a href="{{ url_for('classwork_scores.import_scores', class_id=classroom.id, assignment_id=item.id) }}" class="supervisor-import-scores-link">Import results</a>
-                                            {% endif %}
-                                        </div>
-                                    </article>
-                                {% endfor %}
-                            </div>
-                        {% else %}
-                            <div class="supervisor-classwork-empty">
-                                <div>📝</div>
-                                <h3>No work yet</h3>
-                                <p>Create your first work item. Assigned interns will see it in their work area.</p>
-                            </div>
-                        {% endif %}
-                    </aside>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    {% if classroom.archived %}<span class="supervisor-classwork-archived">Archived Intern Classroom</span>{% endif %}
+                    <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-2" aria-controls="createWorkModal" onclick="openWorkModal('createWorkModal')" {% if classroom.archived %}disabled{% endif %}><span aria-hidden="true">＋</span><span>Create Work</span></button>
                 </div>
             </div>
-        </main>
 
-        <div
-            id="createWorkModal"
-            class="nexora-modal-overlay"
-            aria-hidden="true"
-            onclick="if(event.target===this)closeCreateWorkModal()">
-            <div class="container-fluid px-0">
-                <div class="row justify-content-center g-0">
-                    <div class="col-12 col-lg-10 col-xl-8 col-xxl-7 px-2">
-                        <div class="nexora-modal mw-100" role="dialog" aria-modal="true" aria-labelledby="createWorkModalTitle">
-                            <div class="nexora-modal-header bg-primary-subtle">
-                                <h2 id="createWorkModalTitle">Create Work</h2>
-                                <p>Choose a work type, assign the right interns, then publish.</p>
-                                <button type="button" class="nexora-modal-close" aria-label="Close Create Work" onclick="closeCreateWorkModal()">×</button>
-                            </div>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% for category, message in messages %}<div class="alert alert-{{ 'danger' if category == 'danger' else 'success' if category == 'success' else 'warning' if category == 'warning' else 'info' }}" role="alert">{{ message }}</div>{% endfor %}
+            {% endwith %}
 
-                            <form id="createWorkForm" method="POST" enctype="multipart/form-data" class="supervisor-classwork-form">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="alert alert-primary border-0" role="note"><strong>Non-scored OJT Work.</strong> Work gives interns instructions, deadlines, and reference material. When finished, interns link the Work to a Daily OJT Logbook entry and attach photo evidence there.</div>
 
-                                <div class="nexora-modal-body">
-                                    <section>
-                                        <label class="supervisor-form-label">Work type</label>
-                                        <div class="row g-2">
-                                            {% for key, label in activity_types.items() %}
-                                                <label class="supervisor-activity-option col-12 col-md-6 col-xl-4">
-                                                    <input type="radio" name="activity_type" value="{{ key }}" {% if loop.first %}checked{% endif %}>
-                                                    <span>
-                                                        <strong>{{ label }}</strong>
-                                                        <small>
-                                                            {% if key == 'assignment' %}Individual task or day-to-day work responsibility.
-                                                            {% elif key == 'google_form' %}Form, check-in, assessment, or structured response.
-                                                            {% elif key == 'google_doc' %}Online document, sheet, or linked digital work.
-                                                            {% elif key == 'file_reference' %}Guide, file, link, or reference interns should use.
-                                                            {% elif key == 'project' %}Longer-term project or major deliverable.
-                                                            {% else %}Collaborative work for two or more selected interns.
-                                                            {% endif %}
-                                                        </small>
-                                                    </span>
-                                                </label>
-                                            {% endfor %}
+            <div class="supervisor-classwork-grid d-block">
+                <section class="supervisor-classwork-list-card">
+                    <div class="supervisor-classwork-card-heading"><div><span class="supervisor-classwork-eyebrow">WORK</span><h2>Work items</h2></div><span class="supervisor-classwork-count">{{ assignments|length }}</span></div>
+
+                    {% if assignments %}
+                        <div class="supervisor-classwork-items">
+                            {% for item in assignments %}
+                                <article class="supervisor-classwork-item">
+                                    <div class="supervisor-classwork-item-top">
+                                        <div><span class="supervisor-classwork-type">{{ activity_types.get(item.activity_type, 'Task') }}</span><h3>{{ item.title }}</h3></div>
+                                        <div class="d-flex gap-2 flex-wrap justify-content-end">
+                                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="openWorkModal('edit-work-{{ item.id }}')" {% if classroom.archived %}disabled{% endif %}>Edit</button>
+                                            <form method="POST" action="{{ url_for('classwork.remove_work', class_id=classroom.id, assignment_id=item.id) }}" class="m-0" onsubmit="return confirm('Remove this Work? Daily OJT Logbook history will be preserved, but the Work item and any old direct submissions will be removed.')">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" {% if classroom.archived %}disabled{% endif %}>Remove</button>
+                                            </form>
                                         </div>
-                                    </section>
+                                    </div>
+                                    {% if item.description %}<p>{{ item.description[:180] }}{% if item.description|length > 180 %}…{% endif %}</p>{% endif %}
+                                    <div class="supervisor-classwork-item-meta">
+                                        {% if item.due_at %}<span>Due {{ item.due_at }}</span>{% else %}<span>No due date</span>{% endif %}
+                                        {% if item.activity_type == 'group_project' and item.recipient_count %}<span>{% if item.team_name %}{{ item.team_name }} · {% else %}Team · {% endif %}{{ item.recipient_count }} interns</span>{% elif item.recipient_count %}<span>Selected · {{ item.recipient_count }} intern{% if item.recipient_count != 1 %}s{% endif %}</span>{% else %}<span>Entire classroom</span>{% endif %}
+                                        <span>Completion recorded in Daily OJT Logbook</span>
+                                    </div>
+                                    <div class="supervisor-classwork-resource-links">
+                                        {% if item.external_url %}<a href="{{ item.external_url }}" target="_blank" rel="noopener noreferrer">{{ item.resource_label or 'Open link' }} ↗</a>{% endif %}
+                                        {% if item.resource_filepath %}<a href="{{ url_for('uploaded_file', filename=item.resource_filepath) }}" target="_blank" rel="noopener noreferrer">{{ item.resource_filename or 'Open file' }} ↗</a>{% endif %}
+                                        <a href="{{ url_for('logbook_review.supervisor_logbook', class_id=classroom.id) }}">Open Logbook Review →</a>
+                                    </div>
+                                </article>
 
-                                    <section class="pt-3 border-top">
-                                        <label class="supervisor-form-label mb-2">Assign to</label>
-                                        <div class="d-flex align-items-center flex-wrap gap-4">
-                                            <label class="form-check d-flex align-items-center gap-2 mb-0">
-                                                <input class="form-check-input mt-0" type="radio" name="assignment_scope" value="classroom" checked>
-                                                <span class="small fw-semibold text-dark">All interns in this class</span>
-                                            </label>
-                                            <label class="form-check d-flex align-items-center gap-2 mb-0">
-                                                <input class="form-check-input mt-0" type="radio" name="assignment_scope" value="selected">
-                                                <span class="small fw-semibold text-dark">Selected interns only</span>
-                                            </label>
-                                        </div>
-                                        <p id="team-task-note" class="text-muted small mt-2 mb-0" hidden>Team Tasks require at least two selected interns. Choose whether members submit individually or share one team submission.</p>
-
-                                        <div id="recipient-picker" class="mt-3" hidden>
-                                            <label class="supervisor-form-label">Select interns</label>
-                                            {% if enrolled_students %}
-                                                <div class="row g-2">
-                                                    {% for student in enrolled_students %}
-                                                        <div class="col-md-6">
-                                                            <label class="supervisor-check-option h-100">
-                                                                <input type="checkbox" name="recipient_ids" value="{{ student.id }}" disabled>
-                                                                <span>
-                                                                    <strong>{{ student.username }}</strong>
-                                                                    <small>{{ student.email or 'Enrolled intern' }}</small>
-                                                                </span>
-                                                            </label>
-                                                        </div>
-                                                    {% endfor %}
-                                                </div>
-                                            {% else %}
-                                                <p class="text-muted small mb-0">No interns are enrolled in this Intern Classroom yet.</p>
-                                            {% endif %}
-
-                                            <div id="team-name-field" class="mt-3" hidden>
-                                                <label class="supervisor-form-label" for="team_name">Team name <span class="text-muted">(optional)</span></label>
-                                                <input id="team_name" name="team_name" class="form-control" maxlength="100" disabled placeholder="e.g. Frontend Team">
-                                                <small class="text-muted">Give this selected group a clear name for this Team Task.</small>
-                                            </div>
-
-                                            <div id="team-submission-field" class="mt-3" hidden>
-                                                <label class="supervisor-form-label">Submission mode</label>
-                                                <div class="row g-2">
-                                                    <div class="col-md-6">
-                                                        <label class="supervisor-check-option h-100">
-                                                            <input type="radio" name="submission_mode" value="individual" checked disabled>
-                                                            <span><strong>Individual submissions</strong><small>Every team member submits and is reviewed separately.</small></span>
-                                                        </label>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <label class="supervisor-check-option h-100">
-                                                            <input type="radio" name="submission_mode" value="shared" disabled>
-                                                            <span><strong>Shared team submission</strong><small>Any team member can submit one shared output. One supervisor grade applies to every selected member.</small></span>
-                                                        </label>
-                                                    </div>
+                                <div id="edit-work-{{ item.id }}" class="nexora-modal-overlay" aria-hidden="true" onclick="if(event.target===this)closeWorkModal('edit-work-{{ item.id }}')">
+                                    <div class="nexora-modal" role="dialog" aria-modal="true" aria-labelledby="edit-work-title-{{ item.id }}">
+                                        <div class="nexora-modal-header bg-primary-subtle"><h2 id="edit-work-title-{{ item.id }}">Edit Work</h2><p>Update instructions or resources without changing existing Daily OJT history.</p><button type="button" class="nexora-modal-close" aria-label="Close Edit Work" onclick="closeWorkModal('edit-work-{{ item.id }}')">×</button></div>
+                                        <form method="POST" action="{{ url_for('classwork.edit_work', class_id=classroom.id, assignment_id=item.id) }}">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <div class="nexora-modal-body">
+                                                <div class="row g-3">
+                                                    <div class="col-md-8"><label class="supervisor-form-label" for="edit-title-{{ item.id }}">Title <span class="text-danger">*</span></label><input id="edit-title-{{ item.id }}" name="title" class="form-control" maxlength="200" required value="{{ item.title }}"></div>
+                                                    <div class="col-md-4"><label class="supervisor-form-label" for="edit-due-{{ item.id }}">Due date</label><input id="edit-due-{{ item.id }}" name="due_at" type="datetime-local" class="form-control" value="{{ item.due_at or '' }}"></div>
+                                                    <div class="col-12"><label class="supervisor-form-label" for="edit-description-{{ item.id }}">Instructions</label><textarea id="edit-description-{{ item.id }}" name="description" class="form-control" rows="5" maxlength="5000">{{ item.description or '' }}</textarea></div>
+                                                    <div class="col-md-7"><label class="supervisor-form-label" for="edit-link-{{ item.id }}">Link <span class="text-muted">(optional)</span></label><input id="edit-link-{{ item.id }}" name="external_url" type="url" class="form-control" value="{{ item.external_url or '' }}" placeholder="https://..."></div>
+                                                    <div class="col-md-5"><label class="supervisor-form-label" for="edit-label-{{ item.id }}">Link label</label><input id="edit-label-{{ item.id }}" name="resource_label" class="form-control" maxlength="120" value="{{ item.resource_label or '' }}"></div>
+                                                    {% if item.resource_filepath %}<div class="col-12"><small class="text-muted">Attached reference file remains unchanged: {{ item.resource_filename or 'Reference file' }}.</small></div>{% endif %}
                                                 </div>
                                             </div>
-                                        </div>
-                                    </section>
-
-                                    <section class="pt-3 border-top">
-                                        <div class="row g-3">
-                                            <div class="col-md-8">
-                                                <label class="supervisor-form-label" for="title">Title <span class="text-danger">*</span></label>
-                                                <input id="title" name="title" class="form-control" maxlength="200" required placeholder="Enter work title...">
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label class="supervisor-form-label" for="due_at">Due date</label>
-                                                <input id="due_at" name="due_at" type="datetime-local" class="form-control">
-                                            </div>
-                                            <div class="col-12">
-                                                <label class="supervisor-form-label" for="description">Instructions</label>
-                                                <textarea id="description" name="description" class="form-control" rows="4" maxlength="5000" placeholder="Provide clear instructions, requirements, and expectations..."></textarea>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label class="supervisor-form-label" for="points">Maximum score</label>
-                                                <input id="points" name="points" type="number" min="0" max="10000" value="100" class="form-control" placeholder="e.g. 100">
-                                            </div>
-                                            <div class="col-md-8">
-                                                <label class="supervisor-form-label" for="external_url">Link <span class="text-muted">(optional)</span></label>
-                                                <input id="external_url" name="external_url" type="url" class="form-control" placeholder="https://...">
-                                            </div>
-                                            <div class="col-md-5">
-                                                <label class="supervisor-form-label" for="resource_label">Link label <span class="text-muted">(optional)</span></label>
-                                                <input id="resource_label" name="resource_label" class="form-control" maxlength="120" placeholder="Open resource / Open work">
-                                            </div>
-                                            <div class="col-md-7">
-                                                <label class="supervisor-form-label" for="resource_file">Attach file <span class="text-muted">(optional)</span></label>
-                                                <input id="resource_file" name="resource_file" type="file" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.png,.jpg,.jpeg,.gif,.zip">
-                                                <small class="text-muted">PDF, documents, spreadsheets, presentations, images, TXT, or ZIP. Maximum 5 MB.</small>
-                                            </div>
-                                        </div>
-                                    </section>
-
-                                    <section class="pt-3 border-top">
-                                        <label class="supervisor-form-label">Submission options</label>
-                                        <div class="row g-2">
-                                            <div class="col-md-5">
-                                                <label class="supervisor-check-option h-100">
-                                                    <input type="checkbox" name="allow_file_upload" id="allow_file_upload">
-                                                    <span><strong>Allow intern submissions</strong><small>Interns can upload photos, PDFs, documents, or other allowed files.</small></span>
-                                                </label>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <label class="supervisor-check-option h-100">
-                                                    <input type="checkbox" name="group_mode" id="group_mode">
-                                                    <span><strong>Collaborative work</strong><small>Marks this as team-oriented work.</small></span>
-                                                </label>
-                                            </div>
-                                            <div class="col-md-2">
-                                                <label class="supervisor-group-size-field h-100 d-block" for="max_group_size">
-                                                    <span>Max team size</span>
-                                                    <input id="max_group_size" name="max_group_size" type="number" min="1" max="100" value="1" class="form-control">
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </section>
+                                            <div class="nexora-modal-footer"><button type="button" class="btn btn-light" onclick="closeWorkModal('edit-work-{{ item.id }}')">Cancel</button><button type="submit" class="btn btn-primary">Save Work Changes</button></div>
+                                        </form>
+                                    </div>
                                 </div>
-
-                                <div class="nexora-modal-footer">
-                                    <button type="button" class="btn btn-light" onclick="closeCreateWorkModal()">Cancel</button>
-                                    <button type="submit" class="btn btn-primary" {% if classroom.archived %}disabled{% endif %}>Create Work</button>
-                                </div>
-                            </form>
+                            {% endfor %}
                         </div>
-                    </div>
-                </div>
+                    {% else %}
+                        <div class="supervisor-classwork-empty"><div>📝</div><h3>No work yet</h3><p>Create your first Work item. Assigned interns will see it in their Work area and document completion through the Daily OJT Logbook.</p></div>
+                    {% endif %}
+                </section>
             </div>
         </div>
+    </main>
 
-        <script>
-            const createWorkModal = document.getElementById("createWorkModal");
-            const groupMode = document.getElementById("group_mode");
-            const groupSize = document.getElementById("max_group_size");
-            const assignmentScopeInputs = document.querySelectorAll('input[name="assignment_scope"]');
-            const classroomScopeInput = document.querySelector('input[name="assignment_scope"][value="classroom"]');
-            const selectedScopeInput = document.querySelector('input[name="assignment_scope"][value="selected"]');
-            const activityTypeInputs = document.querySelectorAll('input[name="activity_type"]');
-            const recipientPicker = document.getElementById("recipient-picker");
-            const recipientCheckboxes = document.querySelectorAll('input[name="recipient_ids"]');
-            const teamTaskNote = document.getElementById("team-task-note");
-            const teamNameField = document.getElementById("team-name-field");
-            const teamNameInput = document.getElementById("team_name");
-            const teamSubmissionField = document.getElementById("team-submission-field");
-            const submissionModeInputs = document.querySelectorAll('input[name="submission_mode"]');
+    <div id="createWorkModal" class="nexora-modal-overlay" aria-hidden="true" onclick="if(event.target===this)closeWorkModal('createWorkModal')">
+        <div class="container-fluid px-0"><div class="row justify-content-center g-0"><div class="col-12 col-lg-10 col-xl-8 col-xxl-7 px-2">
+            <div class="nexora-modal mw-100" role="dialog" aria-modal="true" aria-labelledby="createWorkModalTitle">
+                <div class="nexora-modal-header bg-primary-subtle"><h2 id="createWorkModalTitle">Create Work</h2><p>Assign non-scored OJT Work. Interns record completion in their Daily OJT Logbook.</p><button type="button" class="nexora-modal-close" aria-label="Close Create Work" onclick="closeWorkModal('createWorkModal')">×</button></div>
+                <form id="createWorkForm" method="POST" enctype="multipart/form-data" class="supervisor-classwork-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="nexora-modal-body">
+                        <section>
+                            <label class="supervisor-form-label">Work type</label>
+                            <div class="row g-2">
+                                {% for key, label in activity_types.items() %}
+                                    <label class="supervisor-activity-option col-12 col-md-6 col-xl-4"><input type="radio" name="activity_type" value="{{ key }}" {% if loop.first %}checked{% endif %}><span><strong>{{ label }}</strong><small>{% if key == 'assignment' %}Day-to-day task or responsibility.{% elif key == 'google_form' %}Form, check-in, or structured response.{% elif key == 'google_doc' %}Linked online document or digital work.{% elif key == 'file_reference' %}Guide, file, link, or reference material.{% elif key == 'project' %}Longer-term project or deliverable.{% else %}Collaborative Work for selected interns.{% endif %}</small></span></label>
+                                {% endfor %}
+                            </div>
+                        </section>
 
-            function openCreateWorkModal() {
-                if (!createWorkModal) return;
-                createWorkModal.classList.add("open");
-                createWorkModal.setAttribute("aria-hidden", "false");
-                document.body.classList.add("modal-open");
+                        <section class="pt-3 border-top">
+                            <label class="supervisor-form-label mb-2">Assign to</label>
+                            <div class="d-flex align-items-center flex-wrap gap-4">
+                                <label class="form-check d-flex align-items-center gap-2 mb-0"><input class="form-check-input mt-0" type="radio" name="assignment_scope" value="classroom" checked><span class="small fw-semibold text-dark">All interns in this class</span></label>
+                                <label class="form-check d-flex align-items-center gap-2 mb-0"><input class="form-check-input mt-0" type="radio" name="assignment_scope" value="selected"><span class="small fw-semibold text-dark">Selected interns only</span></label>
+                            </div>
+                            <p id="team-task-note" class="text-muted small mt-2 mb-0" hidden>Team Tasks require at least two selected interns. Each intern records the Work in their own Daily OJT Logbook.</p>
+                            <div id="recipient-picker" class="mt-3" hidden>
+                                <label class="supervisor-form-label">Select interns</label>
+                                {% if enrolled_students %}<div class="row g-2">{% for student in enrolled_students %}<div class="col-md-6"><label class="supervisor-check-option h-100"><input type="checkbox" name="recipient_ids" value="{{ student.id }}" disabled><span><strong>{{ student.username }}</strong><small>{{ student.email or 'Enrolled intern' }}</small></span></label></div>{% endfor %}</div>{% else %}<p class="text-muted small mb-0">No interns are enrolled in this Intern Classroom yet.</p>{% endif %}
+                                <div id="team-name-field" class="mt-3" hidden><label class="supervisor-form-label" for="team_name">Team name <span class="text-muted">(optional)</span></label><input id="team_name" name="team_name" class="form-control" maxlength="100" disabled placeholder="e.g. Frontend Team"></div>
+                            </div>
+                        </section>
+
+                        <section class="pt-3 border-top">
+                            <div class="row g-3">
+                                <div class="col-md-8"><label class="supervisor-form-label" for="title">Title <span class="text-danger">*</span></label><input id="title" name="title" class="form-control" maxlength="200" required placeholder="Enter Work title..."></div>
+                                <div class="col-md-4"><label class="supervisor-form-label" for="due_at">Due date</label><input id="due_at" name="due_at" type="datetime-local" class="form-control"></div>
+                                <div class="col-12"><label class="supervisor-form-label" for="description">Instructions</label><textarea id="description" name="description" class="form-control" rows="4" maxlength="5000" placeholder="Describe what the intern needs to complete..."></textarea></div>
+                                <div class="col-md-7"><label class="supervisor-form-label" for="external_url">Link <span class="text-muted">(optional)</span></label><input id="external_url" name="external_url" type="url" class="form-control" placeholder="https://..."></div>
+                                <div class="col-md-5"><label class="supervisor-form-label" for="resource_label">Link label</label><input id="resource_label" name="resource_label" class="form-control" maxlength="120" placeholder="Open resource"></div>
+                                <div class="col-12"><label class="supervisor-form-label" for="resource_file">Attach reference file <span class="text-muted">(optional)</span></label><input id="resource_file" name="resource_file" type="file" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.png,.jpg,.jpeg,.gif,.zip"><small class="text-muted">Reference material only. Intern completion evidence belongs in Daily OJT Logbook. Maximum 5 MB.</small></div>
+                            </div>
+                        </section>
+                        <div class="alert alert-info mb-0" role="note"><strong>Completion flow:</strong> Intern completes the Work → opens Daily OJT Logbook → selects this Work under Related Assigned Work → records accomplishment and optional photo evidence.</div>
+                    </div>
+                    <div class="nexora-modal-footer"><button type="button" class="btn btn-light" onclick="closeWorkModal('createWorkModal')">Cancel</button><button type="submit" class="btn btn-primary" {% if classroom.archived %}disabled{% endif %}>Create Work</button></div>
+                </form>
+            </div>
+        </div></div></div>
+    </div>
+
+    <script>
+        function openWorkModal(id) {
+            const modal = document.getElementById(id);
+            if (!modal) return;
+            modal.classList.add('open');
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeWorkModal(id) {
+            const modal = document.getElementById(id);
+            if (!modal) return;
+            modal.classList.remove('open');
+            modal.setAttribute('aria-hidden', 'true');
+            if (!document.querySelector('.nexora-modal-overlay.open')) document.body.style.overflow = '';
+        }
+
+        const assignmentScopeInputs = document.querySelectorAll('#createWorkForm input[name="assignment_scope"]');
+        const activityTypeInputs = document.querySelectorAll('#createWorkForm input[name="activity_type"]');
+        const recipientPicker = document.getElementById('recipient-picker');
+        const recipientCheckboxes = document.querySelectorAll('#recipient-picker input[name="recipient_ids"]');
+        const teamNameField = document.getElementById('team-name-field');
+        const teamNameInput = document.getElementById('team_name');
+        const teamTaskNote = document.getElementById('team-task-note');
+
+        function selectedActivityType() { const selected = document.querySelector('#createWorkForm input[name="activity_type"]:checked'); return selected ? selected.value : 'assignment'; }
+        function selectedScope() { const selected = document.querySelector('#createWorkForm input[name="assignment_scope"]:checked'); return selected ? selected.value : 'classroom'; }
+        function syncRecipientPicker() {
+            const isTeamTask = selectedActivityType() === 'group_project';
+            if (isTeamTask) {
+                const selectedScopeInput = document.querySelector('#createWorkForm input[name="assignment_scope"][value="selected"]');
+                if (selectedScopeInput) selectedScopeInput.checked = true;
             }
-
-            function closeCreateWorkModal() {
-                if (!createWorkModal) return;
-                createWorkModal.classList.remove("open");
-                createWorkModal.setAttribute("aria-hidden", "true");
-                document.body.classList.remove("modal-open");
-            }
-
-            function isTeamTask() {
-                const selectedType = document.querySelector('input[name="activity_type"]:checked');
-                return selectedType && selectedType.value === "group_project";
-            }
-
-            function syncGroupSize() {
-                if (!groupMode || !groupSize) return;
-                if (isTeamTask()) {
-                    groupMode.dataset.teamForced = "1";
-                    groupMode.checked = true;
-                    groupMode.disabled = true;
-                    groupSize.disabled = true;
-                    const selectedCount = Array.from(recipientCheckboxes).filter((checkbox) => checkbox.checked).length;
-                    groupSize.value = Math.max(selectedCount, 1);
-                    return;
-                }
-
-                if (groupMode.dataset.teamForced === "1") {
-                    groupMode.checked = false;
-                    delete groupMode.dataset.teamForced;
-                }
-                groupMode.disabled = false;
-                groupSize.disabled = !groupMode.checked;
-                if (!groupMode.checked) groupSize.value = 1;
-            }
-
-            function syncRecipientPicker() {
-                const teamTask = isTeamTask();
-                if (teamTask && selectedScopeInput) selectedScopeInput.checked = true;
-                if (classroomScopeInput) classroomScopeInput.disabled = teamTask;
-
-                const selectedScope = document.querySelector('input[name="assignment_scope"]:checked');
-                const useSelectedInterns = selectedScope && selectedScope.value === "selected";
-                if (recipientPicker) recipientPicker.hidden = !useSelectedInterns;
-                recipientCheckboxes.forEach((checkbox) => {
-                    checkbox.disabled = !useSelectedInterns;
-                });
-                if (teamTaskNote) teamTaskNote.hidden = !teamTask;
-                if (teamNameField) teamNameField.hidden = !teamTask;
-                if (teamNameInput) {
-                    teamNameInput.disabled = !teamTask;
-                    if (!teamTask) teamNameInput.value = "";
-                }
-                if (teamSubmissionField) teamSubmissionField.hidden = !teamTask;
-                submissionModeInputs.forEach((input) => {
-                    input.disabled = !teamTask;
-                    if (!teamTask && input.value === "individual") input.checked = true;
-                });
-                syncGroupSize();
-            }
-
-            if (groupMode) groupMode.addEventListener("change", syncGroupSize);
-            recipientCheckboxes.forEach((checkbox) => checkbox.addEventListener("change", syncGroupSize));
-            assignmentScopeInputs.forEach((input) => input.addEventListener("change", syncRecipientPicker));
-            activityTypeInputs.forEach((input) => input.addEventListener("change", syncRecipientPicker));
-            document.addEventListener("keydown", (event) => {
-                if (event.key === "Escape" && createWorkModal?.classList.contains("open")) closeCreateWorkModal();
-            });
-
-            syncRecipientPicker();
-
-            if (document.querySelector(".alert-danger")) openCreateWorkModal();
-        </script>
-    </body>
+            const showRecipients = selectedScope() === 'selected';
+            recipientPicker.hidden = !showRecipients;
+            recipientCheckboxes.forEach((checkbox) => { checkbox.disabled = !showRecipients; });
+            teamNameField.hidden = !isTeamTask;
+            teamTaskNote.hidden = !isTeamTask;
+            if (teamNameInput) teamNameInput.disabled = !isTeamTask;
+        }
+        assignmentScopeInputs.forEach((input) => input.addEventListener('change', syncRecipientPicker));
+        activityTypeInputs.forEach((input) => input.addEventListener('change', syncRecipientPicker));
+        syncRecipientPicker();
+        document.addEventListener('keydown', function (event) { if (event.key !== 'Escape') return; const modal = document.querySelector('.nexora-modal-overlay.open'); if (modal) closeWorkModal(modal.id); });
+    </script>
+</body>
 </html>
