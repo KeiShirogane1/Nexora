@@ -1,4 +1,13 @@
 {% set evaluation_theme = classroom_banner_theme(classroom.id) %}
+{% set weighted_rating = namespace(total=0, count=0, ready=true) %}
+{% for item in evaluation_items %}
+    {% if item.rating_value is not none and item.weight is not none %}
+        {% set weighted_rating.total = weighted_rating.total + (item.rating_value * item.weight / 100) %}
+        {% set weighted_rating.count = weighted_rating.count + 1 %}
+    {% else %}
+        {% set weighted_rating.ready = false %}
+    {% endif %}
+{% endfor %}
 <div class="modal-content col-12 col-lg-10 col-xl-9 mx-auto border-0 rounded-4 shadow-lg overflow-hidden bg-white d-flex flex-column" style="max-height: calc(100vh - 48px);">
     <div class="modal-header border-0 align-items-center gap-3 px-3 py-2 supervisor-class-context-banner--{{ evaluation_theme }}{% if evaluation_theme == 'navy' %} text-white{% endif %}">
         <div class="d-flex align-items-center gap-3 min-w-0">
@@ -46,17 +55,22 @@
                 </div>
                 <div class="card-body p-3">
                     <div class="row g-3 mb-3">
-                        <div class="col-md-4">
+                        <div class="col-md-3">
+                            <div class="text-muted small">Calculated Weighted Rating</div>
+                            <div class="fs-5 fw-bold">{% if weighted_rating.ready and weighted_rating.count and weighted_rating.count == evaluation_items|length %}{{ '%.2f'|format(weighted_rating.total) }} / 5{% else %}—{% endif %}</div>
+                            <div class="text-muted small">Derived from rating × weight</div>
+                        </div>
+                        <div class="col-md-3">
                             <div class="text-muted small">Official Overall Score</div>
                             <div class="fs-5 fw-bold">{% if evaluation.overall_score is not none %}{{ evaluation.overall_score }}{% else %}—{% endif %}</div>
                             <div class="text-muted small">Stored exactly on the official form scale</div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="text-muted small">Criteria</div>
                             <div class="fs-5 fw-bold">{{ evaluation_items|length }}</div>
                             <div class="text-muted small">Supervisor-entered rubric items</div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="text-muted small">Submitted At</div>
                             <div class="fw-bold small">{{ evaluation.submitted_at or '—' }}</div>
                         </div>
@@ -78,6 +92,7 @@
                                                             <span class="{{ 'text-warning' if star <= item.rating_value else 'text-secondary' }}" aria-hidden="true">★</span>
                                                         {% endfor %}
                                                     </span>
+                                                    <span class="small fw-bold ms-2">{{ item.rating_value }} / 5</span>
                                                 {% else %}
                                                     {{ item.rating_value }} / {{ item.max_value }}
                                                 {% endif %}
@@ -105,8 +120,8 @@
                 method="POST"
                 action="{{ url_for('ojt_evaluation.supervisor_evaluations', class_id=classroom.id) }}"
                 data-evaluation-modal-form
-                oninput="const rows=[...this.querySelectorAll('[data-evaluation-row]')]; rows.forEach((row)=>{ const maxField=row.querySelector('input[name=max_value]'); if(maxField) maxField.value='5'; const ratingField=row.querySelector('[data-evaluation-rating-value]'); const rating=ratingField ? Number(ratingField.value || 0) : 0; row.querySelectorAll('[data-evaluation-star]').forEach((star)=>{ const active=Number(star.dataset.ratingValue)<=rating; star.classList.toggle('text-warning',active); star.classList.toggle('text-secondary',!active); star.setAttribute('aria-pressed',Number(star.dataset.ratingValue)===rating ? 'true' : 'false'); }); }); const weights=rows.map((row)=>row.querySelector('[data-evaluation-weight]')).filter(Boolean); weights.forEach((field,index)=>{ const isLast=index===weights.length-1; field.readOnly=isLast; field.classList.toggle('bg-light',isLast); field.title=isLast ? 'Automatically calculated so all criterion weights total 100%.' : ''; if(!isLast && field.value==='') field.value='0'; }); const manualTotal=weights.slice(0,-1).reduce((sum,field)=>sum+(Number(field.value)||0),0); const lastWeight=weights[weights.length-1]; if(lastWeight) lastWeight.value=String(Math.max(0,Math.round((100-manualTotal)*100)/100)); const weightError=this.querySelector('[data-evaluation-weight-error]'); if(weightError) weightError.classList.toggle('d-none',manualTotal<=100);"
-                onsubmit="const rows=[...this.querySelectorAll('[data-evaluation-row]')]; const missingRating=rows.find((row)=>{ const name=row.querySelector('input[name=criterion_name]'); const rating=row.querySelector('[data-evaluation-rating-value]'); return name && name.value.trim() && rating && !rating.value; }); if(missingRating){ event.preventDefault(); alert('Choose a 1–5 star rating for every criterion.'); const firstStar=missingRating.querySelector('[data-evaluation-star]'); if(firstStar) firstStar.focus(); return false; } const weights=rows.map((row)=>row.querySelector('[data-evaluation-weight]')).filter(Boolean); const manualTotal=weights.slice(0,-1).reduce((sum,field)=>sum+(Number(field.value)||0),0); if(manualTotal>100){ event.preventDefault(); alert('Weights before the last criterion cannot exceed 100%.'); const firstWeight=weights.find((field,index)=>index<weights.length-1 && Number(field.value)>0); if(firstWeight) firstWeight.focus(); return false; } return true;">
+                oninput="const rows=[...this.querySelectorAll('[data-evaluation-row]')]; rows.forEach((row)=>{ const maxField=row.querySelector('input[name=max_value]'); if(maxField) maxField.value='5'; const ratingField=row.querySelector('[data-evaluation-rating-value]'); const rating=ratingField ? Number(ratingField.value || 0) : 0; row.querySelectorAll('[data-evaluation-star]').forEach((star)=>{ const active=Number(star.dataset.ratingValue)<=rating; star.classList.toggle('text-warning',active); star.classList.toggle('text-secondary',!active); star.setAttribute('aria-pressed',Number(star.dataset.ratingValue)===rating ? 'true' : 'false'); }); }); const weights=rows.map((row)=>row.querySelector('[data-evaluation-weight]')).filter(Boolean); weights.forEach((field,index)=>{ const isLast=index===weights.length-1; field.readOnly=isLast; field.classList.toggle('bg-light',isLast); field.title=isLast ? 'Automatically calculated so all criterion weights total 100%.' : ''; if(!isLast && field.value==='') field.value='0'; }); const manualTotal=weights.slice(0,-1).reduce((sum,field)=>sum+(Number(field.value)||0),0); const lastWeight=weights[weights.length-1]; if(lastWeight) lastWeight.value=String(Math.max(0,Math.round((100-manualTotal)*100)/100)); const weightError=this.querySelector('[data-evaluation-weight-error]'); if(weightError) weightError.classList.toggle('d-none',manualTotal<=100); const weightedOutput=this.querySelector('[data-evaluation-weighted-rating]'); if(weightedOutput){ const ratedRows=rows.filter((row)=>{ const name=row.querySelector('input[name=criterion_name]'); return name && name.value.trim(); }); const ready=ratedRows.length>0 && ratedRows.every((row)=>{ const ratingField=row.querySelector('[data-evaluation-rating-value]'); const rating=ratingField ? Number(ratingField.value) : NaN; return Number.isFinite(rating) && rating>=1 && rating<=5; }); if(!ready){ weightedOutput.textContent='—'; } else { const weighted= ratedRows.reduce((sum,row)=>{ const ratingField=row.querySelector('[data-evaluation-rating-value]'); const weightField=row.querySelector('[data-evaluation-weight]'); return sum + (Number(ratingField.value)||0) * ((Number(weightField ? weightField.value : 0)||0)/100); },0); weightedOutput.textContent=weighted.toFixed(2)+' / 5'; } }"
+                onsubmit="const rows=[...this.querySelectorAll('[data-evaluation-row]')]; const missingRating=rows.find((row)=>{ const name=row.querySelector('input[name=criterion_name]'); const rating=row.querySelector('[data-evaluation-rating-value]'); const value=rating ? Number(rating.value) : NaN; return name && name.value.trim() && (!Number.isFinite(value) || value<1 || value>5); }); if(missingRating){ event.preventDefault(); alert('Enter a rating from 1.00 to 5.00 for every criterion.'); const ratingField=missingRating.querySelector('[data-evaluation-rating-value]'); if(ratingField) ratingField.focus(); return false; } const weights=rows.map((row)=>row.querySelector('[data-evaluation-weight]')).filter(Boolean); const manualTotal=weights.slice(0,-1).reduce((sum,field)=>sum+(Number(field.value)||0),0); if(manualTotal>100){ event.preventDefault(); alert('Weights before the last criterion cannot exceed 100%.'); const firstWeight=weights.find((field,index)=>index<weights.length-1 && Number(field.value)>0); if(firstWeight) firstWeight.focus(); return false; } return true;">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="student_id" value="{{ selected_student.id }}">
                 <input type="hidden" name="return_to" value="directory">
@@ -115,7 +130,7 @@
                     <div class="card-header bg-white d-flex flex-wrap align-items-start justify-content-between gap-2 px-3 py-2">
                         <div>
                             <h3 class="h6 fw-bold mb-1">Official Rubric Criteria</h3>
-                            <p class="text-muted small mb-0">Four default criteria are prefilled for faster evaluation. Remove or add criteria to match the official evaluation form, then rate each criterion from 1 to 5 stars.</p>
+                            <p class="text-muted small mb-0">Four default criteria are prefilled for faster evaluation. Remove or add criteria to match the official evaluation form, then rate each criterion from 1.00 to 5.00. Stars remain quick whole-number shortcuts.</p>
                         </div>
                         <button
                             type="button"
@@ -131,7 +146,7 @@
                                         <th class="ps-3 w-25">Criterion</th>
                                         <th>
                                             Rating
-                                            <span class="text-primary ms-1" tabindex="0" role="img" aria-label="Rating help: Choose 1 to 5 stars for each criterion. 5 stars is the highest rating and 1 star is the lowest." title="Choose 1 to 5 stars for each criterion. 5 stars is the highest rating and 1 star is the lowest.">ⓘ</span>
+                                            <span class="text-primary ms-1" tabindex="0" role="img" aria-label="Rating help: Click a star for a whole-number rating or enter an exact decimal rating from 1.00 to 5.00, such as 4.50 or 3.70." title="Click a star for a whole-number rating or enter an exact decimal from 1.00 to 5.00, such as 4.50 or 3.70.">ⓘ</span>
                                         </th>
                                         <th>
                                             Weight <span class="text-muted fw-normal small">(total 100%)</span>
@@ -157,21 +172,26 @@
                                             <tr data-evaluation-row>
                                                 <td class="ps-3"><input class="form-control form-control-sm" type="text" name="criterion_name" maxlength="200" value="{{ item.criterion_name }}" required></td>
                                                 <td>
-                                                    <div class="d-inline-flex align-items-center gap-1" data-evaluation-star-group>
-                                                        <input type="hidden" name="rating_value" value="{{ star_rating if star_rating else '' }}" data-evaluation-rating-value>
+                                                    <div class="d-flex align-items-center gap-2 flex-wrap" data-evaluation-star-group>
                                                         <input type="hidden" name="max_value" value="5">
-                                                        {% for star in range(1, 6) %}
-                                                            <button
-                                                                type="button"
-                                                                class="btn btn-link btn-sm p-0 border-0 text-decoration-none fs-4 lh-1 {{ 'text-warning' if star <= star_rating else 'text-secondary' }}"
-                                                                data-evaluation-star
-                                                                data-rating-value="{{ star }}"
-                                                                aria-label="Rate {{ star }} out of 5 stars"
-                                                                aria-pressed="{{ 'true' if star == star_rating else 'false' }}"
-                                                                onclick="const group=this.closest('[data-evaluation-star-group]'); const input=group ? group.querySelector('[data-evaluation-rating-value]') : null; if(input){ input.value=this.dataset.ratingValue; input.dispatchEvent(new Event('input',{bubbles:true})); }">★</button>
-                                                        {% endfor %}
+                                                        <span class="d-inline-flex align-items-center gap-1">
+                                                            {% for star in range(1, 6) %}
+                                                                <button
+                                                                    type="button"
+                                                                    class="btn btn-link btn-sm p-0 border-0 text-decoration-none fs-4 lh-1 {{ 'text-warning' if star <= item.rating_value else 'text-secondary' }}"
+                                                                    data-evaluation-star
+                                                                    data-rating-value="{{ star }}"
+                                                                    aria-label="Rate {{ star }} out of 5 stars"
+                                                                    aria-pressed="{{ 'true' if item.rating_value == star else 'false' }}"
+                                                                    onclick="const group=this.closest('[data-evaluation-star-group]'); const input=group ? group.querySelector('[data-evaluation-rating-value]') : null; if(input){ input.value=this.dataset.ratingValue; input.dispatchEvent(new Event('input',{bubbles:true})); }">★</button>
+                                                            {% endfor %}
+                                                        </span>
+                                                        <div class="input-group input-group-sm w-auto flex-nowrap">
+                                                            <input class="form-control" type="number" name="rating_value" min="1" max="5" step="0.01" value="{{ item.rating_value if star_rating else '' }}" data-evaluation-rating-value aria-label="Exact rating out of 5">
+                                                            <span class="input-group-text">/ 5</span>
+                                                        </div>
                                                     </div>
-                                                    <div class="text-muted small mt-1">1–5 stars</div>
+                                                    <div class="text-muted small mt-1">Click a star or enter 1.00–5.00.</div>
                                                 </td>
                                                 <td>
                                                     <div class="input-group input-group-sm">
@@ -189,21 +209,26 @@
                                             <tr data-evaluation-row>
                                                 <td class="ps-3"><input class="form-control form-control-sm" type="text" name="criterion_name" maxlength="200" value="{{ criterion_name }}" required></td>
                                                 <td>
-                                                    <div class="d-inline-flex align-items-center gap-1" data-evaluation-star-group>
-                                                        <input type="hidden" name="rating_value" value="" data-evaluation-rating-value>
+                                                    <div class="d-flex align-items-center gap-2 flex-wrap" data-evaluation-star-group>
                                                         <input type="hidden" name="max_value" value="5">
-                                                        {% for star in range(1, 6) %}
-                                                            <button
-                                                                type="button"
-                                                                class="btn btn-link btn-sm p-0 border-0 text-decoration-none fs-4 lh-1 text-secondary"
-                                                                data-evaluation-star
-                                                                data-rating-value="{{ star }}"
-                                                                aria-label="Rate {{ star }} out of 5 stars"
-                                                                aria-pressed="false"
-                                                                onclick="const group=this.closest('[data-evaluation-star-group]'); const input=group ? group.querySelector('[data-evaluation-rating-value]') : null; if(input){ input.value=this.dataset.ratingValue; input.dispatchEvent(new Event('input',{bubbles:true})); }">★</button>
-                                                        {% endfor %}
+                                                        <span class="d-inline-flex align-items-center gap-1">
+                                                            {% for star in range(1, 6) %}
+                                                                <button
+                                                                    type="button"
+                                                                    class="btn btn-link btn-sm p-0 border-0 text-decoration-none fs-4 lh-1 text-secondary"
+                                                                    data-evaluation-star
+                                                                    data-rating-value="{{ star }}"
+                                                                    aria-label="Rate {{ star }} out of 5 stars"
+                                                                    aria-pressed="false"
+                                                                    onclick="const group=this.closest('[data-evaluation-star-group]'); const input=group ? group.querySelector('[data-evaluation-rating-value]') : null; if(input){ input.value=this.dataset.ratingValue; input.dispatchEvent(new Event('input',{bubbles:true})); }">★</button>
+                                                            {% endfor %}
+                                                        </span>
+                                                        <div class="input-group input-group-sm w-auto flex-nowrap">
+                                                            <input class="form-control" type="number" name="rating_value" min="1" max="5" step="0.01" value="" data-evaluation-rating-value aria-label="Exact rating out of 5">
+                                                            <span class="input-group-text">/ 5</span>
+                                                        </div>
                                                     </div>
-                                                    <div class="text-muted small mt-1">1–5 stars</div>
+                                                    <div class="text-muted small mt-1">Click a star or enter 1.00–5.00.</div>
                                                 </td>
                                                 <td>
                                                     <div class="input-group input-group-sm">
@@ -219,21 +244,26 @@
                                         <tr data-evaluation-row>
                                             <td class="ps-3"><input class="form-control form-control-sm" type="text" name="criterion_name" maxlength="200" required></td>
                                             <td>
-                                                <div class="d-inline-flex align-items-center gap-1" data-evaluation-star-group>
-                                                    <input type="hidden" name="rating_value" value="" data-evaluation-rating-value>
+                                                <div class="d-flex align-items-center gap-2 flex-wrap" data-evaluation-star-group>
                                                     <input type="hidden" name="max_value" value="5">
-                                                    {% for star in range(1, 6) %}
-                                                        <button
-                                                            type="button"
-                                                            class="btn btn-link btn-sm p-0 border-0 text-decoration-none fs-4 lh-1 text-secondary"
-                                                            data-evaluation-star
-                                                            data-rating-value="{{ star }}"
-                                                            aria-label="Rate {{ star }} out of 5 stars"
-                                                            aria-pressed="false"
-                                                            onclick="const group=this.closest('[data-evaluation-star-group]'); const input=group ? group.querySelector('[data-evaluation-rating-value]') : null; if(input){ input.value=this.dataset.ratingValue; input.dispatchEvent(new Event('input',{bubbles:true})); }">★</button>
-                                                    {% endfor %}
+                                                    <span class="d-inline-flex align-items-center gap-1">
+                                                        {% for star in range(1, 6) %}
+                                                            <button
+                                                                type="button"
+                                                                class="btn btn-link btn-sm p-0 border-0 text-decoration-none fs-4 lh-1 text-secondary"
+                                                                data-evaluation-star
+                                                                data-rating-value="{{ star }}"
+                                                                aria-label="Rate {{ star }} out of 5 stars"
+                                                                aria-pressed="false"
+                                                                onclick="const group=this.closest('[data-evaluation-star-group]'); const input=group ? group.querySelector('[data-evaluation-rating-value]') : null; if(input){ input.value=this.dataset.ratingValue; input.dispatchEvent(new Event('input',{bubbles:true})); }">★</button>
+                                                        {% endfor %}
+                                                    </span>
+                                                    <div class="input-group input-group-sm w-auto flex-nowrap">
+                                                        <input class="form-control" type="number" name="rating_value" min="1" max="5" step="0.01" value="" data-evaluation-rating-value aria-label="Exact rating out of 5">
+                                                        <span class="input-group-text">/ 5</span>
+                                                    </div>
                                                 </div>
-                                                <div class="text-muted small mt-1">1–5 stars</div>
+                                                <div class="text-muted small mt-1">Click a star or enter 1.00–5.00.</div>
                                             </td>
                                             <td>
                                                 <div class="input-group input-group-sm">
@@ -259,11 +289,16 @@
                     <div class="card-body p-3">
                         <div class="row g-3">
                             <div class="col-lg-3">
+                                <label class="form-label small fw-bold">Calculated Weighted Rating</label>
+                                <div class="form-control form-control-sm bg-light fw-bold" data-evaluation-weighted-rating aria-live="polite">{% if weighted_rating.ready and weighted_rating.count and weighted_rating.count == evaluation_items|length %}{{ '%.2f'|format(weighted_rating.total) }} / 5{% else %}—{% endif %}</div>
+                                <div class="form-text small">Automatically calculated from each rating × weight. This stays on the 1–5 scale.</div>
+                            </div>
+                            <div class="col-lg-3">
                                 <label class="form-label small fw-bold" for="evaluationModalOverallScore">Official Overall Score <span class="text-muted fw-normal">(optional)</span></label>
                                 <input id="evaluationModalOverallScore" class="form-control form-control-sm" type="number" name="overall_score" min="0" step="any" value="{% if evaluation and evaluation.overall_score is not none %}{{ evaluation.overall_score }}{% endif %}" placeholder="Official scale">
-                                <div class="form-text small">Enter the final score exactly as shown on the official school/company form. Nexora stores it as entered and does not recalculate it from the criteria above.</div>
+                                <div class="form-text small">Enter the final score exactly as shown on the official school/company form. Nexora does not convert the 1–5 rating into an official percentage without a defined school/company scale.</div>
                             </div>
-                            <div class="col-lg-9">
+                            <div class="col-lg-6">
                                 <label class="form-label small fw-bold" for="evaluationModalRemarks">Overall Remarks <span class="text-muted fw-normal">(optional)</span></label>
                                 <textarea id="evaluationModalRemarks" class="form-control form-control-sm" name="remarks" rows="3" maxlength="5000">{{ evaluation.remarks if evaluation else '' }}</textarea>
                             </div>
@@ -298,21 +333,26 @@
                 <tr data-evaluation-row>
                     <td class="ps-3"><input class="form-control form-control-sm" type="text" name="criterion_name" maxlength="200" required></td>
                     <td>
-                        <div class="d-inline-flex align-items-center gap-1" data-evaluation-star-group>
-                            <input type="hidden" name="rating_value" value="" data-evaluation-rating-value>
+                        <div class="d-flex align-items-center gap-2 flex-wrap" data-evaluation-star-group>
                             <input type="hidden" name="max_value" value="5">
-                            {% for star in range(1, 6) %}
-                                <button
-                                    type="button"
-                                    class="btn btn-link btn-sm p-0 border-0 text-decoration-none fs-4 lh-1 text-secondary"
-                                    data-evaluation-star
-                                    data-rating-value="{{ star }}"
-                                    aria-label="Rate {{ star }} out of 5 stars"
-                                    aria-pressed="false"
-                                    onclick="const group=this.closest('[data-evaluation-star-group]'); const input=group ? group.querySelector('[data-evaluation-rating-value]') : null; if(input){ input.value=this.dataset.ratingValue; input.dispatchEvent(new Event('input',{bubbles:true})); }">★</button>
-                            {% endfor %}
+                            <span class="d-inline-flex align-items-center gap-1">
+                                {% for star in range(1, 6) %}
+                                    <button
+                                        type="button"
+                                        class="btn btn-link btn-sm p-0 border-0 text-decoration-none fs-4 lh-1 text-secondary"
+                                        data-evaluation-star
+                                        data-rating-value="{{ star }}"
+                                        aria-label="Rate {{ star }} out of 5 stars"
+                                        aria-pressed="false"
+                                        onclick="const group=this.closest('[data-evaluation-star-group]'); const input=group ? group.querySelector('[data-evaluation-rating-value]') : null; if(input){ input.value=this.dataset.ratingValue; input.dispatchEvent(new Event('input',{bubbles:true})); }">★</button>
+                                {% endfor %}
+                            </span>
+                            <div class="input-group input-group-sm w-auto flex-nowrap">
+                                <input class="form-control" type="number" name="rating_value" min="1" max="5" step="0.01" value="" data-evaluation-rating-value aria-label="Exact rating out of 5">
+                                <span class="input-group-text">/ 5</span>
+                            </div>
                         </div>
-                        <div class="text-muted small mt-1">1–5 stars</div>
+                        <div class="text-muted small mt-1">Click a star or enter 1.00–5.00.</div>
                     </td>
                     <td>
                         <div class="input-group input-group-sm">
