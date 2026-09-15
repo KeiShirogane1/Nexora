@@ -11,16 +11,10 @@
 <body class="student-page nx-class-page student-classwork-page">
     {% include 'components/student_sidebar.html' %}
 
-    {% set counts = namespace(submitted=0, pending=0, group=0) %}
+    {% set counts = namespace(recorded=0, pending=0, group=0) %}
     {% for item in assignments %}
-        {% if item.submission %}
-            {% set counts.submitted = counts.submitted + 1 %}
-        {% else %}
-            {% set counts.pending = counts.pending + 1 %}
-        {% endif %}
-        {% if item.activity_type == 'group_project' or item.group_mode %}
-            {% set counts.group = counts.group + 1 %}
-        {% endif %}
+        {% if item.logbook_entry %}{% set counts.recorded = counts.recorded + 1 %}{% else %}{% set counts.pending = counts.pending + 1 %}{% endif %}
+        {% if item.activity_type == 'group_project' or item.group_mode %}{% set counts.group = counts.group + 1 %}{% endif %}
     {% endfor %}
 
     <main class="class-main">
@@ -32,147 +26,59 @@
                 <div>
                     <span class="student-section-eyebrow">Intern Portal</span>
                     <h1 id="classwork-heading">Work</h1>
-                    <p>Tasks, documents, projects, and other work activities from your supervisor.</p>
+                    <p>Review assigned OJT Work, complete it, then record your accomplishment and evidence in the Daily OJT Logbook.</p>
                 </div>
             </header>
 
             <section class="student-tasks-stats" aria-label="Work summary">
-                <article class="student-tasks-stat">
-                    <span class="student-tasks-stat-icon" aria-hidden="true">▤</span>
-                    <div class="student-tasks-stat-copy">
-                        <span>Total Activities</span>
-                        <strong>{{ assignments|length }}</strong>
-                        <small>Published work</small>
-                    </div>
-                </article>
-
-                <article class="student-tasks-stat">
-                    <span class="student-tasks-stat-icon" aria-hidden="true">⌛</span>
-                    <div class="student-tasks-stat-copy">
-                        <span>Pending</span>
-                        <strong>{{ counts.pending }}</strong>
-                        <small>Awaiting submission</small>
-                    </div>
-                </article>
-
-                <article class="student-tasks-stat">
-                    <span class="student-tasks-stat-icon" aria-hidden="true">✓</span>
-                    <div class="student-tasks-stat-copy">
-                        <span>Submitted</span>
-                        <strong>{{ counts.submitted }}</strong>
-                        <small>Completed work</small>
-                    </div>
-                </article>
-
-                <article class="student-tasks-stat">
-                    <span class="student-tasks-stat-icon" aria-hidden="true">◇</span>
-                    <div class="student-tasks-stat-copy">
-                        <span>Team Tasks</span>
-                        <strong>{{ counts.group }}</strong>
-                        <small>Collaborative work</small>
-                    </div>
-                </article>
+                <article class="student-tasks-stat"><span class="student-tasks-stat-icon" aria-hidden="true">▤</span><div class="student-tasks-stat-copy"><span>Total Work</span><strong>{{ assignments|length }}</strong><small>Assigned activities</small></div></article>
+                <article class="student-tasks-stat"><span class="student-tasks-stat-icon" aria-hidden="true">⌛</span><div class="student-tasks-stat-copy"><span>Pending Work</span><strong>{{ counts.pending }}</strong><small>Not yet recorded in Logbook</small></div></article>
+                <article class="student-tasks-stat"><span class="student-tasks-stat-icon" aria-hidden="true">✓</span><div class="student-tasks-stat-copy"><span>Recorded</span><strong>{{ counts.recorded }}</strong><small>Linked to Daily OJT Logbook</small></div></article>
+                <article class="student-tasks-stat"><span class="student-tasks-stat-icon" aria-hidden="true">◇</span><div class="student-tasks-stat-copy"><span>Team Tasks</span><strong>{{ counts.group }}</strong><small>Collaborative Work</small></div></article>
             </section>
 
             <section class="student-tasks-grid">
                 <section class="student-tasks-list-card" aria-label="Work activities">
-                    <div class="student-tasks-tabs">
-                        <span class="student-tasks-tab is-active">All Activities</span>
-                    </div>
-
+                    <div class="student-tasks-tabs"><span class="student-tasks-tab is-active">All Work</span></div>
                     {% if assignments %}
                         {% for item in assignments %}
                             <a href="{{ url_for('student_classwork.detail', class_id=classroom.id, assignment_id=item.id) }}" class="student-task-row text-decoration-none">
                                 <div class="student-task-title">
-                                    <span class="student-task-icon" aria-hidden="true">{% if item.submission %}✓{% else %}▤{% endif %}</span>
+                                    <span class="student-task-icon" aria-hidden="true">{% if item.logbook_entry %}✓{% else %}▤{% endif %}</span>
                                     <div>
                                         <strong>{{ item.title }}</strong>
-                                        <span>
-                                            {{ item.activity_label }} · {{ item.points }} pts
-                                            {% if item.team_members %}
-                                                · {{ item.team_name or 'Team' }}: {% for member in item.team_members %}{{ member.username }}{% if not loop.last %}, {% endif %}{% endfor %}
-                                                · {% if item.submission_mode == 'shared' %}Shared submission{% else %}Individual submissions{% endif %}
-                                            {% elif item.group_mode %}
-                                                · Collaborative work
-                                            {% endif %}
-                                        </span>
+                                        <span>{{ item.activity_label }}{% if item.team_members %} · {{ item.team_name or 'Team' }}: {% for member in item.team_members %}{{ member.username }}{% if not loop.last %}, {% endif %}{% endfor %}{% elif item.group_mode %} · Collaborative Work{% endif %}</span>
                                     </div>
                                 </div>
-
-                                <span class="student-task-priority {% if item.submission %}is-low{% endif %}">
-                                    {% if item.submission %}{{ item.submission.status|replace('_',' ')|capitalize }}{% else %}Pending{% endif %}
-                                </span>
-
-                                <div class="student-task-due">
-                                    <strong>{% if item.due_at %}Due {{ item.due_at }}{% else %}No deadline{% endif %}</strong>
-                                    <span>
-                                        {% if item.team_members %}
-                                            {{ item.team_name or 'Team' }} · {{ item.team_members|length }} members · {% if item.submission_mode == 'shared' %}Shared{% else %}Individual{% endif %}
-                                        {% elif item.group_mode %}
-                                            Collaborative · max {{ item.max_group_size }}
-                                        {% else %}
-                                            Individual activity
-                                        {% endif %}
-                                    </span>
-                                </div>
-
-                                <div class="student-task-progress {% if item.submission %}is-complete{% endif %}" aria-label="{% if item.submission %}100{% else %}0{% endif %} percent complete">
-                                    <span>{% if item.submission %}100%{% else %}0%{% endif %}</span>
-                                </div>
-
+                                <span class="student-task-priority {% if item.logbook_entry %}is-low{% endif %}">{% if item.logbook_entry %}Recorded{% else %}Pending{% endif %}</span>
+                                <div class="student-task-due"><strong>{% if item.due_at %}Due {{ item.due_at }}{% else %}No deadline{% endif %}</strong><span>{% if item.team_members %}{{ item.team_name or 'Team' }} · {{ item.team_members|length }} members{% elif item.group_mode %}Collaborative Work{% else %}Assigned OJT Work{% endif %}</span></div>
+                                <div class="student-task-progress {% if item.logbook_entry %}is-complete{% endif %}" aria-label="{% if item.logbook_entry %}Recorded in Daily OJT Logbook{% else %}Pending Work{% endif %}"><span>{% if item.logbook_entry %}✓{% else %}—{% endif %}</span></div>
                                 <span class="student-task-menu" aria-hidden="true">›</span>
                             </a>
                         {% endfor %}
                     {% else %}
-                        <div class="student-tasks-empty">
-                            <span class="student-tasks-empty-icon" aria-hidden="true">▤</span>
-                            <strong>No work yet</strong>
-                            <span>Your supervisor has not published any work activities for this Intern Classroom.</span>
-                        </div>
+                        <div class="student-tasks-empty"><span class="student-tasks-empty-icon" aria-hidden="true">▤</span><strong>No work yet</strong><span>Your supervisor has not published any Work for this Intern Classroom.</span></div>
                     {% endif %}
                 </section>
 
                 <aside class="student-tasks-side" aria-label="Work information">
                     <section class="student-tasks-side-card">
                         <h2>Intern Classroom Overview</h2>
-                        <div class="student-task-deadline">
-                            <span class="student-task-deadline-icon" aria-hidden="true">▣</span>
-                            <div>
-                                <strong>{{ classroom.name }}</strong>
-                                <span>{{ classroom.section }}</span>
-                            </div>
-                            <em>{{ assignments|length }} items</em>
-                        </div>
-                        <div class="student-task-deadline">
-                            <span class="student-task-deadline-icon" aria-hidden="true">✓</span>
-                            <div>
-                                <strong>Submitted</strong>
-                                <span>Completed work</span>
-                            </div>
-                            <em>{{ counts.submitted }}</em>
-                        </div>
-                        <div class="student-task-deadline">
-                            <span class="student-task-deadline-icon" aria-hidden="true">⌛</span>
-                            <div>
-                                <strong>Pending</strong>
-                                <span>Still to complete</span>
-                            </div>
-                            <em>{{ counts.pending }}</em>
-                        </div>
+                        <div class="student-task-deadline"><span class="student-task-deadline-icon" aria-hidden="true">▣</span><div><strong>{{ classroom.name }}</strong><span>{{ classroom.section }}</span></div><em>{{ assignments|length }} items</em></div>
+                        <div class="student-task-deadline"><span class="student-task-deadline-icon" aria-hidden="true">✓</span><div><strong>Recorded</strong><span>Daily OJT Logbook linked</span></div><em>{{ counts.recorded }}</em></div>
+                        <div class="student-task-deadline"><span class="student-task-deadline-icon" aria-hidden="true">⌛</span><div><strong>Pending</strong><span>Still to document</span></div><em>{{ counts.pending }}</em></div>
                     </section>
 
                     <section class="student-tasks-side-card">
                         <h2>Quick Access</h2>
+                        <a class="student-tasks-view-all" href="{{ url_for('student.logbook', classroom_id=classroom.id) }}">Daily OJT Logbook</a>
                         <a class="student-tasks-view-all" href="{{ url_for('classwork_ml_insights.student_insights', class_id=classroom.id) }}">Performance Insights</a>
                         <a class="student-tasks-view-all" href="{{ url_for('classroom.student_class', class_id=classroom.id) }}">Back to Intern Classroom</a>
                     </section>
 
                     <section class="student-tasks-side-card student-tasks-tip">
                         <span class="student-tasks-tip-icon" aria-hidden="true">💡</span>
-                        <div>
-                            <strong>Work Tip</strong>
-                            <span>Open each activity to review instructions, resources, deadlines, and submission requirements before you begin.</span>
-                        </div>
+                        <div><strong>How to finish Work</strong><span>Complete the assigned activity, then open Daily OJT Logbook, create your Daily Entry, select the related Work, and attach photo evidence if needed.</span></div>
                     </section>
                 </aside>
             </section>
