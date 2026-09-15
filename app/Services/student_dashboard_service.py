@@ -173,40 +173,18 @@ def _modern_work(conn, student_id):
         SELECT
             COUNT(*) AS total_count,
             COALESCE(SUM(
-                CASE WHEN
-                    (
-                        COALESCE(m.submission_mode, 'individual') = 'shared'
-                        AND EXISTS (
-                            SELECT 1
-                            FROM classwork_submissions s
-                            WHERE s.assignment_id = a.id
-                              AND COALESCE(s.is_team_submission, 0) = 1
-                        )
-                    )
-                    OR
-                    (
-                        COALESCE(m.submission_mode, 'individual') <> 'shared'
-                        AND (
-                            EXISTS (
-                                SELECT 1
-                                FROM classwork_submissions s
-                                WHERE s.assignment_id = a.id
-                                  AND s.student_id = ?
-                                  AND COALESCE(s.is_team_submission, 0) = 0
-                            )
-                            OR EXISTS (
-                                SELECT 1
-                                FROM classroom_submissions legacy_s
-                                WHERE legacy_s.assignment_id = a.id
-                                  AND legacy_s.student_id = ?
-                            )
-                        )
-                    )
-                    THEN 1 ELSE 0
-                END
-            ), 0) AS submitted_count
+                CASE WHEN EXISTS (
+                    SELECT 1
+                    FROM logs l
+                    JOIN attendance log_attendance ON log_attendance.id = l.attendance_id
+                    WHERE l.student_id = ?
+                      AND l.entry_type = 'daily'
+                      AND l.related_assignment_id = a.id
+                      AND log_attendance.classroom_id = a.classroom_id
+                ) THEN 1 ELSE 0 END
+            ), 0) AS recorded_count
         """ + access_sql,
-        (student_id, student_id, student_id, student_id),
+        (student_id, student_id, student_id),
     ).fetchone()
 
     rows = conn.execute(
@@ -220,37 +198,15 @@ def _modern_work(conn, student_id):
             c.name AS classroom_name,
             COALESCE(m.activity_type, 'assignment') AS activity_type,
             COALESCE(m.submission_mode, 'individual') AS submission_mode,
-            CASE WHEN
-                (
-                    COALESCE(m.submission_mode, 'individual') = 'shared'
-                    AND EXISTS (
-                        SELECT 1
-                        FROM classwork_submissions s
-                        WHERE s.assignment_id = a.id
-                          AND COALESCE(s.is_team_submission, 0) = 1
-                    )
-                )
-                OR
-                (
-                    COALESCE(m.submission_mode, 'individual') <> 'shared'
-                    AND (
-                        EXISTS (
-                            SELECT 1
-                            FROM classwork_submissions s
-                            WHERE s.assignment_id = a.id
-                              AND s.student_id = ?
-                              AND COALESCE(s.is_team_submission, 0) = 0
-                        )
-                        OR EXISTS (
-                            SELECT 1
-                            FROM classroom_submissions legacy_s
-                            WHERE legacy_s.assignment_id = a.id
-                              AND legacy_s.student_id = ?
-                        )
-                    )
-                )
-                THEN 1 ELSE 0
-            END AS is_submitted
+            CASE WHEN EXISTS (
+                SELECT 1
+                FROM logs l
+                JOIN attendance log_attendance ON log_attendance.id = l.attendance_id
+                WHERE l.student_id = ?
+                  AND l.entry_type = 'daily'
+                  AND l.related_assignment_id = a.id
+                  AND log_attendance.classroom_id = a.classroom_id
+            ) THEN 1 ELSE 0 END AS is_recorded
         """ + access_sql + """
         ORDER BY
             CASE WHEN a.due_at IS NULL THEN 1 ELSE 0 END,
@@ -259,17 +215,17 @@ def _modern_work(conn, student_id):
             a.id DESC
         LIMIT 5
         """,
-        (student_id, student_id, student_id, student_id),
+        (student_id, student_id, student_id),
     ).fetchall()
 
     now = datetime.now()
     items = []
     for row in rows:
         due_at = _value(row, "due_at", 3, None)
-        is_submitted = bool(_value(row, "is_submitted", 8, 0))
-        status = "Submitted" if is_submitted else "Pending"
+        is_recorded = bool(_value(row, "is_recorded", 8, 0))
+        status = "Recorded" if is_recorded else "Pending"
         due_dt = _as_datetime(due_at)
-        if not is_submitted and due_dt:
+        if not is_recorded and due_dt:
             compare_now = datetime.now(due_dt.tzinfo) if due_dt.tzinfo else now
             if due_dt < compare_now:
                 status = "Overdue"
@@ -292,7 +248,7 @@ def _modern_work(conn, student_id):
         )
 
     return int(_value(summary, "total_count", 0, 0) or 0), int(
-        _value(summary, "submitted_count", 1, 0) or 0
+        _value(summary, "recorded_count", 1, 0) or 0
     ), items
 
 
