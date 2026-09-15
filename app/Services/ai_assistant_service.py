@@ -187,7 +187,7 @@ def _configured_ai():
     return api_key, model
 
 
-def _openrouter_chat(api_key, model, messages, max_tokens, temperature):
+def _openrouter_chat(api_key, model, messages, max_tokens, temperature, timeout_seconds=None):
     payload = {
         "model": model,
         "messages": messages,
@@ -211,8 +211,9 @@ def _openrouter_chat(api_key, model, messages, max_tokens, temperature):
         method="POST",
     )
 
+    timeout = timeout_seconds if timeout_seconds is not None else _timeout_seconds()
     try:
-        with urllib_request.urlopen(request, timeout=_timeout_seconds()) as response:
+        with urllib_request.urlopen(request, timeout=timeout) as response:
             raw = response.read(MAX_RESPONSE_BYTES + 1)
     except urllib_error.HTTPError as exc:
         raise AIServiceError(_provider_error_message(exc.code)) from exc
@@ -278,6 +279,108 @@ def _parse_ml_explanation(answer):
     return {key: _plain_explanation_value(parsed.get(key)) for key in ML_EXPLANATION_KEYS}
 
 
+def _metric_text(value, percentage=False):
+    if value is None or value == "":
+        return None
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        text = str(value).strip()
+        return text or None
+    if percentage:
+        return f"{number:.1f}%"
+    if number.is_integer():
+        return str(int(number))
+    return f"{number:.1f}"
+
+
+def _evidence_fallback_analysis(evidence):
+    """Build a factual summary only from the evidence already supplied by the page."""
+    analysis = {key: "Unavailable." for key in ML_EXPLANATION_KEYS}
+    work_available = bool(evidence.get("work_evidence"))
+    feedback_available = bool(evidence.get("feedback_evidence"))
+
+    if work_available:
+        reviewed = _metric_text(evidence.get("reviewed"))
+        total = _metric_text(evidence.get("total"))
+        average = _metric_text(evidence.get("average"), percentage=True)
+        minimum = _metric_text(evidence.get("minimum"), percentage=True)
+        maximum = _metric_text(evidence.get("maximum"), percentage=True)
+        completion = _metric_text(evidence.get("completion"), percentage=True)
+        label = str(evidence.get("work_label") or "").strip()
+        recommendation = str(evidence.get("work_recommendation") or "").strip()
+        priority = str(evidence.get("priority") or "").strip()
+
+        overall_parts = [
+            "Nexora could not complete the AI response, so this section summarizes the current evidence directly."
+        ]
+        if reviewed is not None and total is not None:
+            overall_parts.append(f"Current Work evidence includes {reviewed} of {total} reviewed item(s).")
+        if average:
+            overall_parts.append(f"The reviewed Work average is {average}.")
+        if label:
+            overall_parts.append(f"The gradebook-derived Work label is {label}.")
+        analysis["overall"] = " ".join(overall_parts)
+
+        happened_parts = []
+        if completion:
+            happened_parts.append(f"Current Work completion is {completion}.")
+        if minimum and maximum:
+            happened_parts.append(f"Reviewed Work currently ranges from {minimum} to {maximum}.")
+        if not happened_parts and average:
+            happened_parts.append(f"The current reviewed Work average is {average}.")
+        if happened_parts:
+            analysis["happened"] = " ".join(happened_parts)
+
+        if recommendation:
+            analysis["improve"] = recommendation
+        elif reviewed is not None and total is not None and reviewed != total:
+            analysis["improve"] = "Review the Work items that are not yet reflected in the reviewed Work evidence."
+        else:
+            analysis["improve"] = "Use the current Work evidence and supervisor guidance to choose the next improvement area."
+
+        actions = []
+        try:
+            reviewed_number = int(float(evidence.get("reviewed")))
+            total_number = int(float(evidence.get("total")))
+        except (TypeError, ValueError):
+            reviewed_number = total_number = None
+        if reviewed_number is not None and total_number is not None and reviewed_number < total_number:
+            actions.append("Check the Work items that are not yet reviewed")
+        if recommendation:
+            actions.append("Follow the current ML recommendation")
+        if priority:
+            actions.append(f"Address the {priority.lower()} priority shown by Nexora")
+        actions.append("Ask your supervisor for guidance on the current Work evidence")
+        analysis["next_focus"] = "; ".join(actions[:4])
+
+    if feedback_available:
+        feedback_parts = []
+        sentiment = str(evidence.get("sentiment") or "").strip()
+        competency = str(evidence.get("competency") or "").strip()
+        feedback_label = str(evidence.get("feedback_label") or "").strip()
+        confidence = _metric_text(evidence.get("confidence"))
+        if sentiment:
+            feedback_parts.append(f"sentiment: {sentiment}")
+        if competency:
+            feedback_parts.append(f"competency: {competency}")
+        if feedback_label:
+            feedback_parts.append(f"classification: {feedback_label}")
+        if confidence is not None:
+            feedback_parts.append(f"confidence: {confidence}")
+        if feedback_parts:
+            analysis["feedback"] = "Current feedback-model signals show " + "; ".join(feedback_parts) + "."
+        if not work_available:
+            analysis["overall"] = "Nexora could not complete the AI response, so this section summarizes the available feedback-model evidence directly."
+            analysis["happened"] = analysis["feedback"]
+            feedback_recommendation = str(evidence.get("feedback_recommendation") or "").strip()
+            if feedback_recommendation:
+                analysis["improve"] = feedback_recommendation
+                analysis["next_focus"] = "Review the current feedback recommendation; discuss it with your supervisor"
+
+    return analysis
+
+
 def explain_ml_evidence(user_id, evidence):
     """Explain Student ML evidence with a structured, read-only response contract."""
     if not user_id:
@@ -304,25 +407,32 @@ def explain_ml_evidence(user_id, evidence):
         "contain 2 to 4 short actions separated by semicolons when evidence supports actions, "
         "otherwise Unavailable. Never repeat these instructions or the raw JSON."
     )
-    response_payload = _openrouter_chat(
-        api_key,
-        model,
-        [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": json.dumps(clean_evidence, ensure_ascii=False)},
-        ],
-        max_tokens=480,
-        temperature=0.2,
-    )
-    answer = _extract_output_text(response_payload)
-    if not answer:
-        raise AIServiceError("OpenRouter returned no answer.")
 
-    analysis = _parse_ml_explanation(answer)
+    try:
+        response_payload = _openrouter_chat(
+            api_key,
+            model,
+            [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": json.dumps(clean_evidence, ensure_ascii=False)},
+            ],
+            max_tokens=240,
+            temperature=0.2,
+            timeout_seconds=8,
+        )
+        answer = _extract_output_text(response_payload)
+        if not answer:
+            raise AIServiceError("OpenRouter returned no answer.")
+        analysis = _parse_ml_explanation(answer)
+        source = "ai"
+    except AIServiceError:
+        analysis = _evidence_fallback_analysis(clean_evidence)
+        source = "evidence_fallback"
+
     if not clean_evidence.get("feedback_evidence"):
         analysis["feedback"] = "Unavailable."
 
-    return {"available": True, "analysis": analysis, "model": model}
+    return {"available": True, "analysis": analysis, "model": model, "source": source}
 
 
 def answer_role_question(user_id, question):
