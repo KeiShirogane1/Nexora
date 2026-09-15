@@ -131,6 +131,11 @@
         {% set class_active_tab = 'insights' %}
         {% include 'components/student_class_shell.html' %}
 
+        {% set recorded_count = features.recorded_count|default(0)|int %}
+        {% set reviewed_count = features.reviewed_count|default(0)|int %}
+        {% set recorded_completion_rate = features.recorded_completion_rate|default(0)|float %}
+        {% set workflow_review_rate = features.review_rate|default(0)|float %}
+
         {% if numeric_performance_label == 'Excellent' %}
             {% set work_label_class = 'is-excellent' %}
         {% elif numeric_performance_label == 'Very Satisfactory' %}
@@ -174,23 +179,23 @@
                     <div class="student-tasks-stat-copy">
                         <span>Work Average</span>
                         <strong>{% if average_percentage is not none %}{{ "%.1f"|format(average_percentage) }}%{% else %}—{% endif %}</strong>
-                        <small>{% if has_performance_data %}Gradebook-derived evidence{% else %}No graded Work evidence yet{% endif %}</small>
+                        <small>{% if has_performance_data %}Gradebook-derived evidence{% else %}No numeric Work grade yet{% endif %}</small>
                     </div>
                 </article>
                 <article class="student-tasks-stat">
                     <div class="student-tasks-stat-icon" aria-hidden="true">%</div>
                     <div class="student-tasks-stat-copy">
-                        <span>Completion Rate</span>
-                        <strong>{{ "%.1f"|format(completion_rate) }}%</strong>
-                        <small>{{ graded_count }} of {{ total_count }} Work item{% if total_count != 1 %}s{% endif %} reviewed</small>
+                        <span>Recorded Work</span>
+                        <strong>{{ "%.1f"|format(recorded_completion_rate) }}%</strong>
+                        <small>{{ recorded_count }} of {{ total_count }} linked to Daily OJT Logbook</small>
                     </div>
                 </article>
                 <article class="student-tasks-stat">
                     <div class="student-tasks-stat-icon" aria-hidden="true">✓</div>
                     <div class="student-tasks-stat-copy">
                         <span>Reviewed Work</span>
-                        <strong>{{ graded_count }} / {{ total_count }}</strong>
-                        <small>{{ manual_count }} manual · {{ imported_count }} imported</small>
+                        <strong>{{ reviewed_count }} / {{ total_count }}</strong>
+                        <small>{{ graded_count }} graded for numeric performance</small>
                     </div>
                 </article>
                 <article class="student-tasks-stat">
@@ -198,7 +203,7 @@
                     <div class="student-tasks-stat-copy">
                         <span>Performance Label</span>
                         <strong>{% if has_performance_data %}{{ numeric_performance_label }}{% else %}No Data{% endif %}</strong>
-                        <small>{% if has_performance_data %}Based on graded Work{% else %}Waiting for evidence{% endif %}</small>
+                        <small>{% if has_performance_data %}Based on graded Work{% elif recorded_count %}Work is recorded; a numeric grade is still needed{% else %}Waiting for graded evidence{% endif %}</small>
                     </div>
                 </article>
             </section>
@@ -208,13 +213,15 @@
                     <article class="profile-section">
                         <span class="student-section-eyebrow">Evidence Input</span>
                         <h2>Performance Evidence</h2>
-                        <p class="student-classwork-detail-subtitle">Detailed gradebook evidence used to derive your Work performance label.</p>
+                        <p class="student-classwork-detail-subtitle">Daily OJT Work completion and supervisor review are tracked separately from numeric gradebook evidence used for the performance label.</p>
                         <div class="student-classwork-submission-summary">
                             <div><span>Work Average</span><strong>{% if average_percentage is not none %}{{ "%.1f"|format(average_percentage) }}%{% else %}—{% endif %}</strong></div>
                             <div><span>Minimum Score</span><strong>{% if min_percentage is not none %}{{ "%.1f"|format(min_percentage) }}%{% else %}—{% endif %}</strong></div>
                             <div><span>Maximum Score</span><strong>{% if max_percentage is not none %}{{ "%.1f"|format(max_percentage) }}%{% else %}—{% endif %}</strong></div>
-                            <div><span>Completion Rate</span><strong>{{ "%.1f"|format(completion_rate) }}%</strong></div>
+                            <div><span>Recorded / Total</span><strong>{{ recorded_count }} / {{ total_count }}</strong></div>
+                            <div><span>Supervisor Reviewed</span><strong>{{ reviewed_count }} / {{ total_count }}</strong></div>
                             <div><span>Graded / Total</span><strong>{{ graded_count }} / {{ total_count }}</strong></div>
+                            <div><span>Grade Coverage</span><strong>{{ "%.1f"|format(completion_rate) }}%</strong></div>
                             <div><span>Work Label</span><strong>{{ numeric_performance_label or 'No Data' }}</strong></div>
                             <div><span>Manual Grades</span><strong>{{ manual_count }}</strong></div>
                             <div><span>Imported Grades</span><strong>{{ imported_count }}</strong></div>
@@ -223,8 +230,8 @@
                             <div class="student-document-guide">
                                 <div class="student-document-guide-icon" aria-hidden="true">—</div>
                                 <div>
-                                    <h2>No Work performance data yet</h2>
-                                    <p>A Work label and Work-based recommendation will appear after graded or imported Work evidence is available.</p>
+                                    <h2>No numeric Work performance score yet</h2>
+                                    <p>{% if recorded_count %}Your recorded Work is visible here, but Nexora will not invent a performance score. A Work label appears after your supervisor adds a numeric Work grade or imports a score.{% else %}A Work label and Work-based recommendation will appear after graded or imported Work evidence is available.{% endif %}</p>
                                 </div>
                             </div>
                         {% endif %}
@@ -233,7 +240,7 @@
                     <article class="profile-section" aria-labelledby="feedback-intelligence-heading">
                         <span class="student-section-eyebrow">Feedback Models</span>
                         <h2 id="feedback-intelligence-heading">Feedback Intelligence</h2>
-                        <p class="student-classwork-detail-subtitle">Machine-learning analysis based only on available supervisor feedback text.</p>
+                        <p class="student-classwork-detail-subtitle">Machine-learning analysis based only on available supervisor feedback text, including Daily OJT review comments.</p>
                         {% if has_feedback %}
                             <div class="student-classwork-submission-summary">
                                 <div><span>Sentiment</span><strong>{{ sentiment or '—' }}</strong></div>
@@ -252,7 +259,7 @@
                                 <div class="student-document-guide-icon" aria-hidden="true">ML</div>
                                 <div>
                                     <h2>No feedback evidence available</h2>
-                                    <p>Sentiment, competency, confidence, Naive Bayes, SVM, and feedback classification remain unavailable until supervisor feedback exists.</p>
+                                    <p>Sentiment, competency, confidence, Naive Bayes, SVM, and feedback classification remain unavailable until supervisor feedback or Daily OJT review comments exist.</p>
                                 </div>
                             </div>
                         {% endif %}
@@ -269,7 +276,7 @@
                                 <div><span>Work Label Used</span><strong>{{ ml_recommendation.performance_label }}</strong></div>
                                 <div><span>Priority</span><strong>{{ ml_recommendation.priority|title }}</strong></div>
                                 <div><span>Average Used</span><strong>{% if ml_recommendation.overall_percentage is not none %}{{ "%.1f"|format(ml_recommendation.overall_percentage) }}%{% else %}—{% endif %}</strong></div>
-                                <div><span>Completion Used</span><strong>{{ "%.1f"|format(ml_recommendation.completion_rate) }}%</strong></div>
+                                <div><span>Grade Coverage Used</span><strong>{{ "%.1f"|format(ml_recommendation.completion_rate) }}%</strong></div>
                             </div>
                             <div class="student-classwork-feedback">
                                 <h3>Recommendation</h3>
@@ -287,8 +294,8 @@
                             <div class="student-document-guide">
                                 <div class="student-document-guide-icon" aria-hidden="true">ML</div>
                                 <div>
-                                    <h2>No Work-based recommendation yet</h2>
-                                    <p>Nexora will generate a Work recommendation after graded Work evidence is available.</p>
+                                    <h2>No score-based Work recommendation yet</h2>
+                                    <p>Nexora will generate a numeric Work recommendation after graded Work evidence is available. Recorded and reviewed Logbook Work remains visible above without being converted into a fake score.</p>
                                 </div>
                             </div>
                         {% endif %}
@@ -300,8 +307,15 @@
                         <div class="student-document-guide">
                             <div class="student-document-guide-icon" aria-hidden="true">✓</div>
                             <div>
+                                <h2>OJT Work Evidence</h2>
+                                <p>{% if recorded_count %}Available — {{ recorded_count }} of {{ total_count }} Work item{% if total_count != 1 %}s are{% else %} is{% endif %} linked to the Daily OJT Logbook, and {{ reviewed_count }} {% if reviewed_count == 1 %}has{% else %}have{% endif %} a supervisor review.{% else %}No recorded Work evidence is available yet.{% endif %}</p>
+                            </div>
+                        </div>
+                        <div class="student-document-guide">
+                            <div class="student-document-guide-icon" aria-hidden="true">✓</div>
+                            <div>
                                 <h2>Performance Evidence</h2>
-                                <p>{% if has_performance_data %}Available — graded Work data can support performance interpretation.{% else %}No Data — graded Work evidence is not available yet.{% endif %}</p>
+                                <p>{% if has_performance_data %}Available — graded Work data can support performance interpretation.{% else %}No numeric grade yet — recorded/reviewed Work is not automatically converted into a performance score.{% endif %}</p>
                             </div>
                         </div>
                         <div class="student-document-guide">
@@ -349,8 +363,8 @@
                         {% else %}
                             <div class="student-insights-ai-items">
                                 <section class="student-insights-ai-item">
-                                    <h3>Not enough evidence yet</h3>
-                                    <p>Nexora AI cannot explain your performance or suggest score-specific improvements until graded Work or supervisor feedback is available.</p>
+                                    <h3>Not enough scored or feedback evidence yet</h3>
+                                    <p>{% if recorded_count %}Nexora can see your recorded OJT Work, but it will not invent a performance score. AI score-specific guidance starts after a numeric grade or supervisor feedback is available.{% else %}Nexora AI cannot explain your performance or suggest score-specific improvements until graded Work or supervisor feedback is available.{% endif %}</p>
                                 </section>
                             </div>
                         {% endif %}
@@ -372,8 +386,11 @@
             work_average_percentage: {{ average_percentage|tojson }},
             minimum_work_score_percentage: {{ min_percentage|tojson }},
             maximum_work_score_percentage: {{ max_percentage|tojson }},
-            completion_rate_percentage: {{ completion_rate|tojson }},
-            reviewed_work_count: {{ graded_count|tojson }},
+            grade_coverage_percentage: {{ completion_rate|tojson }},
+            recorded_completion_percentage: {{ recorded_completion_rate|tojson }},
+            recorded_work_count: {{ recorded_count|tojson }},
+            workflow_reviewed_work_count: {{ reviewed_count|tojson }},
+            graded_work_count: {{ graded_count|tojson }},
             total_work_count: {{ total_count|tojson }},
             manual_grade_count: {{ manual_count|tojson }},
             imported_grade_count: {{ imported_count|tojson }},
@@ -421,8 +438,11 @@
             average: evidence.work_average_percentage,
             minimum: evidence.minimum_work_score_percentage,
             maximum: evidence.maximum_work_score_percentage,
-            completion: evidence.completion_rate_percentage,
-            reviewed: evidence.reviewed_work_count,
+            grade_coverage: evidence.grade_coverage_percentage,
+            recorded_completion: evidence.recorded_completion_percentage,
+            recorded: evidence.recorded_work_count,
+            reviewed: evidence.workflow_reviewed_work_count,
+            graded: evidence.graded_work_count,
             total: evidence.total_work_count,
             work_label: evidence.work_performance_label,
             work_recommendation: evidence.work_recommendation,
@@ -437,7 +457,7 @@
             feedback_recommendation: evidence.feedback_recommendation
         };
 
-        var cacheKey = 'nxMlAiAnalysis:v2:' + {{ classroom.id|tojson }} + ':' + evidenceHash(aiEvidence);
+        var cacheKey = 'nxMlAiAnalysis:v3:' + {{ classroom.id|tojson }} + ':' + evidenceHash(aiEvidence);
         try {
             var cached = window.sessionStorage.getItem(cacheKey);
             if (cached) {
