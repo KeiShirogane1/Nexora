@@ -1,10 +1,18 @@
 import os
 from datetime import datetime
 
-from flask import Blueprint, abort, current_app, render_template, request, send_file, session
+from flask import Blueprint, abort, current_app, flash, g, render_template, request, send_file, session
+from werkzeug.utils import secure_filename
 
 from app.Http.Middleware.security import role_required
 from app.Models.db import get_db_connection
+from app.Services.document_storage import (
+    DocumentStorageError,
+    delete_document_backup,
+    document_storage_configured,
+    ensure_document_local,
+    mirror_document,
+)
 
 
 supervisor_documents = Blueprint("supervisor_documents", __name__)
@@ -72,7 +80,7 @@ def _is_safe_upload_path(filepath):
         return False
 
 
-def _resolve_upload_path(filepath, filename=None):
+def _resolve_upload_path(filepath, filename=None, document_id=None):
     upload_base = current_app.config.get("UPLOAD_FOLDER", "")
     if not upload_base:
         return None
@@ -102,7 +110,35 @@ def _resolve_upload_path(filepath, filename=None):
         except (OSError, ValueError, TypeError):
             continue
 
+    if document_id:
+        return ensure_document_local(document_id, filename, filepath, upload_base)
     return None
+
+
+def _normalize_document_filepath(document_id, student_id, filename, filepath):
+    upload_base = current_app.config.get("UPLOAD_FOLDER", "")
+    restored = ensure_document_local(document_id, filename, filepath, upload_base)
+    if not restored:
+        return None
+
+    try:
+        old_path = os.path.realpath(filepath) if filepath else ""
+        new_path = os.path.realpath(restored)
+    except (OSError, ValueError, TypeError):
+        old_path = str(filepath or "")
+        new_path = str(restored)
+
+    if old_path != new_path:
+        conn = get_db_connection()
+        try:
+            conn.execute(
+                "UPDATE documents SET filepath = ? WHERE id = ? AND student_id = ?",
+                (restored, document_id, student_id),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+    return restored
 
 
 def _supervisor_owns_student(conn, supervisor_id, student_id):
@@ -116,6 +152,98 @@ def _supervisor_owns_student(conn, supervisor_id, student_id):
         """,
         (student_id, supervisor_id),
     ).fetchone() is not None
+
+
+@supervisor_documents.before_app_request
+def _restore_student_document_cache():
+    endpoint = request.endpoint or ""
+    if endpoint not in {"student.view_document", "student.delete_document"}:
+        return None
+
+    document_id = (request.view_args or {}).get("document_id")
+    student_id = session.get("user_id")
+    if not document_id or not student_id or session.get("role") != "student":
+        return None
+
+    conn = get_db_connection()
+    try:
+        row = conn.execute(
+            "SELECT filename, filepath FROM documents WHERE id = ? AND student_id = ? LIMIT 1",
+            (document_id, student_id),
+        ).fetchone()
+    finally:
+        conn.close()
+
+    if not row:
+        return None
+
+    filename = _value(row, "filename", 0, "") or "Document"
+    filepath = _value(row, "filepath", 1, "") or ""
+
+    if endpoint == "student.delete_document":
+        g.nexora_document_delete_backup = (int(document_id), filepath or filename)
+        return None
+
+    _normalize_document_filepath(int(document_id), int(student_id), filename, filepath)
+    return None
+
+
+@supervisor_documents.after_app_request
+def _persist_student_document_upload(response):
+    endpoint = request.endpoint or ""
+
+    if endpoint == "student.documents" and request.method == "POST" and response.status_code < 400:
+        uploaded = request.files.get("file")
+        user_id = session.get("user_id")
+        if uploaded and uploaded.filename and user_id and document_storage_configured():
+            safe_name = secure_filename(uploaded.filename)
+            expected_filename = f"{user_id}_{safe_name}" if safe_name else ""
+            if expected_filename:
+                conn = get_db_connection()
+                try:
+                    row = conn.execute(
+                        """
+                        SELECT id, filename, filepath
+                        FROM documents
+                        WHERE student_id = ? AND filename = ?
+                        ORDER BY id DESC
+                        LIMIT 1
+                        """,
+                        (user_id, expected_filename),
+                    ).fetchone()
+                finally:
+                    conn.close()
+
+                if row:
+                    document_id = int(_value(row, "id", 0, 0) or 0)
+                    filename = _value(row, "filename", 1, "") or expected_filename
+                    filepath = _value(row, "filepath", 2, "") or ""
+                    resolved = _resolve_upload_path(filepath, filename)
+                    if document_id and resolved:
+                        try:
+                            mirror_document(document_id, filename, resolved)
+                        except DocumentStorageError:
+                            current_app.logger.exception(
+                                "Unable to persist student document %s in Cloudinary",
+                                document_id,
+                            )
+                            flash(
+                                "Document uploaded, but its durable backup failed. Please upload it again before leaving this session.",
+                                "warning",
+                            )
+
+    if endpoint == "student.delete_document" and request.method == "POST" and response.status_code < 400:
+        backup = getattr(g, "nexora_document_delete_backup", None)
+        if backup and document_storage_configured():
+            try:
+                delete_document_backup(backup[0], backup[1])
+            except DocumentStorageError:
+                current_app.logger.exception(
+                    "Unable to delete Cloudinary backup for student document %s",
+                    backup[0],
+                )
+
+    return response
 
 
 @supervisor_documents.route("/supervisor/student-documents")
@@ -344,7 +472,7 @@ def student_document_folder(student_id):
         document_id = int(_value(row, "id", 0, 0) or 0)
         filename = _value(row, "filename", 1, "") or "Document"
         filepath = _value(row, "filepath", 2, "") or ""
-        resolved_filepath = _resolve_upload_path(filepath, filename)
+        resolved_filepath = _resolve_upload_path(filepath, filename, document_id)
         display_filename = _document_display_name(filename, student_id)
         extension = os.path.splitext(display_filename)[1].lower().lstrip(".") or "file"
         available = resolved_filepath is not None
@@ -407,7 +535,7 @@ def view_student_document(student_id, document_id):
         abort(404)
     filename = _value(row, "filename", 0, "") or "Document"
     filepath = _value(row, "filepath", 1, "") or ""
-    resolved_filepath = _resolve_upload_path(filepath, filename)
+    resolved_filepath = _resolve_upload_path(filepath, filename, document_id)
     if not resolved_filepath:
         if not _is_safe_upload_path(filepath):
             abort(403)
