@@ -104,3 +104,13 @@ def test_ml_explanation_route_is_login_protected_and_dedicated():
     handler_index = controller.index("def ml_explanation():", protected_index)
     assert route_index < protected_index < handler_index
     assert "explain_ml_evidence(session.get(\"user_id\"), evidence)" in controller
+
+
+def test_supervisor_insights_registers_assistant_and_matches_export_buttons():
+    bootstrap = (ROOT / "bootstrap/app.py").read_text(encoding="utf-8")
+    script = (ROOT / "resources/assets/js/supervisor_insights_ai.js").read_text(encoding="utf-8")
+
+    assert "from app.Http.Controllers.assistant import assistant_bp" in bootstrap
+    assert "supervisor_profile_photo,assistant_bp,notifications_bp,messages" in bootstrap
+    assert 'ensureExportLink(controls, "pdf", `/supervisor/classes/${classId}/insights/export.pdf`, false);' in script
+    assert 'pdfLink.className = "btn btn-sm btn-outline-primary";' in script
