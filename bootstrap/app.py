@@ -49,6 +49,7 @@ from app.Services.logbook_photo_service import ensure_logbook_photo_schema,get_l
 from app.Services.logbook_review_service import ensure_logbook_review_schema
 from app.Services.performance_rating_service import ensure_daily_performance_rating_schema
 from app.Services.ojt_evaluation_service import ensure_ojt_evaluation_schema
+from app.Services.internship_schedule_service import ensure_internship_schedule_schema
 from app.Services.notification_service import get_user_notifications,get_recent_notifications,get_unread_count
 from app.Services.supervisor_profile_service import ensure_supervisor_profile_schema
 app=Flask(__name__,template_folder=str(BASE_DIR/"resources"/"views"),static_folder=str(BASE_DIR/"resources"/"assets"),static_url_path="/static")
@@ -106,57 +107,38 @@ def uploaded_file(filename):
     authorized = False
 
     try:
-        # --- Authorization Checks ---
-
-        # 1. Check if it's a registered document.
-        # If it IS a registered document: deny for non-admins, allow for admins.
         is_doc = _is_registered_document_upload(filename)
         if is_doc:
             if role == "admin":
                 authorized = True
             else:
-                return "Direct document access is not allowed.", 403 # Original denial for non-admins
-
-        # If it's NOT a registered document, check other types:
+                return "Direct document access is not allowed.", 403
         else:
-            # Profile pictures: allow admins
-            # Note: The specific route /uploads/profile_pictures/<filename> already handles this for non-admins,
-            # but this generic route for profile_pictures is likely intended for admin viewing of student profiles.
             if filename.startswith("profile_pictures/"):
                 if role == "admin":
                     authorized = True
-
-            # Classwork resources: allow admin, student (if enrolled), supervisor (if owns class)
             elif filename.startswith("classwork/"):
                 parts = filename.split('/')
                 if len(parts) >= 3 and parts[0] == 'classwork':
                     class_id_str, assignment_id_str, *resource_parts = parts[1:]
                     try:
                         class_id = int(class_id_str)
-
                         if role == "admin":
                             authorized = True
                         elif role == "student":
-                            # Check if student is enrolled in this class
                             student_enrollment_sql = "SELECT 1 FROM classroom_students WHERE classroom_id = ? AND student_id = ?"
                             if conn.execute(student_enrollment_sql, (class_id, user_id)).fetchone():
                                 authorized = True
                         elif role == "supervisor":
-                            # Check if supervisor owns this class
                             supervisor_class_sql = "SELECT 1 FROM classrooms WHERE id = ? AND supervisor_id = ?"
                             if conn.execute(supervisor_class_sql, (class_id, user_id)).fetchone():
                                 authorized = True
                     except ValueError:
-                        pass # Invalid path format, falls through to deny
-
-        # Default deny if no explicit authorization was granted
+                        pass
         if not authorized:
             return "Access denied.", 403
-
     finally:
         conn.close()
-
-    # If authorized, serve the file
     return send_from_directory(str(UPLOAD_FOLDER), filename)
 @app.route("/uploads/profile_pictures/<filename>")
 @login_required
@@ -195,7 +177,7 @@ def repair_missing_student_profiles():
   sql=("INSERT INTO student_profiles (user_id,profile_completed) SELECT u.id,0 FROM users u WHERE u.role='student' AND NOT EXISTS (SELECT 1 FROM student_profiles sp WHERE sp.user_id=u.id) ON CONFLICT (user_id) DO NOTHING" if using_postgres() else "INSERT OR IGNORE INTO student_profiles (user_id,profile_completed) SELECT u.id,0 FROM users u WHERE u.role='student' AND NOT EXISTS (SELECT 1 FROM student_profiles sp WHERE sp.user_id=u.id)");cur.execute(sql);conn.commit()
  except Exception as exc:conn.rollback();print("student profile repair skipped:",exc)
  finally:cur.close();conn.close()
-initialize_database();ensure_supervisor_profile_schema();ensure_classroom_schema();ensure_classwork_submission_schema();ensure_classwork_score_schema();ensure_attendance_schema();ensure_logbook_schema();ensure_logbook_photo_schema();ensure_logbook_review_schema();ensure_daily_performance_rating_schema();ensure_ojt_evaluation_schema();ensure_session_schema();repair_missing_student_profiles()
+initialize_database();ensure_supervisor_profile_schema();ensure_classroom_schema();ensure_classwork_submission_schema();ensure_classwork_score_schema();ensure_attendance_schema();ensure_logbook_schema();ensure_logbook_photo_schema();ensure_logbook_review_schema();ensure_daily_performance_rating_schema();ensure_ojt_evaluation_schema();ensure_internship_schedule_schema();ensure_session_schema();repair_missing_student_profiles()
 for bp in (auth,password,student,daily_logbook,logbook_review,daily_performance_history,intern_profile,ojt_evaluation,needs_attention,student_classwork,student_gradebook,student_classmates,supervisor,supervisor_documents,admin,admin_assigned_interns,classroom,internship_classroom,classwork,classwork_submissions,classwork_grading,classwork_scores,classwork_gradebook,classwork_gradebook_export,classwork_ml_insights,performance_reports,admin_classrooms,admin_reports_overview,admin_trash,supervisor_profile_photo,assistant_bp,notifications_bp,messages):app.register_blueprint(bp)
 @app.before_request
 def enforce_single_supervisor_session():
@@ -207,9 +189,9 @@ def enforce_single_supervisor_session():
  if current is not None and session.get("session_version")!=int(current):session.clear();session["login_error"]="You were signed out because this supervisor account logged in on another device.";return redirect(url_for("auth.login"))
 @app.context_processor
 def inject_notifications():
- defaults={"notifications":[],"recent_notifications":[],"unread_count":0,"sidebar_profile":None,"supervisor_classroom_pending_count":0,"supervisor_evaluation_pending_count":0,"supervisor_class_pending_counts":{},"admin_pending_approval_count":0}
+ defaults={"notifications":[],"recent_notifications":[],"unread_count":0,"sidebar_profile":None,"supervisor_classroom_pending_count":0,"supervisor_evaluation_pending_count":0,"supervisor_class_pending_counts":{},"supervisor_class_card_stats":{},"admin_pending_approval_count":0}
  if "user_id" not in session:return defaults
- uid=session["user_id"];sidebar=None;supervisor_class_pending_counts={};supervisor_classroom_pending_count=0;supervisor_evaluation_pending_count=0;admin_pending_approval_count=0
+ uid=session["user_id"];sidebar=None;supervisor_class_pending_counts={};supervisor_class_card_stats={};supervisor_classroom_pending_count=0;supervisor_evaluation_pending_count=0;admin_pending_approval_count=0
  try:
   conn=get_db_connection()
   try:
@@ -244,6 +226,43 @@ def inject_notifications():
      for pending_row in pending_rows:
       class_id=int(pending_row["classroom_id"] if "classroom_id" in pending_row.keys() else pending_row[0]);logbook_pending=int(pending_row["pending_logbooks"] if "pending_logbooks" in pending_row.keys() else pending_row[1] or 0);work_pending=int(pending_row["pending_work"] if "pending_work" in pending_row.keys() else pending_row[2] or 0);total_pending=logbook_pending+work_pending
       supervisor_class_pending_counts[class_id]={"logbook":logbook_pending,"work":work_pending,"total":total_pending};supervisor_classroom_pending_count+=total_pending
+     card_rows=conn.execute("""
+      SELECT c.id AS classroom_id,
+             COALESCE(cid.program,'') AS program,
+             COALESCE(cid.required_hours,0) AS required_hours,
+             COALESCE(cid.required_days,0) AS required_days,
+             COALESCE(cid.hours_per_day,0) AS hours_per_day,
+             COALESCE(cid.attendance_days,'') AS attendance_days,
+             COALESCE(cid.shift_start_time,'') AS shift_start_time,
+             COALESCE(cid.shift_end_time,'') AS shift_end_time,
+             (SELECT COUNT(*) FROM classroom_students cs WHERE cs.classroom_id=c.id) AS student_count,
+             (SELECT COUNT(*) FROM ojt_evaluations e
+              WHERE e.classroom_id=c.id AND e.supervisor_id=c.supervisor_id
+                AND LOWER(COALESCE(e.status,''))='submitted') AS submitted_evaluations
+      FROM classrooms c
+      LEFT JOIN classroom_internship_details cid ON cid.classroom_id=c.id
+      WHERE c.supervisor_id=?
+     """,(uid,)).fetchall()
+     for card_row in card_rows:
+      class_id=int(card_row["classroom_id"] if "classroom_id" in card_row.keys() else card_row[0]);program=(card_row["program"] if "program" in card_row.keys() else card_row[1]) or "";required_hours=float((card_row["required_hours"] if "required_hours" in card_row.keys() else card_row[2]) or 0);required_days=int((card_row["required_days"] if "required_days" in card_row.keys() else card_row[3]) or 0);hours_per_day=int((card_row["hours_per_day"] if "hours_per_day" in card_row.keys() else card_row[4]) or 0);attendance_days=(card_row["attendance_days"] if "attendance_days" in card_row.keys() else card_row[5]) or "";shift_start_time=(card_row["shift_start_time"] if "shift_start_time" in card_row.keys() else card_row[6]) or "";shift_end_time=(card_row["shift_end_time"] if "shift_end_time" in card_row.keys() else card_row[7]) or "";student_count=int((card_row["student_count"] if "student_count" in card_row.keys() else card_row[8]) or 0);submitted_evaluations=int((card_row["submitted_evaluations"] if "submitted_evaluations" in card_row.keys() else card_row[9]) or 0)
+      progress_rows=conn.execute("""
+       SELECT cs.student_id,
+              COALESCE(SUM(CASE WHEN a.status='Completed' THEN COALESCE(a.hours_rendered,0) ELSE 0 END),0) AS rendered_hours,
+              COUNT(DISTINCT CASE WHEN a.status='Completed' THEN DATE(a.clock_in) END) AS completed_days
+       FROM classroom_students cs
+       LEFT JOIN attendance a ON a.student_id=cs.student_id AND a.classroom_id=cs.classroom_id
+       WHERE cs.classroom_id=?
+       GROUP BY cs.student_id
+      """,(class_id,)).fetchall()
+      progress_total=0.0;completed_interns=0
+      for progress_row in progress_rows:
+       rendered_hours=float((progress_row["rendered_hours"] if "rendered_hours" in progress_row.keys() else progress_row[1]) or 0);completed_days=int((progress_row["completed_days"] if "completed_days" in progress_row.keys() else progress_row[2]) or 0);ratios=[]
+       if required_hours>0:ratios.append(min(1.0,max(0.0,rendered_hours/required_hours)))
+       if required_days>0:ratios.append(min(1.0,max(0.0,completed_days/required_days)))
+       student_progress=min(ratios) if ratios else 0.0;progress_total+=student_progress
+       if ratios and all(ratio>=1.0 for ratio in ratios):completed_interns+=1
+      progress_percent=int(round((progress_total/student_count)*100)) if student_count else 0;pending_evaluations=max(0,student_count-submitted_evaluations);evaluation_ready=student_count>0 and completed_interns>=student_count
+      supervisor_class_card_stats[class_id]={"program":program,"required_hours":required_hours,"required_days":required_days,"hours_per_day":hours_per_day,"attendance_days":attendance_days,"shift_start_time":shift_start_time,"shift_end_time":shift_end_time,"progress_percent":max(0,min(100,progress_percent)),"completed_interns":completed_interns,"student_count":student_count,"submitted_evaluations":submitted_evaluations,"pending_evaluations":pending_evaluations,"evaluation_ready":evaluation_ready}
      evaluation_row=conn.execute("""
       SELECT COUNT(*) AS pending_count
       FROM classroom_students cs
@@ -261,6 +280,6 @@ def inject_notifications():
      pending_approval_row=conn.execute("SELECT COUNT(*) FROM users WHERE role IN ('pending_student','pending_supervisor')").fetchone()
      if pending_approval_row:admin_pending_approval_count=int(pending_approval_row[0] or 0)
   finally:conn.close()
-  return {"notifications":get_user_notifications(uid,limit=20),"recent_notifications":get_recent_notifications(uid,days=7,limit=10),"unread_count":get_unread_count(uid),"sidebar_profile":sidebar,"supervisor_classroom_pending_count":supervisor_classroom_pending_count,"supervisor_evaluation_pending_count":supervisor_evaluation_pending_count,"supervisor_class_pending_counts":supervisor_class_pending_counts,"admin_pending_approval_count":admin_pending_approval_count}
+  return {"notifications":get_user_notifications(uid,limit=20),"recent_notifications":get_recent_notifications(uid,days=7,limit=10),"unread_count":get_unread_count(uid),"sidebar_profile":sidebar,"supervisor_classroom_pending_count":supervisor_classroom_pending_count,"supervisor_evaluation_pending_count":supervisor_evaluation_pending_count,"supervisor_class_pending_counts":supervisor_class_pending_counts,"supervisor_class_card_stats":supervisor_class_card_stats,"admin_pending_approval_count":admin_pending_approval_count}
  except Exception as exc:print("inject_notifications failed:",exc);defaults["sidebar_profile"]=sidebar;return defaults
 if __name__=="__main__":app.run(debug=app.debug)
