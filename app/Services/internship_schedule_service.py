@@ -17,6 +17,7 @@ DEFAULT_START_TIME = "09:00"
 DEFAULT_END_TIME = "17:00"
 DEFAULT_HOURS_PER_DAY = 8
 APP_TIMEZONE = os.environ.get("NEXORA_TIMEZONE", "Asia/Manila")
+_SCHEMA_READY = False
 
 
 def _row_value(row, key, index=0, default=None):
@@ -68,7 +69,11 @@ def attendance_days_text(values):
 
 
 def ensure_internship_schedule_schema():
-    """Add weekly schedule fields without removing or rewriting legacy fields."""
+    """Add weekly schedule fields once per process without rewriting legacy data."""
+    global _SCHEMA_READY
+    if _SCHEMA_READY:
+        return
+
     conn = get_db_connection()
     try:
         if using_postgres():
@@ -99,6 +104,7 @@ def ensure_internship_schedule_schema():
                 if name not in columns:
                     conn.execute(f"ALTER TABLE classroom_internship_details ADD COLUMN {name} {definition}")
         conn.commit()
+        _SCHEMA_READY = True
     except Exception:
         try:
             conn.rollback()
@@ -167,6 +173,11 @@ def get_student_schedule_state(student_id, classroom_id=None, now=None):
     try:
         student_id = int(student_id)
     except (TypeError, ValueError):
+        return {"classroom_id": None, "attention_count": 0, "attention_reason": None}
+
+    try:
+        ensure_internship_schedule_schema()
+    except Exception:
         return {"classroom_id": None, "attention_count": 0, "attention_reason": None}
 
     current = app_local_now(now)
@@ -326,6 +337,11 @@ def ensure_supervisor_completion_notifications(supervisor_id):
     try:
         supervisor_id = int(supervisor_id)
     except (TypeError, ValueError):
+        return 0
+
+    try:
+        ensure_internship_schedule_schema()
+    except Exception:
         return 0
 
     candidates = []
