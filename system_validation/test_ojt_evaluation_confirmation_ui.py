@@ -10,7 +10,8 @@ def test_official_evaluation_uses_nexora_submit_confirmation():
     ).read_text(encoding="utf-8")
 
     assert "Official Overall Score" in template
-    assert "does not recalculate it from the criteria above" in template
+    assert "The rubric, remarks, and Official Overall Score will be saved exactly as entered." in template
+    assert "Nexora does not convert the 1–5 rating into an official percentage without a defined school/company scale." in template
     assert "data-evaluation-submit-confirm" in template
     assert "data-evaluation-submit-confirm-button" in template
     assert "Submit Official OJT Evaluation?" in template
