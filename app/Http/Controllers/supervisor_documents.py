@@ -354,14 +354,7 @@ def student_document_folder(student_id):
                 size = os.path.getsize(resolved_filepath)
             except OSError:
                 size = None
-        if extension in {"png", "jpg", "jpeg", "gif"}:
-            preview_type = "image"
-        elif extension == "pdf":
-            preview_type = "pdf"
-        elif extension == "txt":
-            preview_type = "text"
-        else:
-            preview_type = None
+        preview_type = "image" if extension in {"png", "jpg", "jpeg", "gif"} else None
         documents.append(
             {
                 "id": document_id,
@@ -420,8 +413,9 @@ def view_student_document(student_id, document_id):
             abort(403)
         abort(404)
 
+    download = (request.args.get("download") or "").strip() == "1"
     return send_file(
         resolved_filepath,
-        as_attachment=False,
+        as_attachment=download,
         download_name=_document_display_name(filename, student_id),
     )
