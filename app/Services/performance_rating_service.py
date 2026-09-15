@@ -98,6 +98,127 @@ def _row_value(row, key, index=0, default=None):
         return default
 
 
+def _linked_assignment_for_attendance(conn, attendance_id, student_id):
+    row = conn.execute(
+        """
+        SELECT related_assignment_id
+        FROM logs
+        WHERE attendance_id = ?
+          AND student_id = ?
+          AND entry_type = 'daily'
+          AND related_assignment_id IS NOT NULL
+        LIMIT 1
+        """,
+        (attendance_id, student_id),
+    ).fetchone()
+    assignment_id = _row_value(row, "related_assignment_id", 0, None)
+    try:
+        return int(assignment_id) if assignment_id is not None else None
+    except (TypeError, ValueError):
+        return None
+
+
+def _sync_work_score_from_daily_ratings(conn, assignment_id, student_id, now=None):
+    """Mirror rated Daily OJT evidence into the existing Work score record."""
+    if not assignment_id or not student_id:
+        return
+
+    row = conn.execute(
+        """
+        SELECT AVG(r.percentage) AS average_percentage,
+               COUNT(r.attendance_id) AS rated_days
+        FROM logs l
+        JOIN attendance a ON a.id = l.attendance_id
+        JOIN daily_performance_ratings r ON r.attendance_id = a.id
+        WHERE l.entry_type = 'daily'
+          AND l.related_assignment_id = ?
+          AND l.student_id = ?
+        """,
+        (assignment_id, student_id),
+    ).fetchone()
+
+    average_percentage = _row_value(row, "average_percentage", 0, None)
+    rated_days = int(_row_value(row, "rated_days", 1, 0) or 0)
+    if average_percentage is None or rated_days <= 0:
+        return
+
+    try:
+        percentage = round(float(average_percentage), 1)
+    except (TypeError, ValueError):
+        return
+
+    timestamp = now or datetime.now()
+    conn.execute(
+        """
+        INSERT INTO classwork_scores (
+            assignment_id,
+            student_id,
+            score,
+            max_score,
+            percentage,
+            grading_method,
+            imported_at
+        ) VALUES (?, ?, ?, 100, ?, 'manual', ?)
+        ON CONFLICT (assignment_id, student_id) DO UPDATE SET
+            score = excluded.score,
+            max_score = excluded.max_score,
+            percentage = excluded.percentage,
+            grading_method = excluded.grading_method,
+            imported_at = excluded.imported_at
+        """,
+        (
+            assignment_id,
+            student_id,
+            percentage,
+            percentage,
+            timestamp,
+        ),
+    )
+
+
+def _sync_attendance_work_score(conn, attendance_id, student_id, now=None):
+    assignment_id = _linked_assignment_for_attendance(
+        conn,
+        attendance_id,
+        student_id,
+    )
+    if assignment_id is not None:
+        _sync_work_score_from_daily_ratings(
+            conn,
+            assignment_id,
+            student_id,
+            now=now,
+        )
+
+
+def _sync_all_linked_work_scores(conn):
+    """Backfill existing rated Logbook Work when an app process starts."""
+    rows = conn.execute(
+        """
+        SELECT DISTINCT l.related_assignment_id, l.student_id
+        FROM logs l
+        JOIN daily_performance_ratings r ON r.attendance_id = l.attendance_id
+        WHERE l.entry_type = 'daily'
+          AND l.related_assignment_id IS NOT NULL
+        """
+    ).fetchall()
+    now = datetime.now()
+    for row in rows:
+        assignment_id = _row_value(row, "related_assignment_id", 0, None)
+        student_id = _row_value(row, "student_id", 1, None)
+        try:
+            assignment_id = int(assignment_id)
+            student_id = int(student_id)
+        except (TypeError, ValueError):
+            continue
+        _sync_work_score_from_daily_ratings(
+            conn,
+            assignment_id,
+            student_id,
+            now=now,
+        )
+
+
 def ensure_daily_performance_rating_schema():
     """Create the additive one-rating-per-attendance-day table."""
     conn = get_db_connection()
@@ -133,6 +254,7 @@ def ensure_daily_performance_rating_schema():
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_daily_performance_ratings_supervisor ON daily_performance_ratings(supervisor_id)"
         )
+        _sync_all_linked_work_scores(conn)
         conn.commit()
     except Exception:
         try:
@@ -273,6 +395,7 @@ def save_daily_performance_rating(
         if _row_value(attendance, "status", 1, "Open") == "Open":
             return {"ok": False, "error": "Clock-out must be completed before daily performance can be rated."}
 
+        student_id = int(_row_value(attendance, "student_id", 0, 0))
         now = datetime.now()
         conn.execute(
             """
@@ -302,13 +425,19 @@ def save_daily_performance_rating(
                 now,
             ),
         )
+        _sync_attendance_work_score(
+            conn,
+            attendance_id,
+            student_id,
+            now=now,
+        )
         conn.commit()
         return {
             "ok": True,
             "error": None,
             "attendance_id": attendance_id,
             "classroom_id": classroom_id,
-            "student_id": int(_row_value(attendance, "student_id", 0, 0)),
+            "student_id": student_id,
             "star_rating": snapshot["star_rating"],
             "percentage": snapshot["percentage"],
             "comment": comment,
@@ -408,6 +537,7 @@ def save_bulk_daily_performance_ratings(
         recipients = []
         for row in ordered_rows:
             attendance_id = int(_row_value(row, "attendance_id", 1, 0))
+            student_id = int(_row_value(row, "student_id", 2, 0))
             conn.execute(
                 """
                 INSERT INTO daily_performance_ratings (
@@ -436,11 +566,17 @@ def save_bulk_daily_performance_ratings(
                     now,
                 ),
             )
+            _sync_attendance_work_score(
+                conn,
+                attendance_id,
+                student_id,
+                now=now,
+            )
             recipients.append(
                 {
                     "log_id": int(_row_value(row, "log_id", 0, 0)),
                     "attendance_id": attendance_id,
-                    "student_id": int(_row_value(row, "student_id", 2, 0)),
+                    "student_id": student_id,
                 }
             )
 
