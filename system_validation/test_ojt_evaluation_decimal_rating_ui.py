@@ -14,6 +14,10 @@ def test_official_evaluation_supports_decimal_ratings_and_weighted_display():
     assert "Calculated Weighted Rating" in source
     assert "data-evaluation-weighted-rating" in source
     assert "rating × weight" in source
+    assert '<svg width="16" height="16"' in source
+    assert "ⓘ" not in source
+    assert "bottom-0 z-3" in source
+    assert "shadow-sm" in source
 
     normalized = _normalize_items(
         [
