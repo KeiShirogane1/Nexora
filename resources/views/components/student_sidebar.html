@@ -66,7 +66,7 @@ body.student-logbook-page .student-logbook-daily-modal .nx-daily-accomplishment 
 </style>
 
 {% set sidebar_route_class_id = request.view_args.get('class_id') if request.view_args else none %}
-{% set sidebar_query_class_id = request.args.get('classroom_id', type=int) %}
+{% set sidebar_query_class_id = request.args.get('classroom_id') %}
 {% set sidebar_requested_class_id = sidebar_route_class_id or sidebar_query_class_id %}
 {% set sidebar_schedule_state = get_student_schedule_state(session.get('user_id'), sidebar_requested_class_id) %}
 {% set sidebar_class_id = sidebar_requested_class_id or sidebar_schedule_state.classroom_id %}
