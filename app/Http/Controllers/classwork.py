@@ -58,6 +58,13 @@ def _student_has_assignment_access(conn, assignment_id, student_id):
     ).fetchone() is not None
 
 
+def _assignment_in_class(conn, class_id, assignment_id):
+    return conn.execute(
+        "SELECT id FROM classroom_assignments WHERE id = ? AND classroom_id = ? LIMIT 1",
+        (assignment_id, class_id),
+    ).fetchone()
+
+
 @classwork.before_app_request
 def _protect_legacy_student_assignment_routes():
     if request.endpoint not in {
@@ -117,6 +124,16 @@ def _save_resource(upload, class_id, assignment_id):
     return filename, relative_path
 
 
+def _validate_work_fields(title, description, external_url):
+    if len(title) < 3 or len(title) > 200:
+        return "Title is required and must be 3-200 characters."
+    if len(description) > 5000:
+        return "Instructions must be 5000 characters or fewer."
+    if external_url and not _valid_external_url(external_url):
+        return "Resource link must be a valid http:// or https:// URL."
+    return None
+
+
 @classwork.route("/supervisor/classes/<int:class_id>/classwork", methods=["GET", "POST"])
 @role_required("supervisor")
 def manage_classwork(class_id):
@@ -169,15 +186,10 @@ def manage_classwork(class_id):
             description = (request.form.get("description") or "").strip()
             activity_type = (request.form.get("activity_type") or "assignment").strip()
             due_at = (request.form.get("due_at") or "").strip() or None
-            points_raw = (request.form.get("points") or "100").strip()
             external_url = (request.form.get("external_url") or "").strip() or None
             resource_label = (request.form.get("resource_label") or "").strip() or None
-            allow_file_upload = 1 if request.form.get("allow_file_upload") == "on" else 0
-            group_mode = 1 if request.form.get("group_mode") == "on" else 0
-            max_group_size_raw = (request.form.get("max_group_size") or "1").strip()
             assignment_scope = (request.form.get("assignment_scope") or "classroom").strip().lower()
             team_name = (request.form.get("team_name") or "").strip()
-            submission_mode = (request.form.get("submission_mode") or "individual").strip().lower()
 
             if activity_type not in ACTIVITY_TYPES:
                 flash("Choose a valid work type.", "danger")
@@ -185,17 +197,9 @@ def manage_classwork(class_id):
             if assignment_scope not in {"classroom", "selected"}:
                 flash("Choose who should receive this work.", "danger")
                 return redirect(url_for("classwork.manage_classwork", class_id=class_id))
-            if submission_mode not in {"individual", "shared"}:
-                flash("Choose a valid submission mode.", "danger")
-                return redirect(url_for("classwork.manage_classwork", class_id=class_id))
-            if len(title) < 3 or len(title) > 200:
-                flash("Title is required and must be 3-200 characters.", "danger")
-                return redirect(url_for("classwork.manage_classwork", class_id=class_id))
-            if len(description) > 5000:
-                flash("Instructions must be 5000 characters or fewer.", "danger")
-                return redirect(url_for("classwork.manage_classwork", class_id=class_id))
-            if external_url and not _valid_external_url(external_url):
-                flash("Resource link must be a valid http:// or https:// URL.", "danger")
+            validation_error = _validate_work_fields(title, description, external_url)
+            if validation_error:
+                flash(validation_error, "danger")
                 return redirect(url_for("classwork.manage_classwork", class_id=class_id))
             if len(team_name) > 100:
                 flash("Team name must be 100 characters or fewer.", "danger")
@@ -220,6 +224,8 @@ def manage_classwork(class_id):
                     flash("Select at least one intern for targeted work.", "danger")
                     return redirect(url_for("classwork.manage_classwork", class_id=class_id))
 
+            group_mode = 0
+            max_group_size = 1
             if activity_type == "group_project":
                 if assignment_scope != "selected":
                     flash("Team Tasks must be assigned to selected interns.", "danger")
@@ -228,27 +234,10 @@ def manage_classwork(class_id):
                     flash("Select at least two interns for a Team Task.", "danger")
                     return redirect(url_for("classwork.manage_classwork", class_id=class_id))
                 group_mode = 1
-                max_group_size_raw = str(len(selected_recipient_ids))
+                max_group_size = len(selected_recipient_ids)
                 team_name = team_name or None
             else:
                 team_name = None
-                submission_mode = "individual"
-
-            try:
-                points = int(points_raw)
-                if points < 0 or points > 10000:
-                    raise ValueError
-            except ValueError:
-                flash("Points must be between 0 and 10000.", "danger")
-                return redirect(url_for("classwork.manage_classwork", class_id=class_id))
-
-            try:
-                max_group_size = int(max_group_size_raw)
-                if max_group_size < 1 or max_group_size > 100:
-                    raise ValueError
-            except ValueError:
-                flash("Maximum group size must be between 1 and 100.", "danger")
-                return redirect(url_for("classwork.manage_classwork", class_id=class_id))
 
             upload = request.files.get("resource_file")
             resource_filename = None
@@ -263,7 +252,7 @@ def manage_classwork(class_id):
 
                 insert_cursor = conn.execute(
                     insert_sql,
-                    (class_id, sid, title, description, due_at, points),
+                    (class_id, sid, title, description, due_at, 0),
                 )
 
                 if using_postgres():
@@ -294,11 +283,11 @@ def manage_classwork(class_id):
                         resource_label,
                         resource_filename,
                         resource_filepath,
-                        allow_file_upload,
+                        0,
                         group_mode,
                         max_group_size,
                         team_name,
-                        submission_mode,
+                        "individual",
                     ),
                 )
 
@@ -334,9 +323,9 @@ def manage_classwork(class_id):
                             ),
                         )
                 except Exception as notify_error:
-                    print("work notification failed:", notify_error)
+                    current_app.logger.warning("work notification failed: %s", notify_error)
 
-                flash("Work created successfully.", "success")
+                flash("Work created successfully. Interns can record completion in their Daily OJT Logbook.", "success")
                 return redirect(url_for("classwork.manage_classwork", class_id=class_id))
             except Exception as error:
                 try:
@@ -403,3 +392,117 @@ def manage_classwork(class_id):
         enrolled_students=enrolled_students,
         active_page="classes",
     )
+
+
+@classwork.route("/supervisor/classes/<int:class_id>/classwork/<int:assignment_id>/edit", methods=["POST"])
+@role_required("supervisor")
+def edit_work(class_id, assignment_id):
+    sid = session["user_id"]
+    if not _is_owner(sid, class_id):
+        return "Forbidden", 403
+
+    title = (request.form.get("title") or "").strip()
+    description = (request.form.get("description") or "").strip()
+    due_at = (request.form.get("due_at") or "").strip() or None
+    external_url = (request.form.get("external_url") or "").strip() or None
+    resource_label = (request.form.get("resource_label") or "").strip() or None
+    validation_error = _validate_work_fields(title, description, external_url)
+    if validation_error:
+        flash(validation_error, "danger")
+        return redirect(url_for("classwork.manage_classwork", class_id=class_id))
+
+    conn = get_db_connection()
+    try:
+        classroom = conn.execute(
+            "SELECT archived FROM classrooms WHERE id = ? AND supervisor_id = ?",
+            (class_id, sid),
+        ).fetchone()
+        if not classroom:
+            abort(404)
+        archived = classroom["archived"] if "archived" in classroom.keys() else classroom[0]
+        if archived:
+            flash("Archived Intern Classrooms cannot change Work.", "warning")
+            return redirect(url_for("classwork.manage_classwork", class_id=class_id))
+        if not _assignment_in_class(conn, class_id, assignment_id):
+            abort(404)
+
+        conn.execute(
+            """UPDATE classroom_assignments
+               SET title = ?, description = ?, due_at = ?
+               WHERE id = ? AND classroom_id = ?""",
+            (title, description, due_at, assignment_id, class_id),
+        )
+        conn.execute(
+            """UPDATE classroom_assignment_meta
+               SET external_url = ?, resource_label = ?
+               WHERE assignment_id = ?""",
+            (external_url, resource_label, assignment_id),
+        )
+        conn.commit()
+        flash("Work updated successfully.", "success")
+    except Exception as error:
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+        current_app.logger.exception("Unable to update Work %s in class %s", assignment_id, class_id)
+        flash(f"Unable to update work: {error}", "danger")
+    finally:
+        conn.close()
+
+    return redirect(url_for("classwork.manage_classwork", class_id=class_id))
+
+
+@classwork.route("/supervisor/classes/<int:class_id>/classwork/<int:assignment_id>/remove", methods=["POST"])
+@role_required("supervisor")
+def remove_work(class_id, assignment_id):
+    sid = session["user_id"]
+    if not _is_owner(sid, class_id):
+        return "Forbidden", 403
+
+    conn = get_db_connection()
+    try:
+        classroom = conn.execute(
+            "SELECT archived FROM classrooms WHERE id = ? AND supervisor_id = ?",
+            (class_id, sid),
+        ).fetchone()
+        if not classroom:
+            abort(404)
+        archived = classroom["archived"] if "archived" in classroom.keys() else classroom[0]
+        if archived:
+            flash("Archived Intern Classrooms cannot remove Work.", "warning")
+            return redirect(url_for("classwork.manage_classwork", class_id=class_id))
+        if not _assignment_in_class(conn, class_id, assignment_id):
+            abort(404)
+
+        # Preserve Daily OJT history: removing Work only clears the optional relation.
+        conn.execute(
+            "UPDATE logs SET related_assignment_id = NULL WHERE related_assignment_id = ?",
+            (assignment_id,),
+        )
+        conn.execute(
+            "DELETE FROM classwork_submission_files WHERE submission_id IN (SELECT id FROM classwork_submissions WHERE assignment_id = ?)",
+            (assignment_id,),
+        )
+        conn.execute("DELETE FROM classwork_submissions WHERE assignment_id = ?", (assignment_id,))
+        conn.execute("DELETE FROM classwork_scores WHERE assignment_id = ?", (assignment_id,))
+        conn.execute("DELETE FROM classroom_submissions WHERE assignment_id = ?", (assignment_id,))
+        conn.execute("DELETE FROM classroom_assignment_recipients WHERE assignment_id = ?", (assignment_id,))
+        conn.execute("DELETE FROM classroom_assignment_meta WHERE assignment_id = ?", (assignment_id,))
+        conn.execute(
+            "DELETE FROM classroom_assignments WHERE id = ? AND classroom_id = ?",
+            (assignment_id, class_id),
+        )
+        conn.commit()
+        flash("Work removed. Existing Daily OJT Logbook entries were preserved.", "success")
+    except Exception as error:
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+        current_app.logger.exception("Unable to remove Work %s from class %s", assignment_id, class_id)
+        flash(f"Unable to remove work: {error}", "danger")
+    finally:
+        conn.close()
+
+    return redirect(url_for("classwork.manage_classwork", class_id=class_id))
