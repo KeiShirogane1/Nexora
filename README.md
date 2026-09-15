@@ -17,6 +17,17 @@ python run.py  # http://127.0.0.1:5000
 
 Database is initialized on first import via `scripts/init_db.py`. Default is SQLite `nexora.db`; set `DATABASE_URL` for PostgreSQL.
 
+## Validation
+
+The authoritative automated test suite lives in `system_validation/`. Root-level pytest discovery is configured through `pytest.ini`, so either of these commands runs the same project validation suite:
+
+```bash
+python -m pytest -q
+python -m pytest system_validation -q
+```
+
+Do not use `pytest tests/` for this repository; Nexora intentionally keeps its validation suite in `system_validation/`.
+
 ## Required Environment Variables
 
 | Variable | Required | Description |
