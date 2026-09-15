@@ -12,6 +12,10 @@ body:has(.nx-role-sidebar-shell) {
     min-height: 0 !important;
 }
 
+.nx-mobile-menu-button {
+    display: none;
+}
+
 @media (min-width: 761px) {
     .nx-role-admin .nx-role-sidebar {
         padding-bottom: 0 !important;
@@ -35,11 +39,31 @@ body:has(.nx-role-sidebar-shell) {
 }
 
 @media (max-width: 760px) {
+    html:has(.nx-role-sidebar-shell),
     body:has(.nx-role-sidebar-shell) {
-        --nexora-sidebar-width: 76px !important;
-        --nexora-sidebar-collapsed: 76px !important;
+        max-width: 100% !important;
+        overflow-x: hidden !important;
+    }
+
+    body:has(.nx-role-sidebar-shell) {
+        --nexora-sidebar-width: 0px !important;
+        --nexora-sidebar-collapsed: 0px !important;
         margin: 0 !important;
-        padding-left: 0 !important;
+        padding: 0 !important;
+    }
+
+    body.nx-mobile-nav-open {
+        overflow: hidden !important;
+    }
+
+    .nx-role-sidebar-shell {
+        position: fixed !important;
+        inset: 0 auto auto 0 !important;
+        z-index: 1290 !important;
+        width: 0 !important;
+        height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
 
     .nx-role-sidebar-shell::before {
@@ -51,18 +75,28 @@ body:has(.nx-role-sidebar-shell) {
     .nx-role-sidebar:focus-within {
         position: fixed !important;
         inset: 0 auto 0 0 !important;
-        width: 76px !important;
-        height: auto !important;
+        z-index: 1300 !important;
+        width: min(86vw, 320px) !important;
+        max-width: 320px !important;
+        height: 100dvh !important;
         max-height: 100dvh !important;
         min-height: 0 !important;
         margin: 0 !important;
-        padding: 22px 10px calc(18px + env(safe-area-inset-bottom)) !important;
+        padding: 18px 16px calc(18px + env(safe-area-inset-bottom)) !important;
         overflow-x: hidden !important;
         overflow-y: auto !important;
         overscroll-behavior: contain !important;
         scrollbar-width: thin !important;
-        scrollbar-color: rgba(142, 233, 173, 0.42) transparent !important;
-        box-shadow: 6px 0 20px var(--nx-sidebar-shadow) !important;
+        scrollbar-color: rgba(255, 255, 255, 0.28) transparent !important;
+        box-shadow: 14px 0 38px var(--nx-sidebar-shadow) !important;
+        transform: translateX(calc(-100% - 18px)) !important;
+        transition: transform 0.2s ease !important;
+    }
+
+    .nx-role-sidebar-shell.is-mobile-open .nx-role-sidebar,
+    .nx-role-sidebar-shell.is-mobile-open .nx-role-sidebar:hover,
+    .nx-role-sidebar-shell.is-mobile-open .nx-role-sidebar:focus-within {
+        transform: translateX(0) !important;
     }
 
     .nx-role-sidebar::-webkit-scrollbar {
@@ -76,36 +110,62 @@ body:has(.nx-role-sidebar-shell) {
 
     .nx-role-sidebar::-webkit-scrollbar-thumb {
         border-radius: 999px !important;
-        background: rgba(142, 233, 173, 0.38) !important;
-    }
-
-    .nx-role-sidebar::-webkit-scrollbar-thumb:hover {
-        background: rgba(142, 233, 173, 0.58) !important;
+        background: rgba(255, 255, 255, 0.24) !important;
     }
 
     .nx-role-sidebar-backdrop,
     .nx-role-sidebar:hover + .nx-role-sidebar-backdrop,
     .nx-role-sidebar:focus-within + .nx-role-sidebar-backdrop {
-        display: none !important;
+        position: fixed !important;
+        inset: 0 !important;
+        z-index: 1280 !important;
+        display: block !important;
         opacity: 0 !important;
         visibility: hidden !important;
         pointer-events: none !important;
+        background: var(--nx-sidebar-backdrop) !important;
+        -webkit-backdrop-filter: blur(3px);
+        backdrop-filter: blur(3px);
+        transition: opacity 0.2s ease, visibility 0.2s ease !important;
+    }
+
+    .nx-role-sidebar-shell.is-mobile-open .nx-role-sidebar-backdrop {
+        opacity: 1 !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+    }
+
+    .nx-role-brand,
+    .nx-role-profile,
+    .nx-role-nav,
+    .nx-role-nav-group,
+    .nx-role-sidebar:hover .nx-role-brand,
+    .nx-role-sidebar:focus-within .nx-role-brand,
+    .nx-role-sidebar:hover .nx-role-profile,
+    .nx-role-sidebar:focus-within .nx-role-profile,
+    .nx-role-sidebar:hover .nx-role-nav,
+    .nx-role-sidebar:focus-within .nx-role-nav,
+    .nx-role-sidebar:hover .nx-role-nav-group,
+    .nx-role-sidebar:focus-within .nx-role-nav-group {
+        width: 100% !important;
+        max-width: none !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
     }
 
     .nx-role-brand,
     .nx-role-sidebar:hover .nx-role-brand,
     .nx-role-sidebar:focus-within .nx-role-brand {
-        width: 56px !important;
-        min-width: 56px !important;
-        max-width: 56px !important;
+        min-width: 0 !important;
         height: 44px !important;
-        margin: 0 auto !important;
-        padding: 0 !important;
-        justify-content: center !important;
-        gap: 0 !important;
-        overflow: hidden !important;
+        margin: 0 !important;
+        padding: 0 4px !important;
+        justify-content: flex-start !important;
+        gap: 10px !important;
+        overflow: visible !important;
     }
 
+    .nx-role-logo,
     .nx-role-sidebar:hover .nx-role-logo,
     .nx-role-sidebar:focus-within .nx-role-logo {
         max-width: 44px !important;
@@ -120,7 +180,6 @@ body:has(.nx-role-sidebar-shell) {
     .nx-role-divider,
     .nx-role-section-label,
     .nx-role-footer,
-    .nx-role-submenu,
     .nx-role-sidebar:hover .nx-role-brand-copy,
     .nx-role-sidebar:focus-within .nx-role-brand-copy,
     .nx-role-sidebar:hover .nx-role-profile-copy,
@@ -137,22 +196,40 @@ body:has(.nx-role-sidebar-shell) {
     .nx-role-sidebar:focus-within .nx-role-section-label,
     .nx-role-sidebar:hover .nx-role-footer,
     .nx-role-sidebar:focus-within .nx-role-footer {
-        display: none !important;
+        display: revert !important;
+    }
+
+    .nx-role-brand-copy {
+        display: flex !important;
+    }
+
+    .nx-role-profile-copy {
+        display: block !important;
+    }
+
+    .nx-role-rule,
+    .nx-role-divider,
+    .nx-role-section-label {
+        display: block !important;
+    }
+
+    .nx-role-footer {
+        display: flex !important;
+        margin: 18px -16px -18px !important;
     }
 
     .nx-role-profile,
     .nx-role-sidebar:hover .nx-role-profile,
     .nx-role-sidebar:focus-within .nx-role-profile {
-        width: 52px !important;
-        min-width: 52px !important;
-        max-width: 52px !important;
-        height: 52px !important;
-        margin: 25px auto 22px !important;
-        padding: 0 !important;
-        justify-content: center !important;
-        gap: 0 !important;
+        min-width: 0 !important;
+        height: auto !important;
+        margin: 22px 0 !important;
+        padding: 0 4px !important;
+        justify-content: flex-start !important;
+        gap: 12px !important;
     }
 
+    .nx-role-profile img,
     .nx-role-sidebar:hover .nx-role-profile img,
     .nx-role-sidebar:focus-within .nx-role-profile img {
         width: 46px !important;
@@ -164,17 +241,8 @@ body:has(.nx-role-sidebar-shell) {
     .nx-role-nav,
     .nx-role-sidebar:hover .nx-role-nav,
     .nx-role-sidebar:focus-within .nx-role-nav {
-        width: 56px !important;
-        margin: 0 auto !important;
-        align-items: center !important;
-        gap: 6px !important;
-    }
-
-    .nx-role-nav-group,
-    .nx-role-sidebar:hover .nx-role-nav-group,
-    .nx-role-sidebar:focus-within .nx-role-nav-group {
-        width: 44px !important;
-        margin: 0 auto !important;
+        align-items: stretch !important;
+        gap: 4px !important;
     }
 
     .nx-role-nav > a,
@@ -183,38 +251,60 @@ body:has(.nx-role-sidebar-shell) {
     .nx-role-sidebar:focus-within .nx-role-nav > a,
     .nx-role-sidebar:hover .nx-role-nav-parent,
     .nx-role-sidebar:focus-within .nx-role-nav-parent {
-        width: 44px !important;
-        min-width: 44px !important;
-        max-width: 44px !important;
-        height: 44px !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        height: auto !important;
         min-height: 44px !important;
-        max-height: 44px !important;
-        margin: 0 auto !important;
-        padding: 0 !important;
-        justify-content: center !important;
-        gap: 0 !important;
-        font-size: 0 !important;
+        max-height: none !important;
+        margin: 0 !important;
+        padding: 0 13px !important;
+        justify-content: flex-start !important;
+        gap: 13px !important;
+        font-size: 12px !important;
     }
 
     .nx-role-icon,
     .nx-role-sidebar:hover .nx-role-icon,
     .nx-role-sidebar:focus-within .nx-role-icon {
-        width: 44px !important;
-        min-width: 44px !important;
-        height: 44px !important;
-        flex: 0 0 44px !important;
+        width: 20px !important;
+        min-width: 20px !important;
+        height: 20px !important;
+        flex: 0 0 20px !important;
         display: grid !important;
         place-items: center !important;
-        font-size: 19px !important;
+        font-size: 17px !important;
+    }
+
+    .nx-role-nav-text,
+    .nx-role-nav-arrow {
+        display: inline !important;
+    }
+
+    .nx-role-nav-arrow {
+        margin-left: auto !important;
+    }
+
+    .nx-role-nav-group.open > .nx-role-submenu {
+        margin: 3px 0 5px 17px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 3px !important;
+    }
+
+    .nx-role-submenu a {
+        min-height: 40px !important;
+        padding: 0 10px !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 9px !important;
+        color: rgba(255, 255, 255, 0.84) !important;
+        text-decoration: none !important;
     }
 
     .nx-role-account-nav {
         margin-bottom: 10px !important;
         padding-bottom: 8px !important;
-    }
-
-    .nx-role-account-nav > a:last-child {
-        margin-bottom: 8px !important;
     }
 
     body:has(.nx-role-sidebar-shell) > main,
@@ -231,51 +321,203 @@ body:has(.nx-role-sidebar-shell) {
     body:has(.nx-role-sidebar-shell) .admin-main,
     body:has(.nx-role-sidebar-shell) .nexora-app-main,
     body:has(.nx-role-sidebar-shell) .supervisor-classes-main {
-        margin-left: 76px !important;
-        width: calc(100% - 76px) !important;
-        max-width: none !important;
-        box-sizing: border-box !important;
-    }
-
-    body:has(.nx-role-sidebar-shell) .student-global-topbar {
-        left: 76px !important;
-        right: 0 !important;
-        width: calc(100% - 76px) !important;
         margin-left: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
         box-sizing: border-box !important;
     }
 
-    body:has(.nx-role-sidebar-shell) .admin-global-topbar {
-        left: auto !important;
-        right: auto !important;
-        width: calc(100% - 76px) !important;
-        margin-left: 76px !important;
-        box-sizing: border-box !important;
-    }
-
+    body:has(.nx-role-sidebar-shell) .student-global-topbar,
+    body:has(.nx-role-sidebar-shell) .admin-global-topbar,
     body:has(.nx-role-sidebar-shell) .supervisor-topbar {
-        left: 76px !important;
+        left: 0 !important;
         right: 0 !important;
-        width: auto !important;
+        width: 100% !important;
         margin-left: 0 !important;
         box-sizing: border-box !important;
     }
 
     body:has(.nx-role-sidebar-shell) .supervisor-create-bar {
-        left: 108px !important;
+        left: 16px !important;
+        right: 16px !important;
     }
 
-    .student-tasks-menu-button,
-    .supervisor-menu-button,
-    .admin-topbar-menu,
-    .sidebar-toggle,
-    .sidebar-collapse-btn,
-    .sidebar-collapse-control,
-    .nx-collapse-toggle {
-        display: none !important;
+    .nx-mobile-menu-button {
+        width: 44px;
+        min-width: 44px;
+        height: 44px;
+        flex: 0 0 44px;
+        margin: 0 10px 0 0;
+        padding: 0;
+        display: inline-grid !important;
+        place-items: center;
+        border: 1px solid #dfe6eb;
+        border-radius: 10px;
+        background: #fff;
+        color: var(--nx-topbar-ink, #17233b);
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+        cursor: pointer;
+    }
+
+    .nx-mobile-menu-button:hover,
+    .nx-mobile-menu-button:focus-visible,
+    .nx-mobile-menu-button[aria-expanded="true"] {
+        border-color: var(--nx-topbar-accent, #2563eb);
+        background: var(--nx-topbar-accent-soft, #eff6ff);
+        color: var(--nx-topbar-accent, #2563eb);
+        outline: none;
+    }
+
+    .nx-mobile-menu-button svg {
+        width: 21px;
+        height: 21px;
+        stroke: currentColor;
+    }
+
+    .student-logbook-table-wrap,
+    .student-gradebook-table-wrap,
+    .admin-compact-table-wrap,
+    .table-responsive {
+        max-width: 100% !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .student-logbook-icon-button,
+    .student-task-menu,
+    .admin-students-page .btn-more {
+        min-width: 44px !important;
+        min-height: 44px !important;
+    }
+
+    .student-task-menu {
+        display: inline-grid !important;
+        place-items: center !important;
+    }
+
+    .admin-students-page .dropdown-item-nexora {
+        min-height: 44px !important;
+    }
+
+    .crop-box {
+        width: min(450px, calc(100vw - 32px)) !important;
+        max-width: none !important;
+        padding: 18px !important;
+        box-sizing: border-box !important;
+    }
+
+    .crop-area {
+        width: min(350px, 100%) !important;
+        height: min(350px, calc(100vw - 68px)) !important;
+        max-width: 100% !important;
+        max-height: 60dvh !important;
+    }
+
+    .flash-container {
+        top: 12px !important;
+        left: 12px !important;
+        right: 12px !important;
+        width: auto !important;
+    }
+
+    .flash-popup {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        box-sizing: border-box !important;
+    }
+
+    .student-main-content .edit-row {
+        align-items: stretch !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+    }
+
+    .student-main-content .edit-row label {
+        width: auto !important;
+        min-width: 0 !important;
     }
 }
 </style>
+
+<script>
+(function () {
+    function initMobilePortalNavigation() {
+        var shell = document.querySelector('.nx-role-sidebar-shell');
+        var sidebar = shell ? shell.querySelector('.nx-role-sidebar') : null;
+        var backdrop = shell ? shell.querySelector('.nx-role-sidebar-backdrop') : null;
+        var topbarLeft = document.querySelector('.nx-role-topbar-left');
+
+        if (!shell || !sidebar || !backdrop || !topbarLeft) return;
+        if (document.querySelector('[data-nx-mobile-menu]')) return;
+
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'nx-mobile-menu-button';
+        button.setAttribute('data-nx-mobile-menu', '');
+        button.setAttribute('aria-label', 'Open navigation menu');
+        button.setAttribute('aria-expanded', 'false');
+        if (sidebar.id) button.setAttribute('aria-controls', sidebar.id);
+        button.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"></path><path d="M4 12h16"></path><path d="M4 17h16"></path></svg>';
+        topbarLeft.insertBefore(button, topbarLeft.firstChild);
+
+        function isMobile() {
+            return window.matchMedia('(max-width: 760px)').matches;
+        }
+
+        function setOpen(open, restoreFocus) {
+            if (!isMobile()) open = false;
+            shell.classList.toggle('is-mobile-open', open);
+            document.body.classList.toggle('nx-mobile-nav-open', open);
+            button.setAttribute('aria-expanded', open ? 'true' : 'false');
+            button.setAttribute('aria-label', open ? 'Close navigation menu' : 'Open navigation menu');
+            sidebar.setAttribute('aria-hidden', open || !isMobile() ? 'false' : 'true');
+
+            if (open) {
+                var firstTarget = sidebar.querySelector('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])');
+                if (firstTarget) window.setTimeout(function () { firstTarget.focus(); }, 40);
+            } else if (restoreFocus && isMobile()) {
+                button.focus();
+            }
+        }
+
+        button.addEventListener('click', function () {
+            setOpen(!shell.classList.contains('is-mobile-open'), false);
+        });
+
+        backdrop.addEventListener('click', function () {
+            setOpen(false, true);
+        });
+
+        sidebar.addEventListener('click', function (event) {
+            if (!isMobile()) return;
+            var link = event.target.closest('a[href]');
+            if (link) setOpen(false, false);
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && shell.classList.contains('is-mobile-open')) {
+                event.preventDefault();
+                setOpen(false, true);
+            }
+        });
+
+        window.addEventListener('resize', function () {
+            if (!isMobile()) setOpen(false, false);
+            else if (!shell.classList.contains('is-mobile-open')) sidebar.setAttribute('aria-hidden', 'true');
+        });
+
+        setOpen(false, false);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initMobilePortalNavigation, { once: true });
+    } else {
+        initMobilePortalNavigation();
+    }
+})();
+</script>
 
 {% include 'components/nexora_assistant_ai.html' %}
 {% include 'components/nexora_assistant_live.html' %}
