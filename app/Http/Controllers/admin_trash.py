@@ -1,10 +1,29 @@
 import os
+import re
 from datetime import datetime, timedelta
 from flask import Blueprint, jsonify, redirect, render_template, session, flash
 from app.Http.Middleware.security import role_required
 from app.Models.db import get_db_connection, using_postgres
 
 admin_trash = Blueprint("admin_trash", __name__)
+
+_SQL_IDENTIFIER_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+_SAFE_DELETE_TARGETS = frozenset({
+    ("classroom_students", "student_id"),
+    ("student_assignments", "student_id"),
+    ("notifications", "user_id"),
+    ("attendance", "student_id"),
+    ("logs", "student_id"),
+    ("documents", "student_id"),
+    ("tasks", "student_id"),
+    ("internships", "student_id"),
+    ("feedback", "student_id"),
+    ("classwork_scores", "student_id"),
+    ("classwork_submissions", "student_id"),
+    ("student_profiles", "user_id"),
+    ("users", "id"),
+    ("admin_user_trash", "user_id"),
+})
 
 
 def ensure_trash_schema(conn):
@@ -16,7 +35,14 @@ def ensure_trash_schema(conn):
 
 
 def _safe_delete(conn, table, column, user_id):
-    """Delete a dependent row without poisoning the surrounding transaction."""
+    """Delete a dependent row only when its SQL identifiers are explicitly allowed."""
+    if (
+        (table, column) not in _SAFE_DELETE_TARGETS
+        or not _SQL_IDENTIFIER_RE.fullmatch(table or "")
+        or not _SQL_IDENTIFIER_RE.fullmatch(column or "")
+    ):
+        return False
+
     conn.execute("SAVEPOINT nexora_trash_delete")
     try:
         conn.execute(f"DELETE FROM {table} WHERE {column}=?", (user_id,))
