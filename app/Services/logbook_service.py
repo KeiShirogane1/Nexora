@@ -105,7 +105,7 @@ def _visible_work(conn, student_id, classroom_id):
         return []
     rows = conn.execute(
         """
-        SELECT a.id, a.title
+        SELECT a.id, a.title, a.due_at, a.created_at
         FROM classroom_assignments a
         WHERE a.classroom_id = ?
           AND (
@@ -125,13 +125,28 @@ def _visible_work(conn, student_id, classroom_id):
         """,
         (classroom_id, student_id),
     ).fetchall()
-    return [
-        {
-            "id": int(_row_value(row, "id", 0, 0)),
-            "title": _row_value(row, "title", 1, "Work"),
-        }
-        for row in rows
-    ]
+
+    work_options = []
+    for row in rows:
+        work_title = _row_value(row, "title", 1, "Work")
+        due_at = _row_value(row, "due_at", 2, None)
+        created_at = _row_value(row, "created_at", 3, None)
+        date_label = (
+            f"Due {_format_date(due_at)}"
+            if due_at
+            else f"Assigned {_format_date(created_at)}"
+        )
+        work_options.append(
+            {
+                "id": int(_row_value(row, "id", 0, 0)),
+                "title": f"{date_label} — {work_title}",
+                "work_title": work_title,
+                "due_at": due_at,
+                "created_at": created_at,
+                "date_label": date_label,
+            }
+        )
+    return work_options
 
 
 def _can_reference_work(conn, student_id, classroom_id, assignment_id):
