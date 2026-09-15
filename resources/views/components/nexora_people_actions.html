@@ -34,12 +34,12 @@ a.btn,
     border-radius:50%!important;
 }
 
-/* Keep opened row menus above every adjacent table button/card. */
+/* Keep opened row menus above the table but below the role sidebar/drawer. */
 .more-actions{position:relative;z-index:20}
-.dropdown-menu-nexora.show{z-index:5000!important}
+.dropdown-menu-nexora.show{z-index:1200!important}
 tr:has(.dropdown-menu-nexora.show),
 td:has(.dropdown-menu-nexora.show),
-.actions-cell:has(.dropdown-menu-nexora.show){position:relative!important;z-index:4990!important}
+.actions-cell:has(.dropdown-menu-nexora.show){position:relative!important;z-index:1190!important}
 .table-responsive:has(.dropdown-menu-nexora.show),
 .table-card:has(.dropdown-menu-nexora.show),
 .nexora-card:has(.dropdown-menu-nexora.show){overflow:visible!important}
@@ -170,6 +170,9 @@ td:has(.dropdown-menu-nexora.show),
     function expandProgramText(){
         var walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,{acceptNode:function(node){
             var parent=node.parentElement;if(!parent||/^(SCRIPT|STYLE|TEXTAREA)$/.test(parent.tagName))return NodeFilter.FILTER_REJECT;
+            var compact=String(node.nodeValue||'').trim();
+            if(document.body.classList.contains('admin-students-page')&&parent.closest('#studentsTable')&&/^(BSIT|BSCS|BSIS|BSCPE)$/i.test(compact))return NodeFilter.FILTER_REJECT;
+            if(parent.closest('[data-nx-compact-program],[data-program-compact]'))return NodeFilter.FILTER_REJECT;
             return NodeFilter.FILTER_ACCEPT;
         }});
         var nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
