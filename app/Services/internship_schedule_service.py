@@ -37,12 +37,23 @@ def _row_value(row, key, index=0, default=None):
 
 
 def app_local_now(now=None):
-    """Return an application-local naive datetime for DB-compatible timestamps."""
+    """Return an application-local naive datetime for schedule comparisons."""
     if now is None:
         return datetime.now(ZoneInfo(APP_TIMEZONE)).replace(tzinfo=None)
     if now.tzinfo is not None:
         return now.astimezone(ZoneInfo(APP_TIMEZONE)).replace(tzinfo=None)
     return now
+
+
+def _parse_datetime(value):
+    if not value:
+        return None
+    if isinstance(value, datetime):
+        return value
+    try:
+        return datetime.fromisoformat(str(value))
+    except (TypeError, ValueError):
+        return None
 
 
 def _parse_time(value, fallback):
@@ -168,6 +179,15 @@ def _student_progress(conn, student_id, classroom_id):
     }
 
 
+def _to_local_attendance_time(raw_value, server_to_local_offset):
+    value = _parse_datetime(raw_value)
+    if value is None:
+        return None
+    if value.tzinfo is not None:
+        return value.astimezone(ZoneInfo(APP_TIMEZONE)).replace(tzinfo=None)
+    return value + server_to_local_offset
+
+
 def get_student_schedule_state(student_id, classroom_id=None, now=None):
     """Return schedule and current sidebar attention state for one intern."""
     try:
@@ -181,6 +201,11 @@ def get_student_schedule_state(student_id, classroom_id=None, now=None):
         return {"classroom_id": None, "attention_count": 0, "attention_reason": None}
 
     current = app_local_now(now)
+    # Existing attendance rows use the application's historical naive server clock.
+    # Detect the server-to-Nexora offset instead of rewriting those rows.
+    server_now = current if now is not None else datetime.now()
+    server_to_local_offset = current - server_now
+
     conn = get_db_connection()
     try:
         resolved_classroom_id = _resolve_student_classroom(conn, student_id, classroom_id)
@@ -252,16 +277,23 @@ def get_student_schedule_state(student_id, classroom_id=None, now=None):
         today_start = datetime.combine(current.date(), shift_start)
         today_end = datetime.combine(current.date(), shift_end)
 
-        completed_today = conn.execute(
+        recent_completed = conn.execute(
             """
-            SELECT 1
+            SELECT clock_in
             FROM attendance
             WHERE student_id = ? AND classroom_id = ? AND status = 'Completed'
-              AND DATE(clock_in) = ?
-            LIMIT 1
+            ORDER BY clock_in DESC
+            LIMIT 5
             """,
-            (student_id, resolved_classroom_id, current.date().isoformat()),
-        ).fetchone()
+            (student_id, resolved_classroom_id),
+        ).fetchall()
+        completed_today = any(
+            local_clock is not None and local_clock.date() == current.date()
+            for local_clock in (
+                _to_local_attendance_time(_row_value(row, "clock_in", 0, None), server_to_local_offset)
+                for row in recent_completed
+            )
+        )
         if completed_today:
             return state
 
@@ -287,14 +319,17 @@ def get_student_schedule_state(student_id, classroom_id=None, now=None):
         state["has_open_attendance"] = True
         attendance_id = int(_row_value(open_attendance, "id", 0, 0) or 0)
         raw_clock_in = _row_value(open_attendance, "clock_in", 1, None)
-        try:
-            clock_in = raw_clock_in if isinstance(raw_clock_in, datetime) else datetime.fromisoformat(str(raw_clock_in))
-            if clock_in.tzinfo is not None:
-                clock_in = clock_in.astimezone(ZoneInfo(APP_TIMEZONE)).replace(tzinfo=None)
-        except Exception:
-            clock_in = current
+        clock_in_server = _parse_datetime(raw_clock_in)
+        if clock_in_server is None:
+            elapsed_seconds = 0
+        elif clock_in_server.tzinfo is not None:
+            elapsed_seconds = max(
+                0,
+                (datetime.now(ZoneInfo(APP_TIMEZONE)) - clock_in_server.astimezone(ZoneInfo(APP_TIMEZONE))).total_seconds(),
+            )
+        else:
+            elapsed_seconds = max(0, (server_now - clock_in_server).total_seconds())
 
-        elapsed_seconds = max(0, (current - clock_in).total_seconds())
         seconds_until_daily_target = max(0, (hours_per_day * 3600) - elapsed_seconds)
         seconds_until_shift_end = max(0, (today_end - current).total_seconds())
         due_now = current >= today_end or elapsed_seconds >= (hours_per_day * 3600)
