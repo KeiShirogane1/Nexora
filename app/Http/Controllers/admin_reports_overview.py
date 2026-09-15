@@ -37,6 +37,14 @@ def _as_datetime(value):
         return None
 
 
+def _merge_defaults(defaults, value):
+    """Return a shallow template-safe mapping while preserving available service data."""
+    merged = dict(defaults)
+    if isinstance(value, dict):
+        merged.update(value)
+    return merged
+
+
 def _empty_student_report():
     """Return the template-safe shape used when optional insight evidence is unavailable."""
     return {
@@ -58,6 +66,58 @@ def _empty_student_report():
         "has_feedback": False,
         "feedback_analysis": None,
     }
+
+
+def _safe_student_report(value):
+    report = _merge_defaults(_empty_student_report(), value)
+    if not isinstance(report.get("assignments"), list):
+        report["assignments"] = []
+    if not isinstance(report.get("basis"), list):
+        report["basis"] = []
+    return report
+
+
+def _safe_attendance(value):
+    return _merge_defaults(
+        {
+            "rendered_hours": 0.0,
+            "required_hours": None,
+            "remaining_hours": None,
+            "progress_percentage": 0.0,
+            "progress_percent": 0.0,
+            "completed_sessions": 0,
+            "total_sessions": 0,
+        },
+        value,
+    )
+
+
+def _safe_daily_performance(value):
+    daily = _merge_defaults({"history": [], "summary": {}}, value)
+    if not isinstance(daily.get("history"), list):
+        daily["history"] = []
+    daily["summary"] = _merge_defaults(
+        {
+            "average_percentage": None,
+            "rated_days": 0,
+            "closed_days": 0,
+        },
+        daily.get("summary"),
+    )
+    return daily
+
+
+def _safe_logbook(value):
+    return _merge_defaults(
+        {
+            "total": 0,
+            "approved": 0,
+            "pending": 0,
+            "reviewed": 0,
+            "revision_requested": 0,
+        },
+        value,
+    )
 
 
 @admin_reports_overview.route("/admin/reports/student/<int:student_id>/overview")
@@ -176,7 +236,9 @@ def student_insights():
     insights_warnings = []
     if selected_student and selected_classroom:
         try:
-            report = build_student_report(selected_student["id"], selected_classroom["id"])
+            report = _safe_student_report(
+                build_student_report(selected_student["id"], selected_classroom["id"])
+            )
         except Exception:
             current_app.logger.exception(
                 "Admin Student Insights Work/ML evidence failed for student_id=%s class_id=%s",
@@ -198,17 +260,22 @@ def student_insights():
                 selected_student["id"],
                 selected_classroom["id"],
             )
-            profile = {
-                "ok": True,
-                "attendance_summary": {},
-                "daily_performance": {"history": [], "summary": {}},
-                "logbook_summary": {},
-            }
+            profile = {"ok": True}
             insights_warnings.append(
                 "Attendance, Daily Performance, and Logbook evidence is temporarily unavailable."
             )
         else:
-            if not profile.get("ok"):
+            if not isinstance(profile, dict):
+                current_app.logger.error(
+                    "Admin Student Insights OJT evidence returned an invalid payload for student_id=%s class_id=%s",
+                    selected_student["id"],
+                    selected_classroom["id"],
+                )
+                profile = {"ok": True}
+                insights_warnings.append(
+                    "Attendance, Daily Performance, and Logbook evidence is temporarily unavailable."
+                )
+            elif not profile.get("ok"):
                 abort(int(profile.get("status_code") or 404))
 
         try:
@@ -226,14 +293,22 @@ def student_insights():
             evaluation_context = {"ok": True, "evaluation": None}
             insights_warnings.append("Official OJT Evaluation is temporarily unavailable.")
         else:
-            if not evaluation_context.get("ok"):
+            if not isinstance(evaluation_context, dict):
+                current_app.logger.error(
+                    "Admin Student Insights Official Evaluation returned an invalid payload for student_id=%s class_id=%s",
+                    selected_student["id"],
+                    selected_classroom["id"],
+                )
+                evaluation_context = {"ok": True, "evaluation": None}
+                insights_warnings.append("Official OJT Evaluation is temporarily unavailable.")
+            elif not evaluation_context.get("ok"):
                 abort(int(evaluation_context.get("status_code") or 404))
 
         context = {
-            "report": report,
-            "attendance": profile.get("attendance_summary") or {},
-            "daily_performance": profile.get("daily_performance") or {"history": [], "summary": {}},
-            "logbook": profile.get("logbook_summary") or {},
+            "report": _safe_student_report(report),
+            "attendance": _safe_attendance(profile.get("attendance_summary")),
+            "daily_performance": _safe_daily_performance(profile.get("daily_performance")),
+            "logbook": _safe_logbook(profile.get("logbook_summary")),
             "official_evaluation": evaluation_context.get("evaluation"),
         }
 
