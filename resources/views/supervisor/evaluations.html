@@ -24,7 +24,7 @@
             <div class="supervisor-classwork-heading">
                 <div>
                     <h1>Evaluations</h1>
-                    <p>Manage and submit Official OJT Evaluations for all your Intern Classrooms.</p>
+                    <p>Official OJT Evaluation becomes available when an Intern Classroom reaches 0 required days left.</p>
                 </div>
                 <div class="d-flex align-items-end gap-2 flex-wrap">
                     <div>
@@ -49,12 +49,12 @@
                 <article class="supervisor-insights-readiness-card{% if summary.for_review %} is-attention{% endif %}">
                     <span>Draft</span>
                     <strong>{{ summary.for_review }}</strong>
-                    <small class="text-muted">Draft evaluations</small>
+                    <small class="text-muted">Saved evaluation drafts</small>
                 </article>
-                <article class="supervisor-insights-readiness-card">
-                    <span>Not Started</span>
-                    <strong>{{ summary.not_started }}</strong>
-                    <small class="text-muted">No official evaluation yet</small>
+                <article class="supervisor-insights-readiness-card{% if summary.ready_pending %} is-attention{% endif %}">
+                    <span>Ready to Evaluate</span>
+                    <strong>{{ summary.ready_pending }}</strong>
+                    <small class="text-muted">Pending interns in completed OJT classrooms</small>
                 </article>
             </section>
 
@@ -62,9 +62,13 @@
                 <section id="evaluationClassroomList" aria-label="Intern Classroom evaluations">
                     {% for classroom in classrooms %}
                         {% set evaluation_theme = classroom_banner_theme(classroom.class_id) %}
+                        {% set is_target = target_class_id and target_class_id == classroom.class_id %}
+                        {% set should_open = is_target or (not target_class_id and loop.first) %}
                         <article
-                            class="supervisor-insights-card mb-3"
+                            id="evaluationClassroom{{ classroom.class_id }}"
+                            class="supervisor-insights-card mb-3{% if is_target %} border border-primary shadow-sm{% endif %}"
                             data-evaluation-classroom
+                            {% if is_target %}data-evaluation-target="true"{% endif %}
                             data-bulk-modal-url="{{ url_for('ojt_evaluation.supervisor_bulk_evaluations', class_id=classroom.class_id) }}"
                             data-search="{{ (classroom.classroom_name ~ ' ' ~ classroom.section ~ ' ' ~ classroom.company_name ~ ' ' ~ classroom.internship_title)|lower|e }}">
                             <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap p-3 border-bottom supervisor-class-context-banner--{{ evaluation_theme }}{% if evaluation_theme == 'navy' %} text-white{% endif %}">
@@ -78,6 +82,14 @@
                                             {% else %}
                                                 <span class="badge rounded-pill text-bg-success">Active</span>
                                             {% endif %}
+                                            {% if classroom.evaluation_schedule_configured %}
+                                                {% if classroom.evaluation_ready %}
+                                                    <span class="badge rounded-pill text-bg-success">Ready to Evaluate</span>
+                                                    <span class="badge rounded-pill text-bg-light border text-success">0 days left</span>
+                                                {% else %}
+                                                    <span class="badge rounded-pill text-bg-light border text-secondary">{{ classroom.days_left }} day{% if classroom.days_left != 1 %}s{% endif %} left</span>
+                                                {% endif %}
+                                            {% endif %}
                                         </div>
                                         <p class="small mb-0 mt-1 {% if evaluation_theme == 'navy' %}text-white-50{% else %}text-secondary{% endif %}">
                                             {% if classroom.section %}{{ classroom.section }}{% endif %}
@@ -89,30 +101,48 @@
                                 <div class="d-flex align-items-center gap-3 flex-wrap ms-auto">
                                     <div class="text-end">
                                         <strong class="d-block">{{ classroom.evaluated_count }}/{{ classroom.intern_count }} evaluated</strong>
-                                        <small class="{% if evaluation_theme == 'navy' %}text-white-50{% else %}text-secondary{% endif %}">{{ classroom.evaluation_percentage }}% complete</small>
+                                        {% if classroom.evaluation_schedule_configured and not classroom.evaluation_ready %}
+                                            <small class="{% if evaluation_theme == 'navy' %}text-white-50{% else %}text-secondary{% endif %}">Evaluation unlocks at 0 days left</small>
+                                        {% else %}
+                                            <small class="{% if evaluation_theme == 'navy' %}text-white-50{% else %}text-secondary{% endif %}">{{ classroom.evaluation_percentage }}% evaluation complete</small>
+                                        {% endif %}
                                     </div>
                                     <button
                                         type="button"
                                         class="btn btn-sm {% if evaluation_theme == 'navy' %}btn-light{% else %}btn-outline-primary{% endif %}"
                                         data-evaluation-classroom-toggle
-                                        aria-expanded="{{ 'true' if loop.first else 'false' }}"
+                                        aria-expanded="{{ 'true' if should_open else 'false' }}"
                                         aria-controls="evaluationClassroomBody{{ loop.index }}"
                                         onclick="toggleEvaluationClassroom(this, 'evaluationClassroomBody{{ loop.index }}')">
-                                        <span aria-hidden="true">{{ '⌃' if loop.first else '⌄' }}</span>
+                                        <span aria-hidden="true">{{ '⌃' if should_open else '⌄' }}</span>
                                         <span class="visually-hidden">Toggle {{ classroom.classroom_name }}</span>
                                     </button>
                                 </div>
                             </div>
 
-                            <div id="evaluationClassroomBody{{ loop.index }}" data-evaluation-classroom-body{% if not loop.first %} hidden{% endif %}>
+                            <div id="evaluationClassroomBody{{ loop.index }}" data-evaluation-classroom-body{% if not should_open %} hidden{% endif %}>
                                 {% if classroom.interns %}
+                                    {% if classroom.evaluation_schedule_configured and not classroom.evaluation_ready %}
+                                        <div class="alert alert-light border-0 border-bottom rounded-0 mb-0 px-3 py-2" role="status">
+                                            <strong>Official Evaluation not available yet.</strong>
+                                            <span class="text-secondary">This classroom has {{ classroom.days_left }} required OJT day{% if classroom.days_left != 1 %}s{% endif %} left. New evaluations unlock automatically at 0 days left.</span>
+                                        </div>
+                                    {% elif classroom.evaluation_schedule_configured and classroom.pending_evaluations > 0 %}
+                                        <div class="alert alert-success border-0 border-bottom rounded-0 mb-0 px-3 py-2" role="status">
+                                            <strong>Ready for Official OJT Evaluation.</strong>
+                                            <span>{{ classroom.pending_evaluations }} intern{% if classroom.pending_evaluations != 1 %}s{% endif %} still need evaluation.</span>
+                                        </div>
+                                    {% endif %}
+
                                     <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap p-3 border-bottom bg-white">
                                         <div class="d-flex align-items-center gap-2 flex-wrap">
                                             <label class="d-flex align-items-center gap-2 mb-0 fw-bold">
                                                 <input class="form-check-input mt-0" type="checkbox" data-evaluation-select-all {% if not classroom.selectable_count %}disabled{% endif %}>
                                                 <span>{{ classroom.intern_count }} student{% if classroom.intern_count != 1 %}s{% endif %}</span>
                                             </label>
-                                            {% if classroom.selectable_count != classroom.intern_count %}
+                                            {% if classroom.evaluation_schedule_configured and not classroom.evaluation_ready %}
+                                                <span class="small text-secondary">Evaluation locked until 0 days left</span>
+                                            {% elif classroom.selectable_count != classroom.intern_count %}
                                                 <span class="small text-secondary">{{ classroom.selectable_count }} available for editing</span>
                                             {% endif %}
                                         </div>
@@ -165,18 +195,30 @@
                                                                 <span class="badge rounded-pill text-bg-success">Submitted</span>
                                                             {% elif intern.evaluation_status_key == 'draft' %}
                                                                 <span class="badge rounded-pill text-bg-warning">Draft</span>
+                                                            {% elif classroom.evaluation_schedule_configured and not classroom.evaluation_ready %}
+                                                                <span class="badge rounded-pill text-bg-light border text-secondary">Waiting for OJT completion</span>
                                                             {% else %}
                                                                 <span class="badge rounded-pill text-bg-light border text-secondary">Not Started</span>
                                                             {% endif %}
                                                         </td>
                                                         <td class="text-end pe-3">
-                                                            <button
-                                                                type="button"
-                                                                class="btn btn-sm btn-outline-primary"
-                                                                data-evaluation-open
-                                                                data-modal-url="{{ url_for('ojt_evaluation.supervisor_evaluations', class_id=classroom.class_id, student_id=intern.id, modal=1) }}">
-                                                                {% if intern.evaluation_status_key == 'submitted' %}View Evaluation{% else %}Evaluate{% endif %}
-                                                            </button>
+                                                            {% if intern.evaluation_status_key == 'submitted' %}
+                                                                <button
+                                                                    type="button"
+                                                                    class="btn btn-sm btn-outline-primary"
+                                                                    data-evaluation-open
+                                                                    data-modal-url="{{ url_for('ojt_evaluation.supervisor_evaluations', class_id=classroom.class_id, student_id=intern.id, modal=1) }}">View Evaluation</button>
+                                                            {% elif intern.evaluation_selectable %}
+                                                                <button
+                                                                    type="button"
+                                                                    class="btn btn-sm btn-outline-primary"
+                                                                    data-evaluation-open
+                                                                    data-modal-url="{{ url_for('ojt_evaluation.supervisor_evaluations', class_id=classroom.class_id, student_id=intern.id, modal=1) }}">Evaluate</button>
+                                                            {% else %}
+                                                                <button type="button" class="btn btn-sm btn-outline-secondary" disabled>
+                                                                    {% if classroom.days_left is not none %}Available in {{ classroom.days_left }} day{% if classroom.days_left != 1 %}s{% endif %}{% else %}Not available yet{% endif %}
+                                                                </button>
+                                                            {% endif %}
                                                         </td>
                                                     </tr>
                                                 {% endfor %}
@@ -266,6 +308,14 @@
             }
             updateEvaluationSelection(group);
         });
+
+        (() => {
+            const target = document.querySelector('[data-evaluation-target="true"]');
+            if (!target) return;
+            window.requestAnimationFrame(() => {
+                target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            });
+        })();
 
         (() => {
             const input = document.getElementById('evaluationDirectorySearch');
