@@ -365,7 +365,7 @@
                         <div class="student-tasks-stat-copy">
                             <span>Pending Work</span>
                             <strong>{{ pending_work }}</strong>
-                            <small>{{ submitted_work }} of {{ total_work }} submitted</small>
+                            <small>{{ submitted_work }} of {{ total_work }} recorded</small>
                         </div>
                     </article>
 
@@ -486,19 +486,19 @@
                         </header>
                         <div class="student-dashboard-overall-progress">
                             <div class="student-dashboard-progress-ring" data-progress="{{ '%.0f'|format(work_progress) }}"><strong>{{ '%.0f'|format(work_progress) }}%</strong></div>
-                            <strong>Submitted Work</strong>
+                            <strong>Recorded Work</strong>
                             <span>{{ submitted_work }} / {{ total_work }} Work items</span>
                             <small>{{ pending_work }} still pending</small>
                         </div>
                         <div class="student-dashboard-list">
                             <div class="student-dashboard-list-row">
                                 <span class="student-dashboard-list-icon" aria-hidden="true">✓</span>
-                                <span class="student-dashboard-list-copy"><strong>{{ submitted_work }} Submitted</strong><small>Completed submission attempts</small></span>
+                                <span class="student-dashboard-list-copy"><strong>{{ submitted_work }} Recorded</strong><small>Linked to Daily OJT Logbook</small></span>
                                 <em class="is-complete">Done</em>
                             </div>
                             <div class="student-dashboard-list-row">
                                 <span class="student-dashboard-list-icon" aria-hidden="true">⌛</span>
-                                <span class="student-dashboard-list-copy"><strong>{{ pending_work }} Pending</strong><small>Work still awaiting submission</small></span>
+                                <span class="student-dashboard-list-copy"><strong>{{ pending_work }} Pending</strong><small>Work not yet recorded in Logbook</small></span>
                                 <em class="is-pending">Pending</em>
                             </div>
                         </div>
@@ -530,7 +530,7 @@
                                     <a class="student-dashboard-list-row" href="{{ task.url }}">
                                         <span class="student-dashboard-list-icon" aria-hidden="true">▤</span>
                                         <span class="student-dashboard-list-copy"><strong>{{ task.title }}</strong><small>{{ task.activity_label }}{% if task.classroom_name %} · {{ task.classroom_name }}{% endif %}</small></span>
-                                        <em class="{% if task.status|string|lower in ['submitted','completed','reviewed'] %}is-complete{% else %}is-pending{% endif %}">{{ task.status }}</em>
+                                        <em class="{% if task.status|string|lower in ['submitted','completed','reviewed','recorded'] %}is-complete{% else %}is-pending{% endif %}">{{ task.status }}</em>
                                     </a>
                                 {% endfor %}
                             {% else %}
