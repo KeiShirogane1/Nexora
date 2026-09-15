@@ -57,6 +57,7 @@
                                 <tbody>
                                 {% for document in documents %}
                                     {% set document_url = url_for('supervisor_documents.view_student_document', student_id=student.id, document_id=document.id) %}
+                                    {% set download_url = url_for('supervisor_documents.view_student_document', student_id=student.id, document_id=document.id, download=1) %}
                                     <tr>
                                         <td>{{ loop.index }}</td>
                                         <td><strong>{{ document.filename }}</strong></td>
@@ -65,10 +66,12 @@
                                         <td>{{ document.uploaded_at }}</td>
                                         <td>
                                             {% if document.available %}
-                                                {% if document.preview_type %}
+                                                {% if document.preview_type == 'image' %}
                                                     <button type="button" class="supervisor-doc-view-button nx-supervisor-btn is-secondary is-compact js-supervisor-doc-preview" data-preview-url="{{ document_url }}" data-preview-name="{{ document.filename }}" data-preview-type="{{ document.preview_type }}">Preview</button>
+                                                {% elif document.extension == 'pdf' %}
+                                                    <a class="supervisor-doc-view-button nx-supervisor-btn is-secondary is-compact" href="{{ document_url }}" target="_blank" rel="noopener">Open PDF</a>
                                                 {% else %}
-                                                    <a class="supervisor-doc-view-button nx-supervisor-btn is-secondary is-compact" href="{{ document_url }}" target="_blank" rel="noopener">Open</a>
+                                                    <a class="supervisor-doc-view-button nx-supervisor-btn is-secondary is-compact" href="{{ download_url }}">Download</a>
                                                 {% endif %}
                                             {% else %}
                                                 <span class="supervisor-doc-unavailable">Unavailable</span>
@@ -92,8 +95,8 @@
                     <button type="button" class="supervisor-doc-preview-body" id="supervisorDocPreviewBody" disabled aria-label="Open document fullscreen">
                         <div class="supervisor-doc-preview-placeholder" id="supervisorDocPreviewPlaceholder">
                             <span class="supervisor-doc-preview-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M8 13h8"></path><path d="M8 17h6"></path></svg></span>
-                            <strong>Select a document to preview</strong>
-                            <small>Images, PDFs, and text files can open fullscreen.</small>
+                            <strong>Select an image to preview</strong>
+                            <small>Images preview here. PDFs open in a new tab; other documents download.</small>
                         </div>
                         <img id="supervisorDocPreviewImage" class="supervisor-doc-preview-image" alt="Student document preview" hidden>
                         <div id="supervisorDocPreviewFile" class="supervisor-doc-preview-file" hidden>
