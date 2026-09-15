@@ -105,41 +105,29 @@ def uploaded_file(filename):
     role = session.get("role")
     conn = get_db_connection()
     authorized = False
-
     try:
         is_doc = _is_registered_document_upload(filename)
         if is_doc:
-            if role == "admin":
-                authorized = True
-            else:
-                return "Direct document access is not allowed.", 403
+            if role == "admin": authorized = True
+            else: return "Direct document access is not allowed.", 403
         else:
             if filename.startswith("profile_pictures/"):
-                if role == "admin":
-                    authorized = True
+                if role == "admin": authorized = True
             elif filename.startswith("classwork/"):
                 parts = filename.split('/')
                 if len(parts) >= 3 and parts[0] == 'classwork':
                     class_id_str, assignment_id_str, *resource_parts = parts[1:]
                     try:
                         class_id = int(class_id_str)
-                        if role == "admin":
-                            authorized = True
+                        if role == "admin": authorized = True
                         elif role == "student":
-                            student_enrollment_sql = "SELECT 1 FROM classroom_students WHERE classroom_id = ? AND student_id = ?"
-                            if conn.execute(student_enrollment_sql, (class_id, user_id)).fetchone():
-                                authorized = True
+                            if conn.execute("SELECT 1 FROM classroom_students WHERE classroom_id = ? AND student_id = ?", (class_id, user_id)).fetchone(): authorized = True
                         elif role == "supervisor":
-                            supervisor_class_sql = "SELECT 1 FROM classrooms WHERE id = ? AND supervisor_id = ?"
-                            if conn.execute(supervisor_class_sql, (class_id, user_id)).fetchone():
-                                authorized = True
-                    except ValueError:
-                        pass
-        if not authorized:
-            return "Access denied.", 403
-    finally:
-        conn.close()
-    return send_from_directory(str(UPLOAD_FOLDER), filename)
+                            if conn.execute("SELECT 1 FROM classrooms WHERE id = ? AND supervisor_id = ?", (class_id, user_id)).fetchone(): authorized = True
+                    except ValueError: pass
+        if not authorized:return "Access denied.",403
+    finally:conn.close()
+    return send_from_directory(str(UPLOAD_FOLDER),filename)
 @app.route("/uploads/profile_pictures/<filename>")
 @login_required
 def profile_picture(filename): return send_from_directory(app.config["PROFILE_UPLOAD_FOLDER"],filename)
@@ -147,23 +135,21 @@ def profile_picture(filename): return send_from_directory(app.config["PROFILE_UP
 @login_required
 def user_profile_picture(user_id):
  conn=get_db_connection()
- try:
-  row=conn.execute("SELECT profile_picture FROM student_profiles WHERE user_id=?",(user_id,)).fetchone(); filename=row[0] if row else None
- finally: conn.close()
+ try:row=conn.execute("SELECT profile_picture FROM student_profiles WHERE user_id=?",(user_id,)).fetchone(); filename=row[0] if row else None
+ finally:conn.close()
  return send_from_directory(str(PROFILE_UPLOAD_FOLDER if filename else BASE_DIR/"resources"/"assets"/"images"),filename or "default_profile.png")
 @app.route("/favicon.ico")
 def favicon():
- role=session.get("role")
- filename={"student":"nexora_logo_student.png","supervisor":"nexora_logo_supervisor.png","admin":"nexora_logo_admin.png"}.get(role,"nexora_logo_supervisor.png")
+ role=session.get("role"); filename={"student":"nexora_logo_student.png","supervisor":"nexora_logo_supervisor.png","admin":"nexora_logo_admin.png"}.get(role,"nexora_logo_supervisor.png")
  return send_from_directory(str(BASE_DIR/"resources"/"assets"/"images"),filename,mimetype="image/png")
 @app.route("/health")
-def health(): return {"status":"ok"},200
+def health():return {"status":"ok"},200
 
 def ensure_session_schema():
- conn=get_db_connection(); cur=conn.cursor()
+ conn=get_db_connection();cur=conn.cursor()
  try:
   if using_postgres():
-   cur.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS session_version INTEGER NOT NULL DEFAULT 0"); cur.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_picture TEXT")
+   cur.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS session_version INTEGER NOT NULL DEFAULT 0");cur.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_picture TEXT")
   else:
    cols=[r[1] for r in cur.execute("PRAGMA table_info(users)").fetchall()]
    if "session_version" not in cols:cur.execute("ALTER TABLE users ADD COLUMN session_version INTEGER NOT NULL DEFAULT 0")
@@ -206,76 +192,43 @@ def inject_notifications():
      if p:sidebar.update({"first_name":p["first_name"],"last_name":p["last_name"]})
      pending_rows=conn.execute("""
       SELECT c.id AS classroom_id,
-             (SELECT COUNT(*)
-              FROM logs l
-              JOIN attendance a ON a.id=l.attendance_id
-              LEFT JOIN logbook_reviews r ON r.log_id=l.id
-              WHERE l.entry_type='daily'
-                AND a.classroom_id=c.id
-                AND COALESCE(a.status,'Open')<>'Open'
-                AND COALESCE(r.status,'pending')='pending') AS pending_logbooks,
-             (SELECT COUNT(*)
-              FROM classwork_submissions s
-              JOIN classroom_assignments ca ON ca.id=s.assignment_id
-              WHERE ca.classroom_id=c.id
-                AND COALESCE(s.status,'submitted')='submitted'
-                AND s.grade IS NULL) AS pending_work
-      FROM classrooms c
-      WHERE c.supervisor_id=? AND COALESCE(c.archived,0)=0
+             (SELECT COUNT(*) FROM logs l JOIN attendance a ON a.id=l.attendance_id LEFT JOIN logbook_reviews r ON r.log_id=l.id WHERE l.entry_type='daily' AND a.classroom_id=c.id AND COALESCE(a.status,'Open')<>'Open' AND COALESCE(r.status,'pending')='pending') AS pending_logbooks,
+             (SELECT COUNT(*) FROM classwork_submissions s JOIN classroom_assignments ca ON ca.id=s.assignment_id WHERE ca.classroom_id=c.id AND COALESCE(s.status,'submitted')='submitted' AND s.grade IS NULL) AS pending_work
+      FROM classrooms c WHERE c.supervisor_id=? AND COALESCE(c.archived,0)=0
      """,(uid,)).fetchall()
      for pending_row in pending_rows:
       class_id=int(pending_row["classroom_id"] if "classroom_id" in pending_row.keys() else pending_row[0]);logbook_pending=int(pending_row["pending_logbooks"] if "pending_logbooks" in pending_row.keys() else pending_row[1] or 0);work_pending=int(pending_row["pending_work"] if "pending_work" in pending_row.keys() else pending_row[2] or 0);total_pending=logbook_pending+work_pending
       supervisor_class_pending_counts[class_id]={"logbook":logbook_pending,"work":work_pending,"total":total_pending};supervisor_classroom_pending_count+=total_pending
      card_rows=conn.execute("""
-      SELECT c.id AS classroom_id,
-             COALESCE(cid.program,'') AS program,
-             COALESCE(cid.required_hours,0) AS required_hours,
-             COALESCE(cid.required_days,0) AS required_days,
-             COALESCE(cid.hours_per_day,0) AS hours_per_day,
-             COALESCE(cid.attendance_days,'') AS attendance_days,
-             COALESCE(cid.shift_start_time,'') AS shift_start_time,
+      SELECT c.id AS classroom_id,COALESCE(c.archived,0) AS archived,
+             COALESCE(cid.program,'') AS program,COALESCE(cid.required_hours,0) AS required_hours,
+             COALESCE(cid.required_days,0) AS required_days,COALESCE(cid.hours_per_day,0) AS hours_per_day,
+             COALESCE(cid.attendance_days,'') AS attendance_days,COALESCE(cid.shift_start_time,'') AS shift_start_time,
              COALESCE(cid.shift_end_time,'') AS shift_end_time,
              (SELECT COUNT(*) FROM classroom_students cs WHERE cs.classroom_id=c.id) AS student_count,
-             (SELECT COUNT(*) FROM ojt_evaluations e
-              WHERE e.classroom_id=c.id AND e.supervisor_id=c.supervisor_id
-                AND LOWER(COALESCE(e.status,''))='submitted') AS submitted_evaluations
-      FROM classrooms c
-      LEFT JOIN classroom_internship_details cid ON cid.classroom_id=c.id
-      WHERE c.supervisor_id=?
+             (SELECT COUNT(*) FROM ojt_evaluations e WHERE e.classroom_id=c.id AND e.supervisor_id=c.supervisor_id AND LOWER(COALESCE(e.status,''))='submitted') AS submitted_evaluations
+      FROM classrooms c LEFT JOIN classroom_internship_details cid ON cid.classroom_id=c.id WHERE c.supervisor_id=?
      """,(uid,)).fetchall()
      for card_row in card_rows:
-      class_id=int(card_row["classroom_id"] if "classroom_id" in card_row.keys() else card_row[0]);program=(card_row["program"] if "program" in card_row.keys() else card_row[1]) or "";required_hours=float((card_row["required_hours"] if "required_hours" in card_row.keys() else card_row[2]) or 0);required_days=int((card_row["required_days"] if "required_days" in card_row.keys() else card_row[3]) or 0);hours_per_day=int((card_row["hours_per_day"] if "hours_per_day" in card_row.keys() else card_row[4]) or 0);attendance_days=(card_row["attendance_days"] if "attendance_days" in card_row.keys() else card_row[5]) or "";shift_start_time=(card_row["shift_start_time"] if "shift_start_time" in card_row.keys() else card_row[6]) or "";shift_end_time=(card_row["shift_end_time"] if "shift_end_time" in card_row.keys() else card_row[7]) or "";student_count=int((card_row["student_count"] if "student_count" in card_row.keys() else card_row[8]) or 0);submitted_evaluations=int((card_row["submitted_evaluations"] if "submitted_evaluations" in card_row.keys() else card_row[9]) or 0)
+      class_id=int(card_row["classroom_id"] if "classroom_id" in card_row.keys() else card_row[0]);archived=bool(card_row["archived"] if "archived" in card_row.keys() else card_row[1]);program=(card_row["program"] if "program" in card_row.keys() else card_row[2]) or "";required_hours=float((card_row["required_hours"] if "required_hours" in card_row.keys() else card_row[3]) or 0);required_days=int((card_row["required_days"] if "required_days" in card_row.keys() else card_row[4]) or 0);hours_per_day=int((card_row["hours_per_day"] if "hours_per_day" in card_row.keys() else card_row[5]) or 0);attendance_days=(card_row["attendance_days"] if "attendance_days" in card_row.keys() else card_row[6]) or "";shift_start_time=(card_row["shift_start_time"] if "shift_start_time" in card_row.keys() else card_row[7]) or "";shift_end_time=(card_row["shift_end_time"] if "shift_end_time" in card_row.keys() else card_row[8]) or "";student_count=int((card_row["student_count"] if "student_count" in card_row.keys() else card_row[9]) or 0);submitted_evaluations=int((card_row["submitted_evaluations"] if "submitted_evaluations" in card_row.keys() else card_row[10]) or 0)
       progress_rows=conn.execute("""
-       SELECT cs.student_id,
-              COALESCE(SUM(CASE WHEN a.status='Completed' THEN COALESCE(a.hours_rendered,0) ELSE 0 END),0) AS rendered_hours,
+       SELECT cs.student_id,COALESCE(SUM(CASE WHEN a.status='Completed' THEN COALESCE(a.hours_rendered,0) ELSE 0 END),0) AS rendered_hours,
               COUNT(DISTINCT CASE WHEN a.status='Completed' THEN DATE(a.clock_in) END) AS completed_days
-       FROM classroom_students cs
-       LEFT JOIN attendance a ON a.student_id=cs.student_id AND a.classroom_id=cs.classroom_id
-       WHERE cs.classroom_id=?
-       GROUP BY cs.student_id
+       FROM classroom_students cs LEFT JOIN attendance a ON a.student_id=cs.student_id AND a.classroom_id=cs.classroom_id
+       WHERE cs.classroom_id=? GROUP BY cs.student_id
       """,(class_id,)).fetchall()
-      progress_total=0.0;completed_interns=0
+      progress_total=0.0;completed_interns=0;minimum_completed_days=required_days if student_count and required_days>0 else 0;days_left=required_days if student_count==0 and required_days>0 else 0
       for progress_row in progress_rows:
        rendered_hours=float((progress_row["rendered_hours"] if "rendered_hours" in progress_row.keys() else progress_row[1]) or 0);completed_days=int((progress_row["completed_days"] if "completed_days" in progress_row.keys() else progress_row[2]) or 0);ratios=[]
        if required_hours>0:ratios.append(min(1.0,max(0.0,rendered_hours/required_hours)))
        if required_days>0:ratios.append(min(1.0,max(0.0,completed_days/required_days)))
-       student_progress=min(ratios) if ratios else 0.0;progress_total+=student_progress
-       if ratios and all(ratio>=1.0 for ratio in ratios):completed_interns+=1
-      progress_percent=int(round((progress_total/student_count)*100)) if student_count else 0;pending_evaluations=max(0,student_count-submitted_evaluations);evaluation_ready=student_count>0 and completed_interns>=student_count
-      supervisor_class_card_stats[class_id]={"program":program,"required_hours":required_hours,"required_days":required_days,"hours_per_day":hours_per_day,"attendance_days":attendance_days,"shift_start_time":shift_start_time,"shift_end_time":shift_end_time,"progress_percent":max(0,min(100,progress_percent)),"completed_interns":completed_interns,"student_count":student_count,"submitted_evaluations":submitted_evaluations,"pending_evaluations":pending_evaluations,"evaluation_ready":evaluation_ready}
-     evaluation_row=conn.execute("""
-      SELECT COUNT(*) AS pending_count
-      FROM classroom_students cs
-      JOIN classrooms c ON c.id=cs.classroom_id
-      LEFT JOIN ojt_evaluations e
-        ON e.classroom_id=c.id
-       AND e.student_id=cs.student_id
-       AND e.supervisor_id=c.supervisor_id
-      WHERE c.supervisor_id=?
-        AND COALESCE(c.archived,0)=0
-        AND LOWER(COALESCE(e.status,'draft'))<>'submitted'
-     """,(uid,)).fetchone()
-     if evaluation_row:supervisor_evaluation_pending_count=int(evaluation_row["pending_count"] if "pending_count" in evaluation_row.keys() else evaluation_row[0] or 0)
+       progress_total+=min(ratios) if ratios else 0.0
+       if required_days>0:
+        minimum_completed_days=min(minimum_completed_days,completed_days);days_left=max(days_left,max(0,required_days-completed_days))
+        if completed_days>=required_days:completed_interns+=1
+      progress_percent=int(round((progress_total/student_count)*100)) if student_count else 0;days_progress_percent=int(round((minimum_completed_days/required_days)*100)) if student_count and required_days>0 else 0;pending_evaluations=max(0,student_count-submitted_evaluations);evaluation_ready=student_count>0 and required_days>0 and days_left==0
+      if evaluation_ready and not archived:supervisor_evaluation_pending_count+=pending_evaluations
+      supervisor_class_card_stats[class_id]={"program":program,"required_hours":required_hours,"required_days":required_days,"hours_per_day":hours_per_day,"attendance_days":attendance_days,"shift_start_time":shift_start_time,"shift_end_time":shift_end_time,"progress_percent":max(0,min(100,progress_percent)),"days_progress_percent":max(0,min(100,days_progress_percent)),"minimum_completed_days":minimum_completed_days,"days_left":days_left,"completed_interns":completed_interns,"student_count":student_count,"submitted_evaluations":submitted_evaluations,"pending_evaluations":pending_evaluations,"evaluation_ready":evaluation_ready}
     elif user["role"]=="admin":
      pending_approval_row=conn.execute("SELECT COUNT(*) FROM users WHERE role IN ('pending_student','pending_supervisor')").fetchone()
      if pending_approval_row:admin_pending_approval_count=int(pending_approval_row[0] or 0)
