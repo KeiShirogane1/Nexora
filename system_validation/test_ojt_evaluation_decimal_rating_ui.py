@@ -16,8 +16,9 @@ def test_official_evaluation_supports_decimal_ratings_and_weighted_display():
     assert "rating × weight" in source
     assert '<svg width="16" height="16"' in source
     assert "ⓘ" not in source
-    assert "bottom-0 z-3" in source
-    assert "shadow-sm" in source
+    assert "data-evaluation-action-bar" in source
+    assert 'position-sticky bottom-0 z-3' not in source
+    assert 'border-top bg-white py-3 px-2 shadow-sm' not in source
 
     normalized = _normalize_items(
         [
