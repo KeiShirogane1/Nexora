@@ -1,10 +1,11 @@
-"""Intern Classroom schedule helpers.
+"""Intern Classroom weekly schedule helpers.
 
-The schedule is additive: legacy start/end-date fields remain untouched while
-new Intern Classrooms can use a weekly OJT attendance schedule.
+The weekly schedule is additive. Legacy start/end date columns remain intact so
+existing classrooms keep their historical data while new/edited Intern
+Classrooms can use repeatable attendance days and shift times.
 """
 import os
-from datetime import datetime, time
+from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from app.Models.db import get_db_connection, using_postgres
@@ -34,12 +35,13 @@ def _row_value(row, key, index=0, default=None):
         return default
 
 
-def _local_now(now=None):
-    if now is not None:
-        if now.tzinfo is not None:
-            return now.astimezone(ZoneInfo(APP_TIMEZONE))
-        return now.replace(tzinfo=ZoneInfo(APP_TIMEZONE))
-    return datetime.now(ZoneInfo(APP_TIMEZONE))
+def app_local_now(now=None):
+    """Return an application-local naive datetime for DB-compatible timestamps."""
+    if now is None:
+        return datetime.now(ZoneInfo(APP_TIMEZONE)).replace(tzinfo=None)
+    if now.tzinfo is not None:
+        return now.astimezone(ZoneInfo(APP_TIMEZONE)).replace(tzinfo=None)
+    return now
 
 
 def _parse_time(value, fallback):
@@ -62,12 +64,11 @@ def normalize_attendance_days(values):
 
 
 def attendance_days_text(values):
-    normalized = normalize_attendance_days(values)
-    return ",".join(normalized)
+    return ",".join(normalize_attendance_days(values))
 
 
 def ensure_internship_schedule_schema():
-    """Add weekly Intern Classroom schedule fields without deleting legacy data."""
+    """Add weekly schedule fields without removing or rewriting legacy fields."""
     conn = get_db_connection()
     try:
         if using_postgres():
@@ -162,18 +163,13 @@ def _student_progress(conn, student_id, classroom_id):
 
 
 def get_student_schedule_state(student_id, classroom_id=None, now=None):
-    """Return the current schedule/attention state used by the Student sidebar."""
+    """Return schedule and current sidebar attention state for one intern."""
     try:
         student_id = int(student_id)
     except (TypeError, ValueError):
         return {"classroom_id": None, "attention_count": 0, "attention_reason": None}
 
-    try:
-        ensure_internship_schedule_schema()
-    except Exception:
-        return {"classroom_id": None, "attention_count": 0, "attention_reason": None}
-
-    current = _local_now(now)
+    current = app_local_now(now)
     conn = get_db_connection()
     try:
         resolved_classroom_id = _resolve_student_classroom(conn, student_id, classroom_id)
@@ -232,18 +228,18 @@ def get_student_schedule_state(student_id, classroom_id=None, now=None):
             "attention_reason": None,
             "seconds_until_attention": None,
             "is_scheduled_day": False,
+            "has_open_attendance": False,
         }
         if schedule_type != "weekly" or schedule_complete:
             return state
 
         weekday = WEEKDAYS[current.weekday()]
-        is_scheduled_day = weekday in attendance_days
-        state["is_scheduled_day"] = is_scheduled_day
-        if not is_scheduled_day:
+        state["is_scheduled_day"] = weekday in attendance_days
+        if not state["is_scheduled_day"]:
             return state
 
-        today_start = datetime.combine(current.date(), shift_start, tzinfo=current.tzinfo)
-        today_end = datetime.combine(current.date(), shift_end, tzinfo=current.tzinfo)
+        today_start = datetime.combine(current.date(), shift_start)
+        today_end = datetime.combine(current.date(), shift_end)
 
         completed_today = conn.execute(
             """
@@ -277,21 +273,22 @@ def get_student_schedule_state(student_id, classroom_id=None, now=None):
                 state["seconds_until_attention"] = max(0, int((today_start - current).total_seconds()))
             return state
 
+        state["has_open_attendance"] = True
         attendance_id = int(_row_value(open_attendance, "id", 0, 0) or 0)
         raw_clock_in = _row_value(open_attendance, "clock_in", 1, None)
         try:
             clock_in = raw_clock_in if isinstance(raw_clock_in, datetime) else datetime.fromisoformat(str(raw_clock_in))
-            if clock_in.tzinfo is None:
-                clock_in = clock_in.replace(tzinfo=current.tzinfo)
-            else:
-                clock_in = clock_in.astimezone(current.tzinfo)
+            if clock_in.tzinfo is not None:
+                clock_in = clock_in.astimezone(ZoneInfo(APP_TIMEZONE)).replace(tzinfo=None)
         except Exception:
             clock_in = current
-        daily_target_at = clock_in.timestamp() + max(hours_per_day, 1) * 3600
-        daily_target = datetime.fromtimestamp(daily_target_at, tz=current.tzinfo)
-        due_at = min(today_end, daily_target)
 
-        if current >= due_at:
+        elapsed_seconds = max(0, (current - clock_in).total_seconds())
+        seconds_until_daily_target = max(0, (hours_per_day * 3600) - elapsed_seconds)
+        seconds_until_shift_end = max(0, (today_end - current).total_seconds())
+        due_now = current >= today_end or elapsed_seconds >= (hours_per_day * 3600)
+
+        if due_now:
             daily_log = conn.execute(
                 """
                 SELECT 1 FROM logs
@@ -303,35 +300,35 @@ def get_student_schedule_state(student_id, classroom_id=None, now=None):
             state["attention_count"] = 1
             state["attention_reason"] = "clock_out" if daily_log else "logbook_and_clock_out"
         else:
-            state["seconds_until_attention"] = max(0, int((due_at - current).total_seconds()))
+            state["seconds_until_attention"] = int(min(seconds_until_daily_target, seconds_until_shift_end))
         return state
     finally:
         conn.close()
 
 
-def _notification_exists(conn, user_id, title, link_url):
-    return conn.execute(
-        """
-        SELECT 1 FROM notifications
-        WHERE user_id = ? AND title = ? AND COALESCE(link_url, '') = ?
-        LIMIT 1
-        """,
-        (user_id, title, link_url or ""),
-    ).fetchone() is not None
+def _notification_exists(user_id, title, link_url):
+    conn = get_db_connection()
+    try:
+        return conn.execute(
+            """
+            SELECT 1 FROM notifications
+            WHERE user_id = ? AND title = ? AND COALESCE(link_url, '') = ?
+            LIMIT 1
+            """,
+            (user_id, title, link_url or ""),
+        ).fetchone() is not None
+    finally:
+        conn.close()
 
 
 def ensure_supervisor_completion_notifications(supervisor_id):
-    """Create one evaluation-ready notification when every intern finishes OJT."""
+    """Notify once a weekly Intern Classroom is ready for formal evaluations."""
     try:
         supervisor_id = int(supervisor_id)
     except (TypeError, ValueError):
         return 0
-    try:
-        ensure_internship_schedule_schema()
-    except Exception:
-        return 0
 
-    created = 0
+    candidates = []
     conn = get_db_connection()
     try:
         classrooms = conn.execute(
@@ -364,8 +361,8 @@ def ensure_supervisor_completion_notifications(supervisor_id):
             if not students:
                 continue
 
-            all_complete = True
             pending_evaluations = 0
+            all_complete = True
             for student in students:
                 student_id = int(_row_value(student, "student_id", 0, 0) or 0)
                 progress = _student_progress(conn, student_id, class_id)
@@ -380,18 +377,21 @@ def ensure_supervisor_completion_notifications(supervisor_id):
                     """,
                     (class_id, student_id, supervisor_id),
                 ).fetchone()
-                status = str(_row_value(evaluation, "status", 0, "") or "").lower()
-                if status != "submitted":
+                if str(_row_value(evaluation, "status", 0, "") or "").lower() != "submitted":
                     pending_evaluations += 1
 
-            if not all_complete or pending_evaluations <= 0:
-                continue
+            if all_complete and pending_evaluations > 0:
+                candidates.append((class_id, class_name, pending_evaluations))
+    finally:
+        conn.close()
 
-            title = "Official OJT Evaluation Ready"
-            link_url = f"/supervisor/evaluations?class_id={class_id}"
-            if _notification_exists(conn, supervisor_id, title, link_url):
-                continue
-
+    created = 0
+    for class_id, class_name, pending_evaluations in candidates:
+        title = "Official OJT Evaluation Ready"
+        link_url = f"/supervisor/evaluations?class_id={class_id}"
+        if _notification_exists(supervisor_id, title, link_url):
+            continue
+        try:
             create_notification(
                 supervisor_id,
                 title,
@@ -400,6 +400,7 @@ def ensure_supervisor_completion_notifications(supervisor_id):
                 link_url=link_url,
             )
             created += 1
-        return created
-    finally:
-        conn.close()
+        except Exception:
+            # Notification delivery should never block normal Supervisor requests.
+            continue
+    return created
