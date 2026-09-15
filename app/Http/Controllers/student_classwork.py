@@ -118,7 +118,7 @@ def _assignment_data(row):
         "title": _value(row, "title", 2),
         "description": _value(row, "description", 3),
         "due_at": _value(row, "due_at", 4),
-        "points": _value(row, "points", 5, 100),
+        "points": _value(row, "points", 5, 0),
         "created_at": _value(row, "created_at", 6),
         "activity_type": activity_type,
         "activity_label": ACTIVITY_LABELS.get(activity_type, "Task"),
@@ -131,6 +131,30 @@ def _assignment_data(row):
         "max_group_size": _value(row, "max_group_size", 14, 1) or 1,
         "team_name": _value(row, "team_name", 15, "") or "",
         "submission_mode": _value(row, "submission_mode", 16, "individual") or "individual",
+    }
+
+
+def _work_logbook_entry(conn, class_id, assignment_id, student_id):
+    row = conn.execute(
+        """SELECT l.id, l.attendance_id, l.accomplishment, l.created_at, l.updated_at
+           FROM logs l
+           JOIN attendance a ON a.id = l.attendance_id
+           WHERE l.student_id = ?
+             AND l.entry_type = 'daily'
+             AND l.related_assignment_id = ?
+             AND a.classroom_id = ?
+           ORDER BY COALESCE(l.updated_at, l.created_at) DESC, l.id DESC
+           LIMIT 1""",
+        (student_id, assignment_id, class_id),
+    ).fetchone()
+    if not row:
+        return None
+    return {
+        "id": _value(row, "id", 0),
+        "attendance_id": _value(row, "attendance_id", 1),
+        "accomplishment": _value(row, "accomplishment", 2, "") or "",
+        "created_at": _value(row, "created_at", 3),
+        "updated_at": _value(row, "updated_at", 4),
     }
 
 
@@ -271,7 +295,7 @@ def index(class_id):
         assignments = []
         for row in rows:
             item = _assignment_data(row)
-            item["submission"] = _submission_for_student(conn, item, student_id)
+            item["logbook_entry"] = _work_logbook_entry(conn, class_id, item["id"], student_id)
             item["team_members"] = (
                 _team_members(conn, class_id, item["id"])
                 if item["activity_type"] == "group_project" or item["group_mode"]
@@ -325,7 +349,8 @@ def detail(class_id, assignment_id):
             if assignment["activity_type"] == "group_project" or assignment["group_mode"]
             else []
         )
-        submission = _submission_for_student(conn, assignment, student_id)
+        logbook_entry = _work_logbook_entry(conn, class_id, assignment_id, student_id)
+        legacy_submission = _submission_for_student(conn, assignment, student_id)
         past_due = False
         if assignment["due_at"]:
             try:
@@ -348,8 +373,9 @@ def detail(class_id, assignment_id):
         "classroom/student_classwork_detail.html",
         classroom=classroom_data,
         assignment=assignment,
-        submission=submission,
+        logbook_entry=logbook_entry,
+        legacy_submission=legacy_submission,
         past_due=past_due,
         active_page="classes",
-        submit_url=url_for("classwork_submissions.submit", class_id=class_id, assignment_id=assignment_id),
+        logbook_url=url_for("student.logbook", classroom_id=class_id, work_id=assignment_id),
     )
