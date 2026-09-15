@@ -201,22 +201,24 @@
                                                                     {% endif %}
                                                                 </td>
                                                                 <td class="text-end pe-3">
-                                                                    <a
-                                                                        class="btn btn-sm btn-outline-primary"
-                                                                        href="{{ url_for('classwork_ml_insights.supervisor_individual_insights', class_id=classroom.class_id, student_id=intern.id) }}"
-                                                                        data-insights-modal-open
-                                                                        data-insights-view="individual"
-                                                                        data-overall-url="{{ url_for('classwork_ml_insights.supervisor_insights', class_id=classroom.class_id) }}"
-                                                                        data-individual-url="{{ url_for('classwork_ml_insights.supervisor_individual_insights', class_id=classroom.class_id, student_id=intern.id) }}"
-                                                                        data-classroom-title="{{ classroom.classroom_name|e }}"
-                                                                        data-classroom-meta="{{ (classroom.section ~ (' · ' ~ classroom.company_name if classroom.company_name else ''))|e }}"
-                                                                        data-individual-title="{{ intern.display_name|e }}"
-                                                                        data-individual-meta="{{ ((intern.student_number or intern.username) ~ (' · ' ~ intern.major_program if intern.major_program else '') ~ ' · ' ~ classroom.classroom_name)|e }}"
-                                                                        data-class-report-url="{{ url_for('performance_reports.supervisor_reports', class_id=classroom.class_id) }}"
-                                                                        data-individual-report-url="{{ url_for('performance_reports.supervisor_student_report', class_id=classroom.class_id, student_id=intern.id) }}"
-                                                                        data-export-url="{{ url_for('classwork_gradebook_export.export_supervisor_gradebook', class_id=classroom.class_id) }}">
-                                                                        View Insights
-                                                                    </a>
+                                                                    <div class="supervisor-intern-actions d-inline-grid gap-1">
+                                                                        <a
+                                                                            class="btn btn-sm btn-outline-primary w-100"
+                                                                            href="{{ url_for('classwork_ml_insights.supervisor_individual_insights', class_id=classroom.class_id, student_id=intern.id) }}"
+                                                                            data-insights-modal-open
+                                                                            data-insights-view="individual"
+                                                                            data-overall-url="{{ url_for('classwork_ml_insights.supervisor_insights', class_id=classroom.class_id) }}"
+                                                                            data-individual-url="{{ url_for('classwork_ml_insights.supervisor_individual_insights', class_id=classroom.class_id, student_id=intern.id) }}"
+                                                                            data-classroom-title="{{ classroom.classroom_name|e }}"
+                                                                            data-classroom-meta="{{ (classroom.section ~ (' · ' ~ classroom.company_name if classroom.company_name else ''))|e }}"
+                                                                            data-individual-title="{{ intern.display_name|e }}"
+                                                                            data-individual-meta="{{ ((intern.student_number or intern.username) ~ (' · ' ~ intern.major_program if intern.major_program else '') ~ ' · ' ~ classroom.classroom_name)|e }}"
+                                                                            data-class-report-url="{{ url_for('performance_reports.supervisor_reports', class_id=classroom.class_id) }}"
+                                                                            data-individual-report-url="{{ url_for('performance_reports.supervisor_student_report', class_id=classroom.class_id, student_id=intern.id) }}"
+                                                                            data-export-url="{{ url_for('classwork_gradebook_export.export_supervisor_gradebook', class_id=classroom.class_id) }}">
+                                                                            View Insights
+                                                                        </a>
+                                                                    </div>
                                                                 </td>
                                                             </tr>
                                                         {% endfor %}
