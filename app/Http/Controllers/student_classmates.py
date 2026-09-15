@@ -1,6 +1,7 @@
 from flask import Blueprint, abort, jsonify, render_template, session
 from app.Http.Middleware.security import role_required
 from app.Models.db import get_db_connection
+from app.Services.internship_schedule_service import ensure_internship_schedule_schema
 from app.Services.supervisor_profile_service import get_or_create_supervisor_profile
 
 student_classmates = Blueprint("student_classmates", __name__)
@@ -34,6 +35,7 @@ def _row_value(row, key, index=0, default=None):
 @student_classmates.route("/student/classes/<int:class_id>/info")
 @role_required("student")
 def classroom_info(class_id):
+    ensure_internship_schedule_schema()
     viewer_id = session["user_id"]
     conn = get_db_connection()
     try:
@@ -52,10 +54,11 @@ def classroom_info(class_id):
             abort(404)
 
         details = conn.execute(
-            """SELECT internship_title, company_name, industry, work_arrangement,
+            """SELECT internship_title, program, company_name, industry, work_arrangement,
                       schedule_type, hours_mode, compensation, location, start_date,
-                      end_date, enrollment_deadline, required_hours, company_website,
-                      company_description, internship_description
+                      end_date, enrollment_deadline, required_hours, hours_per_day,
+                      required_days, attendance_days, shift_start_time, shift_end_time,
+                      company_website, company_description, internship_description
                FROM classroom_internship_details
                WHERE classroom_id = ?""",
             (class_id,),
@@ -87,20 +90,26 @@ def classroom_info(class_id):
         "status": "Archived" if archived else "Active",
         "supervisor": _row_value(classroom, "supervisor_name", 7, "Supervisor"),
         "internship_title": _row_value(details, "internship_title", 0, _row_value(classroom, "name", 1, "")),
-        "company_name": _row_value(details, "company_name", 1, ""),
-        "industry": _row_value(details, "industry", 2, ""),
-        "work_arrangement": _row_value(details, "work_arrangement", 3, ""),
-        "schedule_type": _row_value(details, "schedule_type", 4, "not_specified"),
-        "hours_mode": _row_value(details, "hours_mode", 5, "not_specified"),
-        "compensation": _row_value(details, "compensation", 6, "Not Specified"),
-        "location": _row_value(details, "location", 7, ""),
-        "start_date": _row_value(details, "start_date", 8, ""),
-        "end_date": _row_value(details, "end_date", 9, ""),
-        "enrollment_deadline": _row_value(details, "enrollment_deadline", 10, ""),
-        "required_hours": _row_value(details, "required_hours", 11, 0),
-        "company_website": _row_value(details, "company_website", 12, ""),
-        "company_description": _row_value(details, "company_description", 13, ""),
-        "internship_description": _row_value(details, "internship_description", 14, ""),
+        "program": _row_value(details, "program", 1, ""),
+        "company_name": _row_value(details, "company_name", 2, ""),
+        "industry": _row_value(details, "industry", 3, ""),
+        "work_arrangement": _row_value(details, "work_arrangement", 4, ""),
+        "schedule_type": _row_value(details, "schedule_type", 5, "not_specified"),
+        "hours_mode": _row_value(details, "hours_mode", 6, "not_specified"),
+        "compensation": _row_value(details, "compensation", 7, "Not Specified"),
+        "location": _row_value(details, "location", 8, ""),
+        "start_date": _row_value(details, "start_date", 9, ""),
+        "end_date": _row_value(details, "end_date", 10, ""),
+        "enrollment_deadline": _row_value(details, "enrollment_deadline", 11, ""),
+        "required_hours": _row_value(details, "required_hours", 12, 0),
+        "hours_per_day": _row_value(details, "hours_per_day", 13, 0),
+        "required_days": _row_value(details, "required_days", 14, 0),
+        "attendance_days": _row_value(details, "attendance_days", 15, ""),
+        "shift_start_time": _row_value(details, "shift_start_time", 16, ""),
+        "shift_end_time": _row_value(details, "shift_end_time", 17, ""),
+        "company_website": _row_value(details, "company_website", 18, ""),
+        "company_description": _row_value(details, "company_description", 19, ""),
+        "internship_description": _row_value(details, "internship_description", 20, ""),
         "responsibilities": [
             _row_value(row, "responsibility", 0, "")
             for row in responsibility_rows
