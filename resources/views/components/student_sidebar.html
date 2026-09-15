@@ -17,152 +17,85 @@
 </script>
 <style>
 @media (min-width: 761px) {
-    .nx-role-student .nx-role-sidebar {
-        overflow: hidden !important;
-        padding-bottom: 0 !important;
-    }
-
+    .nx-role-student .nx-role-sidebar { overflow: hidden !important; padding-bottom: 0 !important; }
     .nx-role-student #studentSidebar > .nx-role-brand,
     .nx-role-student #studentSidebar > .nx-role-profile,
     .nx-role-student #studentSidebar > .nx-role-rule,
     .nx-role-student #studentSidebar > .nx-role-section-label,
     .nx-role-student #studentSidebar > .nx-role-account-nav,
-    .nx-role-student #studentSidebar > .nx-role-footer {
-        flex-shrink: 0 !important;
-    }
-
-    .nx-role-student #studentSidebar > .nx-role-nav[aria-label="Student menu"] {
-        flex: 1 1 auto !important;
-        min-height: 0 !important;
-        overflow-x: hidden !important;
-        overflow-y: auto !important;
-        overscroll-behavior: contain;
-        scrollbar-width: none;
-    }
-
-    .nx-role-student #studentSidebar > .nx-role-nav[aria-label="Student menu"]::-webkit-scrollbar {
-        width: 0;
-    }
-
+    .nx-role-student #studentSidebar > .nx-role-footer { flex-shrink: 0 !important; }
+    .nx-role-student #studentSidebar > .nx-role-nav[aria-label="Student menu"] { flex:1 1 auto!important;min-height:0!important;overflow-x:hidden!important;overflow-y:auto!important;overscroll-behavior:contain;scrollbar-width:none; }
+    .nx-role-student #studentSidebar > .nx-role-nav[aria-label="Student menu"]::-webkit-scrollbar { width:0; }
     .nx-role-student .nx-role-sidebar:hover > .nx-role-nav[aria-label="Student menu"],
-    .nx-role-student .nx-role-sidebar:focus-within > .nx-role-nav[aria-label="Student menu"] {
-        padding-right: 4px !important;
-        scrollbar-width: thin;
-        scrollbar-color: rgba(94, 229, 138, .42) transparent;
-    }
-
+    .nx-role-student .nx-role-sidebar:focus-within > .nx-role-nav[aria-label="Student menu"] { padding-right:4px!important;scrollbar-width:thin;scrollbar-color:rgba(94,229,138,.42) transparent; }
     .nx-role-student .nx-role-sidebar:hover > .nx-role-nav[aria-label="Student menu"]::-webkit-scrollbar,
-    .nx-role-student .nx-role-sidebar:focus-within > .nx-role-nav[aria-label="Student menu"]::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    .nx-role-student #studentSidebar > .nx-role-nav[aria-label="Student menu"]::-webkit-scrollbar-track {
-        background: transparent;
-    }
-
-    .nx-role-student #studentSidebar > .nx-role-nav[aria-label="Student menu"]::-webkit-scrollbar-thumb {
-        border-radius: 999px;
-        background: rgba(94, 229, 138, .38);
-    }
-
-    .nx-role-student #studentSidebar > .nx-role-nav[aria-label="Student menu"]::-webkit-scrollbar-thumb:hover {
-        background: rgba(94, 229, 138, .58);
-    }
-
-    .nx-role-student #studentSidebar > .nx-role-account-nav {
-        margin: 8px 0 16px !important;
-    }
+    .nx-role-student .nx-role-sidebar:focus-within > .nx-role-nav[aria-label="Student menu"]::-webkit-scrollbar { width:6px; }
+    .nx-role-student #studentSidebar > .nx-role-nav[aria-label="Student menu"]::-webkit-scrollbar-track { background:transparent; }
+    .nx-role-student #studentSidebar > .nx-role-nav[aria-label="Student menu"]::-webkit-scrollbar-thumb { border-radius:999px;background:rgba(94,229,138,.38); }
+    .nx-role-student #studentSidebar > .nx-role-nav[aria-label="Student menu"]::-webkit-scrollbar-thumb:hover { background:rgba(94,229,138,.58); }
+    .nx-role-student #studentSidebar > .nx-role-account-nav { margin:8px 0 16px!important; }
 }
 </style>
 
-{% set sidebar_class_id = request.view_args.get('class_id') if request.view_args else none %}
+{% set sidebar_route_class_id = request.view_args.get('class_id') if request.view_args else none %}
+{% set sidebar_query_class_id = request.args.get('classroom_id', type=int) %}
+{% set sidebar_class_id = sidebar_route_class_id or sidebar_query_class_id %}
 {% set sidebar_ml_active = request.endpoint == 'classwork_ml_insights.student_insights' %}
 {% set sidebar_report_active = request.endpoint == 'performance_reports.student_reports' %}
+{% set sidebar_work_active = request.endpoint in ['student_classwork.index', 'student_classwork.detail'] %}
 {% set sidebar_ml_url = url_for('classwork_ml_insights.student_insights', class_id=sidebar_class_id) if sidebar_class_id else url_for('classwork_ml_insights.student_insights_entry') %}
 {% set sidebar_report_url = url_for('performance_reports.student_reports', class_id=sidebar_class_id) if sidebar_class_id else url_for('classwork_ml_insights.student_reports_entry') %}
+{% set sidebar_work_context = get_daily_logbook_context(session.get('user_id'), sidebar_class_id) if sidebar_class_id else none %}
+{% set sidebar_completed_work = namespace(ids=[]) %}
+{% if sidebar_work_context %}
+    {% for entry in sidebar_work_context.entries %}
+        {% if entry.related_assignment_id and entry.related_assignment_id not in sidebar_completed_work.ids %}
+            {% set sidebar_completed_work.ids = sidebar_completed_work.ids + [entry.related_assignment_id] %}
+        {% endif %}
+    {% endfor %}
+{% endif %}
+{% set sidebar_pending_work_count = ([sidebar_work_context.work_options|length - sidebar_completed_work.ids|length, 0]|max) if sidebar_work_context else 0 %}
 
 <div class="nx-role-sidebar-shell nx-role-student">
     <aside class="nx-role-sidebar" id="studentSidebar" aria-label="Student navigation">
-        <a
-            class="nx-role-brand"
-            href="{{ url_for('student.student_dashboard') }}"
-            aria-label="Nexora Student Dashboard"
-        >
+        <a class="nx-role-brand" href="{{ url_for('student.student_dashboard') }}" aria-label="Nexora Student Dashboard">
             <img class="nx-role-logo" src="{{ url_for('static', filename='images/nexora_logo_student.png') }}" alt="" aria-hidden="true">
-            <span class="nx-role-brand-copy">
-                <strong>NEXORA</strong>
-                <small>INTERNSHIPS</small>
-            </span>
+            <span class="nx-role-brand-copy"><strong>NEXORA</strong><small>INTERNSHIPS</small></span>
         </a>
 
-        <a
-            class="nx-role-profile"
-            href="{{ url_for('student.student_profile') }}"
-            aria-label="Open student profile"
-        >
+        <a class="nx-role-profile" href="{{ url_for('student.student_profile') }}" aria-label="Open student profile">
             {% if sidebar_profile and sidebar_profile.profile_picture %}
-                <img
-                    src="{{ url_for('profile_picture', filename=sidebar_profile.profile_picture) }}"
-                    alt="Profile picture"
-                    onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_profile.png') }}';"
-                >
+                <img src="{{ url_for('profile_picture', filename=sidebar_profile.profile_picture) }}" alt="Profile picture" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_profile.png') }}';">
             {% elif profile is defined and profile and profile[5] %}
-                <img
-                    src="{{ url_for('profile_picture', filename=profile[5]) }}"
-                    alt="Profile picture"
-                    onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_profile.png') }}';"
-                >
+                <img src="{{ url_for('profile_picture', filename=profile[5]) }}" alt="Profile picture" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_profile.png') }}';">
             {% else %}
-                <img
-                    src="{{ url_for('static', filename='images/default_profile.png') }}"
-                    alt="Default profile picture"
-                >
+                <img src="{{ url_for('static', filename='images/default_profile.png') }}" alt="Default profile picture">
             {% endif %}
-
             <span class="nx-role-profile-copy">
-                <strong>
-                    {% if sidebar_profile and sidebar_profile.first_name %}
-                        {{ sidebar_profile.first_name }} {{ sidebar_profile.last_name or '' }}
-                    {% elif profile is defined and profile %}
-                        {{ profile[0] }} {{ profile[2] }}
-                    {% else %}
-                        Student
-                    {% endif %}
-                </strong>
-                <span>Student</span>
-                <em>View Profile →</em>
+                <strong>{% if sidebar_profile and sidebar_profile.first_name %}{{ sidebar_profile.first_name }} {{ sidebar_profile.last_name or '' }}{% elif profile is defined and profile %}{{ profile[0] }} {{ profile[2] }}{% else %}Student{% endif %}</strong>
+                <span>Student</span><em>View Profile →</em>
             </span>
         </a>
 
         <div class="nx-role-rule"></div>
         <div class="nx-role-section-label">Menu</div>
-
         <nav class="nx-role-nav" aria-label="Student menu">
-            <a href="{{ url_for('student.student_dashboard') }}" aria-label="Dashboard" class="{% if request.path == '/student/dashboard' %}active{% endif %}">
-                <span class="nx-role-icon">▦</span><span class="nx-role-nav-text">Dashboard</span>
-            </a>
-            <a href="{{ url_for('classroom.student_classes') }}" aria-label="Intern Classrooms" class="{% if request.path.startswith('/student/classes') and not sidebar_ml_active and not sidebar_report_active %}active{% endif %}">
-                <span class="nx-role-icon">♙</span><span class="nx-role-nav-text">Intern Classroom</span>
-            </a>
+            <a href="{{ url_for('student.student_dashboard') }}" aria-label="Dashboard" class="{% if request.path == '/student/dashboard' %}active{% endif %}"><span class="nx-role-icon">▦</span><span class="nx-role-nav-text">Dashboard</span></a>
+            <a href="{{ url_for('classroom.student_classes') }}" aria-label="Intern Classrooms" class="{% if request.path.startswith('/student/classes') and not sidebar_ml_active and not sidebar_report_active and not sidebar_work_active %}active{% endif %}"><span class="nx-role-icon">♙</span><span class="nx-role-nav-text">Intern Classroom</span></a>
 
             <div class="nx-role-divider"></div>
             <div class="nx-role-section-label">Class Tools</div>
-            <a href="{{ sidebar_ml_url }}" aria-label="ML Insights" class="{% if sidebar_ml_active %}active{% endif %}">
-                <span class="nx-role-icon">◈</span><span class="nx-role-nav-text">ML Insights</span>
-            </a>
-            <a href="{{ sidebar_report_url }}" aria-label="Report" class="{% if sidebar_report_active %}active{% endif %}">
-                <span class="nx-role-icon">▥</span><span class="nx-role-nav-text">Report</span>
-            </a>
-
-            <a href="{{ url_for('student.logbook') }}" aria-label="Logbook" class="{% if request.path == '/student/logbook' %}active{% endif %}">
-                <span class="nx-role-icon">▤</span><span class="nx-role-nav-text">Logbook</span>
-            </a>
-            <a href="{{ url_for('student.tasks') }}" aria-label="Tasks" class="{% if request.path == '/student/tasks' %}active{% endif %}">
-                <span class="nx-role-icon">☑</span><span class="nx-role-nav-text">Tasks</span>
-            </a>
-            <a href="{{ url_for('student.documents') }}" aria-label="Documents" class="{% if request.path == '/student/documents' %}active{% endif %}">
-                <span class="nx-role-icon">▧</span><span class="nx-role-nav-text">Documents</span>
-            </a>
+            {% if sidebar_class_id %}
+                <a href="{{ url_for('student_classwork.index', class_id=sidebar_class_id) }}" aria-label="Work" class="{% if sidebar_work_active %}active{% endif %}">
+                    <span class="nx-role-icon">▣</span><span class="nx-role-nav-text">Work</span>
+                    {% if sidebar_pending_work_count > 0 %}<span class="nx-role-badge">{{ sidebar_pending_work_count }}</span>{% endif %}
+                </a>
+            {% endif %}
+            <a href="{{ sidebar_ml_url }}" aria-label="ML Insights" class="{% if sidebar_ml_active %}active{% endif %}"><span class="nx-role-icon">◈</span><span class="nx-role-nav-text">ML Insights</span></a>
+            <a href="{{ sidebar_report_url }}" aria-label="Report" class="{% if sidebar_report_active %}active{% endif %}"><span class="nx-role-icon">▥</span><span class="nx-role-nav-text">Report</span></a>
+            <a href="{{ url_for('student.logbook', classroom_id=sidebar_class_id) if sidebar_class_id else url_for('student.logbook') }}" aria-label="Logbook" class="{% if request.path == '/student/logbook' %}active{% endif %}"><span class="nx-role-icon">▤</span><span class="nx-role-nav-text">Logbook</span></a>
+            <a href="{{ url_for('student.tasks') }}" aria-label="Tasks" class="{% if request.path == '/student/tasks' %}active{% endif %}"><span class="nx-role-icon">☑</span><span class="nx-role-nav-text">Tasks</span></a>
+            <a href="{{ url_for('student.documents') }}" aria-label="Documents" class="{% if request.path == '/student/documents' %}active{% endif %}"><span class="nx-role-icon">▧</span><span class="nx-role-nav-text">Documents</span></a>
             <a href="{{ url_for('notifications.notification_list') }}" aria-label="Notifications" class="{% if request.path == '/notifications' %}active{% endif %}">
                 <span class="nx-role-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg></span><span class="nx-role-nav-text">Notifications</span>
                 {% if unread_count|default(0) > 0 %}<span class="nx-role-badge">{{ unread_count }}</span>{% endif %}
@@ -171,22 +104,13 @@
 
         <div class="nx-role-divider"></div>
         <div class="nx-role-section-label">Account</div>
-
         <nav class="nx-role-nav nx-role-account-nav" aria-label="Student account">
             <a href="{{ url_for('student.student_profile') }}" aria-label="Profile"><span class="nx-role-icon">◎</span><span class="nx-role-nav-text">Profile</span></a>
             <a href="javascript:void(0)" aria-label="Logout" onclick="openLogoutModal(); return false;"><span class="nx-role-icon">↪</span><span class="nx-role-nav-text">Logout</span></a>
         </nav>
 
-        <div class="nx-role-footer">
-            <span class="nx-role-footer-mark">◆</span>
-            <span class="nx-role-footer-copy">
-                <strong>Nexora Internships</strong>
-                <span>Empowering Future</span>
-                <span>Developers</span>
-            </span>
-        </div>
+        <div class="nx-role-footer"><span class="nx-role-footer-mark">◆</span><span class="nx-role-footer-copy"><strong>Nexora Internships</strong><span>Empowering Future</span><span>Developers</span></span></div>
     </aside>
-
     <div class="nx-role-sidebar-backdrop" aria-hidden="true"></div>
 </div>
 
@@ -195,137 +119,29 @@
 <script>
 (function () {
     function applyCanonicalStudentHeading() {
-        var headings = document.querySelectorAll(
-            'body.student-page .student-tasks-heading h1,' +
-            'body.student-page .student-logbook-page-heading h1,' +
-            'body.student-page .classes-hero h1,' +
-            'body.student-page .nx-heading h1,' +
-            'body.student-page .profile-page-heading h1'
-        );
-
-        headings.forEach(function (heading) {
-            heading.style.setProperty('margin', '0', 'important');
-            heading.style.setProperty('font-size', '32px', 'important');
-            heading.style.setProperty('line-height', '1.15', 'important');
-            heading.style.setProperty('font-weight', '800', 'important');
-            heading.style.setProperty('letter-spacing', '-0.03em', 'important');
-        });
+        var headings = document.querySelectorAll('body.student-page .student-tasks-heading h1,'+'body.student-page .student-logbook-page-heading h1,'+'body.student-page .classes-hero h1,'+'body.student-page .nx-heading h1,'+'body.student-page .profile-page-heading h1');
+        headings.forEach(function (heading) { heading.style.setProperty('margin','0','important');heading.style.setProperty('font-size','32px','important');heading.style.setProperty('line-height','1.15','important');heading.style.setProperty('font-weight','800','important');heading.style.setProperty('letter-spacing','-0.03em','important'); });
     }
-
     function resolveInternClassroomEntry() {
         if (window.location.pathname !== '/student/classes' && window.location.pathname !== '/student/classes/') return;
-
         var classroomLinks = Array.from(document.querySelectorAll('a.student-intern-open-btn[href]'));
-        if (classroomLinks.length === 1) {
-            window.location.replace(classroomLinks[0].href);
-            return;
-        }
-
-        if (classroomLinks.length === 0) {
-            var joinLink = document.querySelector('a.empty-join[href], a.join-btn[href*="/student/classes/join"]');
-            if (joinLink) window.location.replace(joinLink.href);
-        }
+        if (classroomLinks.length === 1) { window.location.replace(classroomLinks[0].href); return; }
+        if (classroomLinks.length === 0) { var joinLink=document.querySelector('a.empty-join[href], a.join-btn[href*="/student/classes/join"]');if(joinLink)window.location.replace(joinLink.href); }
     }
-
     function enhanceStudentDocumentsPage() {
         if (!document.body.classList.contains('student-documents-page')) return;
-
-        var fileInput = document.getElementById('document-file');
-        var fileName = document.getElementById('document-file-name');
-        var uploadButton = document.querySelector('.student-document-upload-button');
-        var uploadForm = document.getElementById('document-upload');
-        var allowedExtensions = new Set([
-            'pdf', 'docx', 'doc', 'xlsx', 'xls', 'pptx', 'txt', 'zip', 'png', 'jpg', 'jpeg', 'gif'
-        ]);
-        var maxUploadSize = 5 * 1024 * 1024;
-
-        document.querySelectorAll('.js-document-preview').forEach(function (button) {
-            var type = (button.dataset.previewType || '').toLowerCase();
-            if (type !== 'pdf') return;
-
-            var link = document.createElement('a');
-            link.className = button.className.replace(/\bjs-document-preview\b/g, '').trim();
-            link.href = button.dataset.previewUrl || '#';
-            link.target = '_blank';
-            link.rel = 'noopener';
-            link.textContent = button.textContent;
-            link.setAttribute(
-                'aria-label',
-                'Open ' + (button.dataset.previewName || 'document') + ' in a new tab'
-            );
-            button.replaceWith(link);
-        });
-
-        if (!fileInput || !fileName || !uploadButton || !uploadForm) return;
-
-        fileInput.setAttribute(
-            'accept',
-            'application/pdf,.pdf,.docx,.doc,.xlsx,.xls,.pptx,.txt,.zip,.png,.jpg,.jpeg,.gif'
-        );
-
-        function setUploadButtonEnabled(enabled) {
-            uploadButton.disabled = !enabled;
-            uploadButton.setAttribute('aria-disabled', enabled ? 'false' : 'true');
-            uploadButton.style.opacity = enabled ? '' : '0.55';
-            uploadButton.style.cursor = enabled ? '' : 'not-allowed';
-            uploadButton.style.boxShadow = enabled ? '' : 'none';
-            uploadButton.style.background = enabled ? '' : '#9fb3a8';
-        }
-
-        function setFileFeedback(message, isError) {
-            fileName.textContent = message;
-            fileName.style.color = isError ? '#b42323' : '';
-            fileName.style.fontWeight = isError ? '800' : '';
-        }
-
-        function validateSelectedFile() {
-            var file = fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
-            if (!file) {
-                setUploadButtonEnabled(false);
-                setFileFeedback('', false);
-                return false;
-            }
-
-            var parts = file.name.split('.');
-            var extension = parts.length > 1 ? parts.pop().toLowerCase() : '';
-
-            if (!allowedExtensions.has(extension)) {
-                fileInput.value = '';
-                setUploadButtonEnabled(false);
-                setFileFeedback('Unsupported file type. Choose PDF, DOCX, XLSX, PPTX, TXT, ZIP, PNG, or JPG.', true);
-                return false;
-            }
-
-            if (file.size > maxUploadSize) {
-                fileInput.value = '';
-                setUploadButtonEnabled(false);
-                setFileFeedback('File is too large. Maximum size is 5 MB.', true);
-                return false;
-            }
-
-            setUploadButtonEnabled(true);
-            setFileFeedback('Selected: ' + file.name, false);
-            return true;
-        }
-
-        setUploadButtonEnabled(false);
-        fileInput.addEventListener('change', validateSelectedFile);
-        uploadForm.addEventListener('submit', function (event) {
-            if (!validateSelectedFile()) event.preventDefault();
-        });
+        var fileInput=document.getElementById('document-file');var fileName=document.getElementById('document-file-name');var uploadButton=document.querySelector('.student-document-upload-button');var uploadForm=document.getElementById('document-upload');
+        var allowedExtensions=new Set(['pdf','docx','doc','xlsx','xls','pptx','txt','zip','png','jpg','jpeg','gif']);var maxUploadSize=5*1024*1024;
+        document.querySelectorAll('.js-document-preview').forEach(function(button){var type=(button.dataset.previewType||'').toLowerCase();if(type!=='pdf')return;var link=document.createElement('a');link.className=button.className.replace(/\bjs-document-preview\b/g,'').trim();link.href=button.dataset.previewUrl||'#';link.target='_blank';link.rel='noopener';link.textContent=button.textContent;link.setAttribute('aria-label','Open '+(button.dataset.previewName||'document')+' in a new tab');button.replaceWith(link);});
+        if(!fileInput||!fileName||!uploadButton||!uploadForm)return;
+        fileInput.setAttribute('accept','application/pdf,.pdf,.docx,.doc,.xlsx,.xls,.pptx,.txt,.zip,.png,.jpg,.jpeg,.gif');
+        function setUploadButtonEnabled(enabled){uploadButton.disabled=!enabled;uploadButton.setAttribute('aria-disabled',enabled?'false':'true');uploadButton.style.opacity=enabled?'':'0.55';uploadButton.style.cursor=enabled?'':'not-allowed';uploadButton.style.boxShadow=enabled?'':'none';uploadButton.style.background=enabled?'':'#9fb3a8';}
+        function setFileFeedback(message,isError){fileName.textContent=message;fileName.style.color=isError?'#b42323':'';fileName.style.fontWeight=isError?'800':'';}
+        function validateSelectedFile(){var file=fileInput.files&&fileInput.files[0]?fileInput.files[0]:null;if(!file){setUploadButtonEnabled(false);setFileFeedback('',false);return false;}var parts=file.name.split('.');var extension=parts.length>1?parts.pop().toLowerCase():'';if(!allowedExtensions.has(extension)){fileInput.value='';setUploadButtonEnabled(false);setFileFeedback('Unsupported file type. Choose PDF, DOCX, XLSX, PPTX, TXT, ZIP, PNG, or JPG.',true);return false;}if(file.size>maxUploadSize){fileInput.value='';setUploadButtonEnabled(false);setFileFeedback('File is too large. Maximum size is 5 MB.',true);return false;}setUploadButtonEnabled(true);setFileFeedback('Selected: '+file.name,false);return true;}
+        setUploadButtonEnabled(false);fileInput.addEventListener('change',validateSelectedFile);uploadForm.addEventListener('submit',function(event){if(!validateSelectedFile())event.preventDefault();});
     }
-
-    function applyStudentShellEnhancements() {
-        applyCanonicalStudentHeading();
-        resolveInternClassroomEntry();
-        enhanceStudentDocumentsPage();
-    }
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', applyStudentShellEnhancements);
-    } else {
-        applyStudentShellEnhancements();
-    }
+    function applyStudentShellEnhancements(){applyCanonicalStudentHeading();resolveInternClassroomEntry();enhanceStudentDocumentsPage();}
+    if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',applyStudentShellEnhancements);}else{applyStudentShellEnhancements();}
 })();
 </script>
 
