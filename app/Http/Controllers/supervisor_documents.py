@@ -72,6 +72,39 @@ def _is_safe_upload_path(filepath):
         return False
 
 
+def _resolve_upload_path(filepath, filename=None):
+    upload_base = current_app.config.get("UPLOAD_FOLDER", "")
+    if not upload_base:
+        return None
+
+    try:
+        base = os.path.realpath(upload_base)
+    except (OSError, ValueError, TypeError):
+        return None
+
+    candidates = []
+    if filepath:
+        candidates.append(filepath)
+        stored_name = str(filepath).replace("\\", "/").rsplit("/", 1)[-1]
+        if stored_name:
+            candidates.append(os.path.join(base, stored_name))
+
+    if filename:
+        stored_name = str(filename).replace("\\", "/").rsplit("/", 1)[-1]
+        if stored_name:
+            candidates.append(os.path.join(base, stored_name))
+
+    for candidate in candidates:
+        try:
+            resolved = os.path.realpath(candidate)
+            if os.path.commonpath([base, resolved]) == base and os.path.isfile(resolved):
+                return resolved
+        except (OSError, ValueError, TypeError):
+            continue
+
+    return None
+
+
 def _supervisor_owns_student(conn, supervisor_id, student_id):
     return conn.execute(
         """
@@ -311,13 +344,14 @@ def student_document_folder(student_id):
         document_id = int(_value(row, "id", 0, 0) or 0)
         filename = _value(row, "filename", 1, "") or "Document"
         filepath = _value(row, "filepath", 2, "") or ""
+        resolved_filepath = _resolve_upload_path(filepath, filename)
         display_filename = _document_display_name(filename, student_id)
         extension = os.path.splitext(display_filename)[1].lower().lstrip(".") or "file"
-        available = _is_safe_upload_path(filepath) and os.path.isfile(filepath)
+        available = resolved_filepath is not None
         size = None
-        if available:
+        if resolved_filepath:
             try:
-                size = os.path.getsize(filepath)
+                size = os.path.getsize(resolved_filepath)
             except OSError:
                 size = None
         if extension in {"png", "jpg", "jpeg", "gif"}:
@@ -380,13 +414,14 @@ def view_student_document(student_id, document_id):
         abort(404)
     filename = _value(row, "filename", 0, "") or "Document"
     filepath = _value(row, "filepath", 1, "") or ""
-    if not _is_safe_upload_path(filepath):
-        abort(403)
-    if not os.path.isfile(filepath):
+    resolved_filepath = _resolve_upload_path(filepath, filename)
+    if not resolved_filepath:
+        if not _is_safe_upload_path(filepath):
+            abort(403)
         abort(404)
 
     return send_file(
-        filepath,
+        resolved_filepath,
         as_attachment=False,
         download_name=_document_display_name(filename, student_id),
     )
