@@ -109,8 +109,11 @@ def test_ml_explanation_route_is_login_protected_and_dedicated():
 def test_supervisor_insights_registers_assistant_and_matches_export_buttons():
     bootstrap = (ROOT / "bootstrap/app.py").read_text(encoding="utf-8")
     script = (ROOT / "resources/assets/js/supervisor_insights_ai.js").read_text(encoding="utf-8")
+    template = (ROOT / "resources/views/classroom/supervisor_individual_insights.html").read_text(encoding="utf-8")
 
     assert "from app.Http.Controllers.assistant import assistant_bp" in bootstrap
     assert "supervisor_profile_photo,assistant_bp,notifications_bp,messages" in bootstrap
+    assert "url_for('assistant.ask')" in template
+    assert "url_for('assistant_bp.ask')" not in template
     assert 'ensureExportLink(controls, "pdf", `/supervisor/classes/${classId}/insights/export.pdf`, false);' in script
     assert 'pdfLink.className = "btn btn-sm btn-outline-primary";' in script
