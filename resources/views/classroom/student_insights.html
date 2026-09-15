@@ -392,48 +392,21 @@
 
         function setSection(name, value) {
             var node = items.querySelector('[data-ai-section="' + name + '"]');
-            if (node) node.textContent = value || 'Not enough evidence is available for this part of the explanation.';
+            if (node) node.textContent = value || 'Unavailable.';
+        }
+
+        function renderAnalysis(analysis) {
+            analysis = analysis || {};
+            setSection('overall', analysis.overall);
+            setSection('happened', analysis.happened);
+            setSection('improve', analysis.improve);
+            setSection('feedback', analysis.feedback);
+            setSection('next', analysis.next_focus);
         }
 
         function showUnavailable(message) {
             status.textContent = message || 'Nexora AI explanation is unavailable right now. Your ML evidence and recommendations above are still available.';
             items.hidden = true;
-        }
-
-        function parseAnswer(answer) {
-            var text = String(answer || '').replace(/\r/g, '').trim();
-            var labels = [
-                ['overall', 'OVERALL INTERPRETATION'],
-                ['happened', 'WHAT HAPPENED'],
-                ['improve', 'WHAT TO IMPROVE'],
-                ['feedback', 'FEEDBACK SIGNAL'],
-                ['next', 'NEXT FOCUS']
-            ];
-            var found = [];
-
-            labels.forEach(function (entry) {
-                var label = entry[1];
-                var index = text.toUpperCase().indexOf(label + ':');
-                if (index >= 0) found.push({key: entry[0], label: label, index: index});
-            });
-
-            found.sort(function (a, b) { return a.index - b.index; });
-            if (!found.length) {
-                setSection('overall', text);
-                setSection('happened', 'See the overall interpretation above.');
-                setSection('improve', evidence.work_recommendation || 'Focus on the lowest-supported area shown in your current evidence.');
-                setSection('feedback', evidence.feedback_evidence_available ? 'Use the Feedback Intelligence panel for the current model signals.' : 'No supervisor feedback is available yet.');
-                setSection('next', 'Use the current ML recommendation and complete any unfinished Work first.');
-                return;
-            }
-
-            var values = {};
-            for (var i = 0; i < found.length; i++) {
-                var start = found[i].index + found[i].label.length + 1;
-                var end = i + 1 < found.length ? found[i + 1].index : text.length;
-                values[found[i].key] = text.slice(start, end).trim().replace(/^[-•]\s*/, '');
-            }
-            labels.forEach(function (entry) { setSection(entry[0], values[entry[0]]); });
         }
 
         function evidenceHash(value) {
@@ -442,17 +415,6 @@
             for (var i = 0; i < text.length; i++) hash = ((hash << 5) - hash + text.charCodeAt(i)) | 0;
             return String(hash);
         }
-
-        var cacheKey = 'nxMlAiAnalysis:' + {{ classroom.id|tojson }} + ':' + evidenceHash(evidence);
-        try {
-            var cached = window.sessionStorage.getItem(cacheKey);
-            if (cached) {
-                parseAnswer(cached);
-                status.textContent = 'AI explanation generated from your current ML evidence.';
-                items.hidden = false;
-                return;
-            }
-        } catch (error) {}
 
         var aiEvidence = {
             work_evidence: evidence.performance_evidence_available,
@@ -463,6 +425,7 @@
             reviewed: evidence.reviewed_work_count,
             total: evidence.total_work_count,
             work_label: evidence.work_performance_label,
+            work_recommendation: evidence.work_recommendation,
             priority: evidence.recommendation_priority,
             feedback_evidence: evidence.feedback_evidence_available,
             sentiment: evidence.sentiment,
@@ -470,44 +433,44 @@
             confidence: evidence.ml_confidence,
             feedback_label: evidence.feedback_classification,
             naive_bayes: evidence.naive_bayes_prediction,
-            svm: evidence.svm_prediction
+            svm: evidence.svm_prediction,
+            feedback_recommendation: evidence.feedback_recommendation
         };
 
-        var prompt = [
-            "Explain this student's Nexora ML evidence using only the values below. Do not invent trends, score drops, causes, missing assignments, behavior, or feedback details.",
-            'Work label is gradebook-derived; Naive Bayes and SVM are feedback ML predictions. None replaces the Official OJT Evaluation.',
-            'Return exactly five concise labeled sections:',
-            'OVERALL INTERPRETATION:',
-            'WHAT HAPPENED:',
-            'WHAT TO IMPROVE:',
-            'FEEDBACK SIGNAL:',
-            'NEXT FOCUS:',
-            'For NEXT FOCUS give 2-4 actions separated by semicolons. If evidence is missing, say unavailable.',
-            'Data: ' + JSON.stringify(aiEvidence)
-        ].join('\n');
+        var cacheKey = 'nxMlAiAnalysis:v2:' + {{ classroom.id|tojson }} + ':' + evidenceHash(aiEvidence);
+        try {
+            var cached = window.sessionStorage.getItem(cacheKey);
+            if (cached) {
+                renderAnalysis(JSON.parse(cached));
+                status.textContent = 'AI explanation generated from your current ML evidence.';
+                items.hidden = false;
+                return;
+            }
+        } catch (error) {}
 
-        fetch('/assistant/ask', {
+        fetch('/assistant/ml-explanation', {
             method: 'POST',
+            credentials: 'same-origin',
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
                 'X-CSRFToken': {{ csrf_token()|tojson }}
             },
-            body: JSON.stringify({question: prompt})
+            body: JSON.stringify({evidence: aiEvidence})
         }).then(function (response) {
             return response.json().then(function (data) {
                 if (!response.ok) throw new Error(data.error || 'AI request failed.');
                 return data;
             });
         }).then(function (data) {
-            if (!data.available || !data.answer) {
+            if (!data.available || !data.analysis) {
                 showUnavailable('Nexora AI is not enabled on this server yet. Your ML evidence and recommendations remain available above.');
                 return;
             }
-            parseAnswer(data.answer);
+            renderAnalysis(data.analysis);
             status.textContent = 'AI explanation generated from your current ML evidence.';
             items.hidden = false;
-            try { window.sessionStorage.setItem(cacheKey, data.answer); } catch (error) {}
+            try { window.sessionStorage.setItem(cacheKey, JSON.stringify(data.analysis)); } catch (error) {}
         }).catch(function () {
             showUnavailable('Nexora AI explanation is temporarily unavailable. Your ML evidence and recommendations above are unaffected.');
         });
