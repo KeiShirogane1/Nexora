@@ -8,385 +8,89 @@
         <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">
         <style>
-            .supervisor-classes-header {
-                display: flex;
-                align-items: flex-end;
-                justify-content: space-between;
-                gap: 18px;
-                margin-bottom: 20px;
-            }
-
-            .supervisor-classes-view-tools {
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                color: #64748b;
-                font-size: 12px;
-                font-weight: 700;
-                white-space: nowrap;
-            }
-
-            .supervisor-view-toggle {
-                display: inline-flex;
-                padding: 3px;
-                border: 1px solid #dbe4ef;
-                border-radius: 11px;
-                background: #fff;
-                box-shadow: 0 4px 14px rgba(15, 23, 42, .04);
-            }
-
-            .supervisor-view-toggle button {
-                min-height: 34px;
-                padding: 0 12px;
-                border: 0;
-                border-radius: 8px;
-                background: transparent;
-                color: #64748b;
-                font: inherit;
-                font-size: 11px;
-                font-weight: 800;
-                cursor: pointer;
-            }
-
-            .supervisor-view-toggle button.is-active {
-                background: #2563eb;
-                color: #fff;
-                box-shadow: 0 4px 10px rgba(37, 99, 235, .2);
-            }
-
-            .supervisor-class-card-banner {
-                margin: -18px -18px 0;
-                padding: 18px;
-                border-bottom: 1px solid rgba(148, 163, 184, .22);
-                border-radius: 17px 17px 0 0;
-            }
-
-            .supervisor-class-card-banner--blue { background: linear-gradient(135deg, #93c5fd 0%, #dbeafe 100%); }
-            .supervisor-class-card-banner--navy { background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); }
-            .supervisor-class-card-banner--green { background: linear-gradient(135deg, #6ee7b7 0%, #d1fae5 100%); }
-            .supervisor-class-card-banner--teal { background: linear-gradient(135deg, #5eead4 0%, #ccfbf1 100%); }
-            .supervisor-class-card-banner--purple { background: linear-gradient(135deg, #c4b5fd 0%, #ede9fe 100%); }
-            .supervisor-class-card-banner--orange { background: linear-gradient(135deg, #fdba74 0%, #ffedd5 100%); }
-            .supervisor-class-card-banner--amber { background: linear-gradient(135deg, #fcd34d 0%, #fef3c7 100%); }
-            .supervisor-class-card-banner--rose { background: linear-gradient(135deg, #fda4af 0%, #ffe4e6 100%); }
-            .supervisor-class-card-banner--slate { background: linear-gradient(135deg, #94a3b8 0%, #e2e8f0 100%); }
-
-            .supervisor-class-card-banner--navy h2,
-            .supervisor-class-card-banner--navy .supervisor-class-section,
-            .supervisor-class-card-banner--navy .supervisor-class-supervisor {
-                color: #fff;
-            }
-
-            .supervisor-class-card-heading {
-                display: flex;
-                align-items: flex-start;
-                gap: 12px;
-                min-width: 0;
-            }
-
-            .supervisor-class-card-icon {
-                width: 46px;
-                height: 46px;
-                flex: 0 0 46px;
-                display: grid;
-                place-items: center;
-                border: 1px solid rgba(255, 255, 255, .72);
-                border-radius: 13px;
-                background: rgba(255, 255, 255, .72);
-                color: #1d4ed8;
-                font-size: 22px;
-                box-shadow: 0 7px 18px rgba(15, 23, 42, .07);
-            }
-
-            .supervisor-class-card-title-copy { min-width: 0; }
-            .supervisor-class-card-title-copy h2 { margin: 0 0 4px; }
-            .supervisor-class-card-title-copy p { margin: 0; }
-            .supervisor-class-section { color: #334155; font-weight: 800; }
-            .supervisor-class-supervisor { margin-top: 3px !important; color: #64748b; font-size: 12px; line-height: 1.35; }
-
-            .supervisor-class-card .dropdown { z-index: 20; }
-            .supervisor-class-card .dropdown-menu { min-width: 220px; z-index: 40; }
-
-            .supervisor-class-pending-pill {
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                min-height: 29px;
-                padding: 5px 9px;
-                border: 1px solid #fed7aa;
-                border-radius: 999px;
-                background: #fff7ed;
-                color: #c2410c !important;
-                font-size: 10px;
-                font-weight: 850;
-                line-height: 1;
-                text-decoration: none !important;
-                white-space: nowrap;
-            }
-
-            .supervisor-class-pending-pill:hover { border-color: #fdba74; background: #ffedd5; color: #9a3412 !important; }
-
-            .supervisor-class-card .class-banner-color-panel {
-                padding: 9px 13px 12px;
-                border-top: 1px solid #eef2f7;
-                background: #fbfdff;
-            }
-            .supervisor-class-card .class-banner-color-panel[hidden] { display: none !important; }
-            .supervisor-class-card .class-banner-color-label {
-                display: block;
-                margin-bottom: 8px;
-                color: #708096;
-                font-size: 9px;
-                font-weight: 800;
-                letter-spacing: .08em;
-                text-transform: uppercase;
-            }
-            .supervisor-class-card .class-banner-color-grid { display: grid; grid-template-columns: repeat(3, 28px); gap: 10px; }
-            .supervisor-class-card .class-banner-swatch {
-                width: 28px;
-                height: 28px;
-                min-height: 28px;
-                padding: 0;
-                border: 2px solid #fff;
-                border-radius: 999px;
-                box-shadow: 0 0 0 1px #cbd5e1;
-                cursor: pointer;
-            }
-            .supervisor-class-card .class-banner-swatch.is-selected { box-shadow: 0 0 0 2px #2563eb; }
-            .class-banner-swatch--blue { background: #60a5fa; }
-            .class-banner-swatch--navy { background: #1e3a8a; }
-            .class-banner-swatch--green { background: #34d399; }
-            .class-banner-swatch--teal { background: #14b8a6; }
-            .class-banner-swatch--purple { background: #a78bfa; }
-            .class-banner-swatch--orange { background: #fb923c; }
-            .class-banner-swatch--amber { background: #f59e0b; }
-            .class-banner-swatch--rose { background: #fb7185; }
-            .class-banner-swatch--slate { background: #64748b; }
-
-            body.supervisor-classes-page .supervisor-classes-main { padding-bottom: 32px !important; }
-            body.supervisor-classes-page .supervisor-classes-list {
-                display: grid;
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-                align-items: start;
-                gap: 18px;
-                max-height: calc(100vh - 155px) !important;
-                overflow-x: hidden !important;
-                overflow-y: auto !important;
-                padding: 0 5px 104px 0;
-                scrollbar-gutter: stable;
-            }
-            body.supervisor-classes-page .supervisor-classes-list.is-list-view { grid-template-columns: 1fr; }
-            body.supervisor-classes-page .supervisor-class-card {
-                min-width: 0;
-                margin-bottom: 0;
-                padding: 18px;
-                overflow: visible;
-            }
-
-            .supervisor-card-info-grid {
-                display: grid;
-                grid-template-columns: repeat(3, minmax(0, 1fr));
-                gap: 9px;
-                margin-top: 14px;
-            }
-
-            .supervisor-card-info {
-                min-width: 0;
-                min-height: 74px;
-                display: flex;
-                align-items: flex-start;
-                gap: 9px;
-                padding: 11px;
-                border: 1px solid #e2e8f0;
-                border-radius: 12px;
-                background: #f8fafc;
-            }
-
-            .supervisor-card-info-icon {
-                width: 30px;
-                height: 30px;
-                flex: 0 0 30px;
-                display: grid;
-                place-items: center;
-                border-radius: 9px;
-                background: #e8f0ff;
-                color: #2563eb;
-                font-size: 14px;
-                font-weight: 900;
-            }
-
-            .supervisor-card-info-copy { min-width: 0; }
-            .supervisor-card-info-label {
-                display: block;
-                color: #64748b;
-                font-size: 9px;
-                font-weight: 850;
-                letter-spacing: .035em;
-                text-transform: uppercase;
-            }
-            .supervisor-card-info-value {
-                display: block;
-                margin-top: 3px;
-                overflow: hidden;
-                color: #172033;
-                font-size: 13px;
-                font-weight: 850;
-                line-height: 1.25;
-                text-overflow: ellipsis;
-            }
-            .supervisor-card-info-sub {
-                display: block;
-                margin-top: 2px;
-                overflow: hidden;
-                color: #7b8798;
-                font-size: 10px;
-                line-height: 1.3;
-                text-overflow: ellipsis;
-            }
-
-            .supervisor-card-code-row {
-                display: flex;
-                align-items: center;
-                gap: 6px;
-                margin-top: 3px;
-            }
-            .supervisor-card-code-row strong {
-                min-width: 0;
-                overflow: hidden;
-                color: #172033;
-                font-size: 12px;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-            }
-            .supervisor-card-code-row .supervisor-copy-btn {
-                min-height: 26px;
-                margin-left: auto;
-                padding: 0 8px;
-                font-size: 9px;
-                white-space: nowrap;
-            }
-
-            .supervisor-card-progress-track {
-                width: 100%;
-                height: 5px;
-                margin-top: 7px;
-                overflow: hidden;
-                border-radius: 999px;
-                background: #e2e8f0;
-            }
-            .supervisor-card-progress-bar {
-                height: 100%;
-                border-radius: inherit;
-                background: #22c55e;
-            }
-
-            .supervisor-card-evaluation.is-due .supervisor-card-info-icon { background: #fff2df; color: #d97706; }
-            .supervisor-card-evaluation.is-complete .supervisor-card-info-icon { background: #dcfce7; color: #15803d; }
-
-            .supervisor-card-actions {
-                display: grid;
-                grid-template-columns: minmax(0, 1fr) auto;
-                gap: 9px;
-                margin-top: 12px;
-            }
-            body.supervisor-classes-page .supervisor-open-class-btn {
-                min-height: 42px;
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                flex-shrink: 0;
-                margin: 0;
-            }
-            .supervisor-card-manage-btn {
-                min-width: 112px;
-                min-height: 42px;
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                gap: 7px;
-                padding: 0 15px;
-                border: 1px solid #2563eb;
-                border-radius: 11px;
-                background: #fff;
-                color: #2563eb;
-                font-size: 11px;
-                font-weight: 850;
-                text-decoration: none;
-            }
-            .supervisor-card-manage-btn:hover { background: #eff6ff; color: #1d4ed8; }
-
-            .supervisor-classes-list.is-list-view .supervisor-class-card {
-                display: grid;
-                grid-template-columns: minmax(250px, .8fr) minmax(0, 1.7fr) minmax(220px, .55fr);
-                gap: 14px;
-                align-items: stretch;
-            }
-            .supervisor-classes-list.is-list-view .supervisor-class-card-banner {
-                height: 100%;
-                margin: 0;
-                border: 0;
-                border-radius: 14px;
-            }
-            .supervisor-classes-list.is-list-view .supervisor-card-info-grid { margin-top: 0; grid-template-columns: repeat(3, minmax(0, 1fr)); }
-            .supervisor-classes-list.is-list-view .supervisor-card-actions { margin-top: 0; grid-template-columns: 1fr; align-content: center; }
-
-            @media (max-width: 1180px) {
-                body.supervisor-classes-page .supervisor-classes-list { grid-template-columns: 1fr; }
-                .supervisor-classes-list.is-list-view .supervisor-class-card { display: block; }
-                .supervisor-classes-list.is-list-view .supervisor-class-card-banner { margin: -18px -18px 0; border-radius: 17px 17px 0 0; }
-                .supervisor-classes-list.is-list-view .supervisor-card-info-grid { margin-top: 14px; }
-                .supervisor-classes-list.is-list-view .supervisor-card-actions { margin-top: 12px; grid-template-columns: minmax(0, 1fr) auto; }
-            }
-
-            @media (max-width: 768px) {
-                .supervisor-classes-header { align-items: flex-start; flex-direction: column; }
-                .supervisor-classes-view-tools { width: 100%; justify-content: space-between; }
-                body.supervisor-classes-page .supervisor-classes-main { padding-bottom: 20px !important; }
-                body.supervisor-classes-page .supervisor-classes-list {
-                    max-height: calc(100vh - 135px) !important;
-                    padding-bottom: 88px;
-                }
-                .supervisor-card-info-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-            }
-
-            @media (max-width: 520px) {
-                .supervisor-view-toggle { display: none; }
-                .supervisor-class-card-banner { margin: -15px -15px 0; padding: 15px; }
-                body.supervisor-classes-page .supervisor-class-card { padding: 15px; }
-                .supervisor-class-card-heading { gap: 9px; }
-                .supervisor-class-card-icon { width: 40px; height: 40px; flex-basis: 40px; }
-                .supervisor-class-card-top { align-items: flex-start; }
-                .supervisor-class-pending-pill { display: none; }
-                .supervisor-card-info-grid { grid-template-columns: 1fr 1fr; gap: 7px; }
-                .supervisor-card-info { min-height: 68px; padding: 9px; }
-                .supervisor-card-info-icon { width: 26px; height: 26px; flex-basis: 26px; font-size: 12px; }
-                .supervisor-card-info-value { font-size: 12px; }
-                .supervisor-card-actions { grid-template-columns: 1fr; }
-                .supervisor-card-manage-btn { width: 100%; }
-            }
+            .supervisor-classes-header { display:flex; align-items:flex-end; justify-content:space-between; gap:18px; margin-bottom:20px; }
+            .supervisor-classes-view-tools { display:flex; align-items:center; gap:12px; color:#64748b; font-size:12px; font-weight:700; white-space:nowrap; }
+            .supervisor-view-toggle { display:inline-flex; padding:3px; border:1px solid #dbe4ef; border-radius:11px; background:#fff; box-shadow:0 4px 14px rgba(15,23,42,.04); }
+            .supervisor-view-toggle button { min-height:34px; padding:0 12px; border:0; border-radius:8px; background:transparent; color:#64748b; font:inherit; font-size:11px; font-weight:800; cursor:pointer; }
+            .supervisor-view-toggle button.is-active { background:#2563eb; color:#fff; box-shadow:0 4px 10px rgba(37,99,235,.2); }
+            .supervisor-class-card-banner { margin:-18px -18px 0; padding:18px; border-bottom:1px solid rgba(148,163,184,.22); border-radius:17px 17px 0 0; }
+            .supervisor-class-card-banner--blue { background:linear-gradient(135deg,#93c5fd 0%,#dbeafe 100%); }
+            .supervisor-class-card-banner--navy { background:linear-gradient(135deg,#1e3a8a 0%,#3b82f6 100%); }
+            .supervisor-class-card-banner--green { background:linear-gradient(135deg,#6ee7b7 0%,#d1fae5 100%); }
+            .supervisor-class-card-banner--teal { background:linear-gradient(135deg,#5eead4 0%,#ccfbf1 100%); }
+            .supervisor-class-card-banner--purple { background:linear-gradient(135deg,#c4b5fd 0%,#ede9fe 100%); }
+            .supervisor-class-card-banner--orange { background:linear-gradient(135deg,#fdba74 0%,#ffedd5 100%); }
+            .supervisor-class-card-banner--amber { background:linear-gradient(135deg,#fcd34d 0%,#fef3c7 100%); }
+            .supervisor-class-card-banner--rose { background:linear-gradient(135deg,#fda4af 0%,#ffe4e6 100%); }
+            .supervisor-class-card-banner--slate { background:linear-gradient(135deg,#94a3b8 0%,#e2e8f0 100%); }
+            .supervisor-class-card-banner--navy h2,.supervisor-class-card-banner--navy .supervisor-class-section,.supervisor-class-card-banner--navy .supervisor-class-supervisor { color:#fff; }
+            .supervisor-class-card-heading { display:flex; align-items:flex-start; gap:12px; min-width:0; }
+            .supervisor-class-card-icon { width:46px; height:46px; flex:0 0 46px; display:grid; place-items:center; border:1px solid rgba(255,255,255,.72); border-radius:13px; background:rgba(255,255,255,.72); color:#1d4ed8; font-size:22px; box-shadow:0 7px 18px rgba(15,23,42,.07); }
+            .supervisor-class-card-title-copy { min-width:0; }
+            .supervisor-class-card-title-copy h2 { margin:0 0 4px; }
+            .supervisor-class-card-title-copy p { margin:0; }
+            .supervisor-class-section { color:#334155; font-weight:800; }
+            .supervisor-class-supervisor { margin-top:3px !important; color:#64748b; font-size:12px; line-height:1.35; }
+            .supervisor-card-banner-code { display:inline-flex; align-items:center; gap:7px; margin-top:7px; padding:4px 7px; border:1px solid rgba(255,255,255,.58); border-radius:8px; background:rgba(255,255,255,.48); color:#334155; font-size:9px; font-weight:800; }
+            .supervisor-card-banner-code .supervisor-copy-btn { min-height:22px; padding:0 7px; font-size:8px; }
+            .supervisor-class-card-banner--navy .supervisor-card-banner-code { color:#fff; background:rgba(255,255,255,.14); }
+            .supervisor-class-card .dropdown { z-index:20; }
+            .supervisor-class-card .dropdown-menu { min-width:220px; z-index:40; }
+            .supervisor-class-pending-pill { display:inline-flex; align-items:center; justify-content:center; min-height:29px; padding:5px 9px; border:1px solid #fed7aa; border-radius:999px; background:#fff7ed; color:#c2410c !important; font-size:10px; font-weight:850; line-height:1; text-decoration:none !important; white-space:nowrap; }
+            .supervisor-class-pending-pill:hover { border-color:#fdba74; background:#ffedd5; color:#9a3412 !important; }
+            .supervisor-class-card .class-banner-color-panel { padding:9px 13px 12px; border-top:1px solid #eef2f7; background:#fbfdff; }
+            .supervisor-class-card .class-banner-color-panel[hidden] { display:none !important; }
+            .supervisor-class-card .class-banner-color-label { display:block; margin-bottom:8px; color:#708096; font-size:9px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+            .supervisor-class-card .class-banner-color-grid { display:grid; grid-template-columns:repeat(3,28px); gap:10px; }
+            .supervisor-class-card .class-banner-swatch { width:28px; height:28px; min-height:28px; padding:0; border:2px solid #fff; border-radius:999px; box-shadow:0 0 0 1px #cbd5e1; cursor:pointer; }
+            .supervisor-class-card .class-banner-swatch.is-selected { box-shadow:0 0 0 2px #2563eb; }
+            .class-banner-swatch--blue { background:#60a5fa; }.class-banner-swatch--navy { background:#1e3a8a; }.class-banner-swatch--green { background:#34d399; }.class-banner-swatch--teal { background:#14b8a6; }.class-banner-swatch--purple { background:#a78bfa; }.class-banner-swatch--orange { background:#fb923c; }.class-banner-swatch--amber { background:#f59e0b; }.class-banner-swatch--rose { background:#fb7185; }.class-banner-swatch--slate { background:#64748b; }
+            body.supervisor-classes-page .supervisor-classes-main { padding-bottom:32px !important; }
+            body.supervisor-classes-page .supervisor-classes-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-items:start; gap:18px; max-height:calc(100vh - 155px) !important; overflow-x:hidden !important; overflow-y:auto !important; padding:0 5px 104px 0; scrollbar-gutter:stable; }
+            body.supervisor-classes-page .supervisor-classes-list.is-list-view { grid-template-columns:1fr; }
+            body.supervisor-classes-page .supervisor-class-card { min-width:0; margin-bottom:0; padding:18px; overflow:visible; }
+            .supervisor-card-info-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:9px; margin-top:14px; }
+            .supervisor-card-info { min-width:0; min-height:74px; display:flex; align-items:flex-start; gap:9px; padding:11px; border:1px solid #e2e8f0; border-radius:12px; background:#f8fafc; }
+            .supervisor-card-info-icon { width:30px; height:30px; flex:0 0 30px; display:grid; place-items:center; border-radius:9px; background:#e8f0ff; color:#2563eb; font-size:14px; font-weight:900; }
+            .supervisor-card-info-copy { min-width:0; }
+            .supervisor-card-info-label { display:block; color:#64748b; font-size:9px; font-weight:850; letter-spacing:.035em; text-transform:uppercase; }
+            .supervisor-card-info-value { display:block; margin-top:3px; overflow:hidden; color:#172033; font-size:13px; font-weight:850; line-height:1.25; text-overflow:ellipsis; }
+            .supervisor-card-info-sub { display:block; margin-top:2px; overflow:hidden; color:#7b8798; font-size:10px; line-height:1.3; text-overflow:ellipsis; }
+            .supervisor-card-progress-track { width:100%; height:5px; margin-top:7px; overflow:hidden; border-radius:999px; background:#e2e8f0; }
+            .supervisor-card-progress-bar { height:100%; border-radius:inherit; background:#22c55e; }
+            .supervisor-card-days.is-complete { border-color:#bbf7d0; background:#f0fdf4; }
+            .supervisor-card-days.is-complete .supervisor-card-info-icon { background:#dcfce7; color:#15803d; }
+            .supervisor-card-evaluation.is-due { border-color:#fecaca; background:#fff7f7; }
+            .supervisor-card-evaluation.is-due .supervisor-card-info-icon { background:#fee2e2; color:#dc2626; }
+            .supervisor-card-evaluation.is-complete .supervisor-card-info-icon { background:#dcfce7; color:#15803d; }
+            .supervisor-card-actions { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:9px; margin-top:12px; }
+            body.supervisor-classes-page .supervisor-open-class-btn { min-height:42px; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; margin:0; }
+            body.supervisor-classes-page .supervisor-open-class-btn.is-evaluation-ready { border-color:#16a34a; background:#16a34a; box-shadow:0 8px 18px rgba(22,163,74,.18); }
+            body.supervisor-classes-page .supervisor-open-class-btn.is-evaluation-ready:hover { border-color:#15803d; background:#15803d; }
+            .supervisor-card-manage-btn { min-width:112px; min-height:42px; display:inline-flex; align-items:center; justify-content:center; gap:7px; padding:0 15px; border:1px solid #2563eb; border-radius:11px; background:#fff; color:#2563eb; font-size:11px; font-weight:850; text-decoration:none; }
+            .supervisor-card-manage-btn:hover { background:#eff6ff; color:#1d4ed8; }
+            .supervisor-classes-list.is-list-view .supervisor-class-card { display:grid; grid-template-columns:minmax(250px,.8fr) minmax(0,1.7fr) minmax(220px,.55fr); gap:14px; align-items:stretch; }
+            .supervisor-classes-list.is-list-view .supervisor-class-card-banner { height:100%; margin:0; border:0; border-radius:14px; }
+            .supervisor-classes-list.is-list-view .supervisor-card-info-grid { margin-top:0; grid-template-columns:repeat(3,minmax(0,1fr)); }
+            .supervisor-classes-list.is-list-view .supervisor-card-actions { margin-top:0; grid-template-columns:1fr; align-content:center; }
+            @media (max-width:1180px) { body.supervisor-classes-page .supervisor-classes-list { grid-template-columns:1fr; } .supervisor-classes-list.is-list-view .supervisor-class-card { display:block; } .supervisor-classes-list.is-list-view .supervisor-class-card-banner { margin:-18px -18px 0; border-radius:17px 17px 0 0; } .supervisor-classes-list.is-list-view .supervisor-card-info-grid { margin-top:14px; } .supervisor-classes-list.is-list-view .supervisor-card-actions { margin-top:12px; grid-template-columns:minmax(0,1fr) auto; } }
+            @media (max-width:768px) { .supervisor-classes-header { align-items:flex-start; flex-direction:column; } .supervisor-classes-view-tools { width:100%; justify-content:space-between; } body.supervisor-classes-page .supervisor-classes-main { padding-bottom:20px !important; } body.supervisor-classes-page .supervisor-classes-list { max-height:calc(100vh - 135px) !important; padding-bottom:88px; } .supervisor-card-info-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+            @media (max-width:520px) { .supervisor-view-toggle { display:none; } .supervisor-class-card-banner { margin:-15px -15px 0; padding:15px; } body.supervisor-classes-page .supervisor-class-card { padding:15px; } .supervisor-class-card-heading { gap:9px; } .supervisor-class-card-icon { width:40px; height:40px; flex-basis:40px; } .supervisor-class-card-top { align-items:flex-start; } .supervisor-class-pending-pill { display:none; } .supervisor-card-info-grid { grid-template-columns:1fr 1fr; gap:7px; } .supervisor-card-info { min-height:68px; padding:9px; } .supervisor-card-info-icon { width:26px; height:26px; flex-basis:26px; font-size:12px; } .supervisor-card-info-value { font-size:12px; } .supervisor-card-actions { grid-template-columns:1fr; } .supervisor-card-manage-btn { width:100%; } }
         </style>
     </head>
     <body class="supervisor-classes-page">
         {% include 'components/supervisor_sidebar.html' %}
-
         <main class="page-content nexora-app-main supervisor-classes-main">
             <div class="nexora-page supervisor-classes-page-inner">
                 <header class="supervisor-classes-header">
-                    <div>
-                        <h1>My Intern Classrooms</h1>
-                        <p>Manage your internship cohorts by company and section.</p>
-                    </div>
+                    <div><h1>My Intern Classrooms</h1><p>Manage your internship cohorts by company and section.</p></div>
                     {% if classes and classes|length > 0 %}
                         <div class="supervisor-classes-view-tools">
-                            <div class="supervisor-view-toggle" role="group" aria-label="Classroom display">
-                                <button type="button" class="is-active" data-class-view="cards" onclick="setClassView('cards')">▦ Card View</button>
-                                <button type="button" data-class-view="list" onclick="setClassView('list')">☷ List View</button>
-                            </div>
+                            <div class="supervisor-view-toggle" role="group" aria-label="Classroom display"><button type="button" class="is-active" data-class-view="cards" onclick="setClassView('cards')">▦ Card View</button><button type="button" data-class-view="list" onclick="setClassView('list')">☷ List View</button></div>
                             <span>{{ classes|length }} classroom{% if classes|length != 1 %}s{% endif %}</span>
                         </div>
                     {% endif %}
                 </header>
-
                 <section class="supervisor-classes-list" id="supervisorClassesList" aria-label="Your Intern Classrooms">
                     {% if classes and classes|length > 0 %}
                         {% for c in classes %}
@@ -394,8 +98,9 @@
                             {% set pending = supervisor_class_pending_counts.get(c.id, {}) %}
                             {% set pending_total = pending.get('total', 0) %}
                             {% set stats = supervisor_class_card_stats.get(c.id, {}) %}
-                            {% set progress_percent = stats.get('progress_percent', 0) %}
-                            {% set completed_interns = stats.get('completed_interns', 0) %}
+                            {% set progress_percent = stats.get('days_progress_percent', stats.get('progress_percent', 0)) %}
+                            {% set completed_days = stats.get('minimum_completed_days', 0) %}
+                            {% set days_left = stats.get('days_left') %}
                             {% set submitted_evaluations = stats.get('submitted_evaluations', 0) %}
                             {% set pending_evaluations = stats.get('pending_evaluations', c.student_count) %}
                             {% set evaluation_ready = stats.get('evaluation_ready', false) %}
@@ -407,257 +112,58 @@
                                             <div class="supervisor-class-card-title-copy">
                                                 <h2>{{ c.name }}</h2>
                                                 <p class="supervisor-class-section">{{ stats.get('program') or c.section }}</p>
-                                                <p class="supervisor-class-supervisor">
-                                                    {% if c.company_name %}Company: {{ c.company_name }}{% else %}Intern Classroom{% endif %}
-                                                </p>
+                                                <p class="supervisor-class-supervisor">{% if c.company_name %}Company: {{ c.company_name }}{% else %}Intern Classroom{% endif %}</p>
+                                                <div class="supervisor-card-banner-code"><span>Code {{ c.code }}</span><button type="button" class="supervisor-copy-btn" data-code="{{ c.code }}" onclick="copyClassCode(this)" aria-label="Copy Intern Classroom code {{ c.code }}">Copy</button></div>
                                             </div>
                                         </div>
                                         <div class="d-flex align-items-start gap-2">
-                                            <span class="supervisor-status {% if c.status == 'Active' %}is-active{% endif %}">
-                                                <span class="supervisor-status-dot"></span>{{ c.status }}
-                                            </span>
-                                            {% if pending_total > 0 %}
-                                                <a
-                                                    href="{{ url_for('classroom.supervisor_class', class_id=c.id) }}"
-                                                    class="supervisor-class-pending-pill"
-                                                    title="{{ pending.get('logbook', 0) }} Daily OJT review{% if pending.get('logbook', 0) != 1 %}s{% endif %} · {{ pending.get('work', 0) }} Work review{% if pending.get('work', 0) != 1 %}s{% endif %}">
-                                                    {{ pending_total }} pending
-                                                </a>
-                                            {% endif %}
+                                            <span class="supervisor-status {% if c.status == 'Active' %}is-active{% endif %}"><span class="supervisor-status-dot"></span>{{ c.status }}</span>
+                                            {% if pending_total > 0 %}<a href="{{ url_for('classroom.supervisor_class', class_id=c.id) }}" class="supervisor-class-pending-pill" title="{{ pending.get('logbook', 0) }} Daily OJT review{% if pending.get('logbook', 0) != 1 %}s{% endif %} · {{ pending.get('work', 0) }} Work review{% if pending.get('work', 0) != 1 %}s{% endif %}">{{ pending_total }} pending</a>{% endif %}
                                             <div class="dropdown position-relative">
-                                                <button
-                                                    type="button"
-                                                    class="btn btn-light border btn-sm px-2"
-                                                    aria-label="Manage {{ c.name }}"
-                                                    aria-expanded="false"
-                                                    onclick="toggleClassMenu(event, 'class-menu-{{ c.id }}', this)">
-                                                    ⋮
-                                                </button>
+                                                <button type="button" class="btn btn-light border btn-sm px-2" aria-label="Manage {{ c.name }}" aria-expanded="false" onclick="toggleClassMenu(event, 'class-menu-{{ c.id }}', this)">⋮</button>
                                                 <div class="dropdown-menu dropdown-menu-end shadow-sm" id="class-menu-{{ c.id }}">
                                                     <a class="dropdown-item" href="{{ url_for('internship_classroom.edit_intern_classroom', class_id=c.id) }}">Edit Intern Classroom</a>
                                                     <button type="button" class="dropdown-item" onclick="toggleCardBannerColorChoices(event, 'class-banner-colors-{{ c.id }}')">Change Banner Color</button>
-                                                    <div class="class-banner-color-panel" id="class-banner-colors-{{ c.id }}" hidden>
-                                                        <span class="class-banner-color-label">Banner color</span>
-                                                        <form method="POST" action="{{ url_for('internship_classroom.update_classroom_banner_theme', class_id=c.id) }}">
-                                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                            <input type="hidden" name="return_to" value="classes">
-                                                            <div class="class-banner-color-grid">
-                                                                {% for theme, label in [('blue','Blue'),('navy','Navy'),('green','Green'),('teal','Teal'),('purple','Purple'),('orange','Orange'),('amber','Amber'),('rose','Rose'),('slate','Slate')] %}
-                                                                    <button
-                                                                        type="submit"
-                                                                        name="banner_theme"
-                                                                        value="{{ theme }}"
-                                                                        class="class-banner-swatch class-banner-swatch--{{ theme }}{% if active_banner_theme == theme %} is-selected{% endif %}"
-                                                                        aria-label="Use {{ label }} banner"
-                                                                        title="{{ label }}">
-                                                                    </button>
-                                                                {% endfor %}
-                                                            </div>
-                                                        </form>
-                                                    </div>
-                                                    <form method="POST" action="{{ url_for('classroom.archive_class', class_id=c.id) }}" class="m-0"{% if not c.archived %} onsubmit="return confirm('Complete and archive this Intern Classroom? Historical data will be preserved, while new announcements, work, and enrollment will be disabled until it is restored.')"{% endif %}>
-                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                        <button type="submit" class="dropdown-item">{% if c.archived %}Restore Intern Classroom{% else %}Complete &amp; Archive{% endif %}</button>
-                                                    </form>
+                                                    <div class="class-banner-color-panel" id="class-banner-colors-{{ c.id }}" hidden><span class="class-banner-color-label">Banner color</span><form method="POST" action="{{ url_for('internship_classroom.update_classroom_banner_theme', class_id=c.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="return_to" value="classes"><div class="class-banner-color-grid">{% for theme, label in [('blue','Blue'),('navy','Navy'),('green','Green'),('teal','Teal'),('purple','Purple'),('orange','Orange'),('amber','Amber'),('rose','Rose'),('slate','Slate')] %}<button type="submit" name="banner_theme" value="{{ theme }}" class="class-banner-swatch class-banner-swatch--{{ theme }}{% if active_banner_theme == theme %} is-selected{% endif %}" aria-label="Use {{ label }} banner" title="{{ label }}"></button>{% endfor %}</div></form></div>
+                                                    <form method="POST" action="{{ url_for('classroom.archive_class', class_id=c.id) }}" class="m-0"{% if not c.archived %} onsubmit="return confirm('Complete and archive this Intern Classroom? Historical data will be preserved, while new announcements, work, and enrollment will be disabled until it is restored.')"{% endif %}><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="dropdown-item">{% if c.archived %}Restore Intern Classroom{% else %}Complete &amp; Archive{% endif %}</button></form>
                                                     <div class="dropdown-divider"></div>
-                                                    <form method="POST" action="{{ url_for('internship_classroom.delete_classroom', class_id=c.id) }}" class="m-0" onsubmit="return confirm('Permanently delete this Intern Classroom? This removes enrolled interns, classroom activities, submissions, and related classroom data. This cannot be undone.')">
-                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                        <button type="submit" class="dropdown-item text-danger">Delete Intern Classroom</button>
-                                                    </form>
+                                                    <form method="POST" action="{{ url_for('internship_classroom.delete_classroom', class_id=c.id) }}" class="m-0" onsubmit="return confirm('Permanently delete this Intern Classroom? This removes enrolled interns, classroom activities, submissions, and related classroom data. This cannot be undone.')"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="dropdown-item text-danger">Delete Intern Classroom</button></form>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-
                                 <div class="supervisor-card-info-grid">
-                                    <div class="supervisor-card-info">
-                                        <span class="supervisor-card-info-icon" aria-hidden="true">👥</span>
-                                        <div class="supervisor-card-info-copy">
-                                            <span class="supervisor-card-info-label">Interns</span>
-                                            <strong class="supervisor-card-info-value">{{ c.student_count }}</strong>
-                                            <span class="supervisor-card-info-sub">intern{% if c.student_count != 1 %}s{% endif %} assigned</span>
-                                        </div>
-                                    </div>
-
-                                    <div class="supervisor-card-info">
-                                        <span class="supervisor-card-info-icon" aria-hidden="true">⌖</span>
-                                        <div class="supervisor-card-info-copy">
-                                            <span class="supervisor-card-info-label">Arrangement</span>
-                                            <strong class="supervisor-card-info-value">{{ c.work_arrangement or 'Not specified' }}</strong>
-                                            <span class="supervisor-card-info-sub">{{ c.location or 'Location not specified' }}</span>
-                                        </div>
-                                    </div>
-
-                                    <div class="supervisor-card-info">
-                                        <span class="supervisor-card-info-icon" aria-hidden="true">◷</span>
-                                        <div class="supervisor-card-info-copy">
-                                            <span class="supervisor-card-info-label">Required Hours</span>
-                                            <strong class="supervisor-card-info-value">{% if c.required_hours %}{{ c.required_hours }} hrs{% else %}Not specified{% endif %}</strong>
-                                            <span class="supervisor-card-info-sub">
-                                                {% if stats.get('hours_per_day') and stats.get('required_days') %}{{ stats.get('hours_per_day') }}h/day · {{ stats.get('required_days') }} days{% else %}OJT requirement{% endif %}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    <div class="supervisor-card-info">
-                                        <span class="supervisor-card-info-icon" aria-hidden="true">⌘</span>
-                                        <div class="supervisor-card-info-copy">
-                                            <span class="supervisor-card-info-label">Classroom Code</span>
-                                            <div class="supervisor-card-code-row">
-                                                <strong>{{ c.code }}</strong>
-                                                <button
-                                                    type="button"
-                                                    class="supervisor-copy-btn"
-                                                    data-code="{{ c.code }}"
-                                                    onclick="copyClassCode(this)"
-                                                    aria-label="Copy Intern Classroom code {{ c.code }}">Copy</button>
-                                            </div>
-                                            <span class="supervisor-card-info-sub">Share with interns</span>
-                                        </div>
-                                    </div>
-
-                                    <div class="supervisor-card-info">
-                                        <span class="supervisor-card-info-icon" aria-hidden="true">▥</span>
-                                        <div class="supervisor-card-info-copy">
-                                            <span class="supervisor-card-info-label">Progress</span>
-                                            <strong class="supervisor-card-info-value">{{ progress_percent }}% completed</strong>
-                                            <span class="supervisor-card-info-sub">{{ completed_interns }} of {{ c.student_count }} complete</span>
-                                            <div class="supervisor-card-progress-track" aria-hidden="true"><div class="supervisor-card-progress-bar" style="width: {{ progress_percent }}%"></div></div>
-                                        </div>
-                                    </div>
-
-                                    <div class="supervisor-card-info supervisor-card-evaluation{% if evaluation_ready and pending_evaluations > 0 %} is-due{% elif c.student_count > 0 and submitted_evaluations >= c.student_count %} is-complete{% endif %}">
-                                        <span class="supervisor-card-info-icon" aria-hidden="true">▣</span>
-                                        <div class="supervisor-card-info-copy">
-                                            <span class="supervisor-card-info-label">Evaluations</span>
-                                            {% if c.student_count == 0 %}
-                                                <strong class="supervisor-card-info-value">No interns yet</strong>
-                                                <span class="supervisor-card-info-sub">Evaluation starts after enrollment</span>
-                                            {% elif submitted_evaluations >= c.student_count %}
-                                                <strong class="supervisor-card-info-value">Evaluations complete</strong>
-                                                <span class="supervisor-card-info-sub">{{ submitted_evaluations }} of {{ c.student_count }} submitted</span>
-                                            {% elif evaluation_ready %}
-                                                <strong class="supervisor-card-info-value">{{ pending_evaluations }} evaluation{% if pending_evaluations != 1 %}s{% endif %} due</strong>
-                                                <span class="supervisor-card-info-sub">OJT schedule is complete</span>
-                                            {% elif submitted_evaluations > 0 %}
-                                                <strong class="supervisor-card-info-value">{{ submitted_evaluations }} submitted</strong>
-                                                <span class="supervisor-card-info-sub">{{ pending_evaluations }} still pending</span>
-                                            {% else %}
-                                                <strong class="supervisor-card-info-value">No evaluations yet</strong>
-                                                <span class="supervisor-card-info-sub">Available when OJT is complete</span>
-                                            {% endif %}
-                                        </div>
-                                    </div>
+                                    <div class="supervisor-card-info"><span class="supervisor-card-info-icon" aria-hidden="true">👥</span><div class="supervisor-card-info-copy"><span class="supervisor-card-info-label">Interns</span><strong class="supervisor-card-info-value">{{ c.student_count }}</strong><span class="supervisor-card-info-sub">intern{% if c.student_count != 1 %}s{% endif %} assigned</span></div></div>
+                                    <div class="supervisor-card-info"><span class="supervisor-card-info-icon" aria-hidden="true">⌖</span><div class="supervisor-card-info-copy"><span class="supervisor-card-info-label">Arrangement</span><strong class="supervisor-card-info-value">{{ c.work_arrangement or 'Not specified' }}</strong><span class="supervisor-card-info-sub">{{ c.location or 'Location not specified' }}</span></div></div>
+                                    <div class="supervisor-card-info"><span class="supervisor-card-info-icon" aria-hidden="true">◷</span><div class="supervisor-card-info-copy"><span class="supervisor-card-info-label">Required Hours</span><strong class="supervisor-card-info-value">{% if c.required_hours %}{{ c.required_hours }} hrs{% else %}Not specified{% endif %}</strong><span class="supervisor-card-info-sub">{% if stats.get('hours_per_day') and stats.get('required_days') %}{{ stats.get('hours_per_day') }}h/day · {{ stats.get('required_days') }} days{% else %}OJT requirement{% endif %}</span></div></div>
+                                    <div class="supervisor-card-info supervisor-card-days{% if evaluation_ready %} is-complete{% endif %}"><span class="supervisor-card-info-icon" aria-hidden="true">▦</span><div class="supervisor-card-info-copy"><span class="supervisor-card-info-label">Days Left</span>{% if c.student_count == 0 %}<strong class="supervisor-card-info-value">{{ stats.get('required_days', 0) or '—' }} days</strong><span class="supervisor-card-info-sub">Starts after interns enroll</span>{% elif stats.get('required_days', 0) %}<strong class="supervisor-card-info-value">{{ days_left }} day{% if days_left != 1 %}s{% endif %}</strong><span class="supervisor-card-info-sub">of {{ stats.get('required_days') }} required days</span>{% else %}<strong class="supervisor-card-info-value">Not configured</strong><span class="supervisor-card-info-sub">Set required OJT days</span>{% endif %}</div></div>
+                                    <div class="supervisor-card-info"><span class="supervisor-card-info-icon" aria-hidden="true">▥</span><div class="supervisor-card-info-copy"><span class="supervisor-card-info-label">Progress</span><strong class="supervisor-card-info-value">{{ progress_percent }}% completed</strong><span class="supervisor-card-info-sub">{% if stats.get('required_days', 0) and c.student_count > 0 %}{{ completed_days }} of {{ stats.get('required_days') }} days{% else %}No OJT day progress yet{% endif %}</span><div class="supervisor-card-progress-track" aria-hidden="true"><div class="supervisor-card-progress-bar" style="width: {{ progress_percent }}%"></div></div></div></div>
+                                    <div class="supervisor-card-info supervisor-card-evaluation{% if evaluation_ready and pending_evaluations > 0 %} is-due{% elif c.student_count > 0 and submitted_evaluations >= c.student_count %} is-complete{% endif %}"><span class="supervisor-card-info-icon" aria-hidden="true">▣</span><div class="supervisor-card-info-copy"><span class="supervisor-card-info-label">Evaluations</span>{% if c.student_count == 0 %}<strong class="supervisor-card-info-value">No interns yet</strong><span class="supervisor-card-info-sub">Evaluation starts after enrollment</span>{% elif submitted_evaluations >= c.student_count %}<strong class="supervisor-card-info-value">Evaluations complete</strong><span class="supervisor-card-info-sub">{{ submitted_evaluations }} of {{ c.student_count }} submitted</span>{% elif evaluation_ready %}<strong class="supervisor-card-info-value">{{ pending_evaluations }} pending</strong><span class="supervisor-card-info-sub">Ready to evaluate</span>{% elif stats.get('required_days', 0) %}<strong class="supervisor-card-info-value">Not yet available</strong><span class="supervisor-card-info-sub">Available in {{ days_left }} day{% if days_left != 1 %}s{% endif %}</span>{% else %}<strong class="supervisor-card-info-value">Not yet available</strong><span class="supervisor-card-info-sub">Configure required OJT days</span>{% endif %}</div></div>
                                 </div>
-
                                 <div class="supervisor-card-actions">
-                                    <a href="{{ url_for('classroom.supervisor_class', class_id=c.id) }}" class="supervisor-open-class-btn">↗ Open Intern Classroom</a>
+                                    {% if evaluation_ready and pending_evaluations > 0 %}<a href="{{ url_for('ojt_evaluation.supervisor_evaluation_directory', class_id=c.id) }}" class="supervisor-open-class-btn is-evaluation-ready">↗ Go to Evaluations ({{ pending_evaluations }} Pending)</a>{% else %}<a href="{{ url_for('classroom.supervisor_class', class_id=c.id) }}" class="supervisor-open-class-btn">↗ Open Intern Classroom</a>{% endif %}
                                     <a href="{{ url_for('internship_classroom.edit_intern_classroom', class_id=c.id) }}" class="supervisor-card-manage-btn">⚙ Manage</a>
                                 </div>
                             </article>
                         {% endfor %}
                     {% else %}
-                        <article class="supervisor-empty-card">
-                            <div class="supervisor-empty-icon" aria-hidden="true">🏫</div>
-                            <h2>No Intern Classrooms yet</h2>
-                            <p>Create your first Intern Classroom to organize interns by company and section.</p>
-                        </article>
+                        <article class="supervisor-empty-card"><div class="supervisor-empty-icon" aria-hidden="true">🏫</div><h2>No Intern Classrooms yet</h2><p>Create your first Intern Classroom to organize interns by company and section.</p></article>
                     {% endif %}
                 </section>
-
-                <div class="supervisor-create-bar">
-                    <a href="{{ url_for('classroom.create_class') }}" class="supervisor-create-class-btn">+ Create Intern Classroom</a>
-                </div>
+                <div class="supervisor-create-bar"><a href="{{ url_for('classroom.create_class') }}" class="supervisor-create-class-btn">+ Create Intern Classroom</a></div>
             </div>
         </main>
-
         <script>
-            function setClassView(view) {
-                const list = document.getElementById('supervisorClassesList');
-                const listView = view === 'list';
-                if (list) list.classList.toggle('is-list-view', listView);
-                document.querySelectorAll('[data-class-view]').forEach((button) => {
-                    button.classList.toggle('is-active', button.dataset.classView === view);
-                });
-                try { localStorage.setItem('nexoraSupervisorClassView', listView ? 'list' : 'cards'); } catch (error) {}
-            }
-
-            function toggleClassMenu(event, menuId, button) {
-                event.stopPropagation();
-                document.querySelectorAll('.supervisor-class-card .dropdown-menu.show').forEach((menu) => {
-                    if (menu.id !== menuId) menu.classList.remove('show');
-                });
-                document.querySelectorAll('.supervisor-class-card .class-banner-color-panel').forEach((panel) => {
-                    if (!document.getElementById(menuId)?.contains(panel)) panel.hidden = true;
-                });
-                const menu = document.getElementById(menuId);
-                if (!menu) return;
-                const opening = !menu.classList.contains('show');
-                menu.classList.toggle('show', opening);
-                if (button) button.setAttribute('aria-expanded', opening ? 'true' : 'false');
-            }
-
-            function toggleCardBannerColorChoices(event, panelId) {
-                event.stopPropagation();
-                const panel = document.getElementById(panelId);
-                if (panel) panel.hidden = !panel.hidden;
-            }
-
-            document.addEventListener('click', function () {
-                document.querySelectorAll('.supervisor-class-card .dropdown-menu.show').forEach((menu) => menu.classList.remove('show'));
-                document.querySelectorAll('.supervisor-class-card [aria-expanded="true"]').forEach((button) => button.setAttribute('aria-expanded', 'false'));
-                document.querySelectorAll('.supervisor-class-card .class-banner-color-panel').forEach((panel) => { panel.hidden = true; });
-            });
-
-            document.querySelectorAll('.supervisor-class-card .dropdown-menu').forEach((menu) => {
-                menu.addEventListener('click', function (event) { event.stopPropagation(); });
-            });
-
-            function showCopyState(button, success) {
-                const original = button.dataset.originalHtml || button.innerHTML;
-                button.dataset.originalHtml = original;
-                button.innerHTML = success ? '✓ Copied' : '! Copy failed';
-                button.classList.toggle('is-copied', success);
-                window.setTimeout(() => {
-                    button.innerHTML = original;
-                    button.classList.remove('is-copied');
-                }, 1600);
-            }
-
-            function copyClassCode(button) {
-                const code = button.dataset.code || '';
-                if (!code) return;
-                const success = () => showCopyState(button, true);
-                const failure = () => showCopyState(button, false);
-                if (navigator.clipboard && window.isSecureContext) {
-                    navigator.clipboard.writeText(code).then(success).catch(() => fallbackCopy(code, success, failure));
-                } else {
-                    fallbackCopy(code, success, failure);
-                }
-            }
-
-            function fallbackCopy(text, onSuccess, onFailure) {
-                const input = document.createElement('textarea');
-                input.value = text;
-                input.setAttribute('readonly', '');
-                input.style.position = 'fixed';
-                input.style.left = '-9999px';
-                input.style.opacity = '0';
-                document.body.appendChild(input);
-                input.select();
-                input.setSelectionRange(0, input.value.length);
-                let copied = false;
-                try { copied = document.execCommand('copy'); } catch (error) { copied = false; }
-                input.remove();
-                if (copied) onSuccess(); else onFailure();
-            }
-
-            document.addEventListener('DOMContentLoaded', function () {
-                let savedView = 'cards';
-                try { savedView = localStorage.getItem('nexoraSupervisorClassView') || 'cards'; } catch (error) {}
-                setClassView(savedView === 'list' ? 'list' : 'cards');
-            });
+            function setClassView(view){const list=document.getElementById('supervisorClassesList');const listView=view==='list';if(list)list.classList.toggle('is-list-view',listView);document.querySelectorAll('[data-class-view]').forEach((button)=>{button.classList.toggle('is-active',button.dataset.classView===view);});try{localStorage.setItem('nexoraSupervisorClassView',listView?'list':'cards');}catch(error){}}
+            function toggleClassMenu(event,menuId,button){event.stopPropagation();document.querySelectorAll('.supervisor-class-card .dropdown-menu.show').forEach((menu)=>{if(menu.id!==menuId)menu.classList.remove('show');});document.querySelectorAll('.supervisor-class-card .class-banner-color-panel').forEach((panel)=>{if(!document.getElementById(menuId)?.contains(panel))panel.hidden=true;});const menu=document.getElementById(menuId);if(!menu)return;const opening=!menu.classList.contains('show');menu.classList.toggle('show',opening);if(button)button.setAttribute('aria-expanded',opening?'true':'false');}
+            function toggleCardBannerColorChoices(event,panelId){event.stopPropagation();const panel=document.getElementById(panelId);if(panel)panel.hidden=!panel.hidden;}
+            document.addEventListener('click',function(){document.querySelectorAll('.supervisor-class-card .dropdown-menu.show').forEach((menu)=>menu.classList.remove('show'));document.querySelectorAll('.supervisor-class-card [aria-expanded="true"]').forEach((button)=>button.setAttribute('aria-expanded','false'));document.querySelectorAll('.supervisor-class-card .class-banner-color-panel').forEach((panel)=>{panel.hidden=true;});});
+            document.querySelectorAll('.supervisor-class-card .dropdown-menu').forEach((menu)=>{menu.addEventListener('click',function(event){event.stopPropagation();});});
+            function showCopyState(button,success){const original=button.dataset.originalHtml||button.innerHTML;button.dataset.originalHtml=original;button.innerHTML=success?'✓ Copied':'! Copy failed';button.classList.toggle('is-copied',success);window.setTimeout(()=>{button.innerHTML=original;button.classList.remove('is-copied');},1600);}
+            function copyClassCode(button){const code=button.dataset.code||'';if(!code)return;const success=()=>showCopyState(button,true);const failure=()=>showCopyState(button,false);if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(code).then(success).catch(()=>fallbackCopy(code,success,failure));}else{fallbackCopy(code,success,failure);}}
+            function fallbackCopy(text,onSuccess,onFailure){const input=document.createElement('textarea');input.value=text;input.setAttribute('readonly','');input.style.position='fixed';input.style.left='-9999px';input.style.opacity='0';document.body.appendChild(input);input.select();input.setSelectionRange(0,input.value.length);let copied=false;try{copied=document.execCommand('copy');}catch(error){copied=false;}input.remove();if(copied)onSuccess();else onFailure();}
+            document.addEventListener('DOMContentLoaded',function(){let savedView='cards';try{savedView=localStorage.getItem('nexoraSupervisorClassView')||'cards';}catch(error){}setClassView(savedView==='list'?'list':'cards');});
         </script>
     </body>
 </html>
