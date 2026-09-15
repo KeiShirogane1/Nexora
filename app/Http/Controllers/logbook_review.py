@@ -1,11 +1,10 @@
 from flask import Blueprint, abort, flash, redirect, render_template, request, send_file, session, url_for
 
 from app.Http.Middleware.security import role_required
-from app.Services.logbook_photo_service import get_logbook_photos
+from app.Services.logbook_photo_service import get_logbook_photos, get_photo_for_supervisor
 from app.Services.logbook_review_service import (
     get_student_review_page,
     get_supervisor_logbook_context,
-    get_supervisor_logbook_photo,
     revise_daily_log,
     save_supervisor_review,
 )
@@ -200,7 +199,7 @@ def bulk_rate_daily_performance(class_id):
 @logbook_review.route("/supervisor/classes/<int:class_id>/logbook/photo/<int:photo_id>")
 @role_required("supervisor")
 def supervisor_photo(class_id, photo_id):
-    photo = get_supervisor_logbook_photo(session["user_id"], class_id, photo_id)
+    photo = get_photo_for_supervisor(session["user_id"], class_id, photo_id)
     if not photo:
         abort(404)
     return send_file(
@@ -215,7 +214,7 @@ def supervisor_photo(class_id, photo_id):
 @logbook_review.route("/supervisor/classes/<int:class_id>/logbook/photo/<int:photo_id>/download")
 @role_required("supervisor")
 def supervisor_photo_download(class_id, photo_id):
-    photo = get_supervisor_logbook_photo(session["user_id"], class_id, photo_id)
+    photo = get_photo_for_supervisor(session["user_id"], class_id, photo_id)
     if not photo:
         abort(404)
     return send_file(
