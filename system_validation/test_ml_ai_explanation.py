@@ -2,7 +2,11 @@ from pathlib import Path
 
 import pytest
 
-from app.Services.ai_assistant_service import AIServiceError, _parse_ml_explanation
+from app.Services.ai_assistant_service import (
+    AIServiceError,
+    _evidence_fallback_analysis,
+    _parse_ml_explanation,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -44,6 +48,32 @@ def test_ml_explanation_parser_rejects_instruction_leakage():
         )
 
 
+def test_ml_evidence_fallback_uses_only_supplied_current_values():
+    result = _evidence_fallback_analysis(
+        {
+            "work_evidence": True,
+            "average": 67.0,
+            "minimum": 67.0,
+            "maximum": 67.0,
+            "completion": 33.3,
+            "reviewed": 1,
+            "total": 3,
+            "work_label": "Fair",
+            "work_recommendation": "Review current Work and seek supervisor guidance.",
+            "priority": "High",
+            "feedback_evidence": False,
+        }
+    )
+
+    assert "1 of 3" in result["overall"]
+    assert "67.0%" in result["overall"]
+    assert "Fair" in result["overall"]
+    assert "33.3%" in result["happened"]
+    assert result["improve"] == "Review current Work and seek supervisor guidance."
+    assert result["feedback"] == "Unavailable."
+    assert "not yet reviewed" in result["next_focus"]
+
+
 def test_student_insights_uses_structured_ml_explanation_endpoint():
     template = (ROOT / "resources/views/classroom/student_insights.html").read_text(encoding="utf-8")
 
@@ -54,6 +84,15 @@ def test_student_insights_uses_structured_ml_explanation_endpoint():
     assert "parseAnswer(data.answer)" not in template
     assert "Return exactly five concise labeled sections" not in template
     assert "For NEXT FOCUS give 2-4 actions" not in template
+
+
+def test_ml_explanation_service_limits_latency_and_keeps_fallback():
+    service = (ROOT / "app/Services/ai_assistant_service.py").read_text(encoding="utf-8")
+
+    assert "max_tokens=240" in service
+    assert "timeout_seconds=8" in service
+    assert 'source = "evidence_fallback"' in service
+    assert "_evidence_fallback_analysis(clean_evidence)" in service
 
 
 def test_ml_explanation_route_is_login_protected_and_dedicated():
