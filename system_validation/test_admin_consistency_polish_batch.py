@@ -24,6 +24,8 @@ def test_admin_student_program_choices_are_database_driven_and_saved_canonical()
     assert 'programs_raw + ["BSIT", "BS Information Technology", "BSCS"]' not in source
     assert "program = normalize_program_name(" in source
     assert "SELECT DISTINCT major_program FROM student_profiles" in source
+    assert "student_profiles.created_at AS joined_at" in source
+    assert 'student["joined_date"] = format_date(student.get("joined_at"))' in source
 
     template = _read("resources/views/admin/students.html")
     assert 'id="programFilter"' in template
@@ -38,11 +40,14 @@ def test_admin_student_program_choices_are_database_driven_and_saved_canonical()
     assert "'bachelor of science in computer science': 'BSCS'" in template
     assert "'bachelor of science in information systems': 'BSIS'" in template
     assert "'bachelor of science in computer engineering': 'BSCPE'" in template
-    assert 'data-full-program="{{ student.major_program or \'\' }}"' in template
+    assert 'data-full-program="{{ (student.major_program or \'\')|trim }}"' in template
+    assert "student.major_program|trim|lower" in template
     assert 'class="table-meta text-nowrap"' in template
-    assert 'title="{{ student.major_program }}"' in template
-    assert "program_label[:25] ~ '…'" in template
+    assert 'title="{{ student.major_program|trim }}"' in template
+    assert "program_label[:13] ~ '…'" in template
     assert 'cells[5].getAttribute("data-full-program")' in template
+    assert "student.joined_date" in template
+    assert '<span class="text-nowrap">{{ student.joined_date }}</span>' in template
 
     shell = _read("resources/views/components/admin_sidebar.html")
     assert "nxProgramDatabase" in shell

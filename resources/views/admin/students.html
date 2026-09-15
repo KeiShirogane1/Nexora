@@ -120,7 +120,7 @@
                                         'bachelor of science in computer engineering': 'BSCPE'
                                     } %}
                                     {% for student in students %}
-                                        <tr data-username="{{ student.username|lower }}" data-email="{{ (student.email|lower) if student.email else '' }}" data-name="{{ student.username|lower }}" data-status="{{ 'pending' if student.role == 'pending_student' else 'active' }}" data-program="{{ (student.major_program|lower) if student.major_program else '' }}" data-supervisor="{{ (student.supervisor_name|lower) if student.supervisor_name else '' }}" data-id="{{ student.id }}">
+                                        <tr data-username="{{ student.username|lower }}" data-email="{{ (student.email|lower) if student.email else '' }}" data-name="{{ student.username|lower }}" data-status="{{ 'pending' if student.role == 'pending_student' else 'active' }}" data-program="{{ (student.major_program|trim|lower) if student.major_program else '' }}" data-supervisor="{{ (student.supervisor_name|lower) if student.supervisor_name else '' }}" data-id="{{ student.id }}">
                                             <td><input type="checkbox" class="custom-checkbox row-checkbox" value="{{ student.id }}"></td>
                                             <td class="text-muted table-index-cell">{{ loop.index }}</td>
                                             <td>
@@ -137,12 +137,12 @@
                                                     <span class="text-muted-placeholder">No email</span>
                                                 {% endif %}
                                             </td>
-                                            <td data-full-program="{{ student.major_program or '' }}">
+                                            <td data-full-program="{{ (student.major_program or '')|trim }}">
                                                 {% if student.major_program %}
-                                                    {% set program_key = student.major_program|lower %}
-                                                    {% set program_label = program_abbreviations.get(program_key, student.major_program) %}
-                                                    <span class="table-meta text-nowrap" title="{{ student.major_program }}">
-                                                        {{ program_label if program_label|length <= 28 else program_label[:25] ~ '…' }}
+                                                    {% set program_key = student.major_program|trim|lower %}
+                                                    {% set program_label = program_abbreviations.get(program_key, student.major_program|trim) %}
+                                                    <span class="table-meta text-nowrap" title="{{ student.major_program|trim }}">
+                                                        {{ program_label if program_label|length <= 16 else program_label[:13] ~ '…' }}
                                                     </span>
                                                 {% else %}
                                                     <span class="text-muted-placeholder">—</span>
@@ -156,7 +156,13 @@
                                                     <span class="status-badge status-active"><span class="status-dot"></span> Active</span>
                                                 {% endif %}
                                             </td>
-                                            <td><span class="text-muted-placeholder">—</span></td>
+                                            <td>
+                                                {% if student.joined_date %}
+                                                    <span class="text-nowrap">{{ student.joined_date }}</span>
+                                                {% else %}
+                                                    <span class="text-muted-placeholder">—</span>
+                                                {% endif %}
+                                            </td>
                                             <td>
                                                 <div class="actions-cell">
                                                     <a href="{{ url_for('admin.student_profile', student_id=student.id) }}" class="btn-view">View Profile</a>

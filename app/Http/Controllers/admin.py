@@ -367,6 +367,7 @@ def admin_students():
                 users.email,
                 users.role,
                 student_profiles.major_program,
+                student_profiles.created_at AS joined_at,
                 sup.username AS supervisor_name
             FROM users
             LEFT JOIN student_profiles
@@ -383,7 +384,12 @@ def admin_students():
             """
         )
 
-        students = cursor.fetchall()
+        student_rows = cursor.fetchall()
+        students = []
+        for row in student_rows:
+            student = {key: row[key] for key in row.keys()}
+            student["joined_date"] = format_date(student.get("joined_at"))
+            students.append(student)
 
 
         # Fetch only real database values for the Admin program selector.
