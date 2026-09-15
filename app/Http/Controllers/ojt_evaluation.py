@@ -30,6 +30,85 @@ def _row_value(row, key, index=0, default=None):
         return default
 
 
+def _classroom_evaluation_readiness(supervisor_id, class_id):
+    """Return the classroom-level OJT-day gate for Official Evaluation.
+
+    Weekly classrooms with a configured required-day count become available only
+    when every enrolled intern has completed all required attendance days.
+    Legacy classrooms without the new weekly schedule remain editable so old
+    evaluation workflows are not broken.
+    """
+    conn = get_db_connection()
+    try:
+        classroom = conn.execute(
+            """
+            SELECT c.id,
+                   COALESCE(cid.schedule_type, 'not_specified') AS schedule_type,
+                   COALESCE(cid.required_days, 0) AS required_days
+            FROM classrooms c
+            LEFT JOIN classroom_internship_details cid ON cid.classroom_id = c.id
+            WHERE c.id = ? AND c.supervisor_id = ?
+            LIMIT 1
+            """,
+            (class_id, supervisor_id),
+        ).fetchone()
+        if not classroom:
+            return {"exists": False, "configured": False, "available": False, "days_left": None}
+
+        schedule_type = str(_row_value(classroom, "schedule_type", 1, "not_specified") or "not_specified").lower()
+        required_days = int(_row_value(classroom, "required_days", 2, 0) or 0)
+        configured = schedule_type == "weekly" and required_days > 0
+        if not configured:
+            return {
+                "exists": True,
+                "configured": False,
+                "available": True,
+                "required_days": required_days,
+                "days_left": None,
+                "minimum_completed_days": 0,
+            }
+
+        progress_rows = conn.execute(
+            """
+            SELECT cs.student_id,
+                   COUNT(DISTINCT CASE WHEN a.status = 'Completed' THEN DATE(a.clock_in) END) AS completed_days
+            FROM classroom_students cs
+            LEFT JOIN attendance a
+              ON a.student_id = cs.student_id
+             AND a.classroom_id = cs.classroom_id
+            WHERE cs.classroom_id = ?
+            GROUP BY cs.student_id
+            """,
+            (class_id,),
+        ).fetchall()
+        if not progress_rows:
+            return {
+                "exists": True,
+                "configured": True,
+                "available": False,
+                "required_days": required_days,
+                "days_left": required_days,
+                "minimum_completed_days": 0,
+            }
+
+        completed_values = [
+            int(_row_value(row, "completed_days", 1, 0) or 0)
+            for row in progress_rows
+        ]
+        minimum_completed_days = min(completed_values) if completed_values else 0
+        days_left = max(0, required_days - minimum_completed_days)
+        return {
+            "exists": True,
+            "configured": True,
+            "available": days_left == 0,
+            "required_days": required_days,
+            "days_left": days_left,
+            "minimum_completed_days": minimum_completed_days,
+        }
+    finally:
+        conn.close()
+
+
 def _build_evaluation_directory(supervisor_id):
     assigned = get_supervisor_assigned_interns(supervisor_id)
     classrooms = []
@@ -65,9 +144,17 @@ def _build_evaluation_directory(supervisor_id):
     completed = 0
     for_review = 0
     not_started = 0
+    ready_pending = 0
 
     for classroom in classrooms:
         classroom_id = int(classroom.get("class_id") or 0)
+        readiness = _classroom_evaluation_readiness(supervisor_id, classroom_id)
+        classroom["evaluation_schedule_configured"] = bool(readiness.get("configured"))
+        classroom["evaluation_ready"] = bool(readiness.get("available"))
+        classroom["required_days"] = int(readiness.get("required_days") or 0)
+        classroom["days_left"] = readiness.get("days_left")
+        classroom["minimum_completed_days"] = int(readiness.get("minimum_completed_days") or 0)
+
         submitted_count = 0
         draft_count = 0
         not_started_count = 0
@@ -86,17 +173,18 @@ def _build_evaluation_directory(supervisor_id):
                 status_label = "Draft"
                 draft_count += 1
                 for_review += 1
-                selectable_count += 1
             else:
                 status_key = "not_started"
                 status_label = "Not Started"
                 not_started_count += 1
                 not_started += 1
-                selectable_count += 1
 
+            selectable = status_key != "submitted" and bool(readiness.get("available"))
+            if selectable:
+                selectable_count += 1
             student["evaluation_status_key"] = status_key
             student["evaluation_status"] = status_label
-            student["evaluation_selectable"] = status_key != "submitted"
+            student["evaluation_selectable"] = selectable
             total_interns += 1
 
         intern_count = len(classroom.get("interns", []))
@@ -106,6 +194,9 @@ def _build_evaluation_directory(supervisor_id):
         classroom["selectable_count"] = selectable_count
         classroom["evaluated_count"] = submitted_count
         classroom["evaluation_percentage"] = round((submitted_count / intern_count) * 100) if intern_count else 0
+        classroom["pending_evaluations"] = max(0, intern_count - submitted_count)
+        if classroom["evaluation_schedule_configured"] and classroom["evaluation_ready"]:
+            ready_pending += classroom["pending_evaluations"]
 
     return {
         "classrooms": classrooms,
@@ -114,6 +205,7 @@ def _build_evaluation_directory(supervisor_id):
             "completed": completed,
             "for_review": for_review,
             "not_started": not_started,
+            "ready_pending": ready_pending,
         },
     }
 
@@ -142,7 +234,7 @@ def _build_items_from_form():
 
 def _evaluation_redirect(class_id, student_id=None, return_to_directory=False):
     if return_to_directory:
-        return redirect(url_for("ojt_evaluation.supervisor_evaluation_directory"))
+        return redirect(url_for("ojt_evaluation.supervisor_evaluation_directory", class_id=class_id))
     if student_id:
         return redirect(
             url_for(
@@ -217,6 +309,7 @@ def supervisor_evaluation_directory():
         "supervisor/evaluations.html",
         classrooms=context["classrooms"],
         summary=context["summary"],
+        target_class_id=request.args.get("class_id", type=int),
         active_page="evaluations",
     )
 
@@ -230,11 +323,16 @@ def supervisor_bulk_evaluations(class_id):
     supervisor_id = session["user_id"]
 
     if request.method == "POST":
+        readiness = _classroom_evaluation_readiness(supervisor_id, class_id)
+        if readiness.get("configured") and not readiness.get("available"):
+            flash(f"Official OJT Evaluation becomes available when this classroom reaches 0 days left. {readiness.get('days_left', 0)} day(s) remain.", "warning")
+            return redirect(url_for("ojt_evaluation.supervisor_evaluation_directory", class_id=class_id))
+
         action = (request.form.get("action") or "").strip().lower()
         status = "submitted" if action == "submit" else "draft" if action == "save_draft" else None
         if not status:
             flash("Invalid bulk Official OJT Evaluation action.", "danger")
-            return redirect(url_for("ojt_evaluation.supervisor_evaluation_directory"))
+            return redirect(url_for("ojt_evaluation.supervisor_evaluation_directory", class_id=class_id))
 
         student_ids = request.form.getlist("student_id")
         result = save_supervisor_ojt_evaluations_bulk(
@@ -254,7 +352,7 @@ def supervisor_bulk_evaluations(class_id):
                 flash(f"Saved drafts for {count} selected interns.", "success")
         else:
             flash(result.get("error") or "Unable to save the selected evaluations.", "danger")
-        return redirect(url_for("ojt_evaluation.supervisor_evaluation_directory"))
+        return redirect(url_for("ojt_evaluation.supervisor_evaluation_directory", class_id=class_id))
 
     context = _build_bulk_evaluation_context(
         supervisor_id,
@@ -265,7 +363,7 @@ def supervisor_bulk_evaluations(class_id):
         abort(int(context.get("status_code") or 400))
 
     if (request.args.get("modal") or "").strip() != "1":
-        return redirect(url_for("ojt_evaluation.supervisor_evaluation_directory"))
+        return redirect(url_for("ojt_evaluation.supervisor_evaluation_directory", class_id=class_id))
 
     return render_template(
         "components/supervisor_bulk_evaluation_modal_content.html",
@@ -303,6 +401,11 @@ def supervisor_evaluations(class_id):
                 student_id=student_id,
                 return_to_directory=return_to_directory,
             )
+
+        readiness = _classroom_evaluation_readiness(supervisor_id, class_id)
+        if readiness.get("configured") and not readiness.get("available"):
+            flash(f"Official OJT Evaluation becomes available when this classroom reaches 0 days left. {readiness.get('days_left', 0)} day(s) remain.", "warning")
+            return _evaluation_redirect(class_id, return_to_directory=True)
 
         status = "submitted" if action == "submit" else "draft" if action == "save_draft" else None
         if not status:
@@ -345,18 +448,23 @@ def supervisor_evaluations(class_id):
     if not context.get("ok"):
         abort(int(context.get("status_code") or 404))
 
+    readiness = _classroom_evaluation_readiness(supervisor_id, class_id)
     template_context = {
         "classroom": context["classroom"],
         "students": context["students"],
         "selected_student": context["selected_student"],
         "evaluation": context["evaluation"],
         "evaluation_items": context["items"],
+        "evaluation_readiness": readiness,
         "active_page": "evaluations",
     }
 
     if (request.args.get("modal") or "").strip() == "1":
         if not context["selected_student"]:
             abort(404)
+        current_status = str((context.get("evaluation") or {}).get("status") or "").lower()
+        if readiness.get("configured") and not readiness.get("available") and current_status != "submitted":
+            abort(409)
         return render_template(
             "components/supervisor_evaluation_modal_content.html",
             **template_context,
