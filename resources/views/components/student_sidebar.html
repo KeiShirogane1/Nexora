@@ -34,6 +34,7 @@
     .nx-role-student #studentSidebar > .nx-role-nav[aria-label="Student menu"]::-webkit-scrollbar-thumb { border-radius:999px;background:rgba(94,229,138,.38); }
     .nx-role-student #studentSidebar > .nx-role-nav[aria-label="Student menu"]::-webkit-scrollbar-thumb:hover { background:rgba(94,229,138,.58); }
     .nx-role-student #studentSidebar > .nx-role-account-nav { margin:8px 0 16px!important; }
+    body.student-logbook-page .student-logbook-main { width:calc(100% - 76px)!important; margin-left:76px!important; }
 }
 
 /* Daily OJT Entry uses the page overlay for overflow instead of an inner side scrollbar. */
@@ -55,6 +56,7 @@ body.student-logbook-page .student-logbook-daily-modal .nx-daily-work { grid-are
 body.student-logbook-page .student-logbook-daily-modal .nx-daily-photos { grid-area:photos; grid-column:auto!important; }
 body.student-logbook-page .student-logbook-daily-modal .nx-daily-accomplishment textarea { min-height:188px; }
 @media (max-width:760px) {
+    body.student-logbook-page .student-logbook-main { width:100%!important; margin-left:0!important; }
     body.student-logbook-page .student-logbook-daily-modal.open { padding:14px; }
     body.student-logbook-page .student-logbook-daily-modal .nexora-modal { width:100%; }
     body.student-logbook-page .student-logbook-daily-modal .student-logbook-field-grid.nx-daily-work-layout {
@@ -77,15 +79,17 @@ body.student-logbook-page .student-logbook-daily-modal .nx-daily-accomplishment 
 {% set sidebar_report_url = url_for('performance_reports.student_reports', class_id=sidebar_class_id) if sidebar_class_id else url_for('classwork_ml_insights.student_reports_entry') %}
 {% set sidebar_work_context = get_daily_logbook_context(session.get('user_id'), sidebar_class_id) if sidebar_class_id else none %}
 {% set sidebar_completed_work = namespace(ids=[]) %}
+{% set sidebar_open_daily = namespace(saved=false) %}
 {% if sidebar_work_context %}
     {% for entry in sidebar_work_context.entries %}
         {% if entry.related_assignment_id and entry.related_assignment_id not in sidebar_completed_work.ids %}{% set sidebar_completed_work.ids = sidebar_completed_work.ids + [entry.related_assignment_id] %}{% endif %}
+        {% if entry.status == 'Open' %}{% set sidebar_open_daily.saved = true %}{% endif %}
     {% endfor %}
 {% endif %}
 {% set sidebar_pending_work_count = ([sidebar_work_context.work_options|length - sidebar_completed_work.ids|length, 0]|max) if sidebar_work_context else 0 %}
-{% set sidebar_logbook_attention = sidebar_schedule_state.attention_count|default(0) %}
 {% set sidebar_logbook_reason = sidebar_schedule_state.attention_reason|default(none) %}
-{% set sidebar_logbook_title = 'Time to check in for today\'s OJT schedule.' if sidebar_logbook_reason == 'check_in' else ('Complete today\'s Daily OJT Entry and clock out.' if sidebar_logbook_reason == 'logbook_and_clock_out' else ('Today\'s Daily OJT Entry is saved. Time to clock out.' if sidebar_logbook_reason == 'clock_out' else 'Daily OJT Logbook')) %}
+{% set sidebar_logbook_attention = 1 if sidebar_logbook_reason == 'logbook_and_clock_out' else 0 %}
+{% set sidebar_logbook_title = 'Complete today\'s Daily OJT Entry before clocking out.' if sidebar_logbook_attention else 'Daily OJT Logbook' %}
 
 <div class="nx-role-sidebar-shell nx-role-student">
     <aside class="nx-role-sidebar" id="studentSidebar" aria-label="Student navigation">
@@ -137,12 +141,13 @@ body.student-logbook-page .student-logbook-daily-modal .nx-daily-accomplishment 
     function armLogbookAttentionBadge(){
         var seconds={{ sidebar_schedule_state.seconds_until_attention|default(none)|tojson }};
         var hasOpen={{ sidebar_schedule_state.has_open_attendance|default(false)|tojson }};
-        if(seconds===null||seconds===undefined||Number(seconds)<=0)return;
+        var dailySaved={{ sidebar_open_daily.saved|tojson }};
+        if(!hasOpen||dailySaved||seconds===null||seconds===undefined||Number(seconds)<=0)return;
         window.setTimeout(function(){
             var badge=document.getElementById('studentSidebarLogbookBadge');
             var link=document.getElementById('studentSidebarLogbookLink');
             if(badge){badge.hidden=false;badge.textContent='1';}
-            if(link){var message=hasOpen?'Complete today\'s Daily OJT Entry and clock out.':'Time to check in for today\'s OJT schedule.';link.setAttribute('title',message);link.setAttribute('aria-label',message);}
+            if(link){var message='Complete today\'s Daily OJT Entry before clocking out.';link.setAttribute('title',message);link.setAttribute('aria-label',message);}
         },Math.min(Number(seconds)*1000,2147483000));
     }
     function applyStudentShellEnhancements(){applyCanonicalStudentHeading();resolveInternClassroomEntry();enhanceStudentDocumentsPage();enhanceDailyLogbookWorkFlow();armLogbookAttentionBadge();}
