@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from flask import Blueprint, abort, jsonify, render_template, request, session
+from flask import Blueprint, abort, current_app, jsonify, render_template, request, session
 from app.Http.Middleware.security import role_required
 from app.Models.db import get_db_connection
 from app.Services.intern_profile_service import get_supervisor_intern_profile
@@ -35,6 +35,29 @@ def _as_datetime(value):
         return datetime.fromisoformat(str(value))
     except (TypeError, ValueError):
         return None
+
+
+def _empty_student_report():
+    """Return the template-safe shape used when optional insight evidence is unavailable."""
+    return {
+        "performance_label": "No Data",
+        "average_percentage": None,
+        "min_percentage": None,
+        "max_percentage": None,
+        "completion_rate": 0.0,
+        "graded_count": 0,
+        "total_count": 0,
+        "assignments": [],
+        "strongest": None,
+        "weakest": None,
+        "priority": "none",
+        "recommendation": "",
+        "basis": [],
+        "sentiment": None,
+        "competency": None,
+        "has_feedback": False,
+        "feedback_analysis": None,
+    }
 
 
 @admin_reports_overview.route("/admin/reports/student/<int:student_id>/overview")
@@ -150,22 +173,62 @@ def student_insights():
         selected_classroom = classrooms[0]
 
     context = None
+    insights_warnings = []
     if selected_student and selected_classroom:
-        report = build_student_report(selected_student["id"], selected_classroom["id"])
-        profile = get_supervisor_intern_profile(
-            supervisor_id=selected_classroom["supervisor_id"],
-            classroom_id=selected_classroom["id"],
-            student_id=selected_student["id"],
-        )
-        if not profile.get("ok"):
-            abort(int(profile.get("status_code") or 404))
-        evaluation_context = get_supervisor_evaluation_context(
-            supervisor_id=selected_classroom["supervisor_id"],
-            classroom_id=selected_classroom["id"],
-            student_id=selected_student["id"],
-        )
-        if not evaluation_context.get("ok"):
-            abort(int(evaluation_context.get("status_code") or 404))
+        try:
+            report = build_student_report(selected_student["id"], selected_classroom["id"])
+        except Exception:
+            current_app.logger.exception(
+                "Admin Student Insights Work/ML evidence failed for student_id=%s class_id=%s",
+                selected_student["id"],
+                selected_classroom["id"],
+            )
+            report = _empty_student_report()
+            insights_warnings.append("Work and ML evidence is temporarily unavailable.")
+
+        try:
+            profile = get_supervisor_intern_profile(
+                supervisor_id=selected_classroom["supervisor_id"],
+                classroom_id=selected_classroom["id"],
+                student_id=selected_student["id"],
+            )
+        except Exception:
+            current_app.logger.exception(
+                "Admin Student Insights OJT evidence failed for student_id=%s class_id=%s",
+                selected_student["id"],
+                selected_classroom["id"],
+            )
+            profile = {
+                "ok": True,
+                "attendance_summary": {},
+                "daily_performance": {"history": [], "summary": {}},
+                "logbook_summary": {},
+            }
+            insights_warnings.append(
+                "Attendance, Daily Performance, and Logbook evidence is temporarily unavailable."
+            )
+        else:
+            if not profile.get("ok"):
+                abort(int(profile.get("status_code") or 404))
+
+        try:
+            evaluation_context = get_supervisor_evaluation_context(
+                supervisor_id=selected_classroom["supervisor_id"],
+                classroom_id=selected_classroom["id"],
+                student_id=selected_student["id"],
+            )
+        except Exception:
+            current_app.logger.exception(
+                "Admin Student Insights Official Evaluation failed for student_id=%s class_id=%s",
+                selected_student["id"],
+                selected_classroom["id"],
+            )
+            evaluation_context = {"ok": True, "evaluation": None}
+            insights_warnings.append("Official OJT Evaluation is temporarily unavailable.")
+        else:
+            if not evaluation_context.get("ok"):
+                abort(int(evaluation_context.get("status_code") or 404))
+
         context = {
             "report": report,
             "attendance": profile.get("attendance_summary") or {},
@@ -181,6 +244,7 @@ def student_insights():
         classrooms=classrooms,
         selected_classroom=selected_classroom,
         insights=context,
+        insights_warnings=insights_warnings,
         active_page="reports",
     )
 
