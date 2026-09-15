@@ -49,7 +49,7 @@ from app.Services.logbook_photo_service import ensure_logbook_photo_schema,get_l
 from app.Services.logbook_review_service import ensure_logbook_review_schema
 from app.Services.performance_rating_service import ensure_daily_performance_rating_schema
 from app.Services.ojt_evaluation_service import ensure_ojt_evaluation_schema
-from app.Services.internship_schedule_service import ensure_internship_schedule_schema
+from app.Services.internship_schedule_service import ensure_internship_schedule_schema,get_student_schedule_state
 from app.Services.notification_service import get_user_notifications,get_recent_notifications,get_unread_count
 from app.Services.supervisor_profile_service import ensure_supervisor_profile_schema
 app=Flask(__name__,template_folder=str(BASE_DIR/"resources"/"views"),static_folder=str(BASE_DIR/"resources"/"assets"),static_url_path="/static")
@@ -58,6 +58,7 @@ app.jinja_env.globals["get_daily_logbook_context"]=get_daily_logbook_context
 app.jinja_env.globals["get_session_daily_log"]=get_session_daily_log
 app.jinja_env.globals["get_logbook_photos"]=get_logbook_photos
 app.jinja_env.globals["get_classroom_announcements"]=get_classroom_announcements
+app.jinja_env.globals["get_student_schedule_state"]=get_student_schedule_state
 _secret=os.environ.get("SECRET_KEY")
 if not _secret:
  if os.environ.get("FLASK_ENV")=="production" or os.environ.get("NEXORA_ENV")=="production": raise RuntimeError("SECRET_KEY must be set in production")
