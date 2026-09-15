@@ -61,17 +61,20 @@ def ensure_logbook_schema():
                 conn.execute(statement)
         else:
             columns = [row[1] for row in conn.execute("PRAGMA table_info(logs)").fetchall()]
-            additions = {
-                "entry_type": "TEXT NOT NULL DEFAULT 'activity'",
-                "accomplishment": "TEXT",
-                "reflection": "TEXT",
-                "challenges": "TEXT",
-                "related_assignment_id": "INTEGER REFERENCES classroom_assignments(id) ON DELETE SET NULL",
-                "updated_at": "TIMESTAMP",
-            }
-            for name, definition in additions.items():
+            additions = (
+                ("entry_type", "ALTER TABLE logs ADD COLUMN entry_type TEXT NOT NULL DEFAULT 'activity'"),
+                ("accomplishment", "ALTER TABLE logs ADD COLUMN accomplishment TEXT"),
+                ("reflection", "ALTER TABLE logs ADD COLUMN reflection TEXT"),
+                ("challenges", "ALTER TABLE logs ADD COLUMN challenges TEXT"),
+                (
+                    "related_assignment_id",
+                    "ALTER TABLE logs ADD COLUMN related_assignment_id INTEGER REFERENCES classroom_assignments(id) ON DELETE SET NULL",
+                ),
+                ("updated_at", "ALTER TABLE logs ADD COLUMN updated_at TIMESTAMP"),
+            )
+            for name, statement in additions:
                 if name not in columns:
-                    conn.execute(f"ALTER TABLE logs ADD COLUMN {name} {definition}")
+                    conn.execute(statement)
 
         conn.execute(
             """CREATE INDEX IF NOT EXISTS idx_logs_student_daily
@@ -399,39 +402,62 @@ def get_daily_logbook_context(student_id, classroom_id=None, attendance_id=None)
             ).fetchone()
             if not membership:
                 return {"entries": [], "current_entry": None, "work_options": [], "total_entries": 0}
-            scope_sql = "a.classroom_id = ?"
-            scope_params = [normalized_classroom_id]
-        else:
-            scope_sql = "a.classroom_id IS NULL"
-            scope_params = []
 
         day_map = _attendance_day_map(conn, student_id, normalized_classroom_id)
-        rows = conn.execute(
-            f"""
-            SELECT
-                l.id,
-                l.attendance_id,
-                l.accomplishment,
-                l.reflection,
-                l.challenges,
-                l.related_assignment_id,
-                ca.title AS related_work_title,
-                l.created_at,
-                l.updated_at,
-                a.clock_in,
-                a.clock_out,
-                a.hours_rendered,
-                a.status
-            FROM logs l
-            JOIN attendance a ON a.id = l.attendance_id
-            LEFT JOIN classroom_assignments ca ON ca.id = l.related_assignment_id
-            WHERE l.student_id = ?
-              AND l.entry_type = 'daily'
-              AND {scope_sql}
-            ORDER BY a.clock_in DESC, l.id DESC
-            """,
-            tuple([student_id] + scope_params),
-        ).fetchall()
+        if normalized_classroom_id is not None:
+            rows = conn.execute(
+                """
+                SELECT
+                    l.id,
+                    l.attendance_id,
+                    l.accomplishment,
+                    l.reflection,
+                    l.challenges,
+                    l.related_assignment_id,
+                    ca.title AS related_work_title,
+                    l.created_at,
+                    l.updated_at,
+                    a.clock_in,
+                    a.clock_out,
+                    a.hours_rendered,
+                    a.status
+                FROM logs l
+                JOIN attendance a ON a.id = l.attendance_id
+                LEFT JOIN classroom_assignments ca ON ca.id = l.related_assignment_id
+                WHERE l.student_id = ?
+                  AND l.entry_type = 'daily'
+                  AND a.classroom_id = ?
+                ORDER BY a.clock_in DESC, l.id DESC
+                """,
+                (student_id, normalized_classroom_id),
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                """
+                SELECT
+                    l.id,
+                    l.attendance_id,
+                    l.accomplishment,
+                    l.reflection,
+                    l.challenges,
+                    l.related_assignment_id,
+                    ca.title AS related_work_title,
+                    l.created_at,
+                    l.updated_at,
+                    a.clock_in,
+                    a.clock_out,
+                    a.hours_rendered,
+                    a.status
+                FROM logs l
+                JOIN attendance a ON a.id = l.attendance_id
+                LEFT JOIN classroom_assignments ca ON ca.id = l.related_assignment_id
+                WHERE l.student_id = ?
+                  AND l.entry_type = 'daily'
+                  AND a.classroom_id IS NULL
+                ORDER BY a.clock_in DESC, l.id DESC
+                """,
+                (student_id,),
+            ).fetchall()
         entries = [_serialize_daily_row(row, day_map) for row in rows]
         current_entry = next(
             (entry for entry in entries if entry["attendance_id"] == normalized_attendance_id),
