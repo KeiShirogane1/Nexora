@@ -48,8 +48,10 @@ def _cleanup():
     conn.close()
 
 
-def _setup_classwork(points=100):
-    # returns (cid, aid, sid)
+def _setup_classwork(points=100, legacy_scored=True):
+    # Returns (cid, aid, sid). New OJT Work is always non-scored. When a test
+    # explicitly exercises the preserved legacy grading backend, update the
+    # fixture row to simulate an older scored assignment.
     client = app.test_client()
     _login_as(client, 99001, "supervisor")
     client.post("/supervisor/classes/create", data={"class_name": "Test Class", "section": "A", "description": "desc"})
@@ -58,11 +60,9 @@ def _setup_classwork(points=100):
     cid = row["id"] if "id" in row.keys() else row[0]
     code = row["code"] if "code" in row.keys() else row[1]
     conn.close()
-    # join student
     client_s = app.test_client()
     _login_as(client_s, 99011, "student")
     client_s.post("/student/classes/join", data={"class_code": code})
-    # create assignment
     _login_as(client, 99001, "supervisor")
     client.post(
         f"/supervisor/classes/{cid}/classwork",
@@ -71,7 +71,8 @@ def _setup_classwork(points=100):
     conn = get_db_connection()
     a_row = conn.execute("SELECT id FROM classroom_assignments WHERE classroom_id=? ORDER BY id DESC LIMIT 1", (cid,)).fetchone()
     aid = a_row["id"] if "id" in a_row.keys() else a_row[0]
-    # submission
+    if legacy_scored and points > 0:
+        conn.execute("UPDATE classroom_assignments SET points=? WHERE id=?", (points, aid))
     conn.execute(
         "INSERT INTO classwork_submissions (assignment_id, student_id, attempt_no, content, status) VALUES (?, ?, 1, 'test', 'submitted')",
         (aid, 99011),
@@ -83,6 +84,20 @@ def _setup_classwork(points=100):
     sid = sub["id"] if "id" in sub.keys() else sub[0]
     conn.close()
     return cid, aid, sid
+
+
+def test_new_work_ignores_legacy_points_input():
+    app.config["WTF_CSRF_ENABLED"] = False
+    app.config["TESTING"] = True
+    _ensure_users()
+    _cleanup()
+    _, aid, _ = _setup_classwork(points=100, legacy_scored=False)
+    conn = get_db_connection()
+    row = conn.execute("SELECT points FROM classroom_assignments WHERE id=?", (aid,)).fetchone()
+    assert row is not None
+    assert float(row["points"] if "points" in row.keys() else row[0]) == 0.0
+    conn.close()
+    _cleanup()
 
 
 def test_manual_grade_creates_normalized_score():
@@ -110,7 +125,6 @@ def test_manual_grade_creates_normalized_score():
     assert float(row["max_score"] if "max_score" in row.keys() else row[3]) == 100.0
     assert float(row["percentage"] if "percentage" in row.keys() else row[4]) == 80.0
     assert (row["grading_method"] if "grading_method" in row.keys() else row[5]) == "manual"
-    # also verify submission updated
     sub = conn.execute("SELECT grade, status FROM classwork_submissions WHERE id=?", (sid,)).fetchone()
     assert sub is not None
     assert float(sub["grade"] if "grade" in sub.keys() else sub[0]) == 80
