@@ -6,76 +6,214 @@ from app.ML.predictor import analyze_feedback_detailed
 
 def _value(row, key, index=0, default=None):
     try:
-        if key in row.keys(): return row[key]
-    except AttributeError: pass
-    try: return row[index]
-    except (IndexError, KeyError, TypeError): return default
+        if key in row.keys():
+            return row[key]
+    except AttributeError:
+        pass
+    try:
+        return row[index]
+    except (IndexError, KeyError, TypeError):
+        return default
+
+
+def _latest_logbook_feedback(student_id, class_id):
+    """Return the latest supervisor comment from this student's Daily OJT entries."""
+    conn = get_db_connection()
+    try:
+        row = conn.execute(
+            """
+            SELECT r.comments
+            FROM logbook_reviews r
+            JOIN logs l ON l.id = r.log_id
+            JOIN attendance a ON a.id = l.attendance_id
+            WHERE l.student_id = ?
+              AND a.classroom_id = ?
+              AND l.entry_type = 'daily'
+              AND r.comments IS NOT NULL
+              AND TRIM(r.comments) != ''
+            ORDER BY COALESCE(r.reviewed_at, r.updated_at) DESC, l.id DESC
+            LIMIT 1
+            """,
+            (student_id, class_id),
+        ).fetchone()
+        comment = _value(row, "comments", 0, "") if row else ""
+        return str(comment).strip() if comment else ""
+    except Exception:
+        # Feedback is optional evidence. Missing legacy tables/rows must not
+        # prevent the rest of the ML insight page from loading.
+        return ""
+    finally:
+        conn.close()
 
 
 def build_student_performance_features(student_id, class_id):
-    """Return normalized gradebook features, including grades stored on submissions."""
-    conn=get_db_connection()
+    """Return gradebook metrics plus real Daily OJT Work workflow coverage."""
+    conn = get_db_connection()
     try:
-        total_row=conn.execute("SELECT COUNT(*) AS total_assignments FROM classroom_assignments WHERE classroom_id=?",(class_id,)).fetchone()
-        total_assignments=int(_value(total_row,"total_assignments",0,0) or 0)
-        rows=conn.execute("""SELECT a.id, a.points AS assignment_points,
-               s.score, s.max_score, s.percentage, s.grading_method,
-               (SELECT cs.grade FROM classwork_submissions cs WHERE cs.assignment_id=a.id AND cs.student_id=? AND cs.grade IS NOT NULL ORDER BY cs.attempt_no DESC, cs.id DESC LIMIT 1) AS submission_grade
+        total_row = conn.execute(
+            "SELECT COUNT(*) AS total_assignments FROM classroom_assignments WHERE classroom_id = ?",
+            (class_id,),
+        ).fetchone()
+        total_assignments = int(_value(total_row, "total_assignments", 0, 0) or 0)
+        rows = conn.execute(
+            """
+            SELECT
+                a.id,
+                a.points AS assignment_points,
+                s.score,
+                s.max_score,
+                s.percentage,
+                s.grading_method,
+                (
+                    SELECT cs.grade
+                    FROM classwork_submissions cs
+                    WHERE cs.assignment_id = a.id
+                      AND cs.student_id = ?
+                      AND cs.grade IS NOT NULL
+                    ORDER BY cs.attempt_no DESC, cs.id DESC
+                    LIMIT 1
+                ) AS submission_grade,
+                CASE WHEN EXISTS (
+                    SELECT 1
+                    FROM logs l
+                    JOIN attendance log_attendance ON log_attendance.id = l.attendance_id
+                    WHERE l.student_id = ?
+                      AND l.entry_type = 'daily'
+                      AND l.related_assignment_id = a.id
+                      AND log_attendance.classroom_id = a.classroom_id
+                ) THEN 1 ELSE 0 END AS is_recorded,
+                CASE WHEN EXISTS (
+                    SELECT 1
+                    FROM logs l
+                    JOIN attendance log_attendance ON log_attendance.id = l.attendance_id
+                    JOIN logbook_reviews lr ON lr.log_id = l.id
+                    WHERE l.student_id = ?
+                      AND l.entry_type = 'daily'
+                      AND l.related_assignment_id = a.id
+                      AND log_attendance.classroom_id = a.classroom_id
+                      AND lr.status IN ('reviewed', 'approved', 'revision_requested')
+                ) THEN 1 ELSE 0 END AS is_reviewed
             FROM classroom_assignments a
-            LEFT JOIN classwork_scores s ON s.assignment_id=a.id AND s.student_id=?
-            WHERE a.classroom_id=? ORDER BY a.created_at ASC,a.id ASC""",(student_id,student_id,class_id)).fetchall()
-    finally: conn.close()
+            LEFT JOIN classwork_scores s
+              ON s.assignment_id = a.id
+             AND s.student_id = ?
+            WHERE a.classroom_id = ?
+            ORDER BY a.created_at ASC, a.id ASC
+            """,
+            (student_id, student_id, student_id, student_id, class_id),
+        ).fetchall()
+    finally:
+        conn.close()
 
-    graded=[]; methods=[]
+    graded = []
+    methods = []
+    recorded_count = 0
+    reviewed_count = 0
+
     for row in rows:
-        assignment_points=_value(row,"assignment_points",1)
-        score=_value(row,"score",2); max_score=_value(row,"max_score",3); percentage=_value(row,"percentage",4); method=_value(row,"grading_method",5)
-        submission_grade=_value(row,"submission_grade",6)
+        recorded_count += 1 if bool(_value(row, "is_recorded", 7, 0)) else 0
+        reviewed_count += 1 if bool(_value(row, "is_reviewed", 8, 0)) else 0
+
+        assignment_points = _value(row, "assignment_points", 1)
+        score = _value(row, "score", 2)
+        max_score = _value(row, "max_score", 3)
+        percentage = _value(row, "percentage", 4)
+        method = _value(row, "grading_method", 5)
+        submission_grade = _value(row, "submission_grade", 6)
+
         if score is None and submission_grade is not None:
-            score=submission_grade
-            max_score=max_score or assignment_points
-        if score is None: continue
-        if max_score is None: continue
+            score = submission_grade
+            max_score = max_score or assignment_points
+        if score is None or max_score is None:
+            continue
+
         try:
-            max_score=float(max_score)
-            if max_score<=0: continue
-            score=float(score)
-            pct=float(percentage) if percentage is not None else score/max_score*100
-        except (TypeError,ValueError): continue
-        graded.append({"score":score,"max_score":max_score,"percentage":pct})
+            max_score = float(max_score)
+            if max_score <= 0:
+                continue
+            score = float(score)
+            pct = float(percentage) if percentage is not None else score / max_score * 100
+        except (TypeError, ValueError):
+            continue
+
+        graded.append({"score": score, "max_score": max_score, "percentage": pct})
         methods.append((method or "manual").lower())
 
+    recorded_completion_rate = (
+        recorded_count / total_assignments * 100 if total_assignments else 0.0
+    )
+    review_rate = reviewed_count / total_assignments * 100 if total_assignments else 0.0
+    grade_completion_rate = len(graded) / total_assignments * 100 if total_assignments else 0.0
+
+    common = {
+        "student_id": student_id,
+        "class_id": class_id,
+        "graded_count": len(graded),
+        "recorded_count": recorded_count,
+        "reviewed_count": reviewed_count,
+        "total_count": total_assignments,
+        "recorded_completion_rate": recorded_completion_rate,
+        "review_rate": review_rate,
+        # Preserve the existing ML meaning: this is gradebook coverage, not
+        # whether a Work item has merely been recorded in the Logbook.
+        "completion_rate": grade_completion_rate,
+        "manual_count": sum(1 for method in methods if method == "manual"),
+        "imported_count": sum(1 for method in methods if method == "imported"),
+    }
+
     if not graded:
-        return {"student_id":student_id,"class_id":class_id,"graded_count":0,"total_count":total_assignments,"average_percentage":None,"min_percentage":None,"max_percentage":None,"completion_rate":0.0,"manual_count":0,"imported_count":0}
-    percentages=[x["percentage"] for x in graded]
-    return {"student_id":student_id,"class_id":class_id,"graded_count":len(graded),"total_count":total_assignments,"average_percentage":sum(percentages)/len(percentages),"min_percentage":min(percentages),"max_percentage":max(percentages),"completion_rate":len(graded)/total_assignments*100 if total_assignments else 0.0,"manual_count":sum(1 for m in methods if m=="manual"),"imported_count":sum(1 for m in methods if m=="imported")}
+        return {
+            **common,
+            "average_percentage": None,
+            "min_percentage": None,
+            "max_percentage": None,
+        }
+
+    percentages = [item["percentage"] for item in graded]
+    return {
+        **common,
+        "average_percentage": sum(percentages) / len(percentages),
+        "min_percentage": min(percentages),
+        "max_percentage": max(percentages),
+    }
 
 
 def classify_numeric_performance(average_percentage):
-    if average_percentage is None: return "Satisfactory"
-    score=float(average_percentage)
-    if score>=90:return "Excellent"
-    if score>=85:return "Very Satisfactory"
-    if score>=75:return "Satisfactory"
-    if score>=60:return "Fair"
+    if average_percentage is None:
+        return "Satisfactory"
+    score = float(average_percentage)
+    if score >= 90:
+        return "Excellent"
+    if score >= 85:
+        return "Very Satisfactory"
+    if score >= 75:
+        return "Satisfactory"
+    if score >= 60:
+        return "Fair"
     return "Needs Improvement"
 
 
-def build_student_ml_analysis(student_id,class_id,feedback_text=""):
-    features=build_student_performance_features(student_id,class_id)
-    numeric_label=classify_numeric_performance(features["average_percentage"])
-    feedback_analysis=analyze_feedback_detailed(feedback_text)
-    has_feedback=not bool(feedback_analysis.get("is_empty",True))
+def build_student_ml_analysis(student_id, class_id, feedback_text=""):
+    features = build_student_performance_features(student_id, class_id)
+    numeric_label = classify_numeric_performance(features["average_percentage"])
+
+    feedback_text = (feedback_text or "").strip()
+    if not feedback_text:
+        feedback_text = _latest_logbook_feedback(student_id, class_id)
+
+    feedback_analysis = analyze_feedback_detailed(feedback_text)
+    has_feedback = not bool(feedback_analysis.get("is_empty", True))
     return {
-        "student_id":student_id,
-        "class_id":class_id,
-        "features":features,
-        "has_performance_data":features.get("average_percentage") is not None and int(features.get("graded_count",0) or 0)>0,
-        "numeric_performance_label":numeric_label,
-        "feedback_analysis":feedback_analysis,
-        "performance_label":numeric_label,
-        "sentiment":feedback_analysis.get("sentiment") if has_feedback else None,
-        "competency":feedback_analysis.get("competency") if has_feedback else None,
-        "recommendation":feedback_analysis.get("recommendation") if has_feedback else None,
-        "confidence":feedback_analysis.get("confidence",0.0) if has_feedback else 0.0,
+        "student_id": student_id,
+        "class_id": class_id,
+        "features": features,
+        "has_performance_data": features.get("average_percentage") is not None
+        and int(features.get("graded_count", 0) or 0) > 0,
+        "numeric_performance_label": numeric_label,
+        "feedback_analysis": feedback_analysis,
+        "performance_label": numeric_label,
+        "sentiment": feedback_analysis.get("sentiment") if has_feedback else None,
+        "competency": feedback_analysis.get("competency") if has_feedback else None,
+        "recommendation": feedback_analysis.get("recommendation") if has_feedback else None,
+        "confidence": feedback_analysis.get("confidence", 0.0) if has_feedback else 0.0,
     }
