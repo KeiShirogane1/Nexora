@@ -44,7 +44,7 @@
                         {% for item in assignments %}
                             <a href="{{ url_for('student_classwork.detail', class_id=classroom.id, assignment_id=item.id) }}" class="student-task-row text-decoration-none">
                                 <div class="student-task-title">
-                                    <span class="student-task-icon" aria-hidden="true">{% if item.logbook_entry %}✓{% else %}▤{% endif %}</span>
+                                    <div class="student-task-icon" aria-hidden="true">{% if item.logbook_entry %}✓{% else %}▤{% endif %}</div>
                                     <div>
                                         <strong>{{ item.title }}</strong>
                                         <span>{{ item.activity_label }}{% if item.team_members %} · {{ item.team_name or 'Team' }}: {% for member in item.team_members %}{{ member.username }}{% if not loop.last %}, {% endif %}{% endfor %}{% elif item.group_mode %} · Collaborative Work{% endif %}</span>
