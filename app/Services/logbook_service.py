@@ -2,6 +2,7 @@
 from datetime import datetime
 
 from app.Models.db import get_db_connection, using_postgres
+from app.Services.internship_schedule_service import attendance_local_datetime
 
 
 MAX_LOG_TEXT_LENGTH = 5000
@@ -330,7 +331,7 @@ def _attendance_day_map(conn, student_id, classroom_id):
     if classroom_id is None:
         rows = conn.execute(
             """
-            SELECT id
+            SELECT id, clock_in
             FROM attendance
             WHERE student_id = ? AND classroom_id IS NULL
             ORDER BY clock_in ASC, id ASC
@@ -340,17 +341,26 @@ def _attendance_day_map(conn, student_id, classroom_id):
     else:
         rows = conn.execute(
             """
-            SELECT id
+            SELECT id, clock_in
             FROM attendance
             WHERE student_id = ? AND classroom_id = ?
             ORDER BY clock_in ASC, id ASC
             """,
             (student_id, classroom_id),
         ).fetchall()
-    return {
-        int(_row_value(row, "id", 0, 0)): index + 1
-        for index, row in enumerate(rows)
-    }
+
+    date_numbers = {}
+    mapping = {}
+    next_day = 1
+    for row in rows:
+        attendance_id = int(_row_value(row, "id", 0, 0))
+        local_clock = attendance_local_datetime(_row_value(row, "clock_in", 1, None))
+        date_key = local_clock.date() if local_clock is not None else ("attendance", attendance_id)
+        if date_key not in date_numbers:
+            date_numbers[date_key] = next_day
+            next_day += 1
+        mapping[attendance_id] = date_numbers[date_key]
+    return mapping
 
 
 def _serialize_daily_row(row, day_map):
@@ -360,6 +370,8 @@ def _serialize_daily_row(row, day_map):
         hours = float(hours) if hours is not None else None
     except (TypeError, ValueError):
         hours = None
+    clock_in = attendance_local_datetime(_row_value(row, "clock_in", 9, None))
+    clock_out = attendance_local_datetime(_row_value(row, "clock_out", 10, None))
     return {
         "id": int(_row_value(row, "id", 0, 0)),
         "attendance_id": attendance_id,
@@ -371,9 +383,9 @@ def _serialize_daily_row(row, day_map):
         "related_work_title": _row_value(row, "related_work_title", 6, None),
         "created_at": _row_value(row, "created_at", 7, None),
         "updated_at": _row_value(row, "updated_at", 8, None),
-        "date": _format_date(_row_value(row, "clock_in", 9, None)),
-        "time_in": _format_time(_row_value(row, "clock_in", 9, None)),
-        "time_out": _format_time(_row_value(row, "clock_out", 10, None)),
+        "date": _format_date(clock_in),
+        "time_in": _format_time(clock_in),
+        "time_out": _format_time(clock_out),
         "hours_rendered": hours,
         "status": _row_value(row, "status", 12, "Open"),
     }
@@ -381,17 +393,24 @@ def _serialize_daily_row(row, day_map):
 
 def get_daily_logbook_context(student_id, classroom_id=None, attendance_id=None):
     """Return structured Daily OJT entries for one authorized intern/classroom scope."""
+    empty = {
+        "entries": [],
+        "current_entry": None,
+        "work_options": [],
+        "total_entries": 0,
+        "attendance_day_numbers": {},
+    }
     try:
         student_id = int(student_id)
     except (TypeError, ValueError):
-        return {"entries": [], "current_entry": None, "work_options": [], "total_entries": 0}
+        return empty
 
     normalized_classroom_id = None
     if classroom_id not in (None, ""):
         try:
             normalized_classroom_id = int(classroom_id)
         except (TypeError, ValueError):
-            return {"entries": [], "current_entry": None, "work_options": [], "total_entries": 0}
+            return empty
 
     normalized_attendance_id = None
     if attendance_id not in (None, ""):
@@ -416,7 +435,7 @@ def get_daily_logbook_context(student_id, classroom_id=None, attendance_id=None)
                 (student_id, normalized_classroom_id),
             ).fetchone()
             if not membership:
-                return {"entries": [], "current_entry": None, "work_options": [], "total_entries": 0}
+                return empty
 
         day_map = _attendance_day_map(conn, student_id, normalized_classroom_id)
         if normalized_classroom_id is not None:
@@ -483,6 +502,7 @@ def get_daily_logbook_context(student_id, classroom_id=None, attendance_id=None)
             "current_entry": current_entry,
             "work_options": _visible_work(conn, student_id, normalized_classroom_id),
             "total_entries": len(entries),
+            "attendance_day_numbers": day_map,
         }
     finally:
         conn.close()

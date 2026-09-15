@@ -3,6 +3,7 @@ from datetime import datetime
 from pathlib import Path
 
 from app.Models.db import get_db_connection, using_postgres
+from app.Services.internship_schedule_service import attendance_local_datetime
 from app.Services.logbook_photo_service import PHOTO_ROOT
 
 
@@ -133,20 +134,27 @@ def _classroom_dict(row):
 def _day_map(conn, classroom_id):
     rows = conn.execute(
         """
-        SELECT id, student_id
+        SELECT id, student_id, clock_in
         FROM attendance
         WHERE classroom_id = ?
         ORDER BY student_id ASC, clock_in ASC, id ASC
         """,
         (classroom_id,),
     ).fetchall()
-    counts = {}
+    date_numbers = {}
+    next_days = {}
     mapping = {}
     for row in rows:
         attendance_id = int(_row_value(row, "id", 0, 0))
         student_id = int(_row_value(row, "student_id", 1, 0))
-        counts[student_id] = counts.get(student_id, 0) + 1
-        mapping[attendance_id] = counts[student_id]
+        local_clock = attendance_local_datetime(_row_value(row, "clock_in", 2, None))
+        date_key = local_clock.date() if local_clock is not None else ("attendance", attendance_id)
+        student_dates = date_numbers.setdefault(student_id, {})
+        if date_key not in student_dates:
+            day_number = next_days.get(student_id, 1)
+            student_dates[date_key] = day_number
+            next_days[student_id] = day_number + 1
+        mapping[attendance_id] = student_dates[date_key]
     return mapping
 
 
@@ -165,6 +173,8 @@ def _serialize_entry(row, day_map):
     display_name = " ".join(part for part in (first_name, last_name) if part).strip() or username or email or "Intern"
     attendance_status = _row_value(row, "attendance_status", 14, "Open")
     review_status = "in_progress" if attendance_status == "Open" else (_row_value(row, "review_status", 19, "pending") or "pending")
+    clock_in = attendance_local_datetime(_row_value(row, "clock_in", 10, None))
+    clock_out = attendance_local_datetime(_row_value(row, "clock_out", 11, None))
     return {
         "id": int(_row_value(row, "id", 0, 0)),
         "attendance_id": attendance_id,
@@ -179,9 +189,9 @@ def _serialize_entry(row, day_map):
         "related_work_title": _row_value(row, "related_work_title", 7, None),
         "created_at": _row_value(row, "created_at", 8, None),
         "updated_at": _row_value(row, "updated_at", 9, None),
-        "date": _format_date(_row_value(row, "clock_in", 10, None)),
-        "time_in": _format_time(_row_value(row, "clock_in", 10, None)),
-        "time_out": _format_time(_row_value(row, "clock_out", 11, None)),
+        "date": _format_date(clock_in),
+        "time_in": _format_time(clock_in),
+        "time_out": _format_time(clock_out),
         "hours_rendered": hours,
         "attendance_status": attendance_status,
         "review_status": review_status,
@@ -421,6 +431,8 @@ def get_student_review_page(student_id, log_id):
             hours = float(hours) if hours is not None else None
         except (TypeError, ValueError):
             hours = None
+        clock_in = attendance_local_datetime(_row_value(row, "clock_in", 7, None))
+        clock_out = attendance_local_datetime(_row_value(row, "clock_out", 8, None))
         return {
             "id": log_id,
             "attendance_id": attendance_id,
@@ -430,9 +442,9 @@ def get_student_review_page(student_id, log_id):
             "company_name": _row_value(row, "company_name", 13, ""),
             "supervisor_id": int(_row_value(row, "supervisor_id", 18, 0)),
             "day_number": day_map.get(attendance_id),
-            "date": _format_date(_row_value(row, "clock_in", 7, None)),
-            "time_in": _format_time(_row_value(row, "clock_in", 7, None)),
-            "time_out": _format_time(_row_value(row, "clock_out", 8, None)),
+            "date": _format_date(clock_in),
+            "time_in": _format_time(clock_in),
+            "time_out": _format_time(clock_out),
             "hours_rendered": hours,
             "attendance_status": attendance_status,
             "accomplishment": _row_value(row, "accomplishment", 2, "") or "",

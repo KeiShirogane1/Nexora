@@ -1,6 +1,7 @@
 from flask import Blueprint, abort, flash, redirect, request, send_file, session, url_for
 
 from app.Http.Middleware.security import role_required
+from app.Services.internship_schedule_service import get_student_schedule_state
 from app.Services.logbook_service import save_daily_log
 from app.Services.logbook_photo_service import (
     add_logbook_photos,
@@ -11,6 +12,34 @@ from app.Services.logbook_photo_service import (
 
 
 daily_logbook = Blueprint("daily_logbook", __name__)
+
+
+@daily_logbook.before_app_request
+def _enforce_student_clock_in_schedule():
+    """Reject duplicate or out-of-schedule OJT Clock In posts before attendance is created."""
+    if request.endpoint != "student.clock_in" or request.method != "POST":
+        return None
+    if session.get("role") != "student" or not session.get("user_id"):
+        return None
+
+    try:
+        state = get_student_schedule_state(session["user_id"])
+    except Exception as exc:
+        # Keep the existing student Clock In route authoritative if schedule
+        # state cannot be loaded for an unrelated legacy-data reason.
+        print("clock-in schedule check skipped:", exc)
+        return None
+
+    classroom_id = state.get("classroom_id")
+    if not classroom_id or state.get("can_clock_in", True):
+        return None
+
+    flash(
+        state.get("clock_in_block_reason")
+        or "Clock In is not available for this OJT day.",
+        "warning",
+    )
+    return redirect(url_for("student.logbook", classroom_id=int(classroom_id)))
 
 
 @daily_logbook.route("/student/daily-log/save", methods=["POST"])

@@ -56,6 +56,18 @@ def _parse_datetime(value):
         return None
 
 
+def attendance_local_datetime(raw_value, server_to_local_offset=None):
+    """Normalize a stored attendance timestamp to Nexora's configured local time."""
+    value = _parse_datetime(raw_value)
+    if value is None:
+        return None
+    if value.tzinfo is not None:
+        return value.astimezone(ZoneInfo(APP_TIMEZONE)).replace(tzinfo=None)
+    if server_to_local_offset is None:
+        server_to_local_offset = app_local_now() - datetime.now()
+    return value + server_to_local_offset
+
+
 def _parse_time(value, fallback):
     raw = str(value or fallback).strip()
     try:
@@ -163,33 +175,48 @@ def _resolve_student_classroom(conn, student_id, classroom_id=None):
     return int(_row_value(rows[0], "id", 0, 0))
 
 
-def _student_progress(conn, student_id, classroom_id):
-    row = conn.execute(
+def _student_progress(conn, student_id, classroom_id, server_to_local_offset=None):
+    rows = conn.execute(
         """
-        SELECT COALESCE(SUM(hours_rendered), 0) AS rendered_hours,
-               COUNT(DISTINCT DATE(clock_in)) AS completed_days
+        SELECT clock_in, COALESCE(hours_rendered, 0) AS hours_rendered
         FROM attendance
         WHERE student_id = ? AND classroom_id = ? AND status = 'Completed'
+        ORDER BY clock_in ASC, id ASC
         """,
         (student_id, classroom_id),
-    ).fetchone()
+    ).fetchall()
+
+    rendered_hours = 0.0
+    completed_dates = set()
+    for row in rows:
+        try:
+            rendered_hours += float(_row_value(row, "hours_rendered", 1, 0) or 0)
+        except (TypeError, ValueError):
+            pass
+        local_clock = attendance_local_datetime(
+            _row_value(row, "clock_in", 0, None),
+            server_to_local_offset=server_to_local_offset,
+        )
+        if local_clock is not None:
+            completed_dates.add(local_clock.date())
+
     return {
-        "rendered_hours": float(_row_value(row, "rendered_hours", 0, 0) or 0),
-        "completed_days": int(_row_value(row, "completed_days", 1, 0) or 0),
+        "rendered_hours": rendered_hours,
+        "completed_days": len(completed_dates),
     }
 
 
-def _to_local_attendance_time(raw_value, server_to_local_offset):
-    value = _parse_datetime(raw_value)
-    if value is None:
-        return None
-    if value.tzinfo is not None:
-        return value.astimezone(ZoneInfo(APP_TIMEZONE)).replace(tzinfo=None)
-    return value + server_to_local_offset
+def _schedule_is_complete(progress, required_days, required_hours):
+    checks = []
+    if required_days > 0:
+        checks.append(progress["completed_days"] >= required_days)
+    if required_hours > 0:
+        checks.append(progress["rendered_hours"] >= required_hours)
+    return bool(checks and all(checks))
 
 
 def get_student_schedule_state(student_id, classroom_id=None, now=None):
-    """Return schedule and current sidebar attention state for one intern."""
+    """Return schedule, attendance-day integrity, and sidebar attention state."""
     try:
         student_id = int(student_id)
     except (TypeError, ValueError):
@@ -227,27 +254,29 @@ def get_student_schedule_state(student_id, classroom_id=None, now=None):
             """,
             (resolved_classroom_id,),
         ).fetchone()
-        if not details:
-            return {"classroom_id": resolved_classroom_id, "attention_count": 0, "attention_reason": None}
 
         schedule_type = str(_row_value(details, "schedule_type", 0, "not_specified") or "not_specified").lower()
         hours_per_day = int(_row_value(details, "hours_per_day", 1, DEFAULT_HOURS_PER_DAY) or DEFAULT_HOURS_PER_DAY)
         required_days = int(_row_value(details, "required_days", 2, 0) or 0)
         required_hours = float(_row_value(details, "required_hours", 3, 0) or 0)
-        attendance_days = normalize_attendance_days(_row_value(details, "attendance_days", 4, ""))
+        attendance_days = normalize_attendance_days(
+            _row_value(details, "attendance_days", 4, ",".join(DEFAULT_ATTENDANCE_DAYS))
+        )
         shift_start_raw = str(_row_value(details, "shift_start_time", 5, DEFAULT_START_TIME) or DEFAULT_START_TIME)
         shift_end_raw = str(_row_value(details, "shift_end_time", 6, DEFAULT_END_TIME) or DEFAULT_END_TIME)
         shift_start = _parse_time(shift_start_raw, DEFAULT_START_TIME)
         shift_end = _parse_time(shift_end_raw, DEFAULT_END_TIME)
 
-        progress = _student_progress(conn, student_id, resolved_classroom_id)
-        schedule_complete = bool(
-            required_days > 0
-            and required_hours > 0
-            and progress["completed_days"] >= required_days
-            and progress["rendered_hours"] >= required_hours
+        progress = _student_progress(
+            conn,
+            student_id,
+            resolved_classroom_id,
+            server_to_local_offset=server_to_local_offset,
         )
+        schedule_complete = _schedule_is_complete(progress, required_days, required_hours)
 
+        weekday = WEEKDAYS[current.weekday()]
+        is_scheduled_day = schedule_type != "weekly" or weekday in attendance_days
         state = {
             "classroom_id": resolved_classroom_id,
             "schedule_type": schedule_type,
@@ -263,39 +292,34 @@ def get_student_schedule_state(student_id, classroom_id=None, now=None):
             "attention_count": 0,
             "attention_reason": None,
             "seconds_until_attention": None,
-            "is_scheduled_day": False,
+            "is_scheduled_day": is_scheduled_day,
             "has_open_attendance": False,
+            "has_attendance_today": False,
+            "completed_today": False,
+            "can_clock_in": True,
+            "clock_in_block_reason": None,
         }
-        if schedule_type != "weekly" or schedule_complete:
-            return state
 
-        weekday = WEEKDAYS[current.weekday()]
-        state["is_scheduled_day"] = weekday in attendance_days
-        if not state["is_scheduled_day"]:
-            return state
-
-        today_start = datetime.combine(current.date(), shift_start)
-        today_end = datetime.combine(current.date(), shift_end)
-
-        recent_completed = conn.execute(
+        recent_attendance = conn.execute(
             """
-            SELECT clock_in
+            SELECT id, clock_in, status
             FROM attendance
-            WHERE student_id = ? AND classroom_id = ? AND status = 'Completed'
-            ORDER BY clock_in DESC
-            LIMIT 5
+            WHERE student_id = ? AND classroom_id = ?
+            ORDER BY clock_in DESC, id DESC
+            LIMIT 10
             """,
             (student_id, resolved_classroom_id),
         ).fetchall()
-        completed_today = any(
-            local_clock is not None and local_clock.date() == current.date()
-            for local_clock in (
-                _to_local_attendance_time(_row_value(row, "clock_in", 0, None), server_to_local_offset)
-                for row in recent_completed
+        for row in recent_attendance:
+            local_clock = attendance_local_datetime(
+                _row_value(row, "clock_in", 1, None),
+                server_to_local_offset=server_to_local_offset,
             )
-        )
-        if completed_today:
-            return state
+            if local_clock is None or local_clock.date() != current.date():
+                continue
+            state["has_attendance_today"] = True
+            if str(_row_value(row, "status", 2, "") or "") == "Completed":
+                state["completed_today"] = True
 
         open_attendance = conn.execute(
             """
@@ -308,45 +332,83 @@ def get_student_schedule_state(student_id, classroom_id=None, now=None):
             (student_id, resolved_classroom_id),
         ).fetchone()
 
-        if not open_attendance:
-            if current >= today_start:
-                state["attention_count"] = 1
-                state["attention_reason"] = "check_in"
+        if open_attendance:
+            state["has_open_attendance"] = True
+            state["can_clock_in"] = False
+            state["clock_in_block_reason"] = "An OJT attendance session is already active."
+            if schedule_type != "weekly":
+                return state
+
+            today_end = datetime.combine(current.date(), shift_end)
+            attendance_id = int(_row_value(open_attendance, "id", 0, 0) or 0)
+            raw_clock_in = _row_value(open_attendance, "clock_in", 1, None)
+            clock_in_server = _parse_datetime(raw_clock_in)
+            if clock_in_server is None:
+                elapsed_seconds = 0
+            elif clock_in_server.tzinfo is not None:
+                elapsed_seconds = max(
+                    0,
+                    (
+                        datetime.now(ZoneInfo(APP_TIMEZONE))
+                        - clock_in_server.astimezone(ZoneInfo(APP_TIMEZONE))
+                    ).total_seconds(),
+                )
             else:
-                state["seconds_until_attention"] = max(0, int((today_start - current).total_seconds()))
+                elapsed_seconds = max(0, (server_now - clock_in_server).total_seconds())
+
+            seconds_until_daily_target = max(0, (hours_per_day * 3600) - elapsed_seconds)
+            seconds_until_shift_end = max(0, (today_end - current).total_seconds())
+            due_now = current >= today_end or elapsed_seconds >= (hours_per_day * 3600)
+
+            if due_now:
+                daily_log = conn.execute(
+                    """
+                    SELECT 1 FROM logs
+                    WHERE attendance_id = ? AND student_id = ? AND entry_type = 'daily'
+                    LIMIT 1
+                    """,
+                    (attendance_id, student_id),
+                ).fetchone()
+                state["attention_count"] = 1
+                state["attention_reason"] = "clock_out" if daily_log else "logbook_and_clock_out"
+            else:
+                state["seconds_until_attention"] = int(
+                    min(seconds_until_daily_target, seconds_until_shift_end)
+                )
             return state
 
-        state["has_open_attendance"] = True
-        attendance_id = int(_row_value(open_attendance, "id", 0, 0) or 0)
-        raw_clock_in = _row_value(open_attendance, "clock_in", 1, None)
-        clock_in_server = _parse_datetime(raw_clock_in)
-        if clock_in_server is None:
-            elapsed_seconds = 0
-        elif clock_in_server.tzinfo is not None:
-            elapsed_seconds = max(
-                0,
-                (datetime.now(ZoneInfo(APP_TIMEZONE)) - clock_in_server.astimezone(ZoneInfo(APP_TIMEZONE))).total_seconds(),
-            )
-        else:
-            elapsed_seconds = max(0, (server_now - clock_in_server).total_seconds())
+        if schedule_complete:
+            state["can_clock_in"] = False
+            state["clock_in_block_reason"] = "Your configured OJT attendance requirements are already complete."
+            return state
 
-        seconds_until_daily_target = max(0, (hours_per_day * 3600) - elapsed_seconds)
-        seconds_until_shift_end = max(0, (today_end - current).total_seconds())
-        due_now = current >= today_end or elapsed_seconds >= (hours_per_day * 3600)
+        if schedule_type == "weekly" and not is_scheduled_day:
+            state["can_clock_in"] = False
+            state["clock_in_block_reason"] = "Today is not a scheduled OJT attendance day."
+            return state
 
-        if due_now:
-            daily_log = conn.execute(
-                """
-                SELECT 1 FROM logs
-                WHERE attendance_id = ? AND student_id = ? AND entry_type = 'daily'
-                LIMIT 1
-                """,
-                (attendance_id, student_id),
-            ).fetchone()
+        if state["has_attendance_today"]:
+            state["can_clock_in"] = False
+            if state["completed_today"]:
+                state["clock_in_block_reason"] = (
+                    "Today's OJT attendance is already completed. Clock In will be available on your next OJT day."
+                )
+            else:
+                state["clock_in_block_reason"] = "Today's OJT attendance has already been recorded."
+            return state
+
+        if schedule_type != "weekly":
+            return state
+
+        today_start = datetime.combine(current.date(), shift_start)
+        if current >= today_start:
             state["attention_count"] = 1
-            state["attention_reason"] = "clock_out" if daily_log else "logbook_and_clock_out"
+            state["attention_reason"] = "check_in"
         else:
-            state["seconds_until_attention"] = int(min(seconds_until_daily_target, seconds_until_shift_end))
+            state["seconds_until_attention"] = max(
+                0,
+                int((today_start - current).total_seconds()),
+            )
         return state
     finally:
         conn.close()
