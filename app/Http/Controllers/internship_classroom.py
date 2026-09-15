@@ -77,11 +77,71 @@ def _get_classroom_banner_theme(class_id):
         conn.close()
 
 
+def _get_classroom_internship_details(class_id):
+    """Read all stored Intern Classroom information for existing view components."""
+    try:
+        class_id = int(class_id)
+    except (TypeError, ValueError):
+        return {}
+    try:
+        ensure_internship_schedule_schema()
+    except Exception:
+        return {}
+
+    conn = get_db_connection()
+    try:
+        row = conn.execute(
+            """
+            SELECT internship_title, program, company_name, industry, work_arrangement,
+                   schedule_type, hours_mode, compensation, location, start_date, end_date,
+                   enrollment_deadline, required_hours, hours_per_day, required_days,
+                   attendance_days, shift_start_time, shift_end_time, company_website,
+                   company_description, internship_description
+            FROM classroom_internship_details
+            WHERE classroom_id = ?
+            LIMIT 1
+            """,
+            (class_id,),
+        ).fetchone()
+        if not row:
+            return {}
+        keys = [
+            "internship_title", "program", "company_name", "industry", "work_arrangement",
+            "schedule_type", "hours_mode", "compensation", "location", "start_date", "end_date",
+            "enrollment_deadline", "required_hours", "hours_per_day", "required_days",
+            "attendance_days", "shift_start_time", "shift_end_time", "company_website",
+            "company_description", "internship_description",
+        ]
+        details = {key: _row_value(row, key, index, "") for index, key in enumerate(keys)}
+        responsibility_rows = conn.execute(
+            "SELECT responsibility FROM classroom_internship_responsibilities WHERE classroom_id = ? ORDER BY sort_order, id",
+            (class_id,),
+        ).fetchall()
+        qualification_rows = conn.execute(
+            "SELECT qualification FROM classroom_internship_qualifications WHERE classroom_id = ? ORDER BY sort_order, id",
+            (class_id,),
+        ).fetchall()
+        details["responsibilities"] = [
+            _row_value(item, "responsibility", 0, "")
+            for item in responsibility_rows
+            if _row_value(item, "responsibility", 0, "")
+        ]
+        details["qualifications"] = [
+            _row_value(item, "qualification", 0, "")
+            for item in qualification_rows
+            if _row_value(item, "qualification", 0, "")
+        ]
+        return details
+    finally:
+        conn.close()
+
+
 @internship_classroom.app_context_processor
 def inject_internship_helpers():
     return {
         "classroom_banner_theme": _get_classroom_banner_theme,
         "get_student_schedule_state": get_student_schedule_state,
+        "get_classroom_internship_details": _get_classroom_internship_details,
     }
 
 
