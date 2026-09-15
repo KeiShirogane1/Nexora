@@ -1,184 +1,205 @@
-"""Durable Cloudinary backing store for student documents.
+"""Database-backed persistence helpers for student documents.
 
-The existing documents table continues to store the local filepath. On hosts with
-Cloudinary configured, the local file is mirrored as an authenticated raw asset
-and can be restored into UPLOAD_FOLDER after a restart or deployment.
+Student documents keep their existing database row and local filepath for
+backward compatibility. The actual file bytes are also stored in the documents
+table so Render/PostgreSQL is the durable source and the filesystem is only a
+cache.
 """
 
 import os
 from pathlib import Path
-from urllib.error import HTTPError, URLError
-from urllib.request import Request, urlopen
 
-import cloudinary
-import cloudinary.uploader
-from cloudinary.utils import cloudinary_url
+from app.Models.db import get_db_connection, using_postgres
 
 
 MAX_DOCUMENT_BYTES = 5 * 1024 * 1024
+_schema_ready = False
 
 
 class DocumentStorageError(RuntimeError):
-    """Raised when durable document storage cannot complete an operation."""
+    """Raised when database-backed document storage cannot complete safely."""
 
 
-def document_storage_configured():
-    return all(
-        (os.environ.get(name) or "").strip()
-        for name in ("CLOUDINARY_CLOUD_NAME", "CLOUDINARY_API_KEY", "CLOUDINARY_API_SECRET")
-    )
-
-
-def _configure_cloudinary():
-    cloud_name = (os.environ.get("CLOUDINARY_CLOUD_NAME") or "").strip()
-    api_key = (os.environ.get("CLOUDINARY_API_KEY") or "").strip()
-    api_secret = (os.environ.get("CLOUDINARY_API_SECRET") or "").strip()
-    if not cloud_name or not api_key or not api_secret:
-        raise DocumentStorageError("Cloudinary document storage is not configured.")
-
-    cloudinary.config(
-        cloud_name=cloud_name,
-        api_key=api_key,
-        api_secret=api_secret,
-        secure=True,
-    )
-
-
-def _basename(value):
-    name = str(value or "").replace("\\", "/").rsplit("/", 1)[-1].strip()
-    if not name or name in {".", ".."} or "/" in name or "\\" in name:
-        return ""
-    return name
-
-
-def _document_extension(filename):
-    suffix = Path(_basename(filename)).suffix.lower()
-    if not suffix or len(suffix) > 16 or not suffix[1:].isalnum():
-        return ".bin"
-    return suffix
-
-
-def _public_id(document_id, storage_name):
-    try:
-        safe_id = int(document_id)
-    except (TypeError, ValueError) as exc:
-        raise DocumentStorageError("Invalid document id.") from exc
-    if safe_id <= 0:
-        raise DocumentStorageError("Invalid document id.")
-    # Raw Cloudinary assets must include their extension in the public id.
-    return f"nexora_document_{safe_id}{_document_extension(storage_name)}"
-
-
-def _safe_current_path(upload_folder, storage_name):
-    name = _basename(storage_name)
-    if not upload_folder or not name:
+def normalize_document_bytes(value):
+    """Normalize SQLite/Postgres binary values to bytes while preserving NULL."""
+    if value is None:
         return None
+    if isinstance(value, bytes):
+        return value
+    if isinstance(value, bytearray):
+        return bytes(value)
+    if isinstance(value, memoryview):
+        return value.tobytes()
+    try:
+        return bytes(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def ensure_document_storage_schema():
+    """Ensure documents.file_data exists on both PostgreSQL and SQLite."""
+    global _schema_ready
+    if _schema_ready:
+        return
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        if using_postgres():
+            cursor.execute(
+                "ALTER TABLE documents ADD COLUMN IF NOT EXISTS file_data BYTEA"
+            )
+        else:
+            columns = {
+                row[1]
+                for row in cursor.execute("PRAGMA table_info(documents)").fetchall()
+            }
+            if "file_data" not in columns:
+                cursor.execute("ALTER TABLE documents ADD COLUMN file_data BLOB")
+        conn.commit()
+        _schema_ready = True
+    except Exception as exc:
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+        raise DocumentStorageError(
+            "Unable to initialize database-backed document storage."
+        ) from exc
+    finally:
+        cursor.close()
+        conn.close()
+
+
+def store_document_bytes(document_id, student_id, data):
+    """Persist one validated student document's bytes in the documents row."""
+    ensure_document_storage_schema()
+    payload = normalize_document_bytes(data)
+    if payload is None:
+        raise DocumentStorageError("Document bytes are unavailable.")
+    if len(payload) > MAX_DOCUMENT_BYTES:
+        raise DocumentStorageError("Document exceeds the supported 5 MB limit.")
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            """
+            UPDATE documents
+            SET file_data = ?
+            WHERE id = ? AND student_id = ?
+            """,
+            (payload, int(document_id), int(student_id)),
+        )
+        conn.commit()
+        return cursor.rowcount > 0
+    except Exception as exc:
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+        raise DocumentStorageError(
+            "Unable to persist document bytes in the database."
+        ) from exc
+    finally:
+        cursor.close()
+        conn.close()
+
+
+def get_document_bytes(document_id, student_id=None):
+    """Read a document BLOB/BYTEA from the database without exposing its path."""
+    ensure_document_storage_schema()
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        if student_id is None:
+            cursor.execute(
+                "SELECT file_data FROM documents WHERE id = ? LIMIT 1",
+                (int(document_id),),
+            )
+        else:
+            cursor.execute(
+                """
+                SELECT file_data
+                FROM documents
+                WHERE id = ? AND student_id = ?
+                LIMIT 1
+                """,
+                (int(document_id), int(student_id)),
+            )
+        row = cursor.fetchone()
+        if not row:
+            return None
+        return normalize_document_bytes(row[0])
+    finally:
+        cursor.close()
+        conn.close()
+
+
+def current_document_path(upload_folder, filepath, filename):
+    """Return the safe current cache path for a legacy document filename."""
+    if not upload_folder:
+        return None
+
+    stored_name = str(filepath or "").replace("\\", "/").rsplit("/", 1)[-1]
+    if not stored_name:
+        stored_name = str(filename or "").replace("\\", "/").rsplit("/", 1)[-1]
+    stored_name = stored_name.strip()
+    if not stored_name or stored_name in {".", ".."}:
+        return None
+
     try:
         base = Path(upload_folder).resolve()
-        candidate = (base / name).resolve()
+        candidate = (base / stored_name).resolve()
         if candidate.parent != base:
             return None
-        return candidate
+        return str(candidate)
     except (OSError, RuntimeError, ValueError):
         return None
 
 
-def mirror_document(document_id, filename, filepath):
-    """Persist a local student document as an authenticated Cloudinary raw asset."""
-    if not document_storage_configured():
-        return False
+def restore_document_local(document_id, student_id, filename, filepath, upload_folder):
+    """Restore a DB-backed document to the current local upload cache if needed."""
+    data = get_document_bytes(document_id, student_id)
+    if data is None or len(data) > MAX_DOCUMENT_BYTES:
+        return None
 
-    local_path = Path(filepath)
-    if not local_path.is_file():
-        raise DocumentStorageError("Local document does not exist.")
+    target = current_document_path(upload_folder, filepath, filename)
+    if not target:
+        return None
+
+    target_path = Path(target)
     try:
-        size = local_path.stat().st_size
-    except OSError as exc:
-        raise DocumentStorageError("Unable to inspect local document.") from exc
-    if size > MAX_DOCUMENT_BYTES:
-        raise DocumentStorageError("Document exceeds the supported 5 MB limit.")
-
-    storage_name = _basename(filepath) or _basename(filename)
-    _configure_cloudinary()
-    try:
-        cloudinary.uploader.upload(
-            str(local_path),
-            resource_type="raw",
-            type="authenticated",
-            public_id=_public_id(document_id, storage_name),
-            overwrite=True,
-            invalidate=True,
-            unique_filename=False,
-            use_filename=False,
-            tags=["nexora", "student-document"],
-        )
-    except Exception as exc:
-        raise DocumentStorageError("Unable to persist document in Cloudinary.") from exc
-    return True
-
-
-def ensure_document_local(document_id, filename, filepath, upload_folder):
-    """Return a safe local path, restoring the document from Cloudinary if needed."""
-    storage_name = _basename(filepath) or _basename(filename)
-    target = _safe_current_path(upload_folder, storage_name)
-    if target is None:
-        return None
-
-    # Accept an existing file only from the current configured upload directory.
-    if target.is_file():
-        return str(target)
-
-    filename_target = _safe_current_path(upload_folder, filename)
-    if filename_target is not None and filename_target.is_file():
-        return str(filename_target)
-
-    if not document_storage_configured():
-        return None
-
-    _configure_cloudinary()
-    try:
-        remote_url, _ = cloudinary_url(
-            _public_id(document_id, storage_name),
-            resource_type="raw",
-            type="authenticated",
-            secure=True,
-            sign_url=True,
-        )
-        request = Request(remote_url, headers={"User-Agent": "Nexora/1.0"})
-        with urlopen(request, timeout=15) as response:
-            data = response.read(MAX_DOCUMENT_BYTES + 1)
-    except (HTTPError, URLError, TimeoutError, OSError, ValueError, DocumentStorageError):
-        return None
-    except Exception:
-        return None
-
-    if not data or len(data) > MAX_DOCUMENT_BYTES:
-        return None
-
-    try:
-        target.parent.mkdir(parents=True, exist_ok=True)
-        temporary = target.with_name(f".{target.name}.cloudinary.tmp")
-        temporary.write_bytes(data)
-        temporary.replace(target)
+        target_path.parent.mkdir(parents=True, exist_ok=True)
+        if not target_path.is_file():
+            temporary = target_path.with_name(f".{target_path.name}.db.tmp")
+            temporary.write_bytes(data)
+            temporary.replace(target_path)
     except OSError:
         return None
 
-    return str(target)
-
-
-def delete_document_backup(document_id, filename_or_path):
-    """Delete a document's durable Cloudinary copy when the database row is deleted."""
-    if not document_storage_configured():
-        return False
-
-    _configure_cloudinary()
     try:
-        cloudinary.uploader.destroy(
-            _public_id(document_id, filename_or_path),
-            resource_type="raw",
-            type="authenticated",
-            invalidate=True,
-        )
-    except Exception as exc:
-        raise DocumentStorageError("Unable to delete document from Cloudinary.") from exc
-    return True
+        current_path = os.path.realpath(filepath) if filepath else ""
+        restored_path = os.path.realpath(target)
+    except (OSError, ValueError, TypeError):
+        current_path = str(filepath or "")
+        restored_path = str(target)
+
+    if current_path != restored_path:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                """
+                UPDATE documents
+                SET filepath = ?
+                WHERE id = ? AND student_id = ?
+                """,
+                (target, int(document_id), int(student_id)),
+            )
+            conn.commit()
+        finally:
+            cursor.close()
+            conn.close()
+
+    return target
