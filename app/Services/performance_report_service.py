@@ -14,10 +14,23 @@ def _value(row,key,index=0,default=None):
 
 
 def _get_latest_feedback_text(student_id,class_id):
-    """Return feedback that belongs to this classroom's evidence context."""
+    """Return feedback that belongs to this classroom's OJT evidence context."""
     conn=get_db_connection()
     try:
-        # Current Work feedback is classroom-scoped through the assignment.
+        # Daily OJT supervisor feedback is authoritative for internship reports.
+        try:
+            logbook=conn.execute("""SELECT r.comments
+                FROM logbook_reviews r
+                JOIN logs l ON l.id=r.log_id
+                JOIN attendance a ON a.id=l.attendance_id
+                WHERE l.student_id=? AND a.classroom_id=?
+                  AND l.entry_type='daily'
+                  AND r.comments IS NOT NULL AND TRIM(r.comments)!=''
+                ORDER BY COALESCE(r.reviewed_at,r.updated_at) DESC,l.id DESC LIMIT 1""",(student_id,class_id)).fetchone()
+            if logbook and _value(logbook,"comments",0):return str(_value(logbook,"comments",0)).strip()
+        except Exception:pass
+
+        # Keep academic Classwork feedback as a compatibility fallback.
         try:
             sub=conn.execute("""SELECT s.feedback
                 FROM classwork_submissions s
@@ -82,7 +95,19 @@ def build_student_report(student_id,class_id,feedback_text=None):
         rows=conn.execute("""SELECT a.id,a.title,a.points,s.score,s.max_score,s.percentage,s.grading_method,
                (SELECT cs.grade FROM classwork_submissions cs WHERE cs.assignment_id=a.id AND cs.student_id=? AND cs.grade IS NOT NULL ORDER BY cs.attempt_no DESC,cs.id DESC LIMIT 1) AS submission_grade
                FROM classroom_assignments a LEFT JOIN classwork_scores s ON s.assignment_id=a.id AND s.student_id=?
-               WHERE a.classroom_id=? ORDER BY a.created_at ASC,a.id ASC""",(student_id,student_id,class_id)).fetchall()
+               WHERE a.classroom_id=?
+                 AND (
+                     NOT EXISTS (
+                         SELECT 1 FROM classroom_assignment_recipients all_recipients
+                         WHERE all_recipients.assignment_id=a.id
+                     )
+                     OR EXISTS (
+                         SELECT 1 FROM classroom_assignment_recipients my_recipient
+                         WHERE my_recipient.assignment_id=a.id
+                           AND my_recipient.student_id=?
+                     )
+                 )
+               ORDER BY a.created_at ASC,a.id ASC""",(student_id,student_id,class_id,student_id)).fetchall()
         for r in rows:
             title=_value(r,"title",1,"Assignment"); points=_safe_float(_value(r,"points",2),0) or 0; score=_value(r,"score",3); max_score=_value(r,"max_score",4); pct=_value(r,"percentage",5); method=_value(r,"grading_method",6); sub_grade=_value(r,"submission_grade",7)
             if score is None and sub_grade is not None:score=float(sub_grade); max_score=points; pct=(score/max_score*100) if max_score else 0; method=method or "manual"
@@ -97,7 +122,7 @@ def build_student_report(student_id,class_id,feedback_text=None):
 
     has_feedback=not bool(feedback_analysis.get("is_empty",True)) if isinstance(feedback_analysis,dict) else False
     has_performance_data=_safe_float(features.get("average_percentage")) is not None and int(features.get("graded_count",0) or 0)>0
-    return {"student":student,"class":class_info,"supervisor":supervisor_info,"overall_percentage":_safe_float(features.get("average_percentage")),"completion_rate":_safe_float(features.get("completion_rate"),0.0) or 0.0,"graded_count":features.get("graded_count",0),"total_count":features.get("total_count",0),"has_performance_data":has_performance_data,"performance_label":numeric_label,"performance_classification":numeric_label,"feedback_analysis":feedback_analysis if has_feedback else None,"sentiment":feedback_analysis.get("sentiment") if has_feedback else None,"competency":feedback_analysis.get("competency") if has_feedback else None,"has_feedback":has_feedback,"ml_recommendation":ml_reco,"recommendation":ml_reco.get("recommendation"),"priority":ml_reco.get("priority"),"basis":ml_reco.get("basis",[]),"strongest":strongest,"weakest":weakest,"assignments":assignments,"average_percentage":_safe_float(features.get("average_percentage")),"min_percentage":_safe_float(features.get("min_percentage")),"max_percentage":_safe_float(features.get("max_percentage")),"manual_count":features.get("manual_count",0),"imported_count":features.get("imported_count",0)}
+    return {"student":student,"class":class_info,"supervisor":supervisor_info,"overall_percentage":_safe_float(features.get("average_percentage")),"completion_rate":_safe_float(features.get("completion_rate"),0.0) or 0.0,"graded_count":features.get("graded_count",0),"total_count":features.get("total_count",0),"recorded_count":features.get("recorded_count",0),"reviewed_count":features.get("reviewed_count",0),"recorded_completion_rate":_safe_float(features.get("recorded_completion_rate"),0.0) or 0.0,"review_rate":_safe_float(features.get("review_rate"),0.0) or 0.0,"has_performance_data":has_performance_data,"performance_label":numeric_label,"performance_classification":numeric_label,"feedback_analysis":feedback_analysis if has_feedback else None,"sentiment":feedback_analysis.get("sentiment") if has_feedback else None,"competency":feedback_analysis.get("competency") if has_feedback else None,"has_feedback":has_feedback,"ml_recommendation":ml_reco,"recommendation":ml_reco.get("recommendation"),"priority":ml_reco.get("priority"),"basis":ml_reco.get("basis",[]),"strongest":strongest,"weakest":weakest,"assignments":assignments,"average_percentage":_safe_float(features.get("average_percentage")),"min_percentage":_safe_float(features.get("min_percentage")),"max_percentage":_safe_float(features.get("max_percentage")),"manual_count":features.get("manual_count",0),"imported_count":features.get("imported_count",0)}
 
 
 def build_class_reports(class_id):
