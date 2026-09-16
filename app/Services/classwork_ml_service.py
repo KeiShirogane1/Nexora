@@ -47,7 +47,13 @@ def _latest_logbook_feedback(student_id, class_id):
 
 
 def build_student_performance_features(student_id, class_id):
-    """Return metrics only for Work actually available to this student."""
+    """Return metrics only for Work actually available to this student.
+
+    For internship Work, the supervisor's Daily Performance rating is the
+    authoritative numeric source. ``classwork_scores`` remains a compatibility
+    snapshot/fallback for academic and legacy Work, but ML/report reads do not
+    depend on that mirror being refreshed first.
+    """
     conn = get_db_connection()
     try:
         rows = conn.execute(
@@ -59,6 +65,26 @@ def build_student_performance_features(student_id, class_id):
                 s.max_score,
                 s.percentage,
                 s.grading_method,
+                (
+                    SELECT AVG(dpr.percentage)
+                    FROM daily_performance_ratings dpr
+                    JOIN (
+                        SELECT DISTINCT l.attendance_id
+                        FROM logs l
+                        JOIN attendance rated_attendance
+                          ON rated_attendance.id = l.attendance_id
+                        LEFT JOIN daily_log_work_links rated_link
+                          ON rated_link.log_id = l.id
+                        WHERE l.student_id = ?
+                          AND l.entry_type = 'daily'
+                          AND rated_attendance.classroom_id = a.classroom_id
+                          AND (
+                                l.related_assignment_id = a.id
+                                OR rated_link.assignment_id = a.id
+                          )
+                    ) rated_days
+                      ON rated_days.attendance_id = dpr.attendance_id
+                ) AS daily_rating_percentage,
                 (
                     SELECT cs.grade
                     FROM classwork_submissions cs
@@ -124,7 +150,15 @@ def build_student_performance_features(student_id, class_id):
               )
             ORDER BY a.created_at ASC, a.id ASC
             """,
-            (student_id, student_id, student_id, student_id, class_id, student_id),
+            (
+                student_id,
+                student_id,
+                student_id,
+                student_id,
+                student_id,
+                class_id,
+                student_id,
+            ),
         ).fetchall()
     finally:
         conn.close()
@@ -136,19 +170,32 @@ def build_student_performance_features(student_id, class_id):
     reviewed_count = 0
 
     for row in rows:
-        recorded_count += 1 if bool(_value(row, "is_recorded", 7, 0)) else 0
-        reviewed_count += 1 if bool(_value(row, "is_reviewed", 8, 0)) else 0
+        recorded_count += 1 if bool(_value(row, "is_recorded", 8, 0)) else 0
+        reviewed_count += 1 if bool(_value(row, "is_reviewed", 9, 0)) else 0
 
         assignment_points = _value(row, "assignment_points", 1)
         score = _value(row, "score", 2)
         max_score = _value(row, "max_score", 3)
         percentage = _value(row, "percentage", 4)
         method = _value(row, "grading_method", 5)
-        submission_grade = _value(row, "submission_grade", 6)
+        daily_rating_percentage = _value(row, "daily_rating_percentage", 6)
+        submission_grade = _value(row, "submission_grade", 7)
 
-        if score is None and submission_grade is not None:
+        # Daily OJT ratings are authoritative whenever rated Logbook evidence
+        # exists for this Work. This also makes reads resilient if the legacy
+        # classwork_scores compatibility row has not yet been backfilled.
+        if daily_rating_percentage is not None:
+            try:
+                percentage = float(daily_rating_percentage)
+                score = percentage
+                max_score = 100.0
+                method = "daily_performance"
+            except (TypeError, ValueError):
+                pass
+        elif score is None and submission_grade is not None:
             score = submission_grade
             max_score = max_score or assignment_points
+
         if score is None or max_score is None:
             continue
 
@@ -179,9 +226,12 @@ def build_student_performance_features(student_id, class_id):
         "total_count": total_assignments,
         "recorded_completion_rate": recorded_completion_rate,
         "review_rate": review_rate,
-        # Preserve the existing ML meaning: this is numeric score coverage, not
-        # whether a Work item has merely been recorded in the Logbook.
+        # Preserve the existing ML field for compatibility. In internship
+        # views this now represents Daily Performance rating coverage.
         "completion_rate": grade_completion_rate,
+        "daily_performance_count": sum(
+            1 for method in methods if method == "daily_performance"
+        ),
         "manual_count": sum(1 for method in methods if method == "manual"),
         "imported_count": sum(1 for method in methods if method == "imported"),
     }
