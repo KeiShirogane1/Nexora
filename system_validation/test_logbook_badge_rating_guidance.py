@@ -13,7 +13,7 @@ def test_supervisor_review_warns_when_daily_performance_is_not_rated():
 
     assert "get_daily_performance_rating_for_supervisor" in source
     assert "this Daily OJT entry is not graded yet" in source
-    assert "Choose Daily Performance and click Save Rating" in source
+    assert "Choose Daily Performance and save the Overall Daily Rating" in source
 
 
 def test_daily_performance_success_reports_linked_work_sync():

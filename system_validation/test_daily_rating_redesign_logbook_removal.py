@@ -68,7 +68,9 @@ def test_supervisor_and_admin_can_remove_daily_logbook_but_attendance_is_preserv
     assert "DELETE FROM daily_log_work_links" in controller
     assert "DELETE FROM logbook_photos" in controller
     assert "DELETE FROM daily_performance_ratings" in controller
-    assert "DELETE FROM attendance" not in controller
+    assert "remove_attendance=False" in controller
+    assert "if remove_attendance:" in controller
+    assert "DELETE FROM attendance WHERE id = ? AND student_id = ? AND classroom_id = ?" in controller
     assert "attendance Time In/Out and rendered hours" in controller
     assert "Remove Logbook" in supervisor_topbar
     assert "Manage OJT Logbook" in admin_topbar

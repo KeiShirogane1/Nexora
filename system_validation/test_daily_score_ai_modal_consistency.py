@@ -12,9 +12,9 @@ def test_student_insights_exposes_daily_ojt_grade_separately_from_work():
 
     assert "get_supervisor_daily_performance_history" in controller
     assert "daily_performance=daily_performance" in controller
-    assert "Daily OJT Grades" in template
-    assert "Each Daily Performance rating is that OJT day's grade" in template
-    assert "Work analytics stay separate" in template
+    assert "Daily OJT Performance" in template
+    assert "Overall Daily Rating is the numeric grade for each completed OJT day" in template
+    assert "Daily OJT ratings remain the source for Internship Work analytics" in template
     assert "daily_evidence:" in template
     assert "completion: evidence.grade_coverage_percentage" in template
 

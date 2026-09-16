@@ -152,7 +152,8 @@ def test_admin_insights_keeps_evidence_dimensions_read_only_and_separate():
     assert "ML Signals" in template
     assert "Official OJT Evaluation" in template
     assert "separate evidence dimensions" in template
-    assert "not merged with ML, Work, attendance, Daily Performance, or Logbook" in template
+    assert "does not combine them into an overall OJT grade" in template
+    assert "do not create or replace the Official OJT Evaluation" in template
 
 
 def test_student_class_menu_removes_duplicate_information_action_only():

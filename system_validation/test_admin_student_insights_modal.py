@@ -56,7 +56,8 @@ def test_admin_insights_xhr_returns_clean_fragment_with_supervisor_evidence_dime
     assert ">Daily Logbook</span>" in source
     assert ">Work</span>" in source
     assert ">Official Evaluation</span>" in source
-    assert "daily_summary.average_star" in source
+    assert "daily_summary.get('average_star')" in source
+    assert "daily_average_star" in source
     assert "insights_warnings|join(' ')" in source
 
 
