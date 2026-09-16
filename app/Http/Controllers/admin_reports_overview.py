@@ -125,15 +125,19 @@ def _load_admin_insight_students(conn):
     try:
         return conn.execute(
             """
-            SELECT DISTINCT u.id, u.username, u.email,
+            SELECT u.id, u.username, u.email,
                    COALESCE(sp.first_name, '') AS first_name,
                    COALESCE(sp.last_name, '') AS last_name,
                    COALESCE(sp.student_id, '') AS student_number,
                    COALESCE(sp.major_program, '') AS major_program
             FROM users u
-            JOIN classroom_students cs ON cs.student_id = u.id
             LEFT JOIN student_profiles sp ON sp.user_id = u.id
             WHERE u.role = 'student'
+              AND EXISTS (
+                  SELECT 1
+                  FROM classroom_students cs
+                  WHERE cs.student_id = u.id
+              )
             ORDER BY LOWER(COALESCE(NULLIF(sp.first_name, ''), u.username)),
                      LOWER(COALESCE(NULLIF(sp.last_name, ''), u.email)), u.id
             """
@@ -148,14 +152,18 @@ def _load_admin_insight_students(conn):
         )
         return conn.execute(
             """
-            SELECT DISTINCT u.id, u.username, u.email,
+            SELECT u.id, u.username, u.email,
                    '' AS first_name,
                    '' AS last_name,
                    '' AS student_number,
                    '' AS major_program
             FROM users u
-            JOIN classroom_students cs ON cs.student_id = u.id
             WHERE u.role = 'student'
+              AND EXISTS (
+                  SELECT 1
+                  FROM classroom_students cs
+                  WHERE cs.student_id = u.id
+              )
             ORDER BY LOWER(u.username), LOWER(u.email), u.id
             """
         ).fetchall()
