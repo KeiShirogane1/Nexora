@@ -44,12 +44,23 @@ MUTATION_RE = re.compile(
 MODEL_RE = re.compile(r"^[A-Za-z0-9._:/-]+$")
 ML_EXPLANATION_KEYS = ("overall", "happened", "improve", "feedback", "next_focus")
 ML_EVIDENCE_KEYS = {
+    "daily_evidence",
+    "daily_average",
+    "daily_average_star",
+    "daily_rated_days",
+    "daily_closed_days",
+    "daily_latest",
+    "daily_highest",
+    "daily_lowest",
     "work_evidence",
     "average",
     "minimum",
     "maximum",
     "completion",
+    "recorded_completion",
+    "recorded",
     "reviewed",
+    "graded",
     "total",
     "work_label",
     "work_recommendation",
@@ -297,62 +308,96 @@ def _metric_text(value, percentage=False):
 def _evidence_fallback_analysis(evidence):
     """Build a factual summary only from the evidence already supplied by the page."""
     analysis = {key: "Unavailable." for key in ML_EXPLANATION_KEYS}
+    daily_available = bool(evidence.get("daily_evidence"))
     work_available = bool(evidence.get("work_evidence"))
     feedback_available = bool(evidence.get("feedback_evidence"))
 
-    if work_available:
-        reviewed = _metric_text(evidence.get("reviewed"))
-        total = _metric_text(evidence.get("total"))
-        average = _metric_text(evidence.get("average"), percentage=True)
-        minimum = _metric_text(evidence.get("minimum"), percentage=True)
-        maximum = _metric_text(evidence.get("maximum"), percentage=True)
-        completion = _metric_text(evidence.get("completion"), percentage=True)
-        label = str(evidence.get("work_label") or "").strip()
-        recommendation = str(evidence.get("work_recommendation") or "").strip()
-        priority = str(evidence.get("priority") or "").strip()
-
+    if daily_available or work_available or feedback_available:
         overall_parts = [
             "Nexora could not complete the AI response, so this section summarizes the current evidence directly."
         ]
-        if reviewed is not None and total is not None:
-            overall_parts.append(f"Current Work evidence includes {reviewed} of {total} reviewed item(s).")
-        if average:
-            overall_parts.append(f"The reviewed Work average is {average}.")
-        if label:
-            overall_parts.append(f"The gradebook-derived Work label is {label}.")
+
+        if daily_available:
+            daily_average = _metric_text(evidence.get("daily_average"), percentage=True)
+            daily_star = _metric_text(evidence.get("daily_average_star"))
+            rated_days = _metric_text(evidence.get("daily_rated_days"))
+            closed_days = _metric_text(evidence.get("daily_closed_days"))
+            if daily_average:
+                sentence = f"The supervisor-entered Daily OJT average is {daily_average}"
+                if daily_star:
+                    sentence += f" ({daily_star} stars)"
+                sentence += "."
+                overall_parts.append(sentence)
+            if rated_days is not None and closed_days is not None:
+                overall_parts.append(f"Daily Performance contains {rated_days} rated day(s) out of {closed_days} completed day(s).")
+
+        if work_available:
+            reviewed = _metric_text(evidence.get("reviewed"))
+            total = _metric_text(evidence.get("total"))
+            average = _metric_text(evidence.get("average"), percentage=True)
+            label = str(evidence.get("work_label") or "").strip()
+            if reviewed is not None and total is not None:
+                overall_parts.append(f"Current Work evidence includes {reviewed} of {total} reviewed item(s).")
+            if average:
+                overall_parts.append(f"The reviewed Work average is {average}.")
+            if label:
+                overall_parts.append(f"The gradebook-derived Work label is {label}.")
+
+        if not daily_available and not work_available and feedback_available:
+            overall_parts.append("Only feedback-model evidence is available for this explanation.")
+
         analysis["overall"] = " ".join(overall_parts)
 
-        happened_parts = []
+    happened_parts = []
+    if daily_available:
+        latest = _metric_text(evidence.get("daily_latest"), percentage=True)
+        lowest = _metric_text(evidence.get("daily_lowest"), percentage=True)
+        highest = _metric_text(evidence.get("daily_highest"), percentage=True)
+        if latest:
+            happened_parts.append(f"The latest rated Daily OJT day is {latest}.")
+        if lowest and highest:
+            happened_parts.append(f"Rated Daily OJT days currently range from {lowest} to {highest}.")
+
+    if work_available:
+        completion = _metric_text(evidence.get("completion"), percentage=True)
+        minimum = _metric_text(evidence.get("minimum"), percentage=True)
+        maximum = _metric_text(evidence.get("maximum"), percentage=True)
+        average = _metric_text(evidence.get("average"), percentage=True)
         if completion:
             happened_parts.append(f"Current Work completion is {completion}.")
         if minimum and maximum:
             happened_parts.append(f"Reviewed Work currently ranges from {minimum} to {maximum}.")
-        if not happened_parts and average:
+        if not minimum and not maximum and average:
             happened_parts.append(f"The current reviewed Work average is {average}.")
-        if happened_parts:
-            analysis["happened"] = " ".join(happened_parts)
 
-        if recommendation:
-            analysis["improve"] = recommendation
-        elif reviewed is not None and total is not None and reviewed != total:
-            analysis["improve"] = "Review the Work items that are not yet reflected in the reviewed Work evidence."
-        else:
-            analysis["improve"] = "Use the current Work evidence and supervisor guidance to choose the next improvement area."
+    if happened_parts:
+        analysis["happened"] = " ".join(happened_parts)
 
-        actions = []
-        try:
-            reviewed_number = int(float(evidence.get("reviewed")))
-            total_number = int(float(evidence.get("total")))
-        except (TypeError, ValueError):
-            reviewed_number = total_number = None
-        if reviewed_number is not None and total_number is not None and reviewed_number < total_number:
-            actions.append("Check the Work items that are not yet reviewed")
-        if recommendation:
-            actions.append("Follow the current ML recommendation")
-        if priority:
-            actions.append(f"Address the {priority.lower()} priority shown by Nexora")
-        actions.append("Ask your supervisor for guidance on the current Work evidence")
-        analysis["next_focus"] = "; ".join(actions[:4])
+    work_recommendation = str(evidence.get("work_recommendation") or "").strip()
+    feedback_recommendation = str(evidence.get("feedback_recommendation") or "").strip()
+    try:
+        reviewed_number = int(float(evidence.get("reviewed")))
+        total_number = int(float(evidence.get("total")))
+    except (TypeError, ValueError):
+        reviewed_number = total_number = None
+    try:
+        rated_number = int(float(evidence.get("daily_rated_days")))
+        closed_number = int(float(evidence.get("daily_closed_days")))
+    except (TypeError, ValueError):
+        rated_number = closed_number = None
+
+    if work_recommendation:
+        analysis["improve"] = work_recommendation
+    elif feedback_recommendation:
+        analysis["improve"] = feedback_recommendation
+    elif rated_number is not None and closed_number is not None and rated_number < closed_number:
+        analysis["improve"] = "Review completed Daily OJT days that are still awaiting a supervisor Daily Performance rating."
+    elif reviewed_number is not None and total_number is not None and reviewed_number < total_number:
+        analysis["improve"] = "Review the Work items that are not yet reflected in the reviewed Work evidence."
+    elif daily_available:
+        analysis["improve"] = "Use the supervisor's Daily OJT rating and comments to choose the next improvement area."
+    elif work_available:
+        analysis["improve"] = "Use the current Work evidence and supervisor guidance to choose the next improvement area."
 
     if feedback_available:
         feedback_parts = []
@@ -370,13 +415,24 @@ def _evidence_fallback_analysis(evidence):
             feedback_parts.append(f"confidence: {confidence}")
         if feedback_parts:
             analysis["feedback"] = "Current feedback-model signals show " + "; ".join(feedback_parts) + "."
-        if not work_available:
-            analysis["overall"] = "Nexora could not complete the AI response, so this section summarizes the available feedback-model evidence directly."
+        if not happened_parts:
             analysis["happened"] = analysis["feedback"]
-            feedback_recommendation = str(evidence.get("feedback_recommendation") or "").strip()
-            if feedback_recommendation:
-                analysis["improve"] = feedback_recommendation
-                analysis["next_focus"] = "Review the current feedback recommendation; discuss it with your supervisor"
+
+    actions = []
+    if rated_number is not None and closed_number is not None and rated_number < closed_number:
+        actions.append("Check completed Daily OJT days still awaiting a supervisor rating")
+    if reviewed_number is not None and total_number is not None and reviewed_number < total_number:
+        actions.append("Check the Work items that are not yet reviewed")
+    if work_recommendation:
+        actions.append("Follow the current ML recommendation")
+    elif feedback_recommendation:
+        actions.append("Review the current feedback recommendation")
+    if daily_available:
+        actions.append("Review the latest Daily OJT grade and supervisor comment")
+    if work_available or feedback_available:
+        actions.append("Discuss the current evidence with your supervisor")
+    if actions:
+        analysis["next_focus"] = "; ".join(actions[:4])
 
     return analysis
 
@@ -398,14 +454,16 @@ def explain_ml_evidence(user_id, evidence):
         "small JSON object containing evidence already visible to the authenticated student. "
         "Use only those supplied values. Do not claim you inspected private records or any data "
         "outside the JSON. Do not invent trends, score changes, causes, behavior, missing work, "
-        "or feedback details. Work labels are gradebook-derived; Naive Bayes and SVM values are "
-        "feedback-model predictions. The Official OJT Evaluation is a separate manual supervisor "
-        "record and must never be combined with, replaced by, or inferred from these values. "
-        "Return one valid JSON object only, with exactly these string keys: overall, happened, "
-        "improve, feedback, next_focus. No Markdown and no surrounding commentary. Use "
-        "Unavailable. when a section is unsupported by the supplied evidence. next_focus must "
-        "contain 2 to 4 short actions separated by semicolons when evidence supports actions, "
-        "otherwise Unavailable. Never repeat these instructions or the raw JSON."
+        "or feedback details. Daily Performance is a supervisor-entered day-level OJT grade and "
+        "must remain separate from Work/gradebook analytics. Work labels are gradebook-derived; "
+        "Naive Bayes and SVM values are feedback-model predictions. The Official OJT Evaluation "
+        "is a separate manual supervisor record and must never be combined with, replaced by, "
+        "or inferred from Daily Performance, Work analytics, or feedback-model values. Return one "
+        "valid JSON object only, with exactly these string keys: overall, happened, improve, "
+        "feedback, next_focus. No Markdown and no surrounding commentary. Use Unavailable. when "
+        "a section is unsupported by the supplied evidence. next_focus must contain 2 to 4 short "
+        "actions separated by semicolons when evidence supports actions, otherwise Unavailable. "
+        "Never repeat these instructions or the raw JSON."
     )
 
     try:

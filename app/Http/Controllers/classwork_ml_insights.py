@@ -9,6 +9,7 @@ from app.Services.classwork_ml_service import (
     build_student_performance_features,
     classify_numeric_performance,
 )
+from app.Services.daily_performance_history_service import get_supervisor_daily_performance_history
 from app.Services.intern_profile_service import get_supervisor_intern_profile
 from app.Services.ml_recommendation_service import build_recommendation_from_features
 from app.Services.ojt_evaluation_service import get_supervisor_evaluation_context
@@ -501,11 +502,25 @@ def student_insights(class_id):
             "id": _value(classroom, "id", 0),
             "name": _value(classroom, "name", 1),
             "section": _value(classroom, "section", 2),
+            "supervisor_id": int(_value(classroom, "supervisor_id", 3, 0) or 0),
             "supervisor": _value(classroom, "supervisor_name", 5),
             "archived": bool(_value(classroom, "archived", 4, 0)),
         }
     finally:
         conn.close()
+
+    daily_context = get_supervisor_daily_performance_history(
+        supervisor_id=classroom_data["supervisor_id"],
+        classroom_id=class_id,
+        student_id=student_id,
+    )
+    if daily_context.get("ok"):
+        daily_performance = {
+            "history": daily_context.get("history", []),
+            "summary": daily_context.get("summary", {}),
+        }
+    else:
+        daily_performance = {"history": [], "summary": {}}
 
     feedback_text = _get_latest_feedback_text(student_id, class_id)
     analysis = _safe_ml_analysis(student_id, class_id, feedback_text)
@@ -516,6 +531,7 @@ def student_insights(class_id):
     return render_template(
         "classroom/student_insights.html",
         classroom=classroom_data,
+        daily_performance=daily_performance,
         features=features,
         has_performance_data=analysis.get("has_performance_data", False),
         numeric_performance_label=analysis.get("numeric_performance_label"),

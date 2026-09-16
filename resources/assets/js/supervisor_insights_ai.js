@@ -47,6 +47,82 @@
     sectionLabels.forEach(([key]) => setSection(root, key, values[key]));
   }
 
+  function formatNumber(value, suffix) {
+    const number = Number(value);
+    if (!Number.isFinite(number)) return null;
+    const text = Number.isInteger(number) ? String(number) : number.toFixed(1);
+    return `${text}${suffix || ""}`;
+  }
+
+  function renderEvidenceFallback(root, evidence) {
+    const overall = ["Live AI could not complete the response, so Nexora is summarizing the current evidence directly."];
+    const happened = [];
+    const improve = [];
+    const next = [];
+
+    const dailyAverage = formatNumber(evidence.daily_average, "%");
+    const dailyRatedDays = formatNumber(evidence.daily_rated_days, "");
+    const attendanceHours = formatNumber(evidence.attendance_hours, " hours");
+    const requiredHours = formatNumber(evidence.required_hours, " hours");
+    const workAverage = formatNumber(evidence.work_average, "%");
+    const workReviewed = formatNumber(evidence.work_reviewed, "");
+    const workTotal = formatNumber(evidence.work_total, "");
+    const logbookTotal = formatNumber(evidence.logbook_total, "");
+    const logbookApproved = formatNumber(evidence.logbook_approved, "");
+
+    if (dailyAverage) {
+      overall.push(`The supervisor-entered Daily Performance average is ${dailyAverage}${dailyRatedDays ? ` across ${dailyRatedDays} rated day(s)` : ""}.`);
+    }
+    if (workAverage) {
+      overall.push(`The current Work average is ${workAverage}.`);
+    } else if (workTotal && Number(evidence.work_total || 0) > 0) {
+      overall.push("Work items exist, but Work analytics do not currently have a numeric Work score.");
+    }
+    if (evidence.official_status) {
+      overall.push(`The Official OJT Evaluation status is ${String(evidence.official_status)} and remains separate from these analytics.`);
+    }
+
+    if (attendanceHours) {
+      happened.push(`Recorded OJT time is ${attendanceHours}${requiredHours ? ` out of ${requiredHours} required` : ""}.`);
+    }
+    if (logbookTotal) {
+      happened.push(`The Daily Logbook contains ${logbookTotal} entr${Number(evidence.logbook_total) === 1 ? "y" : "ies"}${logbookApproved ? `, with ${logbookApproved} approved` : ""}.`);
+    }
+    if (workReviewed && workTotal) {
+      happened.push(`Work evidence shows ${workReviewed} reviewed item(s) out of ${workTotal} assigned.`);
+    }
+
+    if (Number(evidence.daily_rated_days || 0) > 0 && Number(evidence.work_total || 0) > 0 && !evidence.work_evidence) {
+      improve.push("Daily Performance is already rated, while Work analytics still have no numeric score. Confirm that the intended Work is linked to the rated Daily OJT day before relying on Work analytics.");
+      next.push("Check the Daily OJT day and its Related Assigned Work link");
+    }
+    if (Number(evidence.work_total || 0) > Number(evidence.work_reviewed || 0)) {
+      next.push("Review remaining Work evidence when it becomes available");
+    }
+    if (Number(evidence.daily_rated_days || 0) > 0) {
+      next.push("Use the supervisor-entered Daily Performance rating as the day-level OJT score");
+    }
+    next.push("Keep the Official OJT Evaluation separate from Daily Performance and Work analytics");
+
+    let feedback = "No supervisor feedback evidence is available yet.";
+    if (evidence.feedback_evidence) {
+      const parts = [];
+      if (evidence.sentiment) parts.push(`sentiment: ${evidence.sentiment}`);
+      if (evidence.competency) parts.push(`competency: ${evidence.competency}`);
+      const confidence = formatNumber(evidence.confidence, "");
+      if (confidence) parts.push(`confidence: ${confidence}`);
+      feedback = parts.length
+        ? `Current feedback-model signals show ${parts.join("; ")}.`
+        : "Feedback evidence is available; use the Feedback Analysis panel for the current model signals.";
+    }
+
+    setSection(root, "overall", overall.join(" "));
+    setSection(root, "happened", happened.join(" ") || "Use the evidence cards above for the current measured results.");
+    setSection(root, "improve", improve.join(" ") || "Use the current supervisor-entered evidence to choose the next improvement area without combining separate OJT dimensions into one grade.");
+    setSection(root, "feedback", feedback);
+    setSection(root, "next", next.slice(0, 4).join("; "));
+  }
+
   function evidenceHash(value) {
     const text = JSON.stringify(value);
     let hash = 0;
@@ -105,7 +181,7 @@
       return;
     }
 
-    const cacheKey = `nxSupervisorInsightAi:${root.dataset.classroomId || "0"}:${root.dataset.studentId || "0"}:${evidenceHash(evidence)}`;
+    const cacheKey = `nxSupervisorInsightAi:v2:${root.dataset.classroomId || "0"}:${root.dataset.studentId || "0"}:${evidenceHash(evidence)}`;
     try {
       const cached = window.sessionStorage.getItem(cacheKey);
       if (cached) {
@@ -133,7 +209,9 @@
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "AI request failed.");
       if (!data.available || !data.answer) {
-        status.textContent = "Nexora AI is not enabled on this server yet. The existing evidence and ML recommendation remain available.";
+        renderEvidenceFallback(root, evidence);
+        status.textContent = "Live AI is not enabled on this server, so Nexora is showing a direct summary of the current evidence.";
+        items.hidden = false;
         return;
       }
 
@@ -144,8 +222,9 @@
         window.sessionStorage.setItem(cacheKey, data.answer);
       } catch (error) {}
     } catch (error) {
-      status.textContent = "Nexora AI explanation is temporarily unavailable. The existing evidence and ML recommendation are unaffected.";
-      items.hidden = true;
+      renderEvidenceFallback(root, evidence);
+      status.textContent = "Live AI could not complete the response, so Nexora is showing a direct summary of the current evidence.";
+      items.hidden = false;
     }
   }
 

@@ -135,6 +135,15 @@
         {% set reviewed_count = features.reviewed_count|default(0)|int %}
         {% set recorded_completion_rate = features.recorded_completion_rate|default(0)|float %}
         {% set workflow_review_rate = features.review_rate|default(0)|float %}
+        {% set daily_summary = daily_performance.summary|default({}) %}
+        {% set daily_rated_days = daily_summary.rated_days|default(0)|int %}
+        {% set daily_closed_days = daily_summary.closed_days|default(0)|int %}
+        {% set daily_average_percentage = daily_summary.average_percentage|default(none) %}
+        {% set daily_average_star = daily_summary.average_star|default(none) %}
+        {% set daily_latest_percentage = daily_summary.latest_percentage|default(none) %}
+        {% set daily_highest_percentage = daily_summary.highest_percentage|default(none) %}
+        {% set daily_lowest_percentage = daily_summary.lowest_percentage|default(none) %}
+        {% set has_daily_performance = daily_rated_days > 0 and daily_average_percentage is not none %}
 
         {% if numeric_performance_label == 'Excellent' %}
             {% set work_label_class = 'is-excellent' %}
@@ -155,12 +164,15 @@
                 <div>
                     <span class="student-section-eyebrow">Machine Learning</span>
                     <h1 id="insights-heading">ML Performance Insights</h1>
-                    <p>{{ classroom.section }} · {{ classroom.supervisor }} · Work evidence, feedback signals, model predictions, and personalized AI analysis.</p>
+                    <p>{{ classroom.section }} · {{ classroom.supervisor }} · Daily OJT grades, Work evidence, feedback signals, model predictions, and personalized AI analysis.</p>
                     <div class="profile-actions">
+                        {% if has_daily_performance %}
+                            <span class="student-classwork-status">Daily OJT {{ "%.1f"|format(daily_average_percentage) }}%</span>
+                        {% endif %}
                         {% if has_performance_data %}
                             <span class="student-insights-label {{ work_label_class }}">{{ numeric_performance_label }}</span>
                         {% else %}
-                            <span class="student-classwork-status">No Data</span>
+                            <span class="student-classwork-status">Work: No Data</span>
                         {% endif %}
                         <span class="student-classwork-status">Work performance label</span>
                     </div>
@@ -175,11 +187,19 @@
 
             <section class="student-tasks-stats" aria-label="ML insight summary">
                 <article class="student-tasks-stat">
-                    <div class="student-tasks-stat-icon" aria-hidden="true">↗</div>
+                    <div class="student-tasks-stat-icon" aria-hidden="true">★</div>
                     <div class="student-tasks-stat-copy">
-                        <span>Work Average</span>
-                        <strong>{% if average_percentage is not none %}{{ "%.1f"|format(average_percentage) }}%{% else %}—{% endif %}</strong>
-                        <small>{% if has_performance_data %}Gradebook-derived evidence{% else %}No numeric Work grade yet{% endif %}</small>
+                        <span>Daily OJT Score</span>
+                        <strong>{% if has_daily_performance %}{{ "%.1f"|format(daily_average_percentage) }}%{% else %}—{% endif %}</strong>
+                        <small>{% if has_daily_performance %}{{ "%.1f"|format(daily_average_star) }} ★ supervisor-entered average{% else %}No Daily Performance rating yet{% endif %}</small>
+                    </div>
+                </article>
+                <article class="student-tasks-stat">
+                    <div class="student-tasks-stat-icon" aria-hidden="true">✓</div>
+                    <div class="student-tasks-stat-copy">
+                        <span>Rated Days</span>
+                        <strong>{{ daily_rated_days }} / {{ daily_closed_days }}</strong>
+                        <small>Each Daily Performance rating is that OJT day's grade</small>
                     </div>
                 </article>
                 <article class="student-tasks-stat">
@@ -191,19 +211,11 @@
                     </div>
                 </article>
                 <article class="student-tasks-stat">
-                    <div class="student-tasks-stat-icon" aria-hidden="true">✓</div>
-                    <div class="student-tasks-stat-copy">
-                        <span>Reviewed Work</span>
-                        <strong>{{ reviewed_count }} / {{ total_count }}</strong>
-                        <small>{{ graded_count }} graded for numeric performance</small>
-                    </div>
-                </article>
-                <article class="student-tasks-stat">
                     <div class="student-tasks-stat-icon" aria-hidden="true">ML</div>
                     <div class="student-tasks-stat-copy">
-                        <span>Performance Label</span>
+                        <span>Work Performance Label</span>
                         <strong>{% if has_performance_data %}{{ numeric_performance_label }}{% else %}No Data{% endif %}</strong>
-                        <small>{% if has_performance_data %}Based on graded Work{% elif recorded_count %}Work is recorded; a numeric grade is still needed{% else %}Waiting for graded evidence{% endif %}</small>
+                        <small>{% if has_performance_data %}Based on graded Work{% elif recorded_count %}Work needs a linked rated OJT day for a score{% else %}Waiting for graded Work evidence{% endif %}</small>
                     </div>
                 </article>
             </section>
@@ -211,9 +223,39 @@
             <section class="student-insights-workspace" aria-label="ML insights dashboard">
                 <div class="student-insights-column">
                     <article class="profile-section">
+                        <span class="student-section-eyebrow">Manual Daily Grade</span>
+                        <h2>Daily OJT Grades</h2>
+                        <p class="student-classwork-detail-subtitle">Your supervisor's Daily Performance rating is the numeric grade for that completed OJT day. It stays separate from the Official OJT Evaluation.</p>
+                        <div class="student-classwork-submission-summary">
+                            <div><span>Average Grade</span><strong>{% if has_daily_performance %}{{ "%.1f"|format(daily_average_percentage) }}%{% else %}—{% endif %}</strong></div>
+                            <div><span>Average Rating</span><strong>{% if has_daily_performance %}{{ "%.1f"|format(daily_average_star) }} ★{% else %}—{% endif %}</strong></div>
+                            <div><span>Rated Days</span><strong>{{ daily_rated_days }} / {{ daily_closed_days }}</strong></div>
+                            <div><span>Latest Grade</span><strong>{% if daily_latest_percentage is not none %}{{ "%.1f"|format(daily_latest_percentage) }}%{% else %}—{% endif %}</strong></div>
+                            <div><span>Highest Grade</span><strong>{% if daily_highest_percentage is not none %}{{ "%.1f"|format(daily_highest_percentage) }}%{% else %}—{% endif %}</strong></div>
+                            <div><span>Lowest Grade</span><strong>{% if daily_lowest_percentage is not none %}{{ "%.1f"|format(daily_lowest_percentage) }}%{% else %}—{% endif %}</strong></div>
+                        </div>
+                        {% if daily_performance.history %}
+                            {% for item in daily_performance.history[-4:] %}
+                                <div class="student-document-guide">
+                                    <div class="student-document-guide-icon" aria-hidden="true">{{ item.day_number }}</div>
+                                    <div>
+                                        <h2>Day {{ item.day_number }} · {{ item.date }}</h2>
+                                        <p>{% if item.is_rated %}<strong>{{ "%.1f"|format(item.percentage) }}%</strong> · {{ "%.1f"|format(item.star_rating) }} ★{% if item.comment %} · {{ item.comment }}{% endif %}{% else %}Completed OJT day · awaiting supervisor Daily Performance rating.{% endif %}</p>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% elif daily_closed_days == 0 %}
+                            <div class="student-document-guide">
+                                <div class="student-document-guide-icon" aria-hidden="true">—</div>
+                                <div><h2>No completed OJT days yet</h2><p>Your Daily OJT grades will appear after a completed day is rated by your supervisor.</p></div>
+                            </div>
+                        {% endif %}
+                    </article>
+
+                    <article class="profile-section">
                         <span class="student-section-eyebrow">Evidence Input</span>
-                        <h2>Performance Evidence</h2>
-                        <p class="student-classwork-detail-subtitle">Daily OJT Work completion and supervisor review are tracked separately from numeric gradebook evidence used for the performance label.</p>
+                        <h2>Work Performance Evidence</h2>
+                        <p class="student-classwork-detail-subtitle">Work analytics use only Work that is linked to a rated Daily OJT day or another supported numeric Work grade. Daily OJT grades above remain valid even when a Work item has no linked score yet.</p>
                         <div class="student-classwork-submission-summary">
                             <div><span>Work Average</span><strong>{% if average_percentage is not none %}{{ "%.1f"|format(average_percentage) }}%{% else %}—{% endif %}</strong></div>
                             <div><span>Minimum Score</span><strong>{% if min_percentage is not none %}{{ "%.1f"|format(min_percentage) }}%{% else %}—{% endif %}</strong></div>
@@ -231,7 +273,7 @@
                                 <div class="student-document-guide-icon" aria-hidden="true">—</div>
                                 <div>
                                     <h2>No numeric Work performance score yet</h2>
-                                    <p>{% if recorded_count %}Your recorded Work is visible here, but Nexora will not invent a performance score. A Work label appears after your supervisor adds a numeric Work grade or imports a score.{% else %}A Work label and Work-based recommendation will appear after graded or imported Work evidence is available.{% endif %}</p>
+                                    <p>{% if has_daily_performance and recorded_count %}Your Daily OJT grade is already recorded above. Work analytics stay separate and only receive that score when the Work is linked to a rated Daily OJT day.{% elif recorded_count %}Your recorded Work is visible here, but Nexora will not invent a performance score. A Work score appears when the linked Daily OJT day is rated or another supported numeric Work grade is entered.{% else %}A Work label and Work-based recommendation will appear after graded Work evidence is available.{% endif %}</p>
                                 </div>
                             </div>
                         {% endif %}
@@ -295,7 +337,7 @@
                                 <div class="student-document-guide-icon" aria-hidden="true">ML</div>
                                 <div>
                                     <h2>No score-based Work recommendation yet</h2>
-                                    <p>Nexora will generate a numeric Work recommendation after graded Work evidence is available. Recorded and reviewed Logbook Work remains visible above without being converted into a fake score.</p>
+                                    <p>{% if has_daily_performance %}Your Daily OJT grade is available, but Work recommendations remain Work-specific. Nexora will generate one after rated Daily OJT evidence is linked to Work or another numeric Work grade is available.{% else %}Nexora will generate a numeric Work recommendation after graded Work evidence is available. Recorded and reviewed Logbook Work remains visible above without being converted into a fake score.{% endif %}</p>
                                 </div>
                             </div>
                         {% endif %}
@@ -304,6 +346,13 @@
                     <article class="profile-section student-insights-evidence-card">
                         <span class="student-section-eyebrow">Availability</span>
                         <h2>Evidence Status</h2>
+                        <div class="student-document-guide">
+                            <div class="student-document-guide-icon" aria-hidden="true">★</div>
+                            <div>
+                                <h2>Daily Performance Evidence</h2>
+                                <p>{% if has_daily_performance %}Available — {{ daily_rated_days }} of {{ daily_closed_days }} completed OJT day{% if daily_closed_days != 1 %}s{% endif %} {% if daily_rated_days == 1 %}has{% else %}have{% endif %} a supervisor-entered grade, averaging {{ "%.1f"|format(daily_average_percentage) }}%.{% elif daily_closed_days %}No Daily OJT grade yet — {{ daily_closed_days }} completed day{% if daily_closed_days != 1 %}s are{% else %} is{% endif %} waiting for a supervisor rating.{% else %}No completed Daily OJT day is available yet.{% endif %}</p>
+                            </div>
+                        </div>
                         <div class="student-document-guide">
                             <div class="student-document-guide-icon" aria-hidden="true">✓</div>
                             <div>
@@ -314,8 +363,8 @@
                         <div class="student-document-guide">
                             <div class="student-document-guide-icon" aria-hidden="true">✓</div>
                             <div>
-                                <h2>Performance Evidence</h2>
-                                <p>{% if has_performance_data %}Available — graded Work data can support performance interpretation.{% else %}No numeric grade yet — recorded/reviewed Work is not automatically converted into a performance score.{% endif %}</p>
+                                <h2>Work Performance Evidence</h2>
+                                <p>{% if has_performance_data %}Available — graded Work data can support Work-performance interpretation.{% elif has_daily_performance %}Daily OJT grades are available, but no linked numeric Work score is available yet.{% else %}No numeric Work grade yet — recorded/reviewed Work is not automatically converted into a performance score until its linked OJT day is rated.{% endif %}</p>
                             </div>
                         </div>
                         <div class="student-document-guide">
@@ -329,7 +378,7 @@
                             <div class="student-document-guide-icon" aria-hidden="true">i</div>
                             <div>
                                 <h2>Important Note</h2>
-                                <p>ML Insights and AI explanations are decision-support only and do not replace the Official OJT Evaluation.</p>
+                                <p>Daily OJT grades, Work analytics, ML Insights, and AI explanations are separate evidence dimensions and do not replace the Official OJT Evaluation.</p>
                             </div>
                         </div>
                     </article>
@@ -341,7 +390,7 @@
                             <div>
                                 <span class="student-section-eyebrow">Automatic Explanation</span>
                                 <h2 id="nexora-ai-analysis-heading">Nexora AI Analysis</h2>
-                                <p class="student-classwork-detail-subtitle">Automatically generated from the ML evidence already visible on this page.</p>
+                                <p class="student-classwork-detail-subtitle">Automatically generated from the OJT and ML evidence already visible on this page.</p>
                             </div>
                             <span class="student-insights-ai-badge">AI</span>
                         </div>
@@ -351,8 +400,8 @@
                             <p>Nexora AI explains what the current evidence means, what may be limiting progress, and what to focus on next. It cannot change grades or the Official OJT Evaluation.</p>
                         </div>
 
-                        {% if has_performance_data or has_feedback %}
-                            <p id="nxMlAiStatus" class="student-insights-ai-status">Analyzing your current ML evidence…</p>
+                        {% if has_daily_performance or has_performance_data or has_feedback %}
+                            <p id="nxMlAiStatus" class="student-insights-ai-status">Analyzing your current evidence…</p>
                             <div id="nxMlAiItems" class="student-insights-ai-items" hidden>
                                 <section class="student-insights-ai-item"><h3>Overall Interpretation</h3><p data-ai-section="overall"></p></section>
                                 <section class="student-insights-ai-item"><h3>What Happened</h3><p data-ai-section="happened"></p></section>
@@ -363,8 +412,8 @@
                         {% else %}
                             <div class="student-insights-ai-items">
                                 <section class="student-insights-ai-item">
-                                    <h3>Not enough scored or feedback evidence yet</h3>
-                                    <p>{% if recorded_count %}Nexora can see your recorded OJT Work, but it will not invent a performance score. AI score-specific guidance starts after a numeric grade or supervisor feedback is available.{% else %}Nexora AI cannot explain your performance or suggest score-specific improvements until graded Work or supervisor feedback is available.{% endif %}</p>
+                                    <h3>Not enough rated or feedback evidence yet</h3>
+                                    <p>{% if recorded_count %}Nexora can see your recorded OJT Work, but score-specific guidance starts after a supervisor Daily Performance rating, numeric Work grade, or supervisor feedback is available.{% else %}Nexora AI cannot explain your performance yet because no Daily OJT grade, numeric Work grade, or supervisor feedback is available.{% endif %}</p>
                                 </section>
                             </div>
                         {% endif %}
@@ -374,7 +423,7 @@
         </div>
     </main>
 
-    {% if has_performance_data or has_feedback %}
+    {% if has_daily_performance or has_performance_data or has_feedback %}
     <script>
     (function () {
         var status = document.getElementById('nxMlAiStatus');
@@ -382,6 +431,14 @@
         if (!status || !items) return;
 
         var evidence = {
+            daily_performance_available: {{ has_daily_performance|tojson }},
+            daily_average_percentage: {{ daily_average_percentage|tojson }},
+            daily_average_star: {{ daily_average_star|tojson }},
+            daily_rated_days: {{ daily_rated_days|tojson }},
+            daily_closed_days: {{ daily_closed_days|tojson }},
+            daily_latest_percentage: {{ daily_latest_percentage|tojson }},
+            daily_highest_percentage: {{ daily_highest_percentage|tojson }},
+            daily_lowest_percentage: {{ daily_lowest_percentage|tojson }},
             performance_evidence_available: {{ has_performance_data|tojson }},
             work_average_percentage: {{ average_percentage|tojson }},
             minimum_work_score_percentage: {{ min_percentage|tojson }},
@@ -422,7 +479,7 @@
         }
 
         function showUnavailable(message) {
-            status.textContent = message || 'Nexora AI explanation is unavailable right now. Your ML evidence and recommendations above are still available.';
+            status.textContent = message || 'Nexora AI explanation is unavailable right now. Your evidence and recommendations above are still available.';
             items.hidden = true;
         }
 
@@ -434,11 +491,19 @@
         }
 
         var aiEvidence = {
+            daily_evidence: evidence.daily_performance_available,
+            daily_average: evidence.daily_average_percentage,
+            daily_average_star: evidence.daily_average_star,
+            daily_rated_days: evidence.daily_rated_days,
+            daily_closed_days: evidence.daily_closed_days,
+            daily_latest: evidence.daily_latest_percentage,
+            daily_highest: evidence.daily_highest_percentage,
+            daily_lowest: evidence.daily_lowest_percentage,
             work_evidence: evidence.performance_evidence_available,
             average: evidence.work_average_percentage,
             minimum: evidence.minimum_work_score_percentage,
             maximum: evidence.maximum_work_score_percentage,
-            grade_coverage: evidence.grade_coverage_percentage,
+            completion: evidence.grade_coverage_percentage,
             recorded_completion: evidence.recorded_completion_percentage,
             recorded: evidence.recorded_work_count,
             reviewed: evidence.workflow_reviewed_work_count,
@@ -457,12 +522,12 @@
             feedback_recommendation: evidence.feedback_recommendation
         };
 
-        var cacheKey = 'nxMlAiAnalysis:v3:' + {{ classroom.id|tojson }} + ':' + evidenceHash(aiEvidence);
+        var cacheKey = 'nxMlAiAnalysis:v4:' + {{ classroom.id|tojson }} + ':' + evidenceHash(aiEvidence);
         try {
             var cached = window.sessionStorage.getItem(cacheKey);
             if (cached) {
                 renderAnalysis(JSON.parse(cached));
-                status.textContent = 'AI explanation generated from your current ML evidence.';
+                status.textContent = 'Explanation generated from your current evidence.';
                 items.hidden = false;
                 return;
             }
@@ -484,15 +549,17 @@
             });
         }).then(function (data) {
             if (!data.available || !data.analysis) {
-                showUnavailable('Nexora AI is not enabled on this server yet. Your ML evidence and recommendations remain available above.');
+                showUnavailable('Nexora AI is not enabled on this server yet. Your evidence and recommendations remain available above.');
                 return;
             }
             renderAnalysis(data.analysis);
-            status.textContent = 'AI explanation generated from your current ML evidence.';
+            status.textContent = data.source === 'evidence_fallback'
+                ? 'Live AI could not complete the response, so Nexora is showing a direct summary of your current evidence.'
+                : 'AI explanation generated from your current evidence.';
             items.hidden = false;
             try { window.sessionStorage.setItem(cacheKey, JSON.stringify(data.analysis)); } catch (error) {}
         }).catch(function () {
-            showUnavailable('Nexora AI explanation is temporarily unavailable. Your ML evidence and recommendations above are unaffected.');
+            showUnavailable('Nexora AI explanation is temporarily unavailable. Your evidence and recommendations above are unaffected.');
         });
     })();
     </script>
