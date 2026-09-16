@@ -73,6 +73,21 @@ def review_daily_log(class_id, log_id):
 
     if result.get("ok"):
         flash(f"Daily OJT entry marked {result['status_label']}.", "success")
+        if result.get("status") in {"reviewed", "approved"}:
+            try:
+                daily_rating = get_daily_performance_rating_for_supervisor(
+                    supervisor_id=session["user_id"],
+                    classroom_id=class_id,
+                    attendance_id=result["attendance_id"],
+                )
+            except Exception as exc:
+                print("daily performance rating lookup failed:", exc)
+                daily_rating = None
+            if not daily_rating:
+                flash(
+                    "Review saved, but this Daily OJT entry is not graded yet. Choose Daily Performance and click Save Rating to update its linked Work scores, ML Insights, and Reports.",
+                    "warning",
+                )
         try:
             create_notification(
                 int(result["student_id"]),
@@ -120,8 +135,15 @@ def rate_daily_performance(class_id, log_id):
         result = {"ok": False, "error": "Unable to save the daily performance rating."}
 
     if result.get("ok"):
+        linked_assignment_ids = result.get("linked_assignment_ids") or []
+        linked_note = ""
+        if linked_assignment_ids:
+            linked_note = (
+                f" Applied to {len(linked_assignment_ids)} linked Work "
+                f"item{'s' if len(linked_assignment_ids) != 1 else ''}."
+            )
         flash(
-            f"Daily performance saved: {result['star_rating']:.1f} stars · {result['percentage']:.1f}%.",
+            f"Daily performance saved: {result['star_rating']:.1f} stars · {result['percentage']:.1f}%.{linked_note}",
             "success",
         )
         try:
