@@ -179,8 +179,16 @@ def _modern_work(conn, student_id):
                     JOIN attendance log_attendance ON log_attendance.id = l.attendance_id
                     WHERE l.student_id = ?
                       AND l.entry_type = 'daily'
-                      AND l.related_assignment_id = a.id
                       AND log_attendance.classroom_id = a.classroom_id
+                      AND (
+                            l.related_assignment_id = a.id
+                            OR EXISTS (
+                                SELECT 1
+                                FROM daily_log_work_links link
+                                WHERE link.log_id = l.id
+                                  AND link.assignment_id = a.id
+                            )
+                      )
                 ) THEN 1 ELSE 0 END
             ), 0) AS recorded_count
         """ + access_sql,
@@ -204,8 +212,16 @@ def _modern_work(conn, student_id):
                 JOIN attendance log_attendance ON log_attendance.id = l.attendance_id
                 WHERE l.student_id = ?
                   AND l.entry_type = 'daily'
-                  AND l.related_assignment_id = a.id
                   AND log_attendance.classroom_id = a.classroom_id
+                  AND (
+                        l.related_assignment_id = a.id
+                        OR EXISTS (
+                            SELECT 1
+                            FROM daily_log_work_links link
+                            WHERE link.log_id = l.id
+                              AND link.assignment_id = a.id
+                        )
+                  )
             ) THEN 1 ELSE 0 END AS is_recorded
         """ + access_sql + """
         ORDER BY
