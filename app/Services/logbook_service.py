@@ -6,6 +6,7 @@ from app.Services.internship_schedule_service import attendance_local_datetime
 
 
 MAX_LOG_TEXT_LENGTH = 5000
+MAX_RELATED_WORK_ITEMS = 2
 
 
 def _row_value(row, key, index=0, default=None):
@@ -46,7 +47,7 @@ def _format_time(value):
 
 
 def ensure_logbook_schema():
-    """Extend legacy logs without rewriting or deleting existing activity rows."""
+    """Extend legacy logs and create additive Daily Logbook-to-Work links."""
     conn = get_db_connection()
     try:
         if using_postgres():
@@ -78,6 +79,48 @@ def ensure_logbook_schema():
                     conn.execute(statement)
 
         conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS daily_log_work_links (
+                log_id INTEGER NOT NULL REFERENCES logs(id) ON DELETE CASCADE,
+                assignment_id INTEGER NOT NULL REFERENCES classroom_assignments(id) ON DELETE CASCADE,
+                sort_order INTEGER NOT NULL DEFAULT 0,
+                PRIMARY KEY (log_id, assignment_id)
+            )
+            """
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_daily_log_work_assignment ON daily_log_work_links(assignment_id)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_daily_log_work_log ON daily_log_work_links(log_id, sort_order)"
+        )
+
+        # Preserve every existing single Work link. The legacy column stays in
+        # place as the compatibility first-link for older services while the
+        # additive table becomes authoritative for multi-Work Daily entries.
+        if using_postgres():
+            conn.execute(
+                """
+                INSERT INTO daily_log_work_links (log_id, assignment_id, sort_order)
+                SELECT id, related_assignment_id, 0
+                FROM logs
+                WHERE entry_type = 'daily'
+                  AND related_assignment_id IS NOT NULL
+                ON CONFLICT (log_id, assignment_id) DO NOTHING
+                """
+            )
+        else:
+            conn.execute(
+                """
+                INSERT OR IGNORE INTO daily_log_work_links (log_id, assignment_id, sort_order)
+                SELECT id, related_assignment_id, 0
+                FROM logs
+                WHERE entry_type = 'daily'
+                  AND related_assignment_id IS NOT NULL
+                """
+            )
+
+        conn.execute(
             """CREATE INDEX IF NOT EXISTS idx_logs_student_daily
                ON logs(student_id, entry_type, created_at)"""
         )
@@ -101,9 +144,117 @@ def ensure_logbook_schema():
         conn.close()
 
 
-def _visible_work(conn, student_id, classroom_id):
+def _normalize_assignment_ids(related_assignment_ids=None, related_assignment_id=None):
+    """Normalize a Daily entry's Work selection while retaining single-link callers."""
+    if related_assignment_ids is None:
+        raw_values = []
+    elif isinstance(related_assignment_ids, (str, int)):
+        raw_values = [related_assignment_ids]
+    else:
+        raw_values = list(related_assignment_ids)
+
+    if not raw_values and related_assignment_id not in (None, ""):
+        raw_values.append(related_assignment_id)
+
+    normalized = []
+    for raw_value in raw_values:
+        if raw_value in (None, ""):
+            continue
+        try:
+            assignment_id = int(raw_value)
+        except (TypeError, ValueError):
+            return [], "Choose valid related Work items."
+        if assignment_id not in normalized:
+            normalized.append(assignment_id)
+
+    if len(normalized) > MAX_RELATED_WORK_ITEMS:
+        return [], f"Choose up to {MAX_RELATED_WORK_ITEMS} related Work items for one Daily OJT entry."
+    return normalized, None
+
+
+def get_logbook_work_items(log_id, conn=None):
+    """Return every Work item linked to one Daily OJT log, in saved order."""
+    try:
+        log_id = int(log_id)
+    except (TypeError, ValueError):
+        return []
+
+    owns_connection = conn is None
+    if owns_connection:
+        conn = get_db_connection()
+    try:
+        rows = conn.execute(
+            """
+            SELECT
+                link.assignment_id,
+                a.title,
+                a.due_at,
+                a.created_at,
+                link.sort_order
+            FROM daily_log_work_links link
+            JOIN classroom_assignments a ON a.id = link.assignment_id
+            WHERE link.log_id = ?
+            ORDER BY link.sort_order ASC, link.assignment_id ASC
+            """,
+            (log_id,),
+        ).fetchall()
+
+        if not rows:
+            legacy = conn.execute(
+                """
+                SELECT a.id AS assignment_id, a.title, a.due_at, a.created_at, 0 AS sort_order
+                FROM logs l
+                JOIN classroom_assignments a ON a.id = l.related_assignment_id
+                WHERE l.id = ? AND l.related_assignment_id IS NOT NULL
+                LIMIT 1
+                """,
+                (log_id,),
+            ).fetchall()
+            rows = legacy
+
+        items = []
+        for row in rows:
+            due_at = _row_value(row, "due_at", 2, None)
+            created_at = _row_value(row, "created_at", 3, None)
+            items.append(
+                {
+                    "id": int(_row_value(row, "assignment_id", 0, 0)),
+                    "title": _row_value(row, "title", 1, "Work") or "Work",
+                    "due_at": due_at,
+                    "created_at": created_at,
+                    "date_label": (
+                        f"Due {_format_date(due_at)}"
+                        if due_at
+                        else f"Assigned {_format_date(created_at)}"
+                    ),
+                }
+            )
+        return items
+    finally:
+        if owns_connection:
+            conn.close()
+
+
+def _attach_work_items(conn, entry):
+    items = get_logbook_work_items(entry.get("id"), conn=conn)
+    entry["related_work_items"] = items
+    entry["related_assignment_ids"] = [item["id"] for item in items]
+    entry["related_work_titles"] = [item["title"] for item in items]
+    if items:
+        entry["related_assignment_id"] = items[0]["id"]
+        entry["related_work_title"] = " · ".join(item["title"] for item in items)
+    else:
+        entry["related_assignment_id"] = None
+        entry["related_work_title"] = None
+    return entry
+
+
+def _visible_work(conn, student_id, classroom_id, current_log_id=None):
+    """Return assigned Work that has not already been completed in another OJT day."""
     if not classroom_id:
         return []
+
+    current_log_id = int(current_log_id or 0)
     rows = conn.execute(
         """
         SELECT a.id, a.title, a.due_at, a.created_at
@@ -122,9 +273,28 @@ def _visible_work(conn, student_id, classroom_id):
                       AND r.student_id = ?
                 )
           )
+          AND (
+                NOT EXISTS (
+                    SELECT 1
+                    FROM daily_log_work_links completed_link
+                    JOIN logs completed_log ON completed_log.id = completed_link.log_id
+                    JOIN attendance completed_attendance ON completed_attendance.id = completed_log.attendance_id
+                    WHERE completed_link.assignment_id = a.id
+                      AND completed_log.student_id = ?
+                      AND completed_log.entry_type = 'daily'
+                      AND completed_attendance.classroom_id = ?
+                      AND completed_attendance.status = 'Completed'
+                )
+                OR EXISTS (
+                    SELECT 1
+                    FROM daily_log_work_links current_link
+                    WHERE current_link.log_id = ?
+                      AND current_link.assignment_id = a.id
+                )
+          )
         ORDER BY a.created_at DESC, a.id DESC
         """,
-        (classroom_id, student_id),
+        (classroom_id, student_id, student_id, classroom_id, current_log_id),
     ).fetchall()
 
     work_options = []
@@ -150,9 +320,10 @@ def _visible_work(conn, student_id, classroom_id):
     return work_options
 
 
-def _can_reference_work(conn, student_id, classroom_id, assignment_id):
+def _can_reference_work(conn, student_id, classroom_id, assignment_id, current_log_id=None):
     if not classroom_id or not assignment_id:
         return False
+    current_log_id = int(current_log_id or 0)
     row = conn.execute(
         """
         SELECT 1
@@ -172,9 +343,28 @@ def _can_reference_work(conn, student_id, classroom_id, assignment_id):
                       AND r.student_id = ?
                 )
           )
+          AND (
+                NOT EXISTS (
+                    SELECT 1
+                    FROM daily_log_work_links completed_link
+                    JOIN logs completed_log ON completed_log.id = completed_link.log_id
+                    JOIN attendance completed_attendance ON completed_attendance.id = completed_log.attendance_id
+                    WHERE completed_link.assignment_id = a.id
+                      AND completed_log.student_id = ?
+                      AND completed_log.entry_type = 'daily'
+                      AND completed_attendance.classroom_id = ?
+                      AND completed_attendance.status = 'Completed'
+                )
+                OR EXISTS (
+                    SELECT 1
+                    FROM daily_log_work_links current_link
+                    WHERE current_link.log_id = ?
+                      AND current_link.assignment_id = a.id
+                )
+          )
         LIMIT 1
         """,
-        (assignment_id, classroom_id, student_id),
+        (assignment_id, classroom_id, student_id, student_id, classroom_id, current_log_id),
     ).fetchone()
     return row is not None
 
@@ -186,8 +376,9 @@ def save_daily_log(
     reflection="",
     challenges="",
     related_assignment_id=None,
+    related_assignment_ids=None,
 ):
-    """Create or update the single Daily OJT entry for one open attendance session."""
+    """Create/update one Daily OJT entry and link up to two assigned Work items."""
     try:
         student_id = int(student_id)
         attendance_id = int(attendance_id)
@@ -207,12 +398,12 @@ def save_daily_log(
             "classroom_id": None,
         }
 
-    normalized_assignment_id = None
-    if related_assignment_id not in (None, ""):
-        try:
-            normalized_assignment_id = int(related_assignment_id)
-        except (TypeError, ValueError):
-            return {"ok": False, "error": "Choose a valid related Work item.", "classroom_id": None}
+    normalized_assignment_ids, normalization_error = _normalize_assignment_ids(
+        related_assignment_ids,
+        related_assignment_id,
+    )
+    if normalization_error:
+        return {"ok": False, "error": normalization_error, "classroom_id": None}
 
     conn = get_db_connection()
     try:
@@ -237,18 +428,6 @@ def save_daily_log(
                 "classroom_id": classroom_id,
             }
 
-        if normalized_assignment_id is not None and not _can_reference_work(
-            conn,
-            student_id,
-            classroom_id,
-            normalized_assignment_id,
-        ):
-            return {
-                "ok": False,
-                "error": "That Work item is not assigned to you in this Intern Classroom.",
-                "classroom_id": classroom_id,
-            }
-
         existing = conn.execute(
             """
             SELECT id
@@ -260,10 +439,27 @@ def save_daily_log(
             """,
             (attendance_id, student_id),
         ).fetchone()
+        current_log_id = int(_row_value(existing, "id", 0, 0)) if existing else 0
+
+        for assignment_id in normalized_assignment_ids:
+            if not _can_reference_work(
+                conn,
+                student_id,
+                classroom_id,
+                assignment_id,
+                current_log_id=current_log_id,
+            ):
+                return {
+                    "ok": False,
+                    "error": "One of those Work items is not available to you or was already completed in an earlier OJT day.",
+                    "classroom_id": classroom_id,
+                }
+
         now = datetime.now()
+        compatibility_assignment_id = normalized_assignment_ids[0] if normalized_assignment_ids else None
 
         if existing:
-            log_id = int(_row_value(existing, "id", 0, 0))
+            log_id = current_log_id
             conn.execute(
                 """
                 UPDATE logs
@@ -280,7 +476,7 @@ def save_daily_log(
                     accomplishment,
                     reflection or None,
                     challenges or None,
-                    normalized_assignment_id,
+                    compatibility_assignment_id,
                     now,
                     log_id,
                     student_id,
@@ -310,13 +506,41 @@ def save_daily_log(
                     accomplishment,
                     reflection or None,
                     challenges or None,
-                    normalized_assignment_id,
+                    compatibility_assignment_id,
                     now,
                 ),
             )
+            created = conn.execute(
+                """
+                SELECT id
+                FROM logs
+                WHERE attendance_id = ?
+                  AND student_id = ?
+                  AND entry_type = 'daily'
+                LIMIT 1
+                """,
+                (attendance_id, student_id),
+            ).fetchone()
+            log_id = int(_row_value(created, "id", 0, 0))
+
+        conn.execute("DELETE FROM daily_log_work_links WHERE log_id = ?", (log_id,))
+        for sort_order, assignment_id in enumerate(normalized_assignment_ids):
+            conn.execute(
+                """
+                INSERT INTO daily_log_work_links (log_id, assignment_id, sort_order)
+                VALUES (?, ?, ?)
+                """,
+                (log_id, assignment_id, sort_order),
+            )
 
         conn.commit()
-        return {"ok": True, "error": None, "classroom_id": classroom_id}
+        return {
+            "ok": True,
+            "error": None,
+            "classroom_id": classroom_id,
+            "log_id": log_id,
+            "related_assignment_ids": normalized_assignment_ids,
+        }
     except Exception:
         try:
             conn.rollback()
@@ -397,6 +621,7 @@ def get_daily_logbook_context(student_id, classroom_id=None, attendance_id=None)
         "entries": [],
         "current_entry": None,
         "work_options": [],
+        "pending_work_count": 0,
         "total_entries": 0,
         "attendance_day_numbers": {},
     }
@@ -492,15 +717,27 @@ def get_daily_logbook_context(student_id, classroom_id=None, attendance_id=None)
                 """,
                 (student_id,),
             ).fetchall()
-        entries = [_serialize_daily_row(row, day_map) for row in rows]
+
+        entries = []
+        for row in rows:
+            entries.append(_attach_work_items(conn, _serialize_daily_row(row, day_map)))
+
         current_entry = next(
             (entry for entry in entries if entry["attendance_id"] == normalized_attendance_id),
             None,
         )
+        current_log_id = current_entry["id"] if current_entry else None
+        work_options = _visible_work(
+            conn,
+            student_id,
+            normalized_classroom_id,
+            current_log_id=current_log_id,
+        )
         return {
             "entries": entries,
             "current_entry": current_entry,
-            "work_options": _visible_work(conn, student_id, normalized_classroom_id),
+            "work_options": work_options,
+            "pending_work_count": len(work_options),
             "total_entries": len(entries),
             "attendance_day_numbers": day_map,
         }
@@ -552,6 +789,8 @@ def get_session_daily_log(student_id, attendance_id):
             """,
             (student_id, attendance_id),
         ).fetchone()
-        return _serialize_daily_row(row, day_map) if row else None
+        if not row:
+            return None
+        return _attach_work_items(conn, _serialize_daily_row(row, day_map))
     finally:
         conn.close()
