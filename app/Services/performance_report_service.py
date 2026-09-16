@@ -17,7 +17,6 @@ def _get_latest_feedback_text(student_id,class_id):
     """Return feedback that belongs to this classroom's OJT evidence context."""
     conn=get_db_connection()
     try:
-        # Daily OJT supervisor feedback is authoritative for internship reports.
         try:
             logbook=conn.execute("""SELECT r.comments
                 FROM logbook_reviews r
@@ -29,8 +28,6 @@ def _get_latest_feedback_text(student_id,class_id):
                 ORDER BY COALESCE(r.reviewed_at,r.updated_at) DESC,l.id DESC LIMIT 1""",(student_id,class_id)).fetchone()
             if logbook and _value(logbook,"comments",0):return str(_value(logbook,"comments",0)).strip()
         except Exception:pass
-
-        # Keep academic Classwork feedback as a compatibility fallback.
         try:
             sub=conn.execute("""SELECT s.feedback
                 FROM classwork_submissions s
@@ -40,9 +37,6 @@ def _get_latest_feedback_text(student_id,class_id):
                 ORDER BY s.submitted_at DESC,s.id DESC LIMIT 1""",(student_id,class_id)).fetchone()
             if sub and _value(sub,"feedback",0):return str(_value(sub,"feedback",0)).strip()
         except Exception:pass
-
-        # Legacy feedback has no classroom_id, so constrain it to the owner
-        # of this classroom instead of accepting another supervisor's comment.
         try:
             fb=conn.execute("""SELECT f.comment
                 FROM feedback f
@@ -95,17 +89,16 @@ def build_student_report(student_id,class_id,feedback_text=None):
         rows=conn.execute("""SELECT a.id,a.title,a.points,s.score,s.max_score,s.percentage,s.grading_method,
                (
                    SELECT AVG(dpr.percentage)
-                   FROM daily_performance_ratings dpr
-                   JOIN (
-                       SELECT DISTINCT l.attendance_id
-                       FROM logs l
-                       JOIN attendance rated_attendance ON rated_attendance.id=l.attendance_id
-                       LEFT JOIN daily_log_work_links rated_link ON rated_link.log_id=l.id
-                       WHERE l.student_id=?
-                         AND l.entry_type='daily'
-                         AND rated_attendance.classroom_id=a.classroom_id
-                         AND (l.related_assignment_id=a.id OR rated_link.assignment_id=a.id)
-                   ) rated_days ON rated_days.attendance_id=dpr.attendance_id
+                   FROM logs rated_log
+                   JOIN attendance rated_attendance ON rated_attendance.id=-rated_log.attendance_id
+                   JOIN daily_performance_ratings dpr ON dpr.attendance_id=rated_log.attendance_id
+                   LEFT JOIN daily_log_work_links rated_link
+                     ON rated_link.log_id=rated_log.id
+                    AND rated_link.assignment_id=a.id
+                   WHERE rated_log.student_id=?
+                     AND rated_log.entry_type='daily'
+                     AND rated_attendance.classroom_id=a.classroom_id
+                     AND (rated_log.related_assignment_id=a.id OR rated_link.assignment_id=a.id)
                ) AS daily_rating_percentage,
                (SELECT cs.grade FROM classwork_submissions cs WHERE cs.assignment_id=a.id AND cs.student_id=? AND cs.grade IS NOT NULL ORDER BY cs.attempt_no DESC,cs.id DESC LIMIT 1) AS submission_grade
                FROM classroom_assignments a LEFT JOIN classwork_scores s ON s.assignment_id=a.id AND s.student_id=?
