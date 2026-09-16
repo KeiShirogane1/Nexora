@@ -47,14 +47,9 @@ def _latest_logbook_feedback(student_id, class_id):
 
 
 def build_student_performance_features(student_id, class_id):
-    """Return gradebook metrics plus real Daily OJT Work workflow coverage."""
+    """Return metrics only for Work actually available to this student."""
     conn = get_db_connection()
     try:
-        total_row = conn.execute(
-            "SELECT COUNT(*) AS total_assignments FROM classroom_assignments WHERE classroom_id = ?",
-            (class_id,),
-        ).fetchone()
-        total_assignments = int(_value(total_row, "total_assignments", 0, 0) or 0)
         rows = conn.execute(
             """
             SELECT
@@ -79,8 +74,16 @@ def build_student_performance_features(student_id, class_id):
                     JOIN attendance log_attendance ON log_attendance.id = l.attendance_id
                     WHERE l.student_id = ?
                       AND l.entry_type = 'daily'
-                      AND l.related_assignment_id = a.id
                       AND log_attendance.classroom_id = a.classroom_id
+                      AND (
+                            l.related_assignment_id = a.id
+                            OR EXISTS (
+                                SELECT 1
+                                FROM daily_log_work_links link
+                                WHERE link.log_id = l.id
+                                  AND link.assignment_id = a.id
+                            )
+                      )
                 ) THEN 1 ELSE 0 END AS is_recorded,
                 CASE WHEN EXISTS (
                     SELECT 1
@@ -89,8 +92,16 @@ def build_student_performance_features(student_id, class_id):
                     JOIN logbook_reviews lr ON lr.log_id = l.id
                     WHERE l.student_id = ?
                       AND l.entry_type = 'daily'
-                      AND l.related_assignment_id = a.id
                       AND log_attendance.classroom_id = a.classroom_id
+                      AND (
+                            l.related_assignment_id = a.id
+                            OR EXISTS (
+                                SELECT 1
+                                FROM daily_log_work_links link
+                                WHERE link.log_id = l.id
+                                  AND link.assignment_id = a.id
+                            )
+                      )
                       AND lr.status IN ('reviewed', 'approved', 'revision_requested')
                 ) THEN 1 ELSE 0 END AS is_reviewed
             FROM classroom_assignments a
@@ -98,13 +109,27 @@ def build_student_performance_features(student_id, class_id):
               ON s.assignment_id = a.id
              AND s.student_id = ?
             WHERE a.classroom_id = ?
+              AND (
+                    NOT EXISTS (
+                        SELECT 1
+                        FROM classroom_assignment_recipients all_recipients
+                        WHERE all_recipients.assignment_id = a.id
+                    )
+                    OR EXISTS (
+                        SELECT 1
+                        FROM classroom_assignment_recipients my_recipient
+                        WHERE my_recipient.assignment_id = a.id
+                          AND my_recipient.student_id = ?
+                    )
+              )
             ORDER BY a.created_at ASC, a.id ASC
             """,
-            (student_id, student_id, student_id, student_id, class_id),
+            (student_id, student_id, student_id, student_id, class_id, student_id),
         ).fetchall()
     finally:
         conn.close()
 
+    total_assignments = len(rows)
     graded = []
     methods = []
     recorded_count = 0
@@ -154,7 +179,7 @@ def build_student_performance_features(student_id, class_id):
         "total_count": total_assignments,
         "recorded_completion_rate": recorded_completion_rate,
         "review_rate": review_rate,
-        # Preserve the existing ML meaning: this is gradebook coverage, not
+        # Preserve the existing ML meaning: this is numeric score coverage, not
         # whether a Work item has merely been recorded in the Logbook.
         "completion_rate": grade_completion_rate,
         "manual_count": sum(1 for method in methods if method == "manual"),
