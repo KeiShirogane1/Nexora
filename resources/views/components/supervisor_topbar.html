@@ -256,6 +256,14 @@
 .nx-remove-criterion { width: 32px; height: 32px; padding: 0; border: 1px solid #fecaca; border-radius: 8px; background: #fff; color: #dc2626; font-size: 1rem; cursor: pointer; }
 .nx-logbook-delete-form { order: 0; margin-right: auto; }
 .nx-logbook-delete-button { border: 1px solid #ef4444 !important; background: #fff !important; color: #dc2626 !important; }
+.nx-logbook-remove-modal .nexora-modal { width: min(580px, 100%) !important; max-width: 580px !important; }
+.nx-logbook-remove-options { display: grid; gap: 10px; margin-top: 12px; }
+.nx-logbook-remove-option { display: grid; grid-template-columns: 20px minmax(0,1fr); gap: 10px; align-items: start; padding: 13px 14px; border: 1px solid #dbe3ed; border-radius: 12px; background: #fff; cursor: pointer; }
+.nx-logbook-remove-option:has(input:checked) { border-color: #60a5fa; background: #f8fbff; box-shadow: 0 0 0 3px rgba(37,99,235,.07); }
+.nx-logbook-remove-option strong { display: block; color: #10213d; font-size: .78rem; }
+.nx-logbook-remove-option small { display: block; margin-top: 3px; color: #64748b; font-size: .68rem; line-height: 1.45; }
+.nx-logbook-remove-warning { margin-top: 12px; padding: 10px 12px; border: 1px solid #fecaca; border-radius: 10px; background: #fff7f7; color: #991b1b; font-size: .68rem; line-height: 1.45; }
+.nx-logbook-remove-danger { border-color: #dc2626 !important; background: #dc2626 !important; color: #fff !important; }
 @media (max-width: 760px) {
     .nx-rating-criterion-row { grid-template-columns: 1fr 34px; }
     .nx-criterion-rating { grid-column: 1 / -1; grid-row: 2; flex-wrap: wrap; }
@@ -268,6 +276,7 @@
 
     var initialCriteria = {% if daily_rating is defined and daily_rating %}{{ daily_rating.criteria|default([])|tojson }}{% else %}[]{% endif %};
     var MAX_CRITERIA = 8;
+    var pendingRemovalForm = null;
 
     function setCriterionRating(row, next) {
         var input = row.querySelector('input[name="criterion_rating"]');
@@ -357,6 +366,64 @@
         });
     }
 
+    function ensureRemovalModal() {
+        var existing = document.getElementById('nxSupervisorLogbookRemoveModal');
+        if (existing) return existing;
+        var overlay = document.createElement('div');
+        overlay.id = 'nxSupervisorLogbookRemoveModal';
+        overlay.className = 'nexora-modal-overlay nx-logbook-remove-modal';
+        overlay.setAttribute('aria-hidden', 'true');
+        overlay.innerHTML = '<div class="nexora-modal" role="dialog" aria-modal="true" aria-labelledby="nxRemoveLogbookTitle">' +
+            '<div class="nexora-modal-header"><h2 id="nxRemoveLogbookTitle">Remove Daily OJT Record</h2><p>Choose exactly what should be removed from this OJT day.</p><button type="button" class="nexora-modal-close" data-remove-close aria-label="Close">×</button></div>' +
+            '<div class="nexora-modal-body"><div class="nx-logbook-remove-options">' +
+            '<label class="nx-logbook-remove-option"><input type="radio" name="nx_remove_mode" value="logbook" checked><span><strong>Logbook only</strong><small>Removes the Daily OJT entry, review, rating, linked Work evidence, and photos. Time In/Out and rendered hours remain.</small></span></label>' +
+            '<label class="nx-logbook-remove-option"><input type="radio" name="nx_remove_mode" value="attendance"><span><strong>Logbook + Attendance Session</strong><small>Use this only for a duplicate or incorrect attendance session. Its Time In/Out and rendered hours are removed too.</small></span></label>' +
+            '</div><div class="nx-logbook-remove-warning">Removing a rated Logbook recalculates its linked Work scores from the student\'s remaining rated Daily OJT evidence.</div></div>' +
+            '<div class="nexora-modal-footer"><button type="button" class="ojt-footer-button" data-remove-close>Cancel</button><button type="button" class="ojt-footer-button nx-logbook-remove-danger" data-remove-submit>Remove Record</button></div>' +
+            '</div>';
+        document.body.appendChild(overlay);
+        overlay.querySelectorAll('[data-remove-close]').forEach(function (button) {
+            button.addEventListener('click', closeRemovalModal);
+        });
+        overlay.addEventListener('click', function (event) { if (event.target === overlay) closeRemovalModal(); });
+        overlay.querySelector('[data-remove-submit]').addEventListener('click', function () {
+            if (!pendingRemovalForm) return;
+            var mode = overlay.querySelector('input[name="nx_remove_mode"]:checked');
+            var hidden = pendingRemovalForm.querySelector('input[name="remove_attendance"]');
+            if (!hidden) {
+                hidden = document.createElement('input');
+                hidden.type = 'hidden';
+                hidden.name = 'remove_attendance';
+                pendingRemovalForm.appendChild(hidden);
+            }
+            hidden.value = mode && mode.value === 'attendance' ? '1' : '0';
+            var form = pendingRemovalForm;
+            closeRemovalModal();
+            form.submit();
+        });
+        return overlay;
+    }
+
+    function openRemovalModal(form) {
+        pendingRemovalForm = form;
+        var modal = ensureRemovalModal();
+        var defaultChoice = modal.querySelector('input[value="logbook"]');
+        if (defaultChoice) defaultChoice.checked = true;
+        modal.classList.add('open');
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeRemovalModal() {
+        var modal = document.getElementById('nxSupervisorLogbookRemoveModal');
+        if (modal) {
+            modal.classList.remove('open');
+            modal.setAttribute('aria-hidden', 'true');
+        }
+        document.body.style.overflow = '';
+        pendingRemovalForm = null;
+    }
+
     function addRemovalControl(ratingForm, reviewForm) {
         var footer = document.querySelector('#ojt-individual-modal .ojt-review-footer');
         if (!footer || footer.querySelector('.nx-logbook-delete-form')) return;
@@ -368,11 +435,8 @@
         form.method = 'POST';
         form.action = '/supervisor/classes/' + encodeURIComponent(match[1]) + '/logbook/' + encodeURIComponent(match[2]) + '/delete';
         form.className = 'nx-logbook-delete-form';
-        form.innerHTML = '<input type="hidden" name="csrf_token" value="' + String(csrf.value || '').replace(/"/g, '&quot;') + '"><button type="submit" class="ojt-footer-button nx-logbook-delete-button">Remove Logbook</button>';
-        form.addEventListener('submit', function (event) {
-            var okay = window.confirm('Remove this Daily OJT Logbook entry? Its review, Daily Performance rating, linked Work evidence, and photos will be removed. Attendance Time In/Out and rendered hours will remain.');
-            if (!okay) event.preventDefault();
-        });
+        form.innerHTML = '<input type="hidden" name="csrf_token" value="' + String(csrf.value || '').replace(/"/g, '&quot;') + '"><button type="button" class="ojt-footer-button nx-logbook-delete-button">Remove Logbook</button>';
+        form.querySelector('button').addEventListener('click', function () { openRemovalModal(form); });
         footer.insertBefore(form, footer.firstChild);
     }
 
@@ -416,6 +480,12 @@
 
         addRemovalControl(ratingForm, reviewForm);
     }
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && document.getElementById('nxSupervisorLogbookRemoveModal')?.classList.contains('open')) {
+            closeRemovalModal();
+        }
+    });
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', bootDailyRatingRedesign, { once: true });
