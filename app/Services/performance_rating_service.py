@@ -98,7 +98,35 @@ def _row_value(row, key, index=0, default=None):
         return default
 
 
-def _linked_assignment_for_attendance(conn, attendance_id, student_id):
+def _linked_assignments_for_attendance(conn, attendance_id, student_id):
+    """Return every Work item attached to one Daily OJT attendance day."""
+    rows = conn.execute(
+        """
+        SELECT link.assignment_id
+        FROM logs l
+        JOIN daily_log_work_links link ON link.log_id = l.id
+        WHERE l.attendance_id = ?
+          AND l.student_id = ?
+          AND l.entry_type = 'daily'
+        ORDER BY link.sort_order ASC, link.assignment_id ASC
+        """,
+        (attendance_id, student_id),
+    ).fetchall()
+
+    assignment_ids = []
+    for row in rows:
+        assignment_id = _row_value(row, "assignment_id", 0, None)
+        try:
+            assignment_id = int(assignment_id)
+        except (TypeError, ValueError):
+            continue
+        if assignment_id not in assignment_ids:
+            assignment_ids.append(assignment_id)
+
+    if assignment_ids:
+        return assignment_ids
+
+    # Legacy fallback for records created before daily_log_work_links existed.
     row = conn.execute(
         """
         SELECT related_assignment_id
@@ -113,9 +141,9 @@ def _linked_assignment_for_attendance(conn, attendance_id, student_id):
     ).fetchone()
     assignment_id = _row_value(row, "related_assignment_id", 0, None)
     try:
-        return int(assignment_id) if assignment_id is not None else None
+        return [int(assignment_id)] if assignment_id is not None else []
     except (TypeError, ValueError):
-        return None
+        return []
 
 
 def _sync_work_score_from_daily_ratings(conn, assignment_id, student_id, now=None):
@@ -123,18 +151,29 @@ def _sync_work_score_from_daily_ratings(conn, assignment_id, student_id, now=Non
     if not assignment_id or not student_id:
         return
 
+    # The Phase 2 link table is authoritative. The UNION preserves legacy logs
+    # that still only carry logs.related_assignment_id.
     row = conn.execute(
         """
         SELECT AVG(r.percentage) AS average_percentage,
                COUNT(r.attendance_id) AS rated_days
-        FROM logs l
-        JOIN attendance a ON a.id = l.attendance_id
-        JOIN daily_performance_ratings r ON r.attendance_id = a.id
-        WHERE l.entry_type = 'daily'
-          AND l.related_assignment_id = ?
-          AND l.student_id = ?
+        FROM (
+            SELECT l.attendance_id
+            FROM logs l
+            JOIN daily_log_work_links link ON link.log_id = l.id
+            WHERE l.entry_type = 'daily'
+              AND link.assignment_id = ?
+              AND l.student_id = ?
+            UNION
+            SELECT l.attendance_id
+            FROM logs l
+            WHERE l.entry_type = 'daily'
+              AND l.related_assignment_id = ?
+              AND l.student_id = ?
+        ) linked_days
+        JOIN daily_performance_ratings r ON r.attendance_id = linked_days.attendance_id
         """,
-        (assignment_id, student_id),
+        (assignment_id, student_id, assignment_id, student_id),
     ).fetchone()
 
     average_percentage = _row_value(row, "average_percentage", 0, None)
@@ -177,12 +216,13 @@ def _sync_work_score_from_daily_ratings(conn, assignment_id, student_id, now=Non
 
 
 def _sync_attendance_work_score(conn, attendance_id, student_id, now=None):
-    assignment_id = _linked_assignment_for_attendance(
+    """Apply one Daily OJT rating to every Work item linked to that day."""
+    assignment_ids = _linked_assignments_for_attendance(
         conn,
         attendance_id,
         student_id,
     )
-    if assignment_id is not None:
+    for assignment_id in assignment_ids:
         _sync_work_score_from_daily_ratings(
             conn,
             assignment_id,
@@ -192,19 +232,28 @@ def _sync_attendance_work_score(conn, attendance_id, student_id, now=None):
 
 
 def _sync_all_linked_work_scores(conn):
-    """Backfill existing rated Logbook Work when an app process starts."""
+    """Backfill every rated Logbook Work when an app process starts."""
     rows = conn.execute(
         """
-        SELECT DISTINCT l.related_assignment_id, l.student_id
-        FROM logs l
-        JOIN daily_performance_ratings r ON r.attendance_id = l.attendance_id
-        WHERE l.entry_type = 'daily'
-          AND l.related_assignment_id IS NOT NULL
+        SELECT DISTINCT linked.assignment_id, linked.student_id
+        FROM (
+            SELECT link.assignment_id, l.student_id
+            FROM daily_log_work_links link
+            JOIN logs l ON l.id = link.log_id
+            JOIN daily_performance_ratings r ON r.attendance_id = l.attendance_id
+            WHERE l.entry_type = 'daily'
+            UNION
+            SELECT l.related_assignment_id AS assignment_id, l.student_id
+            FROM logs l
+            JOIN daily_performance_ratings r ON r.attendance_id = l.attendance_id
+            WHERE l.entry_type = 'daily'
+              AND l.related_assignment_id IS NOT NULL
+        ) linked
         """
     ).fetchall()
     now = datetime.now()
     for row in rows:
-        assignment_id = _row_value(row, "related_assignment_id", 0, None)
+        assignment_id = _row_value(row, "assignment_id", 0, None)
         student_id = _row_value(row, "student_id", 1, None)
         try:
             assignment_id = int(assignment_id)
@@ -220,7 +269,7 @@ def _sync_all_linked_work_scores(conn):
 
 
 def ensure_daily_performance_rating_schema():
-    """Create the additive one-rating-per-attendance-day table."""
+    """Create Daily OJT ratings and additive multi-criterion item storage."""
     conn = get_db_connection()
     try:
         if using_postgres():
@@ -234,6 +283,19 @@ def ensure_daily_performance_rating_schema():
                     comment TEXT,
                     rated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+                )
+                """
+            )
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS daily_performance_rating_items (
+                    attendance_id INTEGER NOT NULL REFERENCES daily_performance_ratings(attendance_id) ON DELETE CASCADE,
+                    criterion_key TEXT NOT NULL,
+                    criterion_name TEXT NOT NULL,
+                    rating_value NUMERIC(3,1) NOT NULL,
+                    max_value NUMERIC(3,1) NOT NULL DEFAULT 5.0,
+                    sort_order INTEGER NOT NULL DEFAULT 0,
+                    PRIMARY KEY (attendance_id, criterion_key)
                 )
                 """
             )
@@ -251,8 +313,24 @@ def ensure_daily_performance_rating_schema():
                 )
                 """
             )
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS daily_performance_rating_items (
+                    attendance_id INTEGER NOT NULL REFERENCES daily_performance_ratings(attendance_id) ON DELETE CASCADE,
+                    criterion_key TEXT NOT NULL,
+                    criterion_name TEXT NOT NULL,
+                    rating_value REAL NOT NULL,
+                    max_value REAL NOT NULL DEFAULT 5.0,
+                    sort_order INTEGER NOT NULL DEFAULT 0,
+                    PRIMARY KEY (attendance_id, criterion_key)
+                )
+                """
+            )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_daily_performance_ratings_supervisor ON daily_performance_ratings(supervisor_id)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_daily_performance_rating_items_attendance ON daily_performance_rating_items(attendance_id, sort_order)"
         )
         _sync_all_linked_work_scores(conn)
         conn.commit()
@@ -266,6 +344,28 @@ def ensure_daily_performance_rating_schema():
         conn.close()
 
 
+def _rating_items(conn, attendance_id):
+    rows = conn.execute(
+        """
+        SELECT criterion_key, criterion_name, rating_value, max_value, sort_order
+        FROM daily_performance_rating_items
+        WHERE attendance_id = ?
+        ORDER BY sort_order ASC, criterion_key ASC
+        """,
+        (attendance_id,),
+    ).fetchall()
+    return [
+        {
+            "criterion_key": _row_value(row, "criterion_key", 0, "") or "",
+            "criterion_name": _row_value(row, "criterion_name", 1, "") or "",
+            "rating_value": float(_row_value(row, "rating_value", 2, 0) or 0),
+            "max_value": float(_row_value(row, "max_value", 3, 5) or 5),
+            "sort_order": int(_row_value(row, "sort_order", 4, 0) or 0),
+        }
+        for row in rows
+    ]
+
+
 def _rating_dict(row):
     if not row:
         return None
@@ -277,6 +377,7 @@ def _rating_dict(row):
         "comment": _row_value(row, "comment", 4, "") or "",
         "rated_at": _row_value(row, "rated_at", 5, None),
         "updated_at": _row_value(row, "updated_at", 6, None),
+        "criteria": [],
     }
 
 
@@ -314,7 +415,10 @@ def get_daily_performance_rating_for_supervisor(supervisor_id, classroom_id, att
             """,
             (attendance_id,),
         ).fetchone()
-        return _rating_dict(row)
+        rating = _rating_dict(row)
+        if rating:
+            rating["criteria"] = _rating_items(conn, attendance_id)
+        return rating
     finally:
         conn.close()
 
@@ -344,7 +448,10 @@ def get_daily_performance_rating_for_student(student_id, attendance_id):
             """,
             (attendance_id,),
         ).fetchone()
-        return _rating_dict(row)
+        rating = _rating_dict(row)
+        if rating:
+            rating["criteria"] = _rating_items(conn, attendance_id)
+        return rating
     finally:
         conn.close()
 
@@ -441,6 +548,11 @@ def save_daily_performance_rating(
             "star_rating": snapshot["star_rating"],
             "percentage": snapshot["percentage"],
             "comment": comment,
+            "linked_assignment_ids": _linked_assignments_for_attendance(
+                conn,
+                attendance_id,
+                student_id,
+            ),
         }
     except Exception:
         try:
@@ -577,6 +689,11 @@ def save_bulk_daily_performance_ratings(
                     "log_id": int(_row_value(row, "log_id", 0, 0)),
                     "attendance_id": attendance_id,
                     "student_id": student_id,
+                    "linked_assignment_ids": _linked_assignments_for_attendance(
+                        conn,
+                        attendance_id,
+                        student_id,
+                    ),
                 }
             )
 
