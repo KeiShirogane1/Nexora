@@ -46,12 +46,16 @@ def _enforce_student_clock_in_schedule():
 @role_required("student")
 def save_daily_entry():
     attendance_id = request.form.get("attendance_id")
+    related_assignment_ids = request.form.getlist("related_assignment_ids")
     result = save_daily_log(
         student_id=session["user_id"],
         attendance_id=attendance_id,
         accomplishment=request.form.get("accomplishment"),
         reflection=request.form.get("reflection"),
         challenges=request.form.get("challenges"),
+        related_assignment_ids=related_assignment_ids,
+        # Keep compatibility with the pre-Phase-2 single-select form if an old
+        # browser tab submits before its page is refreshed after deployment.
         related_assignment_id=request.form.get("related_assignment_id"),
     )
 
