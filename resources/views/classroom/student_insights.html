@@ -179,6 +179,7 @@
                 </div>
 
                 <nav class="profile-actions" aria-label="ML Insights shortcuts">
+                    <a class="student-dashboard-button" href="{{ url_for('classwork_ml_insights.student_insights', class_id=classroom.id) }}">Refresh Insights</a>
                     <a class="student-dashboard-button is-primary" href="{{ url_for('student_classwork.index', class_id=classroom.id) }}">View Work</a>
                     <a class="student-dashboard-button" href="{{ url_for('performance_reports.student_reports', class_id=classroom.id) }}">Open Report</a>
                     <a class="student-dashboard-button" href="{{ url_for('classroom.student_class', class_id=classroom.id) }}">Back to Class</a>
@@ -235,7 +236,7 @@
                             <div><span>Lowest Grade</span><strong>{% if daily_lowest_percentage is not none %}{{ "%.1f"|format(daily_lowest_percentage) }}%{% else %}—{% endif %}</strong></div>
                         </div>
                         {% if daily_performance.history %}
-                            {% for item in daily_performance.history[-4:] %}
+                            {% for item in daily_performance.history[-2:]|reverse %}
                                 <div class="student-document-guide">
                                     <div class="student-document-guide-icon" aria-hidden="true">{{ item.day_number }}</div>
                                     <div>
@@ -244,6 +245,9 @@
                                     </div>
                                 </div>
                             {% endfor %}
+                            <div class="profile-actions">
+                                <a class="student-dashboard-button" href="{{ url_for('student.logbook', classroom_id=classroom.id) }}">View More Logbook Days</a>
+                            </div>
                         {% elif daily_closed_days == 0 %}
                             <div class="student-document-guide">
                                 <div class="student-document-guide-icon" aria-hidden="true">—</div>

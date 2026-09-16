@@ -28,6 +28,7 @@
                     </p>
                 </div>
                 <div class="d-flex flex-wrap gap-2">
+                    <a class="btn btn-outline-primary" href="{{ url_for('classwork_ml_insights.supervisor_individual_insights', class_id=classroom.id, student_id=student.id) }}">Refresh Insights</a>
                     <a class="btn btn-outline-primary" href="{{ url_for('intern_profile.supervisor_intern_profile', class_id=classroom.id, student_id=student.id) }}">Intern Profile</a>
                     <a class="btn btn-outline-primary" href="{{ url_for('performance_reports.supervisor_student_report', class_id=classroom.id, student_id=student.id) }}">Work Report</a>
                     <a class="btn btn-primary" href="{{ url_for('classwork_ml_insights.supervisor_insights', class_id=classroom.id) }}">All Insights</a>
@@ -126,14 +127,14 @@
                                 <div>
                                     <span class="text-primary fw-bold text-uppercase small">Manual Evidence</span>
                                     <h2 class="h6 fw-bold mb-1 mt-1">Recent Daily Performance</h2>
-                                    <p class="text-muted small mb-0">Manual supervisor day ratings, kept separate from Work scoring.</p>
+                                    <p class="text-muted small mb-0">The two latest completed OJT days from the same Daily Performance source used by Student and Admin Insights.</p>
                                 </div>
                                 <a class="btn btn-sm btn-outline-primary" href="{{ url_for('daily_performance_history.supervisor_history', class_id=classroom.id, student_id=student.id) }}">Open Performance History</a>
                             </div>
                             <div class="p-0">
                                 {% if daily_performance.history %}
                                     <div class="list-group list-group-flush">
-                                        {% for item in daily_performance.history[:4] %}
+                                        {% for item in daily_performance.history[:2] %}
                                             <div class="list-group-item d-flex justify-content-between gap-3 py-3 px-4">
                                                 <div>
                                                     <strong>Day {{ item.day_number }}</strong>
@@ -150,6 +151,9 @@
                                                 </div>
                                             </div>
                                         {% endfor %}
+                                    </div>
+                                    <div class="p-3 border-top bg-light text-end">
+                                        <a class="btn btn-sm btn-outline-primary" href="{{ url_for('logbook_review.supervisor_logbook', class_id=classroom.id) }}">View More Logbook Days</a>
                                     </div>
                                 {% else %}
                                     <div class="p-4 text-muted small">No completed OJT days are available yet.</div>

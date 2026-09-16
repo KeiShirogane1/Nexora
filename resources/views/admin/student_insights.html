@@ -64,12 +64,19 @@
                 {% set daily = insights.daily_performance or {} %}
                 {% set daily_summary = daily.summary or {} %}
                 {% set daily_average_star = daily_summary.get('average_star') if daily_summary is mapping else none %}
+                {% set daily_latest_percentage = daily_summary.get('latest_percentage') if daily_summary is mapping else none %}
                 {% set logbook = insights.logbook or {} %}
                 {% set evaluation = insights.official_evaluation %}
 
                 <section class="admin-insights-context">
                     <div><span class="admin-status-pill">Read-only</span><h2>{{ selected_student.display_name }}</h2><p>{{ selected_student.student_number or selected_student.username }}{% if selected_student.major_program %} · {{ selected_student.major_program }}{% endif %}</p></div>
-                    <div class="admin-insights-class-meta"><strong>{{ selected_classroom.name }}</strong><span>{% if selected_classroom.section %}{{ selected_classroom.section }} · {% endif %}Supervisor: {{ selected_classroom.supervisor_name or '—' }}</span></div>
+                    <div class="admin-insights-class-meta">
+                        <strong>{{ selected_classroom.name }}</strong>
+                        <span>{% if selected_classroom.section %}{{ selected_classroom.section }} · {% endif %}Supervisor: {{ selected_classroom.supervisor_name or '—' }}</span>
+                        <div class="admin-inline-actions">
+                            <a class="admin-secondary-button" href="{{ url_for('admin_reports_overview.student_insights', student_id=selected_student.id, class_id=selected_classroom.id) }}">Refresh Insights</a>
+                        </div>
+                    </div>
                 </section>
 
                 <section class="admin-polish-notice" role="note">These are five separate evidence dimensions. Nexora does not combine them into an overall OJT grade, and Work analytics do not create or replace the Official OJT Evaluation.</section>
@@ -105,9 +112,24 @@
                         </section>
 
                         <section class="admin-polish-panel">
-                            <div class="admin-section-heading"><div><span>SUPERVISOR-ENTERED EVIDENCE</span><h3>Daily Performance</h3></div></div>
-                            <div class="admin-evidence-grid"><div><span>Average</span><strong>{% if daily_summary.average_percentage is not none %}{{ '%.1f'|format(daily_summary.average_percentage) }}%{% else %}—{% endif %}</strong></div><div><span>Rated days</span><strong>{{ daily_summary.rated_days or 0 }}</strong></div><div><span>Completed days</span><strong>{{ daily_summary.closed_days or 0 }}</strong></div></div>
-                            {% if daily.history %}<div class="admin-evidence-list">{% for item in daily.history[:5] %}<div class="admin-evidence-row"><div><strong>Day {{ item.day_number }}</strong><span>{{ item.date or '—' }}</span>{% if item.comment %}<p>{{ item.comment }}</p>{% endif %}</div><div class="admin-evidence-value">{% if item.is_rated %}{{ '%.1f'|format(item.percentage or 0) }}%{% else %}Not rated{% endif %}</div></div>{% endfor %}</div>{% else %}<p class="admin-empty-copy">No completed OJT days are available yet.</p>{% endif %}
+                            <div class="admin-section-heading"><div><span>SUPERVISOR-ENTERED EVIDENCE</span><h3>Daily OJT Grades</h3></div></div>
+                            <div class="admin-evidence-grid">
+                                <div><span>Average Grade</span><strong>{% if daily_summary.average_percentage is not none %}{{ '%.1f'|format(daily_summary.average_percentage) }}%{% else %}—{% endif %}</strong></div>
+                                <div><span>Latest Grade</span><strong>{% if daily_latest_percentage is not none %}{{ '%.1f'|format(daily_latest_percentage) }}%{% else %}—{% endif %}</strong></div>
+                                <div><span>Rated Days</span><strong>{{ daily_summary.rated_days or 0 }} / {{ daily_summary.closed_days or 0 }}</strong></div>
+                            </div>
+                            {% if daily.history %}
+                                <div class="admin-evidence-list">
+                                    {% for item in daily.history[:2] %}
+                                        <div class="admin-evidence-row"><div><strong>Day {{ item.day_number }}</strong><span>{{ item.date or '—' }}</span>{% if item.comment %}<p>{{ item.comment }}</p>{% endif %}</div><div class="admin-evidence-value">{% if item.is_rated %}{{ '%.1f'|format(item.percentage or 0) }}%{% else %}Not rated{% endif %}</div></div>
+                                    {% endfor %}
+                                </div>
+                                <div class="admin-inline-actions">
+                                    <a class="admin-secondary-button" href="{{ url_for('logbook_review.admin_student_logbooks', student_id=selected_student.id) }}">View More Logbook Days</a>
+                                </div>
+                            {% else %}
+                                <p class="admin-empty-copy">No completed OJT days are available yet.</p>
+                            {% endif %}
                         </section>
 
                         <section class="admin-polish-panel">
