@@ -1,4 +1,7 @@
+import ast
 from pathlib import Path
+
+from jinja2 import Environment
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -6,6 +9,18 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def _source(relative_path):
     return (ROOT / relative_path).read_text(encoding="utf-8")
+
+
+def test_modified_python_and_templates_parse():
+    ast.parse(_source("app/Http/Controllers/logbook_review.py"))
+    env = Environment()
+    for relative_path in (
+        "resources/views/components/supervisor_topbar.html",
+        "resources/views/components/admin_topbar.html",
+        "resources/views/admin/student_logbooks.html",
+        "resources/views/student/logbook_review.html",
+    ):
+        env.parse(_source(relative_path))
 
 
 def test_approve_flow_saves_daily_performance_and_requires_rating():
