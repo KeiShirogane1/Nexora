@@ -63,6 +63,7 @@
                 {% set attendance = insights.attendance or {} %}
                 {% set daily = insights.daily_performance or {} %}
                 {% set daily_summary = daily.summary or {} %}
+                {% set daily_average_star = daily_summary.get('average_star') if daily_summary is mapping else none %}
                 {% set logbook = insights.logbook or {} %}
                 {% set evaluation = insights.official_evaluation %}
 
@@ -79,7 +80,7 @@
 
                 <section class="admin-kpi-grid admin-insights-kpis" aria-label="Student insight summary">
                     <article class="admin-kpi-card"><span>Attendance &amp; OJT Hours</span><strong>{{ '%.2f'|format(attendance.rendered_hours or 0) }}</strong><small>{% if attendance.required_hours is not none %}{{ '%.1f'|format(attendance.progress_percentage or 0) }}% of {{ '%g'|format(attendance.required_hours) }} required hours{% else %}Required hours not specified{% endif %}</small></article>
-                    <article class="admin-kpi-card"><span>Daily Performance</span><strong>{% if daily_summary.average_star is not none %}{{ '%.1f'|format(daily_summary.average_star) }} ★{% else %}—{% endif %}</strong><small>{% if daily_summary.average_percentage is not none %}{{ '%.1f'|format(daily_summary.average_percentage) }}% manual day average · {{ daily_summary.rated_days or 0 }} rated{% else %}No manual day ratings yet{% endif %}</small></article>
+                    <article class="admin-kpi-card"><span>Daily Performance</span><strong>{% if daily_average_star is not none %}{{ '%.1f'|format(daily_average_star) }} ★{% else %}—{% endif %}</strong><small>{% if daily_summary.average_percentage is not none %}{{ '%.1f'|format(daily_summary.average_percentage) }}% manual day average · {{ daily_summary.rated_days or 0 }} rated{% else %}No manual day ratings yet{% endif %}</small></article>
                     <article class="admin-kpi-card"><span>Daily Logbook</span><strong>{{ logbook.total or 0 }}</strong><small>{{ logbook.approved or 0 }} approved · {{ logbook.pending or 0 }} pending{% if logbook.revision_requested %} · {{ logbook.revision_requested }} revision{% endif %}</small></article>
                     <article class="admin-kpi-card"><span>Work</span><strong>{% if report.average_percentage is not none %}{{ '%.1f'|format(report.average_percentage) }}%{% else %}—{% endif %}</strong><small>{{ report.graded_count or 0 }} reviewed of {{ report.total_count or 0 }} assigned · {{ report.performance_label or 'No Data' }}</small></article>
                     <article class="admin-kpi-card"><span>Official Evaluation</span><strong>{% if evaluation %}{{ evaluation.status|title }}{% else %}Not started{% endif %}</strong><small>{% if evaluation and evaluation.overall_score is not none %}Manual overall score: {{ '%g'|format(evaluation.overall_score) }}{% elif evaluation %}No manual overall score{% else %}No official evaluation saved{% endif %}</small></article>
