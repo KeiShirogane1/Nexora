@@ -38,11 +38,14 @@ body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar):not(.admin-d
         box-sizing: border-box !important;
     }
 
+    body:has(.nx-role-sidebar-shell.nx-role-admin) .admin-main > :first-child,
+    body:has(.nx-role-sidebar-shell.nx-role-admin) .nexora-app-main > :first-child,
     body:has(.nx-role-sidebar-shell.nx-role-admin) .compact-dashboard,
     body:has(.nx-role-sidebar-shell.nx-role-admin) .admin-command-center,
     body:has(.nx-role-sidebar-shell.nx-role-admin) .admin-report-page-shell,
     body:has(.nx-role-sidebar-shell.nx-role-admin) .admin-dashboard-content,
     body:has(.nx-role-sidebar-shell.nx-role-admin) .admin-insights-page,
+    body:has(.nx-role-sidebar-shell.nx-role-admin) .admin-polish-page,
     body:has(.nx-role-sidebar-shell.nx-role-admin) .nexora-page,
     body:has(.nx-role-sidebar-shell.nx-role-admin) .nx-notifications-wrap {
         width: 100% !important;
@@ -144,6 +147,20 @@ body.admin-students-page #studentsTable td[data-full-program] .table-meta {
         });
     }
 
+    function setupStudentLogbookManagementLink() {
+        var match = window.location.pathname.match(/^\/admin\/student\/(\d+)\/?$/);
+        if (!match) return;
+        var actions = document.querySelector('.profile-actions');
+        if (!actions || actions.querySelector('[data-admin-logbook-manager]')) return;
+        var link = document.createElement('a');
+        link.href = '/admin/student/' + encodeURIComponent(match[1]) + '/logbook';
+        link.className = 'btn btn-outline-danger';
+        link.dataset.adminLogbookManager = '1';
+        link.textContent = 'Manage OJT Logbook';
+        link.title = 'Review or remove duplicate Daily OJT Logbook entries. Attendance records are kept.';
+        actions.appendChild(link);
+    }
+
     function setupDocumentFolderAutoPreview() {
         if (!document.body.classList.contains('admin-document-folder-page')) return;
 
@@ -189,6 +206,7 @@ body.admin-students-page #studentsTable td[data-full-program] .table-meta {
 
     function bootLegacyDocumentBridge() {
         setupStudentProfileDocumentLinks();
+        setupStudentLogbookManagementLink();
         setupDocumentFolderAutoPreview();
     }
 
