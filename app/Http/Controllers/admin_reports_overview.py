@@ -120,6 +120,47 @@ def _safe_logbook(value):
     )
 
 
+def _load_admin_insight_students(conn):
+    """Load the Admin insight directory without making optional profile columns fatal."""
+    try:
+        return conn.execute(
+            """
+            SELECT DISTINCT u.id, u.username, u.email,
+                   COALESCE(sp.first_name, '') AS first_name,
+                   COALESCE(sp.last_name, '') AS last_name,
+                   COALESCE(sp.student_id, '') AS student_number,
+                   COALESCE(sp.major_program, '') AS major_program
+            FROM users u
+            JOIN classroom_students cs ON cs.student_id = u.id
+            LEFT JOIN student_profiles sp ON sp.user_id = u.id
+            WHERE u.role = 'student'
+            ORDER BY LOWER(COALESCE(NULLIF(sp.first_name, ''), u.username)),
+                     LOWER(COALESCE(NULLIF(sp.last_name, ''), u.email)), u.id
+            """
+        ).fetchall()
+    except Exception:
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+        current_app.logger.exception(
+            "Admin Student Insights profile enrichment failed; using account-only directory"
+        )
+        return conn.execute(
+            """
+            SELECT DISTINCT u.id, u.username, u.email,
+                   '' AS first_name,
+                   '' AS last_name,
+                   '' AS student_number,
+                   '' AS major_program
+            FROM users u
+            JOIN classroom_students cs ON cs.student_id = u.id
+            WHERE u.role = 'student'
+            ORDER BY LOWER(u.username), LOWER(u.email), u.id
+            """
+        ).fetchall()
+
+
 @admin_reports_overview.route("/admin/reports/student/<int:student_id>/overview")
 @role_required("admin")
 def overview(student_id):
@@ -154,21 +195,7 @@ def student_insights():
 
     conn = get_db_connection()
     try:
-        student_rows = conn.execute(
-            """
-            SELECT DISTINCT u.id, u.username, u.email,
-                   COALESCE(sp.first_name, '') AS first_name,
-                   COALESCE(sp.last_name, '') AS last_name,
-                   COALESCE(sp.student_id, '') AS student_number,
-                   COALESCE(sp.major_program, '') AS major_program
-            FROM users u
-            JOIN classroom_students cs ON cs.student_id = u.id
-            LEFT JOIN student_profiles sp ON sp.user_id = u.id
-            WHERE u.role = 'student'
-            ORDER BY LOWER(COALESCE(NULLIF(sp.first_name, ''), u.username)),
-                     LOWER(COALESCE(NULLIF(sp.last_name, ''), u.email)), u.id
-            """
-        ).fetchall()
+        student_rows = _load_admin_insight_students(conn)
         students = [
             {
                 "id": int(_value(row, "id", 0, 0)),
