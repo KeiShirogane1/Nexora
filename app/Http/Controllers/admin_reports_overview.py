@@ -219,7 +219,23 @@ def student_insights():
         if requested_student_id is not None:
             selected_student = next((item for item in students if item["id"] == requested_student_id), None)
             if selected_student is None:
-                abort(404)
+                account_row = conn.execute(
+                    "SELECT id, username, email FROM users WHERE id = ? AND role = 'student' LIMIT 1",
+                    (requested_student_id,),
+                ).fetchone()
+                if not account_row:
+                    abort(404)
+                selected_student = {
+                    "id": int(_value(account_row, "id", 0, 0)),
+                    "username": _value(account_row, "username", 1, "") or "",
+                    "email": _value(account_row, "email", 2, "") or "",
+                    "first_name": "",
+                    "last_name": "",
+                    "student_number": "",
+                    "major_program": "",
+                }
+                selected_student["display_name"] = selected_student["username"] or "Student"
+                students.append(selected_student)
 
         classrooms = []
         if selected_student:
@@ -292,18 +308,17 @@ def student_insights():
                 "Attendance, Daily Performance, and Logbook evidence is temporarily unavailable."
             )
         else:
-            if not isinstance(profile, dict):
-                current_app.logger.error(
-                    "Admin Student Insights OJT evidence returned an invalid payload for student_id=%s class_id=%s",
+            if not isinstance(profile, dict) or not profile.get("ok"):
+                current_app.logger.warning(
+                    "Admin Student Insights OJT evidence unavailable for student_id=%s class_id=%s status=%s",
                     selected_student["id"],
                     selected_classroom["id"],
+                    profile.get("status_code") if isinstance(profile, dict) else None,
                 )
                 profile = {"ok": True}
                 insights_warnings.append(
                     "Attendance, Daily Performance, and Logbook evidence is temporarily unavailable."
                 )
-            elif not profile.get("ok"):
-                abort(int(profile.get("status_code") or 404))
 
         try:
             evaluation_context = get_supervisor_evaluation_context(
@@ -320,16 +335,15 @@ def student_insights():
             evaluation_context = {"ok": True, "evaluation": None}
             insights_warnings.append("Official OJT Evaluation is temporarily unavailable.")
         else:
-            if not isinstance(evaluation_context, dict):
-                current_app.logger.error(
-                    "Admin Student Insights Official Evaluation returned an invalid payload for student_id=%s class_id=%s",
+            if not isinstance(evaluation_context, dict) or not evaluation_context.get("ok"):
+                current_app.logger.warning(
+                    "Admin Student Insights Official Evaluation unavailable for student_id=%s class_id=%s status=%s",
                     selected_student["id"],
                     selected_classroom["id"],
+                    evaluation_context.get("status_code") if isinstance(evaluation_context, dict) else None,
                 )
                 evaluation_context = {"ok": True, "evaluation": None}
                 insights_warnings.append("Official OJT Evaluation is temporarily unavailable.")
-            elif not evaluation_context.get("ok"):
-                abort(int(evaluation_context.get("status_code") or 404))
 
         context = {
             "report": _safe_student_report(report),
