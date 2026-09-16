@@ -3,123 +3,647 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ML Performance Insights - {{ classroom.name }} - Nexora</title>
+    <title>Performance Insights - {{ classroom.name }} - Nexora</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
     <style>
-        .student-insights-page .student-insights-workspace {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(300px, 0.95fr);
-            gap: 18px;
-            align-items: start;
+        .student-insights-page .student-insights-shell {
+            max-width: 1440px;
+            padding-bottom: 56px;
         }
-        .student-insights-page .student-insights-column {
-            display: grid;
-            gap: 18px;
+        .student-insights-page .student-insights-hero {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 24px;
+            margin: 0 0 24px;
+        }
+        .student-insights-page .student-insights-hero-copy {
             min-width: 0;
         }
-        .student-insights-page .student-insights-workspace .profile-section {
-            margin-bottom: 0;
+        .student-insights-page .student-insights-breadcrumb {
+            margin: 0 0 8px;
+            color: #718078;
+            font-size: 0.72rem;
+            font-weight: 700;
         }
-        .student-insights-page .student-insights-ai-card {
-            position: relative;
-            border-color: #d9eee5;
-            background: linear-gradient(180deg, #ffffff 0%, #fbfefc 100%);
+        .student-insights-page .student-insights-eyebrow {
+            display: block;
+            margin-bottom: 7px;
+            color: var(--student-green, #0a8f46);
+            font-size: 0.7rem;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
         }
-        .student-insights-page .student-insights-ai-head {
+        .student-insights-page .student-insights-hero h1 {
+            margin: 0;
+            color: #0d3b2b;
+            font-size: 2rem;
+            line-height: 1.1;
+            font-weight: 800;
+            letter-spacing: -0.035em;
+        }
+        .student-insights-page .student-insights-hero p {
+            max-width: 760px;
+            margin: 7px 0 0;
+            color: #68776f;
+            font-size: 0.9rem;
+            line-height: 1.55;
+        }
+        .student-insights-page .student-insights-actions {
             display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        .student-insights-page .student-insights-button {
+            display: inline-flex;
+            min-height: 40px;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            padding: 0 15px;
+            border: 1px solid #cfe0d5;
+            border-radius: 9px;
+            background: #fff;
+            color: #173d30;
+            font-size: 0.74rem;
+            font-weight: 800;
+            text-decoration: none;
+            box-shadow: 0 4px 12px rgba(20, 52, 38, 0.035);
+        }
+        .student-insights-page .student-insights-button:hover {
+            border-color: #9bcbb7;
+            color: #08783b;
+            background: #f7fcf9;
+        }
+        .student-insights-page .student-insights-button.is-primary {
+            border-color: var(--student-green, #0a8f46);
+            background: var(--student-green, #0a8f46);
+            color: #fff;
+        }
+        .student-insights-page .student-insights-button.is-primary:hover {
+            border-color: var(--student-green-dark, #08783b);
+            background: var(--student-green-dark, #08783b);
+            color: #fff;
+        }
+        .student-insights-page .student-insights-kpis {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
             gap: 14px;
             margin-bottom: 18px;
         }
-        .student-insights-page .student-insights-ai-head h2 {
-            margin: 0;
-        }
-        .student-insights-page .student-insights-ai-badge {
-            display: inline-flex;
+        .student-insights-page .student-insights-kpi {
+            display: flex;
+            min-width: 0;
+            min-height: 112px;
             align-items: center;
-            justify-content: center;
-            min-width: 34px;
-            height: 26px;
-            padding: 0 9px;
-            border-radius: 999px;
-            background: #dcfce7;
-            color: #166534;
-            font-size: 0.7rem;
-            font-weight: 900;
-            letter-spacing: 0.04em;
+            gap: 14px;
+            padding: 18px;
+            border: 1px solid var(--student-border, #e3eae5);
+            border-radius: 10px;
+            background: #fff;
+            box-shadow: var(--student-card-shadow, 0 6px 20px rgba(20, 52, 38, 0.035));
         }
-        .student-insights-page .student-insights-ai-intro {
-            padding: 16px;
-            border: 1px solid #d9eee5;
+        .student-insights-page .student-insights-kpi-icon {
+            display: grid;
+            width: 48px;
+            height: 48px;
+            flex: 0 0 48px;
+            place-items: center;
             border-radius: 14px;
-            background: #eefbf5;
+            background: #e7f7ed;
+            color: #0a8f46;
+            font-size: 1.05rem;
+            font-weight: 900;
         }
-        .student-insights-page .student-insights-ai-intro strong {
+        .student-insights-page .student-insights-kpi:nth-child(2) .student-insights-kpi-icon {
+            background: #e9f2ff;
+            color: #2f79d8;
+        }
+        .student-insights-page .student-insights-kpi:nth-child(3) .student-insights-kpi-icon {
+            background: #fff1df;
+            color: #e98700;
+        }
+        .student-insights-page .student-insights-kpi:nth-child(4) .student-insights-kpi-icon {
+            background: #efe8ff;
+            color: #7547dc;
+        }
+        .student-insights-page .student-insights-kpi-copy {
+            min-width: 0;
+        }
+        .student-insights-page .student-insights-kpi-copy span,
+        .student-insights-page .student-insights-kpi-copy small {
             display: block;
-            color: #14532d;
-            font-size: 0.95rem;
         }
-        .student-insights-page .student-insights-ai-intro p {
+        .student-insights-page .student-insights-kpi-copy span {
+            color: #52625a;
+            font-size: 0.69rem;
+            font-weight: 800;
+            letter-spacing: 0.035em;
+            text-transform: uppercase;
+        }
+        .student-insights-page .student-insights-kpi-copy strong {
+            display: block;
+            margin: 5px 0 3px;
+            color: #10261d;
+            font-size: 1.45rem;
+            line-height: 1.05;
+            font-weight: 800;
+            overflow-wrap: anywhere;
+        }
+        .student-insights-page .student-insights-kpi-copy small {
+            color: #7b8982;
+            font-size: 0.68rem;
+            line-height: 1.4;
+        }
+        .student-insights-page .student-insights-primary-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.65fr) minmax(300px, 0.9fr);
+            gap: 18px;
+            margin-bottom: 18px;
+            align-items: stretch;
+        }
+        .student-insights-page .student-insights-secondary-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.45fr) minmax(300px, 0.85fr);
+            gap: 18px;
+            margin-bottom: 18px;
+            align-items: stretch;
+        }
+        .student-insights-page .student-insights-card {
+            min-width: 0;
+            border: 1px solid var(--student-border, #e3eae5);
+            border-radius: 10px;
+            background: #fff;
+            box-shadow: var(--student-card-shadow, 0 6px 20px rgba(20, 52, 38, 0.035));
+            overflow: hidden;
+        }
+        .student-insights-page .student-insights-card + .student-insights-card {
+            margin-top: 0;
+        }
+        .student-insights-page .student-insights-card-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 20px 22px 16px;
+            border-bottom: 1px solid #edf1ee;
+        }
+        .student-insights-page .student-insights-card-title {
+            display: flex;
+            min-width: 0;
+            gap: 12px;
+            align-items: flex-start;
+        }
+        .student-insights-page .student-insights-card-icon {
+            display: grid;
+            width: 42px;
+            height: 42px;
+            flex: 0 0 42px;
+            place-items: center;
+            border-radius: 12px;
+            background: var(--student-green-soft, #e7f7ed);
+            color: var(--student-green, #0a8f46);
+            font-size: 1rem;
+            font-weight: 900;
+        }
+        .student-insights-page .student-insights-card-head h2 {
+            margin: 0;
+            color: #10261d;
+            font-size: 1.05rem;
+            line-height: 1.25;
+            font-weight: 800;
+        }
+        .student-insights-page .student-insights-card-head p {
             margin: 5px 0 0;
-            color: #527062;
+            color: #718078;
+            font-size: 0.74rem;
+            line-height: 1.5;
+        }
+        .student-insights-page .student-insights-pill {
+            display: inline-flex;
+            flex: 0 0 auto;
+            align-items: center;
+            min-height: 28px;
+            padding: 0 10px;
+            border-radius: 999px;
+            background: var(--student-green-soft, #e7f7ed);
+            color: var(--student-green-dark, #08783b);
+            font-size: 0.67rem;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+        .student-insights-page .student-insights-card-body {
+            padding: 18px 22px 22px;
+        }
+        .student-insights-page .student-insights-metric-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+        .student-insights-page .student-insights-metric-grid.is-two {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .student-insights-page .student-insights-metric {
+            min-width: 0;
+            padding: 12px;
+            border: 1px solid #edf1ee;
+            border-radius: 9px;
+            background: #f8faf9;
+        }
+        .student-insights-page .student-insights-metric span,
+        .student-insights-page .student-insights-metric small {
+            display: block;
+        }
+        .student-insights-page .student-insights-metric span {
+            color: #6e7c75;
+            font-size: 0.64rem;
+            font-weight: 700;
+        }
+        .student-insights-page .student-insights-metric strong {
+            display: block;
+            margin-top: 4px;
+            color: #10261d;
+            font-size: 0.98rem;
+            line-height: 1.15;
+            font-weight: 800;
+            overflow-wrap: anywhere;
+        }
+        .student-insights-page .student-insights-metric small {
+            margin-top: 3px;
+            color: #8b9791;
+            font-size: 0.61rem;
+        }
+        .student-insights-page .student-insights-subtitle {
+            margin: 0 0 9px;
+            color: #173d30;
             font-size: 0.82rem;
+            font-weight: 800;
+        }
+        .student-insights-page .student-insights-day-list {
+            display: grid;
+            gap: 8px;
+        }
+        .student-insights-page .student-insights-day {
+            display: grid;
+            grid-template-columns: 40px minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 11px;
+            padding: 11px 12px;
+            border: 1px solid #edf1ee;
+            border-radius: 9px;
+            background: #fbfdfc;
+        }
+        .student-insights-page .student-insights-day-icon {
+            display: grid;
+            width: 40px;
+            height: 40px;
+            place-items: center;
+            border-radius: 11px;
+            background: #e7f7ed;
+            color: #0a8f46;
+            font-size: 0.72rem;
+            font-weight: 900;
+        }
+        .student-insights-page .student-insights-day-copy {
+            min-width: 0;
+        }
+        .student-insights-page .student-insights-day-copy strong,
+        .student-insights-page .student-insights-day-copy span {
+            display: block;
+        }
+        .student-insights-page .student-insights-day-copy strong {
+            color: #173d30;
+            font-size: 0.76rem;
+            font-weight: 800;
+        }
+        .student-insights-page .student-insights-day-copy span {
+            margin-top: 3px;
+            color: #7b8982;
+            font-size: 0.66rem;
+            overflow-wrap: anywhere;
+        }
+        .student-insights-page .student-insights-day-score {
+            text-align: right;
+            white-space: nowrap;
+        }
+        .student-insights-page .student-insights-day-score strong {
+            display: block;
+            color: #0a8f46;
+            font-size: 0.9rem;
+        }
+        .student-insights-page .student-insights-day-score span {
+            display: block;
+            margin-top: 3px;
+            color: #e9a000;
+            font-size: 0.72rem;
+            font-weight: 800;
+        }
+        .student-insights-page .student-insights-day-score.is-empty strong,
+        .student-insights-page .student-insights-day-score.is-empty span {
+            color: #8b9791;
+        }
+        .student-insights-page .student-insights-card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 14px;
+        }
+        .student-insights-page .student-insights-wide-link {
+            display: flex;
+            min-height: 40px;
+            width: 100%;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 0 14px;
+            box-sizing: border-box;
+            border: 1px solid #cde7d6;
+            border-radius: 9px;
+            background: #f0faf4;
+            color: #08783b;
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-decoration: none;
+        }
+        .student-insights-page .student-insights-wide-link:hover {
+            border-color: #9bcbb7;
+            background: #e9f7ee;
+            color: #076b35;
+        }
+        .student-insights-page .student-insights-work-list {
+            display: grid;
+            gap: 8px;
+        }
+        .student-insights-page .student-insights-work-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            padding: 11px 12px;
+            border-radius: 9px;
+            background: #f8faf9;
+        }
+        .student-insights-page .student-insights-work-row span {
+            color: #68776f;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+        .student-insights-page .student-insights-work-row strong {
+            color: #10261d;
+            font-size: 0.84rem;
+            font-weight: 800;
+            text-align: right;
+        }
+        .student-insights-page .student-insights-note {
+            margin: 14px 0 0;
+            padding: 12px 13px;
+            border: 1px solid #dbeee2;
+            border-radius: 9px;
+            background: #f4fbf6;
+            color: #5c7065;
+            font-size: 0.68rem;
             line-height: 1.55;
         }
+        .student-insights-page .student-insights-ai-card {
+            margin-bottom: 18px;
+            border-color: #d8eadf;
+            background: linear-gradient(180deg, #fff 0%, #fbfefc 100%);
+        }
+        .student-insights-page .student-insights-ai-card .student-insights-card-head {
+            background: linear-gradient(90deg, #fbfffc, #f4fbf6);
+        }
         .student-insights-page .student-insights-ai-status {
-            margin: 14px 0 0;
-            color: #64748b;
-            font-size: 0.78rem;
+            margin: 0 0 12px;
+            color: #718078;
+            font-size: 0.68rem;
             font-weight: 700;
         }
         .student-insights-page .student-insights-ai-items {
             display: grid;
-            gap: 0;
-            margin-top: 10px;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
         }
         .student-insights-page .student-insights-ai-item {
-            padding: 15px 0;
-            border-bottom: 1px solid #edf2ef;
-        }
-        .student-insights-page .student-insights-ai-item:last-child {
-            border-bottom: 0;
-            padding-bottom: 0;
+            min-width: 0;
+            padding: 14px;
+            border: 1px solid #e6eee9;
+            border-radius: 9px;
+            background: #f8faf9;
         }
         .student-insights-page .student-insights-ai-item h3 {
-            margin: 0 0 5px;
-            color: #0f172a;
-            font-size: 0.9rem;
+            margin: 0 0 6px;
+            color: #173d30;
+            font-size: 0.74rem;
             font-weight: 800;
         }
         .student-insights-page .student-insights-ai-item p {
             margin: 0;
-            color: #475569;
-            font-size: 0.82rem;
-            line-height: 1.62;
+            color: #64756c;
+            font-size: 0.68rem;
+            line-height: 1.55;
             white-space: pre-line;
         }
-        .student-insights-page .student-insights-evidence-card .student-document-guide {
-            margin-bottom: 12px;
+        .student-insights-page .student-insights-feedback-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
         }
-        .student-insights-page .student-insights-evidence-card .student-document-guide:last-child {
-            margin-bottom: 0;
+        .student-insights-page .student-insights-feedback-box {
+            min-width: 0;
+            padding: 13px;
+            border: 1px solid #edf1ee;
+            border-radius: 9px;
+            background: #f8faf9;
         }
-        @media (max-width: 1120px) {
-            .student-insights-page .student-insights-workspace {
+        .student-insights-page .student-insights-feedback-box span,
+        .student-insights-page .student-insights-feedback-box small {
+            display: block;
+        }
+        .student-insights-page .student-insights-feedback-box span {
+            color: #718078;
+            font-size: 0.62rem;
+            font-weight: 700;
+        }
+        .student-insights-page .student-insights-feedback-box strong {
+            display: block;
+            margin-top: 5px;
+            color: #173d30;
+            font-size: 0.78rem;
+            font-weight: 800;
+            overflow-wrap: anywhere;
+        }
+        .student-insights-page .student-insights-feedback-box small {
+            margin-top: 3px;
+            color: #8b9791;
+            font-size: 0.6rem;
+        }
+        .student-insights-page .student-insights-copy-block {
+            margin-top: 12px;
+            padding: 13px;
+            border: 1px solid #edf1ee;
+            border-radius: 9px;
+            background: #fbfdfc;
+        }
+        .student-insights-page .student-insights-copy-block h3 {
+            margin: 0 0 5px;
+            color: #173d30;
+            font-size: 0.75rem;
+            font-weight: 800;
+        }
+        .student-insights-page .student-insights-copy-block p {
+            margin: 0;
+            color: #64756c;
+            font-size: 0.69rem;
+            line-height: 1.55;
+            white-space: pre-line;
+        }
+        .student-insights-page .student-insights-basis {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px;
+            margin-top: 12px;
+        }
+        .student-insights-page .student-insights-basis span {
+            padding: 6px 8px;
+            border-radius: 999px;
+            background: #e7f7ed;
+            color: #08783b;
+            font-size: 0.61rem;
+            font-weight: 800;
+        }
+        .student-insights-page .student-insights-evidence-card {
+            margin-bottom: 18px;
+        }
+        .student-insights-page .student-insights-evidence-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+        }
+        .student-insights-page .student-insights-evidence-item {
+            min-width: 0;
+            padding: 14px;
+            border: 1px solid #e7eee9;
+            border-radius: 9px;
+            background: #fbfdfc;
+        }
+        .student-insights-page .student-insights-evidence-item strong {
+            display: block;
+            color: #173d30;
+            font-size: 0.74rem;
+            font-weight: 800;
+        }
+        .student-insights-page .student-insights-evidence-item p {
+            margin: 5px 0 0;
+            color: #718078;
+            font-size: 0.66rem;
+            line-height: 1.5;
+        }
+        .student-insights-page .student-insights-boundary {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            margin-top: 12px;
+            padding: 13px 14px;
+            border: 1px solid #dcebe2;
+            border-radius: 9px;
+            background: #f2faf5;
+        }
+        .student-insights-page .student-insights-boundary-icon {
+            display: grid;
+            width: 30px;
+            height: 30px;
+            flex: 0 0 30px;
+            place-items: center;
+            border-radius: 8px;
+            background: #e0f3e6;
+            color: #08783b;
+            font-size: 0.72rem;
+            font-weight: 900;
+        }
+        .student-insights-page .student-insights-boundary strong {
+            display: block;
+            color: #173d30;
+            font-size: 0.72rem;
+        }
+        .student-insights-page .student-insights-boundary p {
+            margin: 4px 0 0;
+            color: #64756c;
+            font-size: 0.66rem;
+            line-height: 1.5;
+        }
+        .student-insights-page .student-insights-empty {
+            padding: 18px;
+            border: 1px dashed #d8e4dc;
+            border-radius: 9px;
+            background: #fbfdfc;
+            color: #718078;
+            font-size: 0.7rem;
+            line-height: 1.55;
+            text-align: center;
+        }
+        @media (max-width: 1180px) {
+            .student-insights-page .student-insights-kpis,
+            .student-insights-page .student-insights-evidence-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
             }
-            .student-insights-page .student-insights-column.is-ai {
-                grid-column: 1 / -1;
+            .student-insights-page .student-insights-ai-items {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+        @media (max-width: 960px) {
+            .student-insights-page .student-insights-primary-grid,
+            .student-insights-page .student-insights-secondary-grid {
+                grid-template-columns: 1fr;
+            }
+            .student-insights-page .student-insights-metric-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
             }
         }
         @media (max-width: 760px) {
-            .student-insights-page .student-insights-workspace {
+            .student-insights-page .student-insights-hero {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+            .student-insights-page .student-insights-actions {
+                justify-content: flex-start;
+                width: 100%;
+            }
+            .student-insights-page .student-insights-kpis,
+            .student-insights-page .student-insights-evidence-grid,
+            .student-insights-page .student-insights-feedback-grid,
+            .student-insights-page .student-insights-ai-items {
                 grid-template-columns: 1fr;
             }
-            .student-insights-page .student-insights-column.is-ai {
-                grid-column: auto;
+            .student-insights-page .student-insights-day {
+                grid-template-columns: 40px minmax(0, 1fr);
+            }
+            .student-insights-page .student-insights-day-score {
+                grid-column: 2;
+                text-align: left;
+            }
+        }
+        @media (max-width: 520px) {
+            .student-insights-page .student-insights-actions {
+                display: grid;
+                grid-template-columns: 1fr;
+            }
+            .student-insights-page .student-insights-button {
+                width: 100%;
+                box-sizing: border-box;
+            }
+            .student-insights-page .student-insights-metric-grid,
+            .student-insights-page .student-insights-metric-grid.is-two {
+                grid-template-columns: 1fr;
+            }
+            .student-insights-page .student-insights-card-head {
+                align-items: flex-start;
+                flex-direction: column;
             }
         }
     </style>
@@ -145,290 +669,276 @@
         {% set daily_lowest_percentage = daily_summary.lowest_percentage|default(none) %}
         {% set has_daily_performance = daily_rated_days > 0 and daily_average_percentage is not none %}
 
-        {% if numeric_performance_label == 'Excellent' %}
-            {% set work_label_class = 'is-excellent' %}
-        {% elif numeric_performance_label == 'Very Satisfactory' %}
-            {% set work_label_class = 'is-very-satisfactory' %}
-        {% elif numeric_performance_label == 'Satisfactory' %}
-            {% set work_label_class = 'is-satisfactory' %}
-        {% elif numeric_performance_label == 'Fair' %}
-            {% set work_label_class = 'is-fair' %}
-        {% elif numeric_performance_label == 'Needs Improvement' %}
-            {% set work_label_class = 'is-needs-improvement' %}
-        {% else %}
-            {% set work_label_class = '' %}
-        {% endif %}
-
         <div class="class-wrap student-insights-shell">
-            <header class="student-section-heading" aria-labelledby="insights-heading">
-                <div>
-                    <span class="student-section-eyebrow">Machine Learning</span>
-                    <h1 id="insights-heading">ML Performance Insights</h1>
-                    <p>{{ classroom.section }} · {{ classroom.supervisor }} · Daily OJT grades, Work evidence, feedback signals, model predictions, and personalized AI analysis.</p>
-                    <div class="profile-actions">
-                        {% if has_daily_performance %}
-                            <span class="student-classwork-status">Daily OJT {{ "%.1f"|format(daily_average_percentage) }}%</span>
-                        {% endif %}
-                        {% if has_performance_data %}
-                            <span class="student-insights-label {{ work_label_class }}">{{ numeric_performance_label }}</span>
-                        {% else %}
-                            <span class="student-classwork-status">Work: No Data</span>
-                        {% endif %}
-                        <span class="student-classwork-status">Work performance label</span>
-                    </div>
+            <header class="student-insights-hero" aria-labelledby="insights-heading">
+                <div class="student-insights-hero-copy">
+                    <div class="student-insights-breadcrumb">Student Portal / Insights</div>
+                    <span class="student-insights-eyebrow">Performance Intelligence</span>
+                    <h1 id="insights-heading">Performance Insights</h1>
+                    <p>Understand your Daily OJT grades, linked Work performance, supervisor feedback, ML signals, recommendations, and personalized Nexora AI analysis.</p>
                 </div>
-
-                <nav class="profile-actions" aria-label="ML Insights shortcuts">
-                    <a class="student-dashboard-button" href="{{ url_for('classwork_ml_insights.student_insights', class_id=classroom.id) }}">Refresh Insights</a>
-                    <a class="student-dashboard-button is-primary" href="{{ url_for('student_classwork.index', class_id=classroom.id) }}">View Work</a>
-                    <a class="student-dashboard-button" href="{{ url_for('performance_reports.student_reports', class_id=classroom.id) }}">Open Report</a>
-                    <a class="student-dashboard-button" href="{{ url_for('classroom.student_class', class_id=classroom.id) }}">Back to Class</a>
+                <nav class="student-insights-actions" aria-label="Insights actions">
+                    <a class="student-insights-button" href="{{ url_for('classwork_ml_insights.student_insights', class_id=classroom.id) }}">↻ Refresh Insights</a>
+                    <a class="student-insights-button is-primary" href="{{ url_for('performance_reports.student_reports', class_id=classroom.id) }}">Open Report</a>
+                    <a class="student-insights-button" href="{{ url_for('classroom.student_class', class_id=classroom.id) }}">Back to Class</a>
                 </nav>
             </header>
 
-            <section class="student-tasks-stats" aria-label="ML insight summary">
-                <article class="student-tasks-stat">
-                    <div class="student-tasks-stat-icon" aria-hidden="true">★</div>
-                    <div class="student-tasks-stat-copy">
-                        <span>Daily OJT Score</span>
+            <section class="student-insights-kpis" aria-label="Performance summary">
+                <article class="student-insights-kpi">
+                    <div class="student-insights-kpi-icon" aria-hidden="true">▥</div>
+                    <div class="student-insights-kpi-copy">
+                        <span>OJT Average</span>
                         <strong>{% if has_daily_performance %}{{ "%.1f"|format(daily_average_percentage) }}%{% else %}—{% endif %}</strong>
-                        <small>{% if has_daily_performance %}{{ "%.1f"|format(daily_average_star) }} ★ supervisor-entered average{% else %}No Daily Performance rating yet{% endif %}</small>
+                        <small>{% if daily_average_star is not none %}{{ "%.1f"|format(daily_average_star) }} ★ average Daily Rating{% else %}No supervisor rating yet{% endif %}</small>
                     </div>
                 </article>
-                <article class="student-tasks-stat">
-                    <div class="student-tasks-stat-icon" aria-hidden="true">✓</div>
-                    <div class="student-tasks-stat-copy">
+                <article class="student-insights-kpi">
+                    <div class="student-insights-kpi-icon" aria-hidden="true">▣</div>
+                    <div class="student-insights-kpi-copy">
                         <span>Rated Days</span>
                         <strong>{{ daily_rated_days }} / {{ daily_closed_days }}</strong>
-                        <small>Each Daily Performance rating is that OJT day's grade</small>
+                        <small>{% if daily_closed_days %}{{ "%.1f"|format((daily_rated_days / daily_closed_days * 100) if daily_closed_days else 0) }}% Daily OJT coverage{% else %}No completed OJT days yet{% endif %}</small>
                     </div>
                 </article>
-                <article class="student-tasks-stat">
-                    <div class="student-tasks-stat-icon" aria-hidden="true">%</div>
-                    <div class="student-tasks-stat-copy">
-                        <span>Recorded Work</span>
-                        <strong>{{ "%.1f"|format(recorded_completion_rate) }}%</strong>
-                        <small>{{ recorded_count }} of {{ total_count }} linked to Daily OJT Logbook</small>
+                <article class="student-insights-kpi">
+                    <div class="student-insights-kpi-icon" aria-hidden="true">▤</div>
+                    <div class="student-insights-kpi-copy">
+                        <span>Work Score</span>
+                        <strong>{% if average_percentage is not none %}{{ "%.1f"|format(average_percentage) }}%{% else %}—{% endif %}</strong>
+                        <small>{{ graded_count }} / {{ total_count }} Work item{% if total_count != 1 %}s{% endif %} rated</small>
                     </div>
                 </article>
-                <article class="student-tasks-stat">
-                    <div class="student-tasks-stat-icon" aria-hidden="true">ML</div>
-                    <div class="student-tasks-stat-copy">
-                        <span>Work Performance Label</span>
+                <article class="student-insights-kpi">
+                    <div class="student-insights-kpi-icon" aria-hidden="true">★</div>
+                    <div class="student-insights-kpi-copy">
+                        <span>Performance</span>
                         <strong>{% if has_performance_data %}{{ numeric_performance_label }}{% else %}No Data{% endif %}</strong>
-                        <small>{% if has_performance_data %}Based on graded Work{% elif recorded_count %}Work needs a linked rated OJT day for a score{% else %}Waiting for graded Work evidence{% endif %}</small>
+                        <small>{% if has_performance_data %}Current Work performance label{% else %}Waiting for rated linked Work{% endif %}</small>
                     </div>
                 </article>
             </section>
 
-            <section class="student-insights-workspace" aria-label="ML insights dashboard">
-                <div class="student-insights-column">
-                    <article class="profile-section">
-                        <span class="student-section-eyebrow">Manual Daily Grade</span>
-                        <h2>Daily OJT Grades</h2>
-                        <p class="student-classwork-detail-subtitle">Your supervisor's Daily Performance rating is the numeric grade for that completed OJT day. It stays separate from the Official OJT Evaluation.</p>
-                        <div class="student-classwork-submission-summary">
-                            <div><span>Average Grade</span><strong>{% if has_daily_performance %}{{ "%.1f"|format(daily_average_percentage) }}%{% else %}—{% endif %}</strong></div>
-                            <div><span>Average Rating</span><strong>{% if has_daily_performance %}{{ "%.1f"|format(daily_average_star) }} ★{% else %}—{% endif %}</strong></div>
-                            <div><span>Rated Days</span><strong>{{ daily_rated_days }} / {{ daily_closed_days }}</strong></div>
-                            <div><span>Latest Grade</span><strong>{% if daily_latest_percentage is not none %}{{ "%.1f"|format(daily_latest_percentage) }}%{% else %}—{% endif %}</strong></div>
-                            <div><span>Highest Grade</span><strong>{% if daily_highest_percentage is not none %}{{ "%.1f"|format(daily_highest_percentage) }}%{% else %}—{% endif %}</strong></div>
-                            <div><span>Lowest Grade</span><strong>{% if daily_lowest_percentage is not none %}{{ "%.1f"|format(daily_lowest_percentage) }}%{% else %}—{% endif %}</strong></div>
+            <section class="student-insights-primary-grid" aria-label="Daily OJT and Work performance">
+                <article class="student-insights-card">
+                    <div class="student-insights-card-head">
+                        <div class="student-insights-card-title">
+                            <div class="student-insights-card-icon" aria-hidden="true">▥</div>
+                            <div>
+                                <h2>Daily OJT Performance</h2>
+                                <p>Your supervisor's Overall Daily Rating is the numeric grade for each completed OJT day.</p>
+                            </div>
                         </div>
+                        <span class="student-insights-pill">{{ daily_rated_days }} of {{ daily_closed_days }} days rated</span>
+                    </div>
+                    <div class="student-insights-card-body">
+                        <div class="student-insights-metric-grid">
+                            <div class="student-insights-metric"><span>Average Grade</span><strong>{% if has_daily_performance %}{{ "%.1f"|format(daily_average_percentage) }}%{% else %}—{% endif %}</strong><small>{% if daily_average_star is not none %}{{ "%.1f"|format(daily_average_star) }} ★{% else %}No rating{% endif %}</small></div>
+                            <div class="student-insights-metric"><span>Latest Grade</span><strong>{% if daily_latest_percentage is not none %}{{ "%.1f"|format(daily_latest_percentage) }}%{% else %}—{% endif %}</strong><small>Most recent rated day</small></div>
+                            <div class="student-insights-metric"><span>Highest Grade</span><strong>{% if daily_highest_percentage is not none %}{{ "%.1f"|format(daily_highest_percentage) }}%{% else %}—{% endif %}</strong><small>Best rated day</small></div>
+                            <div class="student-insights-metric"><span>Lowest Grade</span><strong>{% if daily_lowest_percentage is not none %}{{ "%.1f"|format(daily_lowest_percentage) }}%{% else %}—{% endif %}</strong><small>Lowest rated day</small></div>
+                        </div>
+
+                        <h3 class="student-insights-subtitle">Recent OJT Grades</h3>
                         {% if daily_performance.history %}
-                            {% for item in daily_performance.history[-2:]|reverse %}
-                                <div class="student-document-guide">
-                                    <div class="student-document-guide-icon" aria-hidden="true">{{ item.day_number }}</div>
-                                    <div>
-                                        <h2>Day {{ item.day_number }} · {{ item.date }}</h2>
-                                        <p>{% if item.is_rated %}<strong>{{ "%.1f"|format(item.percentage) }}%</strong> · {{ "%.1f"|format(item.star_rating) }} ★{% if item.comment %} · {{ item.comment }}{% endif %}{% else %}Completed OJT day · awaiting supervisor Daily Performance rating.{% endif %}</p>
+                            <div class="student-insights-day-list">
+                                {% for item in daily_performance.history[-2:]|reverse %}
+                                    <div class="student-insights-day">
+                                        <div class="student-insights-day-icon" aria-hidden="true">D{{ item.day_number }}</div>
+                                        <div class="student-insights-day-copy">
+                                            <strong>Day {{ item.day_number }} · {{ item.date }}</strong>
+                                            <span>{% if item.comment %}{{ item.comment }}{% else %}Completed Daily OJT entry{% endif %}</span>
+                                        </div>
+                                        <div class="student-insights-day-score{% if not item.is_rated %} is-empty{% endif %}">
+                                            {% if item.is_rated %}
+                                                <strong>{{ "%.1f"|format(item.percentage) }}%</strong>
+                                                <span>{{ "%.1f"|format(item.star_rating) }} ★</span>
+                                            {% else %}
+                                                <strong>Not rated</strong>
+                                                <span>Awaiting supervisor</span>
+                                            {% endif %}
+                                        </div>
                                     </div>
-                                </div>
-                            {% endfor %}
-                            <div class="profile-actions">
-                                <a class="student-dashboard-button" href="{{ url_for('student.logbook', classroom_id=classroom.id) }}">View More Logbook Days</a>
+                                {% endfor %}
+                            </div>
+                            <div class="student-insights-card-footer">
+                                <a class="student-insights-wide-link" href="{{ url_for('student.logbook', classroom_id=classroom.id) }}"><span>View All Logbook Days</span><span aria-hidden="true">→</span></a>
                             </div>
                         {% elif daily_closed_days == 0 %}
-                            <div class="student-document-guide">
-                                <div class="student-document-guide-icon" aria-hidden="true">—</div>
-                                <div><h2>No completed OJT days yet</h2><p>Your Daily OJT grades will appear after a completed day is rated by your supervisor.</p></div>
-                            </div>
+                            <div class="student-insights-empty">No completed OJT days yet. Daily OJT grades will appear after a completed day is rated by your supervisor.</div>
+                        {% else %}
+                            <div class="student-insights-empty">Completed OJT days are available, but no Daily Performance history could be shown yet.</div>
                         {% endif %}
-                    </article>
+                    </div>
+                </article>
 
-                    <article class="profile-section">
-                        <span class="student-section-eyebrow">Evidence Input</span>
-                        <h2>Work Performance Evidence</h2>
-                        <p class="student-classwork-detail-subtitle">Your Work performance is derived from Supervisor Daily OJT ratings. When a rated Logbook day is linked to Work, that Daily OJT score becomes the numeric evidence for the linked Work item.</p>
-                        <div class="student-document-guide">
-                            <div class="student-document-guide-icon" aria-hidden="true">★</div>
+                <article class="student-insights-card">
+                    <div class="student-insights-card-head">
+                        <div class="student-insights-card-title">
+                            <div class="student-insights-card-icon" aria-hidden="true">▤</div>
                             <div>
-                                <h2>Based on Supervisor Daily OJT Ratings</h2>
-                                <p>Only Work linked to a rated Logbook day is included in the Work analytics below. Nexora does not invent a score for unrated or unlinked Work.</p>
+                                <h2>Work Performance</h2>
+                                <p>Performance based on Work linked to rated Daily OJT Logbook days.</p>
                             </div>
                         </div>
-                        <div class="student-classwork-submission-summary">
-                            <div><span>Rated Work Average</span><strong>{% if average_percentage is not none %}{{ "%.1f"|format(average_percentage) }}%{% else %}—{% endif %}</strong></div>
-                            <div><span>Lowest Linked Rating</span><strong>{% if min_percentage is not none %}{{ "%.1f"|format(min_percentage) }}%{% else %}—{% endif %}</strong></div>
-                            <div><span>Highest Linked Rating</span><strong>{% if max_percentage is not none %}{{ "%.1f"|format(max_percentage) }}%{% else %}—{% endif %}</strong></div>
-                            <div><span>Rated Work / Total</span><strong>{{ graded_count }} / {{ total_count }}</strong></div>
-                            <div><span>Linked to Logbook / Total</span><strong>{{ recorded_count }} / {{ total_count }}</strong></div>
-                            <div><span>Supervisor Reviewed / Total</span><strong>{{ reviewed_count }} / {{ total_count }}</strong></div>
-                            <div><span>Rating Coverage</span><strong>{{ "%.1f"|format(completion_rate) }}%</strong></div>
-                            <div><span>Performance Label</span><strong>{{ numeric_performance_label or 'No Data' }}</strong></div>
+                    </div>
+                    <div class="student-insights-card-body">
+                        <div class="student-insights-work-list">
+                            <div class="student-insights-work-row"><span>Rated Work Average</span><strong>{% if average_percentage is not none %}{{ "%.1f"|format(average_percentage) }}%{% else %}—{% endif %}</strong></div>
+                            <div class="student-insights-work-row"><span>Lowest Linked Rating</span><strong>{% if min_percentage is not none %}{{ "%.1f"|format(min_percentage) }}%{% else %}—{% endif %}</strong></div>
+                            <div class="student-insights-work-row"><span>Highest Linked Rating</span><strong>{% if max_percentage is not none %}{{ "%.1f"|format(max_percentage) }}%{% else %}—{% endif %}</strong></div>
+                            <div class="student-insights-work-row"><span>Rated Work</span><strong>{{ graded_count }} / {{ total_count }}</strong></div>
+                            <div class="student-insights-work-row"><span>Linked to Logbook</span><strong>{{ recorded_count }} / {{ total_count }}</strong></div>
+                            <div class="student-insights-work-row"><span>Supervisor Reviewed</span><strong>{{ reviewed_count }} / {{ total_count }}</strong></div>
+                            <div class="student-insights-work-row"><span>Rating Coverage</span><strong>{{ "%.1f"|format(completion_rate) }}%</strong></div>
+                            <div class="student-insights-work-row"><span>Performance Label</span><strong>{{ numeric_performance_label or 'No Data' }}</strong></div>
                         </div>
-                        {% if not has_performance_data %}
-                            <div class="student-document-guide">
-                                <div class="student-document-guide-icon" aria-hidden="true">—</div>
-                                <div>
-                                    <h2>No linked Daily OJT rating yet</h2>
-                                    <p>{% if has_daily_performance and recorded_count %}Your Daily OJT grade is already recorded. Link that rated Logbook day to Work so the Work analytics can use the same supervisor-entered score.{% elif recorded_count %}Your Work is linked to the Logbook, but no Supervisor Daily OJT rating is available for that linked day yet.{% else %}Work analytics will appear after Work is linked to a Logbook day and that day receives a Supervisor Daily OJT rating.{% endif %}</p>
-                                </div>
-                            </div>
-                        {% endif %}
-                    </article>
+                        <p class="student-insights-note">Daily OJT ratings remain the source for Internship Work analytics when the rated Logbook day is linked to Work. Nexora does not invent a score for unrated or unlinked Work.</p>
+                        <div class="student-insights-card-footer">
+                            <a class="student-insights-wide-link" href="{{ url_for('student_classwork.index', class_id=classroom.id) }}"><span>View My Work</span><span aria-hidden="true">→</span></a>
+                        </div>
+                    </div>
+                </article>
+            </section>
 
-                    <article class="profile-section" aria-labelledby="feedback-intelligence-heading">
-                        <span class="student-section-eyebrow">Feedback Models</span>
-                        <h2 id="feedback-intelligence-heading">Feedback Intelligence</h2>
-                        <p class="student-classwork-detail-subtitle">Machine-learning analysis based only on available supervisor feedback text, including Daily OJT review comments.</p>
-                        {% if has_feedback %}
-                            <div class="student-classwork-submission-summary">
-                                <div><span>Sentiment</span><strong>{{ sentiment or '—' }}</strong></div>
-                                <div><span>Competency Signal</span><strong>{{ competency or '—' }}</strong></div>
-                                <div><span>ML Confidence</span><strong>{{ "%.2f"|format(confidence) }}</strong></div>
-                                <div><span>Feedback Classification</span><strong>{{ feedback_analysis.performance_label or '—' }}</strong></div>
-                                <div><span>Naive Bayes</span><strong>{{ feedback_analysis.nb_prediction or '—' }}</strong></div>
-                                <div><span>SVM</span><strong>{{ feedback_analysis.svm_prediction or '—' }}</strong></div>
+            <article class="student-insights-card student-insights-ai-card" aria-labelledby="nexora-ai-analysis-heading">
+                <div class="student-insights-card-head">
+                    <div class="student-insights-card-title">
+                        <div class="student-insights-card-icon" aria-hidden="true">AI</div>
+                        <div>
+                            <h2 id="nexora-ai-analysis-heading">Nexora AI Analysis</h2>
+                            <p>Personalized explanation based on the same Daily OJT, Work, and feedback evidence visible on this page.</p>
+                        </div>
+                    </div>
+                    <span class="student-insights-pill">AI</span>
+                </div>
+                <div class="student-insights-card-body">
+                    {% if has_daily_performance or has_performance_data or has_feedback %}
+                        <p id="nxMlAiStatus" class="student-insights-ai-status">Analyzing your current evidence…</p>
+                        <div id="nxMlAiItems" class="student-insights-ai-items" hidden>
+                            <section class="student-insights-ai-item"><h3>Overall Interpretation</h3><p data-ai-section="overall"></p></section>
+                            <section class="student-insights-ai-item"><h3>What Happened</h3><p data-ai-section="happened"></p></section>
+                            <section class="student-insights-ai-item"><h3>Areas to Improve</h3><p data-ai-section="improve"></p></section>
+                            <section class="student-insights-ai-item"><h3>Feedback Signal</h3><p data-ai-section="feedback"></p></section>
+                            <section class="student-insights-ai-item"><h3>Next Focus</h3><p data-ai-section="next"></p></section>
+                        </div>
+                    {% else %}
+                        <div class="student-insights-empty">Nexora AI cannot explain performance yet because no Daily OJT grade, numeric Work grade, or supervisor feedback is available.</div>
+                    {% endif %}
+                </div>
+            </article>
+
+            <section class="student-insights-secondary-grid" aria-label="Feedback signals and recommendation">
+                <article class="student-insights-card" aria-labelledby="feedback-intelligence-heading">
+                    <div class="student-insights-card-head">
+                        <div class="student-insights-card-title">
+                            <div class="student-insights-card-icon" aria-hidden="true">ML</div>
+                            <div>
+                                <h2 id="feedback-intelligence-heading">Feedback &amp; Skill Signals</h2>
+                                <p>Machine-learning signals based only on available supervisor feedback text and Daily OJT review comments.</p>
                             </div>
-                            <div class="student-classwork-feedback">
+                        </div>
+                    </div>
+                    <div class="student-insights-card-body">
+                        {% if has_feedback %}
+                            <div class="student-insights-feedback-grid">
+                                <div class="student-insights-feedback-box"><span>Sentiment</span><strong>{{ sentiment or '—' }}</strong><small>Supervisor feedback tone</small></div>
+                                <div class="student-insights-feedback-box"><span>Competency Signal</span><strong>{{ competency or '—' }}</strong><small>Detected skill signal</small></div>
+                                <div class="student-insights-feedback-box"><span>ML Confidence</span><strong>{{ "%.2f"|format(confidence) }}</strong><small>Model confidence</small></div>
+                                <div class="student-insights-feedback-box"><span>Feedback Classification</span><strong>{{ feedback_analysis.performance_label or '—' }}</strong><small>Feedback-only classification</small></div>
+                                <div class="student-insights-feedback-box"><span>Naive Bayes</span><strong>{{ feedback_analysis.nb_prediction or '—' }}</strong><small>Model prediction</small></div>
+                                <div class="student-insights-feedback-box"><span>SVM</span><strong>{{ feedback_analysis.svm_prediction or '—' }}</strong><small>Model prediction</small></div>
+                            </div>
+                            <div class="student-insights-copy-block">
                                 <h3>Feedback-based Recommendation</h3>
                                 <p>{{ recommendation or 'No feedback recommendation is available.' }}</p>
                             </div>
                         {% else %}
-                            <div class="student-document-guide">
-                                <div class="student-document-guide-icon" aria-hidden="true">ML</div>
-                                <div>
-                                    <h2>No feedback evidence available</h2>
-                                    <p>Sentiment, competency, confidence, Naive Bayes, SVM, and feedback classification remain unavailable until supervisor feedback or Daily OJT review comments exist.</p>
-                                </div>
-                            </div>
+                            <div class="student-insights-empty">No supervisor feedback evidence is available yet. Sentiment, competency, confidence, Naive Bayes, SVM, and feedback classification remain unavailable.</div>
                         {% endif %}
-                    </article>
-                </div>
+                    </div>
+                </article>
 
-                <div class="student-insights-column">
-                    <article class="profile-section">
-                        <span class="student-section-eyebrow">Decision Support</span>
-                        <h2>ML Recommendation</h2>
-                        <p class="student-classwork-detail-subtitle">Structured guidance based on the Work evidence currently available to Nexora.</p>
-                        {% if has_performance_data and ml_recommendation and ml_recommendation.recommendation %}
-                            <div class="student-classwork-submission-summary">
-                                <div><span>Work Label Used</span><strong>{{ ml_recommendation.performance_label }}</strong></div>
-                                <div><span>Priority</span><strong>{{ ml_recommendation.priority|title }}</strong></div>
-                                <div><span>Average Used</span><strong>{% if ml_recommendation.overall_percentage is not none %}{{ "%.1f"|format(ml_recommendation.overall_percentage) }}%{% else %}—{% endif %}</strong></div>
-                                <div><span>Grade Coverage Used</span><strong>{{ "%.1f"|format(ml_recommendation.completion_rate) }}%</strong></div>
+                <article class="student-insights-card">
+                    <div class="student-insights-card-head">
+                        <div class="student-insights-card-title">
+                            <div class="student-insights-card-icon" aria-hidden="true">!</div>
+                            <div>
+                                <h2>Recommendation</h2>
+                                <p>Structured decision support from the Work evidence currently available to Nexora.</p>
                             </div>
-                            <div class="student-classwork-feedback">
+                        </div>
+                        {% if ml_recommendation and ml_recommendation.priority %}
+                            <span class="student-insights-pill">{{ ml_recommendation.priority|title }} Priority</span>
+                        {% endif %}
+                    </div>
+                    <div class="student-insights-card-body">
+                        {% if has_performance_data and ml_recommendation and ml_recommendation.recommendation %}
+                            <div class="student-insights-metric-grid is-two">
+                                <div class="student-insights-metric"><span>Work Label Used</span><strong>{{ ml_recommendation.performance_label }}</strong></div>
+                                <div class="student-insights-metric"><span>Priority</span><strong>{{ ml_recommendation.priority|title }}</strong></div>
+                                <div class="student-insights-metric"><span>Average Used</span><strong>{% if ml_recommendation.overall_percentage is not none %}{{ "%.1f"|format(ml_recommendation.overall_percentage) }}%{% else %}—{% endif %}</strong></div>
+                                <div class="student-insights-metric"><span>Grade Coverage Used</span><strong>{{ "%.1f"|format(ml_recommendation.completion_rate) }}%</strong></div>
+                            </div>
+                            <div class="student-insights-copy-block">
                                 <h3>Recommendation</h3>
                                 <p>{{ ml_recommendation.recommendation }}</p>
                             </div>
                             {% if ml_recommendation.basis %}
-                                <h3>Basis for this recommendation</h3>
-                                <div class="profile-check-grid">
+                                <div class="student-insights-basis" aria-label="Recommendation basis">
                                     {% for item in ml_recommendation.basis %}
-                                        <div class="profile-check done">✓ {{ item }}</div>
+                                        <span>✓ {{ item }}</span>
                                     {% endfor %}
                                 </div>
                             {% endif %}
                         {% else %}
-                            <div class="student-document-guide">
-                                <div class="student-document-guide-icon" aria-hidden="true">ML</div>
-                                <div>
-                                    <h2>No score-based Work recommendation yet</h2>
-                                    <p>{% if has_daily_performance %}Your Daily OJT grade is available, but Work recommendations remain Work-specific. Nexora will generate one after rated Daily OJT evidence is linked to Work or another numeric Work grade is available.{% else %}Nexora will generate a numeric Work recommendation after graded Work evidence is available. Recorded and reviewed Logbook Work remains visible above without being converted into a fake score.{% endif %}</p>
-                                </div>
-                            </div>
+                            <div class="student-insights-empty">{% if has_daily_performance %}Your Daily OJT grades are available, but Work recommendations remain Work-specific. A recommendation appears after rated Daily OJT evidence is linked to Work or another supported numeric Work score is available.{% else %}A Work recommendation will appear after graded Work evidence is available.{% endif %}</div>
                         {% endif %}
-                    </article>
-
-                    <article class="profile-section student-insights-evidence-card">
-                        <span class="student-section-eyebrow">Availability</span>
-                        <h2>Evidence Status</h2>
-                        <div class="student-document-guide">
-                            <div class="student-document-guide-icon" aria-hidden="true">★</div>
-                            <div>
-                                <h2>Daily Performance Evidence</h2>
-                                <p>{% if has_daily_performance %}Available — {{ daily_rated_days }} of {{ daily_closed_days }} completed OJT day{% if daily_closed_days != 1 %}s{% endif %} {% if daily_rated_days == 1 %}has{% else %}have{% endif %} a supervisor-entered grade, averaging {{ "%.1f"|format(daily_average_percentage) }}%.{% elif daily_closed_days %}No Daily OJT grade yet — {{ daily_closed_days }} completed day{% if daily_closed_days != 1 %}s are{% else %} is{% endif %} waiting for a supervisor rating.{% else %}No completed Daily OJT day is available yet.{% endif %}</p>
-                            </div>
+                        <div class="student-insights-card-footer">
+                            <a class="student-insights-wide-link" href="{{ url_for('performance_reports.student_reports', class_id=classroom.id) }}"><span>Open Detailed Report</span><span aria-hidden="true">→</span></a>
                         </div>
-                        <div class="student-document-guide">
-                            <div class="student-document-guide-icon" aria-hidden="true">✓</div>
-                            <div>
-                                <h2>OJT Work Evidence</h2>
-                                <p>{% if recorded_count %}Available — {{ recorded_count }} of {{ total_count }} Work item{% if total_count != 1 %}s are{% else %} is{% endif %} linked to the Daily OJT Logbook, and {{ reviewed_count }} {% if reviewed_count == 1 %}has{% else %}have{% endif %} a supervisor review.{% else %}No recorded Work evidence is available yet.{% endif %}</p>
-                            </div>
-                        </div>
-                        <div class="student-document-guide">
-                            <div class="student-document-guide-icon" aria-hidden="true">✓</div>
-                            <div>
-                                <h2>Work Performance Evidence</h2>
-                                <p>{% if has_performance_data %}Available — graded Work data can support Work-performance interpretation.{% elif has_daily_performance %}Daily OJT grades are available, but no linked numeric Work score is available yet.{% else %}No numeric Work grade yet — recorded/reviewed Work is not automatically converted into a performance score until its linked OJT day is rated.{% endif %}</p>
-                            </div>
-                        </div>
-                        <div class="student-document-guide">
-                            <div class="student-document-guide-icon" aria-hidden="true">✓</div>
-                            <div>
-                                <h2>Feedback Evidence</h2>
-                                <p>{% if has_feedback %}Available — supervisor feedback can support feedback ML analysis.{% else %}No Feedback — feedback model outputs remain unavailable.{% endif %}</p>
-                            </div>
-                        </div>
-                        <div class="student-document-guide">
-                            <div class="student-document-guide-icon" aria-hidden="true">i</div>
-                            <div>
-                                <h2>Important Note</h2>
-                                <p>Daily OJT grades, Work analytics, ML Insights, and AI explanations are separate evidence dimensions and do not replace the Official OJT Evaluation.</p>
-                            </div>
-                        </div>
-                    </article>
-                </div>
-
-                <div class="student-insights-column is-ai">
-                    <article class="profile-section student-insights-ai-card" aria-labelledby="nexora-ai-analysis-heading">
-                        <div class="student-insights-ai-head">
-                            <div>
-                                <span class="student-section-eyebrow">Automatic Explanation</span>
-                                <h2 id="nexora-ai-analysis-heading">Nexora AI Analysis</h2>
-                                <p class="student-classwork-detail-subtitle">Automatically generated from the OJT and ML evidence already visible on this page.</p>
-                            </div>
-                            <span class="student-insights-ai-badge">AI</span>
-                        </div>
-
-                        <div class="student-insights-ai-intro">
-                            <strong>Your personalized performance explanation</strong>
-                            <p>Nexora AI explains what the current evidence means, what may be limiting progress, and what to focus on next. It cannot change grades or the Official OJT Evaluation.</p>
-                        </div>
-
-                        {% if has_daily_performance or has_performance_data or has_feedback %}
-                            <p id="nxMlAiStatus" class="student-insights-ai-status">Analyzing your current evidence…</p>
-                            <div id="nxMlAiItems" class="student-insights-ai-items" hidden>
-                                <section class="student-insights-ai-item"><h3>Overall Interpretation</h3><p data-ai-section="overall"></p></section>
-                                <section class="student-insights-ai-item"><h3>What Happened</h3><p data-ai-section="happened"></p></section>
-                                <section class="student-insights-ai-item"><h3>What You Should Improve</h3><p data-ai-section="improve"></p></section>
-                                <section class="student-insights-ai-item"><h3>Feedback Signal</h3><p data-ai-section="feedback"></p></section>
-                                <section class="student-insights-ai-item"><h3>Next Focus</h3><p data-ai-section="next"></p></section>
-                            </div>
-                        {% else %}
-                            <div class="student-insights-ai-items">
-                                <section class="student-insights-ai-item">
-                                    <h3>Not enough rated or feedback evidence yet</h3>
-                                    <p>{% if recorded_count %}Nexora can see your recorded OJT Work, but score-specific guidance starts after a supervisor Daily Performance rating, numeric Work grade, or supervisor feedback is available.{% else %}Nexora AI cannot explain your performance yet because no Daily OJT grade, numeric Work grade, or supervisor feedback is available.{% endif %}</p>
-                                </section>
-                            </div>
-                        {% endif %}
-                    </article>
-                </div>
+                    </div>
+                </article>
             </section>
+
+            <article class="student-insights-card student-insights-evidence-card">
+                <div class="student-insights-card-head">
+                    <div class="student-insights-card-title">
+                        <div class="student-insights-card-icon" aria-hidden="true">✓</div>
+                        <div>
+                            <h2>Evidence &amp; Completion Status</h2>
+                            <p>Availability of the separate evidence dimensions used across Daily OJT, Work, ML, and AI Insights.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="student-insights-card-body">
+                    <div class="student-insights-evidence-grid">
+                        <div class="student-insights-evidence-item">
+                            <strong>Daily Performance Evidence</strong>
+                            <p>{% if has_daily_performance %}{{ daily_rated_days }} of {{ daily_closed_days }} completed OJT day{% if daily_closed_days != 1 %}s{% endif %} rated, averaging {{ "%.1f"|format(daily_average_percentage) }}%.{% elif daily_closed_days %}{{ daily_closed_days }} completed day{% if daily_closed_days != 1 %}s are{% else %} is{% endif %} waiting for a supervisor rating.{% else %}No completed Daily OJT day is available yet.{% endif %}</p>
+                        </div>
+                        <div class="student-insights-evidence-item">
+                            <strong>OJT Work Evidence</strong>
+                            <p>{% if recorded_count %}{{ recorded_count }} of {{ total_count }} Work item{% if total_count != 1 %}s are{% else %} is{% endif %} linked to the Daily OJT Logbook; {{ reviewed_count }} supervisor reviewed.{% else %}No recorded Work evidence is available yet.{% endif %}</p>
+                        </div>
+                        <div class="student-insights-evidence-item">
+                            <strong>Work Performance Evidence</strong>
+                            <p>{% if has_performance_data %}Available — graded Work supports Work-performance interpretation and recommendations.{% elif has_daily_performance %}Daily OJT grades exist, but no linked numeric Work score is available yet.{% else %}No numeric Work grade is available yet.{% endif %}</p>
+                        </div>
+                        <div class="student-insights-evidence-item">
+                            <strong>Feedback Evidence</strong>
+                            <p>{% if has_feedback %}Available — supervisor feedback supports feedback ML analysis.{% else %}No feedback evidence is available yet; feedback ML outputs remain unavailable.{% endif %}</p>
+                        </div>
+                    </div>
+                    <div class="student-insights-boundary">
+                        <div class="student-insights-boundary-icon" aria-hidden="true">i</div>
+                        <div>
+                            <strong>Evidence boundary</strong>
+                            <p>Daily OJT grades, Work analytics, feedback ML signals, recommendations, and Nexora AI explanations remain separate evidence dimensions. They do not replace or automatically calculate the Official OJT Evaluation.</p>
+                        </div>
+                    </div>
+                </div>
+            </article>
         </div>
     </main>
 
@@ -531,7 +1041,7 @@
             feedback_recommendation: evidence.feedback_recommendation
         };
 
-        var cacheKey = 'nxMlAiAnalysis:v4:' + {{ classroom.id|tojson }} + ':' + evidenceHash(aiEvidence);
+        var cacheKey = 'nxMlAiAnalysis:v5:' + {{ classroom.id|tojson }} + ':' + evidenceHash(aiEvidence);
         try {
             var cached = window.sessionStorage.getItem(cacheKey);
             if (cached) {
