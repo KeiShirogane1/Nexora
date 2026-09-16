@@ -1,7 +1,12 @@
-from flask import Blueprint, abort, flash, redirect, request, send_file, session, url_for
+from flask import Blueprint, abort, flash, redirect, render_template, request, send_file, session, url_for
 
 from app.Http.Middleware.security import role_required
-from app.Services.internship_schedule_service import get_student_schedule_state
+from app.Models.db import get_db_connection
+from app.Services.internship_schedule_service import (
+    app_local_now,
+    attendance_local_datetime,
+    get_student_schedule_state,
+)
 from app.Services.logbook_service import save_daily_log
 from app.Services.logbook_photo_service import (
     add_logbook_photos,
@@ -97,6 +102,77 @@ def save_daily_entry():
     if classroom_id is not None:
         return redirect(url_for("student.logbook", classroom_id=int(classroom_id)))
     return redirect(url_for("student.logbook"))
+
+
+@daily_logbook.route(
+    "/student/daily-log/attendance/<int:attendance_id>/edit",
+    methods=["GET", "POST"],
+)
+@role_required("student")
+def edit_today_daily_entry(attendance_id):
+    """Allow a student to edit an existing Daily OJT entry only on its local OJT date."""
+    conn = get_db_connection()
+    try:
+        row = conn.execute(
+            """
+            SELECT l.id,
+                   l.content,
+                   COALESCE(l.reflection, '') AS reflection,
+                   COALESCE(l.challenges, '') AS challenges,
+                   a.clock_in,
+                   a.classroom_id
+            FROM logs l
+            JOIN attendance a ON a.id = l.attendance_id
+            WHERE l.attendance_id = ?
+              AND l.student_id = ?
+              AND COALESCE(l.entry_type, 'daily') = 'daily'
+            ORDER BY l.id DESC
+            LIMIT 1
+            """,
+            (attendance_id, session["user_id"]),
+        ).fetchone()
+        if not row:
+            abort(404)
+
+        local_clock = attendance_local_datetime(row[4])
+        classroom_id = row[5]
+        if local_clock is None or local_clock.date() != app_local_now().date():
+            flash("Previous OJT days are read-only. You can edit only today's Daily OJT Logbook entry.", "warning")
+            if classroom_id is not None:
+                return redirect(url_for("student.logbook", classroom_id=int(classroom_id)))
+            return redirect(url_for("student.logbook"))
+
+        if request.method == "POST":
+            accomplishment = (request.form.get("content") or "").strip()
+            reflection = (request.form.get("reflection") or "").strip()
+            challenges = (request.form.get("challenges") or "").strip()
+            if not accomplishment:
+                flash("Daily accomplishment is required.", "danger")
+            else:
+                conn.execute(
+                    """
+                    UPDATE logs
+                    SET content = ?, reflection = ?, challenges = ?, updated_at = CURRENT_TIMESTAMP
+                    WHERE id = ? AND student_id = ?
+                    """,
+                    (accomplishment, reflection, challenges, row[0], session["user_id"]),
+                )
+                conn.commit()
+                flash("Today's Daily OJT Logbook entry was updated.", "success")
+                if classroom_id is not None:
+                    return redirect(url_for("student.logbook", classroom_id=int(classroom_id)))
+                return redirect(url_for("student.logbook"))
+
+        return render_template(
+            "student/edit_log.html",
+            log=row,
+            log_content=row[1] or "",
+            log_reflection=row[2] or "",
+            log_challenges=row[3] or "",
+            active_page="logbook",
+        )
+    finally:
+        conn.close()
 
 
 @daily_logbook.route("/student/daily-log/<int:log_id>/photos", methods=["POST"])
