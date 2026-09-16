@@ -39,8 +39,6 @@ def _latest_logbook_feedback(student_id, class_id):
         comment = _value(row, "comments", 0, "") if row else ""
         return str(comment).strip() if comment else ""
     except Exception:
-        # Feedback is optional evidence. Missing legacy tables/rows must not
-        # prevent the rest of the ML insight page from loading.
         return ""
     finally:
         conn.close()
@@ -67,23 +65,21 @@ def build_student_performance_features(student_id, class_id):
                 s.grading_method,
                 (
                     SELECT AVG(dpr.percentage)
-                    FROM daily_performance_ratings dpr
-                    JOIN (
-                        SELECT DISTINCT l.attendance_id
-                        FROM logs l
-                        JOIN attendance rated_attendance
-                          ON rated_attendance.id = l.attendance_id
-                        LEFT JOIN daily_log_work_links rated_link
-                          ON rated_link.log_id = l.id
-                        WHERE l.student_id = ?
-                          AND l.entry_type = 'daily'
-                          AND rated_attendance.classroom_id = a.classroom_id
-                          AND (
-                                l.related_assignment_id = a.id
-                                OR rated_link.assignment_id = a.id
-                          )
-                    ) rated_days
-                      ON rated_days.attendance_id = dpr.attendance_id
+                    FROM logs rated_log
+                    JOIN attendance rated_attendance
+                      ON rated_attendance.id = rated_log.attendance_id
+                    JOIN daily_performance_ratings dpr
+                      ON dpr.attendance_id = rated_log.attendance_id
+                    LEFT JOIN daily_log_work_links rated_link
+                      ON rated_link.log_id = rated_log.id
+                     AND rated_link.assignment_id = a.id
+                    WHERE rated_log.student_id = ?
+                      AND rated_log.entry_type = 'daily'
+                      AND rated_attendance.classroom_id = a.classroom_id
+                      AND (
+                            rated_log.related_assignment_id = a.id
+                            OR rated_link.assignment_id = a.id
+                      )
                 ) AS daily_rating_percentage,
                 (
                     SELECT cs.grade
@@ -181,9 +177,6 @@ def build_student_performance_features(student_id, class_id):
         daily_rating_percentage = _value(row, "daily_rating_percentage", 6)
         submission_grade = _value(row, "submission_grade", 7)
 
-        # Daily OJT ratings are authoritative whenever rated Logbook evidence
-        # exists for this Work. This also makes reads resilient if the legacy
-        # classwork_scores compatibility row has not yet been backfilled.
         if daily_rating_percentage is not None:
             try:
                 percentage = float(daily_rating_percentage)
@@ -226,8 +219,6 @@ def build_student_performance_features(student_id, class_id):
         "total_count": total_assignments,
         "recorded_completion_rate": recorded_completion_rate,
         "review_rate": review_rate,
-        # Preserve the existing ML field for compatibility. In internship
-        # views this now represents Daily Performance rating coverage.
         "completion_rate": grade_completion_rate,
         "daily_performance_count": sum(
             1 for method in methods if method == "daily_performance"
