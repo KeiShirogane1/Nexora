@@ -375,7 +375,9 @@ def _admin_student_logbook_context(student_id):
                    sup.username AS supervisor_name,
                    COALESCE(r.status, 'pending') AS review_status,
                    dpr.star_rating,
-                   dpr.percentage
+                   dpr.percentage,
+                   dpr.comment AS rating_comment,
+                   dpr.rated_at
             FROM logs l
             JOIN attendance a ON a.id = l.attendance_id
             JOIN classrooms c ON c.id = a.classroom_id
@@ -394,6 +396,23 @@ def _admin_student_logbook_context(student_id):
             classroom_id = int(_row_value(row, "classroom_id", 2, 0) or 0)
             day = _attendance_day_details(conn, classroom_id, student_id, attendance_id)
             work_items = get_logbook_work_items(int(_row_value(row, "id", 0, 0)), conn=conn)
+            criterion_rows = conn.execute(
+                """
+                SELECT criterion_name, rating_value, max_value
+                FROM daily_performance_rating_items
+                WHERE attendance_id = ?
+                ORDER BY sort_order ASC, criterion_key ASC
+                """,
+                (attendance_id,),
+            ).fetchall()
+            criteria = [
+                {
+                    "criterion_name": _row_value(item, "criterion_name", 0, "") or "",
+                    "rating_value": float(_row_value(item, "rating_value", 1, 0) or 0),
+                    "max_value": float(_row_value(item, "max_value", 2, 5) or 5),
+                }
+                for item in criterion_rows
+            ]
             entries.append(
                 {
                     "id": int(_row_value(row, "id", 0, 0)),
@@ -409,6 +428,9 @@ def _admin_student_logbook_context(student_id):
                     "review_status": _row_value(row, "review_status", 10, "pending"),
                     "star_rating": _row_value(row, "star_rating", 11, None),
                     "percentage": _row_value(row, "percentage", 12, None),
+                    "rating_comment": _row_value(row, "rating_comment", 13, "") or "",
+                    "rated_at": _row_value(row, "rated_at", 14, None),
+                    "criteria": criteria,
                     "work_titles": [item["title"] for item in work_items],
                 }
             )

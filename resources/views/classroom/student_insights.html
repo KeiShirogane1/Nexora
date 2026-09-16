@@ -255,25 +255,30 @@
                     <article class="profile-section">
                         <span class="student-section-eyebrow">Evidence Input</span>
                         <h2>Work Performance Evidence</h2>
-                        <p class="student-classwork-detail-subtitle">Work analytics use only Work that is linked to a rated Daily OJT day or another supported numeric Work grade. Daily OJT grades above remain valid even when a Work item has no linked score yet.</p>
+                        <p class="student-classwork-detail-subtitle">Your Work performance is derived from Supervisor Daily OJT ratings. When a rated Logbook day is linked to Work, that Daily OJT score becomes the numeric evidence for the linked Work item.</p>
+                        <div class="student-document-guide">
+                            <div class="student-document-guide-icon" aria-hidden="true">★</div>
+                            <div>
+                                <h2>Based on Supervisor Daily OJT Ratings</h2>
+                                <p>Only Work linked to a rated Logbook day is included in the Work analytics below. Nexora does not invent a score for unrated or unlinked Work.</p>
+                            </div>
+                        </div>
                         <div class="student-classwork-submission-summary">
-                            <div><span>Work Average</span><strong>{% if average_percentage is not none %}{{ "%.1f"|format(average_percentage) }}%{% else %}—{% endif %}</strong></div>
-                            <div><span>Minimum Score</span><strong>{% if min_percentage is not none %}{{ "%.1f"|format(min_percentage) }}%{% else %}—{% endif %}</strong></div>
-                            <div><span>Maximum Score</span><strong>{% if max_percentage is not none %}{{ "%.1f"|format(max_percentage) }}%{% else %}—{% endif %}</strong></div>
-                            <div><span>Recorded / Total</span><strong>{{ recorded_count }} / {{ total_count }}</strong></div>
-                            <div><span>Supervisor Reviewed</span><strong>{{ reviewed_count }} / {{ total_count }}</strong></div>
-                            <div><span>Graded / Total</span><strong>{{ graded_count }} / {{ total_count }}</strong></div>
-                            <div><span>Grade Coverage</span><strong>{{ "%.1f"|format(completion_rate) }}%</strong></div>
-                            <div><span>Work Label</span><strong>{{ numeric_performance_label or 'No Data' }}</strong></div>
-                            <div><span>Manual Grades</span><strong>{{ manual_count }}</strong></div>
-                            <div><span>Imported Grades</span><strong>{{ imported_count }}</strong></div>
+                            <div><span>Rated Work Average</span><strong>{% if average_percentage is not none %}{{ "%.1f"|format(average_percentage) }}%{% else %}—{% endif %}</strong></div>
+                            <div><span>Lowest Linked Rating</span><strong>{% if min_percentage is not none %}{{ "%.1f"|format(min_percentage) }}%{% else %}—{% endif %}</strong></div>
+                            <div><span>Highest Linked Rating</span><strong>{% if max_percentage is not none %}{{ "%.1f"|format(max_percentage) }}%{% else %}—{% endif %}</strong></div>
+                            <div><span>Rated Work / Total</span><strong>{{ graded_count }} / {{ total_count }}</strong></div>
+                            <div><span>Linked to Logbook / Total</span><strong>{{ recorded_count }} / {{ total_count }}</strong></div>
+                            <div><span>Supervisor Reviewed / Total</span><strong>{{ reviewed_count }} / {{ total_count }}</strong></div>
+                            <div><span>Rating Coverage</span><strong>{{ "%.1f"|format(completion_rate) }}%</strong></div>
+                            <div><span>Performance Label</span><strong>{{ numeric_performance_label or 'No Data' }}</strong></div>
                         </div>
                         {% if not has_performance_data %}
                             <div class="student-document-guide">
                                 <div class="student-document-guide-icon" aria-hidden="true">—</div>
                                 <div>
-                                    <h2>No numeric Work performance score yet</h2>
-                                    <p>{% if has_daily_performance and recorded_count %}Your Daily OJT grade is already recorded above. Work analytics stay separate and only receive that score when the Work is linked to a rated Daily OJT day.{% elif recorded_count %}Your recorded Work is visible here, but Nexora will not invent a performance score. A Work score appears when the linked Daily OJT day is rated or another supported numeric Work grade is entered.{% else %}A Work label and Work-based recommendation will appear after graded Work evidence is available.{% endif %}</p>
+                                    <h2>No linked Daily OJT rating yet</h2>
+                                    <p>{% if has_daily_performance and recorded_count %}Your Daily OJT grade is already recorded. Link that rated Logbook day to Work so the Work analytics can use the same supervisor-entered score.{% elif recorded_count %}Your Work is linked to the Logbook, but no Supervisor Daily OJT rating is available for that linked day yet.{% else %}Work analytics will appear after Work is linked to a Logbook day and that day receives a Supervisor Daily OJT rating.{% endif %}</p>
                                 </div>
                             </div>
                         {% endif %}

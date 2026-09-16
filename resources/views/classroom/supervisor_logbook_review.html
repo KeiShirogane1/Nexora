@@ -88,6 +88,11 @@
         .ojt-rating-section { padding-top:14px; margin-top:2px; border-top:1px solid #edf2f7; }
         .ojt-rating-title { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px; }
         .ojt-rating-title strong { color:#10213d; font-size:.78rem; }
+        .ojt-rating-help { margin:7px 0 0; color:#64748b; font-size:.7rem; line-height:1.45; }
+        .ojt-criteria-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:9px; margin-top:14px; }
+        .ojt-criterion-card { padding:12px 13px; border:1px solid #e2e8f0; border-radius:10px; background:#f8fafc; }
+        .ojt-criterion-card strong { display:block; margin-bottom:7px; color:#334155; font-size:.72rem; font-weight:800; }
+        .ojt-criterion-card .ojt-star { font-size:1.5rem; }
         .ojt-star-picker { display:flex; align-items:center; flex-wrap:wrap; gap:3px; }
         .ojt-star { padding:0; border:0; background:transparent; color:#cbd5e1; font-size:1.85rem; line-height:1; cursor:pointer; }
         .ojt-star.is-filled { color:#f59e0b; }
@@ -317,13 +322,50 @@
                         <form id="ojt-individual-rating-form" method="POST" action="{{ url_for('logbook_review.rate_daily_performance', class_id=classroom.id, log_id=selected_entry.id) }}">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <div class="ojt-rating-section">
-                                <div class="ojt-rating-title"><strong>★ Daily Performance</strong>{% if daily_rating %}<span class="badge text-bg-primary">{{ '%.1f'|format(daily_rating.star_rating) }} ★ · {{ '%.1f'|format(daily_rating.percentage) }}%</span>{% endif %}</div>
-                                <div class="ojt-star-picker" data-star-picker data-input-id="ojt-individual-star-rating">
+                                <div class="ojt-rating-title"><strong>★ Overall Daily Rating</strong>{% if daily_rating %}<span class="badge text-bg-primary">{{ '%.1f'|format(daily_rating.star_rating) }} ★ · {{ '%.1f'|format(daily_rating.percentage) }}%</span>{% endif %}</div>
+                                <div class="ojt-star-picker" data-star-picker data-star-required="1" data-input-id="ojt-individual-star-rating">
                                     <input id="ojt-individual-star-rating" name="star_rating" type="hidden" value="{% if daily_rating %}{{ '%.1f'|format(daily_rating.star_rating) }}{% endif %}">
                                     {% for star in range(1,6) %}<button type="button" class="ojt-star" data-star-value="{{ star }}" aria-label="Set {{ star }} star rating">☆</button>{% endfor %}
                                     <button type="button" class="ojt-star-step" data-star-step="-0.1" aria-label="Decrease by 0.1">−</button><span class="ojt-star-label" data-star-label>Choose</span><button type="button" class="ojt-star-step" data-star-step="0.1" aria-label="Increase by 0.1">+</button>
                                 </div>
                                 <div class="text-danger small mt-1" data-star-error hidden>Choose a star rating before saving.</div>
+                                <p class="ojt-rating-help">This remains the official numeric Daily OJT score used by linked Work analytics, ML Insights, and Reports.</p>
+
+                                {% set rating_criteria = [
+                                    'Quality of Work',
+                                    'Productivity',
+                                    'Initiative',
+                                    'Communication',
+                                    'Teamwork',
+                                    'Professionalism',
+                                    'Reliability / Punctuality',
+                                    'Adaptability / Learning'
+                                ] %}
+                                <div class="ojt-rating-title mt-3">
+                                    <strong>☆ Detailed Rating Criteria</strong>
+                                    <span class="text-muted small">Optional · 1–5 stars each</span>
+                                </div>
+                                <div class="ojt-criteria-grid">
+                                    {% for criterion_label in rating_criteria %}
+                                        {% set saved_criterion = namespace(value='') %}
+                                        {% if daily_rating and daily_rating.criteria %}
+                                            {% for criterion in daily_rating.criteria %}
+                                                {% if criterion.criterion_name == criterion_label %}
+                                                    {% set saved_criterion.value = '%.1f'|format(criterion.rating_value) %}
+                                                {% endif %}
+                                            {% endfor %}
+                                        {% endif %}
+                                        <div class="ojt-criterion-card">
+                                            <strong>{{ loop.index }}. {{ criterion_label }}</strong>
+                                            <div class="ojt-star-picker" data-star-picker data-input-id="ojt-criterion-rating-{{ loop.index }}">
+                                                <input type="hidden" name="criterion_name" value="{{ criterion_label }}" data-criterion-name-input {% if not saved_criterion.value %}disabled{% endif %}>
+                                                <input id="ojt-criterion-rating-{{ loop.index }}" name="criterion_rating" type="hidden" value="{{ saved_criterion.value }}" {% if not saved_criterion.value %}disabled{% endif %}>
+                                                {% for star in range(1,6) %}<button type="button" class="ojt-star" data-star-value="{{ star }}" aria-label="Rate {{ criterion_label }} {{ star }} stars">☆</button>{% endfor %}
+                                                <span class="ojt-star-label" data-star-label>Optional</span>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
                                 <textarea class="ojt-modal-textarea mt-2" name="rating_comment" maxlength="2000" placeholder="Performance comment (optional)...">{{ daily_rating.comment if daily_rating else '' }}</textarea>
                             </div>
                         </form>
@@ -365,7 +407,7 @@
                     <div id="ojt-batch-selection" class="ojt-batch-selection"></div>
                     <div class="ojt-rating-section">
                         <div class="ojt-rating-title"><strong>★ Shared Daily Performance Rating</strong></div>
-                        <div class="ojt-star-picker" data-star-picker data-input-id="ojt-batch-star-rating">
+                        <div class="ojt-star-picker" data-star-picker data-star-required="1" data-input-id="ojt-batch-star-rating">
                             <input id="ojt-batch-star-rating" name="star_rating" type="hidden" value="">
                             {% for star in range(1,6) %}<button type="button" class="ojt-star" data-star-value="{{ star }}" aria-label="Set {{ star }} star rating">☆</button>{% endfor %}
                             <button type="button" class="ojt-star-step" data-star-step="-0.1" aria-label="Decrease by 0.1">−</button><span class="ojt-star-label" data-star-label>Choose</span><button type="button" class="ojt-star-step" data-star-step="0.1" aria-label="Increase by 0.1">+</button>
@@ -497,16 +539,24 @@
             const stepButtons = Array.from(picker.querySelectorAll('[data-star-step]'));
             const label = picker.querySelector('[data-star-label]');
             const error = picker.parentElement ? picker.parentElement.querySelector('[data-star-error]') : null;
+            const criterionNameInput = picker.querySelector('[data-criterion-name-input]');
+            const isCriterion = Boolean(criterionNameInput);
+            const required = picker.dataset.starRequired === '1';
             let value = Number.parseFloat(input.value) || 0;
             const render = () => {
                 const whole = Math.floor(value); const hasFraction = value > whole;
                 starButtons.forEach((button) => { const star = Number(button.dataset.starValue || 0); button.classList.remove('is-filled','is-fraction'); if (value && star <= whole) { button.textContent='★'; button.classList.add('is-filled'); } else if (value && hasFraction && star === whole + 1) { button.textContent='★'; button.classList.add('is-fraction'); } else { button.textContent='☆'; } });
-                if (label) label.textContent = value ? `${value.toFixed(1)} / 5` : 'Choose';
+                if (label) label.textContent = value ? `${value.toFixed(1)} / 5` : (isCriterion ? 'Optional' : 'Choose');
+                if (isCriterion) {
+                    const enabled = value > 0;
+                    criterionNameInput.disabled = !enabled;
+                    input.disabled = !enabled;
+                }
             };
             const setValue = (next) => { const rounded = Math.round(Number(next) * 10) / 10; value = Math.min(5, Math.max(1, rounded)); input.value = value.toFixed(1); if (error) error.hidden = true; render(); };
             starButtons.forEach((button) => button.addEventListener('click', () => setValue(Number(button.dataset.starValue || 1))));
             stepButtons.forEach((button) => button.addEventListener('click', () => setValue((value || 1) + Number(button.dataset.starStep || 0))));
-            const form = picker.closest('form'); if (form) form.addEventListener('submit', (event) => { if (input.value) return; event.preventDefault(); if (error) error.hidden=false; starButtons[0]?.focus(); });
+            const form = picker.closest('form'); if (form && required) form.addEventListener('submit', (event) => { if (input.value) return; event.preventDefault(); if (error) error.hidden=false; starButtons[0]?.focus(); });
             render();
         }
         document.querySelectorAll('[data-star-picker]').forEach(bindStarPicker);
