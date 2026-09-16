@@ -141,11 +141,19 @@ def _work_logbook_entry(conn, class_id, assignment_id, student_id):
            JOIN attendance a ON a.id = l.attendance_id
            WHERE l.student_id = ?
              AND l.entry_type = 'daily'
-             AND l.related_assignment_id = ?
              AND a.classroom_id = ?
+             AND (
+                   l.related_assignment_id = ?
+                   OR EXISTS (
+                       SELECT 1
+                       FROM daily_log_work_links link
+                       WHERE link.log_id = l.id
+                         AND link.assignment_id = ?
+                   )
+             )
            ORDER BY COALESCE(l.updated_at, l.created_at) DESC, l.id DESC
            LIMIT 1""",
-        (student_id, assignment_id, class_id),
+        (student_id, class_id, assignment_id, assignment_id),
     ).fetchone()
     if not row:
         return None
