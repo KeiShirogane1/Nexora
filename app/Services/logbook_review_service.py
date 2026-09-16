@@ -5,6 +5,7 @@ from pathlib import Path
 from app.Models.db import get_db_connection, using_postgres
 from app.Services.internship_schedule_service import attendance_local_datetime
 from app.Services.logbook_photo_service import PHOTO_ROOT
+from app.Services.logbook_service import get_logbook_work_items
 
 
 REVIEW_STATUSES = {"pending", "reviewed", "approved", "revision_requested"}
@@ -204,6 +205,17 @@ def _serialize_entry(row, day_map):
     }
 
 
+def _attach_related_work(conn, entry):
+    items = get_logbook_work_items(entry["id"], conn=conn)
+    entry["related_work_items"] = items
+    entry["related_assignment_ids"] = [item["id"] for item in items]
+    entry["related_work_titles"] = [item["title"] for item in items]
+    if items:
+        entry["related_assignment_id"] = items[0]["id"]
+        entry["related_work_title"] = " · ".join(item["title"] for item in items)
+    return entry
+
+
 def get_supervisor_logbook_context(supervisor_id, classroom_id, selected_log_id=None):
     try:
         supervisor_id = int(supervisor_id)
@@ -259,7 +271,7 @@ def get_supervisor_logbook_context(supervisor_id, classroom_id, selected_log_id=
             """,
             (classroom_id,),
         ).fetchall()
-        entries = [_serialize_entry(row, day_map) for row in rows]
+        entries = [_attach_related_work(conn, _serialize_entry(row, day_map)) for row in rows]
         selected_entry = None
         if selected_log_id is not None:
             selected_entry = next((entry for entry in entries if entry["id"] == selected_log_id), None)
@@ -433,6 +445,7 @@ def get_student_review_page(student_id, log_id):
             hours = None
         clock_in = attendance_local_datetime(_row_value(row, "clock_in", 7, None))
         clock_out = attendance_local_datetime(_row_value(row, "clock_out", 8, None))
+        work_items = get_logbook_work_items(log_id, conn=conn)
         return {
             "id": log_id,
             "attendance_id": attendance_id,
@@ -450,7 +463,9 @@ def get_student_review_page(student_id, log_id):
             "accomplishment": _row_value(row, "accomplishment", 2, "") or "",
             "reflection": _row_value(row, "reflection", 3, "") or "",
             "challenges": _row_value(row, "challenges", 4, "") or "",
-            "related_work_title": _row_value(row, "related_work_title", 5, None),
+            "related_work_items": work_items,
+            "related_assignment_ids": [item["id"] for item in work_items],
+            "related_work_title": " · ".join(item["title"] for item in work_items) if work_items else _row_value(row, "related_work_title", 5, None),
             "review_status": review_status,
             "review_status_label": review_status_label(review_status),
             "review_comments": _row_value(row, "review_comments", 15, "") or "",
