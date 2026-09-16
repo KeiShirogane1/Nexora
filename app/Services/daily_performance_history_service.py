@@ -82,7 +82,7 @@ def _attendance_history_rows(conn, supervisor_id, classroom_id, student_id):
                dpr.star_rating, dpr.percentage, dpr.comment,
                dpr.rated_at, dpr.updated_at
         FROM attendance a
-        LEFT JOIN logs l
+        JOIN logs l
                ON l.attendance_id = a.id
               AND l.student_id = a.student_id
               AND l.entry_type = 'daily'
