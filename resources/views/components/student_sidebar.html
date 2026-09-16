@@ -78,15 +78,16 @@ body.student-logbook-page .student-logbook-daily-modal .nx-daily-accomplishment 
 {% set sidebar_ml_url = url_for('classwork_ml_insights.student_insights', class_id=sidebar_class_id) if sidebar_class_id else url_for('classwork_ml_insights.student_insights_entry') %}
 {% set sidebar_report_url = url_for('performance_reports.student_reports', class_id=sidebar_class_id) if sidebar_class_id else url_for('classwork_ml_insights.student_reports_entry') %}
 {% set sidebar_work_context = get_daily_logbook_context(session.get('user_id'), sidebar_class_id) if sidebar_class_id else none %}
-{% set sidebar_completed_work = namespace(ids=[]) %}
-{% set sidebar_open_daily = namespace(saved=false) %}
+{% set sidebar_open_daily = namespace(saved=false, work_ids=[]) %}
 {% if sidebar_work_context %}
     {% for entry in sidebar_work_context.entries %}
-        {% if entry.related_assignment_id and entry.related_assignment_id not in sidebar_completed_work.ids %}{% set sidebar_completed_work.ids = sidebar_completed_work.ids + [entry.related_assignment_id] %}{% endif %}
-        {% if entry.status == 'Open' %}{% set sidebar_open_daily.saved = true %}{% endif %}
+        {% if entry.status == 'Open' %}
+            {% set sidebar_open_daily.saved = true %}
+            {% set sidebar_open_daily.work_ids = entry.related_assignment_ids|default([]) %}
+        {% endif %}
     {% endfor %}
 {% endif %}
-{% set sidebar_pending_work_count = ([sidebar_work_context.work_options|length - sidebar_completed_work.ids|length, 0]|max) if sidebar_work_context else 0 %}
+{% set sidebar_pending_work_count = sidebar_work_context.pending_work_count|default(sidebar_work_context.work_options|length) if sidebar_work_context else 0 %}
 {% set sidebar_logbook_reason = sidebar_schedule_state.attention_reason|default(none) %}
 {% set sidebar_logbook_attention = 1 if sidebar_logbook_reason == 'logbook_and_clock_out' else 0 %}
 {% set sidebar_logbook_title = 'Complete today\'s Daily OJT Entry before clocking out.' if sidebar_logbook_attention else 'Daily OJT Logbook' %}
@@ -132,11 +133,57 @@ body.student-logbook-page .student-logbook-daily-modal .nx-daily-accomplishment 
             grid.classList.add('nx-daily-work-layout');
             [['daily-accomplishment','nx-daily-accomplishment'],['daily-reflection','nx-daily-reflection'],['daily-challenges','nx-daily-challenges'],['daily-related-work','nx-daily-work'],['daily-photos','nx-daily-photos']].forEach(function(pair){var field=document.getElementById(pair[0]);var wrapper=field&&field.closest('.student-logbook-field');if(wrapper)wrapper.classList.add(pair[1]);});
         }
+
+        var openWorkIds={{ sidebar_open_daily.work_ids|tojson }};
+        var select=document.getElementById('daily-related-work');
+        var secondary=null;
+        if(select){
+            var wrapper=select.closest('.student-logbook-field');
+            var help=wrapper?wrapper.querySelector('.student-logbook-form-help'):null;
+            select.name='related_assignment_ids';
+            select.setAttribute('aria-label','First related assigned Work');
+
+            if(select.options.length<=1){
+                if(select.options[0])select.options[0].textContent='No unfinished Work assigned';
+                select.disabled=true;
+                if(help)help.textContent='No unfinished Work assigned — wait for supervisor instructions.';
+            }else{
+                if(select.options[0])select.options[0].textContent='No first Work item';
+                secondary=select.cloneNode(true);
+                secondary.id='daily-related-work-secondary';
+                secondary.name='related_assignment_ids';
+                secondary.setAttribute('aria-label','Second related assigned Work');
+                if(secondary.options[0])secondary.options[0].textContent='No second Work item';
+                select.insertAdjacentElement('afterend',secondary);
+                if(help)help.textContent='Choose up to 2 unfinished Work items assigned to you for this OJT day.';
+
+                if(openWorkIds.length>0)select.value=String(openWorkIds[0]);
+                if(openWorkIds.length>1)secondary.value=String(openWorkIds[1]);
+
+                function syncDuplicateOptions(){
+                    var firstValue=select.value;var secondValue=secondary.value;
+                    Array.from(select.options).forEach(function(option){option.disabled=!!option.value&&option.value===secondValue&&option.value!==firstValue;});
+                    Array.from(secondary.options).forEach(function(option){option.disabled=!!option.value&&option.value===firstValue&&option.value!==secondValue;});
+                }
+                select.addEventListener('change',syncDuplicateOptions);
+                secondary.addEventListener('change',syncDuplicateOptions);
+                syncDuplicateOptions();
+            }
+        }
+
         var params=new URLSearchParams(window.location.search);var classroomId=params.get('classroom_id')||'';var requestedWork=params.get('work_id');var storageKey=classroomId?'nx-logbook-work-'+classroomId:'';
         if(requestedWork&&storageKey){try{sessionStorage.setItem(storageKey,requestedWork);}catch(error){}}
         if(!requestedWork&&storageKey){try{requestedWork=sessionStorage.getItem(storageKey);}catch(error){requestedWork=null;}}
-        var select=document.getElementById('daily-related-work');
-        if(select&&requestedWork){var option=Array.from(select.options).find(function(item){return String(item.value)===String(requestedWork);});if(option){select.value=String(requestedWork);if(storageKey){try{sessionStorage.removeItem(storageKey);}catch(error){}}if(typeof window.openLogbookModal==='function'){window.setTimeout(function(){window.openLogbookModal('dailyEntryModal');},60);}}}
+        if(select&&requestedWork&&!select.disabled){
+            var selects=secondary?[select,secondary]:[select];
+            var alreadySelected=selects.some(function(item){return String(item.value)===String(requestedWork);});
+            var hasOption=Array.from(select.options).some(function(item){return String(item.value)===String(requestedWork);});
+            if(hasOption){
+                if(!alreadySelected){var target=selects.find(function(item){return !item.value;})||selects[0];target.value=String(requestedWork);target.dispatchEvent(new Event('change'));}
+                if(storageKey){try{sessionStorage.removeItem(storageKey);}catch(error){}}
+                if(typeof window.openLogbookModal==='function'){window.setTimeout(function(){window.openLogbookModal('dailyEntryModal');},60);}
+            }
+        }
     }
     function armLogbookAttentionBadge(){
         var seconds={{ sidebar_schedule_state.seconds_until_attention|default(none)|tojson }};
