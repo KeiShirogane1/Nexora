@@ -90,7 +90,7 @@ def build_student_report(student_id,class_id,feedback_text=None):
                (
                    SELECT AVG(dpr.percentage)
                    FROM logs rated_log
-                   JOIN attendance rated_attendance ON rated_attendance.id=-rated_log.attendance_id
+                   JOIN attendance rated_attendance ON rated_attendance.id=rated_log.attendance_id
                    JOIN daily_performance_ratings dpr ON dpr.attendance_id=rated_log.attendance_id
                    LEFT JOIN daily_log_work_links rated_link
                      ON rated_link.log_id=rated_log.id
