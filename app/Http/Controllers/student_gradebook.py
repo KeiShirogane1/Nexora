@@ -64,8 +64,21 @@ def gradebook(class_id):
                LEFT JOIN classroom_assignment_meta m ON m.assignment_id = a.id
                LEFT JOIN classwork_scores s ON s.assignment_id = a.id AND s.student_id = ?
                WHERE a.classroom_id = ?
+                 AND (
+                     NOT EXISTS (
+                         SELECT 1
+                         FROM classroom_assignment_recipients all_recipients
+                         WHERE all_recipients.assignment_id = a.id
+                     )
+                     OR EXISTS (
+                         SELECT 1
+                         FROM classroom_assignment_recipients my_recipient
+                         WHERE my_recipient.assignment_id = a.id
+                           AND my_recipient.student_id = ?
+                     )
+                 )
                ORDER BY a.created_at ASC, a.id ASC""",
-            (student_id, student_id, student_id, class_id),
+            (student_id, student_id, student_id, class_id, student_id),
         ).fetchall()
 
         grade_records = []
