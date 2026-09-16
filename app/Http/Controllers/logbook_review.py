@@ -823,7 +823,7 @@ def admin_delete_daily_log(student_id, log_id):
         try:
             _notify_removed_logbook(result, "an administrator")
         except Exception as exc:
-            print("daily logbook removal notification failed:", exc)
+            print("admin daily logbook removal notification failed:", exc)
     else:
         flash(result.get("error") or "Unable to remove the Daily OJT Logbook entry.", "danger")
 
