@@ -174,9 +174,6 @@ def _resync_work_score_after_log_removal(conn, assignment_id, student_id):
     rated_days = int(_row_value(row, "rated_days", 1, 0) or 0)
 
     if average_percentage is None or rated_days <= 0:
-        # Internship Work grades are sourced from rated Daily OJT entries. If
-        # no rated Logbook evidence remains, remove the compatibility mirror so
-        # Gradebook/legacy readers cannot keep a stale score alive.
         conn.execute(
             "DELETE FROM classwork_scores WHERE assignment_id = ? AND student_id = ?",
             (assignment_id, student_id),
@@ -206,7 +203,14 @@ def _resync_work_score_after_log_removal(conn, assignment_id, student_id):
     )
 
 
-def _delete_daily_log_entry(log_id, actor_role, actor_id, classroom_id=None, student_id=None):
+def _delete_daily_log_entry(
+    log_id,
+    actor_role,
+    actor_id,
+    classroom_id=None,
+    student_id=None,
+    remove_attendance=False,
+):
     try:
         log_id = int(log_id)
         actor_id = int(actor_id)
@@ -252,6 +256,17 @@ def _delete_daily_log_entry(log_id, actor_role, actor_id, classroom_id=None, stu
         else:
             return {"ok": False, "error": "You are not allowed to remove this Daily OJT entry."}
 
+        if remove_attendance:
+            shared_row = conn.execute(
+                "SELECT COUNT(*) FROM logs WHERE attendance_id = ? AND id <> ?",
+                (attendance_id, log_id),
+            ).fetchone()
+            if int((shared_row[0] if shared_row else 0) or 0) > 0:
+                return {
+                    "ok": False,
+                    "error": "This attendance session is still referenced by another Logbook entry, so its Time In/Out cannot be removed.",
+                }
+
         day_details = _attendance_day_details(
             conn,
             entry_classroom_id,
@@ -266,8 +281,6 @@ def _delete_daily_log_entry(log_id, actor_role, actor_id, classroom_id=None, stu
         ).fetchall()
         photo_paths = [str(_row_value(item, "relative_path", 0, "") or "") for item in photo_rows]
 
-        # Be explicit instead of relying only on database cascade settings so
-        # SQLite and PostgreSQL behave the same way.
         conn.execute(
             "DELETE FROM daily_performance_rating_items WHERE attendance_id = ?",
             (attendance_id,),
@@ -284,6 +297,14 @@ def _delete_daily_log_entry(log_id, actor_role, actor_id, classroom_id=None, stu
         for assignment_id in assignment_ids:
             _resync_work_score_after_log_removal(conn, assignment_id, entry_student_id)
 
+        attendance_removed = False
+        if remove_attendance:
+            conn.execute(
+                "DELETE FROM attendance WHERE id = ? AND student_id = ? AND classroom_id = ?",
+                (attendance_id, entry_student_id, entry_classroom_id),
+            )
+            attendance_removed = True
+
         conn.commit()
         result = {
             "ok": True,
@@ -296,6 +317,7 @@ def _delete_daily_log_entry(log_id, actor_role, actor_id, classroom_id=None, stu
             "day_number": day_details["day_number"],
             "date_label": day_details["date_label"],
             "work_count": len(assignment_ids),
+            "attendance_removed": attendance_removed,
         }
     except Exception:
         try:
@@ -409,9 +431,13 @@ def _admin_student_logbook_context(student_id):
 
 def _notify_removed_logbook(result, actor_label):
     day_label = f"Day {result['day_number']}" if result.get("day_number") else "a Daily OJT day"
+    if result.get("attendance_removed"):
+        detail = "The related attendance session, Time In/Out, and rendered hours were removed too."
+    else:
+        detail = "Your attendance Time In/Out and rendered hours were not deleted."
     message = (
         f"Your {day_label} Logbook ({result['date_label']}) in {result['classroom_name']} was removed by {actor_label}. "
-        "Your attendance Time In/Out and rendered hours were not deleted."
+        f"{detail}"
     )
     create_notification(
         int(result["student_id"]),
@@ -702,12 +728,14 @@ def bulk_rate_daily_performance(class_id):
 )
 @role_required("supervisor")
 def supervisor_delete_daily_log(class_id, log_id):
+    remove_attendance = (request.form.get("remove_attendance") or "").strip() == "1"
     try:
         result = _delete_daily_log_entry(
             log_id=log_id,
             actor_role="supervisor",
             actor_id=session["user_id"],
             classroom_id=class_id,
+            remove_attendance=remove_attendance,
         )
     except Exception as exc:
         print("supervisor daily logbook removal failed:", exc)
@@ -715,7 +743,11 @@ def supervisor_delete_daily_log(class_id, log_id):
 
     if result.get("ok"):
         day_label = f"Day {result['day_number']}" if result.get("day_number") else "Daily OJT"
-        flash(f"{day_label} Logbook ({result['date_label']}) was removed. Attendance and rendered hours were preserved.", "success")
+        if result.get("attendance_removed"):
+            detail = "The related attendance session and rendered hours were removed too."
+        else:
+            detail = "Attendance and rendered hours were preserved."
+        flash(f"{day_label} Logbook ({result['date_label']}) was removed. {detail}", "success")
         try:
             _notify_removed_logbook(result, "your supervisor")
         except Exception as exc:
@@ -746,12 +778,14 @@ def admin_student_logbooks(student_id):
 )
 @role_required("admin")
 def admin_delete_daily_log(student_id, log_id):
+    remove_attendance = (request.form.get("remove_attendance") or "").strip() == "1"
     try:
         result = _delete_daily_log_entry(
             log_id=log_id,
             actor_role="admin",
             actor_id=session["user_id"],
             student_id=student_id,
+            remove_attendance=remove_attendance,
         )
     except Exception as exc:
         print("admin daily logbook removal failed:", exc)
@@ -759,7 +793,11 @@ def admin_delete_daily_log(student_id, log_id):
 
     if result.get("ok"):
         day_label = f"Day {result['day_number']}" if result.get("day_number") else "Daily OJT"
-        flash(f"{day_label} Logbook ({result['date_label']}) was removed. Attendance and rendered hours were preserved.", "success")
+        if result.get("attendance_removed"):
+            detail = "The related attendance session and rendered hours were removed too."
+        else:
+            detail = "Attendance and rendered hours were preserved."
+        flash(f"{day_label} Logbook ({result['date_label']}) was removed. {detail}", "success")
         try:
             _notify_removed_logbook(result, "an administrator")
         except Exception as exc:
