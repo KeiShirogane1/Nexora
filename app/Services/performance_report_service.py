@@ -93,6 +93,20 @@ def build_student_report(student_id,class_id,feedback_text=None):
             class_info={"id":_value(crow,"id",0,class_id),"name":_value(crow,"name",1,"Class"),"section":_value(crow,"section",2,""),"code":_value(crow,"code",3,""),"supervisor_id":_value(crow,"supervisor_id",4)}
             supervisor_info={"id":_value(crow,"supervisor_id",4),"username":_value(crow,"sup_name",5,""),"email":_value(crow,"sup_email",6,"")}
         rows=conn.execute("""SELECT a.id,a.title,a.points,s.score,s.max_score,s.percentage,s.grading_method,
+               (
+                   SELECT AVG(dpr.percentage)
+                   FROM daily_performance_ratings dpr
+                   JOIN (
+                       SELECT DISTINCT l.attendance_id
+                       FROM logs l
+                       JOIN attendance rated_attendance ON rated_attendance.id=l.attendance_id
+                       LEFT JOIN daily_log_work_links rated_link ON rated_link.log_id=l.id
+                       WHERE l.student_id=?
+                         AND l.entry_type='daily'
+                         AND rated_attendance.classroom_id=a.classroom_id
+                         AND (l.related_assignment_id=a.id OR rated_link.assignment_id=a.id)
+                   ) rated_days ON rated_days.attendance_id=dpr.attendance_id
+               ) AS daily_rating_percentage,
                (SELECT cs.grade FROM classwork_submissions cs WHERE cs.assignment_id=a.id AND cs.student_id=? AND cs.grade IS NOT NULL ORDER BY cs.attempt_no DESC,cs.id DESC LIMIT 1) AS submission_grade
                FROM classroom_assignments a LEFT JOIN classwork_scores s ON s.assignment_id=a.id AND s.student_id=?
                WHERE a.classroom_id=?
@@ -107,10 +121,15 @@ def build_student_report(student_id,class_id,feedback_text=None):
                            AND my_recipient.student_id=?
                      )
                  )
-               ORDER BY a.created_at ASC,a.id ASC""",(student_id,student_id,class_id,student_id)).fetchall()
+               ORDER BY a.created_at ASC,a.id ASC""",(student_id,student_id,student_id,class_id,student_id)).fetchall()
         for r in rows:
-            title=_value(r,"title",1,"Assignment"); points=_safe_float(_value(r,"points",2),0) or 0; score=_value(r,"score",3); max_score=_value(r,"max_score",4); pct=_value(r,"percentage",5); method=_value(r,"grading_method",6); sub_grade=_value(r,"submission_grade",7)
-            if score is None and sub_grade is not None:score=float(sub_grade); max_score=points; pct=(score/max_score*100) if max_score else 0; method=method or "manual"
+            title=_value(r,"title",1,"Assignment"); points=_safe_float(_value(r,"points",2),0) or 0; score=_value(r,"score",3); max_score=_value(r,"max_score",4); pct=_value(r,"percentage",5); method=_value(r,"grading_method",6); daily_pct=_value(r,"daily_rating_percentage",7); sub_grade=_value(r,"submission_grade",8)
+            if daily_pct is not None:
+                daily_pct=_safe_float(daily_pct)
+                if daily_pct is not None:
+                    score=daily_pct; max_score=100.0; pct=daily_pct; method="Daily Performance"
+            elif score is None and sub_grade is not None:
+                score=float(sub_grade); max_score=points; pct=(score/max_score*100) if max_score else 0; method=method or "manual"
             if score is None or max_score is None or _safe_float(max_score,0)<=0:
                 assignments.append({"title":title,"points":points,"score":None,"max_score":_safe_float(max_score,points),"percentage":None,"grading_method":None,"graded":False}); continue
             pct_f=_safe_float(pct)
@@ -122,7 +141,7 @@ def build_student_report(student_id,class_id,feedback_text=None):
 
     has_feedback=not bool(feedback_analysis.get("is_empty",True)) if isinstance(feedback_analysis,dict) else False
     has_performance_data=_safe_float(features.get("average_percentage")) is not None and int(features.get("graded_count",0) or 0)>0
-    return {"student":student,"class":class_info,"supervisor":supervisor_info,"overall_percentage":_safe_float(features.get("average_percentage")),"completion_rate":_safe_float(features.get("completion_rate"),0.0) or 0.0,"graded_count":features.get("graded_count",0),"total_count":features.get("total_count",0),"recorded_count":features.get("recorded_count",0),"reviewed_count":features.get("reviewed_count",0),"recorded_completion_rate":_safe_float(features.get("recorded_completion_rate"),0.0) or 0.0,"review_rate":_safe_float(features.get("review_rate"),0.0) or 0.0,"has_performance_data":has_performance_data,"performance_label":numeric_label,"performance_classification":numeric_label,"feedback_analysis":feedback_analysis if has_feedback else None,"sentiment":feedback_analysis.get("sentiment") if has_feedback else None,"competency":feedback_analysis.get("competency") if has_feedback else None,"has_feedback":has_feedback,"ml_recommendation":ml_reco,"recommendation":ml_reco.get("recommendation"),"priority":ml_reco.get("priority"),"basis":ml_reco.get("basis",[]),"strongest":strongest,"weakest":weakest,"assignments":assignments,"average_percentage":_safe_float(features.get("average_percentage")),"min_percentage":_safe_float(features.get("min_percentage")),"max_percentage":_safe_float(features.get("max_percentage")),"manual_count":features.get("manual_count",0),"imported_count":features.get("imported_count",0)}
+    return {"student":student,"class":class_info,"supervisor":supervisor_info,"overall_percentage":_safe_float(features.get("average_percentage")),"completion_rate":_safe_float(features.get("completion_rate"),0.0) or 0.0,"graded_count":features.get("graded_count",0),"total_count":features.get("total_count",0),"recorded_count":features.get("recorded_count",0),"reviewed_count":features.get("reviewed_count",0),"recorded_completion_rate":_safe_float(features.get("recorded_completion_rate"),0.0) or 0.0,"review_rate":_safe_float(features.get("review_rate"),0.0) or 0.0,"daily_performance_count":features.get("daily_performance_count",0),"has_performance_data":has_performance_data,"performance_label":numeric_label,"performance_classification":numeric_label,"feedback_analysis":feedback_analysis if has_feedback else None,"sentiment":feedback_analysis.get("sentiment") if has_feedback else None,"competency":feedback_analysis.get("competency") if has_feedback else None,"has_feedback":has_feedback,"ml_recommendation":ml_reco,"recommendation":ml_reco.get("recommendation"),"priority":ml_reco.get("priority"),"basis":ml_reco.get("basis",[]),"strongest":strongest,"weakest":weakest,"assignments":assignments,"average_percentage":_safe_float(features.get("average_percentage")),"min_percentage":_safe_float(features.get("min_percentage")),"max_percentage":_safe_float(features.get("max_percentage")),"manual_count":features.get("manual_count",0),"imported_count":features.get("imported_count",0)}
 
 
 def build_class_reports(class_id):
