@@ -22,7 +22,7 @@ from app.Services.performance_rating_service import (
 
 logbook_review = Blueprint("logbook_review", __name__)
 
-MAX_ADDITIONAL_RATING_CRITERIA = 8
+MAX_ADDITIONAL_RATING_CRITERIA = 12
 MAX_RATING_CRITERION_NAME_LENGTH = 100
 
 
@@ -50,7 +50,7 @@ def _parse_rating_criteria(form):
     if len(names) != len(values):
         return [], "Each additional rating criterion needs both a name and rating."
     if len(names) > MAX_ADDITIONAL_RATING_CRITERIA:
-        return [], f"Use up to {MAX_ADDITIONAL_RATING_CRITERIA} additional rating criteria."
+        return [], "Use up to 12 total rating criteria: 8 standard and up to 4 custom."
 
     criteria = []
     for index, (raw_name, raw_value) in enumerate(zip(names, values), start=1):
@@ -823,7 +823,7 @@ def admin_delete_daily_log(student_id, log_id):
         try:
             _notify_removed_logbook(result, "an administrator")
         except Exception as exc:
-            print("admin daily logbook removal notification failed:", exc)
+            print("daily logbook removal notification failed:", exc)
     else:
         flash(result.get("error") or "Unable to remove the Daily OJT Logbook entry.", "danger")
 
