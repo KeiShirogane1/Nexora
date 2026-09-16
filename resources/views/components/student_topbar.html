@@ -12,6 +12,55 @@
 
 <style>
     .nx-role-student .nx-role-badge[hidden] { display: none !important; }
+
+    /*
+       Shared Student portal desktop gutter.
+       Documents is the spacing reference: 30px from the usable page edge.
+       Keep the 76px role sidebar reservation owned by sidebars.css and only
+       normalize the inner Student content widths here.
+    */
+    @media (min-width: 761px) {
+        body:has(.nx-role-student) {
+            --nx-student-page-gutter: 30px;
+        }
+
+        body:has(.nx-role-student) .student-tasks-content,
+        body:has(.nx-role-student) .student-logbook-page-content,
+        body:has(.nx-role-student) .student-profile-content,
+        body:has(.nx-role-student) .nx-notifications-main {
+            width: 100% !important;
+            max-width: none !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            padding-left: var(--nx-student-page-gutter) !important;
+            padding-right: var(--nx-student-page-gutter) !important;
+            box-sizing: border-box !important;
+        }
+
+        body:has(.nx-role-student) .class-main,
+        body:has(.nx-role-student) .join-main,
+        body:has(.nx-role-student) .nx-log-main,
+        body.nx-task-page:has(.nx-role-student) .nx-main {
+            padding-left: var(--nx-student-page-gutter) !important;
+            padding-right: var(--nx-student-page-gutter) !important;
+            box-sizing: border-box !important;
+        }
+
+        body:has(.nx-role-student) .class-wrap,
+        body:has(.nx-role-student) .join-wrap,
+        body:has(.nx-role-student) .student-classwork-shell,
+        body:has(.nx-role-student) .student-insights-shell,
+        body:has(.nx-role-student) .nx-notifications-wrap,
+        body:has(.nx-role-student) .nx-log-wrap,
+        body.nx-task-page:has(.nx-role-student) .nx-wrap,
+        body.nx-session:has(.nx-role-student) .nx-wrap {
+            width: 100% !important;
+            max-width: none !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            box-sizing: border-box !important;
+        }
+    }
 </style>
 
 {% if request.path == '/student/logbook' and sidebar_schedule_state is defined %}
