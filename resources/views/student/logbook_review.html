@@ -9,58 +9,21 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
     <style>
-        body.student-logbook-review-page > .student-global-topbar {
-            display: flex !important;
-        }
-
-        body.student-logbook-review-page .student-tasks-content {
-            padding-top: 92px !important;
-        }
-
-        body.student-logbook-review-page .student-tasks-heading {
-            padding-top: 0 !important;
-            margin-top: 0 !important;
-            margin-bottom: 22px !important;
-        }
-
+        body.student-logbook-review-page > .student-global-topbar { display: flex !important; }
+        body.student-logbook-review-page .student-tasks-content { padding-top: 92px !important; }
+        body.student-logbook-review-page .student-tasks-heading { padding-top: 0 !important; margin-top: 0 !important; margin-bottom: 22px !important; }
         body.student-logbook-review-page .student-tasks-heading::before,
-        body.student-logbook-review-page .student-tasks-heading > div:first-child::before {
-            display: none !important;
-            content: none !important;
-        }
-
-        body.student-logbook-review-page .student-review-card {
-            border: 1px solid #e3eae5;
-            border-radius: 10px;
-            box-shadow: 0 6px 20px rgba(20, 52, 38, 0.035);
-            overflow: hidden;
-        }
-
-        body.student-logbook-review-page .student-review-card .card-header {
-            border-bottom-color: #e8eee9;
-        }
-
-        body.student-logbook-review-page .student-review-metric {
-            border-color: #e3eae5 !important;
-            background: #f8faf9;
-        }
-
-        body.student-logbook-review-page .student-review-copy {
-            border-color: #e3eae5 !important;
-            background: #f8faf9 !important;
-            color: #31453c;
-            white-space: pre-wrap;
-        }
-
-        body.student-logbook-review-page .student-review-rating {
-            color: #0a8f46 !important;
-        }
-
-        @media (max-width: 760px) {
-            body.student-logbook-review-page .student-tasks-content {
-                padding-top: 78px !important;
-            }
-        }
+        body.student-logbook-review-page .student-tasks-heading > div:first-child::before { display: none !important; content: none !important; }
+        body.student-logbook-review-page .student-review-card { border: 1px solid #e3eae5; border-radius: 10px; box-shadow: 0 6px 20px rgba(20, 52, 38, 0.035); overflow: hidden; }
+        body.student-logbook-review-page .student-review-card .card-header { border-bottom-color: #e8eee9; }
+        body.student-logbook-review-page .student-review-metric { border-color: #e3eae5 !important; background: #f8faf9; }
+        body.student-logbook-review-page .student-review-copy { border-color: #e3eae5 !important; background: #f8faf9 !important; color: #31453c; white-space: pre-wrap; }
+        body.student-logbook-review-page .student-review-rating { color: #0a8f46 !important; }
+        .student-rating-criteria { display: grid; gap: 8px; margin-top: 14px; }
+        .student-rating-criterion { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border: 1px solid #e3eae5; border-radius: 9px; background: #f8faf9; }
+        .student-rating-criterion span { min-width: 0; color: #40564c; font-size: .76rem; font-weight: 700; }
+        .student-rating-criterion strong { flex: 0 0 auto; color: #0a8f46; font-size: .78rem; }
+        @media (max-width: 760px) { body.student-logbook-review-page .student-tasks-content { padding-top: 78px !important; } }
     </style>
 </head>
 <body class="student-page student-logbook-review-page">
@@ -91,10 +54,7 @@
                 <div class="col-xl-8">
                     <section class="card student-review-card mb-3">
                         <div class="card-header bg-white d-flex flex-wrap align-items-start justify-content-between gap-3 py-3 px-4">
-                            <div>
-                                <h2 class="h5 fw-bold mb-1">Daily OJT Entry</h2>
-                                <p class="text-muted small mb-0">Attendance-backed internship record</p>
-                            </div>
+                            <div><h2 class="h5 fw-bold mb-1">Daily OJT Entry</h2><p class="text-muted small mb-0">Attendance-backed internship record</p></div>
                             <span class="badge text-bg-{{ badge }}">{{ entry.review_status_label }}</span>
                         </div>
                         <div class="card-body p-4">
@@ -108,23 +68,12 @@
                                 <div class="alert alert-warning">Your supervisor requested changes. Update the Daily OJT text below and resubmit it for review. Attendance and saved photo evidence will not be changed.</div>
                                 <form method="POST" action="{{ url_for('logbook_review.student_revise', log_id=entry.id) }}">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <div class="mb-3">
-                                        <label class="form-label fw-bold" for="revision-accomplishment">Daily accomplishment *</label>
-                                        <textarea class="form-control" id="revision-accomplishment" name="accomplishment" maxlength="5000" rows="5" required>{{ entry.accomplishment }}</textarea>
-                                    </div>
+                                    <div class="mb-3"><label class="form-label fw-bold" for="revision-accomplishment">Daily accomplishment *</label><textarea class="form-control" id="revision-accomplishment" name="accomplishment" maxlength="5000" rows="5" required>{{ entry.accomplishment }}</textarea></div>
                                     <div class="row g-3">
-                                        <div class="col-md-6">
-                                            <label class="form-label fw-bold" for="revision-reflection">Learning / reflection</label>
-                                            <textarea class="form-control" id="revision-reflection" name="reflection" maxlength="5000" rows="5">{{ entry.reflection }}</textarea>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label fw-bold" for="revision-challenges">Challenges / notes</label>
-                                            <textarea class="form-control" id="revision-challenges" name="challenges" maxlength="5000" rows="5">{{ entry.challenges }}</textarea>
-                                        </div>
+                                        <div class="col-md-6"><label class="form-label fw-bold" for="revision-reflection">Learning / reflection</label><textarea class="form-control" id="revision-reflection" name="reflection" maxlength="5000" rows="5">{{ entry.reflection }}</textarea></div>
+                                        <div class="col-md-6"><label class="form-label fw-bold" for="revision-challenges">Challenges / notes</label><textarea class="form-control" id="revision-challenges" name="challenges" maxlength="5000" rows="5">{{ entry.challenges }}</textarea></div>
                                     </div>
-                                    <div class="d-flex justify-content-end mt-3">
-                                        <button class="student-tasks-primary-button border-0" type="submit">Submit Revision</button>
-                                    </div>
+                                    <div class="d-flex justify-content-end mt-3"><button class="student-tasks-primary-button border-0" type="submit">Submit Revision</button></div>
                                 </form>
                             {% else %}
                                 <div class="mb-3"><div class="text-muted small fw-bold text-uppercase mb-1">Daily accomplishment</div><div class="student-review-copy border rounded-3 p-3">{{ entry.accomplishment }}</div></div>
@@ -144,10 +93,7 @@
                                     {% for photo in photos %}
                                         <div class="col-6 col-md-4">
                                             <a class="d-block border rounded-3 overflow-hidden" href="{{ url_for('daily_logbook.view_photo', photo_id=photo.id) }}" target="_blank" rel="noopener"><img class="img-fluid w-100" src="{{ url_for('daily_logbook.view_photo', photo_id=photo.id) }}" alt="{{ photo.original_filename }}"></a>
-                                            <div class="d-flex align-items-center justify-content-between gap-2 mt-2">
-                                                <div class="text-muted small text-truncate" title="{{ photo.original_filename }}">{{ photo.original_filename }}</div>
-                                                <a class="btn btn-sm btn-outline-secondary flex-shrink-0" href="{{ url_for('daily_logbook.download_photo', photo_id=photo.id) }}">Download</a>
-                                            </div>
+                                            <div class="d-flex align-items-center justify-content-between gap-2 mt-2"><div class="text-muted small text-truncate" title="{{ photo.original_filename }}">{{ photo.original_filename }}</div><a class="btn btn-sm btn-outline-secondary flex-shrink-0" href="{{ url_for('daily_logbook.download_photo', photo_id=photo.id) }}">Download</a></div>
                                         </div>
                                     {% endfor %}
                                 </div>
@@ -163,25 +109,26 @@
                         <div class="card-header bg-white py-3 px-4"><h2 class="h6 fw-bold mb-0">Daily Performance</h2></div>
                         <div class="card-body p-4">
                             {% if daily_rating %}
-                                <div class="d-flex align-items-end gap-2 mb-3">
-                                    <div class="student-review-rating display-6 fw-bold lh-1">{{ '%.1f'|format(daily_rating.star_rating) }}</div>
-                                    <div class="student-review-rating fw-bold">★</div>
-                                </div>
-                                <div class="student-review-metric border rounded-3 p-3 mb-3">
-                                    <div class="text-muted small">Converted percentage</div>
-                                    <div class="fs-4 fw-bold">{{ '%.1f'|format(daily_rating.percentage) }}%</div>
-                                </div>
-                                {% if daily_rating.comment %}
-                                    <div><div class="text-muted small fw-bold mb-1">Performance comment</div><div class="student-review-copy border rounded-3 p-3">{{ daily_rating.comment }}</div></div>
-                                {% else %}
-                                    <div class="text-muted small">No performance comment was added.</div>
+                                <div class="d-flex align-items-end gap-2 mb-3"><div class="student-review-rating display-6 fw-bold lh-1">{{ '%.1f'|format(daily_rating.star_rating) }}</div><div class="student-review-rating fw-bold">★</div></div>
+                                <div class="student-review-metric border rounded-3 p-3 mb-3"><div class="text-muted small">Overall Daily Rating · Work score source</div><div class="fs-4 fw-bold">{{ '%.1f'|format(daily_rating.percentage) }}%</div><div class="text-muted small mt-1">This percentage is applied to the Work linked to this Logbook day and is used by ML Insights and Reports.</div></div>
+
+                                {% if daily_rating.criteria %}
+                                    <div class="text-muted small fw-bold mb-1">Additional rating criteria</div>
+                                    <div class="student-rating-criteria mb-3">
+                                        {% for criterion in daily_rating.criteria %}
+                                            <div class="student-rating-criterion"><span>{{ criterion.criterion_name }}</span><strong>{{ '%.1f'|format(criterion.rating_value) }} / {{ '%.1f'|format(criterion.max_value) }} ★</strong></div>
+                                        {% endfor %}
+                                    </div>
+                                    <div class="text-muted small mb-3">These criteria explain the supervisor's assessment. They do not replace or automatically re-weight the Overall Daily Rating.</div>
                                 {% endif %}
+
+                                {% if daily_rating.comment %}<div><div class="text-muted small fw-bold mb-1">Performance comment</div><div class="student-review-copy border rounded-3 p-3">{{ daily_rating.comment }}</div></div>{% else %}<div class="text-muted small">No performance comment was added.</div>{% endif %}
                             {% elif entry.attendance_status == 'Open' %}
                                 <div class="text-muted small">Daily performance is rated after the attendance session is completed.</div>
                             {% else %}
                                 <div class="text-muted small">Your supervisor has not entered a daily performance rating for this OJT day yet.</div>
                             {% endif %}
-                            <div class="text-muted small mt-3">This rating is entered manually by your supervisor. Nexora only converts the selected stars to percentage.</div>
+                            <div class="text-muted small mt-3">The Overall Daily Rating is manually entered by your supervisor. Nexora converts that rating to the percentage used for linked Work.</div>
                         </div>
                     </section>
 
@@ -189,24 +136,12 @@
                         <div class="card-header bg-white py-3 px-4"><h2 class="h6 fw-bold mb-0">Supervisor Review</h2></div>
                         <div class="card-body p-4">
                             <div class="mb-3"><div class="text-muted small">Status</div><div class="mt-1"><span class="badge text-bg-{{ badge }}">{{ entry.review_status_label }}</span></div></div>
-                            {% if entry.review_comments %}
-                                <div><div class="text-muted small fw-bold mb-1">Supervisor comment</div><div class="student-review-copy border rounded-3 p-3">{{ entry.review_comments }}</div></div>
-                            {% elif entry.review_status == 'pending' %}
-                                <div class="text-muted small">Your supervisor has not reviewed this closed Daily OJT entry yet.</div>
-                            {% elif entry.review_status == 'in_progress' %}
-                                <div class="text-muted small">This attendance session is still active. Review begins after clock-out.</div>
-                            {% else %}
-                                <div class="text-muted small">No supervisor comment was added.</div>
-                            {% endif %}
+                            {% if entry.review_comments %}<div><div class="text-muted small fw-bold mb-1">Supervisor comment</div><div class="student-review-copy border rounded-3 p-3">{{ entry.review_comments }}</div></div>{% elif entry.review_status == 'pending' %}<div class="text-muted small">Your supervisor has not reviewed this closed Daily OJT entry yet.</div>{% elif entry.review_status == 'in_progress' %}<div class="text-muted small">This attendance session is still active. Review begins after clock-out.</div>{% else %}<div class="text-muted small">No supervisor comment was added.</div>{% endif %}
                         </div>
                     </section>
 
                     <section class="card student-review-card">
-                        <div class="card-body p-4">
-                            <span class="student-section-eyebrow mb-2">Record Protection</span>
-                            <h2 class="h6 fw-bold">Review Safety</h2>
-                            <p class="text-muted small mb-0">Supervisor review, text revisions, and daily performance ratings do not change Time In, Time Out, rendered hours, or attendance status.</p>
-                        </div>
+                        <div class="card-body p-4"><span class="student-section-eyebrow mb-2">Record Protection</span><h2 class="h6 fw-bold">Review Safety</h2><p class="text-muted small mb-0">Supervisor review, text revisions, and Daily Performance ratings do not change Time In, Time Out, rendered hours, or attendance status.</p></div>
                     </section>
                 </div>
             </div>
