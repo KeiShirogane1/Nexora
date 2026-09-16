@@ -61,55 +61,92 @@
         .ojt-batch-actions span { color:#64748b; font-size:.73rem; font-weight:700; }
         .ojt-batch-button { min-height:40px; padding:0 16px; border:0; border-radius:9px; background:#2563eb; color:#fff; font:inherit; font-size:.74rem; font-weight:800; cursor:pointer; }
         .ojt-batch-button:disabled { background:#cbd5e1; cursor:not-allowed; }
-        .ojt-review-modal { display:none; position:fixed; inset:0; z-index:2400; align-items:center; justify-content:center; padding:24px; background:rgba(15,23,42,.52); backdrop-filter:blur(3px); }
+        .ojt-review-modal { display:none; position:fixed; inset:0; z-index:2400; align-items:center; justify-content:center; padding:18px; background:rgba(15,23,42,.55); backdrop-filter:blur(4px); }
         .ojt-review-modal.open { display:flex; }
-        .ojt-review-dialog { width:min(760px,100%); max-height:calc(100vh - 48px); overflow:auto; border:1px solid rgba(226,232,240,.95); border-radius:16px; background:#fff; box-shadow:0 28px 80px rgba(15,23,42,.28); }
-        .ojt-review-modal-header { position:sticky; top:0; z-index:2; display:flex; align-items:center; justify-content:space-between; gap:18px; padding:18px 22px; border-bottom:1px solid #e7edf4; background:#fff; }
-        .ojt-review-modal-header h2 { margin:0; color:#0f172a; font-size:1.15rem; font-weight:800; }
-        .ojt-modal-close { width:34px; height:34px; border:0; border-radius:8px; background:transparent; color:#64748b; font-size:1.35rem; cursor:pointer; }
+        .ojt-review-dialog { width:min(760px,100%); max-height:calc(100vh - 36px); overflow:auto; border:1px solid rgba(226,232,240,.95); border-radius:18px; background:#fff; box-shadow:0 32px 90px rgba(15,23,42,.3); }
+        #ojt-individual-modal .ojt-review-dialog { width:min(1080px,calc(100vw - 36px)); overflow:hidden; display:grid; grid-template-rows:auto minmax(0,1fr) auto; }
+        .ojt-review-modal-header { position:sticky; top:0; z-index:3; display:flex; align-items:flex-start; justify-content:space-between; gap:18px; padding:20px 24px; border-bottom:1px solid #e7edf4; background:#fff; }
+        .ojt-review-modal-title h2, .ojt-review-modal-header h2 { margin:0; color:#0f172a; font-size:1.22rem; font-weight:800; letter-spacing:-.02em; }
+        .ojt-review-modal-title p { margin:5px 0 0; color:#64748b; font-size:.75rem; line-height:1.45; }
+        .ojt-modal-close { flex:0 0 auto; width:36px; height:36px; border:0; border-radius:9px; background:transparent; color:#64748b; font-size:1.35rem; cursor:pointer; }
         .ojt-modal-close:hover { background:#f1f5f9; color:#0f172a; }
-        .ojt-review-modal-body { padding:18px 22px 20px; }
-        .ojt-modal-person { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:14px; }
-        .ojt-modal-person strong { display:block; color:#10213d; font-size:1rem; font-weight:800; }
-        .ojt-modal-person small { color:#64748b; font-size:.74rem; }
-        .ojt-attendance-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-bottom:14px; }
-        .ojt-attendance-card { padding:13px 14px; border:1px solid #e2e8f0; border-radius:11px; background:#f8fafc; }
-        .ojt-attendance-card span { display:block; color:#64748b; font-size:.68rem; font-weight:700; }
-        .ojt-attendance-card strong { display:block; margin-top:3px; color:#10213d; font-size:.9rem; font-weight:800; }
-        .ojt-info-block { padding:13px 0; border-top:1px solid #edf2f7; }
-        .ojt-info-block h3 { display:flex; align-items:center; gap:8px; margin:0 0 5px; color:#10213d; font-size:.78rem; font-weight:800; }
-        .ojt-info-block p { margin:0; color:#52647b; font-size:.76rem; line-height:1.5; white-space:pre-line; }
-        .ojt-proof-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-top:10px; }
+        .ojt-review-modal-body { min-height:0; overflow:auto; padding:18px 22px 20px; }
+        .ojt-individual-body { padding:0; }
+        .ojt-review-overview { display:grid; grid-template-columns:minmax(260px,.9fr) minmax(0,1.7fr); gap:18px; align-items:center; padding:16px 24px; border-bottom:1px solid #e7edf4; background:#fbfdff; }
+        .ojt-modal-person { display:flex; align-items:center; justify-content:space-between; gap:14px; margin:0; min-width:0; }
+        .ojt-modal-person-main { display:flex; align-items:center; gap:12px; min-width:0; }
+        .ojt-modal-avatar { display:flex; align-items:center; justify-content:center; flex:0 0 auto; width:52px; height:52px; border-radius:50%; background:#eaf2ff; color:#2563eb; font-size:1.05rem; font-weight:900; }
+        .ojt-modal-person-copy { min-width:0; }
+        .ojt-modal-person strong { display:block; overflow:hidden; color:#10213d; font-size:1rem; font-weight:800; text-overflow:ellipsis; white-space:nowrap; }
+        .ojt-modal-person small { display:block; margin-top:3px; overflow:hidden; color:#64748b; font-size:.7rem; line-height:1.4; text-overflow:ellipsis; white-space:nowrap; }
+        .ojt-attendance-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin:0; }
+        .ojt-attendance-card { min-height:72px; padding:13px 14px; border:1px solid #dfe7f1; border-radius:12px; background:#fff; box-shadow:0 3px 12px rgba(15,23,42,.025); }
+        .ojt-attendance-card span { display:block; color:#64748b; font-size:.66rem; font-weight:800; text-transform:uppercase; letter-spacing:.03em; }
+        .ojt-attendance-card strong { display:block; margin-top:5px; color:#10213d; font-size:.98rem; font-weight:800; }
+        .ojt-review-columns { display:grid; grid-template-columns:minmax(0,.88fr) minmax(0,1.32fr); gap:16px; padding:18px 24px 22px; align-items:start; }
+        .ojt-evidence-column, .ojt-rating-column { display:grid; gap:12px; min-width:0; }
+        .ojt-panel-card { padding:15px; border:1px solid #e1e8f0; border-radius:13px; background:#fff; }
+        .ojt-panel-card.is-rating { border-color:#dbe7f7; box-shadow:0 5px 18px rgba(37,99,235,.045); }
+        .ojt-panel-heading { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
+        .ojt-panel-heading h3 { margin:0; color:#10213d; font-size:.79rem; font-weight:800; }
+        .ojt-panel-heading span { color:#64748b; font-size:.65rem; }
+        .ojt-info-block { padding:0; border:0; }
+        .ojt-info-block h3 { display:flex; align-items:center; gap:8px; margin:0 0 8px; color:#10213d; font-size:.78rem; font-weight:800; }
+        .ojt-info-block p { margin:0; padding:10px 11px; border-radius:9px; background:#f8fafc; color:#52647b; font-size:.74rem; line-height:1.52; white-space:pre-line; }
+        .ojt-proof-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; margin-top:10px; }
         .ojt-proof { overflow:hidden; border:1px solid #e2e8f0; border-radius:10px; background:#f8fafc; }
-        .ojt-proof img { width:100%; height:110px; object-fit:cover; display:block; }
-        .ojt-proof-meta { display:flex; align-items:center; justify-content:space-between; gap:7px; padding:7px 8px; }
-        .ojt-proof-meta span { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#64748b; font-size:.64rem; }
-        .ojt-proof-meta a { flex:0 0 auto; color:#2563eb; font-size:.64rem; font-weight:800; text-decoration:none; }
-        .ojt-rating-section { padding-top:14px; margin-top:2px; border-top:1px solid #edf2f7; }
-        .ojt-rating-title { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px; }
-        .ojt-rating-title strong { color:#10213d; font-size:.78rem; }
-        .ojt-rating-help { margin:7px 0 0; color:#64748b; font-size:.7rem; line-height:1.45; }
-        .ojt-criteria-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:9px; margin-top:14px; }
-        .ojt-criterion-card { padding:12px 13px; border:1px solid #e2e8f0; border-radius:10px; background:#f8fafc; }
-        .ojt-criterion-card strong { display:block; margin-bottom:7px; color:#334155; font-size:.72rem; font-weight:800; }
-        .ojt-criterion-card .ojt-star { font-size:1.5rem; }
+        .ojt-proof img { width:100%; height:100px; object-fit:cover; display:block; background:#fff; }
+        .ojt-proof-meta { display:flex; align-items:center; justify-content:space-between; gap:7px; padding:8px; }
+        .ojt-proof-meta span { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#64748b; font-size:.62rem; }
+        .ojt-proof-meta a { flex:0 0 auto; color:#2563eb; font-size:.62rem; font-weight:800; text-decoration:none; }
+        .ojt-rating-section { padding:0; margin:0; border:0; }
+        .ojt-rating-title { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:10px; }
+        .ojt-rating-title strong { color:#10213d; font-size:.8rem; }
+        .ojt-overall-rating-row { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; padding:12px 13px; border:1px solid #dfe7f1; border-radius:11px; background:#fbfdff; }
+        .ojt-rating-help { margin:9px 0 0; padding:9px 11px; border:1px solid #dbeafe; border-radius:9px; background:#eff6ff; color:#52647b; font-size:.68rem; line-height:1.45; }
+        .ojt-criteria-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:14px; margin-bottom:8px; }
+        .ojt-criteria-heading strong { color:#10213d; font-size:.75rem; }
+        .ojt-criteria-heading span { color:#64748b; font-size:.64rem; }
+        .ojt-criteria-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin-top:0; }
+        .ojt-criterion-card { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:8px; padding:9px 10px; border:1px solid #e2e8f0; border-radius:9px; background:#f8fafc; }
+        .ojt-criterion-card strong { margin:0; color:#334155; font-size:.66rem; font-weight:800; }
+        .ojt-criterion-card .ojt-star-picker { justify-content:flex-end; flex-wrap:nowrap; }
+        .ojt-criterion-card .ojt-star { font-size:1.12rem; }
+        .ojt-criterion-card .ojt-star-label { min-width:44px; margin:0 0 0 3px; font-size:.65rem; }
         .ojt-star-picker { display:flex; align-items:center; flex-wrap:wrap; gap:3px; }
         .ojt-star { padding:0; border:0; background:transparent; color:#cbd5e1; font-size:1.85rem; line-height:1; cursor:pointer; }
         .ojt-star.is-filled { color:#f59e0b; }
         .ojt-star.is-fraction { color:#f59e0b; opacity:.55; }
         .ojt-star-step { width:28px; height:28px; margin-left:4px; border:1px solid #cbd5e1; border-radius:7px; background:#fff; color:#475569; font-weight:800; cursor:pointer; }
         .ojt-star-label { min-width:58px; margin:0 4px; color:#334155; font-size:.75rem; font-weight:800; text-align:center; }
-        .ojt-modal-textarea { width:100%; min-height:74px; padding:10px 12px; border:1px solid #d8e2ee; border-radius:9px; color:#0f172a; font:inherit; font-size:.75rem; resize:vertical; outline:none; }
+        .ojt-field-label { display:block; margin:13px 0 6px; color:#10213d; font-size:.7rem; font-weight:800; }
+        .ojt-modal-textarea { width:100%; min-height:84px; padding:11px 12px; border:1px solid #d8e2ee; border-radius:9px; background:#fff; color:#0f172a; font:inherit; font-size:.74rem; resize:vertical; outline:none; }
         .ojt-modal-textarea:focus { border-color:#60a5fa; box-shadow:0 0 0 3px rgba(37,99,235,.08); }
-        .ojt-review-footer { position:sticky; bottom:0; z-index:2; display:flex; align-items:center; justify-content:flex-end; gap:8px; flex-wrap:wrap; padding:13px 18px; border-top:1px solid #e7edf4; background:#fff; }
-        .ojt-review-footer .ojt-footer-button[value="revision_requested"] { order:1; }
-        .ojt-review-footer .ojt-footer-button[value="reviewed"] { order:2; }
-        .ojt-review-footer .ojt-footer-button[form="ojt-individual-rating-form"] { order:3; }
-        .ojt-review-footer .ojt-footer-button[value="approved"] { order:4; margin-left:auto; }
-        .ojt-footer-button { min-height:38px; padding:0 13px; border-radius:8px; font:inherit; font-size:.7rem; font-weight:800; cursor:pointer; }
+        .ojt-review-note-card { padding:14px 15px; border:1px solid #e1e8f0; border-radius:13px; background:#fff; }
+        .ojt-review-footer { position:sticky; bottom:0; z-index:3; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; padding:13px 18px; border-top:1px solid #e7edf4; background:#fff; }
+        .ojt-footer-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+        .ojt-footer-actions.is-primary { margin-left:auto; }
+        .ojt-footer-button { min-height:40px; padding:0 15px; border-radius:9px; font:inherit; font-size:.7rem; font-weight:800; cursor:pointer; }
         .ojt-footer-button.danger { border:1px solid #ef4444; background:#fff; color:#dc2626; }
         .ojt-footer-button.outline { border:1px solid #2563eb; background:#fff; color:#2563eb; }
-        .ojt-footer-button.primary { border:1px solid #2563eb; background:#2563eb; color:#fff; }
+        .ojt-footer-button.primary { border:1px solid #2563eb; background:#2563eb; color:#fff; box-shadow:0 4px 12px rgba(37,99,235,.14); }
+        .ojt-footer-button:hover { filter:brightness(.98); }
+        @media (max-width:900px) {
+            #ojt-individual-modal .ojt-review-dialog { width:min(760px,calc(100vw - 24px)); }
+            .ojt-review-overview, .ojt-review-columns { grid-template-columns:1fr; }
+            .ojt-modal-person { padding-bottom:2px; }
+        }
+        @media (max-width:650px) {
+            .ojt-review-modal { padding:8px; }
+            .ojt-review-dialog, #ojt-individual-modal .ojt-review-dialog { width:100%; max-height:calc(100vh - 16px); border-radius:14px; }
+            .ojt-review-modal-header { padding:16px; }
+            .ojt-review-overview, .ojt-review-columns { padding-left:14px; padding-right:14px; }
+            .ojt-attendance-grid { grid-template-columns:1fr; }
+            .ojt-criteria-grid { grid-template-columns:1fr; }
+            .ojt-review-footer { padding:11px 12px; }
+            .ojt-footer-actions, .ojt-footer-actions.is-primary { width:100%; margin:0; }
+            .ojt-footer-button { flex:1 1 auto; }
+        }
         .ojt-batch-selection { display:grid; gap:9px; max-height:270px; overflow:auto; margin-bottom:14px; }
         .ojt-batch-entry { padding:12px 13px; border:1px solid #e2e8f0; border-radius:10px; background:#f8fafc; }
         .ojt-batch-entry strong { color:#10213d; font-size:.78rem; }
@@ -276,117 +313,173 @@
         <div id="ojt-individual-modal" class="ojt-review-modal" aria-hidden="true" onclick="if(event.target===this)closeIndividualReviewModal()">
             <div class="ojt-review-dialog" role="dialog" aria-modal="true" aria-labelledby="ojtIndividualModalTitle">
                 <div class="ojt-review-modal-header">
-                    <h2 id="ojtIndividualModalTitle">Rate &amp; Review Daily OJT Entry</h2>
+                    <div class="ojt-review-modal-title">
+                        <h2 id="ojtIndividualModalTitle">Rate &amp; Review Daily OJT Entry</h2>
+                        <p>Review the student's daily accomplishment, evidence, ratings, and supervisor feedback.</p>
+                    </div>
                     <button type="button" class="ojt-modal-close" onclick="closeIndividualReviewModal()" aria-label="Close">×</button>
                 </div>
-                <div class="ojt-review-modal-body">
-                    <div class="ojt-modal-person">
-                        <div>
-                            <strong>{{ selected_entry.student_name }}</strong>
-                            <small>{{ selected_entry.student_email or 'Enrolled intern' }} · Day {{ selected_entry.day_number or '—' }} · {{ selected_entry.date }}</small>
-                        </div>
-                        <span class="ojt-status {{ selected_entry.review_status }}">{{ selected_entry.review_status_label }}</span>
-                    </div>
 
-                    <div class="ojt-attendance-grid">
-                        <div class="ojt-attendance-card"><span>Time In</span><strong>{{ selected_entry.time_in or '—' }}</strong></div>
-                        <div class="ojt-attendance-card"><span>Time Out</span><strong>{{ selected_entry.time_out or '—' }}</strong></div>
-                        <div class="ojt-attendance-card"><span>Hours Rendered</span><strong>{% if selected_entry.hours_rendered is not none %}{{ '%.2f'|format(selected_entry.hours_rendered) }} hrs{% else %}In progress{% endif %}</strong></div>
-                    </div>
-
-                    <div class="ojt-info-block"><h3>▣ What they did</h3><p>{{ selected_entry.accomplishment or 'No accomplishment recorded.' }}</p></div>
-                    <div class="ojt-info-block"><h3>▰ Learning / Reflection</h3><p>{{ selected_entry.reflection or 'No reflection recorded.' }}</p></div>
-                    <div class="ojt-info-block"><h3>⚠ Challenges / Notes</h3><p>{{ selected_entry.challenges or 'No challenges or notes recorded.' }}</p></div>
-                    {% if selected_entry.related_work_title %}<div class="ojt-info-block"><h3>✓ Related Work</h3><p>{{ selected_entry.related_work_title }}</p></div>{% endif %}
-
-                    <div class="ojt-info-block">
-                        <div class="d-flex align-items-center justify-content-between gap-3">
-                            <h3 class="mb-0">▧ Proof / Evidence</h3>
-                            <span class="text-muted small">{{ selected_photos|length }} photo{% if selected_photos|length != 1 %}s{% endif %}</span>
-                        </div>
-                        {% if selected_photos %}
-                            <div class="ojt-proof-grid">
-                                {% for photo in selected_photos %}
-                                    <div class="ojt-proof">
-                                        <a href="{{ url_for('logbook_review.supervisor_photo', class_id=classroom.id, photo_id=photo.id) }}" target="_blank" rel="noopener"><img src="{{ url_for('logbook_review.supervisor_photo', class_id=classroom.id, photo_id=photo.id) }}" alt="{{ photo.original_filename }}"></a>
-                                        <div class="ojt-proof-meta"><span title="{{ photo.original_filename }}">{{ photo.original_filename }}</span><a href="{{ url_for('logbook_review.supervisor_photo_download', class_id=classroom.id, photo_id=photo.id) }}">Download</a></div>
-                                    </div>
-                                {% endfor %}
+                <div class="ojt-review-modal-body ojt-individual-body">
+                    <div class="ojt-review-overview">
+                        <div class="ojt-modal-person">
+                            <div class="ojt-modal-person-main">
+                                <div class="ojt-modal-avatar" aria-hidden="true">{{ selected_entry.student_name[:1]|upper }}</div>
+                                <div class="ojt-modal-person-copy">
+                                    <strong>{{ selected_entry.student_name }}</strong>
+                                    <small>{{ selected_entry.student_email or 'Enrolled intern' }}</small>
+                                    <small>Day {{ selected_entry.day_number or '—' }} · {{ selected_entry.date }}</small>
+                                </div>
                             </div>
-                        {% else %}
-                            <p class="mt-2">No photo evidence was attached to this Daily OJT entry.</p>
-                        {% endif %}
+                            <span class="ojt-status {{ selected_entry.review_status }}">{{ selected_entry.review_status_label }}</span>
+                        </div>
+
+                        <div class="ojt-attendance-grid">
+                            <div class="ojt-attendance-card"><span>Time In</span><strong>{{ selected_entry.time_in or '—' }}</strong></div>
+                            <div class="ojt-attendance-card"><span>Time Out</span><strong>{{ selected_entry.time_out or '—' }}</strong></div>
+                            <div class="ojt-attendance-card"><span>Hours Rendered</span><strong>{% if selected_entry.hours_rendered is not none %}{{ '%.2f'|format(selected_entry.hours_rendered) }} hrs{% else %}In progress{% endif %}</strong></div>
+                        </div>
                     </div>
 
-                    {% if selected_entry.can_review %}
-                        <form id="ojt-individual-rating-form" method="POST" action="{{ url_for('logbook_review.rate_daily_performance', class_id=classroom.id, log_id=selected_entry.id) }}">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <div class="ojt-rating-section">
-                                <div class="ojt-rating-title"><strong>★ Overall Daily Rating</strong>{% if daily_rating %}<span class="badge text-bg-primary">{{ '%.1f'|format(daily_rating.star_rating) }} ★ · {{ '%.1f'|format(daily_rating.percentage) }}%</span>{% endif %}</div>
-                                <div class="ojt-star-picker" data-star-picker data-star-required="1" data-input-id="ojt-individual-star-rating">
-                                    <input id="ojt-individual-star-rating" name="star_rating" type="hidden" value="{% if daily_rating %}{{ '%.1f'|format(daily_rating.star_rating) }}{% endif %}">
-                                    {% for star in range(1,6) %}<button type="button" class="ojt-star" data-star-value="{{ star }}" aria-label="Set {{ star }} star rating">☆</button>{% endfor %}
-                                    <button type="button" class="ojt-star-step" data-star-step="-0.1" aria-label="Decrease by 0.1">−</button><span class="ojt-star-label" data-star-label>Choose</span><button type="button" class="ojt-star-step" data-star-step="0.1" aria-label="Increase by 0.1">+</button>
-                                </div>
-                                <div class="text-danger small mt-1" data-star-error hidden>Choose a star rating before saving.</div>
-                                <p class="ojt-rating-help">This remains the official numeric Daily OJT score used by linked Work analytics, ML Insights, and Reports.</p>
+                    <div class="ojt-review-columns">
+                        <div class="ojt-evidence-column">
+                            <section class="ojt-panel-card ojt-info-block">
+                                <h3>▣ What they did</h3>
+                                <p>{{ selected_entry.accomplishment or 'No accomplishment recorded.' }}</p>
+                            </section>
 
-                                {% set rating_criteria = [
-                                    'Quality of Work',
-                                    'Productivity',
-                                    'Initiative',
-                                    'Communication',
-                                    'Teamwork',
-                                    'Professionalism',
-                                    'Reliability / Punctuality',
-                                    'Adaptability / Learning'
-                                ] %}
-                                <div class="ojt-rating-title mt-3">
-                                    <strong>☆ Detailed Rating Criteria</strong>
-                                    <span class="text-muted small">Optional · 1–5 stars each</span>
+                            <section class="ojt-panel-card ojt-info-block">
+                                <h3>▰ Learning / Reflection</h3>
+                                <p>{{ selected_entry.reflection or 'No reflection recorded.' }}</p>
+                            </section>
+
+                            <section class="ojt-panel-card ojt-info-block">
+                                <h3>⚠ Challenges / Notes</h3>
+                                <p>{{ selected_entry.challenges or 'No challenges or notes recorded.' }}</p>
+                            </section>
+
+                            {% if selected_entry.related_work_title %}
+                                <section class="ojt-panel-card ojt-info-block">
+                                    <h3>✓ Related Work</h3>
+                                    <p>{{ selected_entry.related_work_title }}</p>
+                                </section>
+                            {% endif %}
+
+                            <section class="ojt-panel-card ojt-info-block">
+                                <div class="ojt-panel-heading">
+                                    <h3 class="mb-0">▧ Proof / Evidence</h3>
+                                    <span>{{ selected_photos|length }} photo{% if selected_photos|length != 1 %}s{% endif %}</span>
                                 </div>
-                                <div class="ojt-criteria-grid">
-                                    {% for criterion_label in rating_criteria %}
-                                        {% set saved_criterion = namespace(value='') %}
-                                        {% if daily_rating and daily_rating.criteria %}
-                                            {% for criterion in daily_rating.criteria %}
-                                                {% if criterion.criterion_name == criterion_label %}
-                                                    {% set saved_criterion.value = '%.1f'|format(criterion.rating_value) %}
-                                                {% endif %}
-                                            {% endfor %}
-                                        {% endif %}
-                                        <div class="ojt-criterion-card">
-                                            <strong>{{ loop.index }}. {{ criterion_label }}</strong>
-                                            <div class="ojt-star-picker" data-star-picker data-input-id="ojt-criterion-rating-{{ loop.index }}">
-                                                <input type="hidden" name="criterion_name" value="{{ criterion_label }}" data-criterion-name-input {% if not saved_criterion.value %}disabled{% endif %}>
-                                                <input id="ojt-criterion-rating-{{ loop.index }}" name="criterion_rating" type="hidden" value="{{ saved_criterion.value }}" {% if not saved_criterion.value %}disabled{% endif %}>
-                                                {% for star in range(1,6) %}<button type="button" class="ojt-star" data-star-value="{{ star }}" aria-label="Rate {{ criterion_label }} {{ star }} stars">☆</button>{% endfor %}
-                                                <span class="ojt-star-label" data-star-label>Optional</span>
+                                {% if selected_photos %}
+                                    <div class="ojt-proof-grid">
+                                        {% for photo in selected_photos %}
+                                            <div class="ojt-proof">
+                                                <a href="{{ url_for('logbook_review.supervisor_photo', class_id=classroom.id, photo_id=photo.id) }}" target="_blank" rel="noopener"><img src="{{ url_for('logbook_review.supervisor_photo', class_id=classroom.id, photo_id=photo.id) }}" alt="{{ photo.original_filename }}"></a>
+                                                <div class="ojt-proof-meta">
+                                                    <span title="{{ photo.original_filename }}">{{ photo.original_filename }}</span>
+                                                    <a href="{{ url_for('logbook_review.supervisor_photo_download', class_id=classroom.id, photo_id=photo.id) }}">Download</a>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <p>No photo evidence was attached to this Daily OJT entry.</p>
+                                {% endif %}
+                            </section>
+                        </div>
+
+                        <div class="ojt-rating-column">
+                            {% if selected_entry.can_review %}
+                                <form id="ojt-individual-rating-form" class="ojt-panel-card is-rating" method="POST" action="{{ url_for('logbook_review.rate_daily_performance', class_id=classroom.id, log_id=selected_entry.id) }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <div class="ojt-rating-section">
+                                        <div class="ojt-panel-heading">
+                                            <h3>★ Ratings</h3>
+                                            <span>Rate performance for this OJT day.</span>
+                                        </div>
+
+                                        <div class="ojt-rating-title">
+                                            <strong>Overall Daily Rating</strong>
+                                            {% if daily_rating %}<span class="badge text-bg-primary">{{ '%.1f'|format(daily_rating.star_rating) }} ★ · {{ '%.1f'|format(daily_rating.percentage) }}%</span>{% endif %}
+                                        </div>
+                                        <div class="ojt-overall-rating-row">
+                                            <div class="ojt-star-picker" data-star-picker data-star-required="1" data-input-id="ojt-individual-star-rating">
+                                                <input id="ojt-individual-star-rating" name="star_rating" type="hidden" value="{% if daily_rating %}{{ '%.1f'|format(daily_rating.star_rating) }}{% endif %}">
+                                                {% for star in range(1,6) %}<button type="button" class="ojt-star" data-star-value="{{ star }}" aria-label="Set {{ star }} star rating">☆</button>{% endfor %}
+                                                <button type="button" class="ojt-star-step" data-star-step="-0.1" aria-label="Decrease by 0.1">−</button>
+                                                <span class="ojt-star-label" data-star-label>Choose</span>
+                                                <button type="button" class="ojt-star-step" data-star-step="0.1" aria-label="Increase by 0.1">+</button>
                                             </div>
                                         </div>
-                                    {% endfor %}
-                                </div>
-                                <textarea class="ojt-modal-textarea mt-2" name="rating_comment" maxlength="2000" placeholder="Performance comment (optional)...">{{ daily_rating.comment if daily_rating else '' }}</textarea>
-                            </div>
-                        </form>
+                                        <div class="text-danger small mt-1" data-star-error hidden>Choose a star rating before saving.</div>
+                                        <p class="ojt-rating-help">Overall Daily Rating is the official numeric score used by linked Work analytics, ML Insights, and Reports. Detailed criteria explain the assessment and do not replace that score.</p>
 
-                        <form id="ojt-individual-review-form" method="POST" action="{{ url_for('logbook_review.review_daily_log', class_id=classroom.id, log_id=selected_entry.id) }}">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <div class="ojt-rating-section">
-                                <div class="ojt-rating-title"><strong>● Supervisor Review</strong></div>
-                                <textarea class="ojt-modal-textarea" name="comments" maxlength="3000" placeholder="Supervisor comments (optional for Reviewed/Approved; required for Revision Requested)...">{{ selected_entry.review_comments }}</textarea>
-                            </div>
-                        </form>
-                    {% else %}
-                        <div class="alert alert-secondary mb-0 mt-3">This attendance session is still open. The intern must clock out before rating or review actions become available.</div>
-                    {% endif %}
+                                        {% set rating_criteria = [
+                                            'Quality of Work',
+                                            'Productivity',
+                                            'Initiative',
+                                            'Communication',
+                                            'Teamwork',
+                                            'Professionalism',
+                                            'Reliability / Punctuality',
+                                            'Adaptability / Learning'
+                                        ] %}
+                                        <div class="ojt-criteria-heading">
+                                            <strong>Detailed Rating Criteria</strong>
+                                            <span>Optional · 1–5 stars each</span>
+                                        </div>
+                                        <div class="ojt-criteria-grid">
+                                            {% for criterion_label in rating_criteria %}
+                                                {% set saved_criterion = namespace(value='') %}
+                                                {% if daily_rating and daily_rating.criteria %}
+                                                    {% for criterion in daily_rating.criteria %}
+                                                        {% if criterion.criterion_name == criterion_label %}
+                                                            {% set saved_criterion.value = '%.1f'|format(criterion.rating_value) %}
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                {% endif %}
+                                                <div class="ojt-criterion-card">
+                                                    <strong>{{ loop.index }}. {{ criterion_label }}</strong>
+                                                    <div class="ojt-star-picker" data-star-picker data-input-id="ojt-criterion-rating-{{ loop.index }}">
+                                                        <input type="hidden" name="criterion_name" value="{{ criterion_label }}" data-criterion-name-input {% if not saved_criterion.value %}disabled{% endif %}>
+                                                        <input id="ojt-criterion-rating-{{ loop.index }}" name="criterion_rating" type="hidden" value="{{ saved_criterion.value }}" {% if not saved_criterion.value %}disabled{% endif %}>
+                                                        {% for star in range(1,6) %}<button type="button" class="ojt-star" data-star-value="{{ star }}" aria-label="Rate {{ criterion_label }} {{ star }} stars">☆</button>{% endfor %}
+                                                        <span class="ojt-star-label" data-star-label>Optional</span>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+
+                                        <label class="ojt-field-label" for="ojt-performance-comment">Performance Comment <span class="text-muted fw-normal">(optional)</span></label>
+                                        <textarea id="ojt-performance-comment" class="ojt-modal-textarea" name="rating_comment" maxlength="2000" placeholder="Write feedback, observations, or recommendations for the student...">{{ daily_rating.comment if daily_rating else '' }}</textarea>
+                                    </div>
+                                </form>
+
+                                <form id="ojt-individual-review-form" class="ojt-review-note-card" method="POST" action="{{ url_for('logbook_review.review_daily_log', class_id=classroom.id, log_id=selected_entry.id) }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <div class="ojt-panel-heading">
+                                        <h3>● Supervisor Review Note</h3>
+                                        <span>Used for review status and revision requests.</span>
+                                    </div>
+                                    <textarea class="ojt-modal-textarea" name="comments" maxlength="3000" placeholder="Supervisor comments (optional for Reviewed/Approved; required for Revision Requested)...">{{ selected_entry.review_comments }}</textarea>
+                                </form>
+                            {% else %}
+                                <div class="alert alert-secondary mb-0">This attendance session is still open. The intern must clock out before rating or review actions become available.</div>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
+
                 {% if selected_entry.can_review %}
                     <div class="ojt-review-footer">
-                        <button class="ojt-footer-button danger" type="submit" form="ojt-individual-review-form" name="status" value="revision_requested">Request Revision</button>
-                        <button class="ojt-footer-button outline" type="submit" form="ojt-individual-review-form" name="status" value="reviewed">Mark Reviewed</button>
-                        <button class="ojt-footer-button primary" type="submit" form="ojt-individual-review-form" name="status" value="approved">Approve Entry</button>
-                        <button class="ojt-footer-button primary" type="submit" form="ojt-individual-rating-form">{% if daily_rating %}Update Rating{% else %}Save Rating{% endif %}</button>
+                        <div class="ojt-footer-actions">
+                            <button class="ojt-footer-button danger" type="submit" form="ojt-individual-review-form" name="status" value="revision_requested">Request Revision</button>
+                            <button class="ojt-footer-button outline" type="submit" form="ojt-individual-review-form" name="status" value="reviewed">Mark Reviewed</button>
+                        </div>
+                        <div class="ojt-footer-actions is-primary">
+                            <button class="ojt-footer-button primary" type="submit" form="ojt-individual-rating-form">{% if daily_rating %}Update Rating{% else %}Save Rating{% endif %}</button>
+                            <button class="ojt-footer-button primary" type="submit" form="ojt-individual-review-form" name="status" value="approved">Approve Entry</button>
+                        </div>
                     </div>
                 {% endif %}
             </div>
