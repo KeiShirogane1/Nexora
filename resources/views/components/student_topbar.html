@@ -109,6 +109,30 @@
             if (dayNumber) dayCell.textContent = 'Day ' + dayNumber;
         });
 
+        /* Closed entries remain editable only during the same Nexora-local OJT day.
+           The backend route enforces the rule; this only exposes the action for today. */
+        var today = new Date();
+        document.querySelectorAll('.student-logbook-entries tbody tr').forEach(function (row) {
+            var viewLink = row.querySelector('a[href*="/student/session/"]');
+            var dateLabel = row.querySelector('.student-logbook-entry-date strong');
+            var actionBox = row.querySelector('.student-logbook-entry-actions');
+            if (!viewLink || !dateLabel || !actionBox || actionBox.querySelector('[data-edit-today-logbook]')) return;
+            var match = (viewLink.getAttribute('href') || '').match(/\/student\/session\/(\d+)/);
+            if (!match) return;
+            var parsed = new Date(String(dateLabel.textContent || '').trim());
+            if (Number.isNaN(parsed.getTime())) return;
+            var sameDay = parsed.getFullYear() === today.getFullYear() && parsed.getMonth() === today.getMonth() && parsed.getDate() === today.getDate();
+            if (!sameDay) return;
+            var editLink = document.createElement('a');
+            editLink.className = 'student-logbook-icon-button';
+            editLink.href = '/student/daily-log/attendance/' + encodeURIComponent(match[1]) + '/edit';
+            editLink.setAttribute('aria-label', "Edit today's Daily OJT entry");
+            editLink.setAttribute('title', "Edit today's Daily OJT entry");
+            editLink.setAttribute('data-edit-today-logbook', '1');
+            editLink.textContent = '✎';
+            actionBox.insertBefore(editLink, viewLink);
+        });
+
         var attendanceInput = document.querySelector('#dailyEntryForm input[name="attendance_id"]');
         var sessionKicker = document.querySelector('.student-logbook-session .student-logbook-section-kicker');
         if (attendanceInput && sessionKicker) {
