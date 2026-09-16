@@ -79,7 +79,7 @@ def test_student_insights_uses_structured_ml_explanation_endpoint():
 
     assert "fetch('/assistant/ml-explanation'" in template
     assert "body: JSON.stringify({evidence: aiEvidence})" in template
-    assert "nxMlAiAnalysis:v2:" in template
+    assert "nxMlAiAnalysis:v4:" in template
     assert "renderAnalysis(data.analysis)" in template
     assert "parseAnswer(data.answer)" not in template
     assert "Return exactly five concise labeled sections" not in template

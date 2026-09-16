@@ -48,7 +48,7 @@
                                             <button type="button" class="btn btn-sm btn-outline-primary" onclick="openWorkModal('edit-work-{{ item.id }}')" {% if classroom.archived %}disabled{% endif %}>Edit</button>
                                             <form id="remove-work-form-{{ item.id }}" method="POST" action="{{ url_for('classwork.remove_work', class_id=classroom.id, assignment_id=item.id) }}" class="m-0">
                                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="openRemoveWorkModal('remove-work-form-{{ item.id }}', {{ item.title|tojson }})" {% if classroom.archived %}disabled{% endif %}>Remove</button>
+                                                <button type="button" class="btn btn-sm btn-outline-danger" data-work-title="{{ item.title }}" onclick="openRemoveWorkModal('remove-work-form-{{ item.id }}', this.getAttribute('data-work-title'))" {% if classroom.archived %}disabled{% endif %}>Remove</button>
                                             </form>
                                         </div>
                                     </div>
