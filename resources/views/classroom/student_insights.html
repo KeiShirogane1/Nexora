@@ -8,6 +8,21 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
     <style>
+        .student-insights-page {
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        .student-insights-page button,
+        .student-insights-page input,
+        .student-insights-page select,
+        .student-insights-page textarea {
+            font: inherit;
+        }
+        .student-insights-page .student-insights-icon {
+            display: block;
+            width: 1em;
+            height: 1em;
+            flex: 0 0 auto;
+        }
         .student-insights-page .student-insights-shell {
             max-width: 1440px;
             padding-bottom: 56px;
@@ -25,16 +40,16 @@
         .student-insights-page .student-insights-breadcrumb {
             margin: 0 0 8px;
             color: #718078;
-            font-size: 0.72rem;
+            font-size: .72rem;
             font-weight: 700;
         }
         .student-insights-page .student-insights-eyebrow {
             display: block;
             margin-bottom: 7px;
             color: var(--student-green, #0a8f46);
-            font-size: 0.7rem;
+            font-size: .7rem;
             font-weight: 800;
-            letter-spacing: 0.1em;
+            letter-spacing: .1em;
             text-transform: uppercase;
         }
         .student-insights-page .student-insights-hero h1 {
@@ -43,13 +58,13 @@
             font-size: 2rem;
             line-height: 1.1;
             font-weight: 800;
-            letter-spacing: -0.035em;
+            letter-spacing: -.035em;
         }
         .student-insights-page .student-insights-hero p {
             max-width: 760px;
             margin: 7px 0 0;
             color: #68776f;
-            font-size: 0.9rem;
+            font-size: .9rem;
             line-height: 1.55;
         }
         .student-insights-page .student-insights-actions {
@@ -63,16 +78,20 @@
             min-height: 40px;
             align-items: center;
             justify-content: center;
-            gap: 7px;
+            gap: 8px;
             padding: 0 15px;
             border: 1px solid #cfe0d5;
             border-radius: 9px;
             background: #fff;
             color: #173d30;
-            font-size: 0.74rem;
+            font-size: .74rem;
             font-weight: 800;
             text-decoration: none;
-            box-shadow: 0 4px 12px rgba(20, 52, 38, 0.035);
+            box-shadow: 0 4px 12px rgba(20, 52, 38, .035);
+        }
+        .student-insights-page .student-insights-button .student-insights-icon {
+            width: 15px;
+            height: 15px;
         }
         .student-insights-page .student-insights-button:hover {
             border-color: #9bcbb7;
@@ -105,7 +124,7 @@
             border: 1px solid var(--student-border, #e3eae5);
             border-radius: 10px;
             background: #fff;
-            box-shadow: var(--student-card-shadow, 0 6px 20px rgba(20, 52, 38, 0.035));
+            box-shadow: var(--student-card-shadow, 0 6px 20px rgba(20, 52, 38, .035));
         }
         .student-insights-page .student-insights-kpi-icon {
             display: grid;
@@ -116,8 +135,10 @@
             border-radius: 14px;
             background: #e7f7ed;
             color: #0a8f46;
-            font-size: 1.05rem;
-            font-weight: 900;
+        }
+        .student-insights-page .student-insights-kpi-icon .student-insights-icon {
+            width: 23px;
+            height: 23px;
         }
         .student-insights-page .student-insights-kpi:nth-child(2) .student-insights-kpi-icon {
             background: #e9f2ff;
@@ -140,9 +161,9 @@
         }
         .student-insights-page .student-insights-kpi-copy span {
             color: #52625a;
-            font-size: 0.69rem;
+            font-size: .69rem;
             font-weight: 800;
-            letter-spacing: 0.035em;
+            letter-spacing: .035em;
             text-transform: uppercase;
         }
         .student-insights-page .student-insights-kpi-copy strong {
@@ -156,19 +177,19 @@
         }
         .student-insights-page .student-insights-kpi-copy small {
             color: #7b8982;
-            font-size: 0.68rem;
+            font-size: .68rem;
             line-height: 1.4;
         }
         .student-insights-page .student-insights-primary-grid {
             display: grid;
-            grid-template-columns: minmax(0, 1.65fr) minmax(300px, 0.9fr);
+            grid-template-columns: minmax(0, 1.65fr) minmax(300px, .9fr);
             gap: 18px;
             margin-bottom: 18px;
             align-items: stretch;
         }
         .student-insights-page .student-insights-secondary-grid {
             display: grid;
-            grid-template-columns: minmax(0, 1.45fr) minmax(300px, 0.85fr);
+            grid-template-columns: minmax(0, 1.45fr) minmax(300px, .85fr);
             gap: 18px;
             margin-bottom: 18px;
             align-items: stretch;
@@ -178,11 +199,8 @@
             border: 1px solid var(--student-border, #e3eae5);
             border-radius: 10px;
             background: #fff;
-            box-shadow: var(--student-card-shadow, 0 6px 20px rgba(20, 52, 38, 0.035));
+            box-shadow: var(--student-card-shadow, 0 6px 20px rgba(20, 52, 38, .035));
             overflow: hidden;
-        }
-        .student-insights-page .student-insights-card + .student-insights-card {
-            margin-top: 0;
         }
         .student-insights-page .student-insights-card-head {
             display: flex;
@@ -207,8 +225,10 @@
             border-radius: 12px;
             background: var(--student-green-soft, #e7f7ed);
             color: var(--student-green, #0a8f46);
-            font-size: 1rem;
-            font-weight: 900;
+        }
+        .student-insights-page .student-insights-card-icon .student-insights-icon {
+            width: 21px;
+            height: 21px;
         }
         .student-insights-page .student-insights-card-head h2 {
             margin: 0;
@@ -220,7 +240,7 @@
         .student-insights-page .student-insights-card-head p {
             margin: 5px 0 0;
             color: #718078;
-            font-size: 0.74rem;
+            font-size: .74rem;
             line-height: 1.5;
         }
         .student-insights-page .student-insights-pill {
@@ -232,7 +252,7 @@
             border-radius: 999px;
             background: var(--student-green-soft, #e7f7ed);
             color: var(--student-green-dark, #08783b);
-            font-size: 0.67rem;
+            font-size: .67rem;
             font-weight: 800;
             white-space: nowrap;
         }
@@ -261,14 +281,14 @@
         }
         .student-insights-page .student-insights-metric span {
             color: #6e7c75;
-            font-size: 0.64rem;
+            font-size: .64rem;
             font-weight: 700;
         }
         .student-insights-page .student-insights-metric strong {
             display: block;
             margin-top: 4px;
             color: #10261d;
-            font-size: 0.98rem;
+            font-size: .98rem;
             line-height: 1.15;
             font-weight: 800;
             overflow-wrap: anywhere;
@@ -276,15 +296,16 @@
         .student-insights-page .student-insights-metric small {
             margin-top: 3px;
             color: #8b9791;
-            font-size: 0.61rem;
+            font-size: .61rem;
         }
         .student-insights-page .student-insights-subtitle {
             margin: 0 0 9px;
             color: #173d30;
-            font-size: 0.82rem;
+            font-size: .82rem;
             font-weight: 800;
         }
-        .student-insights-page .student-insights-day-list {
+        .student-insights-page .student-insights-day-list,
+        .student-insights-page .student-insights-work-list {
             display: grid;
             gap: 8px;
         }
@@ -306,7 +327,7 @@
             border-radius: 11px;
             background: #e7f7ed;
             color: #0a8f46;
-            font-size: 0.72rem;
+            font-size: .72rem;
             font-weight: 900;
         }
         .student-insights-page .student-insights-day-copy {
@@ -318,13 +339,13 @@
         }
         .student-insights-page .student-insights-day-copy strong {
             color: #173d30;
-            font-size: 0.76rem;
+            font-size: .76rem;
             font-weight: 800;
         }
         .student-insights-page .student-insights-day-copy span {
             margin-top: 3px;
             color: #7b8982;
-            font-size: 0.66rem;
+            font-size: .66rem;
             overflow-wrap: anywhere;
         }
         .student-insights-page .student-insights-day-score {
@@ -334,13 +355,13 @@
         .student-insights-page .student-insights-day-score strong {
             display: block;
             color: #0a8f46;
-            font-size: 0.9rem;
+            font-size: .9rem;
         }
         .student-insights-page .student-insights-day-score span {
             display: block;
             margin-top: 3px;
             color: #e9a000;
-            font-size: 0.72rem;
+            font-size: .72rem;
             font-weight: 800;
         }
         .student-insights-page .student-insights-day-score.is-empty strong,
@@ -367,18 +388,23 @@
             border-radius: 9px;
             background: #f0faf4;
             color: #08783b;
-            font-size: 0.7rem;
+            font-size: .7rem;
             font-weight: 800;
             text-decoration: none;
+        }
+        .student-insights-page .student-insights-wide-link-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .student-insights-page .student-insights-wide-link .student-insights-icon {
+            width: 15px;
+            height: 15px;
         }
         .student-insights-page .student-insights-wide-link:hover {
             border-color: #9bcbb7;
             background: #e9f7ee;
             color: #076b35;
-        }
-        .student-insights-page .student-insights-work-list {
-            display: grid;
-            gap: 8px;
         }
         .student-insights-page .student-insights-work-row {
             display: flex;
@@ -391,12 +417,12 @@
         }
         .student-insights-page .student-insights-work-row span {
             color: #68776f;
-            font-size: 0.7rem;
+            font-size: .7rem;
             font-weight: 700;
         }
         .student-insights-page .student-insights-work-row strong {
             color: #10261d;
-            font-size: 0.84rem;
+            font-size: .84rem;
             font-weight: 800;
             text-align: right;
         }
@@ -407,7 +433,7 @@
             border-radius: 9px;
             background: #f4fbf6;
             color: #5c7065;
-            font-size: 0.68rem;
+            font-size: .68rem;
             line-height: 1.55;
         }
         .student-insights-page .student-insights-ai-card {
@@ -421,7 +447,7 @@
         .student-insights-page .student-insights-ai-status {
             margin: 0 0 12px;
             color: #718078;
-            font-size: 0.68rem;
+            font-size: .68rem;
             font-weight: 700;
         }
         .student-insights-page .student-insights-ai-items {
@@ -439,13 +465,13 @@
         .student-insights-page .student-insights-ai-item h3 {
             margin: 0 0 6px;
             color: #173d30;
-            font-size: 0.74rem;
+            font-size: .74rem;
             font-weight: 800;
         }
         .student-insights-page .student-insights-ai-item p {
             margin: 0;
             color: #64756c;
-            font-size: 0.68rem;
+            font-size: .68rem;
             line-height: 1.55;
             white-space: pre-line;
         }
@@ -467,21 +493,21 @@
         }
         .student-insights-page .student-insights-feedback-box span {
             color: #718078;
-            font-size: 0.62rem;
+            font-size: .62rem;
             font-weight: 700;
         }
         .student-insights-page .student-insights-feedback-box strong {
             display: block;
             margin-top: 5px;
             color: #173d30;
-            font-size: 0.78rem;
+            font-size: .78rem;
             font-weight: 800;
             overflow-wrap: anywhere;
         }
         .student-insights-page .student-insights-feedback-box small {
             margin-top: 3px;
             color: #8b9791;
-            font-size: 0.6rem;
+            font-size: .6rem;
         }
         .student-insights-page .student-insights-copy-block {
             margin-top: 12px;
@@ -493,13 +519,13 @@
         .student-insights-page .student-insights-copy-block h3 {
             margin: 0 0 5px;
             color: #173d30;
-            font-size: 0.75rem;
+            font-size: .75rem;
             font-weight: 800;
         }
         .student-insights-page .student-insights-copy-block p {
             margin: 0;
             color: #64756c;
-            font-size: 0.69rem;
+            font-size: .69rem;
             line-height: 1.55;
             white-space: pre-line;
         }
@@ -514,7 +540,7 @@
             border-radius: 999px;
             background: #e7f7ed;
             color: #08783b;
-            font-size: 0.61rem;
+            font-size: .61rem;
             font-weight: 800;
         }
         .student-insights-page .student-insights-evidence-card {
@@ -535,13 +561,13 @@
         .student-insights-page .student-insights-evidence-item strong {
             display: block;
             color: #173d30;
-            font-size: 0.74rem;
+            font-size: .74rem;
             font-weight: 800;
         }
         .student-insights-page .student-insights-evidence-item p {
             margin: 5px 0 0;
             color: #718078;
-            font-size: 0.66rem;
+            font-size: .66rem;
             line-height: 1.5;
         }
         .student-insights-page .student-insights-boundary {
@@ -563,18 +589,20 @@
             border-radius: 8px;
             background: #e0f3e6;
             color: #08783b;
-            font-size: 0.72rem;
-            font-weight: 900;
+        }
+        .student-insights-page .student-insights-boundary-icon .student-insights-icon {
+            width: 16px;
+            height: 16px;
         }
         .student-insights-page .student-insights-boundary strong {
             display: block;
             color: #173d30;
-            font-size: 0.72rem;
+            font-size: .72rem;
         }
         .student-insights-page .student-insights-boundary p {
             margin: 4px 0 0;
             color: #64756c;
-            font-size: 0.66rem;
+            font-size: .66rem;
             line-height: 1.5;
         }
         .student-insights-page .student-insights-empty {
@@ -583,7 +611,7 @@
             border-radius: 9px;
             background: #fbfdfc;
             color: #718078;
-            font-size: 0.7rem;
+            font-size: .7rem;
             line-height: 1.55;
             text-align: center;
         }
@@ -649,6 +677,38 @@
     </style>
 </head>
 <body class="student-page nx-class-page student-insights-page">
+    {% macro insight_icon(name) -%}
+        {% if name == 'refresh' %}
+            <svg class="student-insights-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6v5h-5"/><path d="M4 18v-5h5"/><path d="M6.1 9A7 7 0 0 1 18 6l2 2"/><path d="M17.9 15A7 7 0 0 1 6 18l-2-2"/></svg>
+        {% elif name == 'report' %}
+            <svg class="student-insights-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h6"/></svg>
+        {% elif name == 'back' %}
+            <svg class="student-insights-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+        {% elif name == 'rating' %}
+            <svg class="student-insights-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>
+        {% elif name == 'calendar' %}
+            <svg class="student-insights-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/><path d="m9 15 2 2 4-4"/></svg>
+        {% elif name == 'work' %}
+            <svg class="student-insights-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M3 12h18"/><path d="M10 12v2h4v-2"/></svg>
+        {% elif name == 'performance' %}
+            <svg class="student-insights-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/><path d="M17 8h2v2"/></svg>
+        {% elif name == 'logbook' %}
+            <svg class="student-insights-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v18H6.5A2.5 2.5 0 0 0 4 22z"/><path d="M4 4.5v15"/><path d="M8 7h8M8 11h8"/><path d="m8 15 2 2 4-4"/></svg>
+        {% elif name == 'ai' %}
+            <svg class="student-insights-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="17" r="2"/><circle cx="19" cy="17" r="2"/><path d="M12 7v4M10.5 12 6.7 15M13.5 12l3.8 3"/><circle cx="12" cy="12" r="2"/></svg>
+        {% elif name == 'feedback' %}
+            <svg class="student-insights-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3v-7a4 4 0 0 1-1-2.7V7a4 4 0 0 1 4-4h11a4 4 0 0 1 4 4z"/><path d="M7 8h10M7 12h6"/></svg>
+        {% elif name == 'recommendation' %}
+            <svg class="student-insights-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/><path d="m15.5 8.5 4-4"/></svg>
+        {% elif name == 'evidence' %}
+            <svg class="student-insights-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5h6"/><path d="M9 3h6v4H9z"/><rect x="5" y="5" width="14" height="17" rx="2"/><path d="m8 14 2 2 5-5"/></svg>
+        {% elif name == 'info' %}
+            <svg class="student-insights-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><path d="M12 7h.01"/></svg>
+        {% elif name == 'arrow-right' %}
+            <svg class="student-insights-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
+        {% endif %}
+    {%- endmacro %}
+
     {% include 'components/student_sidebar.html' %}
 
     <main class="class-main">
@@ -678,15 +738,15 @@
                     <p>Understand your Daily OJT grades, linked Work performance, supervisor feedback, ML signals, recommendations, and personalized Nexora AI analysis.</p>
                 </div>
                 <nav class="student-insights-actions" aria-label="Insights actions">
-                    <a class="student-insights-button" href="{{ url_for('classwork_ml_insights.student_insights', class_id=classroom.id) }}">↻ Refresh Insights</a>
-                    <a class="student-insights-button is-primary" href="{{ url_for('performance_reports.student_reports', class_id=classroom.id) }}">Open Report</a>
-                    <a class="student-insights-button" href="{{ url_for('classroom.student_class', class_id=classroom.id) }}">Back to Class</a>
+                    <a class="student-insights-button" href="{{ url_for('classwork_ml_insights.student_insights', class_id=classroom.id) }}">{{ insight_icon('refresh') }}<span>Refresh Insights</span></a>
+                    <a class="student-insights-button is-primary" href="{{ url_for('performance_reports.student_reports', class_id=classroom.id) }}">{{ insight_icon('report') }}<span>Open Report</span></a>
+                    <a class="student-insights-button" href="{{ url_for('classroom.student_class', class_id=classroom.id) }}">{{ insight_icon('back') }}<span>Back to Class</span></a>
                 </nav>
             </header>
 
             <section class="student-insights-kpis" aria-label="Performance summary">
                 <article class="student-insights-kpi">
-                    <div class="student-insights-kpi-icon" aria-hidden="true">▥</div>
+                    <div class="student-insights-kpi-icon" aria-hidden="true">{{ insight_icon('rating') }}</div>
                     <div class="student-insights-kpi-copy">
                         <span>OJT Average</span>
                         <strong>{% if has_daily_performance %}{{ "%.1f"|format(daily_average_percentage) }}%{% else %}—{% endif %}</strong>
@@ -694,7 +754,7 @@
                     </div>
                 </article>
                 <article class="student-insights-kpi">
-                    <div class="student-insights-kpi-icon" aria-hidden="true">▣</div>
+                    <div class="student-insights-kpi-icon" aria-hidden="true">{{ insight_icon('calendar') }}</div>
                     <div class="student-insights-kpi-copy">
                         <span>Rated Days</span>
                         <strong>{{ daily_rated_days }} / {{ daily_closed_days }}</strong>
@@ -702,7 +762,7 @@
                     </div>
                 </article>
                 <article class="student-insights-kpi">
-                    <div class="student-insights-kpi-icon" aria-hidden="true">▤</div>
+                    <div class="student-insights-kpi-icon" aria-hidden="true">{{ insight_icon('work') }}</div>
                     <div class="student-insights-kpi-copy">
                         <span>Work Score</span>
                         <strong>{% if average_percentage is not none %}{{ "%.1f"|format(average_percentage) }}%{% else %}—{% endif %}</strong>
@@ -710,7 +770,7 @@
                     </div>
                 </article>
                 <article class="student-insights-kpi">
-                    <div class="student-insights-kpi-icon" aria-hidden="true">★</div>
+                    <div class="student-insights-kpi-icon" aria-hidden="true">{{ insight_icon('performance') }}</div>
                     <div class="student-insights-kpi-copy">
                         <span>Performance</span>
                         <strong>{% if has_performance_data %}{{ numeric_performance_label }}{% else %}No Data{% endif %}</strong>
@@ -723,7 +783,7 @@
                 <article class="student-insights-card">
                     <div class="student-insights-card-head">
                         <div class="student-insights-card-title">
-                            <div class="student-insights-card-icon" aria-hidden="true">▥</div>
+                            <div class="student-insights-card-icon" aria-hidden="true">{{ insight_icon('logbook') }}</div>
                             <div>
                                 <h2>Daily OJT Performance</h2>
                                 <p>Your supervisor's Overall Daily Rating is the numeric grade for each completed OJT day.</p>
@@ -762,7 +822,10 @@
                                 {% endfor %}
                             </div>
                             <div class="student-insights-card-footer">
-                                <a class="student-insights-wide-link" href="{{ url_for('student.logbook', classroom_id=classroom.id) }}"><span>View All Logbook Days</span><span aria-hidden="true">→</span></a>
+                                <a class="student-insights-wide-link" href="{{ url_for('student.logbook', classroom_id=classroom.id) }}">
+                                    <span class="student-insights-wide-link-label">{{ insight_icon('logbook') }}<span>View All Logbook Days</span></span>
+                                    {{ insight_icon('arrow-right') }}
+                                </a>
                             </div>
                         {% elif daily_closed_days == 0 %}
                             <div class="student-insights-empty">No completed OJT days yet. Daily OJT grades will appear after a completed day is rated by your supervisor.</div>
@@ -775,7 +838,7 @@
                 <article class="student-insights-card">
                     <div class="student-insights-card-head">
                         <div class="student-insights-card-title">
-                            <div class="student-insights-card-icon" aria-hidden="true">▤</div>
+                            <div class="student-insights-card-icon" aria-hidden="true">{{ insight_icon('work') }}</div>
                             <div>
                                 <h2>Work Performance</h2>
                                 <p>Performance based on Work linked to rated Daily OJT Logbook days.</p>
@@ -795,7 +858,10 @@
                         </div>
                         <p class="student-insights-note">Daily OJT ratings remain the source for Internship Work analytics when the rated Logbook day is linked to Work. Nexora does not invent a score for unrated or unlinked Work.</p>
                         <div class="student-insights-card-footer">
-                            <a class="student-insights-wide-link" href="{{ url_for('student_classwork.index', class_id=classroom.id) }}"><span>View My Work</span><span aria-hidden="true">→</span></a>
+                            <a class="student-insights-wide-link" href="{{ url_for('student_classwork.index', class_id=classroom.id) }}">
+                                <span class="student-insights-wide-link-label">{{ insight_icon('work') }}<span>View My Work</span></span>
+                                {{ insight_icon('arrow-right') }}
+                            </a>
                         </div>
                     </div>
                 </article>
@@ -804,7 +870,7 @@
             <article class="student-insights-card student-insights-ai-card" aria-labelledby="nexora-ai-analysis-heading">
                 <div class="student-insights-card-head">
                     <div class="student-insights-card-title">
-                        <div class="student-insights-card-icon" aria-hidden="true">AI</div>
+                        <div class="student-insights-card-icon" aria-hidden="true">{{ insight_icon('ai') }}</div>
                         <div>
                             <h2 id="nexora-ai-analysis-heading">Nexora AI Analysis</h2>
                             <p>Personalized explanation based on the same Daily OJT, Work, and feedback evidence visible on this page.</p>
@@ -832,7 +898,7 @@
                 <article class="student-insights-card" aria-labelledby="feedback-intelligence-heading">
                     <div class="student-insights-card-head">
                         <div class="student-insights-card-title">
-                            <div class="student-insights-card-icon" aria-hidden="true">ML</div>
+                            <div class="student-insights-card-icon" aria-hidden="true">{{ insight_icon('feedback') }}</div>
                             <div>
                                 <h2 id="feedback-intelligence-heading">Feedback &amp; Skill Signals</h2>
                                 <p>Machine-learning signals based only on available supervisor feedback text and Daily OJT review comments.</p>
@@ -862,7 +928,7 @@
                 <article class="student-insights-card">
                     <div class="student-insights-card-head">
                         <div class="student-insights-card-title">
-                            <div class="student-insights-card-icon" aria-hidden="true">!</div>
+                            <div class="student-insights-card-icon" aria-hidden="true">{{ insight_icon('recommendation') }}</div>
                             <div>
                                 <h2>Recommendation</h2>
                                 <p>Structured decision support from the Work evidence currently available to Nexora.</p>
@@ -895,7 +961,10 @@
                             <div class="student-insights-empty">{% if has_daily_performance %}Your Daily OJT grades are available, but Work recommendations remain Work-specific. A recommendation appears after rated Daily OJT evidence is linked to Work or another supported numeric Work score is available.{% else %}A Work recommendation will appear after graded Work evidence is available.{% endif %}</div>
                         {% endif %}
                         <div class="student-insights-card-footer">
-                            <a class="student-insights-wide-link" href="{{ url_for('performance_reports.student_reports', class_id=classroom.id) }}"><span>Open Detailed Report</span><span aria-hidden="true">→</span></a>
+                            <a class="student-insights-wide-link" href="{{ url_for('performance_reports.student_reports', class_id=classroom.id) }}">
+                                <span class="student-insights-wide-link-label">{{ insight_icon('report') }}<span>Open Detailed Report</span></span>
+                                {{ insight_icon('arrow-right') }}
+                            </a>
                         </div>
                     </div>
                 </article>
@@ -904,7 +973,7 @@
             <article class="student-insights-card student-insights-evidence-card">
                 <div class="student-insights-card-head">
                     <div class="student-insights-card-title">
-                        <div class="student-insights-card-icon" aria-hidden="true">✓</div>
+                        <div class="student-insights-card-icon" aria-hidden="true">{{ insight_icon('evidence') }}</div>
                         <div>
                             <h2>Evidence &amp; Completion Status</h2>
                             <p>Availability of the separate evidence dimensions used across Daily OJT, Work, ML, and AI Insights.</p>
@@ -931,7 +1000,7 @@
                         </div>
                     </div>
                     <div class="student-insights-boundary">
-                        <div class="student-insights-boundary-icon" aria-hidden="true">i</div>
+                        <div class="student-insights-boundary-icon" aria-hidden="true">{{ insight_icon('info') }}</div>
                         <div>
                             <strong>Evidence boundary</strong>
                             <p>Daily OJT grades, Work analytics, feedback ML signals, recommendations, and Nexora AI explanations remain separate evidence dimensions. They do not replace or automatically calculate the Official OJT Evaluation.</p>
