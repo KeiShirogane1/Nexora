@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student OJT Logbook - Nexora</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body class="nexora-admin-body">
+    {% include 'components/admin_sidebar.html' %}
+
+    <main class="admin-main nexora-app-main">
+        <div class="nexora-page">
+            <div class="compact-dashboard">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'danger' else 'success' if category == 'success' else 'warning' if category == 'warning' else 'info' }}" role="alert">{{ message }}</div>
+                    {% endfor %}
+                {% endwith %}
+
+                <div class="dashboard-header mb-3">
+                    <div>
+                        <div class="text-uppercase fw-bold text-danger small mb-1">Admin · OJT Record Management</div>
+                        <h1>{{ student.display_name or student.username }} · Daily Logbook</h1>
+                        <p class="text-muted mb-0">Review Daily OJT entries and remove duplicates or invalid Logbook records without deleting attendance Time In/Out or rendered hours.</p>
+                    </div>
+                    <a class="btn btn-outline-secondary" href="{{ url_for('admin.student_profile', student_id=student.id) }}">← Student Profile</a>
+                </div>
+
+                <div class="alert alert-warning border-0 shadow-sm">
+                    Removing a Logbook entry also removes that entry's supervisor review, Daily Performance rating, linked Work evidence, and Logbook photos. The attendance session and rendered hours remain. A notification is sent to the student with the affected OJT day and date.
+                </div>
+
+                <section class="dashboard-box">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                        <div>
+                            <h3 class="mb-1">Daily OJT Entries</h3>
+                            <p class="text-muted small mb-0">{{ entries|length }} recorded entr{% if entries|length == 1 %}y{% else %}ies{% endif %} for @{{ student.username }}.</p>
+                        </div>
+                    </div>
+
+                    {% if entries %}
+                        <div class="table-responsive">
+                            <table class="table align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>OJT Day</th>
+                                        <th>Intern Classroom</th>
+                                        <th>Work</th>
+                                        <th>Daily Performance</th>
+                                        <th>Review</th>
+                                        <th>Attendance</th>
+                                        <th class="text-end">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for entry in entries %}
+                                        <tr>
+                                            <td>
+                                                <strong>Day {{ entry.day_number or '—' }}</strong>
+                                                <div class="text-muted small">{{ entry.date }}</div>
+                                            </td>
+                                            <td>
+                                                <strong>{{ entry.classroom_name }}</strong>
+                                                <div class="text-muted small">{{ entry.section or 'No section' }}{% if entry.supervisor_name %} · {{ entry.supervisor_name }}{% endif %}</div>
+                                            </td>
+                                            <td>
+                                                {% if entry.work_titles %}
+                                                    {% for title in entry.work_titles %}<div class="small">{{ title }}</div>{% endfor %}
+                                                {% else %}
+                                                    <span class="text-muted small">No linked Work</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if entry.percentage is not none %}
+                                                    <strong>{{ '%.1f'|format(entry.percentage) }}%</strong>
+                                                    <div class="text-muted small">{{ '%.1f'|format(entry.star_rating) }} ★</div>
+                                                {% else %}
+                                                    <span class="text-muted small">Not rated</span>
+                                                {% endif %}
+                                            </td>
+                                            <td><span class="badge text-bg-light border">{{ entry.review_status|replace('_', ' ')|title }}</span></td>
+                                            <td>
+                                                <span class="badge {% if entry.attendance_status == 'Open' %}text-bg-warning{% else %}text-bg-success{% endif %}">{{ entry.attendance_status }}</span>
+                                                <div class="text-muted small mt-1">{% if entry.hours_rendered is not none %}{{ '%.2f'|format(entry.hours_rendered) }} hrs{% else %}—{% endif %}</div>
+                                            </td>
+                                            <td class="text-end">
+                                                <form method="POST" action="{{ url_for('logbook_review.admin_delete_daily_log', student_id=student.id, log_id=entry.id) }}" onsubmit="return confirm('Remove Day {{ entry.day_number or '—' }} Logbook dated {{ entry.date|e }}? Attendance and rendered hours will remain, but this Logbook review, rating, Work links, and photos will be removed.')">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">Remove Logbook</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info mb-0">This student has no Daily OJT Logbook entries.</div>
+                    {% endif %}
+                </section>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
