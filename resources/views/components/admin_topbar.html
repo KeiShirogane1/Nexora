@@ -127,6 +127,19 @@ body.admin-students-page #studentsTable td[data-full-program] .table-meta {
 
 <script>
 (function () {
+    function normalizeAdminInternshipBranding() {
+        var brand = document.querySelector('.nx-role-admin .nx-role-brand-copy small');
+        if (brand) brand.textContent = 'INTERNSHIPS';
+        var footer = document.querySelector('.nx-role-admin .nx-role-footer-copy');
+        if (footer) {
+            var strong = footer.querySelector('strong');
+            if (strong) strong.textContent = 'Nexora Internships';
+            var lines = footer.querySelectorAll('span');
+            if (lines[0]) lines[0].textContent = 'Supporting Future';
+            if (lines[1]) lines[1].textContent = 'Professionals';
+        }
+    }
+
     function setupStudentProfileDocumentLinks() {
         var match = window.location.pathname.match(/^\/admin\/student\/(\d+)\/?$/);
         if (!match) return;
@@ -157,7 +170,7 @@ body.admin-students-page #studentsTable td[data-full-program] .table-meta {
         link.className = 'btn btn-outline-danger';
         link.dataset.adminLogbookManager = '1';
         link.textContent = 'Manage OJT Logbook';
-        link.title = 'Review or remove duplicate Daily OJT Logbook entries. Attendance records are kept.';
+        link.title = 'Review or remove Daily OJT Logbook records and, when explicitly selected, duplicate attendance sessions.';
         actions.appendChild(link);
     }
 
@@ -205,6 +218,7 @@ body.admin-students-page #studentsTable td[data-full-program] .table-meta {
     }
 
     function bootLegacyDocumentBridge() {
+        normalizeAdminInternshipBranding();
         setupStudentProfileDocumentLinks();
         setupStudentLogbookManagementLink();
         setupDocumentFolderAutoPreview();
