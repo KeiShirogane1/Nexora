@@ -46,10 +46,25 @@ def test_admin_insights_template_exposes_classroom_choices_for_multi_classroom_s
     assert "admin_reports_overview.student_insights', student_id=selected_student.id, class_id=classroom.id" in source
 
 
+def test_admin_insights_xhr_returns_clean_fragment_with_supervisor_evidence_dimensions():
+    source = _read("resources/views/admin/student_insights.html")
+
+    assert "request.headers.get('X-Requested-With') == 'XMLHttpRequest'" in source
+    assert "{% if not admin_insights_modal %}" in source
+    assert "Attendance &amp; OJT Hours" in source
+    assert ">Daily Performance</span>" in source
+    assert ">Daily Logbook</span>" in source
+    assert ">Work</span>" in source
+    assert ">Official Evaluation</span>" in source
+    assert "daily_summary.average_star" in source
+    assert "insights_warnings|join(' ')" in source
+
+
 def test_assigned_interns_replaces_documents_action_with_insights():
     source = _read("resources/views/admin/assigned_interns.html")
 
     assert "admin_reports_overview.student_insights" in source
+    assert "student_id=intern.id, class_id=classroom.class_id" in source
     assert ">Insights</a>" in source
     assert "admin_classrooms.student_document_folder" not in source
 
