@@ -3,6 +3,7 @@ from flask import Blueprint, abort, flash, redirect, render_template, request, s
 from app.Http.Middleware.security import role_required
 from app.Models.db import get_db_connection
 from app.Services.assigned_interns_service import get_supervisor_assigned_interns
+from app.Services.internship_schedule_service import attendance_local_datetime
 from app.Services.ojt_evaluation_bulk_service import save_supervisor_ojt_evaluations_bulk
 from app.Services.ojt_evaluation_service import (
     get_supervisor_evaluation_context,
@@ -31,12 +32,13 @@ def _row_value(row, key, index=0, default=None):
 
 
 def _classroom_evaluation_readiness(supervisor_id, class_id):
-    """Return the classroom-level OJT-day gate for Official Evaluation.
+    """Return the classroom-level final-evaluation gate using local OJT dates.
 
     Weekly classrooms with a configured required-day count become available only
-    when every enrolled intern has completed all required attendance days.
-    Legacy classrooms without the new weekly schedule remain editable so old
-    evaluation workflows are not broken.
+    when every enrolled intern has completed all required distinct OJT dates.
+    Duplicate same-day attendance rows do not create extra OJT days, and stored
+    timestamps are normalized with the same Nexora timezone rule as Logbook day
+    numbering. Legacy classrooms without the weekly requirement remain editable.
     """
     conn = get_db_connection()
     try:
@@ -70,14 +72,13 @@ def _classroom_evaluation_readiness(supervisor_id, class_id):
 
         progress_rows = conn.execute(
             """
-            SELECT cs.student_id,
-                   COUNT(DISTINCT CASE WHEN a.status = 'Completed' THEN DATE(a.clock_in) END) AS completed_days
+            SELECT cs.student_id, a.clock_in, a.status
             FROM classroom_students cs
             LEFT JOIN attendance a
               ON a.student_id = cs.student_id
              AND a.classroom_id = cs.classroom_id
             WHERE cs.classroom_id = ?
-            GROUP BY cs.student_id
+            ORDER BY cs.student_id ASC, a.clock_in ASC, a.id ASC
             """,
             (class_id,),
         ).fetchall()
@@ -91,9 +92,21 @@ def _classroom_evaluation_readiness(supervisor_id, class_id):
                 "minimum_completed_days": 0,
             }
 
+        completed_dates_by_student = {}
+        for row in progress_rows:
+            student_id = int(_row_value(row, "student_id", 0, 0) or 0)
+            if not student_id:
+                continue
+            completed_dates = completed_dates_by_student.setdefault(student_id, set())
+            if str(_row_value(row, "status", 2, "") or "") != "Completed":
+                continue
+            local_clock = attendance_local_datetime(_row_value(row, "clock_in", 1, None))
+            if local_clock is not None:
+                completed_dates.add(local_clock.date())
+
         completed_values = [
-            int(_row_value(row, "completed_days", 1, 0) or 0)
-            for row in progress_rows
+            len(completed_dates)
+            for completed_dates in completed_dates_by_student.values()
         ]
         minimum_completed_days = min(completed_values) if completed_values else 0
         days_left = max(0, required_days - minimum_completed_days)
