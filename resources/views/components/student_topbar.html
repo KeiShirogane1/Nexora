@@ -10,15 +10,28 @@
 {% include 'components/nexora_assistant.html' %}
 {% include 'components/student_classmate_chat.html' %}
 
+<style>
+    .nx-role-student .nx-role-badge[hidden] { display: none !important; }
+</style>
+
 {% if request.path == '/student/logbook' and sidebar_schedule_state is defined %}
     {% set nx_logbook_can_clock_in = sidebar_schedule_state.can_clock_in if sidebar_schedule_state.can_clock_in is defined else true %}
+    {% set nx_logbook_has_open_attendance = sidebar_schedule_state.has_open_attendance|default(false) %}
+    {% set nx_logbook_completed_today = sidebar_schedule_state.completed_today|default(false) %}
     {% set nx_logbook_block_reason = sidebar_schedule_state.clock_in_block_reason|default('', true) %}
     {% set nx_logbook_day_numbers = sidebar_work_context.attendance_day_numbers if sidebar_work_context and sidebar_work_context.attendance_day_numbers is defined else {} %}
     <script>
     document.addEventListener('DOMContentLoaded', function () {
         var canClockIn = {{ 'true' if nx_logbook_can_clock_in else 'false' }};
+        var hasOpenAttendance = {{ 'true' if nx_logbook_has_open_attendance else 'false' }};
+        var completedToday = {{ 'true' if nx_logbook_completed_today else 'false' }};
         var blockReason = {{ nx_logbook_block_reason|tojson }};
         var dayNumbers = {{ nx_logbook_day_numbers|tojson }};
+
+        if (!hasOpenAttendance || completedToday) {
+            var logbookBadge = document.getElementById('studentSidebarLogbookBadge');
+            if (logbookBadge) logbookBadge.hidden = true;
+        }
 
         if (!canClockIn) {
             var clockInForm = document.querySelector('form[action="/student/clock-in"]');
