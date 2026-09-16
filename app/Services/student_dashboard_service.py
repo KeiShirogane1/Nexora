@@ -7,6 +7,7 @@ fallback for students who have not joined an active Intern Classroom yet.
 from datetime import datetime
 
 from app.Models.db import get_db_connection
+from app.Services.internship_schedule_service import attendance_local_datetime
 
 
 ACTIVITY_LABELS = {
@@ -54,6 +55,16 @@ def _format_time(value):
 def _format_notification_time(value):
     parsed = _as_datetime(value)
     return parsed.strftime("%b %d") if parsed else "Recently"
+
+
+def _count_distinct_completed_days(rows):
+    """Count OJT days, not raw Clock In rows, using the Nexora local timezone."""
+    dates = set()
+    for row in rows or []:
+        local_clock = attendance_local_datetime(_value(row, "clock_in", 0, None))
+        if local_clock is not None:
+            dates.add(local_clock.date())
+    return len(dates)
 
 
 def _active_classrooms(conn, student_id):
@@ -472,9 +483,9 @@ def get_student_dashboard_context(student_id):
             )
             task_total, task_completed, recent_tasks = _modern_work(conn, student_id)
             log_count, logbook_review_status, recent_logs = _scoped_logbook(conn, student_id)
-            attendance_row = conn.execute(
+            attendance_rows = conn.execute(
                 """
-                SELECT COUNT(*)
+                SELECT a.clock_in
                 FROM attendance a
                 JOIN classrooms c ON c.id = a.classroom_id
                 JOIN classroom_students cs
@@ -486,17 +497,17 @@ def get_student_dashboard_context(student_id):
                   AND COALESCE(c.classroom_type, 'classroom') = 'internship'
                 """,
                 (student_id,),
-            ).fetchone()
-            attendance_count = int((attendance_row[0] if attendance_row else 0) or 0)
+            ).fetchall()
+            attendance_count = _count_distinct_completed_days(attendance_rows)
         else:
             internship = _legacy_internship(conn, student_id)
             task_total, task_completed, recent_tasks = _legacy_work(conn, student_id)
             log_count, logbook_review_status, recent_logs = _legacy_logbook(conn, student_id)
-            attendance_row = conn.execute(
-                "SELECT COUNT(*) FROM attendance WHERE student_id = ? AND status = 'Completed'",
+            attendance_rows = conn.execute(
+                "SELECT clock_in FROM attendance WHERE student_id = ? AND status = 'Completed'",
                 (student_id,),
-            ).fetchone()
-            attendance_count = int((attendance_row[0] if attendance_row else 0) or 0)
+            ).fetchall()
+            attendance_count = _count_distinct_completed_days(attendance_rows)
 
         open_row = conn.execute(
             """
@@ -589,7 +600,6 @@ def get_student_dashboard_context(student_id):
             "open_attendance": open_attendance,
             "logbook_review_status": logbook_review_status,
             "dashboard_performance": dashboard_performance,
-            # No fake competency percentages. Add only rubric-backed values later.
             "dashboard_competencies": [],
         }
     finally:
