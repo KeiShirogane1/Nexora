@@ -31,14 +31,12 @@
                         </div>
                     </div>
 
-                    {% set total_students = students|length %}
-                    {% set pending_students = students|selectattr('role', 'equalto', 'pending_student')|list|length %}
-                    {% set assigned_students = students|selectattr('supervisor_name')|list|length %}
                     <div class="row g-3 mb-3" aria-label="Student summary">
-                        <div class="col-12 col-sm-6 col-xl-3"><div class="nexora-card h-100 mb-0"><div class="d-flex align-items-center gap-3"><span class="summary-icon total">👥</span><div><span class="summary-label d-block">Total Students</span><strong class="summary-value">{{ total_students }}</strong></div></div></div></div>
-                        <div class="col-12 col-sm-6 col-xl-3"><div class="nexora-card h-100 mb-0"><div class="d-flex align-items-center gap-3"><span class="summary-icon active">✓</span><div><span class="summary-label d-block">Active Students</span><strong class="summary-value" id="activeStudentCount">{{ total_students - pending_students }}</strong></div></div></div></div>
+                        <div class="col-12 col-sm-6 col-xl-3"><div class="nexora-card h-100 mb-0"><div class="d-flex align-items-center gap-3"><span class="summary-icon total">👥</span><div><span class="summary-label d-block">Total Students</span><strong class="summary-value" id="totalStudentCount">{{ total_students }}</strong></div></div></div></div>
+                        <div class="col-12 col-sm-6 col-xl-3"><div class="nexora-card h-100 mb-0"><div class="d-flex align-items-center gap-3"><span class="summary-icon active">✓</span><div><span class="summary-label d-block">Active</span><strong class="summary-value" id="activeStudentCount">{{ active_students }}</strong></div></div></div></div>
                         <div class="col-12 col-sm-6 col-xl-3"><div class="nexora-card h-100 mb-0"><div class="d-flex align-items-center gap-3"><span class="summary-icon pending">⌛</span><div><span class="summary-label d-block">Pending Approval</span><strong class="summary-value" id="pendingStudentCount">{{ pending_students }}</strong></div></div></div></div>
-                        <div class="col-12 col-sm-6 col-xl-3"><div class="nexora-card h-100 mb-0"><div class="d-flex align-items-center gap-3"><span class="summary-icon assigned">▦</span><div><span class="summary-label d-block">Programs</span><strong class="summary-value" id="studentProgramCount">{{ programs|length }}</strong><small class="text-muted">{{ assigned_students }} assigned</small></div></div></div></div>
+                        <div class="col-12 col-sm-6 col-xl-3"><div class="nexora-card h-100 mb-0"><div class="d-flex align-items-center gap-3"><span class="summary-icon pending">○</span><div><span class="summary-label d-block">Inactive</span><strong class="summary-value" id="inactiveStudentCount">{{ inactive_students }}</strong></div></div></div></div>
+                        <div class="col-12 col-sm-6 col-xl-3"><div class="nexora-card h-100 mb-0"><div class="d-flex align-items-center gap-3"><span class="summary-icon assigned">▦</span><div><span class="summary-label d-block">Programs</span><strong class="summary-value" id="studentProgramCount">{{ programs_count }}</strong></div></div></div></div>
                     </div>
 
                     <div class="nexora-card filter-card">

@@ -402,12 +402,88 @@ def admin_students():
             {normalize_program_name(value) for value in programs_raw if value},
             key=str.casefold,
         )
+        programs_count = len(programs)
+
+        # --- Add new KPI query ---
+        kpi_sql = """
+        SELECT
+            COUNT(*) AS total_students,
+            COALESCE(SUM(
+                CASE
+                    WHEN role = 'student'
+                     AND COALESCE(status, 'active') = 'active'
+                    THEN 1 ELSE 0
+                END
+            ), 0) AS active_students,
+            COALESCE(SUM(
+                CASE
+                    WHEN role = 'pending_student'
+                    THEN 1 ELSE 0
+                END
+            ), 0) AS pending_students,
+            COALESCE(SUM(
+                CASE
+                    WHEN role = 'student'
+                     AND status = 'inactive'
+                    THEN 1 ELSE 0
+                END
+            ), 0) AS inactive_students
+        FROM users
+        WHERE role IN ('student', 'pending_student')
+        """
+        cursor.execute(kpi_sql)
+        kpi_counts = cursor.fetchone()
+
+        total_students_kpi = kpi_counts['total_students'] if kpi_counts else 0
+        active_students_kpi = kpi_counts['active_students'] if kpi_counts else 0
+        pending_students_kpi = kpi_counts['pending_students'] if kpi_counts else 0
+        inactive_students_kpi = kpi_counts['inactive_students'] if kpi_counts else 0
+        # --- End of new KPI query ---
+        cursor.execute(
+            """
+            SELECT
+                COUNT(*) AS total_students,
+                COALESCE(SUM(
+                    CASE
+                        WHEN role = 'student'
+                         AND COALESCE(status, 'active') = 'active'
+                        THEN 1 ELSE 0
+                    END
+                ), 0) AS active_students,
+                COALESCE(SUM(
+                    CASE
+                        WHEN role = 'pending_student'
+                        THEN 1 ELSE 0
+                    END
+                ), 0) AS pending_students,
+                COALESCE(SUM(
+                    CASE
+                        WHEN role = 'student'
+                         AND status = 'inactive'
+                        THEN 1 ELSE 0
+                    END
+                ), 0) AS inactive_students
+            FROM users
+            WHERE role IN ('student', 'pending_student')
+            """
+        )
+        kpi_counts = cursor.fetchone()
+        total_students = kpi_counts[0] if kpi_counts else 0
+        active_students = kpi_counts[1] if kpi_counts else 0
+        pending_students = kpi_counts[2] if kpi_counts else 0
+        inactive_students = kpi_counts[3] if kpi_counts else 0
+        programs_count = len(programs)
 
         return render_template(
             "admin/students.html",
             students=students,
             supervisors_list=supervisors_list,
             programs=programs,
+            total_students=total_students,
+            active_students=active_students,
+            pending_students=pending_students,
+            inactive_students=inactive_students,
+            programs_count=programs_count,
             active_page="users"
         )
 
