@@ -141,11 +141,16 @@ def get_admin_student_management_context():
             SELECT cs.student_id, c.id AS class_id, c.name AS classroom_name,
                    COALESCE(c.section, '') AS section,
                    COALESCE(c.classroom_type, 'classroom') AS classroom_type,
-                   c.supervisor_id, COALESCE(sup.username, '') AS supervisor_name,
+                   c.supervisor_id,
+                   COALESCE(sup.username, '') AS supervisor_username,
+                   COALESCE(spp.first_name, '') AS supervisor_first_name,
+                   COALESCE(spp.middle_name, '') AS supervisor_middle_name,
+                   COALESCE(spp.last_name, '') AS supervisor_last_name,
                    COALESCE(cid.program, '') AS internship_program
             FROM classroom_students cs
             JOIN classrooms c ON c.id = cs.classroom_id
             LEFT JOIN users sup ON sup.id = c.supervisor_id
+            LEFT JOIN supervisor_profiles spp ON spp.user_id = sup.id
             LEFT JOIN classroom_internship_details cid ON cid.classroom_id = c.id
             WHERE COALESCE(c.archived, 0) = 0
             ORDER BY LOWER(c.name), LOWER(COALESCE(c.section, '')), c.id
@@ -153,9 +158,14 @@ def get_admin_student_management_context():
         ).fetchall()
         assignment_rows = conn.execute(
             """
-            SELECT sa.student_id, u.id AS supervisor_id, u.username AS supervisor_name
+            SELECT sa.student_id, u.id AS supervisor_id,
+                   u.username AS supervisor_username,
+                   COALESCE(sp.first_name, '') AS supervisor_first_name,
+                   COALESCE(sp.middle_name, '') AS supervisor_middle_name,
+                   COALESCE(sp.last_name, '') AS supervisor_last_name
             FROM student_assignments sa
             JOIN users u ON u.id = sa.supervisor_id
+            LEFT JOIN supervisor_profiles sp ON sp.user_id = u.id
             WHERE u.role = 'supervisor'
             ORDER BY LOWER(u.username), u.id
             """
@@ -200,9 +210,14 @@ def get_admin_student_management_context():
         class_id = int(_value(row, "class_id", 1, 0) or 0)
         classroom_name = str(_value(row, "classroom_name", 2, "") or "")
         section = str(_value(row, "section", 3, "") or "")
-        program = str(_value(row, "internship_program", 7, "") or "")
+        program = str(_value(row, "internship_program", 10, "") or "")
         supervisor_id = int(_value(row, "supervisor_id", 5, 0) or 0)
-        supervisor_name = str(_value(row, "supervisor_name", 6, "") or "")
+        supervisor_name = _display_name(
+            _value(row, "supervisor_first_name", 7, ""),
+            _value(row, "supervisor_middle_name", 8, ""),
+            _value(row, "supervisor_last_name", 9, ""),
+            _value(row, "supervisor_username", 6, ""),
+        )
         placement = {
             "id": class_id,
             "name": classroom_name,
@@ -225,7 +240,12 @@ def get_admin_student_management_context():
         if not student:
             continue
         supervisor_id = int(_value(row, "supervisor_id", 1, 0) or 0)
-        supervisor_name = str(_value(row, "supervisor_name", 2, "") or "")
+        supervisor_name = _display_name(
+            _value(row, "supervisor_first_name", 3, ""),
+            _value(row, "supervisor_middle_name", 4, ""),
+            _value(row, "supervisor_last_name", 5, ""),
+            _value(row, "supervisor_username", 2, ""),
+        )
         if supervisor_id and supervisor_name and not any(item["id"] == supervisor_id for item in student["assigned_supervisors"]):
             student["assigned_supervisors"].append({"id": supervisor_id, "name": supervisor_name, "source": "legacy"})
 
