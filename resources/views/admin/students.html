@@ -109,7 +109,7 @@
                         <div class="table-card-header">
                             <div>
                                 <h3>Student Directory</h3>
-                                <small class="text-muted">Profile, program, class placement, assigned supervisor, and account status.</small>
+                                <small class="text-muted">Profile, program and section, class placement, assigned supervisor, and account status.</small>
                             </div>
                             <span class="table-meta" id="tableCount">{{ students|length }} students</span>
                         </div>
@@ -117,19 +117,15 @@
                             <table class="table nexora-table align-middle" id="studentsTable">
                                 <thead>
                                     <tr>
-                                        <th><input type="checkbox" id="headerCheckbox" class="custom-checkbox" title="Select all"></th>
-                                        <th>#</th>
-                                        <th>Student</th>
-                                        <th>Student ID</th>
-                                        <th>Username</th>
-                                        <th>Email</th>
-                                        <th>Program</th>
-                                        <th>Year &amp; Section</th>
-                                        <th>Class / Internship</th>
-                                        <th>Supervisor</th>
-                                        <th>Status</th>
-                                        <th>Joined Date</th>
-                                        <th>Actions</th>
+                                        <th class="student-col-select"><input type="checkbox" id="headerCheckbox" class="custom-checkbox" title="Select all"></th>
+                                        <th class="student-col-identity">Student</th>
+                                        <th class="student-col-id">Student ID</th>
+                                        <th class="student-col-program">Program / Section</th>
+                                        <th class="student-col-class">Class / Internship</th>
+                                        <th class="student-col-supervisor">Supervisor</th>
+                                        <th class="student-col-status">Status</th>
+                                        <th class="student-col-joined">Joined</th>
+                                        <th class="student-col-actions">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -144,37 +140,40 @@
                                         'bachelor of science in computer engineering': 'BSCPE'
                                     } %}
                                     {% for student in students %}
-                                        <tr data-student-row data-original-index="{{ loop.index }}" data-username="{{ student.username|lower }}" data-email="{{ (student.email|lower) if student.email else '' }}" data-name="{{ student.username|lower }}" data-student-number="" data-status="{{ 'pending' if student.role == 'pending_student' else 'active' }}" data-program="{{ (student.major_program|trim|lower) if student.major_program else '' }}" data-program-label="{{ student.major_program or 'No Program' }}" data-supervisor="{{ (student.supervisor_name|lower) if student.supervisor_name else '' }}" data-class-ids="" data-primary-class="No Class" data-year="" data-id="{{ student.id }}">
-                                            <td><input type="checkbox" class="custom-checkbox row-checkbox" value="{{ student.id }}"></td>
-                                            <td class="text-muted table-index-cell">{{ loop.index }}</td>
-                                            <td>
+                                        <tr data-student-row data-original-index="{{ loop.index }}" data-username="{{ student.username|lower }}" data-username-value="{{ student.username }}" data-email="{{ (student.email|lower) if student.email else '' }}" data-email-value="{{ student.email or '' }}" data-name="{{ student.username|lower }}" data-student-number="" data-status="{{ 'pending' if student.role == 'pending_student' else 'active' }}" data-program="{{ (student.major_program|trim|lower) if student.major_program else '' }}" data-program-label="{{ student.major_program or 'No Program' }}" data-supervisor="{{ (student.supervisor_name|lower) if student.supervisor_name else '' }}" data-class-ids="" data-primary-class="No Class" data-year="" data-id="{{ student.id }}">
+                                            <td class="student-col-select"><input type="checkbox" class="custom-checkbox row-checkbox" value="{{ student.id }}"></td>
+                                            <td class="student-col-identity">
                                                 <div class="student-cell">
                                                     <img src="{{ url_for('user_profile_picture', user_id=student.id) }}" width="36" height="36" class="rounded-circle object-fit-cover flex-shrink-0" alt="">
-                                                    <span data-student-display-name>{{ student.username }}</span>
+                                                    <div class="student-identity">
+                                                        <span class="student-primary" data-student-display-name>{{ student.username }}</span>
+                                                        <span class="student-secondary" data-student-username>@{{ student.username }}</span>
+                                                        {% if student.email %}<span class="student-secondary table-email" data-student-email>{{ student.email }}</span>{% else %}<span class="student-secondary text-muted-placeholder" data-student-email>No email</span>{% endif %}
+                                                    </div>
                                                 </div>
                                             </td>
-                                            <td><span data-student-number class="text-muted-placeholder">—</span></td>
-                                            <td class="table-name-cell">{{ student.username }}</td>
-                                            <td>{% if student.email %}<span class="table-email">{{ student.email }}</span>{% else %}<span class="text-muted-placeholder">No email</span>{% endif %}</td>
-                                            <td data-full-program="{{ (student.major_program or '')|trim }}">
-                                                {% if student.major_program %}
-                                                    {% set program_key = student.major_program|trim|lower %}
-                                                    {% set program_label = program_abbreviations.get(program_key, student.major_program|trim) %}
-                                                    <span class="table-meta text-nowrap" title="{{ student.major_program|trim }}">{{ program_label if program_label|length <= 16 else program_label[:13] ~ '…' }}</span>
-                                                {% else %}<span class="text-muted-placeholder">—</span>{% endif %}
+                                            <td class="student-col-id"><span data-student-number class="text-muted-placeholder">—</span></td>
+                                            <td class="student-col-program" data-program-cell data-full-program="{{ (student.major_program or '')|trim }}">
+                                                <div class="student-program-section">
+                                                    {% if student.major_program %}
+                                                        {% set program_key = student.major_program|trim|lower %}
+                                                        {% set program_label = program_abbreviations.get(program_key, student.major_program|trim) %}
+                                                        <span class="table-meta text-nowrap" title="{{ student.major_program|trim }}">{{ program_label if program_label|length <= 16 else program_label[:13] ~ '…' }}</span>
+                                                    {% else %}<span class="text-muted-placeholder">—</span>{% endif %}
+                                                    <span data-year-section class="student-secondary-line text-muted-placeholder">—</span>
+                                                </div>
                                             </td>
-                                            <td><span data-year-section class="text-muted-placeholder">—</span></td>
-                                            <td><div data-class-list class="d-flex flex-wrap gap-1"><span class="text-muted-placeholder">—</span></div></td>
-                                            <td data-supervisor-cell>{% if student.supervisor_name %}{{ student.supervisor_name }}{% else %}<span class="text-muted-placeholder">Not Assigned</span>{% endif %}</td>
-                                            <td>
+                                            <td class="student-col-class"><div data-class-list class="student-class-list d-flex flex-wrap gap-1"><span class="text-muted-placeholder">—</span></div></td>
+                                            <td class="student-col-supervisor" data-supervisor-cell>{% if student.supervisor_name %}{{ student.supervisor_name }}{% else %}<span class="text-muted-placeholder">Not Assigned</span>{% endif %}</td>
+                                            <td class="student-col-status" data-status-cell>
                                                 {% if student.role == "pending_student" %}
                                                     <span class="status-badge status-pending"><span class="status-dot"></span> Pending Approval</span>
                                                 {% else %}
                                                     <span class="status-badge status-active"><span class="status-dot"></span> Active</span>
                                                 {% endif %}
                                             </td>
-                                            <td>{% if student.joined_date %}<span class="text-nowrap">{{ student.joined_date }}</span>{% else %}<span class="text-muted-placeholder">—</span>{% endif %}</td>
-                                            <td>
+                                            <td class="student-col-joined" data-joined-date>{% if student.joined_date %}<span class="text-nowrap">{{ student.joined_date }}</span>{% else %}<span class="text-muted-placeholder">—</span>{% endif %}</td>
+                                            <td class="student-col-actions">
                                                 <div class="actions-cell">
                                                     <a href="{{ url_for('admin.student_profile', student_id=student.id) }}" class="btn-view">View Profile</a>
                                                     {% if student.role == "pending_student" %}
@@ -203,7 +202,7 @@
                                             </td>
                                         </tr>
                                     {% else %}
-                                        <tr><td colspan="13"><div class="empty-state"><div class="icon">🎓</div><div class="empty-state-title">No students found</div><div class="empty-state-copy">Try adjusting your search or filter.</div></div></td></tr>
+                                        <tr><td colspan="9"><div class="empty-state"><div class="icon">🎓</div><div class="empty-state-title">No students found</div><div class="empty-state-copy">Try adjusting your search or filter.</div></div></td></tr>
                                     {% endfor %}
                                 </tbody>
                             </table>
@@ -283,8 +282,9 @@
                 }
                 function makeBadge(text) {
                     const span = document.createElement("span");
-                    span.className = "badge text-bg-light border text-secondary fw-semibold";
+                    span.className = "badge student-class-badge text-bg-light border text-secondary fw-semibold";
                     span.textContent = text;
+                    span.title = text;
                     return span;
                 }
                 function populateSelect(select, items, valueKey, labelKey) {
@@ -330,7 +330,7 @@
                         header.dataset.groupRow = "1";
                         header.className = "table-light";
                         const cell = document.createElement("td");
-                        cell.colSpan = 13;
+                        cell.colSpan = 9;
                         cell.className = "fw-bold text-dark py-2 px-3";
                         cell.textContent = key + " · " + members.length + " student" + (members.length === 1 ? "" : "s");
                         header.appendChild(cell);
@@ -348,6 +348,8 @@
                     const year = yearFilter.value;
                     let visible = 0;
                     rows.forEach((row) => {
+                        const programCell = row.querySelector("[data-program-cell]");
+                        row.dataset.program = String(programCell?.getAttribute("data-full-program") || row.dataset.program || "").trim().toLowerCase();
                         const haystack = [row.dataset.username,row.dataset.email,row.dataset.name,row.dataset.studentNumber].join(" ");
                         const classIds = (row.dataset.classIds || "").split(",").filter(Boolean);
                         let show = !q || haystack.includes(q);
@@ -398,21 +400,21 @@
                     const lines=[headers.join(",")];
                     rows.forEach((row)=>{
                         if(row.style.display==="none")return;
-                        const cells=row.querySelectorAll("td");
-                        if(cells.length<13)return;
-                        const program=cells[6].getAttribute("data-full-program")||cells[6].innerText.trim();
+                        const read=(selector)=>String(row.querySelector(selector)?.innerText||"").trim().replace(/\s+/g," ");
+                        const programCell=row.querySelector("[data-program-cell]");
+                        const program=programCell?programCell.getAttribute("data-full-program")||"":"";
                         const values=[
-                            cells[1].innerText,
-                            cells[2].innerText,
-                            cells[3].innerText,
-                            cells[4].innerText,
-                            cells[5].innerText,
+                            row.dataset.originalIndex||"",
+                            read("[data-student-display-name]"),
+                            read("[data-student-number]"),
+                            row.dataset.usernameValue||"",
+                            row.dataset.emailValue||"",
                             program,
-                            cells[7].innerText,
-                            cells[8].innerText,
-                            cells[9].innerText,
-                            cells[10].innerText,
-                            cells[11].innerText
+                            read("[data-year-section]"),
+                            read("[data-class-list]"),
+                            read("[data-supervisor-cell]"),
+                            read("[data-status-cell]"),
+                            read("[data-joined-date]")
                         ].map((value)=>'"'+String(value).trim().replace(/\n/g," ").replace(/"/g,'""')+'"');
                         lines.push(values.join(","));
                     });
@@ -437,6 +439,8 @@
                             row.dataset.supervisor=supervisors.map((item)=>item.name||"").join(" ").toLowerCase();
                             setText(row.querySelector("[data-student-display-name]"),student.display_name,student.username);
                             setText(row.querySelector("[data-student-number]"),student.student_number,"—");
+                            const programCell=row.querySelector("[data-program-cell]");
+                            if(programCell)programCell.setAttribute("data-full-program",student.major_program||"");
                             const primary=student.primary_class||null;
                             setText(row.querySelector("[data-year-section]"),[student.grade_year,primary?.section].filter(Boolean).join(" · "),"—");
                             const classList=row.querySelector("[data-class-list]");

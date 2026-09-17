@@ -128,12 +128,58 @@ body.admin-supervisors-page .dropdown-divider {
     background: #e2e8f0;
 }
 
-/* Large desktop: fit the full Student directory inside the Admin shell without a horizontal scrollbar. */
-@media (min-width: 1280px) {
-    body.admin-students-page .table-responsive {
-        overflow-x: visible !important;
-    }
+/* Student directory identity and grouped detail cells. */
+body.admin-students-page .student-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
 
+body.admin-students-page .student-identity,
+body.admin-students-page .student-program-section {
+    min-width: 0;
+    display: grid;
+    gap: 2px;
+}
+
+body.admin-students-page .student-primary {
+    min-width: 0;
+    overflow: hidden;
+    color: #243448;
+    font-weight: 800;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+body.admin-students-page .student-secondary,
+body.admin-students-page .student-secondary-line {
+    min-width: 0;
+    overflow: hidden;
+    color: #7b8795;
+    font-size: 0.72rem;
+    line-height: 1.35;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+body.admin-students-page .student-class-list {
+    min-width: 0;
+}
+
+body.admin-students-page .student-class-badge {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+body.admin-students-page [data-supervisor-cell] {
+    overflow-wrap: anywhere;
+}
+
+/* Large desktop: use nine semantic columns so the directory fills the shell cleanly. */
+@media (min-width: 1280px) {
     body.admin-students-page #studentsTable {
         width: 100% !important;
         min-width: 0 !important;
@@ -143,57 +189,29 @@ body.admin-supervisors-page .dropdown-divider {
     body.admin-students-page #studentsTable th,
     body.admin-students-page #studentsTable td {
         min-width: 0;
-        padding-left: 7px;
-        padding-right: 7px;
+        padding-left: 9px;
+        padding-right: 9px;
         overflow-wrap: anywhere;
     }
 
-    body.admin-students-page #studentsTable th:nth-child(1),
-    body.admin-students-page #studentsTable td:nth-child(1) { width: 2.2%; }
-    body.admin-students-page #studentsTable th:nth-child(2),
-    body.admin-students-page #studentsTable td:nth-child(2) { width: 2.4%; }
-    body.admin-students-page #studentsTable th:nth-child(3),
-    body.admin-students-page #studentsTable td:nth-child(3) { width: 8.6%; }
-    body.admin-students-page #studentsTable th:nth-child(4),
-    body.admin-students-page #studentsTable td:nth-child(4) { width: 6.7%; }
-    body.admin-students-page #studentsTable th:nth-child(5),
-    body.admin-students-page #studentsTable td:nth-child(5) { width: 6.7%; }
-    body.admin-students-page #studentsTable th:nth-child(6),
-    body.admin-students-page #studentsTable td:nth-child(6) { width: 8.3%; }
-    body.admin-students-page #studentsTable th:nth-child(7),
-    body.admin-students-page #studentsTable td:nth-child(7) { width: 5.5%; }
-    body.admin-students-page #studentsTable th:nth-child(8),
-    body.admin-students-page #studentsTable td:nth-child(8) { width: 9%; }
-    body.admin-students-page #studentsTable th:nth-child(9),
-    body.admin-students-page #studentsTable td:nth-child(9) { width: 10.5%; }
-    body.admin-students-page #studentsTable th:nth-child(10),
-    body.admin-students-page #studentsTable td:nth-child(10) { width: 7.5%; }
-    body.admin-students-page #studentsTable th:nth-child(11),
-    body.admin-students-page #studentsTable td:nth-child(11) { width: 7%; }
-    body.admin-students-page #studentsTable th:nth-child(12),
-    body.admin-students-page #studentsTable td:nth-child(12) { width: 7.6%; }
-    body.admin-students-page #studentsTable th:nth-child(13),
-    body.admin-students-page #studentsTable td:nth-child(13) { width: 18%; }
+    body.admin-students-page #studentsTable .student-col-select { width: 3%; }
+    body.admin-students-page #studentsTable .student-col-identity { width: 19%; }
+    body.admin-students-page #studentsTable .student-col-id { width: 8%; }
+    body.admin-students-page #studentsTable .student-col-program { width: 14%; }
+    body.admin-students-page #studentsTable .student-col-class { width: 14%; }
+    body.admin-students-page #studentsTable .student-col-supervisor { width: 10%; }
+    body.admin-students-page #studentsTable .student-col-status { width: 8%; }
+    body.admin-students-page #studentsTable .student-col-joined { width: 8%; }
+    body.admin-students-page #studentsTable .student-col-actions { width: 16%; }
 
-    body.admin-students-page .student-cell {
-        min-width: 0;
-    }
-
-    body.admin-students-page .student-cell > span {
-        min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    body.admin-students-page #studentsTable .table-email {
+    body.admin-students-page #studentsTable .table-email,
+    body.admin-students-page #studentsTable .student-secondary,
+    body.admin-students-page #studentsTable .student-secondary-line {
         display: block;
-        min-width: 0;
-        white-space: normal;
-        overflow-wrap: anywhere;
+        max-width: 100%;
     }
 
-    body.admin-students-page #studentsTable td:nth-child(7) .table-meta {
+    body.admin-students-page #studentsTable .student-program-section .table-meta {
         display: inline-block;
         max-width: 100%;
         overflow: hidden;
@@ -204,7 +222,7 @@ body.admin-supervisors-page .dropdown-divider {
     body.admin-students-page .actions-cell {
         width: 100% !important;
         min-width: 0 !important;
-        gap: 5px !important;
+        gap: 6px !important;
         flex-wrap: wrap !important;
         justify-content: flex-start !important;
     }
@@ -221,19 +239,25 @@ body.admin-supervisors-page .dropdown-divider {
     }
 }
 
-/* Tablet: keep the information-rich desktop tables intact, but prevent column crushing. */
-@media (min-width: 681px) and (max-width: 1100px) {
+/* Laptop/tablet: retain table semantics and allow controlled horizontal scrolling. */
+@media (min-width: 681px) and (max-width: 1279px) {
     body.admin-students-page #studentsTable {
-        min-width: 1180px;
+        min-width: 980px;
     }
 
+    body.admin-students-page .table-card-header,
+    body.admin-students-page .bulk-bar {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+}
+
+@media (min-width: 681px) and (max-width: 1100px) {
     body.admin-supervisors-page #supervisorsTable {
         min-width: 1040px;
     }
 
-    body.admin-students-page .table-card-header,
     body.admin-supervisors-page .table-card-header,
-    body.admin-students-page .bulk-bar,
     body.admin-supervisors-page .bulk-bar {
         flex-wrap: wrap;
         gap: 10px;
@@ -419,34 +443,35 @@ body.admin-supervisors-page .dropdown-divider {
         border: 0;
     }
 
-    body.admin-students-page #studentsTable tbody tr[data-student-row] > td:nth-child(2),
+    body.admin-students-page #studentsTable tbody tr[data-student-row] > td:nth-child(2) {
+        display: block;
+        padding: 0 46px 13px 0;
+        border-top: 0;
+    }
+
     body.admin-supervisors-page #supervisorsTable tbody tr[data-supervisor-row] > td:nth-child(2) {
         display: none;
     }
 
-    body.admin-students-page #studentsTable tbody tr[data-student-row] > td:nth-child(3),
     body.admin-supervisors-page #supervisorsTable tbody tr[data-supervisor-row] > td:nth-child(3) {
         display: block;
         padding: 0 46px 13px 0;
         border-top: 0;
     }
 
-    body.admin-students-page #studentsTable tbody tr[data-student-row] > td:nth-child(3)::before,
+    body.admin-students-page #studentsTable tbody tr[data-student-row] > td:nth-child(2)::before,
+    body.admin-students-page #studentsTable tbody tr[data-student-row] > td:nth-child(9)::before,
     body.admin-supervisors-page #supervisorsTable tbody tr[data-supervisor-row] > td:nth-child(3)::before,
-    body.admin-students-page #studentsTable tbody tr[data-student-row] > td:nth-child(13)::before,
     body.admin-supervisors-page #supervisorsTable tbody tr[data-supervisor-row] > td:nth-child(11)::before {
         content: none;
     }
 
-    body.admin-students-page #studentsTable td:nth-child(4)::before { content: "Student ID"; }
-    body.admin-students-page #studentsTable td:nth-child(5)::before { content: "Username"; }
-    body.admin-students-page #studentsTable td:nth-child(6)::before { content: "Email"; }
-    body.admin-students-page #studentsTable td:nth-child(7)::before { content: "Program"; }
-    body.admin-students-page #studentsTable td:nth-child(8)::before { content: "Year & Section"; }
-    body.admin-students-page #studentsTable td:nth-child(9)::before { content: "Class / Internship"; }
-    body.admin-students-page #studentsTable td:nth-child(10)::before { content: "Supervisor"; }
-    body.admin-students-page #studentsTable td:nth-child(11)::before { content: "Status"; }
-    body.admin-students-page #studentsTable td:nth-child(12)::before { content: "Joined"; }
+    body.admin-students-page #studentsTable td:nth-child(3)::before { content: "Student ID"; }
+    body.admin-students-page #studentsTable td:nth-child(4)::before { content: "Program / Section"; }
+    body.admin-students-page #studentsTable td:nth-child(5)::before { content: "Class / Internship"; }
+    body.admin-students-page #studentsTable td:nth-child(6)::before { content: "Supervisor"; }
+    body.admin-students-page #studentsTable td:nth-child(7)::before { content: "Status"; }
+    body.admin-students-page #studentsTable td:nth-child(8)::before { content: "Joined"; }
 
     body.admin-supervisors-page #supervisorsTable td:nth-child(4)::before { content: "Employee ID"; }
     body.admin-supervisors-page #supervisorsTable td:nth-child(5)::before { content: "Department"; }
@@ -456,7 +481,7 @@ body.admin-supervisors-page .dropdown-divider {
     body.admin-supervisors-page #supervisorsTable td:nth-child(9)::before { content: "Assigned Students"; }
     body.admin-supervisors-page #supervisorsTable td:nth-child(10)::before { content: "Status"; }
 
-    body.admin-students-page #studentsTable tbody tr[data-student-row] > td:nth-child(13),
+    body.admin-students-page #studentsTable tbody tr[data-student-row] > td:nth-child(9),
     body.admin-supervisors-page #supervisorsTable tbody tr[data-supervisor-row] > td:nth-child(11) {
         display: block;
         padding-top: 12px;
@@ -478,6 +503,13 @@ body.admin-supervisors-page .dropdown-divider {
         min-width: 44px !important;
         height: 44px !important;
         flex: 0 0 44px !important;
+    }
+
+    body.admin-students-page .student-primary,
+    body.admin-students-page .student-secondary,
+    body.admin-students-page .student-secondary-line {
+        white-space: normal;
+        overflow-wrap: anywhere;
     }
 
     body.admin-students-page .actions-cell,

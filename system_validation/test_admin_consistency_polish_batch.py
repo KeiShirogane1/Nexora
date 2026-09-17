@@ -45,7 +45,8 @@ def test_admin_student_program_choices_are_database_driven_and_saved_canonical()
     assert 'class="table-meta text-nowrap"' in template
     assert 'title="{{ student.major_program|trim }}"' in template
     assert "program_label[:13] ~ '…'" in template
-    assert 'cells[6].getAttribute("data-full-program")' in template
+    assert 'programCell.getAttribute("data-full-program")' in template
+    assert 'cells[6].getAttribute("data-full-program")' not in template
     assert "student.joined_date" in template
     assert '<span class="text-nowrap">{{ student.joined_date }}</span>' in template
 

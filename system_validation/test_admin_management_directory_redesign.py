@@ -57,7 +57,7 @@ def test_student_management_keeps_actions_and_adds_richer_responsive_directory()
     assert '<meta name="viewport" content="width=device-width, initial-scale=1.0">' in template
     assert template.count("{% include 'components/admin_sidebar.html' %}") == 1
     assert "Student ID" in template
-    assert "Year &amp; Section" in template
+    assert "Program / Section" in template
     assert "Class / Internship" in template
     assert "Program / Course" in template
     assert "studentSearch" in template
@@ -69,6 +69,13 @@ def test_student_management_keeps_actions_and_adds_richer_responsive_directory()
     assert 'data-group-mode="class"' in template
     assert "admin_assigned_interns.student_management_context" in template
     assert "url_for('user_profile_picture', user_id=student.id)" in template
+    assert 'data-student-username' in template
+    assert 'data-student-email' in template
+    assert 'data-program-cell' in template
+    assert 'data-year-section' in template
+    assert 'student-class-badge' in template
+    assert "cell.colSpan = 9;" in template
+    assert 'row.querySelector("[data-program-cell]")' in template
     assert "csrf_token()" in template
     assert "admin.bulk_action" in template
     assert "admin.create_student" in template
@@ -134,11 +141,12 @@ def test_management_directories_have_mobile_card_responsive_guardrails():
     assert "nx_topbar_role|default('') == 'admin'" in typography
     assert "components/admin_management_responsive.html" in typography
     assert '<style id="nx-admin-management-responsive">' in responsive
-    assert "@media (min-width: 681px) and (max-width: 1100px)" in responsive
+    assert "@media (min-width: 681px) and (max-width: 1279px)" in responsive
     assert "@media (max-width: 680px)" in responsive
     assert "body.admin-students-page #studentsTable thead" in responsive
     assert "body.admin-supervisors-page #supervisorsTable thead" in responsive
     assert 'content: "Student ID";' in responsive
+    assert 'content: "Program / Section";' in responsive
     assert 'content: "Class / Internship";' in responsive
     assert 'content: "Employee ID";' in responsive
     assert 'content: "Assigned Classes";' in responsive
@@ -146,3 +154,20 @@ def test_management_directories_have_mobile_card_responsive_guardrails():
     assert ".nexora-modal-footer" in responsive
     assert "overflow: visible !important;" in responsive
     assert "management.css" not in responsive
+
+
+def test_student_directory_desktop_uses_nine_semantic_columns_without_forced_overflow():
+    template = _source("resources/views/admin/students.html")
+    responsive = _source("resources/views/components/admin_management_responsive.html")
+
+    assert template.count("<th") >= 9
+    assert 'class="student-col-identity"' in template
+    assert 'class="student-col-program"' in template
+    assert 'class="student-col-class"' in template
+    assert 'class="student-col-actions"' in template
+    assert 'colspan="9"' in template
+    assert "@media (min-width: 1280px)" in responsive
+    assert "table-layout: fixed" in responsive
+    assert ".student-col-identity" in responsive
+    assert ".student-col-actions" in responsive
+    assert "overflow-x: visible !important;" not in responsive
