@@ -1,2 +1,832 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Trash - Nexora</title><link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}"><link rel="stylesheet" href="{{ url_for('static',filename='css/admin.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}"></head><body class="admin-page"><div>{% include 'components/admin_sidebar.html' %}</div><main class="admin-main nexora-app-main"><div class="nexora-page"><header class="ui-page-heading"><div><span class="ui-eyebrow">Account recovery</span><h1>Trash</h1><p>Deleted student and supervisor accounts remain recoverable for 30 days.</p></div><span class="profile-completion-pill">30 day retention</span></header><section class="gradebook-card"><div class="gradebook-card-header"><h2>Recently Deleted</h2><p>Restore an account or permanently remove it.</p></div>{% if trash_items %}<div class="table-responsive"><table class="gradebook-table"><thead><tr><th>User</th><th>Email</th><th>Role</th><th>Deleted</th><th>Actions</th></tr></thead><tbody>{% for item in trash_items %}<tr><td><strong>{{ item[2] }}</strong></td><td>{{ item[3] or '—' }}</td><td>{{ item[4]|replace('_',' ')|title }}</td><td>{{ item[5] }}</td><td><div style="display:flex;gap:7px"><form method="POST" action="{{ url_for('admin_trash.restore',user_id=item[1]) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="ui-secondary-btn" type="submit" style="min-height:34px;padding:6px 10px;font-size:.72rem">Restore</button></form><form method="POST" action="{{ url_for('admin_trash.permanent_delete',user_id=item[1]) }}" onsubmit="return confirm('Permanently remove this account? This cannot be undone.')"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="ui-primary-btn" type="submit" style="min-height:34px;padding:6px 10px;font-size:.72rem;background:#dc2626">Delete permanently</button></form></div></td></tr>{% endfor %}</tbody></table></div>{% else %}<div class="student-classwork-empty"><div class="student-classwork-empty-icon">🗑️</div><h2>Trash is empty</h2><p>Deleted accounts will appear here for 30 days.</p></div>{% endif %}</section></div></main></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trash - Nexora</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
+    <style id="nx-admin-trash-redesign">
+        body.admin-trash-page {
+            --trash-accent: #f45125;
+            --trash-accent-dark: #d9471b;
+            --trash-ink: #10213a;
+            --trash-muted: #718198;
+            --trash-border: #e5eaf0;
+            --trash-soft: #fff1eb;
+            --trash-surface: #ffffff;
+        }
+
+        body.admin-trash-page .nx-trash-page {
+            display: grid;
+            gap: 18px;
+        }
+
+        body.admin-trash-page .nx-trash-header {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 20px;
+            padding-top: 10px;
+        }
+
+        body.admin-trash-page .nx-trash-header-copy p {
+            margin: 0;
+            color: var(--trash-muted);
+            font-size: 0.98rem;
+        }
+
+        body.admin-trash-page .nx-trash-retention {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 42px;
+            padding: 0 14px;
+            border: 1px solid #ffd4c7;
+            border-radius: 14px;
+            background: #fff0eb;
+            color: #b93817;
+            font-size: 0.88rem;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        body.admin-trash-page .nx-trash-retention svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        body.admin-trash-page .nx-trash-metrics {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        body.admin-trash-page .nx-trash-metric {
+            min-width: 0;
+            min-height: 108px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 18px;
+            border: 1px solid var(--trash-border);
+            border-radius: 16px;
+            background: var(--trash-surface);
+            box-shadow: 0 5px 22px rgba(15, 23, 42, 0.045);
+        }
+
+        body.admin-trash-page .nx-trash-metric-icon {
+            width: 50px;
+            height: 50px;
+            flex: 0 0 50px;
+            display: inline-grid;
+            place-items: center;
+            border-radius: 15px;
+        }
+
+        body.admin-trash-page .nx-trash-metric-icon svg {
+            width: 23px;
+            height: 23px;
+        }
+
+        body.admin-trash-page .nx-trash-metric-icon.recent {
+            background: #fff0ef;
+            color: #e33f32;
+        }
+
+        body.admin-trash-page .nx-trash-metric-icon.students {
+            background: #edf5ff;
+            color: #2878e6;
+        }
+
+        body.admin-trash-page .nx-trash-metric-icon.supervisors {
+            background: #eefbf3;
+            color: #1aa85a;
+        }
+
+        body.admin-trash-page .nx-trash-metric-icon.expiring {
+            background: #fff4eb;
+            color: #ed7a21;
+        }
+
+        body.admin-trash-page .nx-trash-metric-copy {
+            min-width: 0;
+        }
+
+        body.admin-trash-page .nx-trash-metric-label {
+            display: block;
+            color: var(--trash-ink);
+            font-size: 0.82rem;
+            font-weight: 800;
+            line-height: 1.25;
+        }
+
+        body.admin-trash-page .nx-trash-metric-value {
+            display: block;
+            margin-top: 4px;
+            color: var(--trash-ink);
+            font-size: 1.65rem;
+            line-height: 1;
+            font-weight: 900;
+        }
+
+        body.admin-trash-page .nx-trash-metric-note {
+            display: block;
+            margin-top: 7px;
+            color: #92a0b2;
+            font-size: 0.76rem;
+            line-height: 1.3;
+        }
+
+        body.admin-trash-page .nx-trash-card {
+            overflow: visible;
+            border: 1px solid var(--trash-border);
+            border-radius: 18px;
+            background: var(--trash-surface);
+            box-shadow: 0 8px 26px rgba(15, 23, 42, 0.045);
+        }
+
+        body.admin-trash-page .nx-trash-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 18px 20px;
+            border-bottom: 1px solid #edf1f5;
+        }
+
+        body.admin-trash-page .nx-trash-card-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        body.admin-trash-page .nx-trash-card-title-icon {
+            width: 42px;
+            height: 42px;
+            flex: 0 0 42px;
+            display: inline-grid;
+            place-items: center;
+            border-radius: 12px;
+            background: #fff0ef;
+            color: #e33f32;
+        }
+
+        body.admin-trash-page .nx-trash-card-title-icon svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        body.admin-trash-page .nx-trash-card-title h2 {
+            margin: 0;
+            color: var(--trash-ink);
+            font-size: 1.08rem;
+            font-weight: 900;
+        }
+
+        body.admin-trash-page .nx-trash-card-title p {
+            margin: 3px 0 0;
+            color: var(--trash-muted);
+            font-size: 0.82rem;
+        }
+
+        body.admin-trash-page .nx-trash-count {
+            color: var(--trash-muted);
+            font-size: 0.8rem;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        body.admin-trash-page .nx-trash-controls {
+            display: grid;
+            grid-template-columns: minmax(240px, 1.5fr) repeat(3, minmax(170px, 1fr));
+            gap: 12px;
+            padding: 14px 20px;
+            border-bottom: 1px solid #edf1f5;
+        }
+
+        body.admin-trash-page .nx-trash-control {
+            min-width: 0;
+        }
+
+        body.admin-trash-page .nx-trash-search-wrap {
+            position: relative;
+        }
+
+        body.admin-trash-page .nx-trash-search-icon {
+            position: absolute;
+            top: 50%;
+            left: 13px;
+            width: 17px;
+            height: 17px;
+            color: #8090a5;
+            pointer-events: none;
+            transform: translateY(-50%);
+        }
+
+        body.admin-trash-page .nx-trash-search,
+        body.admin-trash-page .nx-trash-select {
+            width: 100%;
+            height: 42px;
+            border: 1px solid #d9e1eb;
+            border-radius: 10px;
+            background: #fff;
+            color: #334155;
+            font-size: 0.83rem;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        body.admin-trash-page .nx-trash-search {
+            padding: 0 13px 0 39px;
+        }
+
+        body.admin-trash-page .nx-trash-select {
+            padding: 0 12px;
+        }
+
+        body.admin-trash-page .nx-trash-search:focus,
+        body.admin-trash-page .nx-trash-select:focus {
+            border-color: #f5a58f;
+            box-shadow: 0 0 0 3px rgba(244, 81, 37, 0.09);
+        }
+
+        body.admin-trash-page .nx-trash-table-wrap {
+            overflow-x: auto;
+        }
+
+        body.admin-trash-page .nx-trash-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        body.admin-trash-page .nx-trash-table th {
+            padding: 13px 16px;
+            border-bottom: 1px solid #e9eef3;
+            background: #f8fafc;
+            color: #6f8098;
+            font-size: 0.72rem;
+            font-weight: 900;
+            letter-spacing: 0.035em;
+            text-align: left;
+            text-transform: uppercase;
+        }
+
+        body.admin-trash-page .nx-trash-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #eef2f6;
+            color: #44546a;
+            font-size: 0.83rem;
+            vertical-align: middle;
+        }
+
+        body.admin-trash-page .nx-trash-table tbody tr:last-child td {
+            border-bottom: 0;
+        }
+
+        body.admin-trash-page .nx-trash-user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+        }
+
+        body.admin-trash-page .nx-trash-user-avatar {
+            width: 38px;
+            height: 38px;
+            flex: 0 0 38px;
+            display: inline-grid;
+            place-items: center;
+            border-radius: 50%;
+            background: #fff1eb;
+            color: var(--trash-accent-dark);
+            font-size: 0.75rem;
+            font-weight: 900;
+        }
+
+        body.admin-trash-page .nx-trash-user-copy {
+            min-width: 0;
+        }
+
+        body.admin-trash-page .nx-trash-user-copy strong,
+        body.admin-trash-page .nx-trash-user-copy span {
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        body.admin-trash-page .nx-trash-user-copy strong {
+            color: var(--trash-ink);
+            font-size: 0.85rem;
+        }
+
+        body.admin-trash-page .nx-trash-user-copy span {
+            margin-top: 2px;
+            color: #92a0b2;
+            font-size: 0.74rem;
+        }
+
+        body.admin-trash-page .nx-trash-role {
+            display: inline-flex;
+            align-items: center;
+            min-height: 28px;
+            padding: 0 9px;
+            border-radius: 999px;
+            background: #f3f6f9;
+            color: #56677b;
+            font-size: 0.72rem;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        body.admin-trash-page .nx-trash-role.student {
+            background: #edf5ff;
+            color: #286fc6;
+        }
+
+        body.admin-trash-page .nx-trash-role.supervisor {
+            background: #eefbf3;
+            color: #16874a;
+        }
+
+        body.admin-trash-page .nx-trash-actions {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 7px;
+        }
+
+        body.admin-trash-page .nx-trash-actions form {
+            margin: 0;
+        }
+
+        body.admin-trash-page .nx-trash-btn {
+            min-height: 34px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 9px;
+            font-size: 0.72rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+        }
+
+        body.admin-trash-page .nx-trash-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        body.admin-trash-page .nx-trash-btn.restore {
+            border: 1px solid #d8e2ec;
+            background: #fff;
+            color: #334155;
+        }
+
+        body.admin-trash-page .nx-trash-btn.restore:hover {
+            border-color: #a9bacb;
+            background: #f8fafc;
+        }
+
+        body.admin-trash-page .nx-trash-btn.delete {
+            border: 1px solid #efb3ae;
+            background: #fff5f4;
+            color: #c8322a;
+        }
+
+        body.admin-trash-page .nx-trash-btn.delete:hover {
+            border-color: #e56f65;
+            background: #fff0ef;
+        }
+
+        body.admin-trash-page .nx-trash-empty {
+            min-height: 305px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 36px 20px;
+            text-align: center;
+        }
+
+        body.admin-trash-page .nx-trash-empty-visual {
+            width: 118px;
+            height: 100px;
+            display: grid;
+            place-items: center;
+            margin-bottom: 10px;
+            border-radius: 40px;
+            background: radial-gradient(circle at center, #fff0eb 0 46%, transparent 47%);
+            color: var(--trash-accent);
+        }
+
+        body.admin-trash-page .nx-trash-empty-visual svg {
+            width: 76px;
+            height: 76px;
+        }
+
+        body.admin-trash-page .nx-trash-empty h3 {
+            margin: 0;
+            color: var(--trash-ink);
+            font-size: 1.08rem;
+            font-weight: 900;
+        }
+
+        body.admin-trash-page .nx-trash-empty p {
+            max-width: 520px;
+            margin: 7px auto 0;
+            color: var(--trash-muted);
+            font-size: 0.82rem;
+            line-height: 1.55;
+        }
+
+        body.admin-trash-page .nx-trash-empty-actions {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        body.admin-trash-page .nx-trash-link {
+            min-height: 38px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 14px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-size: 0.78rem;
+            font-weight: 800;
+        }
+
+        body.admin-trash-page .nx-trash-link.primary {
+            border: 1px solid var(--trash-accent);
+            background: var(--trash-accent);
+            color: #fff;
+            box-shadow: 0 5px 14px rgba(244, 81, 37, 0.18);
+        }
+
+        body.admin-trash-page .nx-trash-link.secondary {
+            border: 1px solid #cfd9e4;
+            background: #fff;
+            color: #334155;
+        }
+
+        body.admin-trash-page .nx-trash-filter-empty {
+            display: none;
+            min-height: 180px;
+            align-items: center;
+            justify-content: center;
+            padding: 28px;
+            color: var(--trash-muted);
+            font-size: 0.84rem;
+            text-align: center;
+        }
+
+        @media (max-width: 1100px) {
+            body.admin-trash-page .nx-trash-metrics {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            body.admin-trash-page .nx-trash-controls {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 760px) {
+            body.admin-trash-page .nx-trash-header {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            body.admin-trash-page .nx-trash-retention {
+                min-height: 38px;
+            }
+
+            body.admin-trash-page .nx-trash-metrics,
+            body.admin-trash-page .nx-trash-controls {
+                grid-template-columns: 1fr;
+            }
+
+            body.admin-trash-page .nx-trash-card-header {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            body.admin-trash-page .nx-trash-table {
+                min-width: 820px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body.admin-trash-page .nx-trash-metric {
+                min-height: 96px;
+                padding: 15px;
+            }
+
+            body.admin-trash-page .nx-trash-empty-actions {
+                width: 100%;
+            }
+
+            body.admin-trash-page .nx-trash-link {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body class="admin-page admin-trash-page">
+    {% include 'components/admin_sidebar.html' %}
+
+    {% set counts = namespace(students=0, supervisors=0) %}
+    {% for item in trash_items %}
+        {% set role_key = (item[4] or '')|lower %}
+        {% if 'student' in role_key %}
+            {% set counts.students = counts.students + 1 %}
+        {% elif 'supervisor' in role_key %}
+            {% set counts.supervisors = counts.supervisors + 1 %}
+        {% endif %}
+    {% endfor %}
+
+    <main class="admin-main nexora-app-main">
+        <div class="nexora-page nx-trash-page">
+            <header class="nx-trash-header">
+                <div class="nx-trash-header-copy">
+                    <h1>Trash</h1>
+                    <p>Deleted student and supervisor accounts remain recoverable for 30 days.</p>
+                </div>
+                <div class="nx-trash-retention" aria-label="30 day retention policy">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="9"></circle>
+                        <path d="M12 7v5l3 2"></path>
+                    </svg>
+                    30 day retention
+                </div>
+            </header>
+
+            <section class="nx-trash-metrics" aria-label="Trash summary">
+                <article class="nx-trash-metric">
+                    <span class="nx-trash-metric-icon recent" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="M19 6l-1 14H6L5 6"></path><path d="M10 11v5"></path><path d="M14 11v5"></path>
+                        </svg>
+                    </span>
+                    <div class="nx-trash-metric-copy">
+                        <span class="nx-trash-metric-label">Recently Deleted</span>
+                        <strong class="nx-trash-metric-value" id="recentDeletedCount">0</strong>
+                        <small class="nx-trash-metric-note">in the last 7 days</small>
+                    </div>
+                </article>
+
+                <article class="nx-trash-metric">
+                    <span class="nx-trash-metric-icon students" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="8" r="4"></circle><path d="M5 21v-2a7 7 0 0 1 14 0v2"></path>
+                        </svg>
+                    </span>
+                    <div class="nx-trash-metric-copy">
+                        <span class="nx-trash-metric-label">Students</span>
+                        <strong class="nx-trash-metric-value">{{ counts.students }}</strong>
+                        <small class="nx-trash-metric-note">deleted accounts</small>
+                    </div>
+                </article>
+
+                <article class="nx-trash-metric">
+                    <span class="nx-trash-metric-icon supervisors" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="9" cy="8" r="3"></circle><circle cx="17" cy="10" r="2.5"></circle><path d="M3 20v-1a6 6 0 0 1 12 0v1"></path><path d="M14.5 16.5A5 5 0 0 1 21 20"></path>
+                        </svg>
+                    </span>
+                    <div class="nx-trash-metric-copy">
+                        <span class="nx-trash-metric-label">Supervisors</span>
+                        <strong class="nx-trash-metric-value">{{ counts.supervisors }}</strong>
+                        <small class="nx-trash-metric-note">deleted accounts</small>
+                    </div>
+                </article>
+
+                <article class="nx-trash-metric">
+                    <span class="nx-trash-metric-icon expiring" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path>
+                        </svg>
+                    </span>
+                    <div class="nx-trash-metric-copy">
+                        <span class="nx-trash-metric-label">Expiring Soon</span>
+                        <strong class="nx-trash-metric-value" id="expiringSoonCount">0</strong>
+                        <small class="nx-trash-metric-note">accounts with ≤ 7 days left</small>
+                    </div>
+                </article>
+            </section>
+
+            <section class="nx-trash-card" aria-labelledby="deletedAccountsHeading">
+                <div class="nx-trash-card-header">
+                    <div class="nx-trash-card-title">
+                        <span class="nx-trash-card-title-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="M19 6l-1 14H6L5 6"></path><path d="M10 11v5"></path><path d="M14 11v5"></path>
+                            </svg>
+                        </span>
+                        <div>
+                            <h2 id="deletedAccountsHeading">Deleted Accounts</h2>
+                            <p>Restore an account or permanently remove it from the system.</p>
+                        </div>
+                    </div>
+                    <span class="nx-trash-count" id="trashVisibleCount">{{ trash_items|length }} account{{ '' if trash_items|length == 1 else 's' }}</span>
+                </div>
+
+                <div class="nx-trash-controls" aria-label="Trash filters">
+                    <div class="nx-trash-control nx-trash-search-wrap">
+                        <svg class="nx-trash-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                            <circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path>
+                        </svg>
+                        <input type="search" class="nx-trash-search" id="trashSearch" placeholder="Search deleted accounts..." autocomplete="off">
+                    </div>
+                    <div class="nx-trash-control">
+                        <select class="nx-trash-select" id="trashRoleFilter" aria-label="Filter by role">
+                            <option value="all">All roles</option>
+                            <option value="student">Students</option>
+                            <option value="supervisor">Supervisors</option>
+                        </select>
+                    </div>
+                    <div class="nx-trash-control">
+                        <select class="nx-trash-select" id="trashDateFilter" aria-label="Filter by deletion date">
+                            <option value="all">All deletion dates</option>
+                            <option value="7">Last 7 days</option>
+                            <option value="30">Last 30 days</option>
+                            <option value="expiring">Expiring in ≤ 7 days</option>
+                        </select>
+                    </div>
+                    <div class="nx-trash-control">
+                        <select class="nx-trash-select" id="trashSort" aria-label="Sort deleted accounts">
+                            <option value="newest">Newest first</option>
+                            <option value="oldest">Oldest first</option>
+                        </select>
+                    </div>
+                </div>
+
+                {% if trash_items %}
+                    <div class="nx-trash-table-wrap" id="trashTableWrap">
+                        <table class="nx-trash-table" id="trashTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 25%">User</th>
+                                    <th style="width: 25%">Email</th>
+                                    <th style="width: 13%">Role</th>
+                                    <th style="width: 17%">Deleted</th>
+                                    <th style="width: 20%; text-align: right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="trashTableBody">
+                                {% for item in trash_items %}
+                                    {% set role_key = (item[4] or '')|lower %}
+                                    {% set role_group = 'student' if 'student' in role_key else ('supervisor' if 'supervisor' in role_key else 'other') %}
+                                    <tr data-trash-row data-name="{{ item[2]|lower }}" data-email="{{ (item[3] or '')|lower }}" data-role="{{ role_group }}" data-deleted-at="{{ item[5] }}">
+                                        <td>
+                                            <div class="nx-trash-user">
+                                                <span class="nx-trash-user-avatar" aria-hidden="true">{{ (item[2] or '?')[:1]|upper }}</span>
+                                                <div class="nx-trash-user-copy">
+                                                    <strong title="{{ item[2] }}">{{ item[2] }}</strong>
+                                                    <span>Recoverable account</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td title="{{ item[3] or '' }}">{{ item[3] or '—' }}</td>
+                                        <td><span class="nx-trash-role {{ role_group }}">{{ item[4]|replace('_', ' ')|title }}</span></td>
+                                        <td>{{ item[5] }}</td>
+                                        <td>
+                                            <div class="nx-trash-actions">
+                                                <form method="POST" action="{{ url_for('admin_trash.restore', user_id=item[1]) }}">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                    <button class="nx-trash-btn restore" type="submit">Restore</button>
+                                                </form>
+                                                <form method="POST" action="{{ url_for('admin_trash.permanent_delete', user_id=item[1]) }}" onsubmit="return confirm('Permanently remove this account? This cannot be undone.')">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                    <button class="nx-trash-btn delete" type="submit">Delete permanently</button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="nx-trash-filter-empty" id="trashFilterEmpty">No deleted accounts match the current filters.</div>
+                {% else %}
+                    <div class="nx-trash-empty">
+                        <div class="nx-trash-empty-visual" aria-hidden="true">
+                            <svg viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M27 31h42"></path>
+                                <path d="M37 31v-8h22v8"></path>
+                                <path d="M65 31l-3 44H34l-3-44"></path>
+                                <path d="M42 43v20"></path>
+                                <path d="M54 43v20"></path>
+                                <path d="M48 9v6"></path>
+                                <path d="M25 16l5 6"></path>
+                                <path d="M71 16l-5 6"></path>
+                            </svg>
+                        </div>
+                        <h3>Trash is empty</h3>
+                        <p>Deleted accounts will appear here for 30 days before permanent removal.</p>
+                        <div class="nx-trash-empty-actions">
+                            <a href="/admin/users/students" class="nx-trash-link primary">Go to Students</a>
+                            <a href="/admin/users/supervisors" class="nx-trash-link secondary">Go to Supervisors</a>
+                        </div>
+                    </div>
+                {% endif %}
+            </section>
+        </div>
+    </main>
+
+    <script>
+        (function () {
+            const rows = Array.from(document.querySelectorAll('[data-trash-row]'));
+            const search = document.getElementById('trashSearch');
+            const roleFilter = document.getElementById('trashRoleFilter');
+            const dateFilter = document.getElementById('trashDateFilter');
+            const sort = document.getElementById('trashSort');
+            const body = document.getElementById('trashTableBody');
+            const tableWrap = document.getElementById('trashTableWrap');
+            const filterEmpty = document.getElementById('trashFilterEmpty');
+            const visibleCount = document.getElementById('trashVisibleCount');
+            const recentDeletedCount = document.getElementById('recentDeletedCount');
+            const expiringSoonCount = document.getElementById('expiringSoonCount');
+            const DAY_MS = 24 * 60 * 60 * 1000;
+
+            function parseDeletedAt(value) {
+                if (!value) return null;
+                const normalized = String(value).trim().replace(' ', 'T');
+                const parsed = new Date(normalized);
+                return Number.isNaN(parsed.getTime()) ? null : parsed;
+            }
+
+            function ageInDays(row) {
+                const deletedAt = parseDeletedAt(row.dataset.deletedAt);
+                if (!deletedAt) return null;
+                return (Date.now() - deletedAt.getTime()) / DAY_MS;
+            }
+
+            function updateMetrics() {
+                let recent = 0;
+                let expiring = 0;
+                rows.forEach((row) => {
+                    const age = ageInDays(row);
+                    if (age === null) return;
+                    if (age >= 0 && age <= 7) recent += 1;
+                    if (age >= 23 && age <= 30) expiring += 1;
+                });
+                if (recentDeletedCount) recentDeletedCount.textContent = recent;
+                if (expiringSoonCount) expiringSoonCount.textContent = expiring;
+            }
+
+            function applyFilters() {
+                const query = (search?.value || '').trim().toLowerCase();
+                const role = roleFilter?.value || 'all';
+                const date = dateFilter?.value || 'all';
+                let visible = 0;
+
+                rows.forEach((row) => {
+                    const haystack = `${row.dataset.name || ''} ${row.dataset.email || ''}`;
+                    const age = ageInDays(row);
+                    let show = !query || haystack.includes(query);
+
+                    if (show && role !== 'all' && row.dataset.role !== role) show = false;
+                    if (show && date === '7' && (age === null || age < 0 || age > 7)) show = false;
+                    if (show && date === '30' && (age === null || age < 0 || age > 30)) show = false;
+                    if (show && date === 'expiring' && (age === null || age < 23 || age > 30)) show = false;
+
+                    row.hidden = !show;
+                    if (show) visible += 1;
+                });
+
+                if (visibleCount) visibleCount.textContent = `${visible} account${visible === 1 ? '' : 's'}`;
+                if (tableWrap) tableWrap.style.display = visible || !rows.length ? '' : 'none';
+                if (filterEmpty) filterEmpty.style.display = !visible && rows.length ? 'flex' : 'none';
+            }
+
+            function applySort() {
+                if (!body || !rows.length) return;
+                const direction = sort?.value === 'oldest' ? 1 : -1;
+                rows.slice().sort((a, b) => {
+                    const aDate = parseDeletedAt(a.dataset.deletedAt)?.getTime() || 0;
+                    const bDate = parseDeletedAt(b.dataset.deletedAt)?.getTime() || 0;
+                    return (aDate - bDate) * direction;
+                }).forEach((row) => body.appendChild(row));
+                applyFilters();
+            }
+
+            search?.addEventListener('input', applyFilters);
+            roleFilter?.addEventListener('change', applyFilters);
+            dateFilter?.addEventListener('change', applyFilters);
+            sort?.addEventListener('change', applySort);
+
+            updateMetrics();
+            applySort();
+        })();
+    </script>
+</body>
+</html>
