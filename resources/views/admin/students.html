@@ -396,7 +396,26 @@
                 document.getElementById("exportBtn")?.addEventListener("click", () => {
                     const headers=["#","Student","Student ID","Username","Email","Program","Year & Section","Class / Internship","Supervisor","Status","Joined Date"];
                     const lines=[headers.join(",")];
-                    rows.forEach((row)=>{if(row.style.display==="none")return;const c=row.querySelectorAll("td");if(c.length<13)return;const values=[c[1],c[2],c[3],c[4],c[5],c[6],c[7],c[8],c[9],c[10],c[11]].map((cell)=>'"'+cell.innerText.trim().replace(/\n/g," ").replace(/"/g,'""')+'"');lines.push(values.join(","));});
+                    rows.forEach((row)=>{
+                        if(row.style.display==="none")return;
+                        const cells=row.querySelectorAll("td");
+                        if(cells.length<13)return;
+                        const program=cells[6].getAttribute("data-full-program")||cells[6].innerText.trim();
+                        const values=[
+                            cells[1].innerText,
+                            cells[2].innerText,
+                            cells[3].innerText,
+                            cells[4].innerText,
+                            cells[5].innerText,
+                            program,
+                            cells[7].innerText,
+                            cells[8].innerText,
+                            cells[9].innerText,
+                            cells[10].innerText,
+                            cells[11].innerText
+                        ].map((value)=>'"'+String(value).trim().replace(/\n/g," ").replace(/"/g,'""')+'"');
+                        lines.push(values.join(","));
+                    });
                     const blob=new Blob([lines.join("\n")],{type:"text/csv"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="nexora-students.csv";a.click();URL.revokeObjectURL(url);
                 });
 
