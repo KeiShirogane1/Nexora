@@ -104,7 +104,103 @@ body.notification-role-admin:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-r
     {% include 'components/admin_management_responsive.html' %}
 
 <style id="nx-admin-directory-actions-grid">
+/* Supervisor directory keeps Email and Program Focus available to filtering/search,
+   but removes those secondary columns from the visible management table. */
+body.admin-supervisors-page #supervisorsTable th:nth-child(6),
+body.admin-supervisors-page #supervisorsTable td:nth-child(6),
+body.admin-supervisors-page #supervisorsTable th:nth-child(8),
+body.admin-supervisors-page #supervisorsTable td:nth-child(8) {
+    display: none !important;
+}
+
+body.admin-supervisors-page .table-card-header > div > small.text-muted {
+    font-size: 0;
+}
+
+body.admin-supervisors-page .table-card-header > div > small.text-muted::after {
+    content: "Profile, department, classes, assigned students, and account status.";
+    color: #6f7f91;
+    font-size: 0.8rem;
+    font-weight: 400;
+    line-height: 1.45;
+}
+
+/* Keep Supervisor Management on the Admin orange/red visual language. */
+body.admin-supervisors-page .btn-view {
+    background: var(--admin-polish-accent, #f45125) !important;
+    border-color: var(--admin-polish-accent, #f45125) !important;
+    color: #fff !important;
+    box-shadow: 0 2px 8px rgba(244, 81, 37, 0.22) !important;
+}
+
+body.admin-supervisors-page .btn-view:hover,
+body.admin-supervisors-page .btn-view:focus-visible {
+    background: var(--admin-polish-accent-dark, #d9471b) !important;
+    border-color: var(--admin-polish-accent-dark, #d9471b) !important;
+    color: #fff !important;
+}
+
+body.admin-supervisors-page .nx-quick-chat-btn {
+    background: #fff !important;
+    border-color: #f2a086 !important;
+    color: var(--admin-polish-accent-dark, #d9471b) !important;
+}
+
+body.admin-supervisors-page .nx-quick-chat-btn:hover,
+body.admin-supervisors-page .nx-quick-chat-btn:focus-visible {
+    background: #fff7f3 !important;
+    border-color: var(--admin-polish-accent, #f45125) !important;
+    color: var(--admin-polish-accent-dark, #d9471b) !important;
+}
+
+body.admin-supervisors-page #supervisorsTable [data-assigned-students] .badge.bg-primary {
+    background: #f7f9fb !important;
+    border: 1px solid #e0e5ea !important;
+    color: #566577 !important;
+}
+
 @media (min-width: 1280px) {
+    body.admin-supervisors-page .table-responsive {
+        overflow-x: visible !important;
+    }
+
+    body.admin-supervisors-page #supervisorsTable {
+        width: 100% !important;
+        min-width: 0 !important;
+        table-layout: fixed !important;
+    }
+
+    body.admin-supervisors-page #supervisorsTable th,
+    body.admin-supervisors-page #supervisorsTable td {
+        min-width: 0 !important;
+        padding-left: 9px !important;
+        padding-right: 9px !important;
+        overflow-wrap: anywhere;
+    }
+
+    body.admin-supervisors-page #supervisorsTable th:nth-child(1),
+    body.admin-supervisors-page #supervisorsTable td:nth-child(1) { width: 3%; }
+    body.admin-supervisors-page #supervisorsTable th:nth-child(2),
+    body.admin-supervisors-page #supervisorsTable td:nth-child(2) { width: 4%; }
+    body.admin-supervisors-page #supervisorsTable th:nth-child(3),
+    body.admin-supervisors-page #supervisorsTable td:nth-child(3) { width: 18%; }
+    body.admin-supervisors-page #supervisorsTable th:nth-child(4),
+    body.admin-supervisors-page #supervisorsTable td:nth-child(4) { width: 12%; }
+    body.admin-supervisors-page #supervisorsTable th:nth-child(5),
+    body.admin-supervisors-page #supervisorsTable td:nth-child(5) { width: 13%; }
+    body.admin-supervisors-page #supervisorsTable th:nth-child(7),
+    body.admin-supervisors-page #supervisorsTable td:nth-child(7) { width: 16%; }
+    body.admin-supervisors-page #supervisorsTable th:nth-child(9),
+    body.admin-supervisors-page #supervisorsTable td:nth-child(9) { width: 9%; }
+    body.admin-supervisors-page #supervisorsTable th:nth-child(10),
+    body.admin-supervisors-page #supervisorsTable td:nth-child(10) { width: 8%; }
+    body.admin-supervisors-page #supervisorsTable th:nth-child(11),
+    body.admin-supervisors-page #supervisorsTable td:nth-child(11) { width: 17%; }
+
+    body.admin-supervisors-page .supervisor-cell {
+        min-width: 0 !important;
+    }
+
     body.admin-students-page .actions-cell:has(.nx-quick-chat-btn),
     body.admin-supervisors-page .actions-cell:has(.nx-quick-chat-btn) {
         width: 100% !important;
@@ -123,7 +219,10 @@ body.notification-role-admin:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-r
         grid-row: 1;
         width: 100% !important;
         min-width: 0 !important;
+        display: inline-flex !important;
+        align-items: center !important;
         justify-content: center !important;
+        text-align: center !important;
     }
 
     body.admin-students-page .actions-cell:has(.nx-quick-chat-btn) .nx-quick-chat-btn,
@@ -132,7 +231,10 @@ body.notification-role-admin:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-r
         grid-row: 2;
         width: 100% !important;
         min-width: 0 !important;
+        display: inline-flex !important;
+        align-items: center !important;
         justify-content: center !important;
+        text-align: center !important;
     }
 
     body.admin-students-page .actions-cell:has(.nx-quick-chat-btn) .more-actions,
@@ -154,6 +256,18 @@ body.notification-role-admin:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-r
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
+    }
+}
+
+@media (min-width: 681px) and (max-width: 1279px) {
+    body.admin-supervisors-page #supervisorsTable {
+        min-width: 860px !important;
+    }
+}
+
+@media (max-width: 680px) {
+    body.admin-supervisors-page #supervisorsTable {
+        min-width: 760px !important;
     }
 }
 </style>
