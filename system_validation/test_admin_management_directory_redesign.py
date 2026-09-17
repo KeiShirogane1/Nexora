@@ -125,3 +125,24 @@ def test_directory_grouping_is_client_side_and_preserves_existing_rows():
     assert "data-class-ids" in supervisors
     assert "data-primary-class" in supervisors
     assert "data-primary-program" in supervisors
+
+
+def test_management_directories_have_mobile_card_responsive_guardrails():
+    typography = _source("resources/views/components/global_typography.html")
+    responsive = _source("resources/views/components/admin_management_responsive.html")
+
+    assert "nx_topbar_role|default('') == 'admin'" in typography
+    assert "components/admin_management_responsive.html" in typography
+    assert '<style id="nx-admin-management-responsive">' in responsive
+    assert "@media (min-width: 681px) and (max-width: 1100px)" in responsive
+    assert "@media (max-width: 680px)" in responsive
+    assert "body.admin-students-page #studentsTable thead" in responsive
+    assert "body.admin-supervisors-page #supervisorsTable thead" in responsive
+    assert 'content: "Student ID";' in responsive
+    assert 'content: "Class / Internship";' in responsive
+    assert 'content: "Employee ID";' in responsive
+    assert 'content: "Assigned Classes";' in responsive
+    assert ".bulk-actions" in responsive
+    assert ".nexora-modal-footer" in responsive
+    assert "overflow: visible !important;" in responsive
+    assert "management.css" not in responsive
