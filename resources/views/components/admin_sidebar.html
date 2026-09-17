@@ -117,6 +117,45 @@
 .admin-polish-empty { padding:38px 22px; border:1px dashed #dce2e7; border-radius:14px; background:#fff; text-align:center; }
 .admin-polish-empty-compact { padding:25px 18px; border:0; }.admin-polish-empty-icon { margin-bottom:8px; color:var(--admin-polish-accent); font-size:28px; }.admin-polish-empty h2,.admin-polish-empty h3 { margin:0; color:#28394c; font-size:15px; font-weight:900; }.admin-polish-empty p,.admin-empty-copy { margin:6px 0 0; color:#84909e; font-size:10px; line-height:1.5; }
 
+/* Student Management summary mirrors Supervisor Management KPI styling. */
+body.admin-students-page [aria-label="Student summary"] .nexora-card {
+    min-height: 90px;
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+}
+body.admin-students-page [aria-label="Student summary"] .summary-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex: 0 0 44px;
+}
+body.admin-students-page [aria-label="Student summary"] .summary-icon.total { background:#eff6ff; color:#2563eb; }
+body.admin-students-page [aria-label="Student summary"] .summary-icon.active { background:#f0fdf4; color:#16a34a; }
+body.admin-students-page [aria-label="Student summary"] .summary-icon.pending { background:#fefce8; color:#ca8a04; }
+body.admin-students-page [aria-label="Student summary"] .summary-icon.assigned { background:#f5f3ff; color:#7c3aed; }
+body.admin-students-page [aria-label="Student summary"] .summary-icon svg { width:20px; height:20px; }
+body.admin-students-page [aria-label="Student summary"] .summary-label {
+    color:#6f8098;
+    font-size:.78rem;
+    line-height:1.2;
+    font-weight:800;
+    letter-spacing:.02em;
+    text-transform:uppercase;
+}
+body.admin-students-page [aria-label="Student summary"] .summary-value {
+    display:block;
+    margin-top:4px;
+    color:#10213a;
+    font-size:1.55rem;
+    line-height:1;
+    font-weight:850;
+}
+
 .admin-folder-profile { display:flex; justify-content:space-between; gap:20px; align-items:center; padding:17px; margin-bottom:14px; }
 .admin-folder-profile-main { display:flex; align-items:center; gap:13px; }.admin-folder-avatar { width:48px; height:48px; }.admin-folder-title-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }.admin-folder-title-row h1 { margin:0; color:#1e2e40; font-size:20px; font-weight:900; }.admin-folder-profile-main p,.admin-folder-profile-main small { display:block; margin:3px 0 0; color:#778697; font-size:10px; }
 .admin-folder-profile-stats { display:grid; grid-template-columns:repeat(3,minmax(90px,1fr)); gap:9px; }.admin-folder-profile-stats > div { min-width:0; padding:10px 11px; border:1px solid #e7ebef; border-radius:10px; background:#fafbfc; }.admin-folder-profile-stats strong { overflow-wrap:anywhere; }
@@ -173,13 +212,12 @@
         <nav class="nx-role-nav" aria-label="Admin menu">
             <a href="{{ url_for('admin.admin_dashboard') }}" aria-label="Dashboard" class="{% if request.path == '/admin/dashboard' %}active{% endif %}"><span class="nx-role-icon">▦</span><span class="nx-role-nav-text">Dashboard</span></a>
 
-            <div class="nx-role-nav-group {% if request.path.startswith('/admin/users') or request.path == '/admin/trash' %}open{% endif %}">
-                <button class="nx-role-nav-parent {% if request.path.startswith('/admin/users') or request.path == '/admin/trash' %}active-parent{% endif %}" type="button" aria-label="Users" onclick="this.parentElement.classList.toggle('open')"><span class="nx-role-icon">♟</span><span class="nx-role-nav-text">Users</span><span class="nx-role-nav-arrow">›</span></button>
+            <div class="nx-role-nav-group {% if request.path.startswith('/admin/users') %}open{% endif %}">
+                <button class="nx-role-nav-parent {% if request.path.startswith('/admin/users') %}active-parent{% endif %}" type="button" aria-label="Users" onclick="this.parentElement.classList.toggle('open')"><span class="nx-role-icon">♟</span><span class="nx-role-nav-text">Users</span><span class="nx-role-nav-arrow">›</span></button>
                 <div class="nx-role-submenu">
                     <a href="{{ url_for('admin.admin_users') }}" class="{% if request.path == '/admin/users' %}active{% endif %}"><span class="nx-role-icon">✓</span><span>Approvals</span>{% if admin_pending_approval_count|default(0) > 0 %}<span class="nx-role-badge">{{ admin_pending_approval_count }}</span>{% endif %}</a>
                     <a href="{{ url_for('admin.admin_students') }}" class="{% if request.path == '/admin/users/students' %}active{% endif %}"><span class="nx-role-icon">♙</span><span>Students</span></a>
                     <a href="{{ url_for('admin.admin_supervisors') }}" class="{% if request.path == '/admin/users/supervisors' %}active{% endif %}"><span class="nx-role-icon">♙</span><span>Supervisors</span></a>
-                    <a href="/admin/trash" class="{% if request.path == '/admin/trash' %}active{% endif %}"><span class="nx-role-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="M19 6l-1 14H6L5 6"></path><path d="M10 11v5"></path><path d="M14 11v5"></path></svg></span><span>Trash</span></a>
                 </div>
             </div>
 
@@ -207,7 +245,10 @@
 
         <div class="nx-role-divider"></div>
         <div class="nx-role-section-label">Account</div>
-        <nav class="nx-role-nav nx-role-account-nav" aria-label="Admin account"><a href="javascript:void(0)" aria-label="Logout" onclick="openLogoutModal(); return false;"><span class="nx-role-icon">↪</span><span class="nx-role-nav-text">Logout</span></a></nav>
+        <nav class="nx-role-nav nx-role-account-nav" aria-label="Admin account">
+            <a href="/admin/trash" aria-label="Trash" class="{% if request.path == '/admin/trash' %}active{% endif %}"><span class="nx-role-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="M19 6l-1 14H6L5 6"></path><path d="M10 11v5"></path><path d="M14 11v5"></path></svg></span><span class="nx-role-nav-text">Trash</span></a>
+            <a href="javascript:void(0)" aria-label="Logout" onclick="openLogoutModal(); return false;"><span class="nx-role-icon">↪</span><span class="nx-role-nav-text">Logout</span></a>
+        </nav>
 
         <div class="nx-role-footer"><span class="nx-role-footer-mark">◆</span><span class="nx-role-footer-copy"><strong>Nexora Coding</strong><span>Empowering Future</span><span>Developers</span></span></div>
     </aside>
