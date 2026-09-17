@@ -31,6 +31,10 @@ def ensure_trash_schema(conn):
         conn.execute("""CREATE TABLE IF NOT EXISTS admin_user_trash (id SERIAL PRIMARY KEY,user_id INTEGER UNIQUE,username TEXT,email TEXT,role TEXT,deleted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)""")
     else:
         conn.execute("""CREATE TABLE IF NOT EXISTS admin_user_trash (id INTEGER PRIMARY KEY AUTOINCREMENT,user_id INTEGER UNIQUE,username TEXT,email TEXT,role TEXT,deleted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)""")
+    try:
+        conn.execute("UPDATE users SET role='deleted' WHERE username LIKE 'deleted_%' AND role != 'deleted'")
+    except Exception:
+        pass
     conn.commit()
 
 
@@ -362,7 +366,7 @@ def permanent_delete(user_id):
                 # FK-linked records not covered above should not cause a 500.
                 conn.execute("SAVEPOINT nexora_trash_anonymize")
                 try:
-                    conn.execute("UPDATE users SET username=?,email=NULL,status='inactive' WHERE id=?", (f"deleted_{user_id}", user_id))
+                    conn.execute("UPDATE users SET username=?,email=NULL,status='inactive',role='deleted' WHERE id=?", (f"deleted_{user_id}", user_id))
                     conn.execute("RELEASE SAVEPOINT nexora_trash_anonymize")
                 except Exception:
                     try:

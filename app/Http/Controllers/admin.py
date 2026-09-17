@@ -274,6 +274,7 @@ def admin_users():
                 email,
                 role
             FROM users
+            WHERE role != 'deleted'
             ORDER BY username
             """
         )
@@ -814,6 +815,7 @@ def admin_supervisors():
                 'supervisor',
                 'pending_supervisor'
             )
+            AND role != 'deleted'
             ORDER BY username
             """
         )
