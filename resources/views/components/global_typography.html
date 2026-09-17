@@ -159,6 +159,19 @@ body.admin-supervisors-page #supervisorsTable [data-assigned-students] .badge.bg
     color: #566577 !important;
 }
 
+body.admin-students-page .dropdown-menu-nexora,
+body.admin-supervisors-page .dropdown-menu-nexora {
+    max-height: min(360px, calc(100vh - 32px));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+body.admin-students-page .dropdown-menu-nexora.nx-drop-up,
+body.admin-supervisors-page .dropdown-menu-nexora.nx-drop-up {
+    top: auto !important;
+    bottom: calc(100% + 8px) !important;
+}
+
 @media (min-width: 1280px) {
     body.admin-supervisors-page .table-responsive {
         overflow-x: visible !important;
@@ -275,4 +288,29 @@ body.admin-supervisors-page #supervisorsTable [data-assigned-students] .badge.bg
     }
 }
 </style>
+
+<script>
+document.addEventListener("click", (event) => {
+    const button = event.target.closest(".btn-more");
+    if (!button) return;
+    if (!document.body.classList.contains("admin-students-page") && !document.body.classList.contains("admin-supervisors-page")) return;
+
+    requestAnimationFrame(() => {
+        const wrapper = button.closest(".more-actions");
+        const menu = wrapper ? wrapper.querySelector(".dropdown-menu-nexora.show") : null;
+        if (!menu) return;
+
+        menu.classList.remove("nx-drop-up");
+        const menuRect = menu.getBoundingClientRect();
+        const buttonRect = button.getBoundingClientRect();
+        const viewportPadding = 16;
+        const roomBelow = window.innerHeight - buttonRect.bottom - viewportPadding;
+        const roomAbove = buttonRect.top - viewportPadding;
+
+        if (menuRect.height > roomBelow && roomAbove > roomBelow) {
+            menu.classList.add("nx-drop-up");
+        }
+    });
+});
+</script>
 {% endif %}
