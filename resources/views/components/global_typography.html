@@ -34,5 +34,72 @@ body:has(.nx-role-sidebar-shell) :is(code, pre, kbd, samp) * {
 </style>
 
 {% if nx_topbar_role|default('') == 'admin' %}
+<style id="nx-admin-fluid-shell">
+/*
+   Keep every Admin page aligned to the same viewport gutters as the Command Center.
+   The shared sidebar still owns the 76px desktop rail; these rules only remove
+   legacy centered/max-width page shells inside the remaining Admin workspace.
+*/
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) {
+    --nx-admin-fluid-gutter: 28px;
+}
+
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main,
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .nexora-app-main,
+body.notification-role-admin:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .nx-notifications-main {
+    padding-left: var(--nx-admin-fluid-gutter) !important;
+    padding-right: var(--nx-admin-fluid-gutter) !important;
+    box-sizing: border-box !important;
+}
+
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main > :first-child,
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main > .nexora-page,
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main > .container,
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main > .container-fluid,
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main > .compact-dashboard,
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main > .admin-command-center,
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main > .admin-dashboard-content,
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main > .admin-documents-shell,
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main > .admin-document-folder-shell,
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main > .admin-report-page-shell,
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main > .admin-insights-page,
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main > .admin-polish-page,
+body.notification-role-admin:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .nx-notifications-wrap {
+    width: 100% !important;
+    max-width: none !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    box-sizing: border-box !important;
+}
+
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main > .nexora-page,
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main > .container,
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main > .container-fluid,
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main > .compact-dashboard,
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main > .admin-command-center,
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main > .admin-dashboard-content,
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main > .admin-documents-shell,
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main > .admin-document-folder-shell,
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main > .admin-report-page-shell,
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main > .admin-insights-page,
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main > .admin-polish-page,
+body.notification-role-admin:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .nx-notifications-wrap {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+@media (max-width: 900px) {
+    body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) {
+        --nx-admin-fluid-gutter: 20px;
+    }
+}
+
+@media (max-width: 760px) {
+    body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) {
+        --nx-admin-fluid-gutter: 16px;
+    }
+}
+</style>
+
     {% include 'components/admin_management_responsive.html' %}
 {% endif %}
