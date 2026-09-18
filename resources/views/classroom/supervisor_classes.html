@@ -34,8 +34,9 @@
             .supervisor-card-banner-code { display:inline-flex; align-items:center; gap:7px; margin-top:7px; padding:4px 7px; border:1px solid rgba(255,255,255,.58); border-radius:8px; background:rgba(255,255,255,.48); color:#334155; font-size:9px; font-weight:800; }
             .supervisor-card-banner-code .supervisor-copy-btn { min-height:22px; padding:0 7px; font-size:8px; }
             .supervisor-class-card-banner--navy .supervisor-card-banner-code { color:#fff; background:rgba(255,255,255,.14); }
-            .supervisor-class-card .dropdown { z-index:20; }
-            .supervisor-class-card .dropdown-menu { min-width:220px; z-index:40; }
+            .supervisor-class-card .dropdown { z-index:70; }
+            .supervisor-class-card .dropdown-menu { top:calc(100% + 6px); right:0 !important; left:auto !important; transform:none !important; min-width:220px; max-width:min(240px,calc(100vw - 32px)); z-index:80; }
+            .supervisor-create-class-mobile { display:none !important; }
             .supervisor-class-pending-pill { display:inline-flex; align-items:center; justify-content:center; min-height:29px; padding:5px 9px; border:1px solid #fed7aa; border-radius:999px; background:#fff7ed; color:#c2410c !important; font-size:10px; font-weight:850; line-height:1; text-decoration:none !important; white-space:nowrap; }
             .supervisor-class-pending-pill:hover { border-color:#fdba74; background:#ffedd5; color:#9a3412 !important; }
             .supervisor-class-card .class-banner-color-panel { padding:9px 13px 12px; border-top:1px solid #eef2f7; background:#fbfdff; }
@@ -74,7 +75,7 @@
             .supervisor-classes-list.is-list-view .supervisor-card-info-grid { margin-top:0; grid-template-columns:repeat(3,minmax(0,1fr)); }
             .supervisor-classes-list.is-list-view .supervisor-card-actions { margin-top:0; grid-template-columns:1fr; align-content:center; }
             @media (max-width:1180px) { body.supervisor-classes-page .supervisor-classes-list { grid-template-columns:1fr; } .supervisor-classes-list.is-list-view .supervisor-class-card { display:block; } .supervisor-classes-list.is-list-view .supervisor-class-card-banner { margin:-18px -18px 0; border-radius:17px 17px 0 0; } .supervisor-classes-list.is-list-view .supervisor-card-info-grid { margin-top:14px; } .supervisor-classes-list.is-list-view .supervisor-card-actions { margin-top:12px; grid-template-columns:minmax(0,1fr) auto; } }
-            @media (max-width:768px) { .supervisor-classes-header { align-items:flex-start; flex-direction:column; } .supervisor-classes-view-tools { width:100%; justify-content:space-between; } body.supervisor-classes-page .supervisor-classes-main { padding-bottom:20px !important; } body.supervisor-classes-page .supervisor-classes-list { max-height:calc(100vh - 135px) !important; padding-bottom:88px; } .supervisor-card-info-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+            @media (max-width:768px) { html:has(body.supervisor-classes-page), body.supervisor-classes-page { height:auto; min-height:100%; overflow-x:hidden !important; overflow-y:auto !important; } .supervisor-classes-header { align-items:flex-start; flex-direction:column; } .supervisor-classes-view-tools { width:100%; justify-content:space-between; } .supervisor-create-class-mobile { display:flex !important; width:100%; min-height:44px; margin-top:2px; } body.supervisor-classes-page .supervisor-classes-main { height:auto !important; min-height:100vh; padding-bottom:24px !important; overflow:visible !important; } body.supervisor-classes-page .supervisor-classes-page-inner { height:auto !important; overflow:visible !important; } body.supervisor-classes-page .supervisor-classes-list { max-height:none !important; overflow:visible !important; padding:0 0 8px; scrollbar-gutter:auto; } body.supervisor-classes-page .supervisor-create-bar { display:none !important; } .supervisor-card-info-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .supervisor-class-card .dropdown-menu { right:0 !important; left:auto !important; min-width:210px; max-width:calc(100vw - 48px); } }
             @media (max-width:520px) { .supervisor-view-toggle { display:none; } .supervisor-class-card-banner { margin:-15px -15px 0; padding:15px; } body.supervisor-classes-page .supervisor-class-card { padding:15px; } .supervisor-class-card-heading { gap:9px; } .supervisor-class-card-icon { width:40px; height:40px; flex-basis:40px; } .supervisor-class-card-top { align-items:flex-start; } .supervisor-class-pending-pill { display:none; } .supervisor-card-info-grid { grid-template-columns:1fr 1fr; gap:7px; } .supervisor-card-info { min-height:68px; padding:9px; } .supervisor-card-info-icon { width:26px; height:26px; flex-basis:26px; font-size:12px; } .supervisor-card-info-value { font-size:12px; } .supervisor-card-actions { grid-template-columns:1fr; } .supervisor-card-manage-btn { width:100%; } }
         </style>
     </head>
@@ -90,6 +91,7 @@
                             <span>{{ classes|length }} classroom{% if classes|length != 1 %}s{% endif %}</span>
                         </div>
                     {% endif %}
+                    <a href="{{ url_for('classroom.create_class') }}" class="supervisor-create-class-btn supervisor-create-class-mobile">+ Create Intern Classroom</a>
                 </header>
                 <section class="supervisor-classes-list" id="supervisorClassesList" aria-label="Your Intern Classrooms">
                     {% if classes and classes|length > 0 %}
