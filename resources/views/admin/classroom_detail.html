@@ -172,6 +172,12 @@
                                 <span class="admin-status-pill {% if student.status == 'inactive' %}is-muted{% else %}is-success{% endif %}">{{ student.status|title }}</span>
                                 <a class="admin-compact-action admin-classroom-roster-profile-button" href="{{ url_for('admin.student_profile', student_id=student.id) }}"{% if admin_classroom_modal %} target="_top"{% endif %}>Profile</a>
                                 <a class="admin-compact-action admin-classroom-roster-insights-button" href="{{ url_for('admin_reports_overview.student_insights', student_id=student.id, class_id=classroom.id) }}"{% if admin_classroom_modal %} target="_top"{% endif %}>Insights</a>
+                                {% if classroom.classroom_type == 'internship' %}
+                                <form method="POST" action="{{ url_for('admin_classrooms.remove_student_from_classroom', classroom_id=classroom.id, student_id=student.id) }}" class="admin-classroom-remove-form" onsubmit="return confirm('Remove {{ student.display_name|e }} from {{ classroom.name|e }}? Historical records will be preserved.');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="admin-compact-action admin-classroom-roster-remove-button">Remove</button>
+                                </form>
+                                {% endif %}
                             </article>
                         {% endfor %}
                     </div>

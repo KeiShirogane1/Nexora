@@ -31,8 +31,19 @@
                 </div>
             </header>
 
-            <form method="POST" class="admin-internship-form admin-internship-classroom-first-form">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="admin-internship-flash-stack" aria-live="polite">
+                        {% for category, message in messages %}
+                            <div class="admin-internship-flash is-{{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST" class="admin-internship-form admin-internship-classroom-first-form" id="adminInternshipAssignForm">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="confirm_transfer" id="confirmTransferInput" value="0">
 
                 <section class="admin-internship-section" aria-labelledby="internshipAssignmentHeading">
                     <div class="admin-internship-section-header">
@@ -52,7 +63,14 @@
                             <select id="internshipStudent" name="student_id" class="form-select" required>
                                 <option value="">-- Select Student --</option>
                                 {% for student in students %}
-                                    <option value="{{ student.id }}" {% if request.form.get('student_id') == student.id|string %}selected{% endif %}>{{ student.username }}</option>
+                                    <option
+                                        value="{{ student.id }}"
+                                        data-current-classroom-id="{{ student.current_classroom_id }}"
+                                        data-current-classroom="{{ student.current_classroom_name|e }}"
+                                        data-current-supervisor="{{ student.current_supervisor_name|e }}"
+                                        data-current-company="{{ student.current_company_name|e }}"
+                                        {% if request.form.get('student_id') == student.id|string %}selected{% endif %}
+                                    >{{ student.username }}{% if student.current_classroom_name %} — assigned to {{ student.current_classroom_name }}{% endif %}</option>
                                 {% endfor %}
                             </select>
                             <p class="admin-internship-help">Choose the active student account to enroll.</p>
@@ -89,6 +107,15 @@
                             <p class="admin-internship-help">If a Supervisor owns multiple Intern Classrooms, each room appears as a separate option.</p>
                         </div>
                     </div>
+                </section>
+
+                <section class="admin-internship-current-placement" id="adminCurrentPlacement" hidden aria-live="polite">
+                    <div>
+                        <span>CURRENT INTERNSHIP</span>
+                        <strong id="currentPlacementClassroom">—</strong>
+                        <small id="currentPlacementMeta">—</small>
+                    </div>
+                    <span class="admin-internship-current-badge">Currently Assigned</span>
                 </section>
 
                 <section class="admin-internship-section admin-internship-classroom-preview" id="internshipClassroomPreview" hidden aria-live="polite">
@@ -153,19 +180,73 @@
         </div>
     </main>
 
+    <div class="admin-transfer-modal" id="adminTransferModal" hidden aria-hidden="true">
+        <div class="admin-transfer-modal-backdrop" data-transfer-close></div>
+        <section class="admin-transfer-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="adminTransferTitle">
+            <header>
+                <div>
+                    <span>TRANSFER INTERN</span>
+                    <h2 id="adminTransferTitle">Move Student to Another Classroom?</h2>
+                </div>
+                <button type="button" class="admin-transfer-modal-close" data-transfer-close aria-label="Close">×</button>
+            </header>
+            <div class="admin-transfer-modal-body">
+                <p id="adminTransferStudent"></p>
+                <div class="admin-transfer-compare">
+                    <div><span>CURRENT CLASSROOM</span><strong id="adminTransferFrom">—</strong><small id="adminTransferFromSupervisor">—</small></div>
+                    <div><span>NEW CLASSROOM</span><strong id="adminTransferTo">—</strong><small id="adminTransferToSupervisor">—</small></div>
+                </div>
+                <p class="admin-transfer-warning">This removes the active classroom membership from the current room and assigns the student to the selected room. Historical attendance, Daily OJT logs, submitted work, and evaluation records are preserved.</p>
+            </div>
+            <footer>
+                <button type="button" class="admin-transfer-cancel" data-transfer-close>Cancel</button>
+                <button type="button" class="admin-transfer-confirm" id="adminTransferConfirm">Remove & Assign to New Classroom</button>
+            </footer>
+        </section>
+    </div>
+
     <script>
     (function () {
-        var select = document.getElementById('internshipClassroom');
+        var form = document.getElementById('adminInternshipAssignForm');
+        var studentSelect = document.getElementById('internshipStudent');
+        var classroomSelect = document.getElementById('internshipClassroom');
         var preview = document.getElementById('internshipClassroomPreview');
-        if (!select || !preview) return;
+        var currentPanel = document.getElementById('adminCurrentPlacement');
+        var confirmInput = document.getElementById('confirmTransferInput');
+        var transferModal = document.getElementById('adminTransferModal');
+        var transferConfirm = document.getElementById('adminTransferConfirm');
+        if (!form || !studentSelect || !classroomSelect || !preview) return;
 
         function value(option, name, fallback) {
             var result = option ? option.dataset[name] : '';
             return result && String(result).trim() ? result : (fallback || '—');
         }
 
+        function currentStudentOption() {
+            return studentSelect.options[studentSelect.selectedIndex];
+        }
+
+        function targetClassroomOption() {
+            return classroomSelect.options[classroomSelect.selectedIndex];
+        }
+
+        function updateCurrentPlacement() {
+            var student = currentStudentOption();
+            var classroomName = value(student, 'currentClassroom', '');
+            if (!student || !student.value || !classroomName) {
+                currentPanel.hidden = true;
+                return;
+            }
+            document.getElementById('currentPlacementClassroom').textContent = classroomName;
+            var supervisor = value(student, 'currentSupervisor', 'Unknown Supervisor');
+            var company = value(student, 'currentCompany', '');
+            document.getElementById('currentPlacementMeta').textContent =
+                'Supervisor: ' + supervisor + (company ? ' · Company: ' + company : '');
+            currentPanel.hidden = false;
+        }
+
         function updatePreview() {
-            var option = select.options[select.selectedIndex];
+            var option = targetClassroomOption();
             if (!option || !option.value) {
                 preview.hidden = true;
                 return;
@@ -196,7 +277,71 @@
             preview.hidden = false;
         }
 
-        select.addEventListener('change', updatePreview);
+        function closeTransferModal() {
+            transferModal.hidden = true;
+            transferModal.setAttribute('aria-hidden', 'true');
+        }
+
+        function openTransferModal(student, target) {
+            document.getElementById('adminTransferStudent').textContent =
+                student.textContent.trim().split(' — assigned to ')[0] + ' is already assigned to another Intern Classroom.';
+            document.getElementById('adminTransferFrom').textContent = value(student, 'currentClassroom');
+            document.getElementById('adminTransferFromSupervisor').textContent =
+                'Supervisor: ' + value(student, 'currentSupervisor', 'Unknown Supervisor');
+            document.getElementById('adminTransferTo').textContent = value(target, 'classroom');
+            document.getElementById('adminTransferToSupervisor').textContent =
+                'Supervisor: ' + value(target, 'supervisor', 'Unknown Supervisor');
+            transferModal.hidden = false;
+            transferModal.setAttribute('aria-hidden', 'false');
+            transferConfirm.focus();
+        }
+
+        studentSelect.addEventListener('change', function () {
+            confirmInput.value = '0';
+            updateCurrentPlacement();
+        });
+        classroomSelect.addEventListener('change', function () {
+            confirmInput.value = '0';
+            updatePreview();
+        });
+
+        form.addEventListener('submit', function (event) {
+            if (confirmInput.value === '1') return;
+
+            var student = currentStudentOption();
+            var target = targetClassroomOption();
+            if (!student || !student.value || !target || !target.value) return;
+
+            var currentClassroomId = value(student, 'currentClassroomId', '');
+            if (!currentClassroomId || currentClassroomId === '0') return;
+
+            if (currentClassroomId === target.value) {
+                event.preventDefault();
+                currentPanel.hidden = false;
+                currentPanel.classList.add('is-warning');
+                document.getElementById('currentPlacementMeta').textContent =
+                    'This student is already enrolled in the selected Intern Classroom.';
+                return;
+            }
+
+            event.preventDefault();
+            openTransferModal(student, target);
+        });
+
+        transferConfirm.addEventListener('click', function () {
+            confirmInput.value = '1';
+            closeTransferModal();
+            form.submit();
+        });
+
+        transferModal.querySelectorAll('[data-transfer-close]').forEach(function (button) {
+            button.addEventListener('click', closeTransferModal);
+        });
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && !transferModal.hidden) closeTransferModal();
+        });
+
+        updateCurrentPlacement();
         updatePreview();
     })();
     </script>

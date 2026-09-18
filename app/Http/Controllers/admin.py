@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, session, request, redirect, url_for, flash
+from flask import Blueprint, render_template, session, request, redirect, url_for, flash, current_app
 from app.Http.Middleware.security import role_required
 from app.Services.email_service import (
     send_email,
@@ -1693,7 +1693,7 @@ def bulk_action():
 @admin.route("/admin/internship-assign", methods=["GET", "POST"])
 @role_required("admin")
 def internship_assign():
-    """Assign a student to an available Supervisor-owned Intern Classroom."""
+    """Assign or transfer a student to an active Supervisor-owned Intern Classroom."""
     conn = get_db_connection()
     cursor = conn.cursor()
 
@@ -1712,10 +1712,68 @@ def internship_assign():
         except (IndexError, KeyError, TypeError):
             return default
 
+    def get_active_membership(student_id):
+        return cursor.execute(
+            """
+            SELECT
+                c.id AS classroom_id,
+                c.name AS classroom_name,
+                c.supervisor_id,
+                COALESCE(s.username, '') AS supervisor_name,
+                COALESCE(cid.company_name, '') AS company_name
+            FROM classroom_students cs
+            JOIN classrooms c ON c.id = cs.classroom_id
+            LEFT JOIN users s ON s.id = c.supervisor_id
+            LEFT JOIN classroom_internship_details cid ON cid.classroom_id = c.id
+            WHERE cs.student_id = ?
+              AND COALESCE(c.classroom_type, 'classroom') = 'internship'
+              AND COALESCE(c.archived, 0) = 0
+            ORDER BY cs.id DESC
+            LIMIT 1
+            """,
+            (student_id,),
+        ).fetchone()
+
+    def get_target_placement(classroom_id):
+        return cursor.execute(
+            """
+            SELECT
+                c.id AS classroom_id,
+                c.name AS classroom_name,
+                COALESCE(c.section, '') AS section,
+                COALESCE(c.code, '') AS code,
+                c.supervisor_id,
+                supervisor.username AS supervisor_name,
+                COALESCE(supervisor.email, '') AS supervisor_email,
+                COALESCE(cid.company_name, '') AS company_name,
+                COALESCE(cid.internship_title, '') AS internship_title,
+                COALESCE(cid.industry, '') AS industry,
+                COALESCE(cid.work_arrangement, '') AS work_arrangement,
+                COALESCE(cid.compensation, '') AS compensation,
+                COALESCE(cid.location, '') AS location,
+                COALESCE(cid.start_date, '') AS start_date,
+                COALESCE(cid.end_date, '') AS end_date,
+                COALESCE(cid.enrollment_deadline, '') AS enrollment_deadline,
+                COALESCE(cid.required_hours, 0) AS required_hours,
+                COALESCE(cid.company_website, '') AS company_website
+            FROM classrooms c
+            JOIN users supervisor ON supervisor.id = c.supervisor_id
+            LEFT JOIN classroom_internship_details cid ON cid.classroom_id = c.id
+            WHERE c.id = ?
+              AND COALESCE(c.classroom_type, 'classroom') = 'internship'
+              AND COALESCE(c.archived, 0) = 0
+              AND supervisor.role = 'supervisor'
+              AND COALESCE(supervisor.status, 'active') = 'active'
+            LIMIT 1
+            """,
+            (classroom_id,),
+        ).fetchone()
+
     try:
         if request.method == "POST":
             student_id_raw = (request.form.get("student_id") or "").strip()
             classroom_id_raw = (request.form.get("classroom_id") or "").strip()
+            confirm_transfer = (request.form.get("confirm_transfer") or "") == "1"
             errors = []
 
             try:
@@ -1732,6 +1790,7 @@ def internship_assign():
 
             student_row = None
             placement_row = None
+            current_membership = None
 
             if student_id:
                 student_row = cursor.execute(
@@ -1747,74 +1806,40 @@ def internship_assign():
                 ).fetchone()
                 if not student_row:
                     errors.append("Selected student is not available")
+                else:
+                    current_membership = get_active_membership(student_id)
 
             if classroom_id:
-                placement_row = cursor.execute(
-                    """
-                    SELECT
-                        c.id AS classroom_id,
-                        c.name AS classroom_name,
-                        COALESCE(c.section, '') AS section,
-                        COALESCE(c.code, '') AS code,
-                        c.supervisor_id,
-                        supervisor.username AS supervisor_name,
-                        COALESCE(supervisor.email, '') AS supervisor_email,
-                        COALESCE(cid.company_name, '') AS company_name,
-                        COALESCE(cid.internship_title, '') AS internship_title,
-                        COALESCE(cid.industry, '') AS industry,
-                        COALESCE(cid.work_arrangement, '') AS work_arrangement,
-                        COALESCE(cid.compensation, '') AS compensation,
-                        COALESCE(cid.location, '') AS location,
-                        COALESCE(cid.start_date, '') AS start_date,
-                        COALESCE(cid.end_date, '') AS end_date,
-                        COALESCE(cid.enrollment_deadline, '') AS enrollment_deadline,
-                        COALESCE(cid.required_hours, 0) AS required_hours,
-                        COALESCE(cid.company_website, '') AS company_website
-                    FROM classrooms c
-                    JOIN users supervisor ON supervisor.id = c.supervisor_id
-                    LEFT JOIN classroom_internship_details cid ON cid.classroom_id = c.id
-                    WHERE c.id = ?
-                      AND COALESCE(c.classroom_type, 'classroom') = 'internship'
-                      AND COALESCE(c.archived, 0) = 0
-                      AND supervisor.role = 'supervisor'
-                      AND COALESCE(supervisor.status, 'active') = 'active'
-                    LIMIT 1
-                    """,
-                    (classroom_id,),
-                ).fetchone()
+                placement_row = get_target_placement(classroom_id)
                 if not placement_row:
                     errors.append("Selected Supervisor / Intern Classroom is no longer available")
 
-            if not errors and student_row and placement_row:
-                existing_membership = cursor.execute(
-                    """
-                    SELECT c.name
-                    FROM classroom_students cs
-                    JOIN classrooms c ON c.id = cs.classroom_id
-                    WHERE cs.student_id = ?
-                      AND COALESCE(c.archived, 0) = 0
-                      AND COALESCE(c.classroom_type, 'classroom') = 'internship'
-                    LIMIT 1
-                    """,
-                    (student_id,),
-                ).fetchone()
-                if existing_membership:
+            transfer_required = False
+            if not errors and current_membership and placement_row:
+                current_classroom_id = int(row_value(current_membership, "classroom_id", 0, 0) or 0)
+                if current_classroom_id == classroom_id:
                     errors.append(
-                        f"Student is already enrolled in an active Intern Classroom ({row_value(existing_membership, 'name', 0, 'Intern Classroom')})"
+                        f"Student is already assigned to {row_value(current_membership, 'classroom_name', 1, 'this Intern Classroom')}."
                     )
+                else:
+                    transfer_required = True
+                    if not confirm_transfer:
+                        errors.append(
+                            "This student already has an active Intern Classroom. Confirm the transfer to remove the current placement and assign the new one."
+                        )
 
-                existing_internship = cursor.execute(
+            if transfer_required and confirm_transfer and not errors:
+                open_attendance = cursor.execute(
                     """
                     SELECT id
-                    FROM internships
-                    WHERE student_id = ?
-                      AND status = 'Active'
+                    FROM attendance
+                    WHERE student_id = ? AND status = 'Open'
                     LIMIT 1
                     """,
                     (student_id,),
                 ).fetchone()
-                if existing_internship:
-                    errors.append("Student already has an active internship")
+                if open_attendance:
+                    errors.append("Student must Clock Out before being transferred to another Intern Classroom.")
 
             if errors:
                 flash("; ".join(errors), "danger")
@@ -1829,9 +1854,34 @@ def internship_assign():
                 start_date = str(row_value(placement_row, "start_date", 13, "") or "")
                 end_date = str(row_value(placement_row, "end_date", 14, "") or "")
                 required_hours = int(row_value(placement_row, "required_hours", 16, 0) or 0) or 486
+                student_name = str(row_value(student_row, "username", 1, "Student") or "Student")
+
+                old_classroom_id = None
+                old_classroom_name = None
+                old_supervisor_id = None
+                old_supervisor_name = None
 
                 try:
-                    # Keep the legacy internship record for existing reports/workflows.
+                    if current_membership:
+                        old_classroom_id = int(row_value(current_membership, "classroom_id", 0, 0) or 0)
+                        old_classroom_name = str(row_value(current_membership, "classroom_name", 1, "Intern Classroom") or "Intern Classroom")
+                        old_supervisor_id = int(row_value(current_membership, "supervisor_id", 2, 0) or 0)
+                        old_supervisor_name = str(row_value(current_membership, "supervisor_name", 3, "Supervisor") or "Supervisor")
+
+                        cursor.execute(
+                            "DELETE FROM classroom_students WHERE classroom_id = ? AND student_id = ?",
+                            (old_classroom_id, student_id),
+                        )
+                        cursor.execute(
+                            "UPDATE internships SET status = 'Transferred' WHERE student_id = ? AND status = 'Active'",
+                            (student_id,),
+                        )
+                        if old_supervisor_id:
+                            cursor.execute(
+                                "DELETE FROM student_assignments WHERE student_id = ? AND supervisor_id = ?",
+                                (student_id, old_supervisor_id),
+                            )
+
                     cursor.execute(
                         """
                         INSERT INTO internships
@@ -1867,13 +1917,11 @@ def internship_assign():
                         ),
                     )
 
-                    # Classroom membership is the authoritative modern placement.
                     cursor.execute(
                         "INSERT INTO classroom_students (classroom_id, student_id) VALUES (?, ?)",
                         (classroom_id, student_id),
                     )
 
-                    # Keep legacy supervisor ownership checks working.
                     if using_postgres():
                         cursor.execute(
                             """
@@ -1893,16 +1941,79 @@ def internship_assign():
                         )
 
                     conn.commit()
-                    flash(
-                        f"Student assigned to {classroom_name} under {supervisor_name}.",
-                        "success",
-                    )
-                    return redirect(url_for("admin_assigned_interns.assigned_interns"))
+
+                    # Notifications are intentionally after the placement transaction.
+                    try:
+                        if old_classroom_id:
+                            create_notification(
+                                student_id,
+                                "Internship Classroom Changed",
+                                f"Your internship placement was moved from {old_classroom_name} to {classroom_name}.",
+                                "classroom",
+                                link_url=f"/student/classes/{classroom_id}",
+                            )
+                            if old_supervisor_id:
+                                if old_supervisor_id == supervisor_id:
+                                    create_notification(
+                                        old_supervisor_id,
+                                        "Intern Transferred Between Classrooms",
+                                        f"{student_name} was moved from {old_classroom_name} to {classroom_name} by the Administrator.",
+                                        "classroom",
+                                        link_url=f"/supervisor/classes/{classroom_id}",
+                                    )
+                                else:
+                                    create_notification(
+                                        old_supervisor_id,
+                                        "Intern Removed / Transferred",
+                                        f"{student_name} was removed from {old_classroom_name} and transferred to another Intern Classroom by the Administrator.",
+                                        "classroom",
+                                        link_url=f"/supervisor/classes/{old_classroom_id}",
+                                    )
+                                    create_notification(
+                                        supervisor_id,
+                                        "New Intern Assigned",
+                                        f"{student_name} was transferred to your Intern Classroom {classroom_name} by the Administrator.",
+                                        "classroom",
+                                        link_url=f"/supervisor/classes/{classroom_id}",
+                                    )
+                        else:
+                            create_notification(
+                                student_id,
+                                "Internship Classroom Assigned",
+                                f"You have been assigned to {classroom_name} under {supervisor_name}.",
+                                "classroom",
+                                link_url=f"/student/classes/{classroom_id}",
+                            )
+                            create_notification(
+                                supervisor_id,
+                                "New Intern Assigned",
+                                f"{student_name} was assigned to your Intern Classroom {classroom_name} by the Administrator.",
+                                "classroom",
+                                link_url=f"/supervisor/classes/{classroom_id}",
+                            )
+                    except Exception:
+                        current_app.logger.warning(
+                            "Admin internship assignment notification failed",
+                            exc_info=True,
+                        )
+
+                    if old_classroom_id:
+                        flash(
+                            f"{student_name} moved from {old_classroom_name} to {classroom_name} successfully.",
+                            "success",
+                        )
+                    else:
+                        flash(
+                            f"{student_name} has been assigned to {classroom_name} successfully.",
+                            "success",
+                        )
+                    return redirect(url_for("admin.internship_assign"))
                 except Exception as exc:
                     conn.rollback()
+                    current_app.logger.exception("Admin internship assignment failed")
                     flash(f"Failed to assign internship: {exc}", "danger")
 
-        students = cursor.execute(
+        student_rows = cursor.execute(
             """
             SELECT id, username
             FROM users
@@ -1911,6 +2022,22 @@ def internship_assign():
             ORDER BY LOWER(username), id
             """
         ).fetchall()
+
+        students = []
+        for row in student_rows:
+            student_id = int(row_value(row, "id", 0, 0) or 0)
+            membership = get_active_membership(student_id)
+            students.append(
+                {
+                    "id": student_id,
+                    "username": str(row_value(row, "username", 1, "") or ""),
+                    "current_classroom_id": int(row_value(membership, "classroom_id", 0, 0) or 0) if membership else 0,
+                    "current_classroom_name": str(row_value(membership, "classroom_name", 1, "") or "") if membership else "",
+                    "current_supervisor_id": int(row_value(membership, "supervisor_id", 2, 0) or 0) if membership else 0,
+                    "current_supervisor_name": str(row_value(membership, "supervisor_name", 3, "") or "") if membership else "",
+                    "current_company_name": str(row_value(membership, "company_name", 4, "") or "") if membership else "",
+                }
+            )
 
         placement_rows = cursor.execute(
             """

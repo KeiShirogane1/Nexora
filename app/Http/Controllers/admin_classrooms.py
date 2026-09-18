@@ -2,11 +2,12 @@ import os
 from collections import Counter
 from datetime import datetime
 
-from flask import Blueprint, abort, current_app, render_template, request, send_file
+from flask import Blueprint, abort, current_app, flash, redirect, render_template, request, send_file, url_for
 
 from app.Http.Middleware.security import role_required
 from app.Models.db import get_db_connection
 from app.Services.performance_report_service import build_class_reports
+from app.Services.notification_service import create_notification
 from app.Services.profile_service import normalize_program_name
 
 
@@ -211,6 +212,128 @@ def classrooms():
         status=status,
         active_page="classrooms",
     )
+
+
+@admin_classrooms.route(
+    "/admin/classrooms/<int:classroom_id>/students/<int:student_id>/remove",
+    methods=["POST"],
+)
+@role_required("admin")
+def remove_student_from_classroom(classroom_id, student_id):
+    """Remove one student from an active Intern Classroom without deleting history."""
+    conn = get_db_connection()
+    try:
+        membership = conn.execute(
+            """
+            SELECT
+                c.id AS classroom_id,
+                c.name AS classroom_name,
+                c.supervisor_id,
+                COALESCE(c.classroom_type, 'classroom') AS classroom_type,
+                COALESCE(s.username, '') AS supervisor_name,
+                COALESCE(u.username, '') AS student_name
+            FROM classroom_students cs
+            JOIN classrooms c ON c.id = cs.classroom_id
+            JOIN users u ON u.id = cs.student_id
+            LEFT JOIN users s ON s.id = c.supervisor_id
+            WHERE cs.classroom_id = ? AND cs.student_id = ?
+            LIMIT 1
+            """,
+            (classroom_id, student_id),
+        ).fetchone()
+        if not membership:
+            flash("Student is not enrolled in this classroom.", "warning")
+            return redirect(url_for("admin_classrooms.classroom_detail", classroom_id=classroom_id))
+
+        classroom_type = str(_value(membership, "classroom_type", 3, "classroom") or "classroom")
+        if classroom_type != "internship":
+            flash("Admin removal is currently available for Intern Classrooms only.", "warning")
+            return redirect(url_for("admin_classrooms.classroom_detail", classroom_id=classroom_id))
+
+        open_attendance = conn.execute(
+            """
+            SELECT id
+            FROM attendance
+            WHERE student_id = ? AND status = 'Open'
+            LIMIT 1
+            """,
+            (student_id,),
+        ).fetchone()
+        if open_attendance:
+            flash("Student must Clock Out before being removed from the Intern Classroom.", "warning")
+            return redirect(url_for("admin_classrooms.classroom_detail", classroom_id=classroom_id))
+
+        classroom_name = str(_value(membership, "classroom_name", 1, "Intern Classroom") or "Intern Classroom")
+        supervisor_id = int(_value(membership, "supervisor_id", 2, 0) or 0)
+        student_name = str(_value(membership, "student_name", 5, "Student") or "Student")
+
+        conn.execute(
+            "DELETE FROM classroom_students WHERE classroom_id = ? AND student_id = ?",
+            (classroom_id, student_id),
+        )
+        conn.execute(
+            """
+            UPDATE internships
+            SET status = 'Removed'
+            WHERE student_id = ?
+              AND supervisor_id = ?
+              AND status = 'Active'
+            """,
+            (student_id, supervisor_id),
+        )
+
+        remaining = conn.execute(
+            """
+            SELECT 1
+            FROM classroom_students cs
+            JOIN classrooms c ON c.id = cs.classroom_id
+            WHERE cs.student_id = ?
+              AND c.supervisor_id = ?
+              AND COALESCE(c.classroom_type, 'classroom') = 'internship'
+              AND COALESCE(c.archived, 0) = 0
+            LIMIT 1
+            """,
+            (student_id, supervisor_id),
+        ).fetchone()
+        if not remaining:
+            conn.execute(
+                "DELETE FROM student_assignments WHERE student_id = ? AND supervisor_id = ?",
+                (student_id, supervisor_id),
+            )
+
+        conn.commit()
+
+        try:
+            create_notification(
+                student_id,
+                "Removed from Internship Classroom",
+                f"You were removed from {classroom_name} by the Administrator. Your previous records were preserved.",
+                "classroom",
+                link_url="/student/classes",
+            )
+            if supervisor_id:
+                create_notification(
+                    supervisor_id,
+                    "Intern Removed From Classroom",
+                    f"{student_name} was removed from your Intern Classroom {classroom_name} by the Administrator.",
+                    "classroom",
+                    link_url=f"/supervisor/classes/{classroom_id}",
+                )
+        except Exception:
+            current_app.logger.warning("Admin classroom removal notification failed", exc_info=True)
+
+        flash(f"{student_name} was removed from {classroom_name}. Historical records were preserved.", "success")
+    except Exception:
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+        current_app.logger.exception("Admin failed to remove student from classroom")
+        flash("Unable to remove the student from this classroom.", "danger")
+    finally:
+        conn.close()
+
+    return redirect(url_for("admin_classrooms.classroom_detail", classroom_id=classroom_id))
 
 
 @admin_classrooms.route("/admin/classrooms/<int:classroom_id>")
