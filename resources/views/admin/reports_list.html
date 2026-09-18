@@ -66,6 +66,31 @@
         .admin-report-choice-option svg { width: 22px; height: 22px; color: var(--report-accent); }
         .admin-report-choice-option strong { display: block; font-size: .9rem; }
         .admin-report-choice-option span { display: block; margin-top: 4px; color: #82908b; font-size: .72rem; line-height: 1.45; }
+
+        body.admin-report-detail-modal-open { overflow: hidden !important; }
+        .admin-report-detail-modal[hidden] { display: none !important; }
+        .admin-report-detail-modal { position: fixed; inset: 0; z-index: 5700; display: grid; place-items: center; padding: 18px; }
+        .admin-report-detail-backdrop { position: absolute; inset: 0; background: rgba(15, 23, 42, .58); backdrop-filter: blur(4px); }
+        .admin-report-detail-dialog { position: relative; width: min(1320px, 96vw); height: min(900px, 92vh); display: grid; grid-template-rows: auto minmax(0, 1fr); overflow: hidden; border: 1px solid #e7e9eb; border-radius: 18px; background: #fff; box-shadow: 0 30px 90px rgba(15, 23, 42, .28); }
+        .admin-report-detail-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; padding: 16px 18px 14px; border-bottom: 1px solid #edf1ef; background: linear-gradient(180deg, #fff 0%, #fffaf8 100%); }
+        .admin-report-detail-header > div > span { display: block; color: var(--report-accent); font-size: .68rem; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
+        .admin-report-detail-header h2 { margin: 4px 0 0; color: #172f27; font-size: 1.15rem; font-weight: 850; }
+        .admin-report-detail-header p { margin: 4px 0 0; color: #7b8a85; font-size: .76rem; }
+        .admin-report-detail-close { width: 30px; height: 30px; flex: 0 0 30px; padding: 0; border: 0; background: transparent; color: var(--report-accent); font-size: 1.55rem; line-height: 1; font-weight: 900; cursor: pointer; box-shadow: none; outline: none; }
+        .admin-report-detail-close:hover, .admin-report-detail-close:focus-visible { background: transparent; color: var(--report-accent-dark); box-shadow: none; outline: none; }
+        .admin-report-detail-body { position: relative; min-height: 0; overflow: hidden; background: #f6f9f9; }
+        .admin-report-detail-loading { position: absolute; inset: 0; z-index: 2; display: grid; place-items: center; background: #f6f9f9; color: var(--report-accent-dark); font-size: .8rem; font-weight: 850; }
+        .admin-report-detail-loading[hidden] { display: none !important; }
+        .admin-report-detail-content { width: 100%; height: 100%; overflow: auto; overscroll-behavior: contain; background: #f6f9f9; }
+        .admin-report-detail-content > .admin-report-page-shell,
+        .admin-report-detail-content > .admin-insights-page { width: 100%; max-width: none; margin: 0; }
+        .admin-report-detail-content > .admin-report-page-shell { padding-top: 22px; }
+        .admin-report-detail-content .admin-report-back-link { display: none !important; }
+        .admin-report-detail-content .admin-polish-header { margin-top: 0; }
+        .admin-report-detail-error { min-height: 260px; display: grid; place-items: center; align-content: center; gap: 10px; padding: 22px; color: #71817b; text-align: center; }
+        .admin-report-detail-error strong { color: #9e351b; font-size: .9rem; }
+        .admin-report-detail-error a { color: var(--report-accent-dark); font-size: .78rem; font-weight: 850; }
+
         @media (max-width: 720px) {
             .admin-report-page-shell { padding: 22px 16px 36px; }
             .admin-report-page-heading { align-items: flex-start; flex-direction: column; }
@@ -74,6 +99,11 @@
             .admin-report-directory-header { padding: 17px 16px 14px; }
             .admin-report-table th, .admin-report-table td { padding-left: 14px; padding-right: 14px; }
             .admin-report-choice-body { grid-template-columns: 1fr; }
+            .admin-report-detail-modal { padding: 7px; }
+            .admin-report-detail-dialog { width: 100%; height: 96vh; border-radius: 14px; }
+            .admin-report-detail-header { padding: 13px 14px; }
+            .admin-report-detail-content > .admin-report-page-shell { padding: 16px 12px 28px; }
+            .admin-report-detail-content > .admin-insights-page { padding-left: 12px; padding-right: 12px; }
         }
     </style>
 </head>
@@ -181,37 +211,207 @@
         </div>
     </div>
 
+    <div id="adminReportDetailModal" class="admin-report-detail-modal" hidden aria-hidden="true">
+        <div class="admin-report-detail-backdrop" data-admin-report-detail-close></div>
+        <section class="admin-report-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="adminReportDetailTitle">
+            <header class="admin-report-detail-header">
+                <div>
+                    <span id="adminReportDetailKicker">REPORT VIEW</span>
+                    <h2 id="adminReportDetailTitle">Student Report</h2>
+                    <p id="adminReportDetailContext"></p>
+                </div>
+                <button type="button" class="admin-report-detail-close" id="adminReportDetailClose" aria-label="Close report view">×</button>
+            </header>
+            <div class="admin-report-detail-body">
+                <div class="admin-report-detail-loading" id="adminReportDetailLoading">Loading report…</div>
+                <div class="admin-report-detail-content" id="adminReportDetailContent"></div>
+            </div>
+        </section>
+    </div>
+
     <script>
         (function () {
-            var modal = document.getElementById('adminReportChoiceModal');
-            var closeButton = document.getElementById('adminReportChoiceClose');
-            var context = document.getElementById('adminReportChoiceContext');
+            var choiceModal = document.getElementById('adminReportChoiceModal');
+            var choiceCloseButton = document.getElementById('adminReportChoiceClose');
+            var choiceContext = document.getElementById('adminReportChoiceContext');
             var reportLink = document.getElementById('adminReportChoiceReport');
             var insightsLink = document.getElementById('adminReportChoiceInsights');
 
-            function closeModal() {
-                modal.hidden = true;
+            var detailModal = document.getElementById('adminReportDetailModal');
+            var detailCloseButton = document.getElementById('adminReportDetailClose');
+            var detailKicker = document.getElementById('adminReportDetailKicker');
+            var detailTitle = document.getElementById('adminReportDetailTitle');
+            var detailContext = document.getElementById('adminReportDetailContext');
+            var detailLoading = document.getElementById('adminReportDetailLoading');
+            var detailContent = document.getElementById('adminReportDetailContent');
+
+            var currentContext = '';
+            var lastTrigger = null;
+            var requestController = null;
+
+            function closeChoiceModal() {
+                choiceModal.hidden = true;
+            }
+
+            function showDetailError(url) {
+                detailLoading.hidden = true;
+                detailContent.innerHTML = '';
+
+                var errorBox = document.createElement('div');
+                errorBox.className = 'admin-report-detail-error';
+
+                var message = document.createElement('strong');
+                message.textContent = 'Unable to load this report view.';
+                errorBox.appendChild(message);
+
+                var fallback = document.createElement('a');
+                fallback.href = url;
+                fallback.textContent = 'Open this view as a full page';
+                errorBox.appendChild(fallback);
+
+                detailContent.appendChild(errorBox);
+            }
+
+            function loadDetail(url, type) {
+                if (requestController) {
+                    requestController.abort();
+                }
+                requestController = new AbortController();
+
+                detailContent.innerHTML = '';
+                detailContent.scrollTop = 0;
+                detailLoading.textContent = type === 'insights' ? 'Loading Student Insights…' : 'Loading Complete Report…';
+                detailLoading.hidden = false;
+
+                fetch(url, {
+                    method: 'GET',
+                    credentials: 'same-origin',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    signal: requestController.signal
+                })
+                    .then(function (response) {
+                        if (!response.ok) throw new Error('HTTP ' + response.status);
+                        return response.text();
+                    })
+                    .then(function (htmlText) {
+                        var parsed = new DOMParser().parseFromString(htmlText, 'text/html');
+                        var fragment = type === 'insights'
+                            ? parsed.querySelector('.admin-insights-page')
+                            : parsed.querySelector('.admin-report-page-shell');
+
+                        if (!fragment) {
+                            throw new Error('Expected report markup not found');
+                        }
+
+                        var styleMarkup = '';
+                        if (type === 'report') {
+                            styleMarkup = Array.prototype.map.call(
+                                parsed.querySelectorAll('head style'),
+                                function (style) { return style.outerHTML; }
+                            ).join('');
+                        }
+
+                        detailContent.innerHTML = styleMarkup + fragment.outerHTML;
+                        detailContent.scrollTop = 0;
+                        detailLoading.hidden = true;
+                    })
+                    .catch(function (error) {
+                        if (error.name === 'AbortError') return;
+                        showDetailError(url);
+                    });
+            }
+
+            function openDetail(url, type) {
+                closeChoiceModal();
+                detailKicker.textContent = type === 'insights' ? 'STUDENT INSIGHTS' : 'COMPLETE REPORT';
+                detailTitle.textContent = type === 'insights' ? 'Student Insights' : 'Complete Report';
+                detailContext.textContent = currentContext;
+                detailModal.hidden = false;
+                detailModal.setAttribute('aria-hidden', 'false');
+                document.body.classList.add('admin-report-detail-modal-open');
+                loadDetail(url, type);
+                detailCloseButton.focus();
+            }
+
+            function closeDetailModal() {
+                if (requestController) {
+                    requestController.abort();
+                    requestController = null;
+                }
+                detailModal.hidden = true;
+                detailModal.setAttribute('aria-hidden', 'true');
+                document.body.classList.remove('admin-report-detail-modal-open');
+                detailContent.innerHTML = '';
+                detailLoading.hidden = false;
+                if (lastTrigger) lastTrigger.focus();
             }
 
             document.querySelectorAll('[data-report-view]').forEach(function (button) {
                 button.addEventListener('click', function () {
-                    context.textContent = button.dataset.student + ' · ' + button.dataset.classroom;
+                    lastTrigger = button;
+                    currentContext = button.dataset.student + ' · ' + button.dataset.classroom;
+                    choiceContext.textContent = currentContext;
                     reportLink.href = button.dataset.reportUrl;
                     insightsLink.href = button.dataset.insightsUrl;
-                    modal.hidden = false;
-                    closeButton.focus();
+                    choiceModal.hidden = false;
+                    choiceCloseButton.focus();
                 });
             });
 
-            closeButton.addEventListener('click', closeModal);
-            modal.addEventListener('click', function (event) {
-                if (event.target === modal) {
-                    closeModal();
+            reportLink.addEventListener('click', function (event) {
+                event.preventDefault();
+                openDetail(reportLink.href, 'report');
+            });
+
+            insightsLink.addEventListener('click', function (event) {
+                event.preventDefault();
+                openDetail(insightsLink.href, 'insights');
+            });
+
+            detailContent.addEventListener('click', function (event) {
+                var link = event.target.closest('a');
+                if (!link) return;
+
+                if (link.classList.contains('admin-report-back-link')) {
+                    event.preventDefault();
+                    closeDetailModal();
+                    return;
+                }
+
+                var href = link.getAttribute('href');
+                if (!href) return;
+
+                var targetUrl;
+                try {
+                    targetUrl = new URL(href, window.location.href);
+                } catch (error) {
+                    return;
+                }
+
+                if (targetUrl.origin === window.location.origin && targetUrl.pathname === '/admin/insights') {
+                    event.preventDefault();
+                    loadDetail(targetUrl.href, 'insights');
                 }
             });
+
+            choiceCloseButton.addEventListener('click', closeChoiceModal);
+            choiceModal.addEventListener('click', function (event) {
+                if (event.target === choiceModal) {
+                    closeChoiceModal();
+                }
+            });
+
+            detailModal.querySelectorAll('[data-admin-report-detail-close]').forEach(function (button) {
+                button.addEventListener('click', closeDetailModal);
+            });
+            detailCloseButton.addEventListener('click', closeDetailModal);
+
             document.addEventListener('keydown', function (event) {
-                if (event.key === 'Escape' && !modal.hidden) {
-                    closeModal();
+                if (event.key !== 'Escape') return;
+                if (!detailModal.hidden) {
+                    closeDetailModal();
+                } else if (!choiceModal.hidden) {
+                    closeChoiceModal();
                 }
             });
         }());
