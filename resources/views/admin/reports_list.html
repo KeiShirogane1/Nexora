@@ -82,9 +82,31 @@
         .admin-report-detail-loading { position: absolute; inset: 0; z-index: 2; display: grid; place-items: center; background: #f6f9f9; color: var(--report-accent-dark); font-size: .8rem; font-weight: 850; }
         .admin-report-detail-loading[hidden] { display: none !important; }
         .admin-report-detail-content { width: 100%; height: 100%; overflow: auto; overscroll-behavior: contain; background: #f6f9f9; }
+        .admin-report-detail-content.is-report-view {
+            --report-accent: #f45125;
+            --report-accent-dark: #d9471b;
+            --report-accent-soft: #fff1eb;
+            --report-border: #e5ebe9;
+            --report-text: #14251f;
+            --report-muted: #6e7e79;
+            background: #f6f9f9;
+            color: var(--report-text);
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+        }
+        .admin-report-detail-content.is-insights-view {
+            --admin-polish-accent: #f45125;
+            --admin-polish-accent-dark: #d9471b;
+            --admin-polish-accent-soft: #fff1eb;
+            --admin-polish-border: #e4e9ee;
+            --admin-polish-text: #172536;
+            --admin-polish-muted: #718096;
+            background: #f4f7fb;
+            color: var(--admin-polish-text);
+        }
         .admin-report-detail-content > .admin-report-page-shell,
-        .admin-report-detail-content > .admin-insights-page { width: 100%; max-width: none; margin: 0; }
+        .admin-report-detail-content > .admin-insights-page { width: 100%; max-width: none; margin: 0; box-sizing: border-box; }
         .admin-report-detail-content > .admin-report-page-shell { padding-top: 22px; }
+        .admin-report-detail-content.is-insights-view > .admin-insights-page { padding: 22px 24px 32px; }
         .admin-report-detail-content .admin-report-back-link { display: none !important; }
         .admin-report-detail-content .admin-polish-header { margin-top: 0; }
         .admin-report-detail-error { min-height: 260px; display: grid; place-items: center; align-content: center; gap: 10px; padding: 22px; color: #71817b; text-align: center; }
@@ -103,7 +125,7 @@
             .admin-report-detail-dialog { width: 100%; height: 96vh; border-radius: 14px; }
             .admin-report-detail-header { padding: 13px 14px; }
             .admin-report-detail-content > .admin-report-page-shell { padding: 16px 12px 28px; }
-            .admin-report-detail-content > .admin-insights-page { padding-left: 12px; padding-right: 12px; }
+            .admin-report-detail-content.is-insights-view > .admin-insights-page { padding: 14px 12px 24px; }
         }
     </style>
 </head>
@@ -280,6 +302,8 @@
 
                 detailContent.innerHTML = '';
                 detailContent.scrollTop = 0;
+                detailContent.classList.toggle('is-insights-view', type === 'insights');
+                detailContent.classList.toggle('is-report-view', type === 'report');
                 detailLoading.textContent = type === 'insights' ? 'Loading Student Insights…' : 'Loading Complete Report…';
                 detailLoading.hidden = false;
 
@@ -342,6 +366,7 @@
                 detailModal.setAttribute('aria-hidden', 'true');
                 document.body.classList.remove('admin-report-detail-modal-open');
                 detailContent.innerHTML = '';
+                detailContent.classList.remove('is-insights-view', 'is-report-view');
                 detailLoading.hidden = false;
                 if (lastTrigger) lastTrigger.focus();
             }
