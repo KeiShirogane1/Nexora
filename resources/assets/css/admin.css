@@ -2519,18 +2519,22 @@ body.admin-documents-page .admin-documents-folder-button:focus-visible {
   background: #922b17 !important;
   color: #fff !important;
 }
-body.admin-document-folder-page .admin-file-action {
+body.admin-document-folder-page .admin-file-action,
+.admin-documents-modal-content .admin-file-action {
   border-color: #ef9d85 !important;
   background: #fff0ea !important;
   color: #c43d1b !important;
 }
 body.admin-document-folder-page .admin-file-action:hover,
-body.admin-document-folder-page .admin-file-action:focus-visible {
+body.admin-document-folder-page .admin-file-action:focus-visible,
+.admin-documents-modal-content .admin-file-action:hover,
+.admin-documents-modal-content .admin-file-action:focus-visible {
   border-color: #d9471b !important;
   background: #d9471b !important;
   color: #fff !important;
 }
-body.admin-document-folder-page .admin-file-action:disabled {
+body.admin-document-folder-page .admin-file-action:disabled,
+.admin-documents-modal-content .admin-file-action:disabled {
   border-color: #eaded9 !important;
   background: #f7f2f0 !important;
   color: #aa9a94 !important;
@@ -2625,11 +2629,43 @@ body.admin-documents-modal-open {
   min-height: 0;
   background: #fff8f5;
 }
-.admin-documents-modal-body iframe {
+.admin-documents-modal-content {
   width: 100%;
   height: 100%;
-  border: 0;
+  overflow: auto;
+  padding: 16px;
   background: #fff8f5;
+}
+.admin-documents-modal-content > .admin-document-folder-page {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0 !important;
+}
+.admin-documents-modal-content .admin-breadcrumb {
+  display: none !important;
+}
+.admin-documents-modal-error {
+  min-height: 220px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+  padding: 18px;
+  color: #8a5f53;
+  text-align: center;
+}
+.admin-documents-modal-error strong {
+  color: #b43b1d;
+  font-size: 12px;
+}
+.admin-documents-modal-error a {
+  color: #f45125;
+  font-size: 10px;
+  font-weight: 900;
+}
+body.admin-documents-modal-open .nx-document-viewer {
+  z-index: 5600;
 }
 .admin-documents-modal-loading {
   position: absolute;
@@ -2678,6 +2714,9 @@ body.admin-document-folder-page.is-modal .admin-breadcrumb {
   }
   .admin-documents-modal-header {
     padding: 14px;
+  }
+  .admin-documents-modal-content {
+    padding: 10px;
   }
 }
 

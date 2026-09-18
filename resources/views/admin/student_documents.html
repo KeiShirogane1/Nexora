@@ -161,40 +161,120 @@
             </header>
             <div class="admin-documents-modal-body">
                 <div class="admin-documents-modal-loading" id="adminDocumentsModalLoading">Loading student documents…</div>
-                <iframe id="adminDocumentsModalFrame" class="is-loading" title="Student document folder" loading="eager"></iframe>
+                <div class="admin-documents-modal-content" id="adminDocumentsModalContent"></div>
             </div>
         </section>
     </div>
 
+    {% include 'components/document_fullscreen_viewer.html' %}
     <script>
     (function () {
         var modal = document.getElementById('adminDocumentsModal');
-        var frame = document.getElementById('adminDocumentsModalFrame');
+        var content = document.getElementById('adminDocumentsModalContent');
         var title = document.getElementById('adminDocumentsModalTitle');
         var subtitle = document.getElementById('adminDocumentsModalSubtitle');
         var loading = document.getElementById('adminDocumentsModalLoading');
-        if (!modal || !frame) return;
+        var lastTrigger = null;
+        var requestController = null;
+        if (!modal || !content) return;
+
+        function bindFolderInteractions(root) {
+            root.querySelectorAll('[data-admin-folder-tab]').forEach(function (tab) {
+                tab.addEventListener('click', function () {
+                    var target = tab.dataset.adminFolderTab;
+                    root.querySelectorAll('[data-admin-folder-tab]').forEach(function (item) {
+                        var selected = item === tab;
+                        item.classList.toggle('is-active', selected);
+                        item.setAttribute('aria-selected', selected ? 'true' : 'false');
+                    });
+                    root.querySelectorAll('[data-admin-folder-panel]').forEach(function (panel) {
+                        panel.hidden = panel.dataset.adminFolderPanel !== target;
+                    });
+                });
+            });
+
+            root.querySelectorAll('.js-admin-image-preview').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    if (!window.NexoraDocumentViewer) return;
+                    window.NexoraDocumentViewer.open({
+                        url: button.dataset.url,
+                        name: button.dataset.name || 'Image Preview',
+                        type: 'image'
+                    });
+                });
+            });
+        }
+
+        function showError(link) {
+            loading.hidden = true;
+            content.innerHTML = '';
+            var errorBox = document.createElement('div');
+            errorBox.className = 'admin-documents-modal-error';
+
+            var message = document.createElement('strong');
+            message.textContent = 'Unable to load student documents.';
+            errorBox.appendChild(message);
+
+            var fallback = document.createElement('a');
+            fallback.href = link.href;
+            fallback.textContent = 'Open document folder';
+            errorBox.appendChild(fallback);
+
+            content.appendChild(errorBox);
+        }
 
         function openModal(link) {
+            lastTrigger = link;
             title.textContent = link.dataset.studentName || 'Document Folder';
             subtitle.textContent = 'Read-only Admin document view';
+            content.innerHTML = '';
             loading.hidden = false;
-            frame.classList.add('is-loading');
             modal.hidden = false;
             modal.setAttribute('aria-hidden', 'false');
-            frame.src = link.dataset.folderUrl || link.href;
             document.body.classList.add('admin-documents-modal-open');
+
+            if (requestController) requestController.abort();
+            requestController = new AbortController();
+
+            fetch(link.dataset.folderUrl || link.href, {
+                method: 'GET',
+                credentials: 'same-origin',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                signal: requestController.signal
+            })
+                .then(function (response) {
+                    if (!response.ok) throw new Error('HTTP ' + response.status);
+                    return response.text();
+                })
+                .then(function (htmlText) {
+                    var parsed = new DOMParser().parseFromString(htmlText, 'text/html');
+                    var folder = parsed.querySelector('.nexora-page.admin-document-folder-page');
+                    if (!folder) throw new Error('Student document folder markup not found');
+                    content.innerHTML = folder.outerHTML;
+                    content.scrollTop = 0;
+                    bindFolderInteractions(content);
+                    loading.hidden = true;
+                })
+                .catch(function (error) {
+                    if (error.name === 'AbortError') return;
+                    showError(link);
+                });
+
             var closeButton = modal.querySelector('.admin-documents-modal-close');
             if (closeButton) closeButton.focus();
         }
 
         function closeModal() {
+            if (requestController) {
+                requestController.abort();
+                requestController = null;
+            }
             modal.hidden = true;
             modal.setAttribute('aria-hidden', 'true');
             document.body.classList.remove('admin-documents-modal-open');
-            frame.src = 'about:blank';
-            frame.classList.add('is-loading');
+            content.innerHTML = '';
             loading.hidden = false;
+            if (lastTrigger) lastTrigger.focus();
         }
 
         document.querySelectorAll('.js-admin-folder-modal').forEach(function (link) {
@@ -202,13 +282,6 @@
                 event.preventDefault();
                 openModal(link);
             });
-        });
-
-        frame.addEventListener('load', function () {
-            if (!modal.hidden && frame.src && frame.src !== 'about:blank') {
-                loading.hidden = true;
-                frame.classList.remove('is-loading');
-            }
         });
 
         modal.querySelectorAll('[data-admin-documents-close]').forEach(function (button) {
