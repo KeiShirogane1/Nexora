@@ -24,6 +24,7 @@ from app.Services.account_approval_service import (
     process_due_pending_accounts,
     get_pending_account_view,
 )
+from app.Services.account_appeal_service import open_account_appeal_case,reactivate_account
 import os
 from app.Models.db import get_db_connection, using_postgres
 from datetime import datetime, timedelta
@@ -965,60 +966,22 @@ def edit_supervisor(supervisor_id):
 @admin.route("/admin/supervisor/<int:supervisor_id>/deactivate", methods=["POST"])
 @role_required("admin")
 def deactivate_supervisor(supervisor_id):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute("SELECT username, email FROM users WHERE id = ? AND role IN ('supervisor','pending_supervisor')", (supervisor_id,))
-        sup = cursor.fetchone()
-        if not sup:
-            flash("Supervisor not found", "danger")
-            return redirect(url_for("admin.admin_supervisors"))
-        cursor.execute("UPDATE users SET status = 'inactive' WHERE id = ?", (supervisor_id,))
-        conn.commit()
-        if sup["email"]:
-            try:
-                send_account_status_email(
-                    sup["email"],
-                    sup["username"],
-                    "supervisor",
-                    active=False,
-                )
-            except:
-                pass
-        flash("Supervisor deactivated", "success")
-        return redirect(url_for("admin.supervisor_profile", supervisor_id=supervisor_id))
-    finally:
-        cursor.close()
-        conn.close()
+    case=open_account_appeal_case(supervisor_id,"deactivated",(request.form.get("reason") or "Supervisor account deactivated by administrator."))
+    if not case:
+        flash("Supervisor not found","danger")
+        return redirect(url_for("admin.admin_supervisors"))
+    flash("Supervisor deactivated. A 24-hour appeal window is now active.","success")
+    return redirect(url_for("admin.supervisor_profile",supervisor_id=supervisor_id))
 
 @admin.route("/admin/supervisor/<int:supervisor_id>/activate", methods=["POST"])
 @role_required("admin")
 def activate_supervisor(supervisor_id):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute("SELECT username, email FROM users WHERE id = ? AND role IN ('supervisor','pending_supervisor')", (supervisor_id,))
-        sup = cursor.fetchone()
-        if not sup:
-            flash("Supervisor not found", "danger")
-            return redirect(url_for("admin.admin_supervisors"))
-        cursor.execute("UPDATE users SET status = 'active' WHERE id = ?", (supervisor_id,))
-        conn.commit()
-        if sup["email"]:
-            try:
-                send_account_status_email(
-                    sup["email"],
-                    sup["username"],
-                    "supervisor",
-                    active=True,
-                )
-            except:
-                pass
-        flash("Supervisor activated", "success")
-        return redirect(url_for("admin.supervisor_profile", supervisor_id=supervisor_id))
-    finally:
-        cursor.close()
-        conn.close()
+    restored=reactivate_account(supervisor_id,True)
+    if not restored:
+        flash("Supervisor not found","danger")
+        return redirect(url_for("admin.admin_supervisors"))
+    flash("Supervisor activated","success")
+    return redirect(url_for("admin.supervisor_profile",supervisor_id=supervisor_id))
 
 @admin.route("/admin/student/edit/<int:student_id>", methods=["GET", "POST"])
 @role_required("admin")
@@ -2794,202 +2757,28 @@ def student_logbook(student_id, date):
         total_hours=total_hours
     )
     
-@admin.route(
-    "/student/<int:student_id>/deactivate",
-    methods=["POST"]
-)
+@admin.route("/student/<int:student_id>/deactivate",methods=["POST"])
 @role_required("admin")
 def deactivate_student(student_id):
-
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    try:
-
-        cursor.execute(
-            """
-            SELECT
-                username,
-                email
-            FROM users
-            WHERE id = ?
-            AND role = 'student'
-            """,
-            (student_id,)
-        )
-
-        student = cursor.fetchone()
+    case=open_account_appeal_case(student_id,"deactivated",(request.form.get("reason") or "Student account deactivated by administrator."))
+    if not case:
+        flash("Student not found.","danger")
+        return redirect(url_for("admin.admin_students"))
+    flash("Student account has been deactivated. A 24-hour appeal window is now active.","success")
+    return redirect(url_for("admin.student_profile",student_id=student_id))
 
 
-        if not student:
-
-            flash(
-                "Student not found.",
-                "danger"
-            )
-
-            return redirect(
-                url_for(
-                    "admin.admin_students"
-                )
-            )
-
-
-        cursor.execute(
-            """
-            UPDATE users
-            SET status = ?
-            WHERE id = ?
-            AND role = 'student'
-            """,
-            (
-                "inactive",
-                student_id
-            )
-        )
-
-
-        conn.commit()
-
-
-
-        if student["email"]:
-
-            try:
-
-                send_account_status_email(
-                    student["email"],
-                    student["username"],
-                    "student",
-                    active=False,
-                )
-
-            except Exception as e:
-
-                print(
-                    "Deactivation email failed:",
-                    e
-                )
-
-
-        flash(
-            "Student account has been deactivated.",
-            "success"
-        )
-
-
-    finally:
-
-        cursor.close()
-        conn.close()
-
-
-    return redirect(
-        url_for(
-            "admin.student_profile",
-            student_id=student_id
-        )
-    )
-    
-    
-@admin.route(
-    "/student/<int:student_id>/activate",
-    methods=["POST"]
-)
+@admin.route("/student/<int:student_id>/activate",methods=["POST"])
 @role_required("admin")
 def activate_student(student_id):
-
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    try:
-
-        cursor.execute(
-            """
-            SELECT
-                username,
-                email
-            FROM users
-            WHERE id = ?
-            AND role = 'student'
-            """,
-            (student_id,)
-        )
-
-        student = cursor.fetchone()
+    restored=reactivate_account(student_id,True)
+    if not restored:
+        flash("Student not found.","danger")
+        return redirect(url_for("admin.admin_students"))
+    flash("Student account has been activated.","success")
+    return redirect(url_for("admin.student_profile",student_id=student_id))
 
 
-        if not student:
-
-            flash(
-                "Student not found.",
-                "danger"
-            )
-
-            return redirect(
-                url_for(
-                    "admin.admin_students"
-                )
-            )
-
-
-        cursor.execute(
-            """
-            UPDATE users
-            SET status = ?
-            WHERE id = ?
-            AND role = 'student'
-            """,
-            (
-                "active",
-                student_id
-            )
-        )
-
-
-        conn.commit()
-
-
-
-        if student["email"]:
-
-            try:
-
-                send_account_status_email(
-                    student["email"],
-                    student["username"],
-                    "student",
-                    active=True,
-                )
-
-            except Exception as e:
-
-                print(
-                    "Activation email failed:",
-                    e
-                )
-
-
-        flash(
-            "Student account has been activated.",
-            "success"
-        )
-
-
-    finally:
-
-        cursor.close()
-        conn.close()
-
-
-    return redirect(
-        url_for(
-            "admin.student_profile",
-            student_id=student_id
-        )
-    )
-    
-    
     # ============================
 # PROFILE HISTORY
 # ============================

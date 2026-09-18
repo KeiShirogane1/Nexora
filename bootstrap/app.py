@@ -33,6 +33,7 @@ from app.Http.Controllers.performance_reports import performance_reports
 from app.Http.Controllers.admin_classrooms import admin_classrooms
 from app.Http.Controllers.admin_reports_overview import admin_reports_overview
 from app.Http.Controllers.admin_trash import admin_trash
+from app.Http.Controllers.account_appeals import account_appeals
 from app.Http.Controllers.supervisor_profile_photo import supervisor_profile_photo
 from app.Http.Controllers.assistant import assistant_bp
 from app.Http.Controllers.notifications import notifications_bp
@@ -55,6 +56,11 @@ from app.Services.supervisor_profile_service import ensure_supervisor_profile_sc
 from app.Services.account_approval_service import (
     cleanup_legacy_rejected_accounts,
     start_account_approval_worker,
+)
+from app.Services.account_appeal_service import (
+    ensure_account_appeal_schema,
+    get_submitted_appeal_count,
+    start_account_appeal_worker,
 )
 app=Flask(__name__,template_folder=str(BASE_DIR/"resources"/"views"),static_folder=str(BASE_DIR/"resources"/"assets"),static_url_path="/static")
 app.jinja_env.globals["get_ojt_progress"]=get_ojt_progress
@@ -168,8 +174,8 @@ def repair_missing_student_profiles():
   sql=("INSERT INTO student_profiles (user_id,profile_completed) SELECT u.id,0 FROM users u WHERE u.role='student' AND NOT EXISTS (SELECT 1 FROM student_profiles sp WHERE sp.user_id=u.id) ON CONFLICT (user_id) DO NOTHING" if using_postgres() else "INSERT OR IGNORE INTO student_profiles (user_id,profile_completed) SELECT u.id,0 FROM users u WHERE u.role='student' AND NOT EXISTS (SELECT 1 FROM student_profiles sp WHERE sp.user_id=u.id)");cur.execute(sql);conn.commit()
  except Exception as exc:conn.rollback();print("student profile repair skipped:",exc)
  finally:cur.close();conn.close()
-initialize_database();ensure_supervisor_profile_schema();ensure_classroom_schema();ensure_classwork_submission_schema();ensure_classwork_score_schema();ensure_attendance_schema();ensure_logbook_schema();ensure_logbook_photo_schema();ensure_logbook_review_schema();ensure_daily_performance_rating_schema();ensure_ojt_evaluation_schema();ensure_internship_schedule_schema();ensure_session_schema();repair_missing_student_profiles()
-for bp in (auth,password,student,daily_logbook,logbook_review,daily_performance_history,intern_profile,ojt_evaluation,needs_attention,student_classwork,student_gradebook,student_classmates,supervisor,supervisor_documents,admin,admin_assigned_interns,classroom,internship_classroom,classwork,classwork_submissions,classwork_grading,classwork_scores,classwork_gradebook,classwork_gradebook_export,classwork_ml_insights,performance_reports,admin_classrooms,admin_reports_overview,admin_trash,supervisor_profile_photo,assistant_bp,notifications_bp,messages):app.register_blueprint(bp)
+initialize_database();ensure_supervisor_profile_schema();ensure_classroom_schema();ensure_classwork_submission_schema();ensure_classwork_score_schema();ensure_attendance_schema();ensure_logbook_schema();ensure_logbook_photo_schema();ensure_logbook_review_schema();ensure_daily_performance_rating_schema();ensure_ojt_evaluation_schema();ensure_internship_schedule_schema();ensure_session_schema();repair_missing_student_profiles();ensure_account_appeal_schema()
+for bp in (auth,password,student,daily_logbook,logbook_review,daily_performance_history,intern_profile,ojt_evaluation,needs_attention,student_classwork,student_gradebook,student_classmates,supervisor,supervisor_documents,admin,admin_assigned_interns,classroom,internship_classroom,classwork,classwork_submissions,classwork_grading,classwork_scores,classwork_gradebook,classwork_gradebook_export,classwork_ml_insights,performance_reports,admin_classrooms,admin_reports_overview,admin_trash,account_appeals,supervisor_profile_photo,assistant_bp,notifications_bp,messages):app.register_blueprint(bp)
 try:
  cleaned_rejected_accounts=cleanup_legacy_rejected_accounts()
  if cleaned_rejected_accounts:
@@ -177,6 +183,7 @@ try:
 except Exception as exc:
  app.logger.warning("Could not clean legacy rejected accounts: %s",exc)
 start_account_approval_worker(app)
+start_account_appeal_worker(app)
 @app.before_request
 def enforce_single_supervisor_session():
  if session.get("role")!="supervisor" or not session.get("user_id") or request.path in ("/login","/logout","/signup","/") or request.path.startswith("/static/"):return None
@@ -187,9 +194,9 @@ def enforce_single_supervisor_session():
  if current is not None and session.get("session_version")!=int(current):session.clear();session["login_error"]="You were signed out because this supervisor account logged in on another device.";return redirect(url_for("auth.login"))
 @app.context_processor
 def inject_notifications():
- defaults={"notifications":[],"recent_notifications":[],"unread_count":0,"sidebar_profile":None,"supervisor_classroom_pending_count":0,"supervisor_evaluation_pending_count":0,"supervisor_class_pending_counts":{},"supervisor_class_card_stats":{},"admin_pending_approval_count":0}
+ defaults={"notifications":[],"recent_notifications":[],"unread_count":0,"sidebar_profile":None,"supervisor_classroom_pending_count":0,"supervisor_evaluation_pending_count":0,"supervisor_class_pending_counts":{},"supervisor_class_card_stats":{},"admin_pending_approval_count":0,"admin_appeal_count":0}
  if "user_id" not in session:return defaults
- uid=session["user_id"];sidebar=None;supervisor_class_pending_counts={};supervisor_class_card_stats={};supervisor_classroom_pending_count=0;supervisor_evaluation_pending_count=0;admin_pending_approval_count=0
+ uid=session["user_id"];sidebar=None;supervisor_class_pending_counts={};supervisor_class_card_stats={};supervisor_classroom_pending_count=0;supervisor_evaluation_pending_count=0;admin_pending_approval_count=0;admin_appeal_count=0
  try:
   conn=get_db_connection()
   try:
@@ -244,7 +251,8 @@ def inject_notifications():
     elif user["role"]=="admin":
      pending_approval_row=conn.execute("SELECT COUNT(*) FROM users WHERE role IN ('pending_student','pending_supervisor')").fetchone()
      if pending_approval_row:admin_pending_approval_count=int(pending_approval_row[0] or 0)
+     admin_appeal_count=get_submitted_appeal_count()
   finally:conn.close()
-  return {"notifications":get_user_notifications(uid,limit=20),"recent_notifications":get_recent_notifications(uid,days=7,limit=10),"unread_count":get_unread_count(uid),"sidebar_profile":sidebar,"supervisor_classroom_pending_count":supervisor_classroom_pending_count,"supervisor_evaluation_pending_count":supervisor_evaluation_pending_count,"supervisor_class_pending_counts":supervisor_class_pending_counts,"supervisor_class_card_stats":supervisor_class_card_stats,"admin_pending_approval_count":admin_pending_approval_count}
+  return {"notifications":get_user_notifications(uid,limit=20),"recent_notifications":get_recent_notifications(uid,days=7,limit=10),"unread_count":get_unread_count(uid),"sidebar_profile":sidebar,"supervisor_classroom_pending_count":supervisor_classroom_pending_count,"supervisor_evaluation_pending_count":supervisor_evaluation_pending_count,"supervisor_class_pending_counts":supervisor_class_pending_counts,"supervisor_class_card_stats":supervisor_class_card_stats,"admin_pending_approval_count":admin_pending_approval_count,"admin_appeal_count":admin_appeal_count}
  except Exception as exc:print("inject_notifications failed:",exc);defaults["sidebar_profile"]=sidebar;return defaults
 if __name__=="__main__":app.run(debug=app.debug)

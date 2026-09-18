@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Nexora — Account Appeal</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}">
+<style>
+body{margin:0;min-height:100vh;background:radial-gradient(circle at 82% 8%,rgba(214,239,221,.92),transparent 32rem),linear-gradient(180deg,#f2faf5,#e8f5ed);font-family:Arial,sans-serif;color:#14243b}
+.ap-wrap{min-height:100vh;display:grid;place-items:center;padding:28px 16px;box-sizing:border-box}.ap-card{width:min(100%,620px);box-sizing:border-box;padding:28px;border:1px solid #dfe8e2;border-radius:20px;background:#fff;box-shadow:0 18px 55px rgba(26,65,43,.11)}
+.ap-brand{display:flex;align-items:center;gap:10px;margin-bottom:22px;color:inherit;text-decoration:none}.ap-brand img{width:34px}.ap-brand strong,.ap-brand small{display:block}.ap-brand small{color:#87958d;font-size:10px;margin-top:2px}.ap-kicker{color:#c46918;font-size:10px;font-weight:900;letter-spacing:.11em}.ap-card h1{margin:6px 0 10px;font-size:28px}.ap-lead{margin:0 0 20px;color:#66778b;font-size:13px;line-height:1.65}
+.ap-alert{padding:10px 12px;margin-bottom:12px;border-radius:9px;font-size:11px;font-weight:700}.ap-alert.success{background:#edf9f2;color:#176b43}.ap-alert.danger{background:#fff0ef;color:#a7382d}
+.ap-form{display:grid;gap:13px}.ap-form label span{display:block;margin-bottom:6px;color:#4b5d72;font-size:10px;font-weight:850}.ap-form input,.ap-form textarea{width:100%;box-sizing:border-box;border:1px solid #d8e1e8;border-radius:11px;font:inherit}.ap-form input{height:44px;padding:0 12px}.ap-form textarea{min-height:150px;padding:12px;resize:vertical}.ap-form button,.ap-secondary{height:44px;border:0;border-radius:11px;background:#146b45;color:#fff;font-size:12px;font-weight:850;cursor:pointer}
+.ap-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:18px 0}.ap-summary div{padding:11px 12px;border:1px solid #e3e9e5;border-radius:10px;background:#fafcfb}.ap-summary span{display:block;color:#89978f;font-size:8px;font-weight:800;text-transform:uppercase}.ap-summary strong{display:block;margin-top:4px;font-size:10px;overflow-wrap:anywhere}
+.ap-count{padding:14px;margin:16px 0 18px;border:1px solid #f1d7af;border-radius:12px;background:#fffaf1}.ap-count span{font-size:9px;color:#8d7047;font-weight:800}.ap-count strong{display:block;margin-top:5px;color:#c46918;font-size:26px;font-variant-numeric:tabular-nums}.ap-count div{height:7px;margin-top:10px;border-radius:999px;background:#f1e8da;overflow:hidden}.ap-count i{display:block;width:100%;height:100%;background:#d97706}
+.ap-reason{padding:13px;margin:18px 0;border:1px solid #e3e9e5;border-radius:11px;background:#fafcfb}.ap-reason p{white-space:pre-wrap;font-size:11px;line-height:1.6}.ap-secondary{width:100%;background:#f1f5f3;color:#385446;border:1px solid #dce6e0}
+@media(max-width:560px){.ap-card{padding:22px 18px}.ap-summary{grid-template-columns:1fr}}
+</style>
+</head>
+<body><main class="ap-wrap"><section class="ap-card">
+<a class="ap-brand" href="{{ url_for('auth.login') }}"><img src="{{ url_for('static',filename='images/nexora_logo_supervisor.png') }}" alt=""><span><strong>Nexora</strong><small>Account Appeal</small></span></a>
+{% with messages=get_flashed_messages(with_categories=true) %}{% for category,message in messages %}<div class="ap-alert {{ category }}">{{ message }}</div>{% endfor %}{% endwith %}
+{% if not case %}
+<span class="ap-kicker">RESTRICTED ACCOUNT ACCESS</span><h1>Appeal an account action</h1>
+<p class="ap-lead">Verify the exact Nexora account that was deactivated or moved to Trash. Only that account's registered credentials can open its appeal.</p>
+<form class="ap-form" method="POST" action="{{ url_for('account_appeals.appeal_verify') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><label><span>Username or registered email</span><input name="identifier" required autocomplete="username"></label><label><span>Password</span><input type="password" name="password" required autocomplete="current-password"></label><button>Verify Account</button></form>
+{% elif case['appeal_status']=='submitted' %}
+<span class="ap-kicker">APPEAL SUBMITTED</span><h1>Your appeal is under review</h1><p class="ap-lead">Permanent removal is paused while the Nexora administrator reviews your request.</p>
+<div class="ap-summary"><div><span>Account</span><strong>{{ case['username'] }}</strong></div><div><span>Email</span><strong>{{ case['email'] }}</strong></div><div><span>Type</span><strong>{{ case['account_type'] }}</strong></div><div><span>Submitted</span><strong>{{ case['appealed_display'] }}</strong></div></div>
+<div class="ap-reason"><strong>Your appeal reason</strong><p>{{ case['appeal_reason'] }}</p></div>
+<form method="POST" action="{{ url_for('account_appeals.appeal_exit') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="ap-secondary">Return to Login</button></form>
+{% else %}
+<span class="ap-kicker">24-HOUR APPEAL WINDOW</span><h1>Tell us why this account should be restored</h1><p class="ap-lead">Submit an appeal before the deadline. Once submitted, permanent removal is paused while an administrator reviews it.</p>
+<div class="ap-summary"><div><span>Account</span><strong>{{ case['username'] }}</strong></div><div><span>Email</span><strong>{{ case['email'] }}</strong></div><div><span>Type</span><strong>{{ case['account_type'] }}</strong></div><div><span>Deadline</span><strong>{{ case['deadline_display'] }}</strong></div></div>
+<div class="ap-count" data-deadline="{{ case['deadline_iso'] }}"><span>TIME REMAINING BEFORE PERMANENT REMOVAL</span><strong data-countdown>24:00:00</strong><div><i data-progress></i></div></div>
+<form class="ap-form" method="POST" action="{{ url_for('account_appeals.appeal_submit') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><label><span>Why are you appealing this decision?</span><textarea name="reason" minlength="20" maxlength="2000" required></textarea></label><button>Submit Appeal</button></form>
+{% endif %}
+</section></main>
+<script>(function(){const box=document.querySelector('[data-deadline]');if(!box)return;const end=Date.parse(box.dataset.deadline),out=box.querySelector('[data-countdown]'),bar=box.querySelector('[data-progress]'),total={{ appeal_window_hours }}*3600;function tick(){const r=Math.max(0,Math.ceil((end-Date.now())/1000)),h=Math.floor(r/3600),m=Math.floor((r%3600)/60),s=r%60;out.textContent=String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');bar.style.width=Math.max(0,Math.min(100,r/total*100))+'%';if(!r)setTimeout(()=>location.reload(),1200)}tick();setInterval(tick,1000)})();</script>
+</body></html>

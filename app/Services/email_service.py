@@ -857,3 +857,72 @@ Nexora System
         body,
         html_body=html_body,
     )
+
+
+
+def send_account_appeal_access_email(recipient,username,account_type,action_type,deadline_display,appeal_url):
+    action_label="moved to Trash" if action_type=="deleted" else "deactivated"
+    subject="Nexora Account Action — 24-Hour Appeal Available"
+    body=f"""Hello {username},
+
+Your Nexora {account_type.lower()} account has been {action_label}.
+You have 24 hours to submit an appeal before permanent account removal.
+
+Appeal deadline: {deadline_display}
+Submit an appeal: {appeal_url}
+
+Use the same registered Nexora account credentials.
+
+Nexora System"""
+    html_body=_render_nexora_email(
+        title="Your account is inactive",greeting=username,theme_key="deactivated",
+        preheader="You have 24 hours to appeal this Nexora account action.",
+        body_html=f'<p style="margin:0 0 14px;color:#53657d;font-size:15px;line-height:1.7;">Your Nexora <strong>{_safe(account_type.lower())}</strong> account has been {_safe(action_label)}. You have <strong>24 hours</strong> to submit an appeal.</p>',
+        details=[("Account Type",account_type),("Appeal Deadline",deadline_display)],
+        action_url=appeal_url,action_label="Submit an Appeal",
+        note_title="Account verification required",
+        note_body="Use the same username/email and password registered to this inactive account. Submitting an appeal pauses permanent removal.",
+        footer_note="Required academic records may be retained in anonymized form after permanent account removal.",
+    )
+    send_email(recipient,subject,body,html_body=html_body)
+
+
+def send_appeal_received_email(recipient,username,account_type):
+    subject="Nexora Account Appeal Received"
+    body=f"Hello {username},\n\nYour Nexora {account_type.lower()} account appeal has been received. Permanent removal is paused while an administrator reviews it.\n\nNexora System"
+    html_body=_render_nexora_email(
+        title="Appeal received",greeting=username,theme_key="default",
+        body_html='<p style="margin:0 0 14px;color:#53657d;font-size:15px;line-height:1.7;">Your appeal has been received. Permanent removal is paused while the Nexora administrator reviews your request.</p>',
+        note_title="Access remains disabled during review",note_body="You will receive another email when the administrator makes a decision.",
+    )
+    send_email(recipient,subject,body,html_body=html_body)
+
+
+def send_admin_appeal_submitted_email(recipient,admin_username,username,email,account_type,reason,review_url):
+    subject=f"New Nexora Account Appeal — {username}"
+    body=f"Hello {admin_username or 'Administrator'},\n\n{username} ({email}) submitted a {account_type} account appeal.\n\nReason:\n{reason}\n\nReview: {review_url}\n\nNexora System"
+    html_body=_render_nexora_email(
+        title="New account appeal",greeting=admin_username or "Administrator",theme_key="account_request",
+        body_html='<p style="margin:0 0 14px;color:#53657d;font-size:15px;line-height:1.7;">A deactivated Nexora account submitted an appeal. Automatic permanent removal is paused until your decision.</p>',
+        details=[("Username",username),("Email",email),("Account Type",account_type)],
+        action_url=review_url,action_label="Review Appeal",note_title="Appeal reason",note_body=reason,
+    )
+    send_email(recipient,subject,body,html_body=html_body)
+
+
+def send_account_appeal_decision_email(recipient,username,account_type,approved):
+    if approved:
+        subject="Nexora Account Appeal Approved";title="Your appeal was approved";theme="approved";copy="Your Nexora account has been reactivated. You may sign in again.";url=f"{_base_url()}/login" if _base_url() else None;label="Login to Nexora"
+    else:
+        subject="Nexora Account Appeal Denied";title="Your appeal was not approved";theme="rejected";copy="The administrator denied your appeal. Your account login identity will be permanently removed.";url=None;label=None
+    body=f"Hello {username},\n\n{copy}\n\nNexora System"
+    html_body=_render_nexora_email(title=title,greeting=username,theme_key=theme,body_html=f'<p style="margin:0 0 14px;color:#53657d;font-size:15px;line-height:1.7;">{_safe(copy)}</p>',action_url=url,action_label=label,footer_note="Required academic or internship history may be retained in anonymized form.")
+    send_email(recipient,subject,body,html_body=html_body)
+
+
+def send_account_removed_email(recipient,username,account_type,removal_reason):
+    reason="The 24-hour appeal window expired without a submitted appeal." if removal_reason=="appeal_window_expired" else ("The Nexora administrator permanently removed the account identity." if removal_reason=="administrator_permanent_removal" else "The account appeal was denied.")
+    subject="Nexora Account Permanently Removed"
+    body=f"Hello {username},\n\nYour Nexora {account_type.lower()} account login identity has been permanently removed.\n\n{reason}\n\nNexora System"
+    html_body=_render_nexora_email(title="Account identity removed",greeting=username,theme_key="rejected",body_html=f'<p style="margin:0 0 14px;color:#53657d;font-size:15px;line-height:1.7;">Your Nexora <strong>{_safe(account_type.lower())}</strong> account login identity has been permanently removed.</p>',note_title="Reason",note_body=reason,footer_note="Required academic and internship history may be retained in anonymized form for institutional records.")
+    send_email(recipient,subject,body,html_body=html_body)
