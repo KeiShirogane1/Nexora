@@ -1693,164 +1693,300 @@ def bulk_action():
 @admin.route("/admin/internship-assign", methods=["GET", "POST"])
 @role_required("admin")
 def internship_assign():
-
+    """Assign a student to an available Supervisor-owned Intern Classroom."""
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # For GET, load students and supervisors for form
-    if request.method == "POST":
+    def row_value(row, key, index=0, default=None):
+        if row is None:
+            return default
         try:
-            student_id = request.form.get("student_id", "").strip()
-            company_name = request.form.get("company_name", "").strip()
-            company_address = request.form.get("company_address", "").strip()
-            supervisor_name = request.form.get("supervisor_name", "").strip()
-            supervisor_email = request.form.get("supervisor_email", "").strip().lower()
-            supervisor_id_raw = request.form.get("supervisor_id", "").strip()
-            position = request.form.get("position", "").strip()
-            start_date = request.form.get("start_date", "").strip()
-            end_date = request.form.get("end_date", "").strip()
-            required_hours_raw = request.form.get("required_hours", "").strip()
+            if key in row.keys():
+                value = row[key]
+                return default if value is None else value
+        except (AttributeError, KeyError, TypeError):
+            pass
+        try:
+            value = row[index]
+            return default if value is None else value
+        except (IndexError, KeyError, TypeError):
+            return default
 
-            # Validation
+    try:
+        if request.method == "POST":
+            student_id_raw = (request.form.get("student_id") or "").strip()
+            classroom_id_raw = (request.form.get("classroom_id") or "").strip()
             errors = []
-            if not student_id:
-                errors.append("Student is required")
-            if not company_name:
-                errors.append("Company name is required")
-            if not position:
-                errors.append("Position is required")
-            if not start_date or not end_date:
-                errors.append("Start and end date required")
-            if start_date and end_date and start_date > end_date:
-                errors.append("Start date must be before end date")
+
             try:
-                required_hours = int(required_hours_raw) if required_hours_raw else 486
-                if required_hours <= 0 or required_hours > 2000:
-                    errors.append("Required hours must be 1-2000")
-            except:
-                errors.append("Required hours must be a number")
-                required_hours = 486
+                student_id = int(student_id_raw)
+            except (TypeError, ValueError):
+                student_id = 0
+                errors.append("Student is required")
+
+            try:
+                classroom_id = int(classroom_id_raw)
+            except (TypeError, ValueError):
+                classroom_id = 0
+                errors.append("Available Supervisor is required")
+
+            student_row = None
+            placement_row = None
+
+            if student_id:
+                student_row = cursor.execute(
+                    """
+                    SELECT id, username
+                    FROM users
+                    WHERE id = ?
+                      AND role = 'student'
+                      AND COALESCE(status, 'active') = 'active'
+                    LIMIT 1
+                    """,
+                    (student_id,),
+                ).fetchone()
+                if not student_row:
+                    errors.append("Selected student is not available")
+
+            if classroom_id:
+                placement_row = cursor.execute(
+                    """
+                    SELECT
+                        c.id AS classroom_id,
+                        c.name AS classroom_name,
+                        COALESCE(c.section, '') AS section,
+                        COALESCE(c.code, '') AS code,
+                        c.supervisor_id,
+                        supervisor.username AS supervisor_name,
+                        COALESCE(supervisor.email, '') AS supervisor_email,
+                        COALESCE(cid.company_name, '') AS company_name,
+                        COALESCE(cid.internship_title, '') AS internship_title,
+                        COALESCE(cid.industry, '') AS industry,
+                        COALESCE(cid.work_arrangement, '') AS work_arrangement,
+                        COALESCE(cid.compensation, '') AS compensation,
+                        COALESCE(cid.location, '') AS location,
+                        COALESCE(cid.start_date, '') AS start_date,
+                        COALESCE(cid.end_date, '') AS end_date,
+                        COALESCE(cid.enrollment_deadline, '') AS enrollment_deadline,
+                        COALESCE(cid.required_hours, 0) AS required_hours,
+                        COALESCE(cid.company_website, '') AS company_website
+                    FROM classrooms c
+                    JOIN users supervisor ON supervisor.id = c.supervisor_id
+                    LEFT JOIN classroom_internship_details cid ON cid.classroom_id = c.id
+                    WHERE c.id = ?
+                      AND COALESCE(c.classroom_type, 'classroom') = 'internship'
+                      AND COALESCE(c.archived, 0) = 0
+                      AND supervisor.role = 'supervisor'
+                      AND COALESCE(supervisor.status, 'active') = 'active'
+                    LIMIT 1
+                    """,
+                    (classroom_id,),
+                ).fetchone()
+                if not placement_row:
+                    errors.append("Selected Supervisor / Intern Classroom is no longer available")
+
+            if not errors and student_row and placement_row:
+                existing_membership = cursor.execute(
+                    """
+                    SELECT c.name
+                    FROM classroom_students cs
+                    JOIN classrooms c ON c.id = cs.classroom_id
+                    WHERE cs.student_id = ?
+                      AND COALESCE(c.archived, 0) = 0
+                      AND COALESCE(c.classroom_type, 'classroom') = 'internship'
+                    LIMIT 1
+                    """,
+                    (student_id,),
+                ).fetchone()
+                if existing_membership:
+                    errors.append(
+                        f"Student is already enrolled in an active Intern Classroom ({row_value(existing_membership, 'name', 0, 'Intern Classroom')})"
+                    )
+
+                existing_internship = cursor.execute(
+                    """
+                    SELECT id
+                    FROM internships
+                    WHERE student_id = ?
+                      AND status = 'Active'
+                    LIMIT 1
+                    """,
+                    (student_id,),
+                ).fetchone()
+                if existing_internship:
+                    errors.append("Student already has an active internship")
 
             if errors:
                 flash("; ".join(errors), "danger")
-                # fall through to render with students/supervisors
             else:
-                # Verify student exists and is student
-                cursor.execute("SELECT id FROM users WHERE id = ? AND role = 'student'", (student_id,))
-                if not cursor.fetchone():
-                    flash("Selected student not found or not a student", "danger")
-                else:
-                    # Resolve supervisor_id — prefer explicit select, fallback to email lookup
-                    supervisor_id = None
-                    if supervisor_id_raw:
-                        try:
-                            sid = int(supervisor_id_raw)
-                            cursor.execute("SELECT id FROM users WHERE id = ? AND role = 'supervisor'", (sid,))
-                            if cursor.fetchone():
-                                supervisor_id = sid
-                                # Fill legacy name/email from supervisor record if not provided
-                                if not supervisor_name or not supervisor_email:
-                                    cursor.execute("SELECT username, email FROM users WHERE id = ?", (sid,))
-                                    sup = cursor.fetchone()
-                                    if sup:
-                                        if not supervisor_name:
-                                            supervisor_name = sup["username"] if "username" in sup.keys() else sup[0]
-                                        if not supervisor_email:
-                                            supervisor_email = sup["email"] if "email" in sup.keys() else sup[1]
-                            else:
-                                flash("Selected supervisor not found", "danger")
-                                supervisor_id = None
-                        except:
-                            flash("Invalid supervisor", "danger")
-                    elif supervisor_email:
-                        cursor.execute("SELECT id FROM users WHERE LOWER(email)=LOWER(?) AND role='supervisor'", (supervisor_email,))
-                        r = cursor.fetchone()
-                        if r:
-                            supervisor_id = r["id"] if "id" in r.keys() else r[0]
+                supervisor_id = int(row_value(placement_row, "supervisor_id", 4, 0) or 0)
+                supervisor_name = str(row_value(placement_row, "supervisor_name", 5, "") or "")
+                supervisor_email = str(row_value(placement_row, "supervisor_email", 6, "") or "")
+                classroom_name = str(row_value(placement_row, "classroom_name", 1, "Intern Classroom") or "Intern Classroom")
+                company_name = str(row_value(placement_row, "company_name", 7, "") or "").strip() or classroom_name
+                company_address = str(row_value(placement_row, "location", 12, "") or "").strip()
+                position = str(row_value(placement_row, "internship_title", 8, "") or "").strip() or classroom_name
+                start_date = str(row_value(placement_row, "start_date", 13, "") or "")
+                end_date = str(row_value(placement_row, "end_date", 14, "") or "")
+                required_hours = int(row_value(placement_row, "required_hours", 16, 0) or 0) or 486
 
-                    # Prevent duplicate active internship for same student (application-level)
-                    cursor.execute("SELECT id FROM internships WHERE student_id = ? AND status = 'Active'", (student_id,))
-                    if cursor.fetchone():
-                        flash("Student already has an active internship", "danger")
-                    else:
-                        # ONE TRANSACTION: internship + supervisor_id + student_assignments
-                        try:
-                            cursor.execute("""
-                                INSERT INTO internships
-                                (
-                                    student_id,
-                                    company_name,
-                                    company_address,
-                                    supervisor_name,
-                                    supervisor_email,
-                                    supervisor_id,
-                                    position,
-                                    start_date,
-                                    end_date,
-                                    required_hours,
-                                    completed_hours,
-                                    status
-                                )
-                                VALUES
-                                (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                try:
+                    # Keep the legacy internship record for existing reports/workflows.
+                    cursor.execute(
+                        """
+                        INSERT INTO internships
+                        (
+                            student_id,
+                            company_name,
+                            company_address,
+                            supervisor_name,
+                            supervisor_email,
+                            supervisor_id,
+                            position,
+                            start_date,
+                            end_date,
+                            required_hours,
+                            completed_hours,
+                            status
+                        )
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        """,
+                        (
+                            student_id,
+                            company_name,
+                            company_address,
+                            supervisor_name,
+                            supervisor_email,
+                            supervisor_id,
+                            position,
+                            start_date,
+                            end_date,
+                            required_hours,
+                            0,
+                            "Active",
+                        ),
+                    )
+
+                    # Classroom membership is the authoritative modern placement.
+                    cursor.execute(
+                        "INSERT INTO classroom_students (classroom_id, student_id) VALUES (?, ?)",
+                        (classroom_id, student_id),
+                    )
+
+                    # Keep legacy supervisor ownership checks working.
+                    if using_postgres():
+                        cursor.execute(
+                            """
+                            INSERT INTO student_assignments (student_id, supervisor_id)
+                            VALUES (?, ?)
+                            ON CONFLICT (student_id, supervisor_id) DO NOTHING
                             """,
-                            (
-                                student_id,
-                                company_name,
-                                company_address,
-                                supervisor_name,
-                                supervisor_email,
-                                supervisor_id,
-                                position,
-                                start_date,
-                                end_date,
-                                required_hours,
-                                0,
-                                "Active"
-                            ))
-                            # Create student_assignments if supervisor resolved
-                            if supervisor_id:
-                                if using_postgres():
-                                    cursor.execute(
-                                        "INSERT INTO student_assignments (student_id, supervisor_id) VALUES (?, ?) ON CONFLICT (student_id, supervisor_id) DO NOTHING",
-                                        (student_id, supervisor_id)
-                                    )
-                                else:
-                                    cursor.execute(
-                                        "INSERT OR IGNORE INTO student_assignments (student_id, supervisor_id) VALUES (?, ?)",
-                                        (student_id, supervisor_id)
-                                    )
-                            conn.commit()
-                            flash("Internship assigned successfully", "success")
-                        except Exception as e:
-                            conn.rollback()
-                            flash(f"Failed to assign internship: {e}", "danger")
-        except Exception as e:
-            try:
-                conn.rollback()
-            except:
-                pass
-            flash(f"Assignment error: {e}", "danger")
+                            (student_id, supervisor_id),
+                        )
+                    else:
+                        cursor.execute(
+                            """
+                            INSERT OR IGNORE INTO student_assignments (student_id, supervisor_id)
+                            VALUES (?, ?)
+                            """,
+                            (student_id, supervisor_id),
+                        )
 
-    # Load dropdowns for form
-    cursor.execute("""
-        SELECT id, username
-        FROM users
-        WHERE role='student'
-        ORDER BY username
-    """)
-    students = cursor.fetchall()
-    cursor.execute("SELECT id, username FROM users WHERE role='supervisor' ORDER BY username")
-    supervisors = cursor.fetchall()
+                    conn.commit()
+                    flash(
+                        f"Student assigned to {classroom_name} under {supervisor_name}.",
+                        "success",
+                    )
+                    return redirect(url_for("admin_assigned_interns.assigned_interns"))
+                except Exception as exc:
+                    conn.rollback()
+                    flash(f"Failed to assign internship: {exc}", "danger")
 
-    conn.close()
+        students = cursor.execute(
+            """
+            SELECT id, username
+            FROM users
+            WHERE role = 'student'
+              AND COALESCE(status, 'active') = 'active'
+            ORDER BY LOWER(username), id
+            """
+        ).fetchall()
 
-    return render_template(
-        "admin/internship_assign.html",
-        students=students,
-        supervisors=supervisors,
-        active_page="internship"
-    )    
+        placement_rows = cursor.execute(
+            """
+            SELECT
+                c.id AS classroom_id,
+                c.name AS classroom_name,
+                COALESCE(c.section, '') AS section,
+                COALESCE(c.code, '') AS code,
+                c.supervisor_id,
+                supervisor.username AS supervisor_name,
+                COALESCE(supervisor.email, '') AS supervisor_email,
+                COALESCE(cid.company_name, '') AS company_name,
+                COALESCE(cid.internship_title, '') AS internship_title,
+                COALESCE(cid.industry, '') AS industry,
+                COALESCE(cid.work_arrangement, '') AS work_arrangement,
+                COALESCE(cid.compensation, '') AS compensation,
+                COALESCE(cid.location, '') AS location,
+                COALESCE(cid.start_date, '') AS start_date,
+                COALESCE(cid.end_date, '') AS end_date,
+                COALESCE(cid.enrollment_deadline, '') AS enrollment_deadline,
+                COALESCE(cid.required_hours, 0) AS required_hours,
+                COALESCE(cid.company_website, '') AS company_website,
+                (
+                    SELECT COUNT(*)
+                    FROM classroom_students cs
+                    WHERE cs.classroom_id = c.id
+                ) AS student_count
+            FROM classrooms c
+            JOIN users supervisor ON supervisor.id = c.supervisor_id
+            LEFT JOIN classroom_internship_details cid ON cid.classroom_id = c.id
+            WHERE COALESCE(c.classroom_type, 'classroom') = 'internship'
+              AND COALESCE(c.archived, 0) = 0
+              AND supervisor.role = 'supervisor'
+              AND COALESCE(supervisor.status, 'active') = 'active'
+            ORDER BY LOWER(supervisor.username), LOWER(c.name), c.id
+            """
+        ).fetchall()
+
+        placements = []
+        for row in placement_rows:
+            placements.append(
+                {
+                    "classroom_id": int(row_value(row, "classroom_id", 0, 0) or 0),
+                    "classroom_name": str(row_value(row, "classroom_name", 1, "") or ""),
+                    "section": str(row_value(row, "section", 2, "") or ""),
+                    "code": str(row_value(row, "code", 3, "") or ""),
+                    "supervisor_id": int(row_value(row, "supervisor_id", 4, 0) or 0),
+                    "supervisor_name": str(row_value(row, "supervisor_name", 5, "") or ""),
+                    "supervisor_email": str(row_value(row, "supervisor_email", 6, "") or ""),
+                    "company_name": str(row_value(row, "company_name", 7, "") or ""),
+                    "internship_title": str(row_value(row, "internship_title", 8, "") or ""),
+                    "industry": str(row_value(row, "industry", 9, "") or ""),
+                    "work_arrangement": str(row_value(row, "work_arrangement", 10, "") or ""),
+                    "compensation": str(row_value(row, "compensation", 11, "") or ""),
+                    "location": str(row_value(row, "location", 12, "") or ""),
+                    "start_date": str(row_value(row, "start_date", 13, "") or ""),
+                    "end_date": str(row_value(row, "end_date", 14, "") or ""),
+                    "enrollment_deadline": str(row_value(row, "enrollment_deadline", 15, "") or ""),
+                    "required_hours": int(row_value(row, "required_hours", 16, 0) or 0),
+                    "company_website": str(row_value(row, "company_website", 17, "") or ""),
+                    "student_count": int(row_value(row, "student_count", 18, 0) or 0),
+                }
+            )
+
+        return render_template(
+            "admin/internship_assign.html",
+            students=students,
+            placements=placements,
+            active_page="internship",
+        )
+    finally:
+        try:
+            cursor.close()
+        except Exception:
+            pass
+        conn.close()
 
 
 @admin.route('/admin/assign-role', methods=['POST'])

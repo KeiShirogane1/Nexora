@@ -17,7 +17,7 @@
                 <div class="admin-internship-page-copy">
                     <span class="ui-eyebrow">Admin Portal</span>
                     <h1>Assign Internship</h1>
-                    <p>Link a student with a supervisor and record their internship placement.</p>
+                    <p>Select a student and an available Supervisor-owned Intern Classroom. Classroom placement details are reused automatically.</p>
                 </div>
                 <div class="admin-internship-heading-actions">
                     <a href="{{ url_for('admin_assigned_interns.assigned_interns') }}" class="admin-internship-heading-button is-primary">
@@ -31,156 +31,174 @@
                 </div>
             </header>
 
-            <div class="admin-internship-note" role="note">
-                <span class="admin-internship-note-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 10v6M12 7h.01"></path></svg>
-                </span>
-                <div>
-                    <strong>Supervisor linking</strong>
-                    <span>Selecting a Nexora supervisor links this internship to that supervisor. Existing validation and assignment rules remain unchanged.</span>
-                </div>
-            </div>
-
-            <form method="POST" class="admin-internship-form">
+            <form method="POST" class="admin-internship-form admin-internship-classroom-first-form">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-                <section class="admin-internship-section" aria-labelledby="internshipPeopleHeading">
+                <section class="admin-internship-section" aria-labelledby="internshipAssignmentHeading">
                     <div class="admin-internship-section-header">
                         <span class="admin-internship-section-icon" aria-hidden="true">
                             <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path></svg>
                         </span>
                         <div>
-                            <span>STEP 1</span>
-                            <h2 id="internshipPeopleHeading">Student & Supervisor</h2>
-                            <p>Choose the student and, when applicable, connect the placement to a Nexora Supervisor account.</p>
+                            <span>ASSIGNMENT</span>
+                            <h2 id="internshipAssignmentHeading">Student & Available Supervisor</h2>
+                            <p>Only active Supervisors with an active Intern Classroom are available here.</p>
                         </div>
                     </div>
 
-                    <div class="admin-internship-form-grid">
+                    <div class="admin-internship-form-grid admin-internship-assignment-grid">
                         <div class="admin-internship-field">
                             <label for="internshipStudent">Student <span class="admin-internship-required">*</span></label>
                             <select id="internshipStudent" name="student_id" class="form-select" required>
+                                <option value="">-- Select Student --</option>
                                 {% for student in students %}
                                     <option value="{{ student.id }}" {% if request.form.get('student_id') == student.id|string %}selected{% endif %}>{{ student.username }}</option>
                                 {% endfor %}
                             </select>
-                            <p class="admin-internship-help">Select the student account that will receive this internship assignment.</p>
+                            <p class="admin-internship-help">Choose the active student account to enroll.</p>
                         </div>
 
                         <div class="admin-internship-field">
-                            <label for="internshipSupervisor">Nexora Supervisor</label>
-                            <select id="internshipSupervisor" name="supervisor_id" class="form-select">
-                                <option value="">-- Select Supervisor --</option>
-                                {% for sup in supervisors %}
-                                    <option value="{{ sup.id }}" {% if request.form.get('supervisor_id') == sup.id|string %}selected{% endif %}>{{ sup.username }}</option>
+                            <label for="internshipClassroom">Available Supervisor <span class="admin-internship-required">*</span></label>
+                            <select id="internshipClassroom" name="classroom_id" class="form-select" required>
+                                <option value="">-- Select Available Supervisor --</option>
+                                {% for placement in placements %}
+                                    <option
+                                        value="{{ placement.classroom_id }}"
+                                        data-supervisor="{{ placement.supervisor_name|e }}"
+                                        data-supervisor-email="{{ placement.supervisor_email|e }}"
+                                        data-classroom="{{ placement.classroom_name|e }}"
+                                        data-section="{{ placement.section|e }}"
+                                        data-code="{{ placement.code|e }}"
+                                        data-company="{{ placement.company_name|e }}"
+                                        data-title="{{ placement.internship_title|e }}"
+                                        data-industry="{{ placement.industry|e }}"
+                                        data-arrangement="{{ placement.work_arrangement|e }}"
+                                        data-compensation="{{ placement.compensation|e }}"
+                                        data-location="{{ placement.location|e }}"
+                                        data-start="{{ placement.start_date|e }}"
+                                        data-end="{{ placement.end_date|e }}"
+                                        data-deadline="{{ placement.enrollment_deadline|e }}"
+                                        data-hours="{{ placement.required_hours }}"
+                                        data-website="{{ placement.company_website|e }}"
+                                        data-students="{{ placement.student_count }}"
+                                        {% if request.form.get('classroom_id') == placement.classroom_id|string %}selected{% endif %}
+                                    >{{ placement.supervisor_name }} — {{ placement.classroom_name }}{% if placement.section %} · {{ placement.section }}{% endif %}</option>
                                 {% endfor %}
                             </select>
-                            <p class="admin-internship-help">Choose a Nexora Supervisor when this placement should appear in that supervisor's Assigned Interns workflow.</p>
+                            <p class="admin-internship-help">If a Supervisor owns multiple Intern Classrooms, each room appears as a separate option.</p>
                         </div>
                     </div>
                 </section>
 
-                <section class="admin-internship-section" aria-labelledby="internshipPlacementHeading">
+                <section class="admin-internship-section admin-internship-classroom-preview" id="internshipClassroomPreview" hidden aria-live="polite">
                     <div class="admin-internship-section-header">
                         <span class="admin-internship-section-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"></rect><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18M10 12v2h4v-2"></path></svg>
+                            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M7 8h3M14 8h3M7 12h3M14 12h3M7 16h3M14 16h3"></path></svg>
                         </span>
                         <div>
-                            <span>STEP 2</span>
-                            <h2 id="internshipPlacementHeading">Internship Placement</h2>
-                            <p>Record the company, workplace supervisor, and student position exactly as provided.</p>
+                            <span>INTERN CLASSROOM</span>
+                            <h2 id="previewClassroomName">Classroom</h2>
+                            <p id="previewClassroomSubtitle">Placement details from the selected Supervisor's classroom.</p>
                         </div>
                     </div>
 
-                    <div class="admin-internship-form-grid">
-                        <div class="admin-internship-field">
-                            <label for="companyName">Company Name <span class="admin-internship-required">*</span></label>
-                            <input id="companyName" name="company_name" class="form-control" value="{{ request.form.get('company_name', '') }}" placeholder="Company Name" required>
+                    <div class="admin-internship-preview-hero">
+                        <div>
+                            <span>SUPERVISOR</span>
+                            <strong id="previewSupervisor">—</strong>
+                            <small id="previewSupervisorEmail">—</small>
                         </div>
+                        <div>
+                            <span>CLASS CODE</span>
+                            <strong id="previewCode">—</strong>
+                            <small id="previewStudents">0 students enrolled</small>
+                        </div>
+                    </div>
 
-                        <div class="admin-internship-field">
-                            <label for="companyAddress">Company Address <span class="admin-internship-required">*</span></label>
-                            <input id="companyAddress" name="company_address" class="form-control" value="{{ request.form.get('company_address', '') }}" placeholder="Company Address" required>
-                        </div>
+                    <div class="admin-internship-preview-grid">
+                        <div><span>Company</span><strong id="previewCompany">—</strong></div>
+                        <div><span>Internship Title</span><strong id="previewTitle">—</strong></div>
+                        <div><span>Industry</span><strong id="previewIndustry">—</strong></div>
+                        <div><span>Work Arrangement</span><strong id="previewArrangement">—</strong></div>
+                        <div><span>Compensation</span><strong id="previewCompensation">—</strong></div>
+                        <div><span>Location</span><strong id="previewLocation">—</strong></div>
+                        <div><span>Start Date</span><strong id="previewStart">—</strong></div>
+                        <div><span>End Date</span><strong id="previewEnd">—</strong></div>
+                        <div><span>Enrollment Deadline</span><strong id="previewDeadline">—</strong></div>
+                        <div><span>Required Hours</span><strong id="previewHours">—</strong></div>
+                        <div class="is-wide"><span>Company Website</span><strong id="previewWebsite">—</strong></div>
+                    </div>
 
-                        <div class="admin-internship-field">
-                            <label for="position">Position <span class="admin-internship-required">*</span></label>
-                            <input id="position" name="position" class="form-control" value="{{ request.form.get('position', '') }}" placeholder="Position" required>
-                        </div>
-
-                        <div class="admin-internship-field">
-                            <label for="supervisorName">Workplace Supervisor Name <span class="admin-internship-required">*</span></label>
-                            <input id="supervisorName" name="supervisor_name" class="form-control" value="{{ request.form.get('supervisor_name', '') }}" placeholder="Supervisor Name" required>
-                        </div>
-
-                        <div class="admin-internship-field is-wide">
-                            <label for="supervisorEmail">Workplace Supervisor Email <span class="admin-internship-required">*</span></label>
-                            <input id="supervisorEmail" name="supervisor_email" type="email" class="form-control" value="{{ request.form.get('supervisor_email', '') }}" placeholder="Supervisor Email" required>
-                        </div>
+                    <div class="admin-internship-preview-note">
+                        Assigning the student will enroll them in this Intern Classroom and keep existing Supervisor ownership compatibility.
                     </div>
                 </section>
 
-                <section class="admin-internship-section" aria-labelledby="internshipScheduleHeading">
-                    <div class="admin-internship-section-header">
-                        <span class="admin-internship-section-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
-                        </span>
-                        <div>
-                            <span>STEP 3</span>
-                            <h2 id="internshipScheduleHeading">Schedule & Requirements</h2>
-                            <p>Set the internship dates and the required number of OJT hours for this placement.</p>
-                        </div>
+                {% if not placements %}
+                    <div class="admin-internship-empty">
+                        <strong>No available Supervisor Intern Classrooms</strong>
+                        <span>An active Supervisor must create an active Intern Classroom before Admin can assign a student here.</span>
                     </div>
-
-                    <div class="admin-internship-schedule-grid">
-                        <div class="admin-internship-field">
-                            <label for="startDate">Start Date <span class="admin-internship-required">*</span></label>
-                            <input id="startDate" type="date" name="start_date" class="form-control" value="{{ request.form.get('start_date', '') }}" required>
-                        </div>
-
-                        <div class="admin-internship-field">
-                            <label for="endDate">End Date <span class="admin-internship-required">*</span></label>
-                            <input id="endDate" type="date" name="end_date" class="form-control" value="{{ request.form.get('end_date', '') }}" required>
-                        </div>
-
-                        <div class="admin-internship-field">
-                            <label for="requiredHours">Required Hours</label>
-                            <input id="requiredHours" name="required_hours" type="number" min="1" max="2000" class="form-control" value="{{ request.form.get('required_hours', '486') }}" required>
-                            <p class="admin-internship-help">Allowed range: 1–2000 hours. The backend default is 486 hours when no value is supplied.</p>
-                        </div>
-                    </div>
-
-                    <div class="admin-internship-summary-strip" aria-label="Assignment behavior summary">
-                        <div>
-                            <span class="admin-internship-summary-icon" aria-hidden="true">
-                                <svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"></path></svg>
-                            </span>
-                            <span><strong>Student placement</strong><small>Creates an active internship record after existing validation passes.</small></span>
-                        </div>
-                        <div>
-                            <span class="admin-internship-summary-icon" aria-hidden="true">
-                                <svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18"></path></svg>
-                            </span>
-                            <span><strong>Supervisor workflow</strong><small>Links to Assigned Interns when a valid Nexora Supervisor is selected.</small></span>
-                        </div>
-                        <div>
-                            <span class="admin-internship-summary-icon" aria-hidden="true">
-                                <svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"></rect><path d="M8 8h8M8 12h8M8 16h5"></path></svg>
-                            </span>
-                            <span><strong>Existing rules preserved</strong><small>Duplicate-active-placement checks and current transaction behavior remain unchanged.</small></span>
-                        </div>
-                    </div>
-                </section>
+                {% endif %}
 
                 <div class="admin-internship-actions">
                     <a href="{{ url_for('admin.admin_dashboard') }}" class="admin-internship-action-button is-cancel">Cancel</a>
-                    <button type="submit" class="admin-internship-action-button is-submit">
+                    <button type="submit" class="admin-internship-action-button is-submit" {% if not placements %}disabled{% endif %}>
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
-                        <span>Assign Internship</span>
+                        <span>Assign Intern</span>
                     </button>
                 </div>
             </form>
         </div>
     </main>
+
+    <script>
+    (function () {
+        var select = document.getElementById('internshipClassroom');
+        var preview = document.getElementById('internshipClassroomPreview');
+        if (!select || !preview) return;
+
+        function value(option, name, fallback) {
+            var result = option ? option.dataset[name] : '';
+            return result && String(result).trim() ? result : (fallback || '—');
+        }
+
+        function updatePreview() {
+            var option = select.options[select.selectedIndex];
+            if (!option || !option.value) {
+                preview.hidden = true;
+                return;
+            }
+
+            var classroom = value(option, 'classroom');
+            var section = value(option, 'section', '');
+            document.getElementById('previewClassroomName').textContent = classroom;
+            document.getElementById('previewClassroomSubtitle').textContent =
+                (section ? section + ' · ' : '') + 'Placement details from the selected Supervisor’s Intern Classroom.';
+            document.getElementById('previewSupervisor').textContent = value(option, 'supervisor');
+            document.getElementById('previewSupervisorEmail').textContent = value(option, 'supervisorEmail');
+            document.getElementById('previewCode').textContent = value(option, 'code');
+            document.getElementById('previewStudents').textContent =
+                value(option, 'students', '0') + ' student' + (value(option, 'students', '0') === '1' ? '' : 's') + ' enrolled';
+            document.getElementById('previewCompany').textContent = value(option, 'company');
+            document.getElementById('previewTitle').textContent = value(option, 'title');
+            document.getElementById('previewIndustry').textContent = value(option, 'industry');
+            document.getElementById('previewArrangement').textContent = value(option, 'arrangement');
+            document.getElementById('previewCompensation').textContent = value(option, 'compensation');
+            document.getElementById('previewLocation').textContent = value(option, 'location');
+            document.getElementById('previewStart').textContent = value(option, 'start');
+            document.getElementById('previewEnd').textContent = value(option, 'end');
+            document.getElementById('previewDeadline').textContent = value(option, 'deadline');
+            var hours = value(option, 'hours', '0');
+            document.getElementById('previewHours').textContent = hours === '0' ? 'Not specified' : hours + ' hours';
+            document.getElementById('previewWebsite').textContent = value(option, 'website');
+            preview.hidden = false;
+        }
+
+        select.addEventListener('change', updatePreview);
+        updatePreview();
+    })();
+    </script>
 </body>
 </html>

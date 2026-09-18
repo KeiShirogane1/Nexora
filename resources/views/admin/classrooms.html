@@ -181,7 +181,7 @@
             </header>
             <div class="admin-classroom-view-modal-body">
                 <div class="admin-classroom-view-modal-loading" id="adminClassroomViewModalLoading">Loading classroom details…</div>
-                <iframe id="adminClassroomViewModalFrame" class="is-loading" title="Classroom details" loading="eager"></iframe>
+                <div class="admin-classroom-view-modal-content" id="adminClassroomViewModalContent"></div>
             </div>
         </section>
     </div>
@@ -189,31 +189,71 @@
     <script>
     (function () {
         var modal = document.getElementById('adminClassroomViewModal');
-        var frame = document.getElementById('adminClassroomViewModalFrame');
+        var content = document.getElementById('adminClassroomViewModalContent');
         var title = document.getElementById('adminClassroomViewModalTitle');
         var loading = document.getElementById('adminClassroomViewModalLoading');
         var lastTrigger = null;
-        if (!modal || !frame) return;
+        var requestController = null;
+        if (!modal || !content) return;
+
+        function showError(link) {
+            loading.hidden = true;
+            content.innerHTML =
+                '<div class="admin-classroom-view-modal-error">' +
+                    '<strong>Unable to load classroom details.</strong>' +
+                    '<a href="' + link.href + '">Open classroom details</a>' +
+                '</div>';
+        }
 
         function openModal(link) {
             lastTrigger = link;
             title.textContent = link.dataset.classroomName || 'Classroom';
+            content.innerHTML = '';
             loading.hidden = false;
-            frame.classList.add('is-loading');
             modal.hidden = false;
             modal.setAttribute('aria-hidden', 'false');
-            frame.src = link.dataset.classroomUrl || link.href;
             document.body.classList.add('admin-classroom-view-modal-open');
+            document.body.classList.add('admin-classroom-detail-body');
+
+            if (requestController) requestController.abort();
+            requestController = new AbortController();
+
+            fetch(link.dataset.classroomUrl || link.href, {
+                method: 'GET',
+                credentials: 'same-origin',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                signal: requestController.signal
+            })
+                .then(function (response) {
+                    if (!response.ok) throw new Error('HTTP ' + response.status);
+                    return response.text();
+                })
+                .then(function (html) {
+                    var parsed = new DOMParser().parseFromString(html, 'text/html');
+                    var details = parsed.querySelector('.admin-classroom-detail-page');
+                    if (!details) throw new Error('Classroom detail markup not found');
+                    content.innerHTML = details.outerHTML;
+                    loading.hidden = true;
+                })
+                .catch(function (error) {
+                    if (error.name === 'AbortError') return;
+                    showError(link);
+                });
+
             var closeButton = modal.querySelector('.admin-classroom-view-modal-close');
             if (closeButton) closeButton.focus();
         }
 
         function closeModal() {
+            if (requestController) {
+                requestController.abort();
+                requestController = null;
+            }
             modal.hidden = true;
             modal.setAttribute('aria-hidden', 'true');
             document.body.classList.remove('admin-classroom-view-modal-open');
-            frame.src = 'about:blank';
-            frame.classList.add('is-loading');
+            document.body.classList.remove('admin-classroom-detail-body');
+            content.innerHTML = '';
             loading.hidden = false;
             if (lastTrigger) lastTrigger.focus();
         }
@@ -223,13 +263,6 @@
                 event.preventDefault();
                 openModal(link);
             });
-        });
-
-        frame.addEventListener('load', function () {
-            if (!modal.hidden && frame.src && frame.src !== 'about:blank') {
-                loading.hidden = true;
-                frame.classList.remove('is-loading');
-            }
         });
 
         modal.querySelectorAll('[data-admin-classroom-close]').forEach(function (button) {
