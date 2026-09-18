@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
 </head>
-<body class="nexora-admin-body">
+<body class="nexora-admin-body admin-classroom-detail-body">
     {% include 'components/admin_sidebar.html' %}
 
     <main class="admin-main nexora-app-main">
@@ -30,12 +30,30 @@
             </header>
 
             <section class="admin-kpi-grid admin-classroom-kpis" aria-label="Classroom activity summary">
-                <article class="admin-kpi-card"><span>Enrolled Interns</span><strong>{{ students|length }}</strong><small>Current classroom roster</small></article>
-                <article class="admin-kpi-card"><span>Classwork</span><strong>{{ activity.classwork_count }}</strong><small>Classroom-scoped work items</small></article>
-                <article class="admin-kpi-card"><span>Posts</span><strong>{{ activity.post_count }}</strong><small>Classroom posts</small></article>
-                <article class="admin-kpi-card"><span>Student Documents</span><strong>{{ activity.document_count }}</strong><small>Files owned by enrolled students</small></article>
-                <article class="admin-kpi-card"><span>Required OJT Hours</span><strong>{% if classroom.required_hours %}{{ classroom.required_hours }}{% else %}—{% endif %}</strong><small>Per-intern classroom requirement</small></article>
-                <article class="admin-kpi-card"><span>Official Evaluations</span><strong>{{ activity.evaluation_total }}</strong><small>{{ activity.evaluation_submitted }} submitted</small></article>
+                <article class="admin-kpi-card admin-classroom-kpi-card">
+                    <span class="admin-classroom-kpi-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></span>
+                    <span class="admin-classroom-kpi-copy"><span>Enrolled Interns</span><strong>{{ students|length }}</strong><small>Current classroom roster</small></span>
+                </article>
+                <article class="admin-kpi-card admin-classroom-kpi-card">
+                    <span class="admin-classroom-kpi-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"></rect><path d="M9 3h6v4H9zM9 11h6M9 15h4"></path></svg></span>
+                    <span class="admin-classroom-kpi-copy"><span>Classwork</span><strong>{{ activity.classwork_count }}</strong><small>Classroom-scoped work items</small></span>
+                </article>
+                <article class="admin-kpi-card admin-classroom-kpi-card">
+                    <span class="admin-classroom-kpi-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path><path d="M8 9h8M8 13h5"></path></svg></span>
+                    <span class="admin-classroom-kpi-copy"><span>Posts</span><strong>{{ activity.post_count }}</strong><small>Classroom posts</small></span>
+                </article>
+                <article class="admin-kpi-card admin-classroom-kpi-card">
+                    <span class="admin-classroom-kpi-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6M8 13h8M8 17h6"></path></svg></span>
+                    <span class="admin-classroom-kpi-copy"><span>Student Documents</span><strong>{{ activity.document_count }}</strong><small>Files owned by enrolled students</small></span>
+                </article>
+                <article class="admin-kpi-card admin-classroom-kpi-card">
+                    <span class="admin-classroom-kpi-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg></span>
+                    <span class="admin-classroom-kpi-copy"><span>Required OJT Hours</span><strong>{% if classroom.required_hours %}{{ classroom.required_hours }}{% else %}—{% endif %}</strong><small>Per-intern classroom requirement</small></span>
+                </article>
+                <article class="admin-kpi-card admin-classroom-kpi-card">
+                    <span class="admin-classroom-kpi-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"></rect><path d="M9 3v3h6V3M8 11l2 2 4-4M8 17h8"></path></svg></span>
+                    <span class="admin-classroom-kpi-copy"><span>Official Evaluations</span><strong>{{ activity.evaluation_total }}</strong><small>{{ activity.evaluation_submitted }} submitted</small></span>
+                </article>
             </section>
 
             <div class="admin-classroom-main-grid">
@@ -86,7 +104,7 @@
                         <div class="admin-supervisor-card">
                             <div class="admin-doc-student-avatar" aria-hidden="true">{{ (classroom.supervisor_name or '?')[:1]|upper }}</div>
                             <div><strong>{{ classroom.supervisor_name or 'Unknown Supervisor' }}</strong><span>{{ classroom.supervisor_email or '—' }}</span></div>
-                            <a class="admin-compact-action" href="{{ url_for('admin.supervisor_profile', supervisor_id=classroom.supervisor_id) }}">View Profile</a>
+                            <a class="admin-compact-action admin-classroom-supervisor-button" href="{{ url_for('admin.supervisor_profile', supervisor_id=classroom.supervisor_id) }}">View Profile</a>
                         </div>
                     </section>
 
@@ -101,13 +119,23 @@
                                 <div><span>Work Completion</span><strong>{% if overall_insights.completion_average is not none %}{{ '%.1f'|format(overall_insights.completion_average) }}%{% else %}No data yet{% endif %}</strong></div>
                                 <progress max="100" value="{{ overall_insights.completion_average or 0 }}"></progress>
                             </div>
+                            <div class="admin-insight-bar-row">
+                                <div><span>Performance Coverage</span><strong>{% if overall_insights.coverage_percentage is not none %}{{ overall_insights.performance_data_count }} of {{ overall_insights.student_count }} interns · {{ '%.1f'|format(overall_insights.coverage_percentage) }}%{% else %}No interns yet{% endif %}</strong></div>
+                                <progress max="100" value="{{ overall_insights.coverage_percentage or 0 }}"></progress>
+                            </div>
                         </div>
-                        <p class="admin-evidence-note">OJT rendered-hour progress remains an individual intern evidence dimension in Student Insights instead of being collapsed into this classroom Work summary. The classroom's per-intern required-hours target remains visible above.</p>
-                        <div class="admin-evidence-grid admin-classroom-evidence-summary">
-                            <div><span>With performance data</span><strong>{{ overall_insights.performance_data_count }}</strong></div>
-                            <div><span>Needs attention</span><strong>{{ overall_insights.needs_attention }}</strong></div>
-                            <div><span>No Work data</span><strong>{{ overall_insights.no_data_count }}</strong></div>
+                        <div class="admin-evidence-grid admin-classroom-evidence-summary admin-classroom-evidence-summary-rich">
+                            <div><span>Recorded Work</span><strong>{{ overall_insights.recorded_work_count }}</strong><small>Recorded student-work records</small></div>
+                            <div><span>Reviewed Work</span><strong>{{ overall_insights.reviewed_work_count }}</strong><small>Records reviewed by the supervisor</small></div>
+                            <div><span>Graded Work</span><strong>{{ overall_insights.graded_work_count }}</strong><small>Records contributing numeric performance</small></div>
+                            <div><span>Review Rate</span><strong>{% if overall_insights.review_rate is not none %}{{ '%.1f'|format(overall_insights.review_rate) }}%{% else %}No data yet{% endif %}</strong><small>Average across interns with recorded Work</small></div>
+                            <div><span>Daily Performance Links</span><strong>{{ overall_insights.daily_performance_count }}</strong><small>Daily ratings connected to Work evidence</small></div>
+                            <div><span>Needs Attention</span><strong>{{ overall_insights.needs_attention }}</strong><small>Interns with medium/high recommendation priority</small></div>
+                            <div><span>Highest Recorded</span><strong>{% if overall_insights.highest_percentage is not none %}{{ '%.1f'|format(overall_insights.highest_percentage) }}%{% else %}No data yet{% endif %}</strong><small>Highest graded Work percentage in this classroom</small></div>
+                            <div><span>Lowest Recorded</span><strong>{% if overall_insights.lowest_percentage is not none %}{{ '%.1f'|format(overall_insights.lowest_percentage) }}%{% else %}No data yet{% endif %}</strong><small>Lowest graded Work percentage in this classroom</small></div>
+                            <div><span>No Work Data</span><strong>{{ overall_insights.no_data_count }}</strong><small>Enrolled interns without usable Work performance data</small></div>
                         </div>
+                        <p class="admin-evidence-note">These are classroom-scoped Work evidence metrics only. OJT rendered hours, attendance, logbook evidence, ML feedback signals, and Official OJT Evaluation remain separate evidence dimensions and are not combined into a single grade.</p>
                         <div class="admin-performance-distribution">
                             <h3>Performance Distribution</h3>
                             {% set labels = ['Excellent', 'Very Satisfactory', 'Satisfactory', 'Fair', 'Needs Improvement', 'No Data'] %}
@@ -139,8 +167,8 @@
                                 <div class="admin-doc-student-avatar" aria-hidden="true">{{ (student.display_name or student.username or '?')[:1]|upper }}</div>
                                 <div class="admin-doc-student-main"><strong>{{ student.display_name }}</strong><span>@{{ student.username }}{% if student.student_number %} · {{ student.student_number }}{% endif %}</span><small>{{ student.major_program or 'Program not provided' }} · Joined {{ student.joined_at }}</small></div>
                                 <span class="admin-status-pill {% if student.status == 'inactive' %}is-muted{% else %}is-success{% endif %}">{{ student.status|title }}</span>
-                                <a class="admin-compact-action" href="{{ url_for('admin.student_profile', student_id=student.id) }}">Profile</a>
-                                <a class="admin-compact-action" href="{{ url_for('admin_reports_overview.student_insights', student_id=student.id, class_id=classroom.id) }}">Insights</a>
+                                <a class="admin-compact-action admin-classroom-roster-profile-button" href="{{ url_for('admin.student_profile', student_id=student.id) }}">Profile</a>
+                                <a class="admin-compact-action admin-classroom-roster-insights-button" href="{{ url_for('admin_reports_overview.student_insights', student_id=student.id, class_id=classroom.id) }}">Insights</a>
                             </article>
                         {% endfor %}
                     </div>

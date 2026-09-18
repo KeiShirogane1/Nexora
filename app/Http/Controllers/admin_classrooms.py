@@ -418,27 +418,70 @@ def classroom_detail(classroom_id):
     distribution = Counter()
     work_values = []
     completion_values = []
+    review_rate_values = []
+    highest_values = []
+    lowest_values = []
     performance_data_count = 0
     needs_attention = 0
+    recorded_work_count = 0
+    reviewed_work_count = 0
+    graded_work_count = 0
+    daily_performance_count = 0
     for report in class_reports:
         work_value = report.get("overall_percentage")
         completion_value = report.get("completion_rate")
         label = report.get("performance_label") or "No Data"
         distribution[label] += 1
+
+        recorded_count = int(report.get("recorded_count", 0) or 0)
+        reviewed_count = int(report.get("reviewed_count", 0) or 0)
+        graded_count = int(report.get("graded_count", 0) or 0)
+        recorded_work_count += recorded_count
+        reviewed_work_count += reviewed_count
+        graded_work_count += graded_count
+        daily_performance_count += int(report.get("daily_performance_count", 0) or 0)
+
         if work_value is not None:
             performance_data_count += 1
             work_values.append(work_value)
         if completion_value is not None:
             completion_values.append(completion_value)
+
+        review_rate = report.get("review_rate")
+        if recorded_count > 0 and review_rate is not None:
+            review_rate_values.append(review_rate)
+
+        highest_value = report.get("max_percentage")
+        lowest_value = report.get("min_percentage")
+        if highest_value is not None:
+            highest_values.append(highest_value)
+        if lowest_value is not None:
+            lowest_values.append(lowest_value)
+
         if str(report.get("priority") or "").lower() in {"high", "medium"}:
             needs_attention += 1
 
+    student_count = len(students)
+    coverage_percentage = (
+        round(performance_data_count / student_count * 100, 1)
+        if student_count
+        else None
+    )
     overall_insights = {
         "work_average": _average(work_values),
         "completion_average": _average(completion_values),
+        "coverage_percentage": coverage_percentage,
+        "student_count": student_count,
         "performance_data_count": performance_data_count,
+        "recorded_work_count": recorded_work_count,
+        "reviewed_work_count": reviewed_work_count,
+        "graded_work_count": graded_work_count,
+        "review_rate": _average(review_rate_values),
+        "daily_performance_count": daily_performance_count,
+        "highest_percentage": max(highest_values) if highest_values else None,
+        "lowest_percentage": min(lowest_values) if lowest_values else None,
         "needs_attention": needs_attention,
-        "no_data_count": max(len(students) - performance_data_count, 0),
+        "no_data_count": max(student_count - performance_data_count, 0),
         "distribution": dict(distribution),
     }
     activity = {
