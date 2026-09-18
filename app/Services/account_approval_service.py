@@ -332,6 +332,52 @@ def process_due_pending_accounts(limit=100):
     return approved
 
 
+def cleanup_legacy_rejected_accounts():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute(
+            """
+            SELECT id
+            FROM users
+            WHERE role = 'rejected'
+            """
+        )
+        rejected_rows = cursor.fetchall()
+        rejected_ids = [row["id"] for row in rejected_rows]
+
+        if not rejected_ids:
+            return 0
+
+        for user_id in rejected_ids:
+            cursor.execute(
+                """
+                DELETE FROM student_profiles
+                WHERE user_id = ?
+                """,
+                (user_id,),
+            )
+
+            cursor.execute(
+                """
+                DELETE FROM users
+                WHERE id = ?
+                AND role = 'rejected'
+                """,
+                (user_id,),
+            )
+
+        conn.commit()
+        return len(rejected_ids)
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        cursor.close()
+        conn.close()
+
+
 def start_account_approval_worker(app):
     enabled = os.environ.get(
         "NEXORA_AUTO_APPROVAL_ENABLED",
