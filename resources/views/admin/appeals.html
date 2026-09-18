@@ -1,16 +1,259 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Account Appeals - Nexora</title>
-<link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}"><link rel="stylesheet" href="{{ url_for('static',filename='css/admin.css') }}">
-<style>
-.apl-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:16px}.apl-kpis article{padding:17px;border:1px solid #e4e9ee;border-radius:15px;background:#fff}.apl-kpis span{color:#718096;font-size:10px;font-weight:800}.apl-kpis strong{display:block;margin-top:5px;font-size:25px;color:#14243b}.apl-panel{border:1px solid #e4e9ee;border-radius:17px;background:#fff;overflow:hidden}.apl-head{display:flex;justify-content:space-between;gap:16px;padding:18px 20px;border-bottom:1px solid #edf0f3}.apl-head h2{margin:0;font-size:17px}.apl-head p{margin:5px 0 0;color:#7d8b9a;font-size:10px}.apl-card{display:grid;grid-template-columns:minmax(260px,1fr) minmax(210px,.6fr);gap:16px;padding:18px 20px;border-bottom:1px solid #edf0f3}.apl-card.is-highlighted{background:#fff7f3;box-shadow:inset 4px 0 #f45125}.apl-id strong{font-size:13px}.apl-id span,.apl-id small{display:block;margin-top:4px;color:#728196;font-size:10px}.apl-status{display:inline-block!important;width:max-content;padding:4px 8px;border-radius:999px;background:#fff0eb;color:#c84825!important;font-size:8px!important;font-weight:900}.apl-time span{font-size:9px;color:#77879a}.apl-time strong{display:block;margin-top:5px;color:#d45729;font-size:17px;font-variant-numeric:tabular-nums}.apl-time .paused{color:#2563eb}.apl-reason,.apl-wait{grid-column:1/-1;padding:12px 13px;border:1px solid #e8edf1;border-radius:10px;background:#fafbfc;color:#526477;font-size:10px;line-height:1.6}.apl-actions{grid-column:1/-1;display:flex;justify-content:flex-end;gap:8px}.apl-actions form{margin:0}.apl-actions button{height:38px;padding:0 14px;border-radius:9px;font-size:10px;font-weight:850}.apl-actions .approve{border:0;background:#158653;color:#fff}.apl-actions .deny{border:1px solid #efc9c3;background:#fff3f1;color:#be4435}@media(max-width:900px){.apl-kpis{grid-template-columns:1fr}.apl-card{grid-template-columns:1fr}}
-</style></head>
-<body class="nexora-admin-body admin-appeals-page">{% include 'components/admin_sidebar.html' %}
-<main class="content"><header class="admin-polish-header"><div><span class="admin-polish-eyebrow">ADMIN PORTAL</span><h1>Account Appeals</h1><p>Review deactivated Student and Supervisor accounts before permanent identity removal.</p></div></header>
-{% with messages=get_flashed_messages(with_categories=true) %}{% for category,message in messages %}<div class="admin-polish-notice">{{ message }}</div>{% endfor %}{% endwith %}
-<section class="apl-kpis"><article><span>Appeals Submitted</span><strong>{{ submitted_count }}</strong><small>waiting for review</small></article><article><span>Awaiting User</span><strong>{{ awaiting_count }}</strong><small>no appeal yet</small></article><article><span>Expiring Soon</span><strong>{{ expiring_count }}</strong><small>6 hours or less</small></article></section>
-<section class="apl-panel"><div class="apl-head"><div><h2>Account Review</h2><p>Submitted appeals pause automatic permanent removal until you decide.</p></div><strong>{{ appeal_cases|length }} open</strong></div>
-{% if appeal_cases %}{% for case in appeal_cases %}<article class="apl-card{% if highlight_case_id==case['id'] %} is-highlighted{% endif %}" data-case data-deadline="{{ case['deadline_iso'] }}"><div class="apl-id"><strong>{{ case['username'] }}</strong><span>{{ case['email'] }} • {{ case['account_type'] }}</span><small>{{ case['action_type']|replace('_',' ')|title }} • {{ case['created_display'] }}</small><span class="apl-status">{{ 'Appeal submitted' if case['appeal_status']=='submitted' else 'Awaiting appeal' }}</span></div><div class="apl-time">{% if case['appeal_status']=='submitted' %}<span>Deletion status</span><strong class="paused">Paused</strong>{% else %}<span>Permanent removal in</span><strong data-admin-countdown>--:--:--</strong>{% endif %}</div>
-{% if case['appeal_status']=='submitted' %}<div class="apl-reason"><strong>Appeal reason</strong><br>{{ case['appeal_reason'] }}</div><div class="apl-actions"><form method="POST" action="{{ url_for('account_appeals.admin_appeal_approve',case_id=case['id']) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="approve">Approve Appeal</button></form><form method="POST" action="{{ url_for('account_appeals.admin_appeal_deny',case_id=case['id']) }}" onsubmit="return confirm('Deny this appeal and permanently remove the account identity?')"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="deny">Deny Appeal</button></form></div>{% else %}<div class="apl-wait">The user has not submitted an appeal yet. They can authenticate with the registered account until the 24-hour deadline.</div>{% endif %}</article>{% endfor %}{% else %}<div class="admin-polish-empty"><h3>No open account appeals</h3><p>New account actions will appear here during their appeal window.</p></div>{% endif %}
-</section></main>
-<script>(function(){document.querySelectorAll('[data-case]').forEach(c=>{const o=c.querySelector('[data-admin-countdown]');if(!o)return;const e=Date.parse(c.dataset.deadline);function t(){const r=Math.max(0,Math.ceil((e-Date.now())/1000)),h=Math.floor(r/3600),m=Math.floor((r%3600)/60),s=r%60;o.textContent=String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')}t();setInterval(t,1000)});const h=document.querySelector('.apl-card.is-highlighted');if(h)setTimeout(()=>h.scrollIntoView({behavior:'smooth',block:'center'}),200)})();</script>
-</body></html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Appeals - Nexora</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+
+<body class="nexora-admin-body admin-appeals-page">
+    {% include 'components/admin_sidebar.html' %}
+
+    <main class="admin-main nexora-app-main">
+        <div class="nexora-page">
+            <div class="compact-dashboard admin-appeals-dashboard">
+
+                <div class="dashboard-header admin-appeals-header">
+                    <div>
+                        <h1>Account Appeals</h1>
+                        <p>Review deactivated Student and Supervisor accounts before permanent identity removal.</p>
+                    </div>
+
+                    <div class="admin-appeal-policy">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <circle cx="12" cy="12" r="9"></circle>
+                            <path d="M12 7v5l3 2"></path>
+                        </svg>
+                        24-hour appeal window
+                    </div>
+                </div>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        <div class="admin-appeal-flashes">
+                            {% for category, message in messages %}
+                                <div class="admin-appeal-flash {{ category }}">{{ message }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+
+                <section class="metric-grid admin-appeal-metric-grid" aria-label="Account appeal summary">
+                    <article class="metric-box admin-appeal-metric">
+                        <div class="metric-icon admin-appeal-metric-icon submitted" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"></path>
+                                <path d="M8 9h8"></path>
+                                <path d="M8 13h5"></path>
+                            </svg>
+                        </div>
+                        <div class="admin-appeal-metric-copy">
+                            <span>Appeals Submitted</span>
+                            <strong>{{ submitted_count }}</strong>
+                            <small>Waiting for Admin review</small>
+                        </div>
+                    </article>
+
+                    <article class="metric-box admin-appeal-metric">
+                        <div class="metric-icon admin-appeal-metric-icon awaiting" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="9"></circle>
+                                <path d="M12 7v5l3 2"></path>
+                            </svg>
+                        </div>
+                        <div class="admin-appeal-metric-copy">
+                            <span>Awaiting User</span>
+                            <strong>{{ awaiting_count }}</strong>
+                            <small>No appeal submitted yet</small>
+                        </div>
+                    </article>
+
+                    <article class="metric-box admin-appeal-metric">
+                        <div class="metric-icon admin-appeal-metric-icon expiring" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M12 9v4"></path>
+                                <path d="M12 17h.01"></path>
+                                <path d="M10.3 3.7 2.5 17.2A2 2 0 0 0 4.2 20h15.6a2 2 0 0 0 1.7-2.8L13.7 3.7a2 2 0 0 0-3.4 0Z"></path>
+                            </svg>
+                        </div>
+                        <div class="admin-appeal-metric-copy">
+                            <span>Expiring Soon</span>
+                            <strong>{{ expiring_count }}</strong>
+                            <small>6 hours or less remaining</small>
+                        </div>
+                    </article>
+                </section>
+
+                <section class="dashboard-box admin-appeal-management">
+                    <div class="admin-appeal-management-header">
+                        <div>
+                            <span class="admin-appeal-management-kicker">ACCOUNT APPEALS</span>
+                            <h3>Account Review</h3>
+                            <p>Submitted appeals pause automatic permanent removal until an administrator decides.</p>
+                        </div>
+                        <span class="admin-appeal-open-count">
+                            {{ appeal_cases|length }} open
+                        </span>
+                    </div>
+
+                    {% if appeal_cases %}
+                        <div class="admin-appeal-request-list">
+                            {% for case in appeal_cases %}
+                                <article
+                                    class="admin-appeal-request-card{% if highlight_case_id == case['id'] %} is-highlighted{% endif %}"
+                                    data-case
+                                    data-deadline="{{ case['deadline_iso'] }}"
+                                >
+                                    <div class="admin-appeal-request-identity">
+                                        <span class="admin-appeal-request-avatar {{ case['account_type']|lower }}" aria-hidden="true">
+                                            {% if case['account_type'] == 'Supervisor' %}
+                                                <svg viewBox="0 0 24 24">
+                                                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                                                    <circle cx="9" cy="7" r="4"></circle>
+                                                    <path d="M19 8v6"></path>
+                                                    <path d="M22 11h-6"></path>
+                                                </svg>
+                                            {% else %}
+                                                <svg viewBox="0 0 24 24">
+                                                    <path d="M4 19a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4"></path>
+                                                    <circle cx="12" cy="7" r="4"></circle>
+                                                </svg>
+                                            {% endif %}
+                                        </span>
+                                        <div>
+                                            <strong>{{ case['username'] }}</strong>
+                                            <span>{{ case['email'] }}</span>
+                                            <small>{{ case['action_type']|replace('_', ' ')|title }} • {{ case['created_display'] }}</small>
+                                        </div>
+                                    </div>
+
+                                    <div class="admin-appeal-request-role">
+                                        <span class="admin-appeal-role-badge {{ case['account_type']|lower }}">
+                                            {{ case['account_type'] }}
+                                        </span>
+                                        <small>
+                                            {{ 'Appeal submitted' if case['appeal_status'] == 'submitted' else 'Awaiting appeal' }}
+                                        </small>
+                                    </div>
+
+                                    <div class="admin-appeal-request-timer">
+                                        {% if case['appeal_status'] == 'submitted' %}
+                                            <div class="admin-appeal-timer-top">
+                                                <span>Permanent removal</span>
+                                                <strong class="paused">Paused</strong>
+                                            </div>
+                                            <small>Waiting for Admin decision.</small>
+                                        {% else %}
+                                            <div class="admin-appeal-timer-top">
+                                                <span>Permanent removal</span>
+                                                <strong data-admin-countdown>--:--:--</strong>
+                                            </div>
+                                            <div class="admin-appeal-timer-track" aria-hidden="true">
+                                                <span data-admin-progress></span>
+                                            </div>
+                                            <small>Appeal remains available until the 24-hour deadline.</small>
+                                        {% endif %}
+                                    </div>
+
+                                    {% if case['appeal_status'] == 'submitted' %}
+                                        <div class="admin-appeal-reason">
+                                            <span>APPEAL REASON</span>
+                                            <p>{{ case['appeal_reason'] }}</p>
+                                        </div>
+
+                                        <div class="admin-appeal-request-actions">
+                                            <form method="POST" action="{{ url_for('account_appeals.admin_appeal_approve', case_id=case['id']) }}">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <button type="submit" class="admin-appeal-btn approve">
+                                                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                                                        <path d="m5 12 4 4L19 6"></path>
+                                                    </svg>
+                                                    Approve Appeal
+                                                </button>
+                                            </form>
+
+                                            <form
+                                                method="POST"
+                                                action="{{ url_for('account_appeals.admin_appeal_deny', case_id=case['id']) }}"
+                                                onsubmit="return confirm('Deny this appeal and permanently remove the account identity?')"
+                                            >
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <button type="submit" class="admin-appeal-btn deny">
+                                                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                                                        <path d="M6 6l12 12"></path>
+                                                        <path d="M18 6 6 18"></path>
+                                                    </svg>
+                                                    Deny Appeal
+                                                </button>
+                                            </form>
+                                        </div>
+                                    {% else %}
+                                        <div class="admin-appeal-waiting">
+                                            The user has not submitted an appeal yet. They can verify the registered inactive account and submit a reason until the 24-hour deadline.
+                                        </div>
+                                    {% endif %}
+                                </article>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="admin-appeal-empty">
+                            <span class="admin-appeal-empty-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"></path>
+                                    <path d="m8 11 2.5 2.5L16 8"></path>
+                                </svg>
+                            </span>
+                            <h3>No open account appeals</h3>
+                            <p>New account actions will appear here during their 24-hour appeal window.</p>
+                        </div>
+                    {% endif %}
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <script>
+    (function () {
+        const totalSeconds = {{ appeal_window_hours }} * 60 * 60;
+
+        document.querySelectorAll('[data-case]').forEach(function (card) {
+            const output = card.querySelector('[data-admin-countdown]');
+            const progress = card.querySelector('[data-admin-progress]');
+            if (!output) return;
+
+            const deadline = Date.parse(card.dataset.deadline || '');
+            if (!Number.isFinite(deadline)) return;
+
+            function renderCountdown() {
+                const remaining = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+                const hours = Math.floor(remaining / 3600);
+                const minutes = Math.floor((remaining % 3600) / 60);
+                const seconds = remaining % 60;
+
+                output.textContent =
+                    String(hours).padStart(2, '0') + ':' +
+                    String(minutes).padStart(2, '0') + ':' +
+                    String(seconds).padStart(2, '0');
+
+                if (progress) {
+                    progress.style.width =
+                        Math.max(0, Math.min(100, (remaining / totalSeconds) * 100)) + '%';
+                }
+            }
+
+            renderCountdown();
+            window.setInterval(renderCountdown, 1000);
+        });
+
+        const highlighted = document.querySelector('.admin-appeal-request-card.is-highlighted');
+        if (highlighted) {
+            window.setTimeout(function () {
+                highlighted.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 200);
+        }
+    })();
+    </script>
+</body>
+</html>
