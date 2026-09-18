@@ -1,8 +1,9 @@
 from flask import Blueprint, render_template, session, request, redirect, url_for, flash, current_app
 from app.Http.Middleware.security import role_required
 from app.Services.email_service import (
-    send_email,
-    send_profile_updated_email
+    send_account_status_email,
+    send_profile_updated_email,
+    send_temporary_password_email,
 )
 from app.Services.profile_service import (
     update_student_profile,
@@ -142,22 +143,10 @@ def reset_student_password(student_id):
 
         try:
 
-            send_email(
+            send_temporary_password_email(
                 student["email"],
-                "Nexora Temporary Password",
-                f"""
-    Hello {student["username"]},
-
-    Your Nexora account password has been reset by the administrator.
-
-    Your temporary password is:
-
-    {temporary_password}
-
-    Please login and change your password after signing in.
-
-    Nexora System
-    """
+                student["username"],
+                temporary_password,
             )
 
         except Exception as e:
@@ -988,7 +977,12 @@ def deactivate_supervisor(supervisor_id):
         conn.commit()
         if sup["email"]:
             try:
-                send_email(sup["email"], "Nexora Account Deactivated", f"Hello {sup['username']},\n\nYour supervisor account has been deactivated.\n\nNexora System")
+                send_account_status_email(
+                    sup["email"],
+                    sup["username"],
+                    "supervisor",
+                    active=False,
+                )
             except:
                 pass
         flash("Supervisor deactivated", "success")
@@ -1012,7 +1006,12 @@ def activate_supervisor(supervisor_id):
         conn.commit()
         if sup["email"]:
             try:
-                send_email(sup["email"], "Nexora Account Activated", f"Hello {sup['username']},\n\nYour supervisor account has been activated.\n\nNexora System")
+                send_account_status_email(
+                    sup["email"],
+                    sup["username"],
+                    "supervisor",
+                    active=True,
+                )
             except:
                 pass
         flash("Supervisor activated", "success")
@@ -2858,20 +2857,11 @@ def deactivate_student(student_id):
 
             try:
 
-                send_email(
+                send_account_status_email(
                     student["email"],
-                    "Nexora Account Deactivated",
-                    f"""
-Hello {student["username"]},
-
-Your Nexora student account has been deactivated by the administrator.
-
-You will no longer be able to access the system until your account is activated again.
-
-If you believe this was a mistake, please contact the Nexora administrator.
-
-Nexora System
-                    """.strip()
+                    student["username"],
+                    "student",
+                    active=False,
                 )
 
             except Exception as e:
@@ -2965,20 +2955,11 @@ def activate_student(student_id):
 
             try:
 
-                send_email(
+                send_account_status_email(
                     student["email"],
-                    "Nexora Account Activated",
-                    f"""
-Hello {student["username"]},
-
-Your Nexora student account has been activated.
-
-You may now login and continue using the Nexora system.
-
-Welcome back.
-
-Nexora System
-                    """.strip()
+                    student["username"],
+                    "student",
+                    active=True,
                 )
 
             except Exception as e:

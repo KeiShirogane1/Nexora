@@ -21,7 +21,7 @@ from app.Services.password_security import (
 )
 
 from app.Services.email_service import (
-    send_email,
+    send_change_password_code_email,
     send_password_changed_email,
     send_password_reset_email,
 )
@@ -289,23 +289,10 @@ def request_change_code():
         return redirect(url_for("password.change_password"))
     try:
         code = create_change_code(user_id)
-        # Send via Brevo
-        send_email(
+        send_change_password_code_email(
             recipient=user["email"],
-            subject="Nexora — Change Password Verification Code",
-            body=f"""Hello {user['username']},
-
-You requested to change your Nexora password.
-
-Your verification code is:
-
-{code}
-
-This code expires in 10 minutes and can only be used once.
-If you did not request this, please ignore this email.
-
-Nexora System
-""".strip()
+            username=user["username"],
+            code=code,
         )
         session["change_code_sent"] = True
         flash("Verification code sent to your email.", "success")
