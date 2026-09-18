@@ -45,7 +45,7 @@
             .hint { font-size:0.78rem; color:#64748b; text-align:left; margin:4px 0 0 2px; }
         </style>
     </head>
-    <body class="general-page">
+    <body class="general-page signup-page">
         {% include 'components/auth_video_background.html' %}
         {% set form_data = form_data|default({}) %}
         <div class="login-container" style="width:440px;">
@@ -72,13 +72,54 @@
                 <div class="auth-field">
                     <input type="email" name="email" placeholder="Email Address" required autocomplete="email" value="{{ form_data.get('email', '') }}">
                 </div>
-                <div class="auth-field">
-                    <select name="account_type" class="form-control" required>
-                        <option value="" disabled {% if not form_data.get('account_type') %}selected{% endif %}>Select Account Type</option>
-                        <option value="student" {% if form_data.get('account_type') == 'student' %}selected{% endif %}>Student</option>
-                        <option value="supervisor" {% if form_data.get('account_type') == 'supervisor' %}selected{% endif %}>Advisor / Supervisor</option>
-                    </select>
-                </div>
+                <fieldset class="auth-account-type">
+                    <legend>Account Type</legend>
+                    <div class="auth-account-options">
+                        <label class="auth-account-option">
+                            <input type="radio" name="account_type" value="student" required {% if form_data.get('account_type') == 'student' %}checked{% endif %}>
+                            <span class="auth-account-choice">
+                                <span class="auth-account-choice-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M4 19a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4"></path>
+                                        <circle cx="12" cy="7" r="4"></circle>
+                                    </svg>
+                                </span>
+                                <span class="auth-account-choice-copy">
+                                    <strong>Student</strong>
+                                    <small>Intern account</small>
+                                </span>
+                                <span class="auth-account-choice-check" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="m7 12 3 3 7-7"></path>
+                                    </svg>
+                                </span>
+                            </span>
+                        </label>
+
+                        <label class="auth-account-option">
+                            <input type="radio" name="account_type" value="supervisor" required {% if form_data.get('account_type') == 'supervisor' %}checked{% endif %}>
+                            <span class="auth-account-choice">
+                                <span class="auth-account-choice-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                                        <circle cx="9" cy="7" r="4"></circle>
+                                        <path d="M19 8v6"></path>
+                                        <path d="M22 11h-6"></path>
+                                    </svg>
+                                </span>
+                                <span class="auth-account-choice-copy">
+                                    <strong>Advisor / Supervisor</strong>
+                                    <small>Mentor account</small>
+                                </span>
+                                <span class="auth-account-choice-check" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="m7 12 3 3 7-7"></path>
+                                    </svg>
+                                </span>
+                            </span>
+                        </label>
+                    </div>
+                </fieldset>
                 <div class="auth-field">
                     <input type="password" id="signupPass" name="password" placeholder="Password (min 8 chars)" minlength="8" required autocomplete="new-password">
                     <button type="button" class="toggle-pass" onclick="togglePass('signupPass', this)" aria-label="Show password" title="Show password"><span aria-hidden="true">👁</span></button>
