@@ -201,6 +201,15 @@ def reject_pending_user(user_id, expected_pending_role=None):
         if expected_pending_role and pending_role != expected_pending_role:
             return None
 
+        if pending_role == "pending_student":
+            cursor.execute(
+                """
+                DELETE FROM student_profiles
+                WHERE user_id = ?
+                """,
+                (user_id,),
+            )
+
         cursor.execute(
             """
             DELETE FROM users
