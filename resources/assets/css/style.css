@@ -4041,8 +4041,18 @@ Signup page
 ================================ */
 body.signup-page {
   min-height: 100vh;
-  padding: 12px 20px;
+  padding: 4px 20px;
   align-items: center;
+}
+
+/* Keep the normal signup view inside the desktop viewport without a page scrollbar.
+   If a server-side validation message is shown, scrolling remains available. */
+@media (min-width: 641px) and (min-height: 720px) {
+  body.signup-page:not(:has(.auth-error)) {
+    height: 100dvh;
+    min-height: 100dvh;
+    overflow-y: hidden;
+  }
 }
 
 body.signup-page .login-container {
