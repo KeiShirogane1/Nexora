@@ -1,3 +1,4 @@
+{% set admin_classroom_modal = request.args.get('modal') == '1' %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,12 +9,14 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
 </head>
-<body class="nexora-admin-body admin-classroom-detail-body">
-    {% include 'components/admin_sidebar.html' %}
+<body class="nexora-admin-body admin-classroom-detail-body{% if admin_classroom_modal %} is-modal{% endif %}">
+    {% if not admin_classroom_modal %}{% include 'components/admin_sidebar.html' %}{% endif %}
 
-    <main class="admin-main nexora-app-main">
+    <main class="{% if admin_classroom_modal %}admin-classroom-modal-main{% else %}admin-main nexora-app-main{% endif %}">
         <div class="nexora-page admin-classroom-detail-page">
+            {% if not admin_classroom_modal %}
             <nav class="admin-breadcrumb" aria-label="Breadcrumb"><a href="{{ url_for('admin_classrooms.classrooms') }}">Classrooms</a><span>/</span><span>{{ classroom.name }}</span></nav>
+            {% endif %}
 
             <header class="admin-classroom-hero admin-polish-panel">
                 <div>
@@ -104,7 +107,7 @@
                         <div class="admin-supervisor-card">
                             <div class="admin-doc-student-avatar" aria-hidden="true">{{ (classroom.supervisor_name or '?')[:1]|upper }}</div>
                             <div><strong>{{ classroom.supervisor_name or 'Unknown Supervisor' }}</strong><span>{{ classroom.supervisor_email or '—' }}</span></div>
-                            <a class="admin-compact-action admin-classroom-supervisor-button" href="{{ url_for('admin.supervisor_profile', supervisor_id=classroom.supervisor_id) }}">View Profile</a>
+                            <a class="admin-compact-action admin-classroom-supervisor-button" href="{{ url_for('admin.supervisor_profile', supervisor_id=classroom.supervisor_id) }}"{% if admin_classroom_modal %} target="_top"{% endif %}>View Profile</a>
                         </div>
                     </section>
 
@@ -167,8 +170,8 @@
                                 <div class="admin-doc-student-avatar" aria-hidden="true">{{ (student.display_name or student.username or '?')[:1]|upper }}</div>
                                 <div class="admin-doc-student-main"><strong>{{ student.display_name }}</strong><span>@{{ student.username }}{% if student.student_number %} · {{ student.student_number }}{% endif %}</span><small>{{ student.major_program or 'Program not provided' }} · Joined {{ student.joined_at }}</small></div>
                                 <span class="admin-status-pill {% if student.status == 'inactive' %}is-muted{% else %}is-success{% endif %}">{{ student.status|title }}</span>
-                                <a class="admin-compact-action admin-classroom-roster-profile-button" href="{{ url_for('admin.student_profile', student_id=student.id) }}">Profile</a>
-                                <a class="admin-compact-action admin-classroom-roster-insights-button" href="{{ url_for('admin_reports_overview.student_insights', student_id=student.id, class_id=classroom.id) }}">Insights</a>
+                                <a class="admin-compact-action admin-classroom-roster-profile-button" href="{{ url_for('admin.student_profile', student_id=student.id) }}"{% if admin_classroom_modal %} target="_top"{% endif %}>Profile</a>
+                                <a class="admin-compact-action admin-classroom-roster-insights-button" href="{{ url_for('admin_reports_overview.student_insights', student_id=student.id, class_id=classroom.id) }}"{% if admin_classroom_modal %} target="_top"{% endif %}>Insights</a>
                             </article>
                         {% endfor %}
                     </div>

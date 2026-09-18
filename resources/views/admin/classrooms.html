@@ -137,7 +137,12 @@
                                         </td>
                                         <td>{{ classroom.created_at }}</td>
                                         <td>
-                                            <a href="{{ url_for('admin_classrooms.classroom_detail', classroom_id=classroom.id) }}" class="btn-view">View</a>
+                                            <a
+                                                href="{{ url_for('admin_classrooms.classroom_detail', classroom_id=classroom.id) }}"
+                                                class="btn-view js-admin-classroom-modal"
+                                                data-classroom-url="{{ url_for('admin_classrooms.classroom_detail', classroom_id=classroom.id, modal=1) }}"
+                                                data-classroom-name="{{ classroom.name|e }}"
+                                            >View</a>
                                         </td>
                                     </tr>
                                 {% else %}
@@ -162,5 +167,79 @@
             </div>
         </div>
     </main>
+
+    <div class="admin-classroom-view-modal" id="adminClassroomViewModal" hidden aria-hidden="true">
+        <div class="admin-classroom-view-modal-backdrop" data-admin-classroom-close></div>
+        <section class="admin-classroom-view-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="adminClassroomViewModalTitle">
+            <header class="admin-classroom-view-modal-header">
+                <div>
+                    <span>CLASSROOM DETAILS</span>
+                    <h2 id="adminClassroomViewModalTitle">Classroom</h2>
+                    <p>Read-only Admin view</p>
+                </div>
+                <button type="button" class="admin-classroom-view-modal-close" data-admin-classroom-close aria-label="Close classroom details">×</button>
+            </header>
+            <div class="admin-classroom-view-modal-body">
+                <div class="admin-classroom-view-modal-loading" id="adminClassroomViewModalLoading">Loading classroom details…</div>
+                <iframe id="adminClassroomViewModalFrame" title="Classroom details" loading="lazy"></iframe>
+            </div>
+        </section>
+    </div>
+
+    <script>
+    (function () {
+        var modal = document.getElementById('adminClassroomViewModal');
+        var frame = document.getElementById('adminClassroomViewModalFrame');
+        var title = document.getElementById('adminClassroomViewModalTitle');
+        var loading = document.getElementById('adminClassroomViewModalLoading');
+        var lastTrigger = null;
+        if (!modal || !frame) return;
+
+        function openModal(link) {
+            lastTrigger = link;
+            title.textContent = link.dataset.classroomName || 'Classroom';
+            loading.hidden = false;
+            frame.hidden = true;
+            frame.src = link.dataset.classroomUrl || link.href;
+            modal.hidden = false;
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('admin-classroom-view-modal-open');
+            var closeButton = modal.querySelector('.admin-classroom-view-modal-close');
+            if (closeButton) closeButton.focus();
+        }
+
+        function closeModal() {
+            modal.hidden = true;
+            modal.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('admin-classroom-view-modal-open');
+            frame.src = 'about:blank';
+            frame.hidden = true;
+            loading.hidden = false;
+            if (lastTrigger) lastTrigger.focus();
+        }
+
+        document.querySelectorAll('.js-admin-classroom-modal').forEach(function (link) {
+            link.addEventListener('click', function (event) {
+                event.preventDefault();
+                openModal(link);
+            });
+        });
+
+        frame.addEventListener('load', function () {
+            if (!modal.hidden && frame.src && frame.src !== 'about:blank') {
+                loading.hidden = true;
+                frame.hidden = false;
+            }
+        });
+
+        modal.querySelectorAll('[data-admin-classroom-close]').forEach(function (button) {
+            button.addEventListener('click', closeModal);
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && !modal.hidden) closeModal();
+        });
+    })();
+    </script>
 </body>
 </html>
