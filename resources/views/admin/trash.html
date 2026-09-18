@@ -656,9 +656,9 @@
                     <div class="nx-trash-control">
                         <select class="nx-trash-select" id="trashDateFilter" aria-label="Filter by deletion date">
                             <option value="all">All deletion dates</option>
-                            <option value="7">Last 7 days</option>
-                            <option value="30">Last 30 days</option>
-                            <option value="expiring">Expiring in ≤ 7 days</option>
+                            <option value="6h">Last 6 hours</option>
+                            <option value="24h">Last 24 hours</option>
+                            <option value="expiring">Expiring in ≤ 6 hours</option>
                         </select>
                     </div>
                     <div class="nx-trash-control">
@@ -755,7 +755,7 @@
             const visibleCount = document.getElementById('trashVisibleCount');
             const recentDeletedCount = document.getElementById('recentDeletedCount');
             const expiringSoonCount = document.getElementById('expiringSoonCount');
-            const DAY_MS = 24 * 60 * 60 * 1000;
+            const HOUR_MS = 60 * 60 * 1000;
 
             function parseDeletedAt(value) {
                 if (!value) return null;
@@ -764,20 +764,20 @@
                 return Number.isNaN(parsed.getTime()) ? null : parsed;
             }
 
-            function ageInDays(row) {
+            function ageInHours(row) {
                 const deletedAt = parseDeletedAt(row.dataset.deletedAt);
                 if (!deletedAt) return null;
-                return (Date.now() - deletedAt.getTime()) / DAY_MS;
+                return (Date.now() - deletedAt.getTime()) / HOUR_MS;
             }
 
             function updateMetrics() {
                 let recent = 0;
                 let expiring = 0;
                 rows.forEach((row) => {
-                    const age = ageInDays(row);
+                    const age = ageInHours(row);
                     if (age === null) return;
-                    if (age >= 0 && age <= 7) recent += 1;
-                    if (age >= 23 && age <= 30) expiring += 1;
+                    if (age >= 0 && age <= 6) recent += 1;
+                    if (age >= 18 && age <= 24) expiring += 1;
                 });
                 if (recentDeletedCount) recentDeletedCount.textContent = recent;
                 if (expiringSoonCount) expiringSoonCount.textContent = expiring;
@@ -791,13 +791,13 @@
 
                 rows.forEach((row) => {
                     const haystack = `${row.dataset.name || ''} ${row.dataset.email || ''}`;
-                    const age = ageInDays(row);
+                    const age = ageInHours(row);
                     let show = !query || haystack.includes(query);
 
                     if (show && role !== 'all' && row.dataset.role !== role) show = false;
-                    if (show && date === '7' && (age === null || age < 0 || age > 7)) show = false;
-                    if (show && date === '30' && (age === null || age < 0 || age > 30)) show = false;
-                    if (show && date === 'expiring' && (age === null || age < 23 || age > 30)) show = false;
+                    if (show && date === '6h' && (age === null || age < 0 || age > 6)) show = false;
+                    if (show && date === '24h' && (age === null || age < 0 || age > 24)) show = false;
+                    if (show && date === 'expiring' && (age === null || age < 18 || age > 24)) show = false;
 
                     row.hidden = !show;
                     if (show) visible += 1;
