@@ -1,3 +1,4 @@
+{% set admin_documents_modal = request.args.get('modal') == '1' %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,14 +9,14 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
 </head>
-<body class="nexora-admin-body admin-page admin-document-folder-page">
+<body class="nexora-admin-body admin-page admin-document-folder-page{% if admin_documents_modal %} is-modal{% endif %}">
     {% include 'components/admin_sidebar.html' %}
-    {% include 'components/admin_topbar.html' %}
+    {% if not admin_documents_modal %}{% include 'components/admin_topbar.html' %}{% endif %}
 
-    <main class="admin-main nexora-app-main">
+    <main class="{% if admin_documents_modal %}admin-document-modal-main{% else %}admin-main nexora-app-main{% endif %}">
         <div class="nexora-page admin-document-folder-page">
             <nav class="admin-breadcrumb" aria-label="Breadcrumb">
-                <a href="{{ url_for('admin_classrooms.student_documents') }}">Student Documents</a><span>/</span><span>{{ student.display_name }}</span>
+                {% if admin_documents_modal %}<span>Student Documents</span>{% else %}<a href="{{ url_for('admin_classrooms.student_documents') }}">Student Documents</a>{% endif %}<span>/</span><span>{{ student.display_name }}</span>
             </nav>
 
             <section class="admin-folder-profile admin-polish-panel">

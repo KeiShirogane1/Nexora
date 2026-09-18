@@ -21,11 +21,23 @@
                 </div>
             </header>
 
-            <section class="admin-kpi-grid" aria-label="Document summary">
-                <article class="admin-kpi-card"><span>Students</span><strong>{{ summary.total_students }}</strong><small>Registered student accounts</small></article>
-                <article class="admin-kpi-card"><span>With Documents</span><strong>{{ summary.with_documents }}</strong><small>Students with uploaded files</small></article>
-                <article class="admin-kpi-card"><span>Total Documents</span><strong>{{ summary.total_documents }}</strong><small>Protected student files</small></article>
-                <article class="admin-kpi-card"><span>Classrooms</span><strong>{{ summary.total_classrooms }}</strong><small>Classroom groups</small></article>
+            <section class="admin-kpi-grid admin-documents-kpis" aria-label="Document summary">
+                <article class="admin-kpi-card admin-documents-kpi">
+                    <span class="admin-documents-kpi-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></span>
+                    <span class="admin-documents-kpi-copy"><span>Students</span><strong>{{ summary.total_students }}</strong><small>Registered student accounts</small></span>
+                </article>
+                <article class="admin-kpi-card admin-documents-kpi">
+                    <span class="admin-documents-kpi-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="m9 15 2 2 4-4"></path></svg></span>
+                    <span class="admin-documents-kpi-copy"><span>With Documents</span><strong>{{ summary.with_documents }}</strong><small>Students with uploaded files</small></span>
+                </article>
+                <article class="admin-kpi-card admin-documents-kpi">
+                    <span class="admin-documents-kpi-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M8 13h8M8 17h6"></path></svg></span>
+                    <span class="admin-documents-kpi-copy"><span>Total Documents</span><strong>{{ summary.total_documents }}</strong><small>Protected student files</small></span>
+                </article>
+                <article class="admin-kpi-card admin-documents-kpi">
+                    <span class="admin-documents-kpi-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M3 9h18M8 20v-4h8v4"></path></svg></span>
+                    <span class="admin-documents-kpi-copy"><span>Classrooms</span><strong>{{ summary.total_classrooms }}</strong><small>Classroom groups</small></span>
+                </article>
             </section>
 
             <section class="admin-polish-panel admin-documents-filter-panel">
@@ -43,8 +55,8 @@
                         </select>
                     </div>
                     <div class="admin-filter-actions">
-                        <a class="admin-secondary-button" href="{{ url_for('admin_classrooms.student_documents') }}">Reset</a>
-                        <button class="admin-primary-button" type="submit">Apply</button>
+                        <a class="admin-secondary-button admin-documents-reset-button" href="{{ url_for('admin_classrooms.student_documents') }}">Reset</a>
+                        <button class="admin-primary-button admin-documents-apply-button" type="submit">Apply</button>
                     </div>
                 </form>
             </section>
@@ -81,7 +93,7 @@
                                         </div>
                                         <div class="admin-doc-student-stat"><strong>{{ student.document_count }}</strong><span>Documents</span></div>
                                         <div class="admin-doc-student-stat admin-doc-last-upload"><strong>{{ student.last_upload }}</strong><span>Latest upload</span></div>
-                                        <a class="admin-compact-action" href="{{ url_for('admin_classrooms.student_document_folder', student_id=student.id) }}">View Folder</a>
+                                        <a class="admin-compact-action admin-documents-folder-button js-admin-folder-modal" href="{{ url_for('admin_classrooms.student_document_folder', student_id=student.id) }}" data-folder-url="{{ url_for('admin_classrooms.student_document_folder', student_id=student.id, modal=1) }}" data-student-name="{{ student.display_name|e }}">View Folder</a>
                                     </article>
                                 {% endfor %}
                             </div>
@@ -103,7 +115,7 @@
                                 <div class="admin-doc-student-main"><strong>{{ student.display_name }}</strong><span>@{{ student.username }}{% if student.student_number %} · {{ student.student_number }}{% endif %}</span><small>{{ student.major_program or 'Program not provided' }}</small></div>
                                 <div class="admin-doc-student-stat"><strong>{{ student.document_count }}</strong><span>Documents</span></div>
                                 <div class="admin-doc-student-stat admin-doc-last-upload"><strong>{{ student.last_upload }}</strong><span>Latest upload</span></div>
-                                <a class="admin-compact-action" href="{{ url_for('admin_classrooms.student_document_folder', student_id=student.id) }}">View Folder</a>
+                                <a class="admin-compact-action admin-documents-folder-button js-admin-folder-modal" href="{{ url_for('admin_classrooms.student_document_folder', student_id=student.id) }}" data-folder-url="{{ url_for('admin_classrooms.student_document_folder', student_id=student.id, modal=1) }}" data-student-name="{{ student.display_name|e }}">View Folder</a>
                             </article>
                         {% endfor %}
                     </div>
@@ -135,5 +147,78 @@
             {% endif %}
         </div>
     </main>
+
+    <div class="admin-documents-modal" id="adminDocumentsModal" hidden aria-hidden="true">
+        <div class="admin-documents-modal-backdrop" data-admin-documents-close></div>
+        <section class="admin-documents-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="adminDocumentsModalTitle">
+            <header class="admin-documents-modal-header">
+                <div>
+                    <span>STUDENT DOCUMENTS</span>
+                    <h2 id="adminDocumentsModalTitle">Document Folder</h2>
+                    <p id="adminDocumentsModalSubtitle">Read-only Admin view</p>
+                </div>
+                <button type="button" class="admin-documents-modal-close" data-admin-documents-close aria-label="Close document folder">×</button>
+            </header>
+            <div class="admin-documents-modal-body">
+                <div class="admin-documents-modal-loading" id="adminDocumentsModalLoading">Loading student documents…</div>
+                <iframe id="adminDocumentsModalFrame" title="Student document folder" loading="lazy"></iframe>
+            </div>
+        </section>
+    </div>
+
+    <script>
+    (function () {
+        var modal = document.getElementById('adminDocumentsModal');
+        var frame = document.getElementById('adminDocumentsModalFrame');
+        var title = document.getElementById('adminDocumentsModalTitle');
+        var subtitle = document.getElementById('adminDocumentsModalSubtitle');
+        var loading = document.getElementById('adminDocumentsModalLoading');
+        if (!modal || !frame) return;
+
+        function openModal(link) {
+            title.textContent = link.dataset.studentName || 'Document Folder';
+            subtitle.textContent = 'Read-only Admin document view';
+            loading.hidden = false;
+            frame.hidden = true;
+            frame.src = link.dataset.folderUrl || link.href;
+            modal.hidden = false;
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('admin-documents-modal-open');
+            var closeButton = modal.querySelector('.admin-documents-modal-close');
+            if (closeButton) closeButton.focus();
+        }
+
+        function closeModal() {
+            modal.hidden = true;
+            modal.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('admin-documents-modal-open');
+            frame.src = 'about:blank';
+            frame.hidden = true;
+            loading.hidden = false;
+        }
+
+        document.querySelectorAll('.js-admin-folder-modal').forEach(function (link) {
+            link.addEventListener('click', function (event) {
+                event.preventDefault();
+                openModal(link);
+            });
+        });
+
+        frame.addEventListener('load', function () {
+            if (!modal.hidden && frame.src && frame.src !== 'about:blank') {
+                loading.hidden = true;
+                frame.hidden = false;
+            }
+        });
+
+        modal.querySelectorAll('[data-admin-documents-close]').forEach(function (button) {
+            button.addEventListener('click', closeModal);
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && !modal.hidden) closeModal();
+        });
+    })();
+    </script>
 </body>
 </html>
