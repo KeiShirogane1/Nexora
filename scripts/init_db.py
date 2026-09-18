@@ -325,7 +325,8 @@ def initialize_database():
                 password TEXT NOT NULL,
                 role TEXT NOT NULL,
                 status TEXT DEFAULT 'active',
-                password_changed_at TIMESTAMP
+                password_changed_at TIMESTAMP,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
             """,
 
@@ -430,6 +431,17 @@ def initialize_database():
             """
             ALTER TABLE users
             ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'active'
+            """,
+
+            """
+            ALTER TABLE users
+            ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            """,
+
+            """
+            UPDATE users
+            SET created_at = CURRENT_TIMESTAMP
+            WHERE created_at IS NULL
             """,
 
             """
@@ -737,7 +749,8 @@ def initialize_database():
                 email TEXT UNIQUE,
                 password TEXT NOT NULL,
                 role TEXT NOT NULL,
-                password_changed_at TIMESTAMP
+                password_changed_at TIMESTAMP,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
             """,
 
@@ -1190,6 +1203,19 @@ def initialize_database():
                 ADD COLUMN status TEXT DEFAULT 'active'
                 """
             )
+
+        if "created_at" not in user_columns:
+            cursor.execute(
+                "ALTER TABLE users ADD COLUMN created_at TIMESTAMP"
+            )
+
+        cursor.execute(
+            """
+            UPDATE users
+            SET created_at = CURRENT_TIMESTAMP
+            WHERE created_at IS NULL
+            """
+        )
 
         # Internships supervisor_id for Phase 3
         internship_cols = {

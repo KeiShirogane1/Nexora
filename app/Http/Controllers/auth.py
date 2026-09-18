@@ -2,6 +2,12 @@ from flask import Blueprint,render_template,request,redirect,url_for,session,fla
 from app.Models.db import get_db_connection,using_postgres
 from app.Services.password_security import hash_password,verify_password
 from app.Services.notification_service import create_notification
+from app.Services.email_service import send_account_request_email
+from app.Services.account_approval_service import (
+    AUTO_APPROVAL_MINUTES,
+    maybe_auto_approve_user,
+)
+import os
 import re
 
 auth=Blueprint("auth",__name__)
@@ -27,7 +33,13 @@ def login():
  if request.method=="POST":
   username=request.form.get("username","").strip(); password=request.form.get("password",""); user=get_user(username,password)
   if user=="inactive":session["login_error"]="Your account has been deactivated. Please contact the administrator.";session["login_username"]=username;return redirect(url_for("auth.login"))
-  if user and user["role"] in ("pending_student","pending_supervisor"):session["login_error"]="Your account is awaiting administrator approval. You will be notified once approved.";session["login_username"]=username;return redirect(url_for("auth.login"))
+  if user and user["role"] in ("pending_student","pending_supervisor"):
+   try:
+    approved=maybe_auto_approve_user(user["id"])
+    if approved:user=get_user(username,password)
+   except Exception as exc:
+    current_app.logger.warning("Could not check automatic approval during login: %s",exc)
+  if user and user["role"] in ("pending_student","pending_supervisor"):session["login_error"]=f"Your account is awaiting approval. Nexora will approve it automatically within {AUTO_APPROVAL_MINUTES} minutes if an administrator does not act sooner. You will receive an email when it is ready.";session["login_username"]=username;return redirect(url_for("auth.login"))
   if user and user["role"]=="rejected":session["login_error"]="Your account request was not approved. Please contact the administrator.";session["login_username"]=username;return redirect(url_for("auth.login"))
   if user:
    role=user["role"]; session.clear(); session["user_id"]=user["id"];session["role"]=role
@@ -126,30 +138,54 @@ def signup():
    conn.close()
 
   account_label="student" if account_type=="student" else "supervisor"
+  review_path=f"/admin/users?pending_user={user_id}"
+  base_url=os.environ.get("APP_BASE_URL","").strip().rstrip("/") or request.url_root.rstrip("/")
+  review_url=f"{base_url}{review_path}"
   try:
    admin_conn=get_db_connection();admin_cur=admin_conn.cursor()
    try:
-    admin_cur.execute("SELECT id FROM users WHERE role='admin' AND COALESCE(status,'active')<>'inactive'")
-    admin_ids=[row[0] for row in admin_cur.fetchall()]
+    admin_cur.execute("""
+     SELECT id,username,email
+     FROM users
+     WHERE role='admin'
+     AND COALESCE(status,'active')<>'inactive'
+    """)
+    admin_users=admin_cur.fetchall()
    finally:
     admin_cur.close()
     admin_conn.close()
 
-   for admin_id in admin_ids:
+   for admin_user in admin_users:
+    admin_id=admin_user["id"]
     try:
      create_notification(
       admin_id,
       "New account awaiting approval",
-      f"{username} ({email}) requested a {account_label} account.",
+      f"{username} ({email}) requested a {account_label} account. Automatic approval is scheduled in {AUTO_APPROVAL_MINUTES} minutes.",
       "system",
-      "/admin/users",
+      review_path,
      )
     except Exception as exc:
      current_app.logger.warning("Could not create signup notification for admin %s: %s",admin_id,exc)
-  except Exception as exc:
-   current_app.logger.warning("Could not load admins for signup notification: %s",exc)
 
-  flash("Account created successfully. Wait for approval.","success")
+    if admin_user["email"]:
+     try:
+      send_account_request_email(
+       admin_user["email"],
+       admin_user["username"],
+       user_id,
+       username,
+       email,
+       account_label,
+       review_url,
+       auto_minutes=AUTO_APPROVAL_MINUTES,
+      )
+     except Exception as exc:
+      current_app.logger.warning("Could not email signup approval request to admin %s: %s",admin_id,exc)
+  except Exception as exc:
+   current_app.logger.warning("Could not load admins for signup notification/email: %s",exc)
+
+  flash(f"Account created successfully. Please wait up to {AUTO_APPROVAL_MINUTES} minutes for approval. An administrator may approve you sooner; otherwise Nexora will approve the account automatically. You will receive an email when your account is ready.","success")
   return redirect(url_for("auth.login"))
 
  return render_template("auth/signup.html",form_data=form_data)

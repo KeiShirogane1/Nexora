@@ -136,135 +136,134 @@
 
 <!-- PENDING REQUESTS -->
 
-                    <div class="dashboard-box">
+                    <section class="dashboard-box approval-management" id="approval-queue">
 
-                        <div class="box-header">
-
-                            <h3>
-                                Pending Account Requests
-                            </h3>
-
-                            <span>
-                                Approval Required
+                        <div class="approval-management-header">
+                            <div>
+                                <span class="approval-management-kicker">ACCOUNT APPROVAL</span>
+                                <h3>Pending Account Requests</h3>
+                                <p>Review new accounts before the 5-minute automatic approval window completes.</p>
+                            </div>
+                            <span class="approval-auto-policy">
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <circle cx="12" cy="12" r="9"></circle>
+                                    <path d="M12 7v5l3 2"></path>
+                                </svg>
+                                Auto-approve in 5 minutes
                             </span>
-
                         </div>
 
                         {% if pending_users %}
 
-                            <div class="table-responsive">
+                            <div class="approval-request-list">
+                                {% for user in pending_users %}
+                                    <article
+                                        class="approval-request-card{% if highlight_pending_user_id == user['id'] %} is-highlighted{% endif %}"
+                                        data-approval-request
+                                        data-deadline="{{ user['approval_deadline_iso'] }}"
+                                        data-user-id="{{ user['id'] }}"
+                                    >
+                                        <div class="approval-request-identity">
+                                            <span class="approval-request-avatar {{ 'student' if user['role'] == 'pending_student' else 'supervisor' }}" aria-hidden="true">
+                                                {% if user["role"] == "pending_student" %}
+                                                    <svg viewBox="0 0 24 24">
+                                                        <path d="M4 19a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4"></path>
+                                                        <circle cx="12" cy="7" r="4"></circle>
+                                                    </svg>
+                                                {% else %}
+                                                    <svg viewBox="0 0 24 24">
+                                                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                                                        <circle cx="9" cy="7" r="4"></circle>
+                                                        <path d="M19 8v6"></path>
+                                                        <path d="M22 11h-6"></path>
+                                                    </svg>
+                                                {% endif %}
+                                            </span>
+                                            <div>
+                                                <strong>{{ user["username"] }}</strong>
+                                                <span>{{ user["email"] }}</span>
+                                                <small>Requested {{ user["created_at_display"] }}</small>
+                                            </div>
+                                        </div>
 
-                                <table class="table align-middle">
+                                        <div class="approval-request-role">
+                                            <span class="approval-role-badge {{ 'student' if user['role'] == 'pending_student' else 'supervisor' }}">
+                                                {{ user["account_type"] }}
+                                            </span>
+                                            <small>Pending account</small>
+                                        </div>
 
-                                    <thead>
+                                        <div class="approval-request-timer">
+                                            <div class="approval-timer-top">
+                                                <span>Automatic approval</span>
+                                                <strong data-approval-countdown>05:00</strong>
+                                            </div>
+                                            <div class="approval-timer-track" aria-hidden="true">
+                                                <span data-approval-progress></span>
+                                            </div>
+                                            <small data-approval-note>
+                                                Approves automatically if no Admin action is taken.
+                                            </small>
+                                        </div>
 
-                                        <tr>
-
-                                            <th>
-                                                Username
-                                            </th>
-
-                                            <th>
-                                                Email
-                                            </th>
-
-                                            <th>
-                                                Role
-                                            </th>
-
-                                            <th>
-                                                Action
-                                            </th>
-
-                                        </tr>
-
-                                    </thead>
-
-                                    <tbody>
-
-                                        {% for user in pending_users %}
-
-                                            <tr>
-
-                                                <td>
-                                                    <strong>
-                                                        {{ user["username"] }}
-                                                    </strong>
-                                                </td>
-
-                                                <td>
-                                                    {{ user["email"] }}
-                                                </td>
-
-                                                <td>
-
-                                                    <span class="status-badge pending">
-
-                                                        {{ user["role"] }}
-
-                                                    </span>
-
-                                                </td>
-
-                                                <td>
-
-                                                    {% if user["role"] == "pending_student" %}
-
-                                                        <form method="POST" action="{{ url_for('admin.approve_student', user_id=user['id']) }}" style="display:inline;">
-                                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                            <button type="submit" class="btn btn-success btn-sm">Approve</button>
-                                                        </form>
-
-                                                        <form method="POST" action="{{ url_for('admin.reject_student', user_id=user['id']) }}" style="display:inline;">
-                                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                            <button type="submit" class="btn btn-danger btn-sm">Reject</button>
-                                                        </form>
-
-                                                    {% elif user["role"] == "pending_supervisor" %}
-
-                                                        <form method="POST" action="{{ url_for('admin.approve_supervisor', user_id=user['id']) }}" style="display:inline;">
-                                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                            <button type="submit" class="btn btn-success btn-sm">Approve</button>
-                                                        </form>
-
-                                                        <form method="POST" action="{{ url_for('admin.reject_supervisor', user_id=user['id']) }}" style="display:inline;">
-                                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                            <button type="submit" class="btn btn-danger btn-sm">Reject</button>
-                                                        </form>
-
-                                                    {% else %}
-
-                                                        <span class="text-muted">
-
-                                                            Waiting approval
-
-                                                        </span>
-
-                                                    {% endif %}
-
-                                                </td>
-
-                                            </tr>
-
-                                        {% endfor %}
-
-                                    </tbody>
-
-                                </table>
-
+                                        <div class="approval-request-actions">
+                                            {% if user["role"] == "pending_student" %}
+                                                <form method="POST" action="{{ url_for('admin.approve_student', user_id=user['id']) }}">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                    <input type="hidden" name="return_to" value="users">
+                                                    <button type="submit" class="approval-btn approval-btn-approve">
+                                                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"></path></svg>
+                                                        Approve Now
+                                                    </button>
+                                                </form>
+                                                <form method="POST" action="{{ url_for('admin.reject_student', user_id=user['id']) }}">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                    <input type="hidden" name="return_to" value="users">
+                                                    <button type="submit" class="approval-btn approval-btn-reject">
+                                                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg>
+                                                        Reject
+                                                    </button>
+                                                </form>
+                                            {% elif user["role"] == "pending_supervisor" %}
+                                                <form method="POST" action="{{ url_for('admin.approve_supervisor', user_id=user['id']) }}">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                    <input type="hidden" name="return_to" value="users">
+                                                    <button type="submit" class="approval-btn approval-btn-approve">
+                                                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"></path></svg>
+                                                        Approve Now
+                                                    </button>
+                                                </form>
+                                                <form method="POST" action="{{ url_for('admin.reject_supervisor', user_id=user['id']) }}">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                    <input type="hidden" name="return_to" value="users">
+                                                    <button type="submit" class="approval-btn approval-btn-reject">
+                                                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg>
+                                                        Reject
+                                                    </button>
+                                                </form>
+                                            {% endif %}
+                                        </div>
+                                    </article>
+                                {% endfor %}
                             </div>
 
                         {% else %}
 
-                            <div class="empty-state">
-
-                                ✅ No pending account requests.
-
+                            <div class="approval-empty-state">
+                                <span class="approval-empty-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24">
+                                        <path d="m5 12 4 4L19 6"></path>
+                                    </svg>
+                                </span>
+                                <div>
+                                    <strong>No pending account requests</strong>
+                                    <span>New Student and Supervisor requests will appear here.</span>
+                                </div>
                             </div>
 
                         {% endif %}
 
-                    </div>
+                    </section>
 
 <!-- USER DIRECTORY -->
 
@@ -393,6 +392,84 @@
             </div>
         </main>
 
+        <script>
+            (function () {
+                const AUTO_APPROVAL_SECONDS = 300;
+                const cards = Array.from(
+                    document.querySelectorAll("[data-approval-request]")
+                );
+
+                if (!cards.length) return;
+
+                let reloadScheduled = false;
+
+                function formatCountdown(totalSeconds) {
+                    const seconds = Math.max(0, totalSeconds);
+                    const minutes = Math.floor(seconds / 60);
+                    const remainder = seconds % 60;
+                    return String(minutes).padStart(2, "0") + ":" +
+                        String(remainder).padStart(2, "0");
+                }
+
+                function updateCountdowns() {
+                    const now = Date.now();
+
+                    cards.forEach(function (card) {
+                        const deadline = Date.parse(card.dataset.deadline || "");
+                        const countdown = card.querySelector("[data-approval-countdown]");
+                        const progress = card.querySelector("[data-approval-progress]");
+                        const note = card.querySelector("[data-approval-note]");
+
+                        if (!Number.isFinite(deadline)) return;
+
+                        const remaining = Math.max(
+                            0,
+                            Math.ceil((deadline - now) / 1000)
+                        );
+
+                        if (countdown) {
+                            countdown.textContent = remaining > 0
+                                ? formatCountdown(remaining)
+                                : "Approving…";
+                        }
+
+                        if (progress) {
+                            const percent = Math.max(
+                                0,
+                                Math.min(100, (remaining / AUTO_APPROVAL_SECONDS) * 100)
+                            );
+                            progress.style.width = percent + "%";
+                        }
+
+                        if (note && remaining === 0) {
+                            note.textContent = "Approval window complete. Refreshing account status…";
+                        }
+
+                        if (remaining === 0 && !reloadScheduled) {
+                            reloadScheduled = true;
+                            window.setTimeout(function () {
+                                window.location.reload();
+                            }, 1500);
+                        }
+                    });
+                }
+
+                const highlighted = document.querySelector(
+                    ".approval-request-card.is-highlighted"
+                );
+                if (highlighted) {
+                    window.setTimeout(function () {
+                        highlighted.scrollIntoView({
+                            behavior: "smooth",
+                            block: "center"
+                        });
+                    }, 250);
+                }
+
+                updateCountdowns();
+                window.setInterval(updateCountdowns, 1000);
+            })();
+        </script>
     </body>
 
 </html>

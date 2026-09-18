@@ -3721,3 +3721,402 @@ body.admin-classroom-detail-body .admin-classroom-roster-remove-button:focus-vis
     flex-direction: column-reverse;
   }
 }
+
+
+/* =========================================================
+ADMIN USER MANAGEMENT — timed account approval queue
+========================================================= */
+.admin-users-page .approval-management {
+  padding: 0 !important;
+  overflow: hidden;
+  border: 1px solid #e7ebef !important;
+  border-radius: 16px !important;
+  background: #fff !important;
+  box-shadow: 0 8px 28px rgba(34, 26, 23, 0.055) !important;
+}
+
+.admin-users-page .approval-management-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 20px 22px 17px;
+  border-bottom: 1px solid #edf0f2;
+  background: linear-gradient(180deg, #fff 0%, #fffbf9 100%);
+}
+
+.admin-users-page .approval-management-kicker {
+  display: block;
+  margin-bottom: 4px;
+  color: #f45125;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.admin-users-page .approval-management-header h3 {
+  margin: 0 !important;
+  color: #10213a;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.admin-users-page .approval-management-header p {
+  margin: 5px 0 0;
+  color: #75859a;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.admin-users-page .approval-auto-policy {
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  padding: 0 13px;
+  border: 1px solid #ffd9ca;
+  border-radius: 999px;
+  background: #fff3ee;
+  color: #d94a1e;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.admin-users-page .approval-auto-policy svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.admin-users-page .approval-request-list {
+  display: grid;
+  gap: 0;
+}
+
+.admin-users-page .approval-request-card {
+  display: grid;
+  grid-template-columns:
+    minmax(250px, 1.25fr)
+    minmax(130px, 0.55fr)
+    minmax(260px, 1fr)
+    minmax(270px, auto);
+  align-items: center;
+  gap: 20px;
+  padding: 18px 22px;
+  border-bottom: 1px solid #edf0f2;
+  background: #fff;
+  transition:
+    background 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.admin-users-page .approval-request-card:last-child {
+  border-bottom: 0;
+}
+
+.admin-users-page .approval-request-card:hover {
+  background: #fffdfc;
+}
+
+.admin-users-page .approval-request-card.is-highlighted {
+  position: relative;
+  z-index: 1;
+  background: #fff8f4;
+  box-shadow: inset 4px 0 0 #f45125;
+}
+
+.admin-users-page .approval-request-identity {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-users-page .approval-request-avatar {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+}
+
+.admin-users-page .approval-request-avatar.student {
+  background: #edf5ff;
+  color: #3477c8;
+}
+
+.admin-users-page .approval-request-avatar.supervisor {
+  background: #f3efff;
+  color: #7550c9;
+}
+
+.admin-users-page .approval-request-avatar svg,
+.admin-users-page .approval-btn svg,
+.admin-users-page .approval-empty-icon svg {
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.admin-users-page .approval-request-avatar svg {
+  width: 22px;
+  height: 22px;
+}
+
+.admin-users-page .approval-request-identity strong {
+  display: block;
+  overflow: hidden;
+  color: #14243b;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+}
+
+.admin-users-page .approval-request-identity span:not(.approval-request-avatar) {
+  display: block;
+  margin-top: 2px;
+  overflow: hidden;
+  color: #60718a;
+  font-size: 12px;
+  text-overflow: ellipsis;
+}
+
+.admin-users-page .approval-request-identity small {
+  display: block;
+  margin-top: 4px;
+  color: #98a3b1;
+  font-size: 10px;
+}
+
+.admin-users-page .approval-request-role {
+  display: grid;
+  justify-items: start;
+  gap: 5px;
+}
+
+.admin-users-page .approval-role-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.admin-users-page .approval-role-badge.student {
+  background: #edf5ff;
+  color: #2f6fb8;
+}
+
+.admin-users-page .approval-role-badge.supervisor {
+  background: #f3efff;
+  color: #6945bb;
+}
+
+.admin-users-page .approval-request-role small {
+  color: #98a3b1;
+  font-size: 10px;
+}
+
+.admin-users-page .approval-request-timer {
+  min-width: 0;
+}
+
+.admin-users-page .approval-timer-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.admin-users-page .approval-timer-top span {
+  color: #60718a;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.admin-users-page .approval-timer-top strong {
+  color: #f45125;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+}
+
+.admin-users-page .approval-timer-track {
+  height: 6px;
+  margin-top: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #f1f3f5;
+}
+
+.admin-users-page .approval-timer-track span {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #f45125, #ff8b64);
+  transition: width 0.9s linear;
+}
+
+.admin-users-page .approval-request-timer > small {
+  display: block;
+  margin-top: 6px;
+  color: #98a3b1;
+  font-size: 9px;
+  line-height: 1.4;
+}
+
+.admin-users-page .approval-request-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.admin-users-page .approval-request-actions form {
+  width: auto !important;
+  max-width: none !important;
+  margin: 0 !important;
+}
+
+.admin-users-page .approval-btn {
+  min-width: 118px !important;
+  height: 40px !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 14px !important;
+  border-radius: 10px !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  cursor: pointer;
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease,
+    background 0.16s ease;
+}
+
+.admin-users-page .approval-btn svg {
+  width: 15px;
+  height: 15px;
+  stroke-width: 2.3;
+}
+
+.admin-users-page .approval-btn:hover {
+  transform: translateY(-1px);
+}
+
+.admin-users-page .approval-btn-approve {
+  border: 1px solid #169257 !important;
+  background: #169257 !important;
+  color: #fff !important;
+  box-shadow: 0 5px 13px rgba(22, 146, 87, 0.15);
+}
+
+.admin-users-page .approval-btn-approve:hover {
+  background: #117a49 !important;
+}
+
+.admin-users-page .approval-btn-reject {
+  border: 1px solid #efc4bb !important;
+  background: #fff4f1 !important;
+  color: #c9472f !important;
+  box-shadow: none !important;
+}
+
+.admin-users-page .approval-btn-reject:hover {
+  background: #ffe9e3 !important;
+}
+
+.admin-users-page .approval-empty-state {
+  min-height: 126px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 22px;
+  color: #60718a;
+}
+
+.admin-users-page .approval-empty-icon {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: #eaf8f0;
+  color: #15945a;
+}
+
+.admin-users-page .approval-empty-icon svg {
+  width: 22px;
+  height: 22px;
+  stroke-width: 2.2;
+}
+
+.admin-users-page .approval-empty-state strong {
+  display: block;
+  color: #183129;
+  font-size: 13px;
+}
+
+.admin-users-page .approval-empty-state span:not(.approval-empty-icon) {
+  display: block;
+  margin-top: 3px;
+  color: #8a9894;
+  font-size: 10px;
+}
+
+@media (max-width: 1180px) {
+  .admin-users-page .approval-request-card {
+    grid-template-columns: minmax(230px, 1fr) minmax(220px, 0.85fr);
+  }
+
+  .admin-users-page .approval-request-role {
+    justify-self: end;
+  }
+
+  .admin-users-page .approval-request-actions {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 760px) {
+  .admin-users-page .approval-management-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .admin-users-page .approval-request-card {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .admin-users-page .approval-request-role {
+    justify-self: start;
+  }
+
+  .admin-users-page .approval-request-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .admin-users-page .approval-btn {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+}

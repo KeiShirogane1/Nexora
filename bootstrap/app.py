@@ -52,6 +52,7 @@ from app.Services.ojt_evaluation_service import ensure_ojt_evaluation_schema
 from app.Services.internship_schedule_service import ensure_internship_schedule_schema,get_student_schedule_state
 from app.Services.notification_service import get_user_notifications,get_recent_notifications,get_unread_count
 from app.Services.supervisor_profile_service import ensure_supervisor_profile_schema
+from app.Services.account_approval_service import start_account_approval_worker
 app=Flask(__name__,template_folder=str(BASE_DIR/"resources"/"views"),static_folder=str(BASE_DIR/"resources"/"assets"),static_url_path="/static")
 app.jinja_env.globals["get_ojt_progress"]=get_ojt_progress
 app.jinja_env.globals["get_daily_logbook_context"]=get_daily_logbook_context
@@ -166,6 +167,7 @@ def repair_missing_student_profiles():
  finally:cur.close();conn.close()
 initialize_database();ensure_supervisor_profile_schema();ensure_classroom_schema();ensure_classwork_submission_schema();ensure_classwork_score_schema();ensure_attendance_schema();ensure_logbook_schema();ensure_logbook_photo_schema();ensure_logbook_review_schema();ensure_daily_performance_rating_schema();ensure_ojt_evaluation_schema();ensure_internship_schedule_schema();ensure_session_schema();repair_missing_student_profiles()
 for bp in (auth,password,student,daily_logbook,logbook_review,daily_performance_history,intern_profile,ojt_evaluation,needs_attention,student_classwork,student_gradebook,student_classmates,supervisor,supervisor_documents,admin,admin_assigned_interns,classroom,internship_classroom,classwork,classwork_submissions,classwork_grading,classwork_scores,classwork_gradebook,classwork_gradebook_export,classwork_ml_insights,performance_reports,admin_classrooms,admin_reports_overview,admin_trash,supervisor_profile_photo,assistant_bp,notifications_bp,messages):app.register_blueprint(bp)
+start_account_approval_worker(app)
 @app.before_request
 def enforce_single_supervisor_session():
  if session.get("role")!="supervisor" or not session.get("user_id") or request.path in ("/login","/logout","/signup","/") or request.path.startswith("/static/"):return None

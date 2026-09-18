@@ -7,7 +7,7 @@ import urllib.request
 BREVO_API_URL = "https://api.brevo.com/v3/smtp/email"
 
 
-def send_email(recipient, subject, body):
+def send_email(recipient, subject, body, html_body=None):
     api_key = os.environ.get(
         "BREVO_API_KEY",
         ""
@@ -51,6 +51,9 @@ def send_email(recipient, subject, body):
         "subject": subject,
         "textContent": body
     }
+
+    if html_body:
+        payload["htmlContent"] = html_body
 
     request_data = json.dumps(
         payload
@@ -189,4 +192,149 @@ Nexora System
         recipient,
         subject,
         body
+    )
+
+
+
+def send_account_request_email(
+    recipient,
+    admin_username,
+    pending_user_id,
+    username,
+    email,
+    account_type,
+    review_url,
+    auto_minutes=5,
+):
+    account_label = account_type.title()
+    subject = f"New Nexora Account Request — {account_label}"
+
+    body = f"""
+Hello {admin_username or "Administrator"},
+
+A new Nexora account is waiting for approval.
+
+Username: {username}
+Email: {email}
+Account Type: {account_label}
+
+If no administrator action is taken, this account will be approved automatically after {auto_minutes} minutes.
+
+Review and approve the user:
+{review_url}
+
+Nexora System
+""".strip()
+
+    safe_review_url = (
+        review_url.replace("&", "&amp;")
+        .replace('"', "&quot;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+    )
+    safe_username = (
+        username.replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+    )
+    safe_email = (
+        email.replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+    )
+
+    html_body = f"""
+<div style="font-family:Arial,Helvetica,sans-serif;background:#f8fafc;padding:28px;color:#0f172a;">
+  <div style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;padding:28px;">
+    <div style="font-size:12px;font-weight:800;letter-spacing:.12em;color:#f45125;">NEXORA ACCOUNT APPROVAL</div>
+    <h2 style="margin:10px 0 8px;font-size:24px;">New account request</h2>
+    <p style="margin:0 0 20px;color:#64748b;line-height:1.6;">
+      A new {account_label.lower()} account is waiting for approval. If no action is taken, Nexora will approve it automatically after {auto_minutes} minutes.
+    </p>
+    <div style="background:#fff8f5;border:1px solid #ffe0d5;border-radius:12px;padding:16px;margin-bottom:20px;">
+      <p style="margin:0 0 8px;"><strong>Username:</strong> {safe_username}</p>
+      <p style="margin:0 0 8px;"><strong>Email:</strong> {safe_email}</p>
+      <p style="margin:0;"><strong>Account Type:</strong> {account_label}</p>
+    </div>
+    <a href="{safe_review_url}" style="display:inline-block;padding:12px 18px;border-radius:10px;background:#f45125;color:#ffffff;text-decoration:none;font-weight:800;">
+      Review &amp; Approve User
+    </a>
+    <p style="margin:18px 0 0;color:#94a3b8;font-size:12px;line-height:1.5;">
+      For security, the button opens the protected Admin User Management page. Admin authentication is still required.
+    </p>
+  </div>
+</div>
+""".strip()
+
+    send_email(
+        recipient,
+        subject,
+        body,
+        html_body=html_body,
+    )
+
+
+def send_account_approved_email(
+    recipient,
+    username,
+    account_type,
+    automatic=False,
+):
+    account_label = "student" if account_type == "student" else "supervisor"
+    base_url = os.environ.get("APP_BASE_URL", "").strip().rstrip("/")
+    login_url = f"{base_url}/login" if base_url else ""
+
+    approval_note = (
+        "Your account was approved automatically after the 5-minute approval window."
+        if automatic
+        else "Your account was approved by a Nexora administrator."
+    )
+
+    next_step = (
+        "You may now sign in and complete your student profile."
+        if account_label == "student"
+        else "You may now sign in to your Nexora supervisor workspace."
+    )
+
+    body = f"""
+Hello {username},
+
+Your Nexora {account_label} account has been approved.
+
+{approval_note}
+
+{next_step}
+{login_url}
+
+Welcome to Nexora.
+
+Nexora System
+""".strip()
+
+    send_email(
+        recipient,
+        "Nexora Account Approved",
+        body,
+    )
+
+
+def send_account_rejected_email(
+    recipient,
+    username,
+    account_type,
+):
+    body = f"""
+Hello {username},
+
+Your Nexora {account_type} account request was not approved.
+
+Please contact the Nexora administrator for more information.
+
+Nexora System
+""".strip()
+
+    send_email(
+        recipient,
+        "Nexora Account Request Cancelled",
+        body,
     )

@@ -17,6 +17,12 @@ from app.Services.profile_history_service import (
 from app.Services.notification_service import (
     create_notification
 )
+from app.Services.account_approval_service import (
+    approve_pending_user,
+    reject_pending_user,
+    process_due_pending_accounts,
+    get_pending_account_view,
+)
 import os
 from app.Models.db import get_db_connection, using_postgres
 from datetime import datetime, timedelta
@@ -259,94 +265,74 @@ def admin_dashboard():
 @admin.route("/admin/users")
 @role_required("admin")
 def admin_users():
+    try:
+        process_due_pending_accounts()
+    except Exception as exc:
+        current_app.logger.warning(
+            "Could not process due account approvals on Admin User Management: %s",
+            exc,
+        )
 
     conn = get_db_connection()
     cursor = conn.cursor()
 
     try:
-
-        # ALL USERS
         cursor.execute(
             """
             SELECT
                 id,
                 username,
                 email,
-                role
+                role,
+                created_at
             FROM users
             WHERE role != 'deleted'
             ORDER BY username
             """
         )
-
         users = cursor.fetchall()
 
-
-
-        # STUDENTS
         students = [
             user for user in users
             if user["role"] == "student"
         ]
 
-
-
-        # SUPERVISORS
         supervisors = [
             user for user in users
             if user["role"] == "supervisor"
         ]
 
-
-
-        # PENDING ACCOUNTS
         pending_users = [
-            user for user in users
+            get_pending_account_view(user)
+            for user in users
             if user["role"] in (
                 "pending_student",
                 "pending_supervisor"
             )
         ]
 
-
-
-        # TOTAL USERS
         total_users = len(users)
-
-
-
-        # COUNTS
         students_count = len(students)
-
         supervisors_count = len(supervisors)
-
         pending_count = len(pending_users)
-
-
+        highlight_pending_user_id = request.args.get(
+            "pending_user",
+            type=int,
+        )
 
         return render_template(
             "admin/users.html",
-
             active_page="users",
-
             students=students,
-
             supervisors=supervisors,
-
             pending_users=pending_users,
-
             total_users=total_users,
-
             students_count=students_count,
-
             supervisors_count=supervisors_count,
-
-            pending_count=pending_count
+            pending_count=pending_count,
+            highlight_pending_user_id=highlight_pending_user_id,
         )
-
-
     finally:
-
         cursor.close()
         conn.close()
 
@@ -1308,322 +1294,76 @@ def admin_assignments():
         cursor.close()
         conn.close()
     
+def _approval_management_redirect(default_endpoint):
+    if request.form.get("return_to") == "users":
+        return redirect(url_for("admin.admin_users"))
+    return redirect(url_for(default_endpoint))
+
+
 @admin.route("/admin/reject-student/<int:user_id>", methods=["POST"])
 @role_required("admin")
 def reject_student(user_id):
-
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    try:
-
-        cursor.execute(
-            """
-            SELECT username, email
-            FROM users
-            WHERE id = ?
-            AND role = 'pending_student'
-            """,
-            (user_id,)
-        )
-
-        user = cursor.fetchone()
-
-
-        if not user:
-            return redirect(
-                "/admin/users/students"
-            )
-
-
-        cursor.execute(
-            """
-            UPDATE users
-            SET role = 'rejected'
-            WHERE id = ?
-            AND role = 'pending_student'
-            """,
-            (user_id,)
-        )
-
-
-        conn.commit()
-
-
-        if user["email"]:
-
-            try:
-
-                send_email(
-                    user["email"],
-                    "Nexora Account Request Cancelled",
-                    f"""
-Hello {user["username"]},
-
-Your Nexora student account request was not approved.
-
-Please contact the Nexora administrator for more information.
-
-Nexora System
-                    """.strip()
-                )
-
-            except Exception as e:
-
-                print(
-                    "Rejection email failed:",
-                    e
-                )
-
-
-    finally:
-
-        cursor.close()
-        conn.close()
-
-
-    return redirect(
-        "/admin/users/students"
+    user = reject_pending_user(
+        user_id,
+        expected_pending_role="pending_student",
     )
-    
+
+    if user:
+        flash("Student account request rejected.", "success")
+    else:
+        flash("That student account is no longer pending.", "warning")
+
+    return _approval_management_redirect("admin.admin_students")
+
+
 @admin.route("/admin/approve-student/<int:user_id>", methods=["POST"])
 @role_required("admin")
 def approve_student(user_id):
-
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    try:
-
-        cursor.execute(
-            """
-            SELECT username, email
-            FROM users
-            WHERE id = ?
-            AND role = 'pending_student'
-            """,
-            (user_id,)
-        )
-
-        user = cursor.fetchone()
-
-
-        if not user:
-            return redirect(
-                "/admin/users/students"
-            )
-
-
-        cursor.execute(
-            """
-            UPDATE users
-            SET role = 'student'
-            WHERE id = ?
-            AND role = 'pending_student'
-            """,
-            (user_id,)
-        )
-
-        conn.commit()
-
-
-        # Send approval email
-        if user["email"]:
-
-            try:
-
-                send_email(
-                    user["email"],
-                    "Nexora Account Approved",
-                    f"""
-                    Hello {user["username"]},
-
-                    Your Nexora student account has been approved.
-
-                    You may now login and complete your student profile.
-
-                    Welcome to Nexora.
-
-                    Nexora System
-                    """.strip()
-                )
-
-            except Exception as e:
-
-                print(
-                    "Approval email failed:",
-                    e
-                )
-
-
-    finally:
-
-        cursor.close()
-        conn.close()
-
-
-    return redirect(
-        "/admin/users/students"
+    user = approve_pending_user(
+        user_id,
+        expected_pending_role="pending_student",
+        automatic=False,
     )
+
+    if user:
+        flash("Student account approved. An approval email was sent when available.", "success")
+    else:
+        flash("That student account is no longer pending.", "warning")
+
+    return _approval_management_redirect("admin.admin_students")
 
 
 @admin.route("/admin/reject-supervisor/<int:user_id>", methods=["POST"])
 @role_required("admin")
 def reject_supervisor(user_id):
-
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    try:
-
-        cursor.execute(
-            """
-            SELECT username, email
-            FROM users
-            WHERE id = ?
-            AND role = 'pending_supervisor'
-            """,
-            (user_id,)
-        )
-
-        user = cursor.fetchone()
-
-
-        if not user:
-            return redirect(
-                "/admin/users/supervisors"
-            )
-
-
-        cursor.execute(
-            """
-            UPDATE users
-            SET role = 'rejected'
-            WHERE id = ?
-            AND role = 'pending_supervisor'
-            """,
-            (user_id,)
-        )
-
-
-        conn.commit()
-
-
-        if user["email"]:
-
-            try:
-
-                send_email(
-                    user["email"],
-                    "Nexora Account Request Cancelled",
-                    f"""
-Hello {user["username"]},
-
-Your Nexora supervisor account request was not approved.
-
-Please contact the Nexora administrator for more information.
-
-Nexora System
-                    """.strip()
-                )
-
-            except Exception as e:
-
-                print(
-                    "Rejection email failed:",
-                    e
-                )
-
-
-    finally:
-
-        cursor.close()
-        conn.close()
-
-
-    return redirect(
-        "/admin/users/supervisors"
+    user = reject_pending_user(
+        user_id,
+        expected_pending_role="pending_supervisor",
     )
+
+    if user:
+        flash("Supervisor account request rejected.", "success")
+    else:
+        flash("That supervisor account is no longer pending.", "warning")
+
+    return _approval_management_redirect("admin.admin_supervisors")
 
 
 @admin.route("/admin/approve-supervisor/<int:user_id>", methods=["POST"])
 @role_required("admin")
 def approve_supervisor(user_id):
-
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    try:
-
-        cursor.execute(
-            """
-            SELECT username, email
-            FROM users
-            WHERE id = ?
-            AND role = 'pending_supervisor'
-            """,
-            (user_id,)
-        )
-
-        user = cursor.fetchone()
-
-
-        if not user:
-            return redirect(
-                "/admin/users/supervisors"
-            )
-
-
-        cursor.execute(
-            """
-            UPDATE users
-            SET role = 'supervisor'
-            WHERE id = ?
-            AND role = 'pending_supervisor'
-            """,
-            (user_id,)
-        )
-
-        conn.commit()
-
-
-        if user["email"]:
-
-            try:
-
-                send_email(
-                    user["email"],
-                    "Nexora Account Approved",
-                    f"""
-                    Hello {user["username"]},
-
-                    Your Nexora supervisor account has been approved.
-
-                    You may now login to the Nexora system.
-
-                    Welcome to Nexora.
-
-                    Nexora System
-                    """.strip()
-                )
-
-            except Exception as e:
-
-                print(
-                    "Approval email failed:",
-                    e
-                )
-
-
-    finally:
-
-        cursor.close()
-        conn.close()
-
-
-    return redirect(
-        "/admin/users/supervisors"
+    user = approve_pending_user(
+        user_id,
+        expected_pending_role="pending_supervisor",
+        automatic=False,
     )
+
+    if user:
+        flash("Supervisor account approved. An approval email was sent when available.", "success")
+    else:
+        flash("That supervisor account is no longer pending.", "warning")
+
+    return _approval_management_redirect("admin.admin_supervisors")
 
 
 @admin.route("/admin/users/bulk", methods=["POST"])
