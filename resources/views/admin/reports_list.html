@@ -338,6 +338,23 @@
                                 parsed.querySelectorAll('head style'),
                                 function (style) { return style.outerHTML; }
                             ).join('');
+                        } else {
+                            var insightsHeader = fragment.querySelector('.admin-polish-header');
+                            var classroomSelector = fragment.querySelector('.admin-insights-selector');
+                            var studentDirectory = fragment.querySelector('.admin-insights-student-directory');
+
+                            if (insightsHeader) insightsHeader.remove();
+                            if (classroomSelector) classroomSelector.remove();
+                            if (studentDirectory) studentDirectory.remove();
+
+                            fragment.querySelectorAll('.admin-polish-empty').forEach(function (emptyState) {
+                                var heading = emptyState.querySelector('h2');
+                                if (!heading) return;
+                                var text = heading.textContent.trim();
+                                if (text === 'Choose a classroom' || text === 'Choose a student') {
+                                    emptyState.remove();
+                                }
+                            });
                         }
 
                         if (type === 'report') {
