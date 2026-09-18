@@ -161,7 +161,7 @@
             </header>
             <div class="admin-documents-modal-body">
                 <div class="admin-documents-modal-loading" id="adminDocumentsModalLoading">Loading student documents…</div>
-                <iframe id="adminDocumentsModalFrame" title="Student document folder" loading="lazy"></iframe>
+                <iframe id="adminDocumentsModalFrame" class="is-loading" title="Student document folder" loading="eager"></iframe>
             </div>
         </section>
     </div>
@@ -179,10 +179,10 @@
             title.textContent = link.dataset.studentName || 'Document Folder';
             subtitle.textContent = 'Read-only Admin document view';
             loading.hidden = false;
-            frame.hidden = true;
-            frame.src = link.dataset.folderUrl || link.href;
+            frame.classList.add('is-loading');
             modal.hidden = false;
             modal.setAttribute('aria-hidden', 'false');
+            frame.src = link.dataset.folderUrl || link.href;
             document.body.classList.add('admin-documents-modal-open');
             var closeButton = modal.querySelector('.admin-documents-modal-close');
             if (closeButton) closeButton.focus();
@@ -193,7 +193,7 @@
             modal.setAttribute('aria-hidden', 'true');
             document.body.classList.remove('admin-documents-modal-open');
             frame.src = 'about:blank';
-            frame.hidden = true;
+            frame.classList.add('is-loading');
             loading.hidden = false;
         }
 
@@ -207,7 +207,7 @@
         frame.addEventListener('load', function () {
             if (!modal.hidden && frame.src && frame.src !== 'about:blank') {
                 loading.hidden = true;
-                frame.hidden = false;
+                frame.classList.remove('is-loading');
             }
         });
 

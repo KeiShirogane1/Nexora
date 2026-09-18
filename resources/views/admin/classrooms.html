@@ -181,7 +181,7 @@
             </header>
             <div class="admin-classroom-view-modal-body">
                 <div class="admin-classroom-view-modal-loading" id="adminClassroomViewModalLoading">Loading classroom details…</div>
-                <iframe id="adminClassroomViewModalFrame" title="Classroom details" loading="lazy"></iframe>
+                <iframe id="adminClassroomViewModalFrame" class="is-loading" title="Classroom details" loading="eager"></iframe>
             </div>
         </section>
     </div>
@@ -199,10 +199,10 @@
             lastTrigger = link;
             title.textContent = link.dataset.classroomName || 'Classroom';
             loading.hidden = false;
-            frame.hidden = true;
-            frame.src = link.dataset.classroomUrl || link.href;
+            frame.classList.add('is-loading');
             modal.hidden = false;
             modal.setAttribute('aria-hidden', 'false');
+            frame.src = link.dataset.classroomUrl || link.href;
             document.body.classList.add('admin-classroom-view-modal-open');
             var closeButton = modal.querySelector('.admin-classroom-view-modal-close');
             if (closeButton) closeButton.focus();
@@ -213,7 +213,7 @@
             modal.setAttribute('aria-hidden', 'true');
             document.body.classList.remove('admin-classroom-view-modal-open');
             frame.src = 'about:blank';
-            frame.hidden = true;
+            frame.classList.add('is-loading');
             loading.hidden = false;
             if (lastTrigger) lastTrigger.focus();
         }
@@ -228,7 +228,7 @@
         frame.addEventListener('load', function () {
             if (!modal.hidden && frame.src && frame.src !== 'about:blank') {
                 loading.hidden = true;
-                frame.hidden = false;
+                frame.classList.remove('is-loading');
             }
         });
 
