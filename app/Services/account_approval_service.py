@@ -203,8 +203,7 @@ def reject_pending_user(user_id, expected_pending_role=None):
 
         cursor.execute(
             """
-            UPDATE users
-            SET role = 'rejected'
+            DELETE FROM users
             WHERE id = ?
             AND role = ?
             """,
