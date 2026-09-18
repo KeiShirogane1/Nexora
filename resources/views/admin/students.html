@@ -164,7 +164,7 @@
                                                 <div class="more-actions"><button type="button" class="btn-more" onclick="toggleMenu('menu-{{ student.id }}')" aria-label="More actions">⋮</button><div id="menu-{{ student.id }}" class="dropdown-menu-nexora">
                                                     <a href="{{ url_for('admin.student_profile', student_id=student.id) }}" class="dropdown-item-nexora"><span>👁️</span> View Profile</a>
                                                     <a href="{{ url_for('admin.edit_student', student_id=student.id) }}" class="dropdown-item-nexora"><span>✏️</span> Edit Student</a>
-                                                    <form method="POST" action="{{ url_for('admin.deactivate_student', student_id=student.id) }}" class="d-block" onsubmit="return confirm('Deactivate this student? This is safer than delete.')"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="dropdown-item-nexora dropdown-item-deactivate w-100 text-start bg-transparent border-0"><span>⏸️</span> Deactivate</button></form>
+                                                    <form method="POST" action="{{ url_for('admin.deactivate_student', student_id=student.id) }}" class="d-block student-deactivate-form"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="dropdown-item-nexora dropdown-item-deactivate w-100 text-start bg-transparent border-0"><span>⏸️</span> Deactivate</button></form>
                                                     <div class="dropdown-divider"></div>
                                                     {% if student.role == "pending_student" %}<form method="POST" action="{{ url_for('admin.approve_student', user_id=student.id) }}" class="d-block"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="dropdown-item-nexora dropdown-item-approve w-100 text-start bg-transparent border-0"><span>✅</span> Approve</button></form><form method="POST" action="{{ url_for('admin.reject_student', user_id=student.id) }}" class="d-block"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="dropdown-item-nexora danger w-100 text-start bg-transparent border-0"><span>🚫</span> Reject</button></form><div class="dropdown-divider"></div>{% endif %}
                                                     <a href="javascript:void(0)" class="dropdown-item-nexora danger" onclick="confirmDelete('{{ student.id }}'); return false;"><span>🗑️</span> Delete Student</a>
@@ -206,16 +206,201 @@
             </div>
         </div>
 
+        <div id="studentActionConfirmModal" class="nexora-modal-overlay" aria-hidden="true">
+            <div class="nexora-modal nexora-confirm-modal" role="alertdialog" aria-modal="true" aria-labelledby="studentActionConfirmTitle" aria-describedby="studentActionConfirmDescription">
+                <div class="nexora-modal-header nexora-confirm-header">
+                    <div class="nexora-confirm-heading">
+                        <span class="nexora-confirm-icon" id="studentActionConfirmIcon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M12 9v4"></path>
+                                <path d="M12 17h.01"></path>
+                                <path d="M10.3 3.7 2.5 17.2A2 2 0 0 0 4.2 20h15.6a2 2 0 0 0 1.7-2.8L13.7 3.7a2 2 0 0 0-3.4 0Z"></path>
+                            </svg>
+                        </span>
+                        <div>
+                            <h2 id="studentActionConfirmTitle">Confirm Student Action</h2>
+                            <p id="studentActionConfirmDescription">Review this action before continuing.</p>
+                        </div>
+                    </div>
+                    <button type="button" class="nexora-modal-close" id="closeStudentActionConfirm" aria-label="Close">×</button>
+                </div>
+
+                <div class="nexora-modal-body nexora-confirm-body">
+                    <div class="nexora-confirm-notice" id="studentActionConfirmNotice">
+                        <strong id="studentActionConfirmNoticeTitle">Account action</strong>
+                        <span id="studentActionConfirmNoticeText">Review the account action before continuing.</span>
+                    </div>
+
+                    <div class="nexora-confirm-student">
+                        <span id="studentActionConfirmSubjectLabel">Student</span>
+                        <strong id="studentActionConfirmSubjectName">Student account</strong>
+                        <small id="studentActionConfirmSubjectMeta"></small>
+                    </div>
+                </div>
+
+                <div class="nexora-modal-footer nexora-confirm-footer">
+                    <button type="button" class="btn-nexora-secondary" id="cancelStudentActionConfirm">Cancel</button>
+                    <button type="button" class="nexora-confirm-submit" id="confirmStudentAction">Continue</button>
+                </div>
+            </div>
+        </div>
+
         <script>
-            async function confirmDelete(id) {
-                if (!confirm("Soft-delete this student? This will set status to inactive/rejected (preserves history).")) return;
-                try {
-                    const resp = await fetch('{{ url_for("admin.bulk_action") }}', {method:"POST",headers:{"Content-Type":"application/json","X-CSRFToken":"{{ csrf_token() }}"},body:JSON.stringify({ids:[parseInt(id)],action:"delete"})});
-                    const data = await resp.json();
-                    if (data.success) { if (window.showToast) showToast(data.updated_count + " student(s) deleted (soft)."); location.reload(); }
-                    else if (window.showToast) showToast("Error: " + (data.error || "failed"));
-                } catch (e) { if (window.showToast) showToast("Network error", "error"); }
-            }
+            (function () {
+                const modal = document.getElementById("studentActionConfirmModal");
+                const closeBtn = document.getElementById("closeStudentActionConfirm");
+                const cancelBtn = document.getElementById("cancelStudentActionConfirm");
+                const confirmBtn = document.getElementById("confirmStudentAction");
+                const title = document.getElementById("studentActionConfirmTitle");
+                const description = document.getElementById("studentActionConfirmDescription");
+                const icon = document.getElementById("studentActionConfirmIcon");
+                const notice = document.getElementById("studentActionConfirmNotice");
+                const noticeTitle = document.getElementById("studentActionConfirmNoticeTitle");
+                const noticeText = document.getElementById("studentActionConfirmNoticeText");
+                const subjectLabel = document.getElementById("studentActionConfirmSubjectLabel");
+                const subjectName = document.getElementById("studentActionConfirmSubjectName");
+                const subjectMeta = document.getElementById("studentActionConfirmSubjectMeta");
+
+                let pendingAction = null;
+                let confirmLabel = "Continue";
+
+                function closeActionModal() {
+                    if (!modal) return;
+                    modal.classList.remove("open");
+                    modal.setAttribute("aria-hidden", "true");
+                    document.body.style.overflow = "";
+                    pendingAction = null;
+                    confirmBtn.disabled = false;
+                    confirmBtn.textContent = confirmLabel;
+                }
+
+                window.openStudentActionConfirm = function (config, action) {
+                    if (!modal || !confirmBtn) return;
+
+                    const variant = config.variant === "delete" ? "delete" : "deactivate";
+                    title.textContent = config.title || "Confirm Student Action";
+                    description.textContent = config.description || "Review this action before continuing.";
+                    noticeTitle.textContent = config.noticeTitle || "Account action";
+                    noticeText.textContent = config.noticeText || "";
+                    subjectLabel.textContent = config.subjectLabel || "Student";
+                    subjectName.textContent = config.subjectName || "Student account";
+                    subjectMeta.textContent = config.subjectMeta || "";
+                    confirmLabel = config.confirmLabel || "Continue";
+                    confirmBtn.textContent = confirmLabel;
+
+                    icon.classList.toggle("is-delete", variant === "delete");
+                    notice.classList.toggle("is-delete", variant === "delete");
+                    confirmBtn.classList.toggle("is-delete", variant === "delete");
+
+                    pendingAction = action;
+                    document.querySelectorAll(".dropdown-menu-nexora").forEach((el) => el.classList.remove("show"));
+                    modal.classList.add("open");
+                    modal.setAttribute("aria-hidden", "false");
+                    document.body.style.overflow = "hidden";
+                    window.setTimeout(() => confirmBtn.focus(), 50);
+                };
+
+                function studentDetailsFromRow(row) {
+                    const displayName = row?.querySelector("[data-student-display-name]")?.textContent?.trim() || row?.dataset.usernameValue || "Student account";
+                    const username = row?.dataset.usernameValue || row?.querySelector("[data-student-username]")?.textContent?.replace(/^@/, "").trim() || "";
+                    return {
+                        name: displayName,
+                        meta: username ? "@" + username : ""
+                    };
+                }
+
+                document.querySelectorAll(".student-deactivate-form").forEach((form) => {
+                    form.addEventListener("submit", (event) => {
+                        event.preventDefault();
+                        const row = form.closest("tr[data-student-row]");
+                        const student = studentDetailsFromRow(row);
+
+                        window.openStudentActionConfirm({
+                            variant: "deactivate",
+                            title: "Deactivate Student",
+                            description: "Pause access for this student account.",
+                            noticeTitle: "24-hour appeal window",
+                            noticeText: "The student will immediately lose portal access and may submit an account appeal within 24 hours.",
+                            subjectLabel: "Student",
+                            subjectName: student.name,
+                            subjectMeta: student.meta,
+                            confirmLabel: "Deactivate Student"
+                        }, () => {
+                            HTMLFormElement.prototype.submit.call(form);
+                        });
+                    });
+                });
+
+                async function performSingleDelete(id) {
+                    try {
+                        const resp = await fetch('{{ url_for("admin.bulk_action") }}', {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "X-CSRFToken": "{{ csrf_token() }}"
+                            },
+                            body: JSON.stringify({ ids: [parseInt(id)], action: "delete" })
+                        });
+                        const data = await resp.json();
+                        if (data.success) {
+                            if (window.showToast) showToast(data.updated_count + " student(s) deleted (soft).");
+                            location.reload();
+                            return;
+                        }
+                        if (window.showToast) showToast("Error: " + (data.error || "failed"), "error");
+                    } catch (e) {
+                        if (window.showToast) showToast("Network error", "error");
+                    }
+                }
+
+                window.confirmDelete = function (id) {
+                    const row = Array.from(document.querySelectorAll("tr[data-student-row]"))
+                        .find((item) => String(item.dataset.id) === String(id));
+                    const student = studentDetailsFromRow(row);
+
+                    window.openStudentActionConfirm({
+                        variant: "delete",
+                        title: "Delete Student",
+                        description: "Move this student account out of the active directory.",
+                        noticeTitle: "Soft-delete action",
+                        noticeText: "This current action makes the account inactive or rejected and preserves existing history. It does not immediately erase database records.",
+                        subjectLabel: "Student",
+                        subjectName: student.name,
+                        subjectMeta: student.meta,
+                        confirmLabel: "Delete Student"
+                    }, () => performSingleDelete(id));
+                };
+
+                confirmBtn?.addEventListener("click", async () => {
+                    if (!pendingAction) return;
+                    const action = pendingAction;
+                    confirmBtn.disabled = true;
+                    confirmBtn.textContent = "Processing...";
+
+                    try {
+                        await action();
+                    } finally {
+                        if (modal.classList.contains("open")) {
+                            confirmBtn.disabled = false;
+                            confirmBtn.textContent = confirmLabel;
+                        }
+                    }
+                });
+
+                closeBtn?.addEventListener("click", closeActionModal);
+                cancelBtn?.addEventListener("click", closeActionModal);
+                modal?.addEventListener("click", (event) => {
+                    if (event.target === modal) closeActionModal();
+                });
+                document.addEventListener("keydown", (event) => {
+                    if (event.key === "Escape" && modal?.classList.contains("open")) {
+                        closeActionModal();
+                    }
+                });
+
+                window.closeStudentActionConfirm = closeActionModal;
+            })();
+
             function toggleMenu(id) {
                 document.querySelectorAll(".dropdown-menu-nexora").forEach((el) => { if (el.id !== id) el.classList.remove("show"); });
                 const el = document.getElementById(id); if (el) el.classList.toggle("show");
@@ -349,17 +534,37 @@
                 if (headerCheckbox) headerCheckbox.addEventListener("change", function(){handleSelectAll(this.checked);});
                 rowCheckboxes.forEach((cb) => cb.addEventListener("change", updateBulkUI));
 
-                async function runBulk(action, button, noun) {
-                    const ids = rowCheckboxes.filter((cb) => cb.checked).map((cb) => cb.value);
-                    if (!ids.length) return;
-                    if (action !== "activate" && !confirm((action === "delete" ? "Soft-delete " : "Deactivate ") + ids.length + " " + noun + "? History will be preserved.")) return;
+                async function executeBulk(action, button, noun, ids) {
                     const original = button.textContent; button.disabled=true; button.textContent="Processing...";
                     try {
                         const resp = await fetch('{{ url_for("admin.bulk_action") }}',{method:"POST",headers:{"Content-Type":"application/json","X-CSRFToken":"{{ csrf_token() }}"},body:JSON.stringify({ids:ids,action:action})});
                         const data=await resp.json();
                         if(data.success){if(window.showToast)showToast(data.updated_count+" "+noun+" updated.");location.reload();}
-                        else{if(window.showToast)showToast("Error: "+(data.error||"failed"));button.disabled=false;button.textContent=original;}
+                        else{if(window.showToast)showToast("Error: "+(data.error||"failed"),"error");button.disabled=false;button.textContent=original;}
                     } catch(e){if(window.showToast)showToast("Network error","error");button.disabled=false;button.textContent=original;}
+                }
+                function runBulk(action, button, noun) {
+                    const ids = rowCheckboxes.filter((cb) => cb.checked).map((cb) => cb.value);
+                    if (!ids.length) return;
+                    if (action === "activate") {
+                        executeBulk(action, button, noun, ids);
+                        return;
+                    }
+
+                    const isDelete = action === "delete";
+                    window.openStudentActionConfirm({
+                        variant: isDelete ? "delete" : "deactivate",
+                        title: isDelete ? "Delete Selected Students" : "Deactivate Selected Students",
+                        description: "Apply this action to " + ids.length + " selected student" + (ids.length === 1 ? "" : "s") + ".",
+                        noticeTitle: isDelete ? "Soft-delete action" : "Bulk deactivation",
+                        noticeText: isDelete
+                            ? "Selected accounts will be made inactive or rejected while existing history is preserved."
+                            : "Selected accounts will lose normal portal access while existing history is preserved.",
+                        subjectLabel: "Selected students",
+                        subjectName: ids.length + " student" + (ids.length === 1 ? "" : "s"),
+                        subjectMeta: "This action uses the existing bulk account workflow.",
+                        confirmLabel: isDelete ? "Delete Students" : "Deactivate Students"
+                    }, () => executeBulk(action, button, noun, ids));
                 }
                 if (bulkActivate) bulkActivate.addEventListener("click",()=>runBulk("activate",bulkActivate,"student(s)"));
                 if (bulkDeactivate) bulkDeactivate.addEventListener("click",()=>runBulk("deactivate",bulkDeactivate,"student(s)"));
