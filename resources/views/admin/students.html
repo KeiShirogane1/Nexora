@@ -105,27 +105,12 @@
 
                     <div class="nexora-card table-card">
                         <div class="table-card-header">
-                            <div>
-                                <h3>Student Directory</h3>
-                                <small class="text-muted">Profile, program and section, class placement, assigned supervisor, and account status.</small>
-                            </div>
+                            <div><h3>Student Directory</h3><small class="text-muted">Profile, program and section, class placement, assigned supervisor, and account status.</small></div>
                             <span class="table-meta" id="tableCount">{{ students|length }} students</span>
                         </div>
                         <div class="table-responsive">
                             <table class="table nexora-table align-middle" id="studentsTable">
-                                <thead>
-                                    <tr>
-                                        <th class="student-col-select"><input type="checkbox" id="headerCheckbox" class="custom-checkbox" title="Select all"></th>
-                                        <th class="student-col-identity">Student</th>
-                                        <th class="student-col-id">Student ID</th>
-                                        <th class="student-col-program">Program / Section</th>
-                                        <th class="student-col-class">Class / Internship</th>
-                                        <th class="student-col-supervisor">Supervisor</th>
-                                        <th class="student-col-status">Status</th>
-                                        <th class="student-col-joined">Joined</th>
-                                        <th class="student-col-actions">Actions</th>
-                                    </tr>
-                                </thead>
+                                <thead><tr><th><input type="checkbox" id="headerCheckbox" class="custom-checkbox" title="Select all"></th><th>#</th><th>Student</th><th>Student ID</th><th>Program / Section</th><th>Class / Internship</th><th>Supervisor</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
                                 <tbody>
                                     {% set program_abbreviations = {
                                         'bsit': 'BSIT',
@@ -139,68 +124,55 @@
                                     } %}
                                     {% for student in students %}
                                         <tr data-student-row data-original-index="{{ loop.index }}" data-username="{{ student.username|lower }}" data-username-value="{{ student.username }}" data-email="{{ (student.email|lower) if student.email else '' }}" data-email-value="{{ student.email or '' }}" data-name="{{ student.username|lower }}" data-student-number="" data-status="{{ 'pending' if student.role == 'pending_student' else 'active' }}" data-program="{{ (student.major_program|trim|lower) if student.major_program else '' }}" data-program-label="{{ student.major_program or 'No Program' }}" data-supervisor="{{ (student.supervisor_name|lower) if student.supervisor_name else '' }}" data-class-ids="" data-primary-class="No Class" data-year="" data-id="{{ student.id }}">
-                                            <td class="student-col-select"><input type="checkbox" class="custom-checkbox row-checkbox" value="{{ student.id }}"></td>
-                                            <td class="student-col-identity">
-                                                <div class="student-cell">
+                                            <td><input type="checkbox" class="custom-checkbox row-checkbox" value="{{ student.id }}"></td>
+                                            <td class="text-muted table-index-cell">{{ loop.index }}</td>
+                                            <td>
+                                                <div class="supervisor-cell">
                                                     <img src="{{ url_for('user_profile_picture', user_id=student.id) }}" width="36" height="36" class="rounded-circle object-fit-cover flex-shrink-0" alt="">
-                                                    <div class="student-identity">
-                                                        <span class="student-primary" data-student-display-name>{{ student.username }}</span>
-                                                        <span class="student-secondary" data-student-username>@{{ student.username }}</span>
-                                                        {% if student.email %}<span class="student-secondary table-email" data-student-email>{{ student.email }}</span>{% else %}<span class="student-secondary text-muted-placeholder" data-student-email>No email</span>{% endif %}
-                                                    </div>
+                                                    <span>
+                                                        <span class="supervisor-truncate" data-student-display-name>{{ student.username }}</span>
+                                                        <small class="d-block text-muted fw-normal" data-student-username>@{{ student.username }}</small>
+                                                        {% if student.email %}<small class="d-block text-muted fw-normal table-email" data-student-email>{{ student.email }}</small>{% else %}<small class="d-block text-muted fw-normal text-muted-placeholder" data-student-email>No email</small>{% endif %}
+                                                    </span>
                                                 </div>
                                             </td>
-                                            <td class="student-col-id"><span data-student-number class="text-muted-placeholder">—</span></td>
-                                            <td class="student-col-program" data-program-cell data-full-program="{{ (student.major_program or '')|trim }}">
-                                                <div class="student-program-section">
-                                                    {% if student.major_program %}
-                                                        {% set program_key = student.major_program|trim|lower %}
-                                                        {% set program_label = program_abbreviations.get(program_key, student.major_program|trim) %}
-                                                        <span class="table-meta text-nowrap" title="{{ student.major_program|trim }}">{{ program_label if program_label|length <= 16 else program_label[:13] ~ '…' }}</span>
-                                                    {% else %}<span class="text-muted-placeholder">—</span>{% endif %}
-                                                    <span data-year-section class="student-secondary-line text-muted-placeholder">—</span>
-                                                </div>
+                                            <td><span class="supervisor-truncate text-muted-placeholder" data-student-number>—</span></td>
+                                            <td data-program-cell data-full-program="{{ (student.major_program or '')|trim }}">
+                                                {% if student.major_program %}
+                                                    {% set program_key = student.major_program|trim|lower %}
+                                                    {% set program_label = program_abbreviations.get(program_key, student.major_program|trim) %}
+                                                    <span class="supervisor-data-pill table-meta text-nowrap" title="{{ student.major_program|trim }}">{{ program_label if program_label|length <= 16 else program_label[:13] ~ '…' }}</span>
+                                                {% else %}<span class="text-muted-placeholder">—</span>{% endif %}
+                                                <small class="d-block text-muted fw-normal text-muted-placeholder" data-year-section>—</small>
                                             </td>
-                                            <td class="student-col-class"><div data-class-list class="student-class-list d-flex flex-wrap gap-1"><span class="text-muted-placeholder">—</span></div></td>
-                                            <td class="student-col-supervisor" data-supervisor-cell>{% if student.supervisor_name %}{{ student.supervisor_name }}{% else %}<span class="text-muted-placeholder">Not Assigned</span>{% endif %}</td>
-                                            <td class="student-col-status" data-status-cell>
+                                            <td><div data-class-list class="d-flex flex-wrap gap-1"><span class="text-muted-placeholder">—</span></div></td>
+                                            <td><span class="supervisor-truncate{% if not student.supervisor_name %} text-muted-placeholder{% endif %}" data-supervisor-cell>{% if student.supervisor_name %}{{ student.supervisor_name }}{% else %}Not Assigned{% endif %}</span></td>
+                                            <td data-status-cell>
                                                 {% if student.role == "pending_student" %}
                                                     <span class="status-badge status-pending"><span class="status-dot"></span> Pending Approval</span>
                                                 {% else %}
                                                     <span class="status-badge status-active"><span class="status-dot"></span> Active</span>
                                                 {% endif %}
                                             </td>
-                                            <td class="student-col-joined" data-joined-date>{% if student.joined_date %}<span class="text-nowrap">{{ student.joined_date }}</span>{% else %}<span class="text-muted-placeholder">—</span>{% endif %}</td>
-                                            <td class="student-col-actions">
-                                                <div class="actions-cell">
-                                                    <a href="{{ url_for('admin.student_profile', student_id=student.id) }}" class="btn-view">View Profile</a>
-                                                    {% if student.role == "pending_student" %}
-                                                        <form method="POST" action="{{ url_for('admin.approve_student', user_id=student.id) }}" class="d-inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="btn-approve">Approve</button></form>
-                                                        <form method="POST" action="{{ url_for('admin.reject_student', user_id=student.id) }}" class="d-inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="btn-reject">Reject</button></form>
-                                                    {% endif %}
-                                                    <div class="more-actions">
-                                                        <button type="button" class="btn-more" onclick="toggleMenu('menu-{{ student.id }}')" aria-label="More actions">⋮</button>
-                                                        <div id="menu-{{ student.id }}" class="dropdown-menu-nexora">
-                                                            <a href="{{ url_for('admin.student_profile', student_id=student.id) }}" class="dropdown-item-nexora"><span>👁️</span> View Profile</a>
-                                                            <a href="{{ url_for('admin.edit_student', student_id=student.id) }}" class="dropdown-item-nexora"><span>✏️</span> Edit Student</a>
-                                                            <form method="POST" action="{{ url_for('admin.deactivate_student', student_id=student.id) }}" class="d-block" onsubmit="return confirm('Deactivate this student? This is safer than delete.')">
-                                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                                <button type="submit" class="dropdown-item-nexora dropdown-item-deactivate w-100 text-start bg-transparent border-0"><span>⏸️</span> Deactivate</button>
-                                                            </form>
-                                                            <div class="dropdown-divider"></div>
-                                                            {% if student.role == "pending_student" %}
-                                                                <form method="POST" action="{{ url_for('admin.approve_student', user_id=student.id) }}" class="d-block"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="dropdown-item-nexora dropdown-item-approve w-100 text-start bg-transparent border-0"><span>✅</span> Approve</button></form>
-                                                                <form method="POST" action="{{ url_for('admin.reject_student', user_id=student.id) }}" class="d-block"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="dropdown-item-nexora danger w-100 text-start bg-transparent border-0"><span>🚫</span> Reject</button></form>
-                                                                <div class="dropdown-divider"></div>
-                                                            {% endif %}
-                                                            <a href="javascript:void(0)" class="dropdown-item-nexora danger" onclick="confirmDelete('{{ student.id }}'); return false;"><span>🗑️</span> Delete Student</a>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </td>
+                                            <td data-joined-date>{% if student.joined_date %}<span class="text-nowrap">{{ student.joined_date }}</span>{% else %}<span class="text-muted-placeholder">—</span>{% endif %}</td>
+                                            <td><div class="actions-cell">
+                                                <a href="{{ url_for('admin.student_profile', student_id=student.id) }}" class="btn-view">View Profile</a>
+                                                {% if student.role == "pending_student" %}
+                                                    <form method="POST" action="{{ url_for('admin.approve_student', user_id=student.id) }}" class="d-inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="btn-approve">Approve</button></form>
+                                                    <form method="POST" action="{{ url_for('admin.reject_student', user_id=student.id) }}" class="d-inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="btn-reject">Reject</button></form>
+                                                {% endif %}
+                                                <div class="more-actions"><button type="button" class="btn-more" onclick="toggleMenu('menu-{{ student.id }}')" aria-label="More actions">⋮</button><div id="menu-{{ student.id }}" class="dropdown-menu-nexora">
+                                                    <a href="{{ url_for('admin.student_profile', student_id=student.id) }}" class="dropdown-item-nexora"><span>👁️</span> View Profile</a>
+                                                    <a href="{{ url_for('admin.edit_student', student_id=student.id) }}" class="dropdown-item-nexora"><span>✏️</span> Edit Student</a>
+                                                    <form method="POST" action="{{ url_for('admin.deactivate_student', student_id=student.id) }}" class="d-block" onsubmit="return confirm('Deactivate this student? This is safer than delete.')"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="dropdown-item-nexora dropdown-item-deactivate w-100 text-start bg-transparent border-0"><span>⏸️</span> Deactivate</button></form>
+                                                    <div class="dropdown-divider"></div>
+                                                    {% if student.role == "pending_student" %}<form method="POST" action="{{ url_for('admin.approve_student', user_id=student.id) }}" class="d-block"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="dropdown-item-nexora dropdown-item-approve w-100 text-start bg-transparent border-0"><span>✅</span> Approve</button></form><form method="POST" action="{{ url_for('admin.reject_student', user_id=student.id) }}" class="d-block"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="dropdown-item-nexora danger w-100 text-start bg-transparent border-0"><span>🚫</span> Reject</button></form><div class="dropdown-divider"></div>{% endif %}
+                                                    <a href="javascript:void(0)" class="dropdown-item-nexora danger" onclick="confirmDelete('{{ student.id }}'); return false;"><span>🗑️</span> Delete Student</a>
+                                                </div></div>
+                                            </div></td>
                                         </tr>
                                     {% else %}
-                                        <tr><td colspan="9"><div class="empty-state"><div class="icon">🎓</div><div class="empty-state-title">No students found</div><div class="empty-state-copy">Try adjusting your search or filter.</div></div></td></tr>
+                                        <tr><td colspan="10"><div class="empty-state"><div class="icon">🎓</div><div class="empty-state-title">No students found</div><div class="empty-state-copy">Try adjusting your search or filter.</div></div></td></tr>
                                     {% endfor %}
                                 </tbody>
                             </table>
@@ -328,7 +300,7 @@
                         header.dataset.groupRow = "1";
                         header.className = "table-light";
                         const cell = document.createElement("td");
-                        cell.colSpan = 9;
+                        cell.colSpan = 10;
                         cell.className = "fw-bold text-dark py-2 px-3";
                         cell.textContent = key + " · " + members.length + " student" + (members.length === 1 ? "" : "s");
                         header.appendChild(cell);
