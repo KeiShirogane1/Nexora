@@ -143,6 +143,32 @@ body.nx-notifications-page .nx-notifications-summary-item {
     border-right: 1px solid var(--nx-notify-page-border);
 }
 
+body.notification-role-admin .nx-notifications-summary-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+body.notification-role-admin .nx-notifications-summary-icon {
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+    display: grid;
+    place-items: center;
+    border-radius: 11px;
+    background: var(--nx-notify-page-soft);
+    color: var(--nx-notify-page-accent);
+}
+
+body.notification-role-admin .nx-notifications-summary-icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+body.notification-role-admin .nx-notifications-summary-copy {
+    min-width: 0;
+}
+
 body.nx-notifications-page .nx-notifications-summary-item:last-child {
     border-right: 0;
 }
@@ -649,19 +675,28 @@ body.nx-notifications-page .nx-notifications-delete-button:disabled {
 
         <section class="nx-notifications-summary" aria-label="Notification summary">
             <article class="nx-notifications-summary-item">
-                <strong>{{ total_count|default(0) }}</strong>
-                <span>Total Notifications</span>
-                <small>All updates</small>
+                {% if role == 'admin' %}<div class="nx-notifications-summary-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M10 21h4"></path></svg></div>{% endif %}
+                <div class="{% if role == 'admin' %}nx-notifications-summary-copy{% endif %}">
+                    <strong>{{ total_count|default(0) }}</strong>
+                    <span>Total Notifications</span>
+                    <small>All updates</small>
+                </div>
             </article>
             <article class="nx-notifications-summary-item">
-                <strong>{{ unread_count|default(0) }}</strong>
-                <span>Unread</span>
-                <small>Need your attention</small>
+                {% if role == 'admin' %}<div class="nx-notifications-summary-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="2.5" fill="currentColor" stroke="none"></circle></svg></div>{% endif %}
+                <div class="{% if role == 'admin' %}nx-notifications-summary-copy{% endif %}">
+                    <strong>{{ unread_count|default(0) }}</strong>
+                    <span>Unread</span>
+                    <small>Need your attention</small>
+                </div>
             </article>
             <article class="nx-notifications-summary-item">
-                <strong>{{ (total_count|default(0)) - (unread_count|default(0)) }}</strong>
-                <span>Read</span>
-                <small>Already reviewed</small>
+                {% if role == 'admin' %}<div class="nx-notifications-summary-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="m8.5 12 2.2 2.2 4.8-5"></path></svg></div>{% endif %}
+                <div class="{% if role == 'admin' %}nx-notifications-summary-copy{% endif %}">
+                    <strong>{{ (total_count|default(0)) - (unread_count|default(0)) }}</strong>
+                    <span>Read</span>
+                    <small>Already reviewed</small>
+                </div>
             </article>
         </section>
 

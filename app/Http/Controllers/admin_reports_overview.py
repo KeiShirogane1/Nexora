@@ -197,91 +197,125 @@ def overview(student_id):
 @admin_reports_overview.route("/admin/insights")
 @role_required("admin")
 def student_insights():
-    """Read-only, classroom-scoped student insights for administrators."""
+    """Read-only, classroom-first student insights for administrators."""
     requested_student_id = request.args.get("student_id", type=int)
     requested_class_id = request.args.get("class_id", type=int)
 
+    selected_classroom = None
+    selected_student = None
+    students = []
+
     conn = get_db_connection()
     try:
-        student_rows = _load_admin_insight_students(conn)
-        students = [
+        classroom_rows = conn.execute(
+            """
+            SELECT c.id, c.name, c.section, c.code, c.supervisor_id,
+                   COALESCE(su.username, '') AS supervisor_name,
+                   COALESCE(c.archived, 0) AS archived,
+                   COALESCE(c.classroom_type, 'classroom') AS classroom_type,
+                   (
+                       SELECT COUNT(*)
+                       FROM classroom_students cs_count
+                       WHERE cs_count.classroom_id = c.id
+                   ) AS student_count
+            FROM classrooms c
+            LEFT JOIN users su ON su.id = c.supervisor_id
+            WHERE COALESCE(c.classroom_type, 'classroom') = 'internship'
+            ORDER BY COALESCE(c.archived, 0), LOWER(c.name), LOWER(c.section), c.id
+            """
+        ).fetchall()
+
+        classrooms = [
             {
                 "id": int(_value(row, "id", 0, 0)),
-                "username": _value(row, "username", 1, ""),
-                "email": _value(row, "email", 2, "") or "",
-                "first_name": _value(row, "first_name", 3, "") or "",
-                "last_name": _value(row, "last_name", 4, "") or "",
-                "student_number": _value(row, "student_number", 5, "") or "",
-                "major_program": _value(row, "major_program", 6, "") or "",
+                "name": _value(row, "name", 1, "Intern Classroom") or "Intern Classroom",
+                "section": _value(row, "section", 2, "") or "",
+                "code": _value(row, "code", 3, "") or "",
+                "supervisor_id": int(_value(row, "supervisor_id", 4, 0) or 0),
+                "supervisor_name": _value(row, "supervisor_name", 5, "") or "",
+                "archived": bool(_value(row, "archived", 6, 0)),
+                "classroom_type": _value(row, "classroom_type", 7, "internship") or "internship",
+                "student_count": int(_value(row, "student_count", 8, 0) or 0),
             }
-            for row in student_rows
+            for row in classroom_rows
         ]
-        for item in students:
-            item["display_name"] = (
-                " ".join(part for part in (item["first_name"], item["last_name"]) if part).strip()
-                or item["username"]
-                or "Student"
+
+        if requested_class_id is not None:
+            selected_classroom = next(
+                (item for item in classrooms if item["id"] == requested_class_id),
+                None,
             )
-
-        selected_student = None
-        if requested_student_id is not None:
-            selected_student = next((item for item in students if item["id"] == requested_student_id), None)
-            if selected_student is None:
-                account_row = conn.execute(
-                    "SELECT id, username, email FROM users WHERE id = ? AND role = 'student' LIMIT 1",
-                    (requested_student_id,),
-                ).fetchone()
-                if not account_row:
-                    abort(404)
-                selected_student = {
-                    "id": int(_value(account_row, "id", 0, 0)),
-                    "username": _value(account_row, "username", 1, "") or "",
-                    "email": _value(account_row, "email", 2, "") or "",
-                    "first_name": "",
-                    "last_name": "",
-                    "student_number": "",
-                    "major_program": "",
-                }
-                selected_student["display_name"] = selected_student["username"] or "Student"
-                students.append(selected_student)
-
-        classrooms = []
-        if selected_student:
-            rows = conn.execute(
+            if selected_classroom is None:
+                abort(404)
+        elif requested_student_id is not None:
+            membership_rows = conn.execute(
                 """
-                SELECT c.id, c.name, c.section, c.code, c.supervisor_id,
-                       COALESCE(su.username, '') AS supervisor_name,
-                       COALESCE(c.archived, 0) AS archived
+                SELECT c.id
                 FROM classroom_students cs
                 JOIN classrooms c ON c.id = cs.classroom_id
-                LEFT JOIN users su ON su.id = c.supervisor_id
                 WHERE cs.student_id = ?
-                ORDER BY COALESCE(c.archived, 0), LOWER(c.name), LOWER(c.section), c.id
+                  AND COALESCE(c.classroom_type, 'classroom') = 'internship'
+                ORDER BY COALESCE(c.archived, 0), LOWER(c.name), c.id
                 """,
-                (selected_student["id"],),
+                (requested_student_id,),
             ).fetchall()
-            classrooms = [
+            membership_ids = [int(row[0]) for row in membership_rows]
+            if len(membership_ids) == 1:
+                selected_classroom = next(
+                    (item for item in classrooms if item["id"] == membership_ids[0]),
+                    None,
+                )
+
+        if selected_classroom:
+            student_rows = conn.execute(
+                """
+                SELECT u.id, u.username, u.email,
+                       COALESCE(sp.first_name, '') AS first_name,
+                       COALESCE(sp.last_name, '') AS last_name,
+                       COALESCE(sp.student_id, '') AS student_number,
+                       COALESCE(sp.major_program, '') AS major_program
+                FROM classroom_students cs
+                JOIN users u ON u.id = cs.student_id
+                LEFT JOIN student_profiles sp ON sp.user_id = u.id
+                WHERE cs.classroom_id = ?
+                  AND u.role = 'student'
+                ORDER BY LOWER(COALESCE(NULLIF(sp.first_name, ''), u.username)),
+                         LOWER(COALESCE(NULLIF(sp.last_name, ''), u.email)), u.id
+                """,
+                (selected_classroom["id"],),
+            ).fetchall()
+            students = [
                 {
                     "id": int(_value(row, "id", 0, 0)),
-                    "name": _value(row, "name", 1, "Intern Classroom"),
-                    "section": _value(row, "section", 2, "") or "",
-                    "code": _value(row, "code", 3, "") or "",
-                    "supervisor_id": int(_value(row, "supervisor_id", 4, 0) or 0),
-                    "supervisor_name": _value(row, "supervisor_name", 5, "") or "",
-                    "archived": bool(_value(row, "archived", 6, 0)),
+                    "username": _value(row, "username", 1, "") or "",
+                    "email": _value(row, "email", 2, "") or "",
+                    "first_name": _value(row, "first_name", 3, "") or "",
+                    "last_name": _value(row, "last_name", 4, "") or "",
+                    "student_number": _value(row, "student_number", 5, "") or "",
+                    "major_program": _value(row, "major_program", 6, "") or "",
                 }
-                for row in rows
+                for row in student_rows
             ]
+            for item in students:
+                item["display_name"] = (
+                    " ".join(
+                        part
+                        for part in (item["first_name"], item["last_name"])
+                        if part
+                    ).strip()
+                    or item["username"]
+                    or "Student"
+                )
+
+            if requested_student_id is not None:
+                selected_student = next(
+                    (item for item in students if item["id"] == requested_student_id),
+                    None,
+                )
+                if selected_student is None:
+                    abort(404)
     finally:
         conn.close()
-
-    selected_classroom = None
-    if requested_class_id is not None:
-        selected_classroom = next((item for item in classrooms if item["id"] == requested_class_id), None)
-        if selected_student and selected_classroom is None:
-            abort(404)
-    elif len(classrooms) == 1:
-        selected_classroom = classrooms[0]
 
     context = None
     insights_warnings = []
@@ -348,7 +382,9 @@ def student_insights():
                     "Admin Student Insights Official Evaluation unavailable for student_id=%s class_id=%s status=%s",
                     selected_student["id"],
                     selected_classroom["id"],
-                    evaluation_context.get("status_code") if isinstance(evaluation_context, dict) else None,
+                    evaluation_context.get("status_code")
+                    if isinstance(evaluation_context, dict)
+                    else None,
                 )
                 evaluation_context = {"ok": True, "evaluation": None}
                 insights_warnings.append("Official OJT Evaluation is temporarily unavailable.")

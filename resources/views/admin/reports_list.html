@@ -25,12 +25,16 @@
         .admin-report-eyebrow, .admin-report-card-kicker { display: block; color: var(--report-accent); font-size: .72rem; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
         .admin-report-page-heading h1 { margin: 6px 0 5px; color: #11251f; font-size: 2rem; line-height: 1.12; font-weight: 850; letter-spacing: -.025em; }
         .admin-report-page-heading p { max-width: 760px; margin: 0; color: var(--report-muted); font-size: .92rem; line-height: 1.55; }
-        .admin-report-heading-mark { width: 54px; height: 54px; flex: 0 0 54px; display: grid; place-items: center; border-radius: 15px; background: var(--report-accent-soft); color: var(--report-accent); font-size: 1.25rem; font-weight: 900; }
+        .admin-report-heading-mark { width: 54px; height: 54px; flex: 0 0 54px; display: grid; place-items: center; border-radius: 15px; background: var(--report-accent-soft); color: var(--report-accent); }
+        .admin-report-heading-mark svg { width: 23px; height: 23px; }
+        .admin-report-classrooms { display: grid; gap: 14px; }
         .admin-report-directory-card { border: 1px solid var(--report-border); border-radius: 16px; background: #fff; box-shadow: 0 8px 28px rgba(23, 51, 43, .05); overflow: hidden; }
         .admin-report-directory-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; padding: 20px 22px 16px; border-bottom: 1px solid #edf1ef; }
         .admin-report-directory-header h2 { margin: 4px 0 0; color: #173128; font-size: 1.08rem; font-weight: 850; }
         .admin-report-directory-header p { margin: 4px 0 0; color: #7b8a85; font-size: .82rem; }
         .admin-report-count { padding: 6px 10px; border-radius: 999px; background: var(--report-accent-soft); color: var(--report-accent-dark); font-size: .75rem; font-weight: 850; white-space: nowrap; }
+        .admin-report-room-meta { display: flex; flex-wrap: wrap; gap: 7px 14px; margin-top: 7px; color: #7b8a85; font-size: .74rem; }
+        .admin-report-room-meta strong { color: #4b5d56; }
         .admin-report-table-wrap { overflow-x: auto; }
         .admin-report-table { width: 100%; border-collapse: collapse; }
         .admin-report-table th { padding: 12px 18px; background: #fafbfb; color: #62736d; font-size: .76rem; font-weight: 850; text-align: left; letter-spacing: .02em; }
@@ -41,14 +45,26 @@
         .admin-report-intern-avatar { width: 34px; height: 34px; flex: 0 0 34px; display: grid; place-items: center; border-radius: 10px; background: var(--report-accent-soft); color: var(--report-accent); font-size: .82rem; font-weight: 900; }
         .admin-report-intern-cell strong { display: block; color: #263a33; font-size: .9rem; }
         .admin-report-intern-cell small { display: block; margin-top: 2px; color: #8b9994; font-size: .72rem; }
-        .admin-report-supervisor { font-weight: 700; color: #42564f; }
-        .admin-report-supervisor.is-unassigned { color: #9a6b61; font-weight: 650; }
-        .admin-report-open-btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 38px; padding: 8px 13px; border: 1px solid var(--report-accent); border-radius: 10px; background: var(--report-accent); color: #fff !important; font-size: .78rem; font-weight: 850; text-decoration: none; box-shadow: 0 6px 15px rgba(244, 81, 37, .18); transition: .15s ease; }
+        .admin-report-open-btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 38px; padding: 8px 13px; border: 1px solid var(--report-accent); border-radius: 10px; background: var(--report-accent); color: #fff !important; font-size: .78rem; font-weight: 850; text-decoration: none; box-shadow: 0 6px 15px rgba(244, 81, 37, .18); transition: .15s ease; cursor: pointer; }
         .admin-report-open-btn:hover { background: var(--report-accent-dark); border-color: var(--report-accent-dark); transform: translateY(-1px); }
-        .admin-report-empty-state { padding: 56px 24px; text-align: center; }
-        .admin-report-empty-icon { width: 50px; height: 50px; margin: 0 auto 12px; display: grid; place-items: center; border-radius: 14px; background: var(--report-accent-soft); color: var(--report-accent); font-size: 1.25rem; }
+        .admin-report-empty-state { padding: 48px 24px; text-align: center; }
+        .admin-report-empty-icon { width: 50px; height: 50px; margin: 0 auto 12px; display: grid; place-items: center; border-radius: 14px; background: var(--report-accent-soft); color: var(--report-accent); }
+        .admin-report-empty-icon svg { width: 22px; height: 22px; }
         .admin-report-empty-state h2 { margin: 0; color: #213a31; font-size: 1.05rem; }
         .admin-report-empty-state p { margin: 7px 0 0; color: #82908b; font-size: .85rem; }
+        .admin-report-choice-modal[hidden] { display: none !important; }
+        .admin-report-choice-modal { position: fixed; inset: 0; z-index: 2600; display: grid; place-items: center; padding: 20px; background: rgba(15, 23, 42, .48); backdrop-filter: blur(3px); }
+        .admin-report-choice-dialog { width: min(100%, 520px); border: 1px solid #e7e9eb; border-radius: 18px; background: #fff; box-shadow: 0 24px 70px rgba(15, 23, 42, .22); overflow: hidden; }
+        .admin-report-choice-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; padding: 20px 22px 16px; border-bottom: 1px solid #edf1ef; }
+        .admin-report-choice-header h2 { margin: 4px 0 0; color: #172f27; font-size: 1.15rem; font-weight: 850; }
+        .admin-report-choice-header p { margin: 5px 0 0; color: #7b8a85; font-size: .78rem; }
+        .admin-report-choice-close { width: 34px; height: 34px; border: 1px solid #e1e7e4; border-radius: 9px; background: #fff; color: #60736c; font-size: 1.1rem; cursor: pointer; }
+        .admin-report-choice-body { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding: 18px 22px 22px; }
+        .admin-report-choice-option { min-height: 124px; padding: 16px; display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; gap: 14px; border: 1px solid #e4e9e7; border-radius: 13px; background: #fbfcfc; color: #263a33; text-decoration: none; transition: .15s ease; }
+        .admin-report-choice-option:hover { border-color: #f2b29d; background: #fff8f5; color: #263a33; transform: translateY(-1px); }
+        .admin-report-choice-option svg { width: 22px; height: 22px; color: var(--report-accent); }
+        .admin-report-choice-option strong { display: block; font-size: .9rem; }
+        .admin-report-choice-option span { display: block; margin-top: 4px; color: #82908b; font-size: .72rem; line-height: 1.45; }
         @media (max-width: 720px) {
             .admin-report-page-shell { padding: 22px 16px 36px; }
             .admin-report-page-heading { align-items: flex-start; flex-direction: column; }
@@ -56,6 +72,7 @@
             .admin-report-page-heading h1 { font-size: 1.65rem; }
             .admin-report-directory-header { padding: 17px 16px 14px; }
             .admin-report-table th, .admin-report-table td { padding-left: 14px; padding-right: 14px; }
+            .admin-report-choice-body { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -68,46 +85,135 @@
                 <div>
                     <span class="admin-report-eyebrow">Internship Analytics</span>
                     <h1>Internship Reports</h1>
-                    <p>Review each intern's attendance, evaluation, performance, recommendations, and rendered hours from one place.</p>
+                    <p>Choose an Intern Classroom, review the students enrolled in it, then open either the complete report or classroom-scoped Student Insights.</p>
                 </div>
-                <div class="admin-report-heading-mark" aria-hidden="true">▤</div>
+                <div class="admin-report-heading-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18H6z"></path><path d="M9 7h6M9 11h6M9 15h4"></path></svg></div>
             </header>
 
-            <section class="admin-report-directory-card" aria-labelledby="intern-directory-title">
-                <div class="admin-report-directory-header">
-                    <div>
-                        <span class="admin-report-card-kicker">REPORT DIRECTORY</span>
-                        <h2 id="intern-directory-title">Intern Directory</h2>
-                        <p>Select an intern to open their complete internship report.</p>
-                    </div>
-                    {% if students %}<span class="admin-report-count">{{ students|length }} intern{% if students|length != 1 %}s{% endif %}</span>{% endif %}
-                </div>
+            {% if classroom_groups %}
+                <div class="admin-report-classrooms">
+                    {% for classroom in classroom_groups %}
+                        <section class="admin-report-directory-card" aria-labelledby="report-room-{{ classroom.id }}">
+                            <div class="admin-report-directory-header">
+                                <div>
+                                    <span class="admin-report-card-kicker">INTERN CLASSROOM</span>
+                                    <h2 id="report-room-{{ classroom.id }}">{{ classroom.name }}</h2>
+                                    <div class="admin-report-room-meta">
+                                        {% if classroom.section %}<span>{{ classroom.section }}</span>{% endif %}
+                                        {% if classroom.internship_title %}<span>{{ classroom.internship_title }}</span>{% endif %}
+                                        {% if classroom.company_name %}<span>{{ classroom.company_name }}</span>{% endif %}
+                                        <span>Supervisor: <strong>{{ classroom.supervisor_name }}</strong></span>
+                                        {% if classroom.archived %}<span>Archived</span>{% endif %}
+                                    </div>
+                                </div>
+                                <span class="admin-report-count">{{ classroom.students|length }} intern{% if classroom.students|length != 1 %}s{% endif %}</span>
+                            </div>
 
-                {% if students %}
-                    <div class="admin-report-table-wrap">
-                        <table class="admin-report-table">
-                            <thead><tr><th>Intern</th><th>Supervisor</th><th class="admin-report-action-heading">Report</th></tr></thead>
-                            <tbody>
-                                {% for student in students %}
-                                    <tr>
-                                        <td>
-                                            <div class="admin-report-intern-cell">
-                                                <span class="admin-report-intern-avatar" aria-hidden="true">{{ (student[1] or 'I')[0]|upper }}</span>
-                                                <span><strong>{{ student[1] }}</strong><small>Student account</small></span>
-                                            </div>
-                                        </td>
-                                        <td>{% if student[2] %}<span class="admin-report-supervisor">{{ student[2] }}</span>{% else %}<span class="admin-report-supervisor is-unassigned">Not assigned</span>{% endif %}</td>
-                                        <td class="admin-report-action-cell"><a href="{{ url_for('admin_reports_overview.overview', student_id=student[0]) }}" class="admin-report-open-btn">View Report <span aria-hidden="true">→</span></a></td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                            {% if classroom.students %}
+                                <div class="admin-report-table-wrap">
+                                    <table class="admin-report-table">
+                                        <thead><tr><th>Intern</th><th>Account</th><th class="admin-report-action-heading">Actions</th></tr></thead>
+                                        <tbody>
+                                            {% for student in classroom.students %}
+                                                <tr>
+                                                    <td>
+                                                        <div class="admin-report-intern-cell">
+                                                            <span class="admin-report-intern-avatar" aria-hidden="true">{{ (student.username or 'I')[0]|upper }}</span>
+                                                            <span><strong>{{ student.username }}</strong><small>Student account</small></span>
+                                                        </div>
+                                                    </td>
+                                                    <td>{{ student.email or 'No email' }}</td>
+                                                    <td class="admin-report-action-cell">
+                                                        <button
+                                                            type="button"
+                                                            class="admin-report-open-btn"
+                                                            data-report-view
+                                                            data-student="{{ student.username|e }}"
+                                                            data-classroom="{{ classroom.name|e }}"
+                                                            data-report-url="{{ url_for('admin_reports_overview.overview', student_id=student.id) }}"
+                                                            data-insights-url="{{ url_for('admin_reports_overview.student_insights', class_id=classroom.id, student_id=student.id) }}"
+                                                        >View <span aria-hidden="true">→</span></button>
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <div class="admin-report-empty-state"><h2>No students in this classroom yet</h2><p>Students will appear here after they enroll in this Intern Classroom.</p></div>
+                            {% endif %}
+                        </section>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <section class="admin-report-directory-card">
+                    <div class="admin-report-empty-state">
+                        <span class="admin-report-empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M7 8h3M14 8h3M7 12h3M14 12h3"></path></svg></span>
+                        <h2>No Intern Classrooms yet</h2>
+                        <p>Reports will appear here after an Intern Classroom is created.</p>
                     </div>
-                {% else %}
-                    <div class="admin-report-empty-state"><span class="admin-report-empty-icon" aria-hidden="true">▤</span><h2>No internship reports yet</h2><p>Students will appear here once they are registered.</p></div>
-                {% endif %}
-            </section>
+                </section>
+            {% endif %}
         </div>
     </main>
+
+    <div id="adminReportChoiceModal" class="admin-report-choice-modal" hidden>
+        <div class="admin-report-choice-dialog" role="dialog" aria-modal="true" aria-labelledby="adminReportChoiceTitle">
+            <div class="admin-report-choice-header">
+                <div>
+                    <span class="admin-report-card-kicker">VIEW STUDENT</span>
+                    <h2 id="adminReportChoiceTitle">Choose a view</h2>
+                    <p id="adminReportChoiceContext"></p>
+                </div>
+                <button type="button" class="admin-report-choice-close" id="adminReportChoiceClose" aria-label="Close">×</button>
+            </div>
+            <div class="admin-report-choice-body">
+                <a id="adminReportChoiceReport" class="admin-report-choice-option" href="#">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18H6z"></path><path d="M9 7h6M9 11h6M9 15h4"></path></svg>
+                    <span><strong>Complete Report</strong><span>Open attendance, performance, evaluation, and recommendation reporting.</span></span>
+                </a>
+                <a id="adminReportChoiceInsights" class="admin-report-choice-option" href="#">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V9M10 19V5M16 19v-7M22 19V3"></path></svg>
+                    <span><strong>Student Insights</strong><span>Open classroom-scoped Work, OJT, logbook, ML, and evaluation evidence.</span></span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            var modal = document.getElementById('adminReportChoiceModal');
+            var closeButton = document.getElementById('adminReportChoiceClose');
+            var context = document.getElementById('adminReportChoiceContext');
+            var reportLink = document.getElementById('adminReportChoiceReport');
+            var insightsLink = document.getElementById('adminReportChoiceInsights');
+
+            function closeModal() {
+                modal.hidden = true;
+            }
+
+            document.querySelectorAll('[data-report-view]').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    context.textContent = button.dataset.student + ' · ' + button.dataset.classroom;
+                    reportLink.href = button.dataset.reportUrl;
+                    insightsLink.href = button.dataset.insightsUrl;
+                    modal.hidden = false;
+                    closeButton.focus();
+                });
+            });
+
+            closeButton.addEventListener('click', closeModal);
+            modal.addEventListener('click', function (event) {
+                if (event.target === modal) {
+                    closeModal();
+                }
+            });
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape' && !modal.hidden) {
+                    closeModal();
+                }
+            });
+        }());
+    </script>
 </body>
 </html>

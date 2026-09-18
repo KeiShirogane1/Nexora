@@ -1180,35 +1180,75 @@ def assign_students():
 @admin.route("/admin/reports")
 @role_required("admin")
 def admin_reports_list():
-
     conn = get_db_connection()
     cursor = conn.cursor()
 
     try:
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
-                s.id,
-                s.username,
-                COALESCE(sup.username, 'Not Assigned')
-            FROM users s
+                c.id,
+                c.name,
+                c.section,
+                COALESCE(c.archived, 0),
+                COALESCE(sup.username, 'Unknown Supervisor'),
+                COALESCE(cid.company_name, ''),
+                COALESCE(cid.internship_title, ''),
+                student.id,
+                student.username,
+                student.email
+            FROM classrooms c
+            JOIN users sup ON sup.id = c.supervisor_id
+            LEFT JOIN classroom_internship_details cid ON cid.classroom_id = c.id
+            LEFT JOIN classroom_students cs ON cs.classroom_id = c.id
+            LEFT JOIN users student
+                ON student.id = cs.student_id
+               AND student.role = 'student'
+            WHERE COALESCE(c.classroom_type, 'classroom') = 'internship'
+            ORDER BY COALESCE(c.archived, 0) ASC,
+                     LOWER(c.name) ASC,
+                     LOWER(c.section) ASC,
+                     LOWER(COALESCE(student.username, '')) ASC,
+                     c.id ASC
+            """
+        )
+        rows = cursor.fetchall()
 
-            LEFT JOIN student_assignments sa
-                ON s.id = sa.student_id
+        classroom_groups = []
+        groups_by_id = {}
+        for row in rows:
+            classroom_id = int(row[0])
+            classroom = groups_by_id.get(classroom_id)
+            if classroom is None:
+                classroom = {
+                    "id": classroom_id,
+                    "name": row[1] or "Intern Classroom",
+                    "section": row[2] or "",
+                    "archived": bool(row[3]),
+                    "supervisor_name": row[4] or "Unknown Supervisor",
+                    "company_name": row[5] or "",
+                    "internship_title": row[6] or "",
+                    "students": [],
+                }
+                groups_by_id[classroom_id] = classroom
+                classroom_groups.append(classroom)
 
-            LEFT JOIN users sup
-                ON sa.supervisor_id = sup.id
+            if row[7] is not None:
+                classroom["students"].append(
+                    {
+                        "id": int(row[7]),
+                        "username": row[8] or "Student",
+                        "email": row[9] or "",
+                    }
+                )
 
-            WHERE s.role = 'student'
-
-            ORDER BY s.username ASC
-        """)
-
-        students = cursor.fetchall()
+        total_interns = sum(len(classroom["students"]) for classroom in classroom_groups)
 
         return render_template(
             "admin/reports_list.html",
-            students=students,
-            active_page="reports"
+            classroom_groups=classroom_groups,
+            total_interns=total_interns,
+            active_page="reports",
         )
     finally:
         cursor.close()
