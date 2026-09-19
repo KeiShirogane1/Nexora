@@ -1,4 +1,35 @@
-{% include 'components/display_mode_switch.html' %}
+<script id="nx-desktop-mobile-viewport">
+(function () {
+    if (window.__nexoraDesktopMobileViewport) return;
+
+    var isTouchDevice = (navigator.maxTouchPoints || 0) > 0 || 'ontouchstart' in window;
+    var screenWidth = window.screen && window.screen.width ? window.screen.width : window.innerWidth;
+    var screenHeight = window.screen && window.screen.height ? window.screen.height : window.innerHeight;
+    var shortEdge = Math.min(screenWidth || 9999, screenHeight || 9999);
+
+    if (!isTouchDevice || shortEdge > 900) return;
+
+    var desktopWidth = 1180;
+    var visualWidth = window.innerWidth || screenWidth || 360;
+    var scale = Math.max(0.25, Math.min(1, visualWidth / desktopWidth));
+    var viewport = document.querySelector('meta[name="viewport"]');
+
+    if (!viewport) {
+        viewport = document.createElement('meta');
+        viewport.name = 'viewport';
+        document.head.appendChild(viewport);
+    }
+
+    viewport.setAttribute(
+        'content',
+        'width=' + desktopWidth +
+        ', initial-scale=' + scale.toFixed(3) +
+        ', minimum-scale=0.25, maximum-scale=5, user-scalable=yes'
+    );
+
+    window.__nexoraDesktopMobileViewport = true;
+})();
+</script>
 
 <style id="nx-sidebar-viewport-fix">
 html:has(.nx-role-sidebar-shell),
