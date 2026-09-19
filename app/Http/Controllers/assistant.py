@@ -3,6 +3,7 @@ from flask import Blueprint, jsonify, request, session
 from app.Http.Middleware.security import login_required
 from app.Services.ai_assistant_service import (
     AIServiceError,
+    AITransientError,
     answer_role_question,
     explain_ml_evidence,
 )
@@ -22,11 +23,20 @@ def ask():
         return jsonify({"ok": False, "error": str(exc)}), 403
     except ValueError as exc:
         return jsonify({"ok": False, "error": str(exc)}), 400
+    except AITransientError:
+        return jsonify(
+            {
+                "ok": False,
+                "retryable": True,
+                "error": "Nexora AI is still working on your request.",
+            }
+        ), 503
     except AIServiceError:
         return jsonify(
             {
                 "ok": False,
-                "error": "Nexora AI is temporarily unavailable. Please try again later.",
+                "retryable": False,
+                "error": "Nexora AI could not complete this request. Please try again.",
             }
         ), 502
 

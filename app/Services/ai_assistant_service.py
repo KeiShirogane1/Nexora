@@ -87,6 +87,10 @@ class AIServiceError(RuntimeError):
     """Raised when the configured AI provider cannot return a safe answer."""
 
 
+class AITransientError(AIServiceError):
+    """Raised when a temporary provider/network delay is safe to retry."""
+
+
 def _env_true(name):
     return os.environ.get(name, "").strip().lower() in {"1", "true", "yes", "on"}
 
@@ -227,11 +231,13 @@ def _openrouter_chat(api_key, model, messages, max_tokens, temperature, timeout_
         with urllib_request.urlopen(request, timeout=timeout) as response:
             raw = response.read(MAX_RESPONSE_BYTES + 1)
     except urllib_error.HTTPError as exc:
+        if exc.code in {408, 429, 500, 502, 503, 504}:
+            raise AITransientError(_provider_error_message(exc.code)) from exc
         raise AIServiceError(_provider_error_message(exc.code)) from exc
     except urllib_error.URLError as exc:
-        raise AIServiceError("OpenRouter is temporarily unreachable.") from exc
+        raise AITransientError("OpenRouter is taking longer to respond.") from exc
     except TimeoutError as exc:
-        raise AIServiceError("The OpenRouter request timed out.") from exc
+        raise AITransientError("The OpenRouter request timed out.") from exc
 
     if len(raw) > MAX_RESPONSE_BYTES:
         raise AIServiceError("OpenRouter returned an oversized response.")

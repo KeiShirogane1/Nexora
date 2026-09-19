@@ -476,33 +476,77 @@
                 responseText = responseRow.querySelector('p');
             }
 
+            var maxAttempts = 2;
+            var retryDelayMs = 1200;
+
             responseRow.classList.add('is-thinking');
             renderThinking(responseText);
             send.disabled = true;
 
-            fetch('/assistant/ask', {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfToken
-                },
-                body: JSON.stringify({question: text})
-            }).then(function (response) {
-                return response.json().catch(function () {
-                    return {ok: false, error: 'Unexpected server response.'};
-                }).then(function (data) {
-                    if (!response.ok || data.ok === false) {
-                        throw new Error(data.error || 'AI request failed.');
+            function requestAttempt(attempt) {
+                return fetch('/assistant/ask', {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({question: text})
+                }).then(function (response) {
+                    return response.json().catch(function () {
+                        return {
+                            ok: false,
+                            retryable: response.status >= 500,
+                            error: 'Nexora AI did not return a complete response.'
+                        };
+                    }).then(function (data) {
+                        if (response.ok && data.ok !== false) return data;
+
+                        if (data.retryable === true && attempt < maxAttempts) {
+                            renderThinking(responseText);
+                            return new Promise(function (resolve) {
+                                window.setTimeout(resolve, retryDelayMs);
+                            }).then(function () {
+                                return requestAttempt(attempt + 1);
+                            });
+                        }
+
+                        var error = new Error(
+                            data.error ||
+                            'Nexora AI could not complete this request. Please try again.'
+                        );
+                        error.retryable = data.retryable === true;
+                        throw error;
+                    });
+                }).catch(function (error) {
+                    if (
+                        attempt < maxAttempts &&
+                        (error instanceof TypeError || error.retryable === true)
+                    ) {
+                        renderThinking(responseText);
+                        return new Promise(function (resolve) {
+                            window.setTimeout(resolve, retryDelayMs);
+                        }).then(function () {
+                            return requestAttempt(attempt + 1);
+                        });
                     }
-                    return data;
+                    throw error;
                 });
-            }).then(function (data) {
+            }
+
+            requestAttempt(1).then(function (data) {
                 responseRow.classList.remove('is-thinking');
-                renderAssistantText(responseText, data.answer || 'Nexora AI returned no answer.');
+                renderAssistantText(
+                    responseText,
+                    data.answer || 'Nexora AI returned no answer.'
+                );
             }).catch(function (error) {
                 responseRow.classList.remove('is-thinking');
-                renderAssistantText(responseText, error.message || 'Nexora AI is temporarily unavailable.');
+                renderAssistantText(
+                    responseText,
+                    error.message ||
+                    'Nexora AI could not complete this request. Please try again.'
+                );
             }).finally(function () {
                 send.disabled = false;
                 input.focus();
