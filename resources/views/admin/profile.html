@@ -3,84 +3,133 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nexora Admin Profile - Nexora</title>
+    <title>Admin Profile - Nexora</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
 </head>
 <body class="nexora-admin-body admin-profile-page">
     {% include 'components/admin_sidebar.html' %}
-
     <main class="admin-main">
         <div class="admin-profile-shell">
-            <header class="admin-polish-header admin-profile-heading">
-                <div>
-                    <span class="admin-polish-eyebrow">ACCOUNT</span>
-                    <h1>Nexora Admin</h1>
-                    <p>Manage the Admin profile picture while keeping account credentials unchanged.</p>
+            <nav class="admin-profile-breadcrumb" aria-label="Breadcrumb">
+                <span class="admin-profile-breadcrumb-home" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"></path><path d="M5.5 10.5V20h13v-9.5"></path><path d="M9.5 20v-6h5v6"></path></svg></span>
+                <span>Admin Portal</span><span class="admin-profile-breadcrumb-arrow" aria-hidden="true">›</span><strong>Profile</strong>
+            </nav>
+
+            <header class="admin-profile-page-heading">
+                <div class="admin-profile-page-heading-copy">
+                    <span class="admin-polish-eyebrow">ADMIN PORTAL</span>
+                    <h1>Admin Profile</h1>
+                    <p>Manage your profile picture and review your administrator account information.</p>
                 </div>
-                <span class="admin-status-pill{% if admin_account.status == 'active' %} is-success{% endif %}">{{ admin_account.status|title }}</span>
+                <aside class="admin-profile-quote" aria-label="Nexora message">
+                    <span class="admin-profile-quote-mark" aria-hidden="true">“</span>
+                    <div><strong>Empowering Future Developers</strong><span>— Nexora Admin</span></div>
+                </aside>
             </header>
 
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% for category, message in messages %}
-                    <div class="alert alert-{{ 'danger' if category == 'danger' else 'success' if category == 'success' else 'warning' if category == 'warning' else 'info' }}" role="alert">{{ message }}</div>
+                    <div class="alert alert-{{ 'danger' if category == 'danger' else 'success' if category == 'success' else 'warning' if category == 'warning' else 'info' }} admin-profile-alert" role="alert">{{ message }}</div>
                 {% endfor %}
             {% endwith %}
 
-            <section class="admin-profile-card admin-polish-panel" aria-labelledby="adminProfileTitle">
-                <div class="admin-profile-identity">
-                    {% if admin_account.profile_picture %}
-                        <img class="admin-profile-avatar" src="{{ url_for('profile_picture', filename=admin_account.profile_picture) }}" alt="Nexora Admin profile picture" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_profile.png') }}';">
-                    {% else %}
-                        <img class="admin-profile-avatar" src="{{ url_for('static', filename='images/default_profile.png') }}" alt="Default Admin profile picture">
-                    {% endif %}
-                    <div>
-                        <span class="admin-profile-role-label">ADMINISTRATOR</span>
-                        <h2 id="adminProfileTitle">Nexora Admin</h2>
-                        <p>System administrator account</p>
+            <section class="admin-profile-top-grid" aria-label="Admin profile overview">
+                <article class="admin-profile-hero admin-polish-panel">
+                    <div class="admin-profile-hero-accent" aria-hidden="true"></div>
+                    <div class="admin-profile-identity-wrap">
+                        <label class="admin-profile-avatar-control" for="adminProfilePicture" aria-label="Choose a new Admin profile picture">
+                            {% if admin_account.profile_picture %}
+                                <img id="adminProfilePreview" class="admin-profile-avatar" src="{{ url_for('profile_picture', filename=admin_account.profile_picture) }}" alt="Nexora Admin profile picture" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_profile.png') }}';">
+                            {% else %}
+                                <img id="adminProfilePreview" class="admin-profile-avatar" src="{{ url_for('static', filename='images/default_profile.png') }}" alt="Default Admin profile picture">
+                            {% endif %}
+                            <span class="admin-profile-avatar-camera" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 6.5 10.3 4h3.4L15 6.5h3A2.5 2.5 0 0 1 20.5 9v8A2.5 2.5 0 0 1 18 19.5H6A2.5 2.5 0 0 1 3.5 17V9A2.5 2.5 0 0 1 6 6.5h3Z"></path><circle cx="12" cy="13" r="3.2"></circle></svg></span>
+                        </label>
+                        <div class="admin-profile-identity-copy">
+                            <span class="admin-profile-role-label">ADMINISTRATOR</span>
+                            <h2>Nexora Admin</h2>
+                            <p>System administrator account</p>
+                            <div class="admin-profile-status-row">
+                                <span class="admin-profile-status-pill {% if admin_account.status == 'active' %}is-active{% else %}is-muted{% endif %}"><i aria-hidden="true"></i>{{ admin_account.status|title }}</span>
+                                <span class="admin-profile-role-pill"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 19 6v5c0 4.6-2.8 8-7 10-4.2-2-7-5.4-7-10V6l7-3Z"></path><path d="m9.5 12 1.7 1.7 3.6-4"></path></svg>Admin</span>
+                            </div>
+                            <div class="admin-profile-identity-message">Managing today for a better tomorrow.</div>
+                        </div>
                     </div>
-                </div>
+                    <div class="admin-profile-hero-meta" aria-label="Administrator account summary">
+                        <div><span class="admin-profile-meta-icon"><svg viewBox="0 0 24 24"><path d="M12 3 19 6v5c0 4.6-2.8 8-7 10-4.2-2-7-5.4-7-10V6l7-3Z"></path><path d="m9.5 12 1.7 1.7 3.6-4"></path></svg></span><span><small>Account Role</small><strong>Administrator</strong></span></div>
+                        <div><span class="admin-profile-meta-icon"><svg viewBox="0 0 24 24"><path d="M4 20V10"></path><path d="M10 20V4"></path><path d="M16 20v-7"></path><path d="M22 20H2"></path></svg></span><span><small>Portal</small><strong>Admin Portal</strong></span></div>
+                        <div><span class="admin-profile-meta-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"></circle><path d="M8 12h8"></path><path d="M12 8v8"></path></svg></span><span><small>System</small><strong>Nexora</strong></span></div>
+                    </div>
+                </article>
 
-                <form class="admin-profile-photo-form" method="POST" enctype="multipart/form-data" action="{{ url_for('supervisor_profile_photo.update_admin_photo') }}">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <div class="admin-profile-file-field">
-                        <label for="adminProfilePicture">Profile picture</label>
-                        <input id="adminProfilePicture" type="file" name="profile_picture" accept=".png,.jpg,.jpeg,.gif,image/png,image/jpeg,image/gif" required>
-                        <small>PNG, JPG, JPEG, or GIF · maximum 2 MB.</small>
+                <article class="admin-profile-upload-card admin-polish-panel">
+                    <div class="admin-profile-card-heading">
+                        <span class="admin-profile-section-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 6.5 10.3 4h3.4L15 6.5h3A2.5 2.5 0 0 1 20.5 9v8A2.5 2.5 0 0 1 18 19.5H6A2.5 2.5 0 0 1 3.5 17V9A2.5 2.5 0 0 1 6 6.5h3Z"></path><circle cx="12" cy="13" r="3.2"></circle></svg></span>
+                        <div><h2>Profile Picture</h2><p>Update the image shown across your Nexora Admin account.</p></div>
                     </div>
-                    <button type="submit" class="admin-primary-button">Change Profile Picture</button>
-                </form>
+                    <form class="admin-profile-photo-form" method="POST" enctype="multipart/form-data" action="{{ url_for('supervisor_profile_photo.update_admin_photo') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input id="adminProfilePicture" class="admin-profile-file-input" type="file" name="profile_picture" accept=".png,.jpg,.jpeg,.gif,image/png,image/jpeg,image/gif" required>
+                        <label class="admin-profile-upload-zone" for="adminProfilePicture">
+                            <span class="admin-profile-upload-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 16V4"></path><path d="m7 9 5-5 5 5"></path><path d="M5 14.5A4.5 4.5 0 0 0 6 23h12a4 4 0 0 0 .8-7.9A7 7 0 0 0 5.2 12.8"></path></svg></span>
+                            <strong>Choose a new profile picture</strong>
+                            <span>PNG, JPG, JPEG, or GIF · maximum 2 MB</span>
+                            <em>Choose Image</em>
+                        </label>
+                        <div id="adminProfileSelectedFile" class="admin-profile-selected-file" aria-live="polite">No image selected</div>
+                        <button type="submit" class="admin-profile-save-photo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6.5 10.3 4h3.4L15 6.5h3A2.5 2.5 0 0 1 20.5 9v8A2.5 2.5 0 0 1 18 19.5H6A2.5 2.5 0 0 1 3.5 17V9A2.5 2.5 0 0 1 6 6.5h3Z"></path><circle cx="12" cy="13" r="3.2"></circle></svg>Update Profile Picture</button>
+                    </form>
+                    <p class="admin-profile-upload-note">Your saved profile picture is used in the Admin sidebar and topbar.</p>
+                </article>
             </section>
 
-            <section class="admin-profile-details admin-polish-panel" aria-labelledby="adminAccountDetailsTitle">
-                <div class="admin-section-heading">
-                    <div>
-                        <span>ACCOUNT DETAILS</span>
-                        <h2 id="adminAccountDetailsTitle">Administrator information</h2>
+            <section class="admin-profile-bottom-grid">
+                <article class="admin-profile-info-card admin-polish-panel" aria-labelledby="adminAccountInformationTitle">
+                    <div class="admin-profile-card-heading admin-profile-card-heading--split">
+                        <div class="admin-profile-card-heading-main"><span class="admin-profile-section-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="7.5" r="3.5"></circle><path d="M5 21a7 7 0 0 1 14 0"></path></svg></span><div><h2 id="adminAccountInformationTitle">Account Information</h2><p>Your administrator identity and account details.</p></div></div>
+                        <span class="admin-profile-card-caption">Read-only account information</span>
                     </div>
-                </div>
-                <dl class="admin-profile-detail-grid">
-                    <div>
-                        <dt>Display name</dt>
-                        <dd>Nexora Admin</dd>
-                    </div>
-                    <div>
-                        <dt>Role</dt>
-                        <dd>Admin</dd>
-                    </div>
-                    <div>
-                        <dt>Username</dt>
-                        <dd>{{ admin_account.username }}</dd>
-                    </div>
-                    <div>
-                        <dt>Email</dt>
-                        <dd>{{ admin_account.email or 'Not set' }}</dd>
-                    </div>
-                </dl>
-                <p class="admin-profile-credential-note">The display name is presentation-only. Login username, password, and authentication behavior are unchanged.</p>
+                    <dl class="admin-profile-info-list">
+                        <div><span class="admin-profile-info-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="7.5" r="3.5"></circle><path d="M5 21a7 7 0 0 1 14 0"></path></svg></span><dt>Display Name</dt><dd>Nexora Admin</dd><small>Used for display purposes only.</small></div>
+                        <div><span class="admin-profile-info-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"></circle><path d="M16 8.5v6a2 2 0 0 0 4 0V12a8 8 0 1 0-2.3 5.6"></path></svg></span><dt>Username</dt><dd>{{ admin_account.username }}</dd><small>Used for login and authentication.</small></div>
+                        <div><span class="admin-profile-info-icon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m4 7 8 6 8-6"></path></svg></span><dt>Email</dt><dd>{{ admin_account.email or 'Not set' }}</dd><small>Administrator account email.</small></div>
+                        <div><span class="admin-profile-info-icon"><svg viewBox="0 0 24 24"><path d="M12 3 19 6v5c0 4.6-2.8 8-7 10-4.2-2-7-5.4-7-10V6l7-3Z"></path><path d="m9.5 12 1.7 1.7 3.6-4"></path></svg></span><dt>Role</dt><dd>Admin</dd><small>System administrator role.</small></div>
+                        <div class="admin-profile-info-list-status"><span class="admin-profile-info-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"></circle><path d="m8.7 12 2.1 2.1 4.5-4.5"></path></svg></span><dt>Account Status</dt><dd class="{% if admin_account.status == 'active' %}is-active{% endif %}">{{ admin_account.status|title }}</dd><small>Current administrator account status.</small></div>
+                    </dl>
+                </article>
+
+                <aside class="admin-profile-side-stack">
+                    <article class="admin-profile-note-card admin-polish-panel">
+                        <div class="admin-profile-card-heading"><span class="admin-profile-section-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 10v6"></path><path d="M12 7h.01"></path></svg></span><div><h2>Important Note</h2><p>Account identity and authentication remain separate.</p></div></div>
+                        <div class="admin-profile-note-callout"><span aria-hidden="true">!</span><div><strong>The display name is presentation-only.</strong><p>Login username, password, and authentication behavior are unchanged.</p></div></div>
+                        <div class="admin-profile-security-row"><span class="admin-profile-security-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3"></path></svg></span><div><strong>Account Security</strong><p>Profile picture changes do not modify your credentials or Admin access.</p></div></div>
+                    </article>
+                    <article class="admin-profile-brand-card admin-polish-panel"><img src="{{ url_for('static', filename='images/nexora_logo_admin.png') }}" alt="" aria-hidden="true"><div><strong>Nexora</strong><span>Empowering Future Developers</span></div></article>
+                </aside>
             </section>
         </div>
     </main>
+
+    <script>
+    (function () {
+        var input = document.getElementById('adminProfilePicture');
+        var preview = document.getElementById('adminProfilePreview');
+        var selected = document.getElementById('adminProfileSelectedFile');
+        var objectUrl = null;
+        if (!input || !preview || !selected) return;
+        input.addEventListener('change', function () {
+            var file = input.files && input.files[0] ? input.files[0] : null;
+            selected.textContent = file ? file.name : 'No image selected';
+            if (objectUrl) { URL.revokeObjectURL(objectUrl); objectUrl = null; }
+            if (file && file.type && file.type.indexOf('image/') === 0) {
+                objectUrl = URL.createObjectURL(file);
+                preview.src = objectUrl;
+            }
+        });
+    })();
+    </script>
 </body>
 </html>
