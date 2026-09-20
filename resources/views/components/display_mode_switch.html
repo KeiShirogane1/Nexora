@@ -1,0 +1,264 @@
+<script id="nx-display-mode-controller">
+(function () {
+    if (window.__nexoraDisplayModeReady) return;
+    window.__nexoraDisplayModeReady = true;
+
+    var STORAGE_KEY = 'nexoraDisplayPreferenceV2';
+    var DESKTOP_WIDTH = 1180;
+    var MOBILE_BREAKPOINT = 760;
+
+    function getViewportMeta() {
+        var viewport = document.querySelector('meta[name="viewport"]');
+        if (!viewport) {
+            viewport = document.createElement('meta');
+            viewport.name = 'viewport';
+            document.head.appendChild(viewport);
+        }
+        return viewport;
+    }
+
+    function screenShortEdge() {
+        var width = window.screen && window.screen.width ? window.screen.width : window.innerWidth;
+        var height = window.screen && window.screen.height ? window.screen.height : window.innerHeight;
+        return Math.min(width || 9999, height || 9999);
+    }
+
+    function isTouchDevice() {
+        return (navigator.maxTouchPoints || 0) > 0 || 'ontouchstart' in window;
+    }
+
+    function canSwitchDisplayMode() {
+        return isTouchDevice() && screenShortEdge() <= 1000;
+    }
+
+    function readStoredMode() {
+        try {
+            var value = localStorage.getItem(STORAGE_KEY);
+            return value === 'mobile' || value === 'desktop' ? value : null;
+        } catch (error) {
+            return null;
+        }
+    }
+
+    function storeMode(mode) {
+        try {
+            localStorage.setItem(STORAGE_KEY, mode);
+        } catch (error) {}
+    }
+
+    function naturalMode() {
+        if (!canSwitchDisplayMode()) return 'desktop';
+
+        /*
+         * Respect the browser's current presentation on first visit:
+         * - normal phone viewport -> Mobile View
+         * - browser "Desktop site" / wide mobile viewport -> Desktop View
+         *
+         * Pages without a viewport meta tag fall back to Mobile View on
+         * phone-like touch devices instead of forcing a desktop canvas.
+         */
+        var viewport = document.querySelector('meta[name="viewport"]');
+        var hasDeviceViewport = !!(
+            viewport &&
+            /width\s*=\s*device-width/i.test(viewport.getAttribute('content') || '')
+        );
+
+        if (hasDeviceViewport && window.innerWidth > MOBILE_BREAKPOINT) {
+            return 'desktop';
+        }
+        return 'mobile';
+    }
+
+    function desktopScale() {
+        var physicalWidth =
+            window.screen && window.screen.width
+                ? window.screen.width
+                : window.innerWidth || 360;
+
+        return Math.max(0.25, Math.min(1, physicalWidth / DESKTOP_WIDTH));
+    }
+
+    function updateToggle(mode) {
+        var button = document.querySelector('[data-nx-display-toggle]');
+        if (!button) return;
+
+        var nextMode = mode === 'desktop' ? 'mobile' : 'desktop';
+        var label = nextMode === 'desktop' ? 'Desktop View' : 'Mobile View';
+
+        button.dataset.nextMode = nextMode;
+        button.setAttribute('aria-label', 'Switch to ' + label);
+        button.setAttribute('title', 'Switch to ' + label);
+
+        var text = button.querySelector('[data-nx-display-label]');
+        if (text) text.textContent = label;
+
+        var mobileIcon = button.querySelector('[data-nx-display-mobile-icon]');
+        var desktopIcon = button.querySelector('[data-nx-display-desktop-icon]');
+        if (mobileIcon) mobileIcon.hidden = nextMode !== 'mobile';
+        if (desktopIcon) desktopIcon.hidden = nextMode !== 'desktop';
+    }
+
+    function applyMode(mode, persist) {
+        var resolved = mode === 'desktop' ? 'desktop' : 'mobile';
+        var viewport = getViewportMeta();
+
+        if (resolved === 'desktop') {
+            var scale = desktopScale();
+            viewport.setAttribute(
+                'content',
+                'width=' + DESKTOP_WIDTH +
+                ', initial-scale=' + scale.toFixed(3) +
+                ', minimum-scale=0.25, maximum-scale=5, user-scalable=yes'
+            );
+        } else {
+            viewport.setAttribute(
+                'content',
+                'width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5, user-scalable=yes'
+            );
+        }
+
+        document.documentElement.dataset.nxDisplayMode = resolved;
+        window.__nexoraDisplayMode = resolved;
+
+        if (persist !== false) storeMode(resolved);
+        updateToggle(resolved);
+
+        window.setTimeout(function () {
+            try {
+                window.dispatchEvent(new Event('resize'));
+            } catch (error) {}
+        }, 40);
+    }
+
+    function createToggle() {
+        if (!canSwitchDisplayMode() || !document.body) return;
+        if (document.querySelector('[data-nx-display-toggle]')) return;
+
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'nx-display-mode-toggle';
+        button.setAttribute('data-nx-display-toggle', '');
+        button.innerHTML =
+            '<svg data-nx-display-mobile-icon viewBox="0 0 24 24" aria-hidden="true">' +
+                '<rect x="7" y="2.5" width="10" height="19" rx="2"></rect>' +
+                '<path d="M10 5h4"></path>' +
+                '<path d="M11.5 18.5h1"></path>' +
+            '</svg>' +
+            '<svg data-nx-display-desktop-icon viewBox="0 0 24 24" aria-hidden="true" hidden>' +
+                '<rect x="3" y="4" width="18" height="12" rx="2"></rect>' +
+                '<path d="M8 20h8"></path>' +
+                '<path d="M12 16v4"></path>' +
+            '</svg>' +
+            '<span data-nx-display-label></span>';
+
+        button.addEventListener('click', function () {
+            applyMode(button.dataset.nextMode === 'desktop' ? 'desktop' : 'mobile', true);
+        });
+
+        document.body.appendChild(button);
+        updateToggle(window.__nexoraDisplayMode || naturalMode());
+    }
+
+    var initialMode = readStoredMode() || naturalMode();
+
+    if (canSwitchDisplayMode()) {
+        applyMode(initialMode, false);
+    } else {
+        document.documentElement.dataset.nxDisplayMode = 'desktop';
+        window.__nexoraDisplayMode = 'desktop';
+    }
+
+    window.NexoraDisplayMode = {
+        get: function () {
+            return window.__nexoraDisplayMode || naturalMode();
+        },
+        set: function (mode) {
+            if (!canSwitchDisplayMode()) return;
+            applyMode(mode, true);
+        },
+        toggle: function () {
+            if (!canSwitchDisplayMode()) return;
+            applyMode(
+                window.__nexoraDisplayMode === 'desktop' ? 'mobile' : 'desktop',
+                true
+            );
+        },
+        reset: function () {
+            try {
+                localStorage.removeItem(STORAGE_KEY);
+            } catch (error) {}
+            if (canSwitchDisplayMode()) applyMode(naturalMode(), false);
+        }
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', createToggle, { once: true });
+    } else {
+        createToggle();
+    }
+})();
+</script>
+
+<style id="nx-display-mode-styles">
+.nx-display-mode-toggle {
+    position: fixed;
+    right: 16px;
+    bottom: 92px;
+    z-index: 3150;
+    min-width: 124px;
+    height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 13px;
+    border: 1px solid rgba(15, 23, 42, 0.14);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.97);
+    color: var(--nx-topbar-ink, #17324d);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.14);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1;
+    cursor: pointer;
+    touch-action: manipulation;
+}
+
+.nx-display-mode-toggle:hover,
+.nx-display-mode-toggle:focus-visible {
+    border-color: var(--nx-topbar-accent, #2563eb);
+    color: var(--nx-topbar-accent, #2563eb);
+    outline: none;
+}
+
+.nx-display-mode-toggle svg {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.9;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+@media (max-width: 760px) {
+    .nx-display-mode-toggle {
+        right: 12px;
+        bottom: 84px;
+        min-width: 118px;
+        height: 40px;
+        padding: 0 11px;
+        font-size: 11px;
+    }
+}
+
+@media (min-width: 1001px), (pointer: fine) and (min-width: 761px) {
+    .nx-display-mode-toggle {
+        display: none !important;
+    }
+}
+</style>
