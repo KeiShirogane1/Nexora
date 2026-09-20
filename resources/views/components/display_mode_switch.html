@@ -132,24 +132,24 @@
         button.setAttribute('aria-label', 'Switch to ' + label);
         button.setAttribute('title', 'Switch to ' + label);
 
-        var mobileIcon = button.querySelector('[data-nx-display-mobile-icon]');
-        var desktopIcon = button.querySelector('[data-nx-display-desktop-icon]');
+        var icon = button.querySelector('[data-nx-display-icon]');
+        if (!icon) return;
 
         /*
-         * The icon represents the mode the user can switch TO:
-         * Mobile View  -> show the PC/Desktop icon.
-         * Desktop View -> show the Phone icon.
-         * Use both hidden and inline display so page CSS cannot reverse it.
+         * One SVG represents the mode the user can switch TO. Keeping one
+         * element avoids role/page CSS or the HTML hidden attribute causing
+         * one of the two icons to disappear.
          */
-        if (mobileIcon) {
-            var showPhone = mode === 'desktop';
-            mobileIcon.hidden = !showPhone;
-            mobileIcon.style.display = showPhone ? 'block' : 'none';
-        }
-        if (desktopIcon) {
-            var showDesktop = mode === 'mobile';
-            desktopIcon.hidden = !showDesktop;
-            desktopIcon.style.display = showDesktop ? 'block' : 'none';
+        if (nextMode === 'desktop') {
+            icon.innerHTML =
+                '<rect x="3" y="4" width="18" height="12" rx="2"></rect>' +
+                '<path d="M8 20h8"></path>' +
+                '<path d="M12 16v4"></path>';
+        } else {
+            icon.innerHTML =
+                '<rect x="7" y="2.5" width="10" height="19" rx="2"></rect>' +
+                '<path d="M10 5h4"></path>' +
+                '<path d="M11.5 18.5h1"></path>';
         }
     }
 
@@ -198,16 +198,21 @@
         button.className = 'nx-display-mode-toggle';
         button.setAttribute('data-nx-display-toggle', '');
         button.innerHTML =
-            '<svg data-nx-display-mobile-icon viewBox="0 0 24 24" aria-hidden="true">' +
-                '<rect x="7" y="2.5" width="10" height="19" rx="2"></rect>' +
-                '<path d="M10 5h4"></path>' +
-                '<path d="M11.5 18.5h1"></path>' +
-            '</svg>' +
-            '<svg data-nx-display-desktop-icon viewBox="0 0 24 24" aria-hidden="true" hidden>' +
-                '<rect x="3" y="4" width="18" height="12" rx="2"></rect>' +
-                '<path d="M8 20h8"></path>' +
-                '<path d="M12 16v4"></path>' +
-            '</svg>';
+            '<svg data-nx-display-icon viewBox="0 0 24 24" aria-hidden="true"></svg>';
+
+        var roleShell = document.querySelector('.nx-role-sidebar-shell');
+        if (roleShell) {
+            if (roleShell.classList.contains('nx-role-student')) {
+                button.style.setProperty('--nx-display-accent', '#0a8f46');
+                button.style.setProperty('--nx-display-accent-soft', '#edf8f1');
+            } else if (roleShell.classList.contains('nx-role-supervisor')) {
+                button.style.setProperty('--nx-display-accent', '#2563eb');
+                button.style.setProperty('--nx-display-accent-soft', '#eff6ff');
+            } else if (roleShell.classList.contains('nx-role-admin')) {
+                button.style.setProperty('--nx-display-accent', '#f45125');
+                button.style.setProperty('--nx-display-accent-soft', '#fff1eb');
+            }
+        }
 
         button.addEventListener('click', function () {
             applyMode(button.dataset.nextMode === 'desktop' ? 'desktop' : 'mobile', true);
@@ -302,7 +307,7 @@
     border: 1px solid rgba(15, 23, 42, 0.14);
     border-radius: 12px;
     background: rgba(255, 255, 255, 0.97);
-    color: var(--nx-topbar-accent, #2563eb);
+    color: var(--nx-display-accent, #2563eb);
     box-shadow: 0 10px 26px rgba(15, 23, 42, 0.16);
     -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
@@ -312,9 +317,9 @@
 
 .nx-display-mode-toggle:hover,
 .nx-display-mode-toggle:focus-visible {
-    border-color: var(--nx-topbar-accent, #2563eb);
-    background: var(--nx-topbar-accent-soft, #eff6ff);
-    color: var(--nx-topbar-accent, #2563eb);
+    border-color: var(--nx-display-accent, #2563eb);
+    background: var(--nx-display-accent-soft, #eff6ff);
+    color: var(--nx-display-accent, #2563eb);
     outline: none;
 }
 

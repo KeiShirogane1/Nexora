@@ -30,6 +30,11 @@ def welcome():return render_template("welcome.html")
 
 @auth.route("/login",methods=["GET","POST"])
 def login():
+ if request.method=="GET" and session.get("user_id") is not None:
+  role=str(session.get("role") or "").strip().lower()
+  if role=="student":return redirect(url_for("student.student_dashboard"))
+  if role=="supervisor":return redirect(url_for("supervisor.supervisor_dashboard"))
+  if role=="admin":return redirect(url_for("admin.admin_dashboard"))
  if request.method=="POST":
   username=request.form.get("username","").strip(); password=request.form.get("password",""); user=get_user(username,password)
   if user=="inactive":session["login_error"]="Your account has been deactivated. Please contact the administrator.";session["login_username"]=username;return redirect(url_for("auth.login"))
