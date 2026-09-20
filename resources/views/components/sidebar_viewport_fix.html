@@ -101,6 +101,8 @@ body:has(.nx-role-sidebar-shell) {
         transform: translateX(0) !important;
     }
 
+    .nx-role-sidebar-shell.is-mobile-initializing .nx-role-sidebar,
+    .nx-role-sidebar-shell.is-mobile-initializing .nx-role-sidebar-backdrop,
     .nx-role-sidebar-shell.is-mobile-navigating .nx-role-sidebar,
     .nx-role-sidebar-shell.is-mobile-navigating .nx-role-sidebar-backdrop {
         transition: none !important;
@@ -459,6 +461,8 @@ body:has(.nx-role-sidebar-shell) {
         if (!shell || !sidebar || !backdrop || !topbarLeft) return;
         if (document.querySelector('[data-nx-mobile-menu]')) return;
 
+        shell.classList.add('is-mobile-initializing');
+
         var button = document.createElement('button');
         button.type = 'button';
         button.className = 'nx-mobile-menu-button';
@@ -536,6 +540,17 @@ body:has(.nx-role-sidebar-shell) {
         });
 
         setOpen(false, false);
+
+        /*
+         * Establish the initial closed mobile drawer without animation.
+         * Re-enable transitions only after the browser has painted that state,
+         * so a newly loaded page never shows the sidebar sliding shut.
+         */
+        window.requestAnimationFrame(function () {
+            window.requestAnimationFrame(function () {
+                shell.classList.remove('is-mobile-initializing');
+            });
+        });
     }
 
     if (document.readyState === 'loading') {
