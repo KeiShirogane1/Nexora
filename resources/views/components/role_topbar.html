@@ -37,7 +37,11 @@
     {% endif %}
 {% else %}
     {% set nx_role_label = 'Admin' %}
-    {% set nx_display_name = 'Administrator' %}
+    {% set nx_display_name = 'Nexora Admin' %}
+    {% set nx_profile_url = url_for('admin.admin_profile') %}
+    {% if sidebar_profile is defined and sidebar_profile and sidebar_profile.profile_picture %}
+        {% set nx_avatar = url_for('profile_picture', filename=sidebar_profile.profile_picture) %}
+    {% endif %}
 {% endif %}
 
 {% if nx_role == 'student' %}

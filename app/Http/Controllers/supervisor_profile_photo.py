@@ -90,6 +90,7 @@ def _persist_profile_picture_upload(response):
         "/student/profile/setup",
         "/student/profile/photo",
         "/supervisor/profile/photo",
+        "/admin/profile/photo",
     }
     if path not in supported_paths:
         return response
@@ -507,3 +508,43 @@ def update_photo():
     finally:
         conn.close()
     return jsonify({"ok": True, "url": f"/uploads/profile_pictures/{filename}"})
+
+@supervisor_profile_photo.route("/admin/profile/photo", methods=["POST"])
+@role_required("admin")
+def update_admin_photo():
+    file = request.files.get("profile_picture")
+    if not file or not file.filename:
+        flash("Choose a profile picture first.", "warning")
+        return redirect(url_for("admin.admin_profile"))
+
+    name = secure_filename(file.filename)
+    ext = name.rsplit(".", 1)[-1].lower() if "." in name else ""
+    if ext not in {"png", "jpg", "jpeg", "gif"}:
+        flash("Profile picture must be PNG, JPG, JPEG, or GIF.", "danger")
+        return redirect(url_for("admin.admin_profile"))
+
+    file.seek(0, os.SEEK_END)
+    size = file.tell()
+    file.seek(0)
+    if size > 2 * 1024 * 1024:
+        flash("Profile picture is too large. Maximum size is 2 MB.", "danger")
+        return redirect(url_for("admin.admin_profile"))
+
+    stored_ext = "jpg" if ext == "jpeg" else ext
+    filename = f"admin_{session['user_id']}_{uuid4().hex[:10]}.{stored_ext}"
+    path = os.path.join(current_app.config["PROFILE_UPLOAD_FOLDER"], filename)
+    file.save(path)
+
+    conn = get_db_connection()
+    try:
+        conn.execute(
+            "UPDATE users SET profile_picture = ? WHERE id = ? AND role = 'admin'",
+            (filename, session["user_id"]),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    flash("Admin profile picture updated.", "success")
+    return redirect(url_for("admin.admin_profile"))
+

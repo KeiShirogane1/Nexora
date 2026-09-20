@@ -187,6 +187,39 @@ def reset_student_password(student_id):
         )
     )
 
+@admin.route("/admin/profile")
+@role_required("admin")
+def admin_profile():
+    conn = get_db_connection()
+    try:
+        account = conn.execute(
+            """
+            SELECT
+                id,
+                username,
+                email,
+                role,
+                COALESCE(status, 'active') AS status,
+                COALESCE(profile_picture, '') AS profile_picture
+            FROM users
+            WHERE id = ? AND role = 'admin'
+            """,
+            (session["user_id"],),
+        ).fetchone()
+    finally:
+        conn.close()
+
+    if not account:
+        flash("Admin account not found.", "danger")
+        return redirect(url_for("admin.admin_dashboard"))
+
+    admin_account = {key: account[key] for key in account.keys()}
+    return render_template(
+        "admin/profile.html",
+        admin_account=admin_account,
+    )
+
+
 @admin.route("/admin/dashboard")
 @role_required("admin")
 def admin_dashboard():

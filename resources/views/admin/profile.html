@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexora Admin Profile - Nexora</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body class="nexora-admin-body admin-profile-page">
+    {% include 'components/admin_sidebar.html' %}
+
+    <main class="admin-main">
+        <div class="admin-profile-shell">
+            <header class="admin-polish-header admin-profile-heading">
+                <div>
+                    <span class="admin-polish-eyebrow">ACCOUNT</span>
+                    <h1>Nexora Admin</h1>
+                    <p>Manage the Admin profile picture while keeping account credentials unchanged.</p>
+                </div>
+                <span class="admin-status-pill{% if admin_account.status == 'active' %} is-success{% endif %}">{{ admin_account.status|title }}</span>
+            </header>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'danger' else 'success' if category == 'success' else 'warning' if category == 'warning' else 'info' }}" role="alert">{{ message }}</div>
+                {% endfor %}
+            {% endwith %}
+
+            <section class="admin-profile-card admin-polish-panel" aria-labelledby="adminProfileTitle">
+                <div class="admin-profile-identity">
+                    {% if admin_account.profile_picture %}
+                        <img class="admin-profile-avatar" src="{{ url_for('profile_picture', filename=admin_account.profile_picture) }}" alt="Nexora Admin profile picture" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_profile.png') }}';">
+                    {% else %}
+                        <img class="admin-profile-avatar" src="{{ url_for('static', filename='images/default_profile.png') }}" alt="Default Admin profile picture">
+                    {% endif %}
+                    <div>
+                        <span class="admin-profile-role-label">ADMINISTRATOR</span>
+                        <h2 id="adminProfileTitle">Nexora Admin</h2>
+                        <p>System administrator account</p>
+                    </div>
+                </div>
+
+                <form class="admin-profile-photo-form" method="POST" enctype="multipart/form-data" action="{{ url_for('supervisor_profile_photo.update_admin_photo') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="admin-profile-file-field">
+                        <label for="adminProfilePicture">Profile picture</label>
+                        <input id="adminProfilePicture" type="file" name="profile_picture" accept=".png,.jpg,.jpeg,.gif,image/png,image/jpeg,image/gif" required>
+                        <small>PNG, JPG, JPEG, or GIF · maximum 2 MB.</small>
+                    </div>
+                    <button type="submit" class="admin-primary-button">Change Profile Picture</button>
+                </form>
+            </section>
+
+            <section class="admin-profile-details admin-polish-panel" aria-labelledby="adminAccountDetailsTitle">
+                <div class="admin-section-heading">
+                    <div>
+                        <span>ACCOUNT DETAILS</span>
+                        <h2 id="adminAccountDetailsTitle">Administrator information</h2>
+                    </div>
+                </div>
+                <dl class="admin-profile-detail-grid">
+                    <div>
+                        <dt>Display name</dt>
+                        <dd>Nexora Admin</dd>
+                    </div>
+                    <div>
+                        <dt>Role</dt>
+                        <dd>Admin</dd>
+                    </div>
+                    <div>
+                        <dt>Username</dt>
+                        <dd>{{ admin_account.username }}</dd>
+                    </div>
+                    <div>
+                        <dt>Email</dt>
+                        <dd>{{ admin_account.email or 'Not set' }}</dd>
+                    </div>
+                </dl>
+                <p class="admin-profile-credential-note">The display name is presentation-only. Login username, password, and authentication behavior are unchanged.</p>
+            </section>
+        </div>
+    </main>
+</body>
+</html>

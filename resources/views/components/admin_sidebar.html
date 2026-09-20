@@ -207,10 +207,14 @@ body.admin-students-page [aria-label="Student summary"] .summary-value {
             <span class="nx-role-brand-copy"><strong>NEXORA</strong><small>CODING</small></span>
         </a>
 
-        <div class="nx-role-profile" aria-label="Administrator account">
-            <img src="{{ url_for('static', filename='images/default_profile.png') }}" alt="Administrator">
-            <span class="nx-role-profile-copy"><strong>Administrator</strong><span>Admin</span></span>
-        </div>
+        <a class="nx-role-profile" href="{{ url_for('admin.admin_profile') }}" aria-label="Open Admin profile">
+            {% if sidebar_profile and sidebar_profile.profile_picture %}
+                <img src="{{ url_for('profile_picture', filename=sidebar_profile.profile_picture) }}" alt="Nexora Admin profile picture" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_profile.png') }}';">
+            {% else %}
+                <img src="{{ url_for('static', filename='images/default_profile.png') }}" alt="Default Admin profile picture">
+            {% endif %}
+            <span class="nx-role-profile-copy"><strong>Nexora Admin</strong><span>Admin</span><em>View Profile →</em></span>
+        </a>
 
         <div class="nx-role-rule"></div>
         <div class="nx-role-section-label">Menu</div>
@@ -254,6 +258,7 @@ body.admin-students-page [aria-label="Student summary"] .summary-value {
         <div class="nx-role-divider"></div>
         <div class="nx-role-section-label">Account</div>
         <nav class="nx-role-nav nx-role-account-nav" aria-label="Admin account">
+            <a href="{{ url_for('admin.admin_profile') }}" aria-label="Profile" class="{% if request.path == '/admin/profile' %}active{% endif %}"><span class="nx-role-icon">◎</span><span class="nx-role-nav-text">Profile</span></a>
             <a href="javascript:void(0)" aria-label="Logout" onclick="openLogoutModal(); return false;"><span class="nx-role-icon">↪</span><span class="nx-role-nav-text">Logout</span></a>
         </nav>
 
