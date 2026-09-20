@@ -4,6 +4,7 @@
     window.__nexoraDisplayModeReady = true;
 
     var STORAGE_KEY = 'nexoraDisplayPreferenceV2';
+    var BROWSER_MODE_KEY = 'nexoraBrowserDesktopSiteV1';
     var DESKTOP_WIDTH = 1180;
     var MOBILE_BREAKPOINT = 760;
 
@@ -29,6 +30,61 @@
 
     function canSwitchDisplayMode() {
         return isTouchDevice() && screenShortEdge() <= 1000;
+    }
+
+    function browserRequestsDesktopSite() {
+        if (!isTouchDevice()) return false;
+
+        /*
+         * Chrome exposes its requested form factor through UA Client Hints
+         * on Android. This lets Nexora distinguish Chrome's own "Desktop site"
+         * from Nexora's in-page Desktop View.
+         */
+        try {
+            if (
+                navigator.userAgentData &&
+                typeof navigator.userAgentData.mobile === 'boolean'
+            ) {
+                var platform = String(navigator.userAgentData.platform || '');
+                if (/android/i.test(platform)) {
+                    return navigator.userAgentData.mobile === false;
+                }
+            }
+        } catch (error) {}
+
+        var ua = String(navigator.userAgent || '');
+
+        /*
+         * Android Chrome normally includes "Mobile" in phone mode and drops it
+         * when "Desktop site" is requested. The wide initial viewport is a
+         * final fallback for reduced desktop-style user agents.
+         */
+        if (/android/i.test(ua)) {
+            return !/mobile/i.test(ua);
+        }
+
+        return (
+            canSwitchDisplayMode() &&
+            window.innerWidth >= 900 &&
+            !/iphone|ipod|mobile/i.test(ua)
+        );
+    }
+
+    function readBrowserMode() {
+        try {
+            var value = localStorage.getItem(BROWSER_MODE_KEY);
+            return value === 'desktop-site' || value === 'mobile-site'
+                ? value
+                : null;
+        } catch (error) {
+            return null;
+        }
+    }
+
+    function storeBrowserMode(value) {
+        try {
+            localStorage.setItem(BROWSER_MODE_KEY, value);
+        } catch (error) {}
     }
 
     function readStoredMode() {
@@ -130,7 +186,11 @@
     }
 
     function createToggle() {
-        if (!canSwitchDisplayMode() || !document.body) return;
+        if (
+            !canSwitchDisplayMode() ||
+            browserRequestsDesktopSite() ||
+            !document.body
+        ) return;
         if (document.querySelector('[data-nx-display-toggle]')) return;
 
         var button = document.createElement('button');
@@ -157,11 +217,41 @@
         updateToggle(window.__nexoraDisplayMode || naturalMode());
     }
 
+    var chromeDesktopSite = browserRequestsDesktopSite();
+    var previousBrowserMode = readBrowserMode();
     var initialMode = readStoredMode() || naturalMode();
 
-    if (canSwitchDisplayMode()) {
+    if (chromeDesktopSite) {
+        /*
+         * Chrome owns the viewport while its browser-level Desktop site option
+         * is on. Do not fight that mode and do not render the Nexora switch.
+         */
+        document.documentElement.dataset.nxBrowserDesktopSite = 'true';
+        document.documentElement.dataset.nxDisplayMode = 'desktop';
+        window.__nexoraDisplayMode = 'desktop';
+        storeBrowserMode('desktop-site');
+    } else if (canSwitchDisplayMode()) {
+        document.documentElement.dataset.nxBrowserDesktopSite = 'false';
+
+        /*
+         * First normal phone load starts in Mobile View. More importantly,
+         * turning Chrome Desktop site OFF causes a reload; detecting that
+         * desktop-site -> mobile-site transition resets Nexora to Mobile View.
+         * After that, the user's Nexora PC/Phone button choice persists across
+         * normal page navigation until Chrome's browser mode changes again.
+         */
+        if (
+            previousBrowserMode === null ||
+            previousBrowserMode === 'desktop-site'
+        ) {
+            initialMode = 'mobile';
+            storeMode('mobile');
+        }
+
+        storeBrowserMode('mobile-site');
         applyMode(initialMode, false);
     } else {
+        document.documentElement.dataset.nxBrowserDesktopSite = 'false';
         document.documentElement.dataset.nxDisplayMode = 'desktop';
         window.__nexoraDisplayMode = 'desktop';
     }
@@ -171,11 +261,11 @@
             return window.__nexoraDisplayMode || naturalMode();
         },
         set: function (mode) {
-            if (!canSwitchDisplayMode()) return;
+            if (!canSwitchDisplayMode() || browserRequestsDesktopSite()) return;
             applyMode(mode, true);
         },
         toggle: function () {
-            if (!canSwitchDisplayMode()) return;
+            if (!canSwitchDisplayMode() || browserRequestsDesktopSite()) return;
             applyMode(
                 window.__nexoraDisplayMode === 'desktop' ? 'mobile' : 'desktop',
                 true
@@ -248,9 +338,7 @@ html[data-nx-display-mode="mobile"] .nx-display-mode-toggle {
     border-radius: 11px;
 }
 
-@media (min-width: 1001px), (pointer: fine) and (min-width: 761px) {
-    .nx-display-mode-toggle {
-        display: none !important;
-    }
+html[data-nx-browser-desktop-site="true"] .nx-display-mode-toggle {
+    display: none !important;
 }
 </style>
