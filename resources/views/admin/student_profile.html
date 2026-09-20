@@ -18,7 +18,7 @@
 
     </head>
 
-    <body class="nexora-admin-body">
+    <body class="nexora-admin-body admin-student-profile-page">
 
         {% include 'components/admin_sidebar.html' %}
 
@@ -57,7 +57,7 @@
 
                     {% endwith %}
 
-                    <div class="dashboard-header">
+                    <div class="dashboard-header admin-student-profile-header">
 
                         <div>
 
@@ -79,9 +79,9 @@
 
 <!-- PROFILE HEADER -->
 
-                    <div class="dashboard-box profile-card">
+                    <div class="dashboard-box profile-card admin-student-profile-hero">
 
-                        <div class="profile-top">
+                        <div class="profile-top admin-student-profile-top">
 
                             {% if student.profile_picture %}
 
@@ -101,10 +101,9 @@
 
                                 <div class="profile-title">
 
+                                    {% set student_display_name = (((student.first_name or '') ~ ' ' ~ (student.middle_name or '') ~ ' ' ~ (student.last_name or ''))|trim) %}
                                     <h2>
-                                        {{ student.first_name }}
-                                        {{ student.middle_name }}
-                                        {{ student.last_name }}
+                                        {{ student_display_name or student.username or "Student" }}
                                     </h2>
 
                                     <p>
@@ -133,7 +132,7 @@
 
                                 </div>
 
-                                <div class="profile-summary">
+                                <div class="profile-summary admin-student-profile-summary">
 
                                     <div class="summary-item">
 
@@ -195,7 +194,7 @@
 
                                 </div>
 
-                                <div class="profile-actions">
+                                <div class="profile-actions admin-student-profile-actions">
 
                                     <a href="{{ url_for('admin.edit_student', student_id=student.id) }}"
                                        class="btn btn-primary">
@@ -245,7 +244,7 @@
 
 <!-- PROFILE COMPLETION -->
 
-                    <div class="dashboard-box">
+                    <div class="dashboard-box admin-student-profile-completion">
 
                         <h3>
                             Profile Completion
@@ -299,9 +298,11 @@
 
                     </div>
 
+<div class="admin-student-profile-details-grid">
+
 <!-- BASIC INFORMATION -->
 
-                    <div class="dashboard-box">
+                    <div class="dashboard-box admin-student-profile-section">
 
                         <h3>
                             Basic Information
@@ -363,7 +364,7 @@
 
 <!-- CONTACT -->
 
-                    <div class="dashboard-box">
+                    <div class="dashboard-box admin-student-profile-section">
 
                         <h3>
                             Contact Information
@@ -413,7 +414,7 @@
 
 <!-- EMERGENCY -->
 
-                    <div class="dashboard-box">
+                    <div class="dashboard-box admin-student-profile-section">
 
                         <h3>
                             Emergency Contact
@@ -475,7 +476,7 @@
 
 <!-- INTERNSHIP INFORMATION -->
 
-                    <div class="dashboard-box">
+                    <div class="dashboard-box admin-student-profile-section">
 
                         <h3>
                             Internship Information
@@ -665,7 +666,7 @@
 
 <!-- DOCUMENTS -->
 
-                    <div class="dashboard-box">
+                    <div class="dashboard-box admin-student-profile-section admin-student-profile-documents">
 
                         <h3>
                             Documents
@@ -718,8 +719,10 @@
 
                     </div>
 
+                    </div>
+
                     <a href="{{ url_for('admin.admin_students') }}"
-                       class="btn btn-light">
+                       class="btn btn-light admin-student-profile-back">
 
                         ← Back to Students
 
