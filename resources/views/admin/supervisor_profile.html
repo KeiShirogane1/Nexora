@@ -1,92 +1,325 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="UTF-8">
-        <title>Supervisor Profile - Nexora</title>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
-    </head>
-    <body class="nexora-admin-body">
-        {% include 'components/admin_sidebar.html' %}
-        <main class="admin-main nexora-app-main">
-            <div class="nexora-page">
-                <div class="compact-dashboard">
-                    <div class="dashboard-header">
-                        <div>
-                            <h1>Supervisor Profile</h1>
-                            <p>View supervisor information and assigned students.</p>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supervisor Profile - Nexora</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
+</head>
+<body class="nexora-admin-body admin-supervisor-profile-page">
+    {% include 'components/admin_sidebar.html' %}
+
+    <main class="admin-main nexora-app-main">
+        <div class="nexora-page">
+            <div class="compact-dashboard admin-supervisor-profile-shell">
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        <div class="flash-container">
+                            {% for category, message in messages %}
+                                <div class="flash-popup alert alert-{{ category }}">{{ message }}</div>
+                            {% endfor %}
                         </div>
-                        <div class="system-badge">👔 Supervisor Account</div>
+                    {% endif %}
+                {% endwith %}
+
+                <header class="dashboard-header admin-supervisor-profile-header">
+                    <div>
+                        <span class="admin-supervisor-profile-kicker">ADMIN PORTAL</span>
+                        <h1>Supervisor Profile</h1>
+                        <p>View supervisor information, classroom ownership, and assigned students.</p>
                     </div>
 
-                    <div class="dashboard-box profile-card">
-                        <div class="profile-top">
-                            <div class="default-profile">👔</div>
-                            <div class="profile-main">
-                                <div class="profile-title">
-                                    <h2>{{ supervisor.username }}</h2>
-                                    <p>@{{ supervisor.username }}</p>
-                                    {% if supervisor.status == "inactive" %}
-                                        <span class="badge bg-danger">Inactive</span>
-                                    {% elif supervisor.role == "pending_supervisor" %}
-                                        <span class="badge bg-warning text-dark">Pending</span>
-                                    {% else %}
-                                        <span class="badge bg-success">Active</span>
-                                    {% endif %}
+                    <div class="admin-supervisor-profile-header-side">
+                        <nav class="admin-supervisor-profile-breadcrumb" aria-label="Breadcrumb">
+                            <a href="{{ url_for('admin.admin_supervisors') }}">Supervisors</a>
+                            <span>/</span>
+                            <strong>Profile</strong>
+                        </nav>
+                        <span class="admin-supervisor-account-badge">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <circle cx="8.5" cy="7" r="4"></circle>
+                                <path d="M2 21v-2a6.5 6.5 0 0 1 13 0v2"></path>
+                                <path d="M18 8v6M21 11h-6"></path>
+                            </svg>
+                            Supervisor Account
+                        </span>
+                    </div>
+                </header>
+
+                <section class="admin-supervisor-hero">
+                    <div class="admin-supervisor-hero-main">
+                        <div class="admin-supervisor-avatar-wrap">
+                            {% if supervisor.profile_picture_url %}
+                                <img src="{{ supervisor.profile_picture_url }}" class="admin-supervisor-avatar" alt="{{ supervisor.display_name }} profile picture">
+                            {% else %}
+                                <div class="admin-supervisor-avatar admin-supervisor-avatar-fallback" aria-label="Default supervisor profile picture">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="8" r="4"></circle>
+                                        <path d="M4 21a8 8 0 0 1 16 0"></path>
+                                        <path d="M17.5 5.5 20 3m0 0 1 3m-1-3h-3"></path>
+                                    </svg>
                                 </div>
-                                <div class="profile-summary">
-                                    <div class="summary-item"><strong>Account ID</strong><p>#{{ supervisor.id }}</p></div>
-                                    <div class="summary-item"><strong>Username</strong><p>{{ supervisor.username }}</p></div>
-                                    <div class="summary-item"><strong>Email</strong><p>{{ supervisor.email or "Not Provided" }}</p></div>
-                                    <div class="summary-item"><strong>Assigned Students</strong><p>{{ assigned_count }} student{{ 's' if assigned_count != 1 else '' }}</p></div>
-                                </div>
-                                <div class="profile-actions">
-                                    <a href="{{ url_for('admin.edit_supervisor', supervisor_id=supervisor.id) }}" class="btn btn-primary">✏️ Edit</a>
-                                    {% if supervisor.status == "inactive" %}
-                                        <form method="POST" action="{{ url_for('admin.activate_supervisor', supervisor_id=supervisor.id) }}" style="display:inline;">
-                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                            <button type="submit" class="btn btn-success">✅ Activate</button>
-                                        </form>
-                                    {% else %}
-                                        <form method="POST" action="{{ url_for('admin.deactivate_supervisor', supervisor_id=supervisor.id) }}" style="display:inline;" onsubmit="return confirm('Deactivate this supervisor?')">
-                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                            <button type="submit" class="btn btn-danger">🚫 Deactivate</button>
-                                        </form>
-                                    {% endif %}
-                                </div>
-                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="admin-supervisor-identity">
+                            <h2>{{ supervisor.display_name or supervisor.username }}</h2>
+                            <p>@{{ supervisor.username }}</p>
+
+                            {% if supervisor.status == "inactive" or supervisor.account_status == "inactive" %}
+                                <span class="admin-supervisor-status is-inactive"><i></i>Inactive Supervisor</span>
+                            {% elif supervisor.status == "pending" or supervisor.role == "pending_supervisor" %}
+                                <span class="admin-supervisor-status is-pending"><i></i>Pending Supervisor</span>
+                            {% else %}
+                                <span class="admin-supervisor-status is-active"><i></i>Active Supervisor</span>
+                            {% endif %}
                         </div>
                     </div>
 
-                    <div class="dashboard-box">
-                        <h3>Assigned Students ({{ assigned_count }})</h3>
-                        {% if assigned_students %}
-                            <div class="table-responsive">
-                                <table class="table">
-                                    <thead><tr><th>#</th><th>Student</th><th>Email</th><th>Action</th></tr></thead>
-                                    <tbody>
-                                        {% for s in assigned_students %}
-                                            <tr>
-                                                <td>{{ loop.index }}</td>
-                                                <td>{{ s.username }}</td>
-                                                <td>{{ s.email or "—" }}</td>
-                                                <td><a href="{{ url_for('admin.student_profile', student_id=s.id) }}" class="btn btn-sm btn-primary">View</a></td>
-                                            </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
+                    <div class="admin-supervisor-hero-actions">
+                        <a href="{{ url_for('admin.edit_supervisor', supervisor_id=supervisor.id) }}" class="admin-supervisor-action is-edit">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"></path></svg>
+                            Edit
+                        </a>
+
+                        {% if supervisor.status == "inactive" or supervisor.account_status == "inactive" %}
+                            <form method="POST" action="{{ url_for('admin.activate_supervisor', supervisor_id=supervisor.id) }}" class="admin-supervisor-action-form">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="admin-supervisor-action is-activate">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
+                                    Activate
+                                </button>
+                            </form>
                         {% else %}
-                            <div class="alert alert-info">No students assigned to this supervisor.</div>
+                            <form method="POST" action="{{ url_for('admin.deactivate_supervisor', supervisor_id=supervisor.id) }}" class="admin-supervisor-action-form" onsubmit="return confirm('Deactivate this supervisor? A 24-hour appeal window will begin.');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="admin-supervisor-action is-deactivate">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="m8.5 8.5 7 7"></path></svg>
+                                    Deactivate
+                                </button>
+                            </form>
+                        {% endif %}
+
+                        <a href="{{ url_for('messages.open_thread', contact_id=supervisor.id) }}" class="admin-supervisor-action is-chat">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"></path></svg>
+                            Chat
+                        </a>
+                    </div>
+
+                    <div class="admin-supervisor-summary-grid">
+                        <div class="admin-supervisor-summary-card">
+                            <span class="admin-supervisor-summary-icon" aria-hidden="true">#</span>
+                            <span><small>Account ID</small><strong>#{{ supervisor.id }}</strong></span>
+                        </div>
+                        <div class="admin-supervisor-summary-card">
+                            <span class="admin-supervisor-summary-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>
+                            </span>
+                            <span><small>Employee ID</small><strong>{{ supervisor.employee_id or "Not Provided" }}</strong></span>
+                        </div>
+                        <div class="admin-supervisor-summary-card admin-supervisor-summary-wide">
+                            <span class="admin-supervisor-summary-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m3 7 9 6 9-6"></path></svg>
+                            </span>
+                            <span><small>Email</small><strong>{{ supervisor.email or "Not Provided" }}</strong></span>
+                        </div>
+                        <div class="admin-supervisor-summary-card">
+                            <span class="admin-supervisor-summary-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M19 8v6M22 11h-6"></path></svg>
+                            </span>
+                            <span><small>Assigned Students</small><strong>{{ assigned_count }} student{{ 's' if assigned_count != 1 else '' }}</strong></span>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="admin-supervisor-details-grid">
+                    <article class="dashboard-box admin-supervisor-info-card">
+                        <div class="admin-supervisor-card-heading">
+                            <span class="admin-supervisor-card-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"></path><path d="M4 6h.01M4 12h.01M4 18h.01"></path></svg>
+                            </span>
+                            <div><small>PROFILE</small><h3>Professional Information</h3></div>
+                        </div>
+                        <div class="admin-supervisor-info-list">
+                            <div><span>Job Title</span><strong>{{ supervisor.job_title or "Not Provided" }}</strong></div>
+                            <div><span>Department</span><strong>{{ supervisor.department or "Not Provided" }}</strong></div>
+                            <div><span>Specialization</span><strong>{{ supervisor.specialization or "Not Provided" }}</strong></div>
+                            <div><span>Program Focus</span><strong>{{ programs|join(', ') if programs else "Not Provided" }}</strong></div>
+                        </div>
+                    </article>
+
+                    <article class="dashboard-box admin-supervisor-info-card">
+                        <div class="admin-supervisor-card-heading">
+                            <span class="admin-supervisor-card-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"></rect><path d="M8 9h8M8 13h5"></path></svg>
+                            </span>
+                            <div><small>ACCOUNT</small><h3>Account Information</h3></div>
+                        </div>
+                        <div class="admin-supervisor-info-list">
+                            <div><span>Username</span><strong>@{{ supervisor.username }}</strong></div>
+                            <div><span>Email</span><strong>{{ supervisor.email or "Not Provided" }}</strong></div>
+                            <div><span>Employee ID</span><strong>{{ supervisor.employee_id or "Not Provided" }}</strong></div>
+                            <div><span>Owned Classrooms</span><strong>{{ classes|length }}</strong></div>
+                        </div>
+                    </article>
+                </section>
+
+                <section class="dashboard-box admin-supervisor-classrooms">
+                    <div class="admin-supervisor-section-heading">
+                        <div>
+                            <span>CLASSROOM OWNERSHIP</span>
+                            <h3>Assigned Classrooms</h3>
+                            <p>Active classrooms currently owned by this supervisor.</p>
+                        </div>
+                        <span class="admin-supervisor-count-pill">{{ classes|length }} classroom{{ 's' if classes|length != 1 else '' }}</span>
+                    </div>
+
+                    {% if classes %}
+                        <div class="admin-supervisor-classroom-grid">
+                            {% for classroom in classes %}
+                                {% set supervisor_class_theme = classroom_banner_theme(classroom.id) %}
+                                <a href="{{ url_for('admin_classrooms.classroom_detail', classroom_id=classroom.id) }}"
+                                   class="admin-supervisor-classroom-card nx-class-theme nx-class-theme--{{ supervisor_class_theme }}">
+                                    <span class="admin-supervisor-classroom-banner nx-class-fade-banner">
+                                        <span class="admin-supervisor-classroom-icon nx-class-theme-icon" aria-hidden="true">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 6l9 4.5-9 4.5-9-4.5Z"></path><path d="M7 12.5v4.2c2.8 1.8 7.2 1.8 10 0v-4.2"></path></svg>
+                                        </span>
+                                        <span class="admin-supervisor-classroom-copy">
+                                            <small>{{ 'INTERN CLASSROOM' if classroom.classroom_type == 'internship' else 'CLASSROOM' }}</small>
+                                            <strong>{{ classroom.name }}</strong>
+                                            <span>{{ classroom.section or 'No section' }}{% if classroom.program %} · {{ classroom.program }}{% endif %}</span>
+                                        </span>
+                                        <span class="admin-supervisor-classroom-count nx-class-theme-count">{{ classroom.student_count }} student{{ 's' if classroom.student_count != 1 else '' }}</span>
+                                        <span class="admin-supervisor-classroom-arrow" aria-hidden="true">→</span>
+                                    </span>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="admin-supervisor-empty-state">
+                            <span class="admin-supervisor-empty-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M7 9h10M7 13h7"></path></svg>
+                            </span>
+                            <div><strong>No active classrooms</strong><span>This supervisor does not currently own an active classroom.</span></div>
+                        </div>
+                    {% endif %}
+                </section>
+
+                <section class="dashboard-box admin-supervisor-students-section">
+                    <div class="admin-supervisor-section-heading admin-supervisor-students-heading">
+                        <div class="admin-supervisor-students-title">
+                            <span class="admin-supervisor-card-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><path d="M20 8v6M23 11h-6"></path></svg>
+                            </span>
+                            <div>
+                                <span>ROSTER</span>
+                                <h3>Assigned Students ({{ assigned_count }})</h3>
+                                <p>Students currently enrolled in this supervisor's active classrooms.</p>
+                            </div>
+                        </div>
+
+                        {% if assigned_students %}
+                            <label class="admin-supervisor-student-search">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+                                <input id="adminSupervisorStudentSearch" type="search" placeholder="Search assigned students..." autocomplete="off">
+                            </label>
                         {% endif %}
                     </div>
 
-                    <a href="{{ url_for('admin.admin_supervisors') }}" class="btn btn-light">← Back to Supervisors</a>
-                </div>
-            </div>
-        </main>
+                    {% if assigned_students %}
+                        <div class="admin-supervisor-student-table-wrap">
+                            <table class="admin-supervisor-student-table" id="adminSupervisorStudentTable">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Student</th>
+                                        <th>Email</th>
+                                        <th>Program / Year</th>
+                                        <th>Classroom</th>
+                                        <th>OJT Status</th>
+                                        <th class="admin-supervisor-student-actions-heading">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for student in assigned_students %}
+                                        <tr data-supervisor-student-row data-search="{{ (student.display_name ~ ' ' ~ student.username ~ ' ' ~ student.student_number ~ ' ' ~ student.email ~ ' ' ~ student.major_program ~ ' ' ~ student.grade_year ~ ' ' ~ student.classroom_name ~ ' ' ~ student.section)|lower|e }}">
+                                            <td class="admin-supervisor-student-index">{{ loop.index }}</td>
+                                            <td>
+                                                <div class="admin-supervisor-student-person">
+                                                    <span class="admin-supervisor-student-avatar">{{ (student.display_name or student.username or 'S')[0]|upper }}</span>
+                                                    <span>
+                                                        <strong>{{ student.display_name }}</strong>
+                                                        <small>{% if student.student_number %}{{ student.student_number }} · {% endif %}@{{ student.username }}</small>
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td>{{ student.email or "Not Provided" }}</td>
+                                            <td><strong>{{ student.major_program or "Not Provided" }}</strong><small>{{ student.grade_year or "Year not provided" }}</small></td>
+                                            <td><strong>{{ student.classroom_name or "Classroom" }}</strong><small>{{ student.section or "No section" }}</small></td>
+                                            <td>
+                                                <span class="admin-supervisor-roster-status is-{{ student.roster_status_key|e }}">{{ student.roster_status }}</span>
+                                                {% if student.progress_percentage is not none %}
+                                                    <small>{{ student.progress_percentage }}% complete</small>
+                                                {% endif %}
+                                            </td>
+                                            <td class="admin-supervisor-student-actions">
+                                                <a href="{{ url_for('admin.student_profile', student_id=student.id) }}" class="admin-supervisor-student-action">View Profile</a>
+                                                {% if student.class_id %}
+                                                    <a href="{{ url_for('admin_reports_overview.student_insights', student_id=student.id, class_id=student.class_id) }}" class="admin-supervisor-student-action is-secondary">Insights</a>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="admin-supervisor-student-empty-filter" id="adminSupervisorStudentEmpty" hidden>No assigned students match this search.</div>
+                    {% else %}
+                        <div class="admin-supervisor-empty-state">
+                            <span class="admin-supervisor-empty-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle></svg>
+                            </span>
+                            <div><strong>No assigned students</strong><span>Students will appear here when they enroll in this supervisor's classrooms.</span></div>
+                        </div>
+                    {% endif %}
+                </section>
 
-    </body>
+                <a href="{{ url_for('admin.admin_supervisors') }}" class="admin-supervisor-back-link">← Back to Supervisors</a>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        (function () {
+            var search = document.getElementById('adminSupervisorStudentSearch');
+            var rows = Array.prototype.slice.call(document.querySelectorAll('[data-supervisor-student-row]'));
+            var empty = document.getElementById('adminSupervisorStudentEmpty');
+            if (!search || !rows.length) return;
+
+            function filterRows() {
+                var query = (search.value || '').trim().toLowerCase();
+                var visible = 0;
+                rows.forEach(function (row) {
+                    var show = !query || (row.dataset.search || '').indexOf(query) !== -1;
+                    row.hidden = !show;
+                    if (show) visible += 1;
+                });
+                if (empty) empty.hidden = visible !== 0;
+            }
+
+            search.addEventListener('input', filterRows);
+        })();
+
+        window.setTimeout(function () {
+            document.querySelectorAll('.flash-popup').forEach(function (alert) {
+                alert.style.transition = 'all .3s ease';
+                alert.style.opacity = '0';
+                window.setTimeout(function () { alert.remove(); }, 300);
+            });
+        }, 3500);
+    </script>
+</body>
 </html>

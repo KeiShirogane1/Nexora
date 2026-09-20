@@ -34,6 +34,8 @@ import secrets
 import string
 
 from app.Services.password_security import hash_password
+from app.Services.admin_assigned_interns_service import get_admin_supervisor_management_context
+from app.Services.assigned_interns_service import get_supervisor_assigned_interns
 
 def parse_datetime(value):
     if not value:
@@ -1126,30 +1128,126 @@ def supervisor_profile(supervisor_id):
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("SELECT id, username, email, role, status FROM users WHERE id = ? AND role IN ('supervisor','pending_supervisor')", (supervisor_id,))
-        supervisor = cursor.fetchone()
-        if not supervisor:
-            return "Supervisor not found", 404
-        cursor.execute("SELECT COUNT(*) FROM student_assignments WHERE supervisor_id = ?", (supervisor_id,))
-        assigned_count = cursor.fetchone()[0]
-        cursor.execute("""
-            SELECT u.id, u.username, u.email
-            FROM users u
-            JOIN student_assignments sa ON u.id = sa.student_id
-            WHERE sa.supervisor_id = ?
-            ORDER BY u.username
-        """, (supervisor_id,))
-        assigned_students = cursor.fetchall()
-        return render_template(
-            "admin/supervisor_profile.html",
-            supervisor=supervisor,
-            assigned_count=assigned_count,
-            assigned_students=assigned_students,
-            active_page="users"
+        cursor.execute(
+            """
+            SELECT id, username, email, role, status, COALESCE(profile_picture, '') AS profile_picture
+            FROM users
+            WHERE id = ?
+              AND role IN ('supervisor', 'pending_supervisor')
+            """,
+            (supervisor_id,),
         )
+        account_row = cursor.fetchone()
+        if not account_row:
+            return "Supervisor not found", 404
     finally:
         cursor.close()
         conn.close()
+
+    account = {key: account_row[key] for key in account_row.keys()}
+
+    management_context = get_admin_supervisor_management_context()
+    supervisor = next(
+        (
+            item
+            for item in management_context.get("supervisors", [])
+            if int(item.get("id") or 0) == int(supervisor_id)
+        ),
+        None,
+    )
+
+    if supervisor is None:
+        supervisor = {
+            "id": int(account.get("id") or supervisor_id),
+            "username": str(account.get("username") or ""),
+            "email": str(account.get("email") or ""),
+            "display_name": str(account.get("username") or "Supervisor"),
+            "employee_id": "",
+            "job_title": "",
+            "department": "",
+            "specialization": "",
+            "status": (
+                "pending"
+                if account.get("role") == "pending_supervisor"
+                else str(account.get("status") or "active").lower()
+            ),
+            "profile_picture_url": "",
+            "classes": [],
+            "programs": [],
+            "assigned_students": 0,
+            "primary_class": None,
+            "primary_program": "",
+        }
+    else:
+        supervisor = dict(supervisor)
+
+    supervisor["role"] = account.get("role")
+    supervisor["account_status"] = str(account.get("status") or "active").lower()
+    supervisor["username"] = supervisor.get("username") or str(account.get("username") or "")
+    supervisor["email"] = supervisor.get("email") or str(account.get("email") or "")
+    supervisor["display_name"] = supervisor.get("display_name") or supervisor["username"] or "Supervisor"
+
+    if not supervisor.get("profile_picture_url") and account.get("profile_picture"):
+        supervisor["profile_picture_url"] = url_for(
+            "profile_picture",
+            filename=str(account.get("profile_picture") or ""),
+        )
+
+    assigned_context = get_supervisor_assigned_interns(supervisor_id)
+    assigned_students = []
+
+    for intern in assigned_context.get("flat_interns", []):
+        placements = [
+            placement
+            for placement in (intern.get("placements") or [])
+            if not placement.get("archived")
+        ]
+        if not placements:
+            continue
+
+        primary = placements[0]
+        assigned_students.append(
+            {
+                "id": int(intern.get("id") or 0),
+                "username": str(intern.get("username") or ""),
+                "display_name": str(intern.get("display_name") or intern.get("username") or "Student"),
+                "email": str(intern.get("email_address") or ""),
+                "student_number": str(intern.get("student_number") or ""),
+                "major_program": str(intern.get("major_program") or ""),
+                "grade_year": str(intern.get("grade_year") or ""),
+                "class_id": int(primary.get("class_id") or 0),
+                "classroom_name": str(primary.get("classroom_name") or ""),
+                "section": str(primary.get("section") or ""),
+                "roster_status": str(primary.get("roster_status") or "Enrolled"),
+                "roster_status_key": str(primary.get("roster_status_key") or "enrolled"),
+                "progress_percentage": primary.get("progress_percentage"),
+                "rendered_hours": primary.get("rendered_hours", 0),
+                "required_hours": primary.get("required_hours"),
+            }
+        )
+
+    assigned_students.sort(
+        key=lambda item: (
+            item["display_name"].lower(),
+            item["student_number"].lower(),
+            item["id"],
+        )
+    )
+
+    supervisor["assigned_students"] = len(assigned_students)
+    assigned_count = len(assigned_students)
+    classes = list(supervisor.get("classes") or [])
+    programs = list(supervisor.get("programs") or [])
+
+    return render_template(
+        "admin/supervisor_profile.html",
+        supervisor=supervisor,
+        assigned_count=assigned_count,
+        assigned_students=assigned_students,
+        classes=classes,
+        programs=programs,
+        active_page="users",
+    )
 
 @admin.route("/admin/supervisor/edit/<int:supervisor_id>", methods=["GET", "POST"])
 @role_required("admin")
