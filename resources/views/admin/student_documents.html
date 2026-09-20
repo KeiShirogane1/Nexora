@@ -41,26 +41,27 @@
             </section>
 
             <section class="admin-polish-panel admin-documents-filter-panel">
-                <form method="GET" action="{{ url_for('admin_classrooms.student_documents') }}" class="admin-filter-grid admin-documents-filter-grid">
+                <form id="adminDocumentsFilterForm" method="GET" action="{{ url_for('admin_classrooms.student_documents') }}" class="admin-filter-grid admin-documents-filter-grid" autocomplete="off">
                     <div class="admin-filter-field admin-filter-search">
                         <label for="admin-documents-search">Search</label>
-                        <input id="admin-documents-search" type="search" name="search" value="{{ search }}" placeholder="Student, number, program, classroom...">
+                        <input id="admin-documents-search" type="search" name="search" value="{{ search }}" placeholder="Student, number, program, classroom..." data-live-search>
                     </div>
                     <div class="admin-filter-field">
                         <label for="admin-documents-state">Document status</label>
-                        <select id="admin-documents-state" name="documents">
+                        <select id="admin-documents-state" name="documents" data-live-documents>
                             <option value="all" {% if document_state == 'all' %}selected{% endif %}>All Students</option>
                             <option value="with" {% if document_state == 'with' %}selected{% endif %}>With Documents</option>
                             <option value="without" {% if document_state == 'without' %}selected{% endif %}>Without Documents</option>
                         </select>
                     </div>
                     <div class="admin-filter-actions">
-                        <a class="admin-secondary-button admin-documents-reset-button" href="{{ url_for('admin_classrooms.student_documents') }}">Reset</a>
+                        <a id="adminDocumentsReset" class="admin-secondary-button admin-documents-reset-button" href="{{ url_for('admin_classrooms.student_documents') }}">Reset</a>
                         <button class="admin-primary-button admin-documents-apply-button" type="submit">Apply</button>
                     </div>
                 </form>
             </section>
 
+            <div id="adminDocumentsResults" aria-live="polite">
             <div class="admin-documents-results-line">
                 <strong>{{ shown_students }}</strong> student{% if shown_students != 1 %}s{% endif %} shown
                 {% if search %}<span>for “{{ search }}”</span>{% endif %}
@@ -69,8 +70,8 @@
             {% if classroom_groups %}
                 <div class="admin-classroom-doc-groups">
                     {% for classroom in classroom_groups %}
-                        <section class="admin-polish-panel admin-classroom-doc-group">
-                            <div class="admin-classroom-doc-heading">
+                        <details class="admin-polish-panel admin-classroom-doc-group" {% if search %}open{% endif %}>
+                            <summary class="admin-classroom-doc-heading">
                                 <div>
                                     <div class="admin-doc-badges">
                                         <span class="admin-status-pill">{{ 'Intern Classroom' if classroom.classroom_type == 'internship' else 'Classroom' }}</span>
@@ -79,8 +80,11 @@
                                     <h2>{{ classroom.name }}</h2>
                                     <p>{{ classroom.section or 'No section' }} · {{ classroom.supervisor_name }}{% if classroom.company_name %} · {{ classroom.company_name }}{% endif %}{% if classroom.internship_title %} · {{ classroom.internship_title }}{% endif %}</p>
                                 </div>
-                                <span class="admin-count-chip">{{ classroom.students|length }} student{% if classroom.students|length != 1 %}s{% endif %}</span>
-                            </div>
+                                <span class="admin-classroom-doc-toggle">
+                                    <span class="admin-count-chip">{{ classroom.students|length }} student{% if classroom.students|length != 1 %}s{% endif %}</span>
+                                    <span class="admin-classroom-doc-chevron" aria-hidden="true">⌄</span>
+                                </span>
+                            </summary>
 
                             <div class="admin-doc-student-list">
                                 {% for student in classroom.students %}
@@ -97,7 +101,7 @@
                                     </article>
                                 {% endfor %}
                             </div>
-                        </section>
+                        </details>
                     {% endfor %}
                 </div>
             {% endif %}
@@ -145,6 +149,8 @@
                     </div>
                 </section>
             {% endif %}
+            </div>
+
         </div>
     </main>
 
@@ -168,6 +174,105 @@
 
     {% include 'components/document_fullscreen_viewer.html' %}
     <script>
+    (function () {
+        var form = document.getElementById('adminDocumentsFilterForm');
+        var searchInput = document.getElementById('admin-documents-search');
+        var statusSelect = document.getElementById('admin-documents-state');
+        var resetLink = document.getElementById('adminDocumentsReset');
+        var results = document.getElementById('adminDocumentsResults');
+        if (!form || !searchInput || !statusSelect || !results) return;
+
+        var debounceTimer = null;
+        var filterRequest = null;
+
+        function buildUrl() {
+            var url = new URL(form.action, window.location.origin);
+            var searchValue = searchInput.value.trim();
+            var documentValue = statusSelect.value || 'all';
+
+            if (searchValue) url.searchParams.set('search', searchValue);
+            if (documentValue !== 'all') url.searchParams.set('documents', documentValue);
+            return url;
+        }
+
+        function refreshResults(options) {
+            options = options || {};
+            var url = options.url || buildUrl();
+
+            if (filterRequest) filterRequest.abort();
+            filterRequest = new AbortController();
+            results.classList.add('is-loading');
+
+            fetch(url.toString(), {
+                method: 'GET',
+                credentials: 'same-origin',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                signal: filterRequest.signal
+            })
+                .then(function (response) {
+                    if (!response.ok) throw new Error('HTTP ' + response.status);
+                    return response.text();
+                })
+                .then(function (htmlText) {
+                    var parsed = new DOMParser().parseFromString(htmlText, 'text/html');
+                    var nextResults = parsed.querySelector('#adminDocumentsResults');
+                    if (!nextResults) throw new Error('Student document results markup not found');
+
+                    results.innerHTML = nextResults.innerHTML;
+                    results.classList.remove('is-loading');
+                    window.history.replaceState({}, '', url.pathname + url.search);
+                })
+                .catch(function (error) {
+                    if (error.name === 'AbortError') return;
+                    results.classList.remove('is-loading');
+                });
+        }
+
+        function scheduleSearch() {
+            window.clearTimeout(debounceTimer);
+
+            // A typed name search should search every student, not be silently
+            // blocked by an older "With Documents" / "Without Documents" filter.
+            if (searchInput.value.trim() && statusSelect.value !== 'all') {
+                statusSelect.value = 'all';
+            }
+
+            debounceTimer = window.setTimeout(function () {
+                refreshResults();
+            }, 220);
+        }
+
+        searchInput.addEventListener('input', scheduleSearch);
+
+        statusSelect.addEventListener('change', function () {
+            window.clearTimeout(debounceTimer);
+            refreshResults();
+        });
+
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+            window.clearTimeout(debounceTimer);
+            refreshResults();
+        });
+
+        if (resetLink) {
+            resetLink.addEventListener('click', function (event) {
+                event.preventDefault();
+                window.clearTimeout(debounceTimer);
+                searchInput.value = '';
+                statusSelect.value = 'all';
+                refreshResults({ url: new URL(form.action, window.location.origin) });
+                searchInput.focus();
+            });
+        }
+
+        // Repair stale URLs such as ?search=demo6&documents=with on initial load.
+        if (searchInput.value.trim() && statusSelect.value !== 'all') {
+            statusSelect.value = 'all';
+            refreshResults();
+        }
+    })();
+
     (function () {
         var modal = document.getElementById('adminDocumentsModal');
         var content = document.getElementById('adminDocumentsModalContent');
@@ -277,11 +382,11 @@
             if (lastTrigger) lastTrigger.focus();
         }
 
-        document.querySelectorAll('.js-admin-folder-modal').forEach(function (link) {
-            link.addEventListener('click', function (event) {
-                event.preventDefault();
-                openModal(link);
-            });
+        document.addEventListener('click', function (event) {
+            var link = event.target.closest('.js-admin-folder-modal');
+            if (!link) return;
+            event.preventDefault();
+            openModal(link);
         });
 
         modal.querySelectorAll('[data-admin-documents-close]').forEach(function (button) {

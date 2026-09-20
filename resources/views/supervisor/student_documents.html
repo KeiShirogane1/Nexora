@@ -67,8 +67,8 @@
 
             <section class="supervisor-doc-groups" aria-label="Intern Classroom student documents">
                 {% for classroom in classroom_groups %}
-                    <article class="supervisor-doc-classroom-card">
-                        <div class="supervisor-doc-classroom-header">
+                    <details class="supervisor-doc-classroom-card" {% if search %}open{% endif %}>
+                        <summary class="supervisor-doc-classroom-header">
                             <div class="supervisor-doc-classroom-title">
                                 <span class="supervisor-doc-classroom-icon" aria-hidden="true">
                                     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h5l2 2h11v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"></path><path d="M3 7V5a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v2"></path></svg>
@@ -81,8 +81,11 @@
                                     <p>{% if classroom.company_name %}{{ classroom.company_name }} · {% endif %}{{ classroom.students|length }} student{% if classroom.students|length != 1 %}s{% endif %}</p>
                                 </div>
                             </div>
-                            <span class="supervisor-doc-status-pill{% if classroom.archived %} is-archived{% endif %}">{{ 'Archived' if classroom.archived else 'Active' }}</span>
-                        </div>
+                            <span class="supervisor-doc-classroom-toggle">
+                                <span class="supervisor-doc-status-pill{% if classroom.archived %} is-archived{% endif %}">{{ 'Archived' if classroom.archived else 'Active' }}</span>
+                                <span class="supervisor-doc-classroom-chevron" aria-hidden="true">⌄</span>
+                            </span>
+                        </summary>
                         <div class="table-responsive">
                             <table class="supervisor-doc-table">
                                 <thead><tr><th>#</th><th>Student</th><th>Student No.</th><th>Program</th><th>Documents</th><th>Last Upload</th><th>Actions</th></tr></thead>
@@ -106,7 +109,7 @@
                                 </tbody>
                             </table>
                         </div>
-                    </article>
+                    </details>
                 {% else %}
                     <div class="supervisor-doc-empty">
                         <span class="supervisor-doc-classroom-icon mx-auto mb-2" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M9 15h6"></path></svg></span>

@@ -5430,3 +5430,70 @@ ADMIN STUDENT PROFILE — professional page-scoped layout
   }
 }
 
+
+
+/* =========================================================
+ADMIN STUDENT DOCUMENTS — classroom dropdown + live search
+========================================================= */
+body.admin-documents-page details.admin-classroom-doc-group > summary {
+  list-style: none;
+  cursor: pointer;
+  user-select: none;
+}
+body.admin-documents-page details.admin-classroom-doc-group > summary::-webkit-details-marker {
+  display: none;
+}
+body.admin-documents-page details.admin-classroom-doc-group > summary::marker {
+  content: "";
+}
+body.admin-documents-page .admin-classroom-doc-heading {
+  transition: background .15s ease;
+}
+body.admin-documents-page details.admin-classroom-doc-group > summary:hover,
+body.admin-documents-page details.admin-classroom-doc-group > summary:focus-visible {
+  background: #fff8f5;
+  outline: none;
+}
+body.admin-documents-page .admin-classroom-doc-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  flex: 0 0 auto;
+}
+body.admin-documents-page .admin-classroom-doc-chevron {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #e0e5ea;
+  border-radius: 8px;
+  background: #fff;
+  color: #d9471b;
+  font-size: 16px;
+  font-weight: 900;
+  line-height: 1;
+  transition: transform .18s ease, border-color .15s ease, background .15s ease;
+}
+body.admin-documents-page details.admin-classroom-doc-group[open] .admin-classroom-doc-chevron {
+  transform: rotate(180deg);
+  border-color: #f1b09a;
+  background: #fff0ea;
+}
+body.admin-documents-page details.admin-classroom-doc-group[open] > summary {
+  border-bottom: 1px solid #eef1f3;
+}
+body.admin-documents-page #adminDocumentsResults {
+  transition: opacity .12s ease;
+}
+body.admin-documents-page #adminDocumentsResults.is-loading {
+  opacity: .48;
+  pointer-events: none;
+}
+@media (max-width: 720px) {
+  body.admin-documents-page .admin-classroom-doc-heading {
+    align-items: flex-start;
+  }
+  body.admin-documents-page .admin-classroom-doc-toggle {
+    align-self: flex-start;
+  }
+}
