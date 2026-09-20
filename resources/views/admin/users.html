@@ -26,113 +26,82 @@
 
 <!-- HEADER -->
 
-                    <div class="dashboard-header">
-
-                        <div>
-
-                            <h1>
-                                User Management
-                            </h1>
-
-                            <p>
-                                Manage Nexora accounts, approvals, and user access.
-                            </p>
-
+                    <header class="dashboard-header admin-users-hero">
+                        <div class="admin-users-hero-copy">
+                            <h1>User Management</h1>
+                            <p>Manage Nexora accounts, approval requests, and role-based access from one place.</p>
                         </div>
 
-                        <div class="system-badge">
-
-                            🟢 System Online
-
+                        <div class="admin-users-hero-status" aria-label="System status">
+                            <span class="admin-users-status-dot" aria-hidden="true"></span>
+                            <span>
+                                <strong>System Online</strong>
+                                <small>Account services available</small>
+                            </span>
                         </div>
-
-                    </div>
+                    </header>
 
 <!-- USER METRICS -->
 
-                    <div class="metric-grid">
-
-                        <div class="metric-box">
-
-                            <div class="metric-icon">
-                                ⏳
+                    <section class="admin-users-metric-grid" aria-label="User account overview">
+                        <article class="admin-users-metric is-pending">
+                            <span class="admin-users-metric-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="9"></circle>
+                                    <path d="M12 7v5l3 2"></path>
+                                </svg>
+                            </span>
+                            <div class="admin-users-metric-copy">
+                                <span>Pending Accounts</span>
+                                <strong>{{ pending_count }}</strong>
+                                <small>Awaiting approval</small>
                             </div>
+                        </article>
 
-                            <div>
-
-                                <span>
-                                    Pending Accounts
-                                </span>
-
-                                <strong>
-                                    {{ pending_count }}
-                                </strong>
-
+                        <article class="admin-users-metric is-total">
+                            <span class="admin-users-metric-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="8.5" cy="7" r="4"></circle>
+                                    <path d="M20 8v6M23 11h-6"></path>
+                                </svg>
+                            </span>
+                            <div class="admin-users-metric-copy">
+                                <span>Total Users</span>
+                                <strong>{{ total_users }}</strong>
+                                <small>Current accounts</small>
                             </div>
+                        </article>
 
-                        </div>
-
-                        <div class="metric-box">
-
-                            <div class="metric-icon">
-                                👥
+                        <article class="admin-users-metric is-student">
+                            <span class="admin-users-metric-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 10.5 12 6l9 4.5-9 4.5-9-4.5Z"></path>
+                                    <path d="M7 12.5v4.2c2.8 1.8 7.2 1.8 10 0v-4.2"></path>
+                                </svg>
+                            </span>
+                            <div class="admin-users-metric-copy">
+                                <span>Students</span>
+                                <strong>{{ students_count }}</strong>
+                                <small>Active student accounts</small>
                             </div>
+                        </article>
 
-                            <div>
-
-                                <span>
-                                    Total Users
-                                </span>
-
-                                <strong>
-                                    {{ total_users }}
-                                </strong>
-
+                        <article class="admin-users-metric is-supervisor">
+                            <span class="admin-users-metric-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="8.5" cy="7" r="4"></circle>
+                                    <path d="M2 21v-2a6.5 6.5 0 0 1 13 0v2"></path>
+                                    <path d="M18 8v6M21 11h-6"></path>
+                                </svg>
+                            </span>
+                            <div class="admin-users-metric-copy">
+                                <span>Supervisors</span>
+                                <strong>{{ supervisors_count }}</strong>
+                                <small>Active supervisor accounts</small>
                             </div>
-
-                        </div>
-
-                        <div class="metric-box">
-
-                            <div class="metric-icon">
-                                🎓
-                            </div>
-
-                            <div>
-
-                                <span>
-                                    Students
-                                </span>
-
-                                <strong>
-                                    {{ students_count }}
-                                </strong>
-
-                            </div>
-
-                        </div>
-
-                        <div class="metric-box">
-
-                            <div class="metric-icon">
-                                🧑‍🏫
-                            </div>
-
-                            <div>
-
-                                <span>
-                                    Supervisors
-                                </span>
-
-                                <strong>
-                                    {{ supervisors_count }}
-                                </strong>
-
-                            </div>
-
-                        </div>
-
-                    </div>
+                        </article>
+                    </section>
 
 <!-- PENDING REQUESTS -->
 
@@ -267,125 +236,87 @@
 
 <!-- USER DIRECTORY -->
 
-                    <div class="dashboard-box">
-
-                        <h3>
-                            User Directory
-                        </h3>
-
-                        <div class="user-directory-grid">
-
-<!-- STUDENTS -->
-
-                            <div class="user-category-card">
-
-                                <div class="category-icon student">
-
-                                    🎓
-
-                                </div>
-
-                                <h4>
-                                    Students
-                                </h4>
-
-                                <p>
-
-                                    {{ students_count }} active student accounts
-
-                                </p>
-
-                                <a href="{{ url_for('admin.admin_students') }}"
-                                   class="directory-btn">
-
-                                    Manage Students
-
-                                </a>
-
+                    <section class="dashboard-box admin-users-directory">
+                        <div class="admin-users-section-heading">
+                            <div>
+                                <span>ACCOUNT DIRECTORY</span>
+                                <h3>User Directory</h3>
+                                <p>Open the dedicated management workspace for each account type.</p>
                             </div>
-
-<!-- SUPERVISORS -->
-
-                            <div class="user-category-card">
-
-                                <div class="category-icon supervisor">
-
-                                    🧑‍🏫
-
-                                </div>
-
-                                <h4>
-                                    Supervisors
-                                </h4>
-
-                                <p>
-
-                                    {{ supervisors_count }} active supervisor accounts
-
-                                </p>
-
-                                <a href="{{ url_for('admin.admin_supervisors') }}"
-                                   class="directory-btn">
-
-                                    Manage Supervisors
-
-                                </a>
-
-                            </div>
-
+                            <span class="admin-users-directory-total">{{ students_count + supervisors_count }} active accounts</span>
                         </div>
 
-                    </div>
+                        <div class="admin-users-directory-grid">
+                            <a href="{{ url_for('admin.admin_students') }}" class="admin-users-directory-card is-student">
+                                <span class="admin-users-directory-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M3 10.5 12 6l9 4.5-9 4.5-9-4.5Z"></path>
+                                        <path d="M7 12.5v4.2c2.8 1.8 7.2 1.8 10 0v-4.2"></path>
+                                    </svg>
+                                </span>
+                                <span class="admin-users-directory-copy">
+                                    <small>STUDENT ACCOUNTS</small>
+                                    <strong>Students</strong>
+                                    <span>Profiles, documents, status, and account access.</span>
+                                </span>
+                                <span class="admin-users-directory-count">
+                                    <strong>{{ students_count }}</strong>
+                                    <small>active</small>
+                                </span>
+                                <span class="admin-users-directory-arrow" aria-hidden="true">→</span>
+                            </a>
+
+                            <a href="{{ url_for('admin.admin_supervisors') }}" class="admin-users-directory-card is-supervisor">
+                                <span class="admin-users-directory-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="8.5" cy="7" r="4"></circle>
+                                        <path d="M2 21v-2a6.5 6.5 0 0 1 13 0v2"></path>
+                                        <path d="M18 8v6M21 11h-6"></path>
+                                    </svg>
+                                </span>
+                                <span class="admin-users-directory-copy">
+                                    <small>SUPERVISOR ACCOUNTS</small>
+                                    <strong>Supervisors</strong>
+                                    <span>Profiles, classroom ownership, and account access.</span>
+                                </span>
+                                <span class="admin-users-directory-count">
+                                    <strong>{{ supervisors_count }}</strong>
+                                    <small>active</small>
+                                </span>
+                                <span class="admin-users-directory-arrow" aria-hidden="true">→</span>
+                            </a>
+                        </div>
+                    </section>
 
 <!-- ACCOUNT SUMMARY -->
 
-                    <div class="dashboard-box">
-
-                        <h3>
-                            Account Summary
-                        </h3>
-
-                        <div class="status-row">
-
+                    <section class="dashboard-box admin-users-account-summary">
+                        <div class="admin-users-section-heading">
                             <div>
-
-                                <span>
-                                    Students
-                                </span>
-
-                                <strong>
-                                    {{ students_count }}
-                                </strong>
-
+                                <span>ACCOUNT MIX</span>
+                                <h3>Account Summary</h3>
+                                <p>Current distribution of active and pending Nexora accounts.</p>
                             </div>
-
-                            <div>
-
-                                <span>
-                                    Supervisors
-                                </span>
-
-                                <strong>
-                                    {{ supervisors_count }}
-                                </strong>
-
-                            </div>
-
-                            <div>
-
-                                <span>
-                                    Pending
-                                </span>
-
-                                <strong>
-                                    {{ pending_count }}
-                                </strong>
-
-                            </div>
-
                         </div>
 
-                    </div>
+                        <div class="admin-users-summary-grid">
+                            <div class="admin-users-summary-item is-student">
+                                <span class="admin-users-summary-label">Students</span>
+                                <strong>{{ students_count }}</strong>
+                                <span class="admin-users-summary-track"><i></i></span>
+                            </div>
+                            <div class="admin-users-summary-item is-supervisor">
+                                <span class="admin-users-summary-label">Supervisors</span>
+                                <strong>{{ supervisors_count }}</strong>
+                                <span class="admin-users-summary-track"><i></i></span>
+                            </div>
+                            <div class="admin-users-summary-item is-pending">
+                                <span class="admin-users-summary-label">Pending</span>
+                                <strong>{{ pending_count }}</strong>
+                                <span class="admin-users-summary-track"><i></i></span>
+                            </div>
+                        </div>
+                    </section>
 
                 </div>
 

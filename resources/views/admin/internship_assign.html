@@ -278,6 +278,143 @@
             return document.querySelector('input[name="classroom_id"]:checked');
         }
 
+        function enhanceStudentSelect() {
+            if (!studentSelect || studentSelect.dataset.enhanced === '1') return null;
+
+            var root = document.createElement('div');
+            root.className = 'admin-student-select';
+            root.setAttribute('data-student-select', '');
+
+            var trigger = document.createElement('button');
+            trigger.type = 'button';
+            trigger.className = 'admin-student-select-trigger';
+            trigger.setAttribute('aria-haspopup', 'listbox');
+            trigger.setAttribute('aria-expanded', 'false');
+
+            var triggerText = document.createElement('span');
+            triggerText.className = 'admin-student-select-value';
+            trigger.appendChild(triggerText);
+
+            var menu = document.createElement('div');
+            menu.className = 'admin-student-select-menu';
+            menu.setAttribute('role', 'listbox');
+            menu.hidden = true;
+
+            function makeOption(option) {
+                var button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'admin-student-select-option';
+                button.setAttribute('role', 'option');
+                button.dataset.value = option.value;
+                button.textContent = option.textContent.trim();
+                button.addEventListener('click', function () {
+                    studentSelect.value = option.value;
+                    studentSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                    closeMenu();
+                    trigger.focus();
+                });
+                return button;
+            }
+
+            Array.prototype.forEach.call(studentSelect.children, function (child) {
+                if (child.tagName === 'OPTION') {
+                    if (!child.value) return;
+                    menu.appendChild(makeOption(child));
+                    return;
+                }
+
+                if (child.tagName !== 'OPTGROUP') return;
+
+                var group = document.createElement('section');
+                group.className = 'admin-student-select-group';
+
+                var heading = document.createElement('div');
+                heading.className = 'admin-student-select-group-label';
+                heading.textContent = child.label;
+                group.appendChild(heading);
+
+                Array.prototype.forEach.call(child.children, function (option) {
+                    group.appendChild(makeOption(option));
+                });
+
+                menu.appendChild(group);
+            });
+
+            function syncFromNative() {
+                var selected = studentSelect.options[studentSelect.selectedIndex];
+                triggerText.textContent = selected && selected.value
+                    ? selected.textContent.trim()
+                    : '-- Select Student --';
+
+                root.classList.toggle('has-value', Boolean(selected && selected.value));
+                root.classList.remove('is-invalid');
+
+                menu.querySelectorAll('.admin-student-select-option').forEach(function (button) {
+                    var selectedNow = Boolean(selected && selected.value && button.dataset.value === selected.value);
+                    button.classList.toggle('is-selected', selectedNow);
+                    button.setAttribute('aria-selected', selectedNow ? 'true' : 'false');
+                });
+            }
+
+            function openMenu() {
+                menu.hidden = false;
+                root.classList.add('is-open');
+                trigger.setAttribute('aria-expanded', 'true');
+
+                var selectedButton = menu.querySelector('.admin-student-select-option.is-selected');
+                if (selectedButton) {
+                    window.setTimeout(function () {
+                        selectedButton.scrollIntoView({ block: 'nearest' });
+                    }, 0);
+                }
+            }
+
+            function closeMenu() {
+                menu.hidden = true;
+                root.classList.remove('is-open');
+                trigger.setAttribute('aria-expanded', 'false');
+            }
+
+            trigger.addEventListener('click', function () {
+                if (menu.hidden) openMenu();
+                else closeMenu();
+            });
+
+            document.addEventListener('click', function (event) {
+                if (!root.contains(event.target)) closeMenu();
+            });
+
+            root.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape') {
+                    closeMenu();
+                    trigger.focus();
+                }
+            });
+
+            studentSelect.dataset.enhanced = '1';
+            studentSelect.required = false;
+            studentSelect.classList.add('admin-student-native-select', 'is-enhanced');
+            studentSelect.setAttribute('aria-hidden', 'true');
+            studentSelect.tabIndex = -1;
+
+            root.appendChild(trigger);
+            root.appendChild(menu);
+            studentSelect.insertAdjacentElement('afterend', root);
+
+            studentSelect.addEventListener('change', syncFromNative);
+            syncFromNative();
+
+            return {
+                root: root,
+                trigger: trigger,
+                open: openMenu,
+                close: closeMenu,
+                sync: syncFromNative
+            };
+        }
+
+        var studentPicker = enhanceStudentSelect();
+
         function updateCurrentPlacement() {
             currentPanel.classList.remove('is-warning');
             var student = currentStudentOption();
@@ -332,8 +469,16 @@
         }
 
         function openTransferModal(student, target) {
+            var studentLabel = student.textContent.trim();
+            var currentClassroom = value(student, 'currentClassroom', '');
+            if (currentClassroom) {
+                var classroomSuffix = ' — ' + currentClassroom;
+                if (studentLabel.slice(-classroomSuffix.length) === classroomSuffix) {
+                    studentLabel = studentLabel.slice(0, -classroomSuffix.length);
+                }
+            }
             document.getElementById('adminTransferStudent').textContent =
-                student.textContent.trim().split(' — assigned to ')[0] + ' is already assigned to another Intern Classroom.';
+                studentLabel + ' is already assigned to another Intern Classroom.';
             document.getElementById('adminTransferFrom').textContent = value(student, 'currentClassroom');
             document.getElementById('adminTransferFromSupervisor').textContent =
                 'Supervisor: ' + value(student, 'currentSupervisor', 'Unknown Supervisor');
@@ -362,7 +507,18 @@
 
             var student = currentStudentOption();
             var target = targetClassroomOption();
-            if (!student || !student.value || !target || !target.value) return;
+
+            if (!student || !student.value) {
+                event.preventDefault();
+                if (studentPicker) {
+                    studentPicker.root.classList.add('is-invalid');
+                    studentPicker.open();
+                    studentPicker.trigger.focus();
+                }
+                return;
+            }
+
+            if (!target || !target.value) return;
 
             var currentClassroomId = value(student, 'currentClassroomId', '');
             if (!currentClassroomId || currentClassroomId === '0') return;
