@@ -74,7 +74,7 @@ _secret=os.environ.get("SECRET_KEY")
 if not _secret:
  if os.environ.get("FLASK_ENV")=="production" or os.environ.get("NEXORA_ENV")=="production": raise RuntimeError("SECRET_KEY must be set in production")
  _secret="dev-secret-key-change-me-not-for-production"
-app.secret_key=_secret; app.config.update(SECRET_KEY=_secret,SESSION_COOKIE_HTTPONLY=True,SESSION_COOKIE_SAMESITE="Lax",PERMANENT_SESSION_LIFETIME=timedelta(days=7),SESSION_REFRESH_EACH_REQUEST=True,MAX_CONTENT_LENGTH=45*1024*1024); app.config["SESSION_COOKIE_SECURE"]=os.environ.get("SESSION_COOKIE_SECURE","").lower() in ("1","true","yes") or os.environ.get("FLASK_ENV")=="production" or os.environ.get("NEXORA_ENV")=="production"; app.config["WTF_CSRF_ENABLED"]=True; app.config["WTF_CSRF_TIME_LIMIT"]=None; _debug=os.environ.get("FLASK_DEBUG",os.environ.get("NEXORA_DEBUG","0")); app.debug=_debug.lower() in ("1","true","yes")
+app.secret_key=_secret; app.config.update(SECRET_KEY=_secret,SESSION_COOKIE_HTTPONLY=True,SESSION_COOKIE_SAMESITE="Lax",PERMANENT_SESSION_LIFETIME=timedelta(days=7),SESSION_REFRESH_EACH_REQUEST=False,MAX_CONTENT_LENGTH=45*1024*1024); app.config["SESSION_COOKIE_SECURE"]=os.environ.get("SESSION_COOKIE_SECURE","").lower() in ("1","true","yes") or os.environ.get("FLASK_ENV")=="production" or os.environ.get("NEXORA_ENV")=="production"; app.config["WTF_CSRF_ENABLED"]=True; app.config["WTF_CSRF_TIME_LIMIT"]=None; _debug=os.environ.get("FLASK_DEBUG",os.environ.get("NEXORA_DEBUG","0")); app.debug=_debug.lower() in ("1","true","yes")
 try:
  from flask_wtf.csrf import CSRFProtect
  csrf=CSRFProtect(app)
