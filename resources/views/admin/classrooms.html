@@ -55,7 +55,7 @@
                 </div>
 
                 <div class="nexora-card filter-card">
-                    <form method="GET" class="filter-grid" aria-label="Classroom filters">
+                    <form id="adminClassroomsFilterForm" method="GET" action="{{ url_for('admin_classrooms.classrooms') }}" class="filter-grid" aria-label="Classroom filters" autocomplete="off">
                         <div class="search-group">
                             <label for="classroomSearch">Search</label>
                             <input
@@ -76,12 +76,13 @@
                             </select>
                         </div>
                         <div class="filter-actions filter-actions-end">
-                            <a href="{{ url_for('admin_classrooms.classrooms') }}" class="btn-nexora-secondary">Reset</a>
+                            <a id="adminClassroomsReset" href="{{ url_for('admin_classrooms.classrooms') }}" class="btn-nexora-secondary">Reset</a>
                             <button type="submit" class="btn-nexora-primary">Apply</button>
                         </div>
                     </form>
                 </div>
 
+                <div id="adminClassroomDirectoryResults" aria-live="polite">
                 <section class="nexora-card table-card admin-classroom-directory-shell">
                     <div class="table-card-header"><div><h3>Classroom Directory</h3><span class="table-meta">{{ classrooms|length }} classroom{% if classrooms|length != 1 %}s{% endif %} shown</span></div></div>
                     <div class="admin-classroom-directory-list">
@@ -104,6 +105,7 @@
                         {% endfor %}
                     </div>
                 </section>
+                </div>
 
                 <div class="alert alert-light border mt-3 mb-0" role="note">
                     This Admin view is read-only. Classroom ownership, enrollment, classwork, and archive controls remain with their existing workflows.
@@ -131,6 +133,80 @@
     </div>
 
     <script>
+    (function () {
+        var form = document.getElementById('adminClassroomsFilterForm');
+        var searchInput = document.getElementById('classroomSearch');
+        var statusSelect = document.getElementById('classroomStatus');
+        var resetLink = document.getElementById('adminClassroomsReset');
+        var results = document.getElementById('adminClassroomDirectoryResults');
+        if (!form || !searchInput || !statusSelect || !results) return;
+
+        var timer = null;
+        var controller = null;
+
+        function buildUrl() {
+            var url = new URL(form.action, window.location.origin);
+            var query = searchInput.value.trim();
+            var status = statusSelect.value || 'all';
+            if (query) url.searchParams.set('search', query);
+            if (status !== 'all') url.searchParams.set('status', status);
+            return url;
+        }
+
+        function refresh(url) {
+            url = url || buildUrl();
+            if (controller) controller.abort();
+            controller = new AbortController();
+            results.classList.add('is-loading');
+            fetch(url.toString(), {
+                method: 'GET',
+                credentials: 'same-origin',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                signal: controller.signal
+            })
+                .then(function (response) {
+                    if (!response.ok) throw new Error('HTTP ' + response.status);
+                    return response.text();
+                })
+                .then(function (htmlText) {
+                    var parsed = new DOMParser().parseFromString(htmlText, 'text/html');
+                    var next = parsed.querySelector('#adminClassroomDirectoryResults');
+                    if (!next) throw new Error('Classroom results markup not found');
+                    results.innerHTML = next.innerHTML;
+                    results.classList.remove('is-loading');
+                    window.history.replaceState({}, '', url.pathname + url.search);
+                })
+                .catch(function (error) {
+                    if (error.name === 'AbortError') return;
+                    results.classList.remove('is-loading');
+                });
+        }
+
+        searchInput.addEventListener('input', function () {
+            window.clearTimeout(timer);
+            timer = window.setTimeout(function () { refresh(); }, 220);
+        });
+        statusSelect.addEventListener('change', function () {
+            window.clearTimeout(timer);
+            refresh();
+        });
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+            window.clearTimeout(timer);
+            refresh();
+        });
+        if (resetLink) {
+            resetLink.addEventListener('click', function (event) {
+                event.preventDefault();
+                window.clearTimeout(timer);
+                searchInput.value = '';
+                statusSelect.value = 'all';
+                refresh(new URL(form.action, window.location.origin));
+                searchInput.focus();
+            });
+        }
+    })();
+
     (function () {
         var modal = document.getElementById('adminClassroomViewModal');
         var content = document.getElementById('adminClassroomViewModalContent');
@@ -202,11 +278,11 @@
             if (lastTrigger) lastTrigger.focus();
         }
 
-        document.querySelectorAll('.js-admin-classroom-modal').forEach(function (link) {
-            link.addEventListener('click', function (event) {
-                event.preventDefault();
-                openModal(link);
-            });
+        document.addEventListener('click', function (event) {
+            var link = event.target.closest('.js-admin-classroom-modal');
+            if (!link) return;
+            event.preventDefault();
+            openModal(link);
         });
 
         modal.querySelectorAll('[data-admin-classroom-close]').forEach(function (button) {
