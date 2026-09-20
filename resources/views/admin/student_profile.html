@@ -71,9 +71,11 @@
 
                         </div>
 
-                        <div class="system-badge">
-                            👤 Student Account
-                        </div>
+                        <nav class="admin-student-profile-breadcrumb" aria-label="Breadcrumb">
+                            <a href="{{ url_for('admin.admin_students') }}">Students</a>
+                            <span>/</span>
+                            <strong>Profile</strong>
+                        </nav>
 
                     </div>
 
@@ -81,17 +83,22 @@
 
                     <div class="dashboard-box profile-card admin-student-profile-hero">
 
+                        <div class="system-badge admin-student-profile-account-badge">
+                            🎓 Student Account
+                        </div>
+
                         <div class="profile-top admin-student-profile-top">
 
                             {% if student.profile_picture %}
 
                                 <img
                                     src="{{ url_for('uploaded_file', filename='profile_pictures/' + student.profile_picture) }}"
-                                    class="admin-profile-image">
+                                    class="admin-profile-image"
+                                    alt="Student profile picture">
 
                             {% else %}
 
-                                <div class="default-profile">
+                                <div class="default-profile" aria-label="Default student profile picture">
                                     👤
                                 </div>
 
@@ -103,7 +110,7 @@
 
                                     {% set student_display_name = (((student.first_name or '') ~ ' ' ~ (student.middle_name or '') ~ ' ' ~ (student.last_name or ''))|trim) %}
                                     <h2>
-                                        {{ student_display_name or student.username or "Student" }}
+                                        {{ student_display_name or "Student Name Not Set" }}
                                     </h2>
 
                                     <p>
@@ -135,106 +142,62 @@
                                 <div class="profile-summary admin-student-profile-summary">
 
                                     <div class="summary-item">
-
-                                        <strong>
-                                            Account ID
-                                        </strong>
-
-                                        <p>
-                                            #{{ student.id }}
-                                        </p>
-
+                                        <strong>Account ID</strong>
+                                        <p>#{{ student.id }}</p>
                                     </div>
 
                                     <div class="summary-item">
-
-                                        <strong>
-                                            Username
-                                        </strong>
-
-                                        <p>
-                                            {{ student.username }}
-                                        </p>
-
+                                        <strong>Username</strong>
+                                        <p>{{ student.username }}</p>
                                     </div>
 
                                     <div class="summary-item">
-
-                                        <strong>
-                                            Program
-                                        </strong>
-
-                                        <p>
-                                            {{ student.major_program or "Not Provided" }}
-                                        </p>
-
+                                        <strong>Program</strong>
+                                        <p>{{ student.major_program or "Not Provided" }}</p>
                                     </div>
 
                                     <div class="summary-item">
-
-                                        <strong>
-                                            Internship Status
-                                        </strong>
-
-                                        <p>
-
-                                            {% if internship %}
-
-                                                {{ internship.status }}
-
-                                            {% else %}
-
-                                                Not Assigned
-
-                                            {% endif %}
-
-                                        </p>
-
+                                        <strong>Internship Status</strong>
+                                        <p>{% if internship %}{{ internship.status }}{% else %}Not Assigned{% endif %}</p>
                                     </div>
 
                                 </div>
 
-                                <div class="profile-actions admin-student-profile-actions">
+                            </div>
 
-                                    <a href="{{ url_for('admin.edit_student', student_id=student.id) }}"
-                                       class="btn btn-primary">
+                            <div class="profile-actions admin-student-profile-actions">
 
-                                        ✏️ Edit Profile
+                                <a href="{{ url_for('admin.edit_student', student_id=student.id) }}"
+                                   class="btn btn-primary">
+                                    ✎ Edit Profile
+                                </a>
 
-                                    </a>
+                                <a href="{{ url_for('admin.profile_history', student_id=student.id) }}"
+                                   class="btn btn-info">
+                                    ◷ Profile History
+                                </a>
 
-                                    <a href="{{ url_for('admin.profile_history', student_id=student.id) }}"
-                                       class="btn btn-info">
+                                <form method="POST" action="{{ url_for('admin.reset_student_password', student_id=student.id) }}" style="display:inline;">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-warning">⚿ Reset Password</button>
+                                </form>
 
-                                        📜 Profile History
+                                {% if student.status == "inactive" %}
 
-                                    </a>
-
-                                    <form method="POST" action="{{ url_for('admin.reset_student_password', student_id=student.id) }}" style="display:inline;">
+                                    <form method="POST" action="{{ url_for('admin.activate_student', student_id=student.id) }}" style="display:inline;">
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <button type="submit" class="btn btn-warning">🔑 Reset Password</button>
+                                        <button type="submit" class="btn btn-success">✓ Activate Account</button>
                                     </form>
 
-                                    {% if student.status == "inactive" %}
+                                {% else %}
 
-                                        <form method="POST" action="{{ url_for('admin.activate_student', student_id=student.id) }}" style="display:inline;">
-                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                            <button type="submit" class="btn btn-success">✅ Activate Account</button>
-                                        </form>
+                                    <button
+                                        class="btn btn-danger"
+                                        onclick="openDeactivateModal()">
+                                        ⊘ Deactivate Account
+                                    </button>
 
-                                    {% else %}
-
-                                        <button
-                                            class="btn btn-danger"
-                                            onclick="openDeactivateModal()">
-
-                                            🚫 Deactivate Account
-
-                                        </button>
-
-                                    {% endif %}
-
-                                </div>
+                                {% endif %}
 
                             </div>
 
@@ -246,52 +209,50 @@
 
                     <div class="dashboard-box admin-student-profile-completion">
 
+                        <div class="admin-student-profile-completion-ring"
+                             data-progress="{{ completion_percentage }}"
+                             aria-label="Profile completion {{ completion_percentage }} percent">
+                            <span>{{ completion_percentage }}%</span>
+                        </div>
+
                         <div class="admin-student-profile-completion-main">
-                            <h3>
-                                Profile Completion
-                            </h3>
+                            <h3>Profile Completion</h3>
+                            <p class="admin-student-profile-completion-copy">
+                                Complete your profile to keep student information and internship records up to date.
+                            </p>
 
                             <div class="progress-container">
-
                                 <div class="progress-bar"
                                      data-progress="{{ completion_percentage }}">
                                 </div>
-
                             </div>
 
-                            <div class="admin-student-profile-completion-value">
-                                {{ completion_percentage }}%
+                            <div class="admin-student-profile-progress-meta">
+                                <span>Profile progress</span>
+                                <strong>{{ completion_percentage }}%</strong>
                             </div>
                         </div>
 
                         {% if missing_fields %}
 
-                            <div class="alert alert-warning">
+                            <div class="alert alert-warning admin-student-profile-missing">
 
-                                <strong>
-                                    Missing Information:
-                                </strong>
+                                <strong>⚠ Missing Information</strong>
+                                <span>Please complete the following information:</span>
 
                                 <ul>
-
                                     {% for field in missing_fields %}
-
-                                        <li>
-                                            {{ field }}
-                                        </li>
-
+                                        <li>{{ field }}</li>
                                     {% endfor %}
-
                                 </ul>
 
                             </div>
 
                         {% else %}
 
-                            <div class="alert alert-success">
-
-                                ✓ Profile Complete
-
+                            <div class="alert alert-success admin-student-profile-missing">
+                                <strong>✓ Profile Complete</strong>
+                                <span>All required student information is available.</span>
                             </div>
 
                         {% endif %}
@@ -784,9 +745,16 @@
 
         <script>
             const progress = document.querySelector(".progress-bar");
+            const completionRing = document.querySelector(".admin-student-profile-completion-ring");
 
             if (progress) {
-                progress.style.width = progress.dataset.progress + "%";
+                const progressValue = Math.max(0, Math.min(100, Number(progress.dataset.progress) || 0));
+                progress.style.width = progressValue + "%";
+            }
+
+            if (completionRing) {
+                const ringValue = Math.max(0, Math.min(100, Number(completionRing.dataset.progress) || 0));
+                completionRing.style.setProperty("--completion-angle", (ringValue * 3.6) + "deg");
             }
 
             /* AUTO CLOSE FLASH MESSAGE */
