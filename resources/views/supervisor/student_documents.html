@@ -51,25 +51,26 @@
             </section>
 
             <section class="supervisor-doc-filter-card">
-                <form method="GET" class="supervisor-doc-filter-grid" aria-label="Student document filters">
-                    <input type="search" name="search" value="{{ search }}" placeholder="Search student, number, program, Intern Classroom..." aria-label="Search student documents">
-                    <select name="documents" aria-label="Document state">
+                <form id="supervisorDocumentsFilterForm" method="GET" class="supervisor-doc-filter-grid" aria-label="Student document filters" autocomplete="off">
+                    <input id="supervisor-documents-search" type="search" name="search" value="{{ search }}" placeholder="Search student, number, program, Intern Classroom..." aria-label="Search student documents">
+                    <select id="supervisor-documents-state" name="documents" aria-label="Document state">
                         <option value="all" {% if document_state == 'all' %}selected{% endif %}>All Students</option>
                         <option value="with" {% if document_state == 'with' %}selected{% endif %}>Has Documents</option>
                         <option value="without" {% if document_state == 'without' %}selected{% endif %}>No Documents</option>
                     </select>
                     <div class="supervisor-doc-filter-actions">
-                        <a class="nx-supervisor-btn is-secondary is-compact" href="{{ url_for('supervisor_documents.student_documents') }}">Reset</a>
+                        <a id="supervisorDocumentsReset" class="nx-supervisor-btn is-secondary is-compact" href="{{ url_for('supervisor_documents.student_documents') }}">Reset</a>
                         <button class="nx-supervisor-btn is-primary is-compact" type="submit">Apply</button>
                     </div>
                 </form>
             </section>
 
+            <div id="supervisorDocumentsResults" aria-live="polite">
             <section class="supervisor-doc-groups" aria-label="Intern Classroom student documents">
                 {% for classroom in classroom_groups %}
-                    <details class="supervisor-doc-classroom-card" {% if search %}open{% endif %}>
-                        {% set document_banner_theme = classroom_banner_theme(classroom.id) %}
-                        <summary class="supervisor-doc-classroom-header supervisor-doc-classroom-header--{{ document_banner_theme }}">
+                    {% set document_banner_theme = classroom_banner_theme(classroom.id) %}
+                    <details class="supervisor-doc-classroom-card nx-class-theme nx-class-theme--{{ document_banner_theme }}" {% if search %}open{% endif %}>
+                        <summary class="supervisor-doc-classroom-header supervisor-doc-classroom-header--{{ document_banner_theme }} nx-class-fade-banner">
                             <div class="supervisor-doc-classroom-title">
                                 <span class="supervisor-doc-classroom-icon" aria-hidden="true">
                                     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h5l2 2h11v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"></path><path d="M3 7V5a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v2"></path></svg>
@@ -87,28 +88,16 @@
                                 <span class="supervisor-doc-classroom-chevron" aria-hidden="true"></span>
                             </span>
                         </summary>
-                        <div class="table-responsive">
-                            <table class="supervisor-doc-table">
-                                <thead><tr><th>#</th><th>Student</th><th>Student No.</th><th>Program</th><th>Documents</th><th>Last Upload</th><th>Actions</th></tr></thead>
-                                <tbody>
-                                    {% for student in classroom.students %}
-                                        <tr>
-                                            <td>{{ loop.index }}</td>
-                                            <td><strong>{{ student.display_name }}</strong><small>{{ student.username }}</small></td>
-                                            <td>{{ student.student_number or '—' }}</td>
-                                            <td>{{ student.major_program or '—' }}</td>
-                                            <td>
-                                                <span class="supervisor-doc-count">
-                                                    <span class="supervisor-doc-count-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M8 13h8"></path><path d="M8 17h6"></path></svg></span>
-                                                    {{ student.document_count }}
-                                                </span>
-                                            </td>
-                                            <td>{{ student.last_upload }}</td>
-                                            <td><a class="supervisor-doc-view-button nx-supervisor-btn is-secondary is-compact" href="{{ url_for('supervisor_documents.student_document_folder', student_id=student.id) }}">View Documents</a></td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
+                        <div class="supervisor-doc-student-list">
+                            {% for student in classroom.students %}
+                                <article class="supervisor-doc-student-row">
+                                    <span class="supervisor-doc-student-avatar" aria-hidden="true">{{ (student.display_name or student.username or 'S')[0]|upper }}</span>
+                                    <span class="supervisor-doc-student-main"><strong>{{ student.display_name }}</strong><span>@{{ student.username }}{% if student.student_number %} · {{ student.student_number }}{% endif %}</span><small>{{ student.major_program or 'Program not provided' }}{% if student.grade_year %} · {{ student.grade_year }}{% endif %}</small></span>
+                                    <span class="supervisor-doc-student-stat"><strong>{{ student.document_count }}</strong><small>Documents</small></span>
+                                    <span class="supervisor-doc-student-stat supervisor-doc-student-upload"><strong>{{ student.last_upload }}</strong><small>Latest upload</small></span>
+                                    <a class="supervisor-doc-view-button nx-supervisor-btn is-secondary is-compact" href="{{ url_for('supervisor_documents.student_document_folder', student_id=student.id) }}">View Documents</a>
+                                </article>
+                            {% endfor %}
                         </div>
                     </details>
                 {% else %}
@@ -119,7 +108,27 @@
                     </div>
                 {% endfor %}
             </section>
+            </div>
         </div>
     </main>
+    <script>
+    (function(){
+      var form=document.getElementById('supervisorDocumentsFilterForm');
+      var searchInput=document.getElementById('supervisor-documents-search');
+      var statusSelect=document.getElementById('supervisor-documents-state');
+      var resetLink=document.getElementById('supervisorDocumentsReset');
+      var results=document.getElementById('supervisorDocumentsResults');
+      if(!form||!searchInput||!statusSelect||!results)return;
+      var timer=null,controller=null;
+      function buildUrl(){var url=new URL(form.action||window.location.href,window.location.origin);url.search='';var q=searchInput.value.trim(),state=statusSelect.value||'all';if(q)url.searchParams.set('search',q);if(state!=='all')url.searchParams.set('documents',state);return url;}
+      function refresh(url){url=url||buildUrl();if(controller)controller.abort();controller=new AbortController();results.classList.add('is-loading');fetch(url.toString(),{method:'GET',credentials:'same-origin',headers:{'X-Requested-With':'XMLHttpRequest'},signal:controller.signal}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text();}).then(function(html){var parsed=new DOMParser().parseFromString(html,'text/html');var next=parsed.querySelector('#supervisorDocumentsResults');if(!next)throw new Error('Results missing');results.innerHTML=next.innerHTML;results.classList.remove('is-loading');window.history.replaceState({},'',url.pathname+url.search);}).catch(function(e){if(e.name==='AbortError')return;results.classList.remove('is-loading');});}
+      function schedule(){clearTimeout(timer);if(searchInput.value.trim()&&statusSelect.value!=='all')statusSelect.value='all';timer=setTimeout(function(){refresh();},220);}
+      searchInput.addEventListener('input',schedule);
+      statusSelect.addEventListener('change',function(){clearTimeout(timer);refresh();});
+      form.addEventListener('submit',function(e){e.preventDefault();clearTimeout(timer);refresh();});
+      if(resetLink)resetLink.addEventListener('click',function(e){e.preventDefault();clearTimeout(timer);searchInput.value='';statusSelect.value='all';refresh(new URL(form.action||window.location.pathname,window.location.origin));searchInput.focus();});
+      if(searchInput.value.trim()&&statusSelect.value!=='all'){statusSelect.value='all';refresh();}
+    })();
+    </script>
 </body>
 </html>

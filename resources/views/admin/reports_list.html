@@ -35,7 +35,20 @@
         .admin-report-count { padding: 6px 10px; border-radius: 999px; background: var(--report-accent-soft); color: var(--report-accent-dark); font-size: .75rem; font-weight: 850; white-space: nowrap; }
         .admin-report-room-meta { display: flex; flex-wrap: wrap; gap: 7px 14px; margin-top: 7px; color: #7b8a85; font-size: .74rem; }
         .admin-report-room-meta strong { color: #4b5d56; }
-        .admin-report-table-wrap { overflow-x: auto; }
+        .admin-report-directory-card > summary { list-style:none; cursor:pointer; }
+        .admin-report-directory-card > summary::-webkit-details-marker { display:none; }
+        .admin-report-directory-card > summary::marker { content:""; }
+        .admin-report-directory-header { align-items:center; min-height:108px; border-bottom:0; }
+        .admin-report-directory-card[open] .admin-report-directory-header { border-bottom:1px solid rgba(var(--nx-class-accent-rgb),.13); }
+        .admin-report-room-heading { min-width:0; display:flex; align-items:center; gap:14px; }
+        .admin-report-room-icon { width:52px; height:52px; flex:0 0 52px; border-radius:14px; }
+        .admin-report-room-icon svg { width:26px; height:26px; }
+        .admin-report-room-toggle { display:inline-flex; align-items:center; gap:11px; flex:0 0 auto; }
+        .admin-report-count { border:1px solid transparent; }
+        .admin-report-room-chevron { position:relative; width:44px; height:44px; flex:0 0 44px; border:1px solid rgba(var(--nx-class-accent-rgb),.16); border-radius:50%; background:rgba(255,255,255,.94); box-shadow:0 7px 18px rgba(20,35,55,.09); }
+        .admin-report-room-chevron::before { content:""; position:absolute; top:50%; left:50%; width:9px; height:9px; border-right:2px solid var(--nx-class-accent); border-bottom:2px solid var(--nx-class-accent); transform:translate(-50%,-65%) rotate(45deg); transition:transform .18s ease; }
+        .admin-report-directory-card[open] .admin-report-room-chevron::before { transform:translate(-50%,-35%) rotate(225deg); }
+        .admin-report-table-wrap { overflow-x:auto; }
         .admin-report-table { width: 100%; border-collapse: collapse; }
         .admin-report-table th { padding: 12px 18px; background: #fafbfb; color: #62736d; font-size: .76rem; font-weight: 850; text-align: left; letter-spacing: .02em; }
         .admin-report-table td { padding: 14px 18px; border-top: 1px solid #edf1ef; color: #40534d; font-size: .88rem; vertical-align: middle; }
@@ -151,22 +164,28 @@
             {% if classroom_groups %}
                 <div class="admin-report-classrooms">
                     {% for classroom in classroom_groups %}
-                        <section class="admin-report-directory-card" aria-labelledby="report-room-{{ classroom.id }}">
-                            <div class="admin-report-directory-header">
-                                <div>
-                                    <span class="admin-report-card-kicker">INTERN CLASSROOM</span>
-                                    <h2 id="report-room-{{ classroom.id }}">{{ classroom.name }}</h2>
-                                    <div class="admin-report-room-meta">
-                                        {% if classroom.section %}<span>{{ classroom.section }}</span>{% endif %}
-                                        {% if classroom.internship_title %}<span>{{ classroom.internship_title }}</span>{% endif %}
-                                        {% if classroom.company_name %}<span>{{ classroom.company_name }}</span>{% endif %}
-                                        <span>Supervisor: <strong>{{ classroom.supervisor_name }}</strong></span>
-                                        {% if classroom.archived %}<span>Archived</span>{% endif %}
+                        {% set report_classroom_theme = classroom_banner_theme(classroom.id) %}
+                        <details class="admin-report-directory-card nx-class-theme nx-class-theme--{{ report_classroom_theme }}">
+                            <summary class="admin-report-directory-header nx-class-fade-banner" aria-labelledby="report-room-{{ classroom.id }}">
+                                <div class="admin-report-room-heading">
+                                    <span class="admin-report-room-icon nx-class-theme-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 6l9 4.5-9 4.5-9-4.5Z"></path><path d="M7 12.5v4.2c2.8 1.8 7.2 1.8 10 0v-4.2"></path></svg></span>
+                                    <div>
+                                        <span class="admin-report-card-kicker">INTERN CLASSROOM</span>
+                                        <h2 id="report-room-{{ classroom.id }}">{{ classroom.name }}</h2>
+                                        <div class="admin-report-room-meta">
+                                            {% if classroom.section %}<span>{{ classroom.section }}</span>{% endif %}
+                                            {% if classroom.internship_title and classroom.internship_title != classroom.name %}<span>{{ classroom.internship_title }}</span>{% endif %}
+                                            {% if classroom.company_name %}<span>{{ classroom.company_name }}</span>{% endif %}
+                                            <span>Supervisor: <strong>{{ classroom.supervisor_name }}</strong></span>
+                                            {% if classroom.archived %}<span>Archived</span>{% endif %}
+                                        </div>
                                     </div>
                                 </div>
-                                <span class="admin-report-count">{{ classroom.students|length }} intern{% if classroom.students|length != 1 %}s{% endif %}</span>
-                            </div>
-
+                                <span class="admin-report-room-toggle">
+                                    <span class="admin-report-count nx-class-theme-count">{{ classroom.students|length }} intern{% if classroom.students|length != 1 %}s{% endif %}</span>
+                                    <span class="admin-report-room-chevron" aria-hidden="true"></span>
+                                </span>
+                            </summary>
                             {% if classroom.students %}
                                 <div class="admin-report-table-wrap">
                                     <table class="admin-report-table">
@@ -174,24 +193,9 @@
                                         <tbody>
                                             {% for student in classroom.students %}
                                                 <tr>
-                                                    <td>
-                                                        <div class="admin-report-intern-cell">
-                                                            <span class="admin-report-intern-avatar" aria-hidden="true">{{ (student.username or 'I')[0]|upper }}</span>
-                                                            <span><strong>{{ student.username }}</strong><small>Student account</small></span>
-                                                        </div>
-                                                    </td>
+                                                    <td><div class="admin-report-intern-cell"><span class="admin-report-intern-avatar" aria-hidden="true">{{ (student.username or 'I')[0]|upper }}</span><span><strong>{{ student.username }}</strong><small>Student account</small></span></div></td>
                                                     <td>{{ student.email or 'No email' }}</td>
-                                                    <td class="admin-report-action-cell">
-                                                        <button
-                                                            type="button"
-                                                            class="admin-report-open-btn"
-                                                            data-report-view
-                                                            data-student="{{ student.username|e }}"
-                                                            data-classroom="{{ classroom.name|e }}"
-                                                            data-report-url="{{ url_for('admin_reports_overview.overview', student_id=student.id) }}"
-                                                            data-insights-url="{{ url_for('admin_reports_overview.student_insights', class_id=classroom.id, student_id=student.id) }}"
-                                                        >View <span aria-hidden="true">→</span></button>
-                                                    </td>
+                                                    <td class="admin-report-action-cell"><button type="button" class="admin-report-open-btn" data-report-view data-student="{{ student.username|e }}" data-classroom="{{ classroom.name|e }}" data-report-url="{{ url_for('admin_reports_overview.overview', student_id=student.id) }}" data-insights-url="{{ url_for('admin_reports_overview.student_insights', class_id=classroom.id, student_id=student.id) }}">View <span aria-hidden="true">→</span></button></td>
                                                 </tr>
                                             {% endfor %}
                                         </tbody>
@@ -200,7 +204,7 @@
                             {% else %}
                                 <div class="admin-report-empty-state"><h2>No students in this classroom yet</h2><p>Students will appear here after they enroll in this Intern Classroom.</p></div>
                             {% endif %}
-                        </section>
+                        </details>
                     {% endfor %}
                 </div>
             {% else %}

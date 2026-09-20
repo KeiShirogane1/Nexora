@@ -82,84 +82,28 @@
                     </form>
                 </div>
 
-                <div class="nexora-card table-card">
-                    <div class="table-card-header">
-                        <div>
-                            <h3>Classroom Directory</h3>
-                            <span class="table-meta">{{ classrooms|length }} classroom{% if classrooms|length != 1 %}s{% endif %} shown</span>
-                        </div>
+                <section class="nexora-card table-card admin-classroom-directory-shell">
+                    <div class="table-card-header"><div><h3>Classroom Directory</h3><span class="table-meta">{{ classrooms|length }} classroom{% if classrooms|length != 1 %}s{% endif %} shown</span></div></div>
+                    <div class="admin-classroom-directory-list">
+                        {% for classroom in classrooms %}
+                            {% set admin_classroom_theme = classroom_banner_theme(classroom.id) %}
+                            <article class="admin-classroom-directory-card nx-class-theme nx-class-theme--{{ admin_classroom_theme }}">
+                                <div class="admin-classroom-directory-banner nx-class-fade-banner">
+                                    <span class="admin-classroom-directory-icon nx-class-theme-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 6l9 4.5-9 4.5-9-4.5Z"></path><path d="M7 12.5v4.2c2.8 1.8 7.2 1.8 10 0v-4.2"></path><path d="M21 10.5v5"></path></svg></span>
+                                    <div class="admin-classroom-directory-copy">
+                                        <div class="admin-doc-badges"><span class="admin-status-pill nx-class-theme-pill">{{ 'Intern Classroom' if classroom.classroom_type == 'internship' else 'Classroom' }}</span><span class="admin-status-pill {% if classroom.archived %}is-muted{% else %}is-success{% endif %}">{{ 'Archived' if classroom.archived else 'Active' }}</span></div>
+                                        <h2>{{ classroom.name }}</h2>
+                                        <div class="admin-classroom-directory-meta"><span>{{ classroom.section or 'No section' }}</span><span>Supervisor: <strong>{{ classroom.supervisor_name }}</strong></span>{% if classroom.company_name %}<span>{{ classroom.company_name }}</span>{% endif %}{% if classroom.internship_title and classroom.internship_title != classroom.name %}<span>{{ classroom.internship_title }}</span>{% endif %}</div>
+                                    </div>
+                                    <div class="admin-classroom-directory-stats" aria-label="Classroom summary"><span><small>Enrolled</small><strong>{{ classroom.student_count }}</strong></span><span><small>Work</small><strong>{{ classroom.classwork_count }}</strong></span><span><small>Created</small><strong>{{ classroom.created_at }}</strong></span></div>
+                                    <a href="{{ url_for('admin_classrooms.classroom_detail', classroom_id=classroom.id) }}" class="btn-view admin-classroom-directory-view js-admin-classroom-modal" data-classroom-url="{{ url_for('admin_classrooms.classroom_detail', classroom_id=classroom.id, modal=1) }}" data-classroom-name="{{ classroom.name|e }}">View <span aria-hidden="true">→</span></a>
+                                </div>
+                            </article>
+                        {% else %}
+                            <div class="empty-state"><div class="icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M7 8h3M14 8h3M7 12h3M14 12h3M7 16h3M14 16h3"></path></svg></div><div class="empty-state-title">No classrooms found</div><div class="empty-state-copy">Try changing the search or filters.</div></div>
+                        {% endfor %}
                     </div>
-                    <div class="table-responsive">
-                        <table class="table nexora-table align-middle">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Classroom</th>
-                                    <th>Type</th>
-                                    <th>Supervisor</th>
-                                    <th>Enrolled</th>
-                                    <th>Classwork</th>
-                                    <th>Status</th>
-                                    <th>Created</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for classroom in classrooms %}
-                                    <tr>
-                                        <td class="text-muted table-index-cell">{{ loop.index }}</td>
-                                        <td>
-                                            <strong>{{ classroom.name }}</strong>
-                                            <div class="text-muted small">{{ classroom.section }}</div>
-                                            {% if classroom.classroom_type == 'internship' and (classroom.company_name or classroom.internship_title) %}
-                                                <div class="text-muted small">
-                                                    {{ classroom.internship_title or 'Internship' }}
-                                                    {% if classroom.company_name %} · {{ classroom.company_name }}{% endif %}
-                                                </div>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            {% if classroom.classroom_type == 'internship' %}
-                                                <span class="badge rounded-pill text-bg-warning">Intern Classroom</span>
-                                            {% else %}
-                                                <span class="badge rounded-pill text-bg-secondary">Classroom</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>{{ classroom.supervisor_name }}</td>
-                                        <td>{{ classroom.student_count }}</td>
-                                        <td>{{ classroom.classwork_count }}</td>
-                                        <td>
-                                            {% if classroom.archived %}
-                                                <span class="status-badge status-inactive"><span class="status-dot"></span> Archived</span>
-                                            {% else %}
-                                                <span class="status-badge status-active"><span class="status-dot"></span> Active</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>{{ classroom.created_at }}</td>
-                                        <td>
-                                            <a
-                                                href="{{ url_for('admin_classrooms.classroom_detail', classroom_id=classroom.id) }}"
-                                                class="btn-view js-admin-classroom-modal"
-                                                data-classroom-url="{{ url_for('admin_classrooms.classroom_detail', classroom_id=classroom.id, modal=1) }}"
-                                                data-classroom-name="{{ classroom.name|e }}"
-                                            >View</a>
-                                        </td>
-                                    </tr>
-                                {% else %}
-                                    <tr>
-                                        <td colspan="9">
-                                            <div class="empty-state">
-                                                <div class="icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M7 8h3M14 8h3M7 12h3M14 12h3M7 16h3M14 16h3"></path></svg></div>
-                                                <div class="empty-state-title">No classrooms found</div>
-                                                <div class="empty-state-copy">Try changing the search or filters.</div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                </section>
 
                 <div class="alert alert-light border mt-3 mb-0" role="note">
                     This Admin view is read-only. Classroom ownership, enrollment, classwork, and archive controls remain with their existing workflows.

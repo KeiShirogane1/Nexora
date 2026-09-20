@@ -18,10 +18,11 @@
             <nav class="admin-breadcrumb" aria-label="Breadcrumb"><a href="{{ url_for('admin_classrooms.classrooms') }}">Classrooms</a><span>/</span><span>{{ classroom.name }}</span></nav>
             {% endif %}
 
-            <header class="admin-classroom-hero admin-polish-panel">
+            {% set admin_classroom_detail_theme = classroom_banner_theme(classroom.id) %}
+            <header class="admin-classroom-hero admin-polish-panel nx-class-theme nx-class-theme--{{ admin_classroom_detail_theme }} nx-class-fade-banner">
                 <div>
                     <div class="admin-doc-badges">
-                        <span class="admin-status-pill">{{ 'Intern Classroom' if classroom.classroom_type == 'internship' else 'Classroom' }}</span>
+                        <span class="admin-status-pill nx-class-theme-pill">{{ 'Intern Classroom' if classroom.classroom_type == 'internship' else 'Classroom' }}</span>
                         <span class="admin-status-pill {% if classroom.archived %}is-muted{% else %}is-success{% endif %}">{{ 'Archived' if classroom.archived else 'Active' }}</span>
                         <span class="admin-status-pill">Read-only</span>
                     </div>
