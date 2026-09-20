@@ -317,6 +317,25 @@ def student_insights():
     finally:
         conn.close()
 
+    classroom_insights = None
+    classroom_insights_warning = None
+    if selected_classroom:
+        try:
+            from app.Http.Controllers.classwork_ml_insights import _build_cohort_summary
+            classroom_insights = _build_cohort_summary(
+                selected_classroom["id"],
+                selected_classroom["supervisor_id"],
+                students,
+            )
+        except Exception:
+            current_app.logger.exception(
+                "Admin classroom insights failed for class_id=%s",
+                selected_classroom["id"],
+            )
+            classroom_insights_warning = (
+                "Classroom-level evidence is temporarily unavailable."
+            )
+
     context = None
     insights_warnings = []
     if selected_student and selected_classroom:
@@ -403,6 +422,8 @@ def student_insights():
         selected_student=selected_student,
         classrooms=classrooms,
         selected_classroom=selected_classroom,
+        classroom_insights=classroom_insights,
+        classroom_insights_warning=classroom_insights_warning,
         insights=context,
         insights_warnings=insights_warnings,
         active_page="reports",

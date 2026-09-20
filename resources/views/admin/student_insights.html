@@ -66,6 +66,56 @@
             {% elif not selected_classroom %}
                 <section class="admin-polish-empty"><div class="admin-polish-empty-icon">⌕</div><h2>Choose a classroom</h2><p>Select a room above to display the students enrolled in it.</p></section>
             {% else %}
+                <section class="admin-polish-panel" aria-label="Overall classroom insights for {{ selected_classroom.name }}">
+                    <div class="admin-section-heading">
+                        <div>
+                            <span>OVERALL CLASSROOM INSIGHTS</span>
+                            <h3>{{ selected_classroom.name }}</h3>
+                            <p class="admin-insights-student-directory-copy">Classroom-wide evidence summary. Each evidence dimension remains separate and is not combined into an overall OJT grade.</p>
+                        </div>
+                        <span class="admin-metric-tag">{{ students|length }} intern{% if students|length != 1 %}s{% endif %}</span>
+                    </div>
+
+                    {% if classroom_insights %}
+                        <section class="admin-kpi-grid admin-insights-kpis" aria-label="Classroom insight summary">
+                            <article class="admin-kpi-card"><span>Total Interns</span><strong>{{ classroom_insights.total_interns }}</strong><small>Enrolled in this Intern Classroom</small></article>
+                            <article class="admin-kpi-card"><span>Work Average</span><strong>{% if classroom_insights.work_average is not none %}{{ '%.1f'|format(classroom_insights.work_average) }}%{% else %}—{% endif %}</strong><small>{{ classroom_insights.work_reviewed_count }} reviewed of {{ classroom_insights.work_total_count }} assigned</small></article>
+                            <article class="admin-kpi-card"><span>Average Completion</span><strong>{% if classroom_insights.work_completion_average is not none %}{{ '%.1f'|format(classroom_insights.work_completion_average) }}%{% else %}—{% endif %}</strong><small>Work completion across enrolled interns</small></article>
+                            <article class="admin-kpi-card"><span>Total OJT Hours</span><strong>{{ '%.2f'|format(classroom_insights.total_rendered_hours or 0) }}</strong><small>Completed attendance hours in this classroom</small></article>
+                            <article class="admin-kpi-card"><span>Daily Performance</span><strong>{% if classroom_insights.daily_performance_average is not none %}{{ '%.1f'|format(classroom_insights.daily_performance_average) }}%{% else %}—{% endif %}</strong><small>{{ classroom_insights.daily_rating_count }} manual day rating{% if classroom_insights.daily_rating_count != 1 %}s{% endif %}</small></article>
+                            <article class="admin-kpi-card"><span>Daily Logbook</span><strong>{{ classroom_insights.logbook_entry_count }}</strong><small>Daily OJT entries in this classroom</small></article>
+                        </section>
+
+                        <div class="admin-insights-grid">
+                            <section class="admin-polish-panel">
+                                <div class="admin-section-heading"><div><span>EVIDENCE COVERAGE</span><h3>Classroom Coverage</h3></div></div>
+                                <div class="admin-evidence-grid">
+                                    <div><span>Attendance / OJT Hours</span><strong>{{ classroom_insights.attendance_interns }} / {{ classroom_insights.total_interns }}</strong></div>
+                                    <div><span>Daily Performance</span><strong>{{ classroom_insights.daily_performance_interns }} / {{ classroom_insights.total_interns }}</strong></div>
+                                    <div><span>Daily Logbook</span><strong>{{ classroom_insights.logbook_interns }} / {{ classroom_insights.total_interns }}</strong></div>
+                                    <div><span>Work</span><strong>{{ classroom_insights.work_interns }} / {{ classroom_insights.total_interns }}</strong></div>
+                                    <div><span>Official Evaluation Started</span><strong>{{ classroom_insights.official_started }} / {{ classroom_insights.total_interns }}</strong></div>
+                                    <div><span>Evaluation Workflow</span><strong>{{ classroom_insights.official_draft }} draft · {{ classroom_insights.official_submitted }} submitted</strong></div>
+                                </div>
+                            </section>
+
+                            <section class="admin-polish-panel">
+                                <div class="admin-section-heading"><div><span>WORK EVIDENCE</span><h3>Performance Distribution</h3></div></div>
+                                <div class="admin-evidence-grid">
+                                    <div><span>Excellent</span><strong>{{ classroom_insights.work_distribution['Excellent'] }}</strong></div>
+                                    <div><span>Very Satisfactory</span><strong>{{ classroom_insights.work_distribution['Very Satisfactory'] }}</strong></div>
+                                    <div><span>Satisfactory</span><strong>{{ classroom_insights.work_distribution['Satisfactory'] }}</strong></div>
+                                    <div><span>Fair</span><strong>{{ classroom_insights.work_distribution['Fair'] }}</strong></div>
+                                    <div><span>Needs Improvement</span><strong>{{ classroom_insights.work_distribution['Needs Improvement'] }}</strong></div>
+                                    <div><span>No Performance Data</span><strong>{{ classroom_insights.work_distribution['No Data'] }}</strong></div>
+                                </div>
+                            </section>
+                        </div>
+                    {% else %}
+                        <div class="admin-polish-empty admin-polish-empty-compact"><h3>Classroom insights unavailable</h3><p>{{ classroom_insights_warning or 'Classroom-level evidence could not be loaded.' }}</p></div>
+                    {% endif %}
+                </section>
+
                 <section class="admin-polish-panel admin-insights-student-directory" aria-label="Students in {{ selected_classroom.name }}">
                     <div class="admin-section-heading">
                         <div>
