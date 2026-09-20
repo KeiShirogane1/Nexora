@@ -53,6 +53,9 @@ def _user_record(user_id, conn=None):
 
 
 def _display_name(user_id, role, username, conn=None):
+    if str(role or "").strip().lower() == "admin":
+        return "Nexora Admin"
+
     owns_connection = conn is None
     if owns_connection:
         conn = get_db_connection()
