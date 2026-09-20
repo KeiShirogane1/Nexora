@@ -62,18 +62,38 @@
                             <label for="internshipStudent">Student <span class="admin-internship-required">*</span></label>
                             <select id="internshipStudent" name="student_id" class="form-select" required>
                                 <option value="">-- Select Student --</option>
-                                {% for student in students %}
-                                    <option
-                                        value="{{ student.id }}"
-                                        data-current-classroom-id="{{ student.current_classroom_id }}"
-                                        data-current-classroom="{{ student.current_classroom_name|e }}"
-                                        data-current-supervisor="{{ student.current_supervisor_name|e }}"
-                                        data-current-company="{{ student.current_company_name|e }}"
-                                        {% if request.form.get('student_id') == student.id|string %}selected{% endif %}
-                                    >{{ student.display_name }}{% if student.student_number %} · {{ student.student_number }}{% endif %}{% if student.current_classroom_name %} — assigned to {{ student.current_classroom_name }}{% endif %}</option>
-                                {% endfor %}
+
+                                <optgroup label="NOT ASSIGNED — AVAILABLE TO ASSIGN">
+                                    {% for student in students %}
+                                        {% if not student.current_classroom_id %}
+                                            <option
+                                                value="{{ student.id }}"
+                                                data-current-classroom-id="{{ student.current_classroom_id }}"
+                                                data-current-classroom="{{ student.current_classroom_name|e }}"
+                                                data-current-supervisor="{{ student.current_supervisor_name|e }}"
+                                                data-current-company="{{ student.current_company_name|e }}"
+                                                {% if request.form.get('student_id') == student.id|string %}selected{% endif %}
+                                            >{{ student.display_name }}{% if student.student_number %} · {{ student.student_number }}{% endif %}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </optgroup>
+
+                                <optgroup label="ALREADY ASSIGNED — TRANSFER STUDENT">
+                                    {% for student in students %}
+                                        {% if student.current_classroom_id %}
+                                            <option
+                                                value="{{ student.id }}"
+                                                data-current-classroom-id="{{ student.current_classroom_id }}"
+                                                data-current-classroom="{{ student.current_classroom_name|e }}"
+                                                data-current-supervisor="{{ student.current_supervisor_name|e }}"
+                                                data-current-company="{{ student.current_company_name|e }}"
+                                                {% if request.form.get('student_id') == student.id|string %}selected{% endif %}
+                                            >{{ student.display_name }}{% if student.student_number %} · {{ student.student_number }}{% endif %} — {{ student.current_classroom_name }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </optgroup>
                             </select>
-                            <p class="admin-internship-help">Choose the active student account to enroll or transfer.</p>
+                            <p class="admin-internship-help">Unassigned students appear first. Students already in an Intern Classroom are grouped below for transfer.</p>
                         </div>
 
                         <div class="admin-internship-field admin-internship-classroom-picker">
