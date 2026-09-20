@@ -1,636 +1,101 @@
 <!DOCTYPE html>
-<html>
-
-    <head>
-        <meta charset="UTF-8">
-
-        <title>
-            Edit Profile - Nexora
-        </title>
-
-
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-              rel="stylesheet">
-
-
-        <link rel="stylesheet"
-              href="{{ url_for('static', filename='css/style.css') }}">
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
-
-
-    </head>
-
-
-    <body>
-
-
-        {% set errors = errors or {} %}
-
-
-        <div class="admin-main no-admin-sidebar">
-
-
-            <div class="profile-page-container">
-
-
-
-                <div class="dashboard-header">
-
-
-                    <div>
-
-
-                        <h1>
-                            Update Information
-                        </h1>
-
-                        <a href="{{ url_for('student.student_profile') }}"
-                           class="btn btn-secondary mb-3">
-
-                            ← Back to Profile
-
-                        </a>
-
-
-                        <p>
-                            Edit your profile information
-                        </p>
-
-
-                    </div>
-
-
-                </div>
-
-
-
-
-                {% with messages = get_flashed_messages(with_categories=true) %}
-
-                    {% if messages %}
-
-
-                        <div class="flash-container">
-
-
-                            {% for category,message in messages %}
-
-
-                                <div class="flash-popup {{ category }}">
-
-
-                                    <span>
-                                        {{ message }}
-                                    </span>
-
-
-                                    <button onclick="this.parentElement.remove()">
-                                        ×
-                                    </button>
-
-
-                                </div>
-
-
-                            {% endfor %}
-
-
-                        </div>
-
-
-                    {% endif %}
-
-                {% endwith %}
-
-
-
-
-
-                <div class="dashboard-box">
-
-
-
-                    <form method="POST" novalidate>
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-
-
-                        <div class="row g-3">
-
-
-
-                            <div class="col-12">
-
-                                <h3>
-                                    Personal Information
-                                </h3>
-
-                            </div>
-
-
-
-
-<!-- FIRST NAME -->
-
-                            <div class="col-md-4">
-
-
-                                <label>
-                                    First Name
-                                </label>
-
-
-                                <input
-                                    type="text"
-                                    name="first_name"
-                                    class="form-control {% if errors.first_name %}is-invalid{% endif %}"
-                                    value="{{ student.first_name or '' }}">
-
-
-                                {% if errors.first_name %}
-
-                                    <div class="field-error">
-                                        {{ errors.first_name }}
-                                    </div>
-
-                                {% endif %}
-
-
-                            </div>
-
-
-
-
-
-<!-- MIDDLE NAME -->
-
-
-                            <div class="col-md-4">
-
-
-                                <label>
-                                    Middle Name
-                                </label>
-
-
-                                <input
-                                    type="text"
-                                    name="middle_name"
-                                    class="form-control {% if errors.middle_name %}is-invalid{% endif %}"
-                                    value="{{ student.middle_name or '' }}">
-
-
-                                {% if errors.middle_name %}
-
-                                    <div class="field-error">
-                                        {{ errors.middle_name }}
-                                    </div>
-
-                                {% endif %}
-
-
-
-                            </div>
-
-
-
-
-
-<!-- LAST NAME -->
-
-
-                            <div class="col-md-4">
-
-
-                                <label>
-                                    Last Name
-                                </label>
-
-
-                                <input
-                                    type="text"
-                                    name="last_name"
-                                    class="form-control {% if errors.last_name %}is-invalid{% endif %}"
-                                    value="{{ student.last_name or '' }}">
-
-
-
-                                {% if errors.last_name %}
-
-                                    <div class="field-error">
-                                        {{ errors.last_name }}
-                                    </div>
-
-                                {% endif %}
-
-
-                            </div>
-
-
-
-
-
-
-
-<!-- AGE -->
-
-
-                            <div class="col-md-4">
-
-
-                                <label>
-                                    Age
-                                </label>
-
-
-                                <input
-                                    type="number"
-                                    name="age"
-                                    class="form-control {% if errors.age %}is-invalid{% endif %}"
-                                    value="{{ student.age or '' }}">
-
-
-
-                                {% if errors.age %}
-
-                                    <div class="field-error">
-                                        {{ errors.age }}
-                                    </div>
-
-                                {% endif %}
-
-
-                            </div>
-
-
-
-
-
-
-
-                            <div class="col-12">
-                                <h3 class="mt-4">Student Information</h3>
-                            </div>
-
-<!-- STUDENT ID -->
-
-
-                            <div class="col-md-4">
-
-
-                                <label>
-                                    Student ID
-                                </label>
-
-
-                                <input
-                                    type="text"
-                                    name="student_id"
-                                    class="form-control {% if errors.student_id %}is-invalid{% endif %}"
-                                    value="{{ student.student_id or '' }}">
-
-
-
-                                {% if errors.student_id %}
-
-                                    <div class="field-error">
-                                        {{ errors.student_id }}
-                                    </div>
-
-                                {% endif %}
-
-
-                            </div>
-
-
-
-
-
-
-
-
-<!-- YEAR -->
-
-
-                            <div class="col-md-4">
-
-
-                                <label>
-                                    Grade / Year
-                                </label>
-
-
-                                <input
-                                    type="text"
-                                    name="grade_year"
-                                    class="form-control"
-                                    value="{{ student.grade_year or '' }}">
-
-
-
-                            </div>
-
-
-
-
-
-
-
-
-
-<!-- PROGRAM -->
-
-
-                            <div class="col-md-6">
-
-
-                                <label>
-                                    Major / Program
-                                </label>
-
-
-                                <input
-                                    type="text"
-                                    name="major_program"
-                                    class="form-control"
-                                    value="{{ student.major_program or '' }}">
-
-
-
-                            </div>
-
-
-
-
-
-
-
-                            <div class="col-12">
-                                <h3 class="mt-4">Contact Information</h3>
-                            </div>
-
-<!-- EMAIL -->
-
-
-                            <div class="col-md-6">
-
-
-                                <label>
-                                    User Email
-                                </label>
-
-
-                                <input
-                                    type="email"
-                                    class="form-control"
-                                    value="{{ student.email }}"
-                                    readonly>
-
-
-                            </div>
-
-
-
-
-
-
-
-
-
-<!-- CONTACT -->
-
-
-                            <div class="col-md-6">
-
-
-                                <label>
-                                    Phone Number
-                                </label>
-
-
-                                <input
-                                    type="text"
-                                    name="phone_number"
-                                    class="form-control {% if errors.phone_number %}is-invalid{% endif %}"
-                                    value="{{ student.phone_number or '' }}">
-
-
-
-                                {% if errors.phone_number %}
-
-                                    <div class="field-error">
-                                        {{ errors.phone_number }}
-                                    </div>
-
-                                {% endif %}
-
-
-                            </div>
-
-
-
-
-
-
-
-
-                            <div class="col-md-6">
-
-
-                                <label>
-                                    Home Address
-                                </label>
-
-
-                                <input
-                                    type="text"
-                                    name="home_address"
-                                    class="form-control"
-                                    value="{{ student.home_address or '' }}">
-
-
-
-                            </div>
-
-
-
-
-
-
-
-
-<!-- EMERGENCY -->
-
-
-                            <div class="col-12">
-
-                                <h3 class="mt-4">
-                                    Emergency Contact
-                                </h3>
-
-
-                            </div>
-
-
-
-
-
-
-                            <div class="col-md-3">
-
-
-                                <label>
-                                    Name
-                                </label>
-
-
-                                <input
-                                    type="text"
-                                    name="emergency_name"
-                                    class="form-control"
-                                    value="{{ student.emergency_name or '' }}">
-
-
-
-                            </div>
-
-
-
-
-
-
-                            <div class="col-md-3">
-
-
-                                <label>
-                                    Relationship
-                                </label>
-
-
-                                <input
-                                    type="text"
-                                    name="emergency_relationship"
-                                    class="form-control"
-                                    value="{{ student.emergency_relationship or '' }}">
-
-
-
-                            </div>
-
-
-
-
-
-
-
-                            <div class="col-md-3">
-
-
-                                <label>
-                                    Phone
-                                </label>
-
-
-                                <input
-                                    type="text"
-                                    name="emergency_phone"
-                                    class="form-control"
-                                    value="{{ student.emergency_phone or '' }}">
-
-
-
-                            </div>
-
-
-
-
-
-
-
-                            <div class="col-md-3">
-
-
-                                <label>
-                                    Email
-                                </label>
-
-
-                                <input
-                                    type="email"
-                                    name="emergency_email"
-                                    class="form-control"
-                                    value="{{ student.emergency_email or '' }}">
-
-
-
-                            </div>
-
-
-
-
-                        </div>
-
-
-
-
-
-
-
-                        <br>
-
-
-
-
-
-
-                        <button
-                            type="submit"
-                            class="btn btn-primary">
-
-                            Save Changes
-
-                        </button>
-
-
-
-
-
-                        <a href="{{ url_for('student.student_profile') }}"
-                           class="btn btn-secondary">
-
-                            Back to Profile
-
-                        </a>
-
-
-
-
-
-                    </form>
-
-
-                </div>
-
-
-            </div>
-
-
-        </div>
-
-
-        <script>
-            document.querySelectorAll(".flash-popup").forEach(function (alert) {
-                setTimeout(function () {
-                    alert.style.opacity = "0";
-
-                    setTimeout(function () {
-                        alert.remove();
-                    }, 300);
-                }, 5000);
-            });
-        </script>
-
-    </body>
-
-
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Edit Profile - Nexora</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/student.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/modals.css') }}">
+</head>
+
+<body class="student-page student-profile-v2 student-profile-edit-v2">
+{% include 'components/student_sidebar.html' %}
+{% set errors = errors|default({}) %}
+
+<main class="student-tasks-main student-profile-main-v2">
+<div class="student-tasks-content student-profile-shell-v2">
+
+<header class="stv2-page-head">
+  <div>
+    <span class="stv2-eyebrow">STUDENT PORTAL</span>
+    <h1>Edit Profile</h1>
+    <p>Update your personal, academic, contact, and emergency information.</p>
+  </div>
+  <div class="stv2-head-side">
+    <nav class="stv2-breadcrumb" aria-label="Breadcrumb">
+      <a href="{{ url_for('student.student_dashboard') }}">Dashboard</a>
+      <span>›</span>
+      <a href="{{ url_for('student.student_profile') }}">My Profile</a>
+      <span>›</span>
+      <strong>Edit</strong>
+    </nav>
+    <span class="stv2-account-badge">
+      <span class="stv2-account-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="m3 10 9-5 9 5-9 5-9-5Z"></path><path d="M7 12.5v4.2c2.8 1.8 7.2 1.8 10 0v-4.2"></path></svg></span>
+      <span><small>Student Account</small><strong>Profile Editor</strong></span>
+    </span>
+  </div>
+</header>
+
+{% with messages=get_flashed_messages(with_categories=true) %}
+  {% for category,message in messages %}
+    <div class="stv2-alert {% if category in ['danger','error'] %}is-danger{% elif category=='warning' %}is-warning{% else %}is-success{% endif %}">{{ message }}</div>
+  {% endfor %}
+{% endwith %}
+
+<form method="POST" novalidate class="stv2-edit-form">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+<div class="stv2-edit-stack">
+  <section class="stv2-edit-card">
+    <div class="stv2-card-head"><span class="stv2-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg></span><div><h3>Personal Information</h3><p>Your basic personal details.</p></div></div>
+    <div class="stv2-edit-grid">
+      <div class="stv2-edit-field"><label>First Name <span>*</span></label><input type="text" name="first_name" value="{{ student.first_name or '' }}" required>{% if errors.first_name %}<small class="stv2-error">{{ errors.first_name }}</small>{% endif %}</div>
+      <div class="stv2-edit-field"><label>Middle Name</label><input type="text" name="middle_name" value="{{ student.middle_name or '' }}">{% if errors.middle_name %}<small class="stv2-error">{{ errors.middle_name }}</small>{% endif %}</div>
+      <div class="stv2-edit-field"><label>Last Name <span>*</span></label><input type="text" name="last_name" value="{{ student.last_name or '' }}" required>{% if errors.last_name %}<small class="stv2-error">{{ errors.last_name }}</small>{% endif %}</div>
+      <div class="stv2-edit-field"><label>Age</label><input type="number" name="age" min="15" max="100" value="{{ student.age or '' }}">{% if errors.age %}<small class="stv2-error">{{ errors.age }}</small>{% endif %}</div>
+    </div>
+  </section>
+
+  <section class="stv2-edit-card">
+    <div class="stv2-card-head"><span class="stv2-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="m3 10 9-5 9 5-9 5-9-5Z"></path><path d="M7 12.5v4.2c2.8 1.8 7.2 1.8 10 0v-4.2"></path></svg></span><div><h3>Student Information</h3><p>Your academic identity and program information.</p></div></div>
+    <div class="stv2-edit-grid">
+      <div class="stv2-edit-field"><label>Student ID</label><input type="text" name="student_id" value="{{ student.student_id or '' }}" readonly><small class="stv2-field-note">Student ID is managed by Nexora and cannot be changed here.</small>{% if errors.student_id %}<small class="stv2-error">{{ errors.student_id }}</small>{% endif %}</div>
+      <div class="stv2-edit-field"><label>Grade / Year</label><input type="text" name="grade_year" value="{{ student.grade_year or '' }}"></div>
+      <div class="stv2-edit-field is-full"><label>Major / Program</label><input type="text" name="major_program" value="{{ student.major_program or '' }}"></div>
+    </div>
+  </section>
+
+  <section class="stv2-edit-card">
+    <div class="stv2-card-head"><span class="stv2-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M5 4h4l2 5-3 2a14 14 0 0 0 5 5l2-3 5 2v4c0 1.1-.9 2-2 2C9.7 21 3 14.3 3 6a2 2 0 0 1 2-2Z"></path></svg></span><div><h3>Contact Information</h3><p>Keep your account contact details current.</p></div></div>
+    <div class="stv2-edit-grid">
+      <div class="stv2-edit-field"><label>Account Email</label><input type="email" value="{{ student.email or '' }}" readonly><small class="stv2-field-note">Your login email is managed separately from this profile form.</small></div>
+      <div class="stv2-edit-field"><label>Phone Number</label><input type="text" name="phone_number" inputmode="numeric" value="{{ student.phone_number or '' }}">{% if errors.phone_number %}<small class="stv2-error">{{ errors.phone_number }}</small>{% endif %}</div>
+      <div class="stv2-edit-field is-full"><label>Home Address</label><textarea name="home_address" rows="3">{{ student.home_address or '' }}</textarea></div>
+    </div>
+  </section>
+
+  <section class="stv2-edit-card">
+    <div class="stv2-card-head"><span class="stv2-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 21a8 8 0 1 0-8-8"></path><path d="M4 21v-5h5"></path><path d="M12 9v4l2.5 1.5"></path></svg></span><div><h3>Emergency Contact</h3><p>Who Nexora should show as your emergency contact.</p></div></div>
+    <div class="stv2-edit-grid">
+      <div class="stv2-edit-field"><label>Name</label><input type="text" name="emergency_name" value="{{ student.emergency_name or '' }}"></div>
+      <div class="stv2-edit-field"><label>Relationship</label><input type="text" name="emergency_relationship" value="{{ student.emergency_relationship or '' }}"></div>
+      <div class="stv2-edit-field"><label>Phone</label><input type="text" name="emergency_phone" value="{{ student.emergency_phone or '' }}"></div>
+      <div class="stv2-edit-field"><label>Email</label><input type="email" name="emergency_email" value="{{ student.emergency_email or '' }}"></div>
+    </div>
+  </section>
+</div>
+
+<div class="stv2-edit-actions">
+  <a class="stv2-edit-secondary" href="{{ url_for('student.student_profile') }}">Cancel</a>
+  <button class="stv2-edit-primary" type="submit">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M5 4h12l2 2v14H5Z"></path><path d="M8 4v6h8V4M8 20v-6h8v6"></path></svg>
+    Save Changes
+  </button>
+</div>
+</form>
+
+</div>
+</main>
+</body>
 </html>

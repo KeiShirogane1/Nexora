@@ -10,6 +10,33 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
 </head>
 
+{% set completion_fields = [
+  profile.first_name or '',
+  profile.last_name or '',
+  supervisor.username or '',
+  supervisor.email or '',
+  profile.employee_id or '',
+  profile.job_title or '',
+  profile.department or '',
+  profile.specialization or '',
+  (profile.years_experience|string if profile.years_experience is not none else ''),
+  profile.education or '',
+  profile.certifications or '',
+  profile.phone_number or '',
+  profile.office_location or '',
+  profile.office_hours or '',
+  profile.preferred_contact or '',
+  profile.response_time or '',
+  profile.availability or '',
+  profile.skills or '',
+  profile.bio or ''
+] %}
+{% set complete = namespace(count=0) %}
+{% for value in completion_fields %}
+  {% if value|string|trim %}{% set complete.count = complete.count + 1 %}{% endif %}
+{% endfor %}
+{% set profile_percentage = ((complete.count * 100) / (completion_fields|length))|round|int %}
+
 <body class="supervisor-page supervisor-profile-v2">
 {% include 'components/supervisor_sidebar.html' %}
 
@@ -20,9 +47,8 @@
   <div>
     <span class="spv2-eyebrow">SUPERVISOR PORTAL</span>
     <h1>Supervisor Profile</h1>
-    <p>Manage your professional information and view your assigned students.</p>
+    <p>View your professional, contact, and office information.</p>
   </div>
-
   <div class="spv2-head-side">
     <nav class="spv2-breadcrumb" aria-label="Breadcrumb">
       <a href="{{ url_for('supervisor.supervisor_dashboard') }}">
@@ -32,7 +58,6 @@
       <span>›</span>
       <strong>My Profile</strong>
     </nav>
-
     <span class="spv2-account-badge">
       <span class="spv2-account-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 3 5 6v5c0 4.7 2.8 8 7 10 4.2-2 7-5.3 7-10V6Z"></path><path d="m9.2 12 1.8 1.8 3.8-4"></path></svg>
@@ -44,14 +69,9 @@
 
 {% with messages=get_flashed_messages(with_categories=true) %}
   {% for category,message in messages %}
-    <div class="spv2-alert {% if category=='danger' %}is-danger{% else %}is-success{% endif %}">
-      <span>{{ message }}</span>
-    </div>
+    <div class="spv2-alert {% if category in ['danger','error'] %}is-danger{% else %}is-success{% endif %}"><span>{{ message }}</span></div>
   {% endfor %}
 {% endwith %}
-
-<form method="POST" action="{{ url_for('supervisor.supervisor_profile') }}" id="supervisorProfileForm">
-<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
 <section class="spv2-hero">
   <div class="spv2-hero-main">
@@ -71,44 +91,26 @@
     <div class="spv2-identity">
       <span class="spv2-role-pill">Supervisor</span>
       <h2>{{ (profile.first_name ~ ' ' ~ profile.last_name).strip() or supervisor.username }}</h2>
-
       <div class="spv2-identity-meta">
-        <span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"></rect><path d="M8 8h8M8 12h5"></path></svg>
-          {{ profile.employee_id or 'Employee ID not set' }}
-        </span>
-        <span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m3 7 9 6 9-6"></path></svg>
-          {{ supervisor.email }}
-        </span>
+        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="4" y="3" width="16" height="18" rx="2"></rect><path d="M8 8h8M8 12h5"></path></svg>{{ profile.employee_id or 'Employee ID not set' }}</span>
+        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m3 7 9 6 9-6"></path></svg>{{ supervisor.email or 'Email not set' }}</span>
       </div>
-
       <div class="spv2-identity-chips">
-        <span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2"></rect><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-          {{ profile.job_title or 'Position not set' }}
-        </span>
-        <span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><path d="M4 21V8l8-5 8 5v13"></path><path d="M9 21v-6h6v6"></path></svg>
-          {{ profile.department or 'Department not set' }}
-        </span>
-        <span class="is-status">
-          <i></i>
-          {{ supervisor.status|capitalize }}
-        </span>
+        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="7" width="18" height="13" rx="2"></rect><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>{{ profile.job_title or 'Position not set' }}</span>
+        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M4 21V8l8-5 8 5v13"></path><path d="M9 21v-6h6v6"></path></svg>{{ profile.department or 'Department not set' }}</span>
+        <span class="is-status"><i></i>{{ supervisor.status|capitalize }}</span>
       </div>
     </div>
   </div>
-
   <div class="spv2-hero-side">
     <blockquote>Guiding today’s learners<br>for a better tomorrow.</blockquote>
     <div class="spv2-hero-actions">
-      <button type="button" class="spv2-hero-btn is-primary" id="spv2EditProfile">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"></path></svg>
+      <a class="spv2-hero-btn is-primary" href="{{ url_for('supervisor_profile_photo.supervisor_profile_edit') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"></path></svg>
         Edit Profile
-      </button>
+      </a>
       <a class="spv2-hero-btn is-secondary" href="{{ url_for('password.change_password') }}">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><circle cx="7.5" cy="15.5" r="3.5"></circle><path d="m10 13 10-10M16 7l2 2M13 10l2 2"></path></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="7.5" cy="15.5" r="3.5"></circle><path d="m10 13 10-10M16 7l2 2M13 10l2 2"></path></svg>
         Change Password
       </a>
     </div>
@@ -116,146 +118,60 @@
 </section>
 
 <section class="spv2-kpi-grid" aria-label="Supervisor profile statistics">
-  <article class="spv2-kpi">
-    <span class="spv2-kpi-icon is-blue" aria-hidden="true">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 10 9-5 9 5-9 5-9-5Z"></path><path d="M7 12.5v4.2c2.8 1.8 7.2 1.8 10 0v-4.2"></path></svg>
-    </span>
-    <div><small>My Classrooms</small><strong>{{ class_count or 0 }}</strong><span>Active classrooms</span></div>
-  </article>
-
-  <article class="spv2-kpi">
-    <span class="spv2-kpi-icon is-red" aria-hidden="true">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M19 8v6M22 11h-6"></path></svg>
-    </span>
-    <div><small>Active Interns</small><strong>{{ intern_count or 0 }}</strong><span>Currently enrolled</span></div>
-  </article>
-
-  <article class="spv2-kpi">
-    <span class="spv2-kpi-icon is-amber" aria-hidden="true">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"></rect><path d="M8 9h8M8 13h5M8 17h4"></path></svg>
-    </span>
-    <div><small>Assignments</small><strong>{{ assignment_count or 0 }}</strong><span>Current classwork</span></div>
-  </article>
-
-  <article class="spv2-kpi">
-    <span class="spv2-kpi-icon is-blue" aria-hidden="true">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h9l3 3v15H6Z"></path><path d="M15 3v4h4M9 12h6M9 16h4"></path></svg>
-    </span>
-    <div><small>Feedback Entries</small><strong>{{ feedback_count or 0 }}</strong><span>Submitted records</span></div>
-  </article>
+  <article class="spv2-kpi"><span class="spv2-kpi-icon is-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 10 9-5 9 5-9 5-9-5Z"></path><path d="M7 12.5v4.2c2.8 1.8 7.2 1.8 10 0v-4.2"></path></svg></span><div><small>My Classrooms</small><strong>{{ class_count or 0 }}</strong><span>Active classrooms</span></div></article>
+  <article class="spv2-kpi"><span class="spv2-kpi-icon is-red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M19 8v6M22 11h-6"></path></svg></span><div><small>Active Interns</small><strong>{{ intern_count or 0 }}</strong><span>Currently enrolled</span></div></article>
+  <article class="spv2-kpi"><span class="spv2-kpi-icon is-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"></rect><path d="M8 9h8M8 13h5M8 17h4"></path></svg></span><div><small>Assignments</small><strong>{{ assignment_count or 0 }}</strong><span>Current classwork</span></div></article>
+  <article class="spv2-kpi"><span class="spv2-kpi-icon is-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h9l3 3v15H6Z"></path><path d="M15 3v4h4M9 12h6M9 16h4"></path></svg></span><div><small>Feedback Entries</small><strong>{{ feedback_count or 0 }}</strong><span>Submitted records</span></div></article>
 </section>
 
 <section class="spv2-completion">
   <div class="spv2-completion-head">
-    <span class="spv2-completion-icon" aria-hidden="true">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"></circle><path d="m8.5 12 2.2 2.2 4.8-5"></path></svg>
-    </span>
-    <div>
-      <h3>Profile Completeness</h3>
-      <p>Keep your professional information complete and up to date.</p>
-    </div>
-    <strong id="profilePercent">—</strong>
+    <span class="spv2-completion-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"></circle><path d="m8.5 12 2.2 2.2 4.8-5"></path></svg></span>
+    <div><h3>Profile Completeness</h3><p>Keep your professional information complete and up to date.</p></div>
+    <strong>{{ profile_percentage }}%</strong>
   </div>
-
-  <div class="spv2-progress-track"><div class="spv2-progress-fill" id="profileProgress"></div></div>
-
+  <div class="spv2-progress-track"><div class="spv2-progress-fill" style="width:{{ profile_percentage }}%"></div></div>
   <div class="spv2-completion-checks">
-    <span data-completion-group="personal"><i>✓</i>Personal information</span>
-    <span data-completion-group="professional"><i>✓</i>Professional information</span>
-    <span data-completion-group="contact"><i>✓</i>Contact information</span>
-    <span data-completion-group="picture"><i>✓</i>Profile picture</span>
-    <span data-completion-group="office"><i>✓</i>Office information</span>
+    <span class="{{ 'is-complete' if profile.first_name and profile.last_name and supervisor.username else '' }}"><i>✓</i>Personal information</span>
+    <span class="{{ 'is-complete' if profile.employee_id and profile.job_title and profile.department and profile.specialization and profile.years_experience is not none and profile.education and profile.certifications else '' }}"><i>✓</i>Professional information</span>
+    <span class="{{ 'is-complete' if profile.phone_number and supervisor.email and profile.preferred_contact and profile.response_time and profile.availability else '' }}"><i>✓</i>Contact information</span>
+    <span class="{{ 'is-complete' if supervisor.profile_picture else '' }}"><i>✓</i>Profile picture</span>
+    <span class="{{ 'is-complete' if profile.office_location and profile.office_hours else '' }}"><i>✓</i>Office information</span>
   </div>
 </section>
 
 <nav class="spv2-tabs" aria-label="Supervisor profile sections">
-  <button type="button" class="is-active" data-sp-tab="personal" aria-selected="true">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>
-    Personal Information
-  </button>
-  <button type="button" data-sp-tab="professional" aria-selected="false">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="7" width="18" height="13" rx="2"></rect><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-    Professional Information
-  </button>
-  <button type="button" data-sp-tab="contact" aria-selected="false">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M5 4h4l2 5-3 2a14 14 0 0 0 5 5l2-3 5 2v4c0 1.1-.9 2-2 2C9.7 21 3 14.3 3 6a2 2 0 0 1 2-2Z"></path></svg>
-    Contact Information
-  </button>
-  <button type="button" data-sp-tab="office" aria-selected="false">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M4 21V8l8-5 8 5v13"></path><path d="M9 21v-6h6v6"></path></svg>
-    Office Information
-  </button>
-  <button type="button" data-sp-tab="preferences" aria-selected="false">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6V21h-4v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1A1.7 1.7 0 0 0 4.6 15 1.7 1.7 0 0 0 3 14H3v-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.6V3h4v.1a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.1v4H21a1.7 1.7 0 0 0-1.6 1Z"></path></svg>
-    Preferences
-  </button>
+  <button type="button" class="is-active" data-sp-tab="personal" aria-selected="true">Personal Information</button>
+  <button type="button" data-sp-tab="professional" aria-selected="false">Professional Information</button>
+  <button type="button" data-sp-tab="contact" aria-selected="false">Contact Information</button>
+  <button type="button" data-sp-tab="office" aria-selected="false">Office Information</button>
+  <button type="button" data-sp-tab="preferences" aria-selected="false">Preferences</button>
 </nav>
 
 <div class="spv2-panels">
-
 <section class="spv2-panel is-active" data-sp-panel="personal">
-  <article class="spv2-form-card">
-    <div class="spv2-card-head">
-      <span class="spv2-card-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>
-      </span>
-      <div><h3>Personal Information</h3><p>Your name and account identity.</p></div>
-    </div>
-
-    <div class="spv2-field-grid">
-      <div class="spv2-field">
-        <label>First Name <span>*</span></label>
-        <input name="first_name" value="{{ profile.first_name or '' }}" required maxlength="80">
-        {% if errors.first_name %}<small class="spv2-error">{{ errors.first_name }}</small>{% endif %}
-      </div>
-      <div class="spv2-field">
-        <label>Last Name <span>*</span></label>
-        <input name="last_name" value="{{ profile.last_name or '' }}" required maxlength="80">
-        {% if errors.last_name %}<small class="spv2-error">{{ errors.last_name }}</small>{% endif %}
-      </div>
-      <div class="spv2-field">
-        <label>Middle Name</label>
-        <input name="middle_name" value="{{ profile.middle_name or '' }}" maxlength="80">
-      </div>
-      <div class="spv2-field">
-        <label>Username</label>
-        <input name="username" value="{{ supervisor.username }}" required minlength="3" maxlength="60" pattern="[A-Za-z0-9_.-]+">
-        {% if errors.username %}<small class="spv2-error">{{ errors.username }}</small>{% endif %}
-      </div>
-    </div>
+  <article class="spv2-info-card">
+    <div class="spv2-card-head"><span class="spv2-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg></span><div><h3>Personal Information</h3><p>Your name and account identity.</p></div></div>
+    <dl class="spv2-info-list">
+      <div><dt>First Name</dt><dd>{{ profile.first_name or 'Not provided' }}</dd></div>
+      <div><dt>Middle Name</dt><dd>{{ profile.middle_name or 'Not provided' }}</dd></div>
+      <div><dt>Last Name</dt><dd>{{ profile.last_name or 'Not provided' }}</dd></div>
+      <div><dt>Username</dt><dd>{{ supervisor.username or 'Not provided' }}</dd></div>
+    </dl>
   </article>
-
   <article class="spv2-picture-card">
-    <div class="spv2-card-head">
-      <span class="spv2-card-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="8.5" cy="9" r="2"></circle><path d="m21 15-5-5L5 20"></path></svg>
-      </span>
-      <div><h3>Profile Picture</h3><p>Your profile picture as seen by your students.</p></div>
-    </div>
-
+    <div class="spv2-card-head"><span class="spv2-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="8.5" cy="9" r="2"></circle><path d="m21 15-5-5L5 20"></path></svg></span><div><h3>Profile Picture</h3><p>Your profile picture as seen by your students.</p></div></div>
     <div class="spv2-picture-body">
       <button type="button" class="spv2-picture-preview" onclick="document.getElementById('supervisorUpload').click()">
         <img src="{% if supervisor.profile_picture %}{{ url_for('profile_picture',filename=supervisor.profile_picture) }}{% else %}{{ url_for('static',filename='images/default_profile.png') }}{% endif %}" alt="Supervisor profile photo">
-        <span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M8 7 9.4 5h5.2L16 7h3a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z"></path><circle cx="12" cy="13" r="3.5"></circle></svg>
-        </span>
+        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M8 7 9.4 5h5.2L16 7h3a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z"></path><circle cx="12" cy="13" r="3.5"></circle></svg></span>
       </button>
-
       <div class="spv2-picture-copy">
         <div class="spv2-picture-status {% if supervisor.profile_picture %}is-complete{% endif %}">
-          <span class="spv2-picture-status-icon">
-            {% if supervisor.profile_picture %}✓{% else %}!{% endif %}
-          </span>
-          <div>
-            <strong>{% if supervisor.profile_picture %}Profile picture uploaded{% else %}Profile picture not uploaded{% endif %}</strong>
-            <p>{% if supervisor.profile_picture %}This is visible to students in classroom lists, announcements, and feedback.{% else %}Add a professional picture so students can recognize you more easily.{% endif %}</p>
-          </div>
+          <span class="spv2-picture-status-icon">{% if supervisor.profile_picture %}✓{% else %}!{% endif %}</span>
+          <div><strong>{% if supervisor.profile_picture %}Profile picture uploaded{% else %}Profile picture not uploaded{% endif %}</strong><p>{% if supervisor.profile_picture %}This is visible to students in classroom lists, announcements, and feedback.{% else %}Add a professional picture so students can recognize you more easily.{% endif %}</p></div>
         </div>
-
-        <button type="button" class="spv2-picture-change" onclick="document.getElementById('supervisorUpload').click()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="m7 15 3-3 3 3 3-4 4 5"></path></svg>
-          Change Picture
-        </button>
+        <button type="button" class="spv2-picture-change" onclick="document.getElementById('supervisorUpload').click()">Change Picture</button>
         <small>Recommended: square image, at least 300×300px. Source images up to 12MB are optimized when saved.</small>
       </div>
     </div>
@@ -263,159 +179,69 @@
 </section>
 
 <section class="spv2-panel" data-sp-panel="professional" hidden>
-  <article class="spv2-form-card is-full">
-    <div class="spv2-card-head">
-      <span class="spv2-card-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="7" width="18" height="13" rx="2"></rect><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-      </span>
-      <div><h3>Professional Information</h3><p>Help students understand your role, expertise, and experience.</p></div>
-    </div>
-
-    <div class="spv2-field-grid">
-      <div class="spv2-field">
-        <label>Employee ID</label>
-        <input name="employee_id" value="{{ profile.employee_id or '' }}" maxlength="80">
-        {% if errors.employee_id %}<small class="spv2-error">{{ errors.employee_id }}</small>{% endif %}
-      </div>
-      <div class="spv2-field">
-        <label>Position / Title <span>*</span></label>
-        <input name="job_title" value="{{ profile.job_title or '' }}" placeholder="e.g. Faculty Supervisor" required maxlength="120">
-        {% if errors.job_title %}<small class="spv2-error">{{ errors.job_title }}</small>{% endif %}
-      </div>
-      <div class="spv2-field">
-        <label>Department <span>*</span></label>
-        <input name="department" value="{{ profile.department or '' }}" placeholder="e.g. Information Technology" required maxlength="120">
-        {% if errors.department %}<small class="spv2-error">{{ errors.department }}</small>{% endif %}
-      </div>
-      <div class="spv2-field">
-        <label>Specialization</label>
-        <input name="specialization" value="{{ profile.specialization or '' }}" placeholder="e.g. Web Development, Database Systems" maxlength="180">
-      </div>
-      <div class="spv2-field">
-        <label>Years of Experience</label>
-        <input type="number" name="years_experience" value="{{ profile.years_experience or 0 }}" min="0" max="60">
-        {% if errors.years_experience %}<small class="spv2-error">{{ errors.years_experience }}</small>{% endif %}
-      </div>
-      <div class="spv2-field">
-        <label>Education</label>
-        <input name="education" value="{{ profile.education or '' }}" placeholder="Degree, school, or highest qualification" maxlength="250">
-      </div>
-      <div class="spv2-field is-full">
-        <label>Certifications / Professional Credentials</label>
-        <input name="certifications" value="{{ profile.certifications or '' }}" placeholder="Separate multiple certifications with commas" maxlength="500">
-      </div>
-    </div>
+  <article class="spv2-info-card is-full">
+    <div class="spv2-card-head"><span class="spv2-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="7" width="18" height="13" rx="2"></rect><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></span><div><h3>Professional Information</h3><p>Your role, expertise, and experience.</p></div></div>
+    <dl class="spv2-info-list is-two-column">
+      <div><dt>Employee ID</dt><dd>{{ profile.employee_id or 'Not provided' }}</dd></div>
+      <div><dt>Position / Title</dt><dd>{{ profile.job_title or 'Not provided' }}</dd></div>
+      <div><dt>Department</dt><dd>{{ profile.department or 'Not provided' }}</dd></div>
+      <div><dt>Specialization</dt><dd>{{ profile.specialization or 'Not provided' }}</dd></div>
+      <div><dt>Years of Experience</dt><dd>{{ profile.years_experience if profile.years_experience is not none else 'Not provided' }}</dd></div>
+      <div><dt>Education</dt><dd>{{ profile.education or 'Not provided' }}</dd></div>
+      <div><dt>Certifications</dt><dd>{{ profile.certifications or 'Not provided' }}</dd></div>
+    </dl>
   </article>
 </section>
 
 <section class="spv2-panel" data-sp-panel="contact" hidden>
-  <article class="spv2-form-card is-full">
-    <div class="spv2-card-head">
-      <span class="spv2-card-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M5 4h4l2 5-3 2a14 14 0 0 0 5 5l2-3 5 2v4c0 1.1-.9 2-2 2C9.7 21 3 14.3 3 6a2 2 0 0 1 2-2Z"></path></svg>
-      </span>
-      <div><h3>Contact Information</h3><p>Your phone, email, and communication preferences.</p></div>
-    </div>
-
-    <div class="spv2-field-grid">
-      <div class="spv2-field">
-        <label>Phone Number</label>
-        <input name="phone_number" value="{{ profile.phone_number or '' }}" maxlength="40">
-      </div>
-      <div class="spv2-field">
-        <label>Account Email <span>*</span></label>
-        <input type="email" name="email" value="{{ supervisor.email or '' }}" required>
-        {% if errors.email %}<small class="spv2-error">{{ errors.email }}</small>{% endif %}
-      </div>
-      <div class="spv2-field">
-        <label>Preferred Contact</label>
-        <select name="preferred_contact">
-          <option value="">Select</option>
-          <option value="Email" {% if profile.preferred_contact=='Email' %}selected{% endif %}>Email</option>
-          <option value="Phone" {% if profile.preferred_contact=='Phone' %}selected{% endif %}>Phone</option>
-          <option value="Message" {% if profile.preferred_contact=='Message' %}selected{% endif %}>Message</option>
-        </select>
-      </div>
-      <div class="spv2-field">
-        <label>Typical Response Time</label>
-        <input name="response_time" value="{{ profile.response_time or '' }}" placeholder="e.g. Usually within 24 hours" maxlength="120">
-      </div>
-      <div class="spv2-field is-full">
-        <label>Availability</label>
-        <input name="availability" value="{{ profile.availability or '' }}" placeholder="e.g. Available for student consultations by appointment" maxlength="250">
-      </div>
-    </div>
+  <article class="spv2-info-card is-full">
+    <div class="spv2-card-head"><span class="spv2-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M5 4h4l2 5-3 2a14 14 0 0 0 5 5l2-3 5 2v4c0 1.1-.9 2-2 2C9.7 21 3 14.3 3 6a2 2 0 0 1 2-2Z"></path></svg></span><div><h3>Contact Information</h3><p>Your contact details and communication preferences.</p></div></div>
+    <dl class="spv2-info-list is-two-column">
+      <div><dt>Phone Number</dt><dd>{{ profile.phone_number or 'Not provided' }}</dd></div>
+      <div><dt>Account Email</dt><dd>{{ supervisor.email or 'Not provided' }}</dd></div>
+      <div><dt>Preferred Contact</dt><dd>{{ profile.preferred_contact or 'Not provided' }}</dd></div>
+      <div><dt>Typical Response Time</dt><dd>{{ profile.response_time or 'Not provided' }}</dd></div>
+      <div><dt>Availability</dt><dd>{{ profile.availability or 'Not provided' }}</dd></div>
+    </dl>
   </article>
 </section>
 
 <section class="spv2-panel" data-sp-panel="office" hidden>
-  <article class="spv2-form-card is-full">
-    <div class="spv2-card-head">
-      <span class="spv2-card-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M4 21V8l8-5 8 5v13"></path><path d="M8 11h8M8 15h8"></path></svg>
-      </span>
-      <div><h3>Office Information</h3><p>Share where and when students can meet you.</p></div>
-    </div>
-
-    <div class="spv2-field-grid">
-      <div class="spv2-field">
-        <label>Office Location</label>
-        <input name="office_location" value="{{ profile.office_location or '' }}" placeholder="e.g. IT Department, Room 305" maxlength="180">
-      </div>
-      <div class="spv2-field">
-        <label>Office Hours</label>
-        <input name="office_hours" value="{{ profile.office_hours or '' }}" placeholder="e.g. Mon–Fri · 8:00 AM–5:00 PM" maxlength="120">
-      </div>
-    </div>
+  <article class="spv2-info-card is-full">
+    <div class="spv2-card-head"><span class="spv2-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M4 21V8l8-5 8 5v13"></path><path d="M8 11h8M8 15h8"></path></svg></span><div><h3>Office Information</h3><p>Where and when students can meet you.</p></div></div>
+    <dl class="spv2-info-list">
+      <div><dt>Office Location</dt><dd>{{ profile.office_location or 'Not provided' }}</dd></div>
+      <div><dt>Office Hours</dt><dd>{{ profile.office_hours or 'Not provided' }}</dd></div>
+    </dl>
   </article>
 </section>
 
 <section class="spv2-panel" data-sp-panel="preferences" hidden>
-  <article class="spv2-form-card is-full">
-    <div class="spv2-card-head">
-      <span class="spv2-card-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 3 9.5 8H4l4 3.5L6.5 17l5.5-3 5.5 3-1.5-5.5L20 8h-5.5Z"></path></svg>
-      </span>
-      <div><h3>Expertise & Preferences</h3><p>Describe your mentoring strengths and professional background.</p></div>
-    </div>
-
-    <div class="spv2-field-grid">
-      <div class="spv2-field is-full">
-        <label>Skills</label>
-        <input name="skills" value="{{ profile.skills or '' }}" placeholder="Python, JavaScript, Flask, SQL, Git, Data Analysis" maxlength="500">
-        {% if errors.skills %}<small class="spv2-error">{{ errors.skills }}</small>{% endif %}
-      </div>
-      <div class="spv2-field is-full">
-        <label>Professional Bio</label>
-        <textarea name="bio" maxlength="1500" placeholder="Tell students about your teaching approach, experience, and what you enjoy mentoring.">{{ profile.bio or '' }}</textarea>
-        {% if errors.bio %}<small class="spv2-error">{{ errors.bio }}</small>{% endif %}
-      </div>
-    </div>
+  <article class="spv2-info-card is-full">
+    <div class="spv2-card-head"><span class="spv2-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 3 9.5 8H4l4 3.5L6.5 17l5.5-3 5.5 3-1.5-5.5L20 8h-5.5Z"></path></svg></span><div><h3>Expertise & Preferences</h3><p>Your mentoring strengths and professional background.</p></div></div>
+    <dl class="spv2-info-list">
+      <div><dt>Skills</dt><dd>{{ profile.skills or 'Not provided' }}</dd></div>
+      <div><dt>Professional Bio</dt><dd>{{ profile.bio or 'Not provided' }}</dd></div>
+    </dl>
   </article>
 </section>
-
 </div>
 
-<div class="spv2-save-row">
-  <a class="spv2-save-secondary" href="{{ url_for('supervisor.supervisor_dashboard') }}">Cancel</a>
-  <button class="spv2-save-primary" type="submit">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><path d="M5 4h12l2 2v14H5Z"></path><path d="M8 4v6h8V4M8 20v-6h8v6"></path></svg>
-    Save Profile Changes
-  </button>
+<div class="spv2-bottom-actions">
+  <a class="spv2-bottom-secondary" href="{{ url_for('supervisor.supervisor_dashboard') }}">Back to Dashboard</a>
+  <a class="spv2-bottom-primary" href="{{ url_for('supervisor_profile_photo.supervisor_profile_edit') }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"></path></svg>
+    Edit Profile
+  </a>
 </div>
 
-</form>
 </div>
 </main>
 
-<div id="supervisorCropModal" class="crop-editor-overlay">
-  <div class="crop-editor">
+<div id="supervisorCropModal" class="crop-editor-overlay" aria-hidden="true">
+  <div class="crop-editor" role="dialog" aria-modal="true" aria-label="Adjust supervisor profile photo">
     <div class="crop-editor-header">
-      <div>
-        <span class="ui-eyebrow">Supervisor profile</span>
-        <h2>Adjust your photo</h2>
-        <p>Crop and zoom before saving.</p>
-      </div>
+      <div><span class="ui-eyebrow">Supervisor profile</span><h2>Adjust your photo</h2><p>Crop and zoom before saving.</p></div>
       <button type="button" class="crop-close" onclick="closeSupervisorCrop()">×</button>
     </div>
     <div class="crop-editor-stage"><img id="supervisorCropImage" alt="Crop preview"></div>
@@ -437,6 +263,22 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 <script>
+const tabs=[...document.querySelectorAll('[data-sp-tab]')];
+const panels=[...document.querySelectorAll('[data-sp-panel]')];
+tabs.forEach(tab=>tab.addEventListener('click',()=>{
+  const name=tab.dataset.spTab;
+  tabs.forEach(item=>{
+    const active=item.dataset.spTab===name;
+    item.classList.toggle('is-active',active);
+    item.setAttribute('aria-selected',active?'true':'false');
+  });
+  panels.forEach(panel=>{
+    const active=panel.dataset.spPanel===name;
+    panel.hidden=!active;
+    panel.classList.toggle('is-active',active);
+  });
+}));
+
 let cropper=null,objUrl=null;
 const up=document.getElementById('supervisorUpload');
 const modal=document.getElementById('supervisorCropModal');
@@ -444,164 +286,67 @@ const img=document.getElementById('supervisorCropImage');
 const supervisorCropError=document.getElementById('supervisorCropError');
 const MAX_PROFILE_SOURCE_BYTES=12*1024*1024;
 
-function clearSupervisorCropError(){
-  supervisorCropError.hidden=true;
-  supervisorCropError.textContent='';
-}
-
+function clearSupervisorCropError(){supervisorCropError.hidden=true;supervisorCropError.textContent='';}
 up.addEventListener('change',e=>{
   const f=e.target.files&&e.target.files[0];
   if(!f)return;
-
   clearSupervisorCropError();
-  cropper&&cropper.destroy();
-  cropper=null;
+  if(cropper){cropper.destroy();cropper=null;}
   if(objUrl)URL.revokeObjectURL(objUrl);
   objUrl=null;
   img.removeAttribute('src');
-
   if(!f.type.startsWith('image/')){
     supervisorCropError.textContent='Please choose a PNG, JPG, JPEG, or GIF image.';
     supervisorCropError.hidden=false;
     modal.style.display='flex';
+    modal.setAttribute('aria-hidden','false');
     return;
   }
   if(f.size>MAX_PROFILE_SOURCE_BYTES){
     supervisorCropError.textContent='Please choose an original image up to 12MB. Nexora optimizes the saved crop automatically.';
     supervisorCropError.hidden=false;
     modal.style.display='flex';
+    modal.setAttribute('aria-hidden','false');
     return;
   }
-
   objUrl=URL.createObjectURL(f);
   modal.style.display='flex';
+  modal.setAttribute('aria-hidden','false');
   img.onload=()=>{
-    cropper=new Cropper(img,{
-      aspectRatio:1,
-      viewMode:1,
-      dragMode:'move',
-      autoCropArea:.86,
-      background:false,
-      responsive:true,
-      zoomOnWheel:true,
-      zoomOnTouch:true
-    });
+    cropper=new Cropper(img,{aspectRatio:1,viewMode:1,dragMode:'move',autoCropArea:.86,background:false,responsive:true,zoomOnWheel:true,zoomOnTouch:true});
     document.getElementById('supervisorZoom').value=1;
   };
-  img.onerror=()=>{
-    supervisorCropError.textContent='This image could not be loaded. Please choose another photo.';
-    supervisorCropError.hidden=false;
-  };
+  img.onerror=()=>{supervisorCropError.textContent='This image could not be loaded. Please choose another photo.';supervisorCropError.hidden=false;};
   img.src=objUrl;
 });
 
 function closeSupervisorCrop(){
-  cropper&&cropper.destroy();
-  cropper=null;
+  if(cropper){cropper.destroy();cropper=null;}
   if(objUrl)URL.revokeObjectURL(objUrl);
   objUrl=null;
   up.value='';
   modal.style.display='none';
+  modal.setAttribute('aria-hidden','true');
   clearSupervisorCropError();
 }
 
 async function saveSupervisorPhoto(){
   if(!cropper)return;
   const b=document.getElementById('saveSupervisorPicture');
-  b.disabled=true;
-  b.textContent='Saving…';
+  b.disabled=true;b.textContent='Saving…';
   try{
-    const blob=await new Promise((res,rej)=>cropper.getCroppedCanvas({
-      width:500,
-      height:500,
-      imageSmoothingEnabled:true,
-      imageSmoothingQuality:'high'
-    }).toBlob(x=>x?res(x):rej(), 'image/jpeg',.92));
-    const fd=new FormData();
-    fd.append('profile_picture',blob,'profile.jpg');
-    const r=await fetch('/supervisor/profile/photo',{method:'POST',headers:{'X-CSRFToken':'{{ csrf_token() }}'},body:fd});
-    if(!r.ok)throw new Error(await r.text());
-    closeSupervisorCrop();
-    location.reload();
-  }catch(e){
-    const x=document.getElementById('supervisorCropError');
-    x.textContent=e.message||'Unable to save picture.';
-    x.hidden=false;
-    b.disabled=false;
-    b.textContent='Save Picture';
+    const blob=await new Promise((resolve,reject)=>cropper.getCroppedCanvas({width:500,height:500,imageSmoothingEnabled:true,imageSmoothingQuality:'high'}).toBlob(value=>value?resolve(value):reject(new Error('Unable to prepare the image.')),'image/jpeg',.92));
+    const fd=new FormData();fd.append('profile_picture',blob,'profile.jpg');
+    const response=await fetch('/supervisor/profile/photo',{method:'POST',headers:{'X-CSRFToken':'{{ csrf_token() }}'},body:fd});
+    if(!response.ok)throw new Error(await response.text());
+    closeSupervisorCrop();location.reload();
+  }catch(error){
+    supervisorCropError.textContent=error.message||'Unable to save picture.';
+    supervisorCropError.hidden=false;
+    b.disabled=false;b.textContent='Save Picture';
   }
 }
-
-modal.addEventListener('click',e=>{if(e.target===modal)closeSupervisorCrop()});
-
-const tracked=['first_name','last_name','username','email','employee_id','job_title','department','specialization','years_experience','education','certifications','phone_number','office_location','office_hours','preferred_contact','response_time','availability','skills','bio'];
-
-const completionGroups={
-  personal:['first_name','last_name','username'],
-  professional:['employee_id','job_title','department','specialization','years_experience','education','certifications'],
-  contact:['phone_number','email','preferred_contact','response_time','availability'],
-  office:['office_location','office_hours']
-};
-
-function fieldFilled(name){
-  const el=document.querySelector('[name="'+name+'"]');
-  return !!(el&&String(el.value||'').trim());
-}
-
-function updateCompletionBadge(group,names){
-  const badge=document.querySelector('[data-completion-group="'+group+'"]');
-  if(!badge)return;
-  const filled=names.filter(fieldFilled).length;
-  badge.classList.remove('is-complete','is-partial');
-  if(filled===names.length&&names.length){
-    badge.classList.add('is-complete');
-  }else if(filled>0){
-    badge.classList.add('is-partial');
-  }
-}
-
-function updateCompleteness(){
-  let filled=0;
-  tracked.forEach(n=>{if(fieldFilled(n))filled++});
-  const pct=Math.round(filled/tracked.length*100);
-  document.getElementById('profilePercent').textContent=pct+'%';
-  document.getElementById('profileProgress').style.width=pct+'%';
-
-  Object.keys(completionGroups).forEach(group=>updateCompletionBadge(group,completionGroups[group]));
-
-  const pictureBadge=document.querySelector('[data-completion-group="picture"]');
-  if(pictureBadge){
-    pictureBadge.classList.toggle('is-complete', {{ 'true' if supervisor.profile_picture else 'false' }});
-  }
-}
-
-tracked.forEach(n=>{
-  document.querySelector('[name="'+n+'"]')?.addEventListener('input',updateCompleteness);
-  document.querySelector('[name="'+n+'"]')?.addEventListener('change',updateCompleteness);
-});
-updateCompleteness();
-
-const tabs=[...document.querySelectorAll('[data-sp-tab]')];
-const panels=[...document.querySelectorAll('[data-sp-panel]')];
-
-function activateProfileTab(name,scroll){
-  tabs.forEach(tab=>{
-    const active=tab.dataset.spTab===name;
-    tab.classList.toggle('is-active',active);
-    tab.setAttribute('aria-selected',active?'true':'false');
-  });
-  panels.forEach(panel=>{
-    const active=panel.dataset.spPanel===name;
-    panel.hidden=!active;
-    panel.classList.toggle('is-active',active);
-  });
-  if(scroll){
-    document.querySelector('.spv2-tabs')?.scrollIntoView({behavior:'smooth',block:'start'});
-  }
-}
-
-tabs.forEach(tab=>tab.addEventListener('click',()=>activateProfileTab(tab.dataset.spTab,false)));
-document.getElementById('spv2EditProfile')?.addEventListener('click',()=>activateProfileTab('personal',true));
+modal.addEventListener('click',e=>{if(e.target===modal)closeSupervisorCrop();});
 </script>
 </body>
 </html>

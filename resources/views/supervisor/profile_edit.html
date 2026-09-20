@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Edit Supervisor Profile - Nexora</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/supervisor.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/modals.css') }}">
+</head>
+
+<body class="supervisor-page supervisor-profile-v2 supervisor-profile-edit-v2">
+{% include 'components/supervisor_sidebar.html' %}
+{% set errors = errors|default({}) %}
+
+<main class="page-content nexora-app-main">
+<div class="nexora-page supervisor-profile-shell-v2">
+
+<header class="spv2-page-head">
+  <div>
+    <span class="spv2-eyebrow">SUPERVISOR PORTAL</span>
+    <h1>Edit Profile</h1>
+    <p>Update the professional information students and administrators see in Nexora.</p>
+  </div>
+  <div class="spv2-head-side">
+    <nav class="spv2-breadcrumb" aria-label="Breadcrumb">
+      <a href="{{ url_for('supervisor.supervisor_dashboard') }}">Dashboard</a>
+      <span>›</span>
+      <a href="{{ url_for('supervisor.supervisor_profile') }}">My Profile</a>
+      <span>›</span>
+      <strong>Edit</strong>
+    </nav>
+    <span class="spv2-account-badge">
+      <span class="spv2-account-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 3 5 6v5c0 4.7 2.8 8 7 10 4.2-2 7-5.3 7-10V6Z"></path><path d="m9.2 12 1.8 1.8 3.8-4"></path></svg></span>
+      <span><small>Supervisor Account</small><strong>Profile Editor</strong></span>
+    </span>
+  </div>
+</header>
+
+{% with messages=get_flashed_messages(with_categories=true) %}
+  {% for category,message in messages %}
+    <div class="spv2-alert {% if category in ['danger','error'] %}is-danger{% else %}is-success{% endif %}"><span>{{ message }}</span></div>
+  {% endfor %}
+{% endwith %}
+
+<form method="POST" action="{{ url_for('supervisor_profile_photo.supervisor_profile_edit') }}" novalidate class="spv2-edit-form">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+<div class="spv2-edit-stack">
+  <section class="spv2-form-card">
+    <div class="spv2-card-head"><span class="spv2-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg></span><div><h3>Personal Information</h3><p>Your name and account identity.</p></div></div>
+    <div class="spv2-field-grid">
+      <div class="spv2-field"><label>First Name <span>*</span></label><input name="first_name" value="{{ profile.first_name or '' }}" required maxlength="80">{% if errors.first_name %}<small class="spv2-error">{{ errors.first_name }}</small>{% endif %}</div>
+      <div class="spv2-field"><label>Last Name <span>*</span></label><input name="last_name" value="{{ profile.last_name or '' }}" required maxlength="80">{% if errors.last_name %}<small class="spv2-error">{{ errors.last_name }}</small>{% endif %}</div>
+      <div class="spv2-field"><label>Middle Name</label><input name="middle_name" value="{{ profile.middle_name or '' }}" maxlength="80"></div>
+      <div class="spv2-field"><label>Username <span>*</span></label><input name="username" value="{{ supervisor.username or '' }}" required minlength="3" maxlength="60" pattern="[A-Za-z0-9_.-]+">{% if errors.username %}<small class="spv2-error">{{ errors.username }}</small>{% endif %}</div>
+    </div>
+  </section>
+
+  <section class="spv2-form-card">
+    <div class="spv2-card-head"><span class="spv2-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="7" width="18" height="13" rx="2"></rect><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></span><div><h3>Professional Information</h3><p>Your role, expertise, and experience.</p></div></div>
+    <div class="spv2-field-grid">
+      <div class="spv2-field"><label>Employee ID</label><input name="employee_id" value="{{ profile.employee_id or '' }}" maxlength="80">{% if errors.employee_id %}<small class="spv2-error">{{ errors.employee_id }}</small>{% endif %}</div>
+      <div class="spv2-field"><label>Position / Title <span>*</span></label><input name="job_title" value="{{ profile.job_title or '' }}" required maxlength="120">{% if errors.job_title %}<small class="spv2-error">{{ errors.job_title }}</small>{% endif %}</div>
+      <div class="spv2-field"><label>Department <span>*</span></label><input name="department" value="{{ profile.department or '' }}" required maxlength="120">{% if errors.department %}<small class="spv2-error">{{ errors.department }}</small>{% endif %}</div>
+      <div class="spv2-field"><label>Specialization</label><input name="specialization" value="{{ profile.specialization or '' }}" maxlength="180"></div>
+      <div class="spv2-field"><label>Years of Experience</label><input type="number" name="years_experience" value="{{ profile.years_experience if profile.years_experience is not none else 0 }}" min="0" max="60">{% if errors.years_experience %}<small class="spv2-error">{{ errors.years_experience }}</small>{% endif %}</div>
+      <div class="spv2-field"><label>Education</label><input name="education" value="{{ profile.education or '' }}" maxlength="250"></div>
+      <div class="spv2-field is-full"><label>Certifications / Professional Credentials</label><input name="certifications" value="{{ profile.certifications or '' }}" maxlength="500"></div>
+    </div>
+  </section>
+
+  <section class="spv2-form-card">
+    <div class="spv2-card-head"><span class="spv2-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M5 4h4l2 5-3 2a14 14 0 0 0 5 5l2-3 5 2v4c0 1.1-.9 2-2 2C9.7 21 3 14.3 3 6a2 2 0 0 1 2-2Z"></path></svg></span><div><h3>Contact Information</h3><p>Your contact details and communication preferences.</p></div></div>
+    <div class="spv2-field-grid">
+      <div class="spv2-field"><label>Phone Number</label><input name="phone_number" value="{{ profile.phone_number or '' }}" maxlength="40"></div>
+      <div class="spv2-field"><label>Account Email <span>*</span></label><input type="email" name="email" value="{{ supervisor.email or '' }}" required>{% if errors.email %}<small class="spv2-error">{{ errors.email }}</small>{% endif %}</div>
+      <div class="spv2-field"><label>Preferred Contact</label><select name="preferred_contact"><option value="">Select</option><option value="Email" {% if profile.preferred_contact=='Email' %}selected{% endif %}>Email</option><option value="Phone" {% if profile.preferred_contact=='Phone' %}selected{% endif %}>Phone</option><option value="Message" {% if profile.preferred_contact=='Message' %}selected{% endif %}>Message</option></select></div>
+      <div class="spv2-field"><label>Typical Response Time</label><input name="response_time" value="{{ profile.response_time or '' }}" maxlength="120"></div>
+      <div class="spv2-field is-full"><label>Availability</label><input name="availability" value="{{ profile.availability or '' }}" maxlength="250"></div>
+    </div>
+  </section>
+
+  <section class="spv2-form-card">
+    <div class="spv2-card-head"><span class="spv2-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M4 21V8l8-5 8 5v13"></path><path d="M8 11h8M8 15h8"></path></svg></span><div><h3>Office Information</h3><p>Where and when students can meet you.</p></div></div>
+    <div class="spv2-field-grid">
+      <div class="spv2-field"><label>Office Location</label><input name="office_location" value="{{ profile.office_location or '' }}" maxlength="180"></div>
+      <div class="spv2-field"><label>Office Hours</label><input name="office_hours" value="{{ profile.office_hours or '' }}" maxlength="180"></div>
+    </div>
+  </section>
+
+  <section class="spv2-form-card">
+    <div class="spv2-card-head"><span class="spv2-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 3 9.5 8H4l4 3.5L6.5 17l5.5-3 5.5 3-1.5-5.5L20 8h-5.5Z"></path></svg></span><div><h3>Expertise & Preferences</h3><p>Your mentoring strengths and professional background.</p></div></div>
+    <div class="spv2-field-grid">
+      <div class="spv2-field is-full"><label>Skills</label><input name="skills" value="{{ profile.skills or '' }}" maxlength="500">{% if errors.skills %}<small class="spv2-error">{{ errors.skills }}</small>{% endif %}</div>
+      <div class="spv2-field is-full"><label>Professional Bio</label><textarea name="bio" maxlength="1500">{{ profile.bio or '' }}</textarea>{% if errors.bio %}<small class="spv2-error">{{ errors.bio }}</small>{% endif %}</div>
+    </div>
+  </section>
+</div>
+
+<div class="spv2-edit-actions">
+  <a class="spv2-save-secondary" href="{{ url_for('supervisor.supervisor_profile') }}">Cancel</a>
+  <button class="spv2-save-primary" type="submit">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M5 4h12l2 2v14H5Z"></path><path d="M8 4v6h8V4M8 20v-6h8v6"></path></svg>
+    Save Profile Changes
+  </button>
+</div>
+</form>
+
+</div>
+</main>
+</body>
+</html>

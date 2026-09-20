@@ -240,6 +240,143 @@ def _render_supervisor_profile(user_id, errors=None):
     return render_template("supervisor/profile.html", supervisor=user_data, profile=profile_data, errors=errors or {}, active_page="profile", **_profile_stats(user_id))
 
 
+def _render_supervisor_profile_edit(user_id, errors=None, user_data=None, profile_data=None):
+    if user_data is None:
+        conn = get_db_connection()
+        try:
+            user = conn.execute(
+                "SELECT id, username, email, role, status, profile_picture FROM users WHERE id = ? AND role = 'supervisor'",
+                (user_id,),
+            ).fetchone()
+        finally:
+            conn.close()
+        if not user:
+            return redirect(url_for("auth.login"))
+        user_data = _row_to_dict(user)
+
+    if profile_data is None:
+        profile_data = _row_to_dict(get_or_create_supervisor_profile(user_id))
+
+    return render_template(
+        "supervisor/profile_edit.html",
+        supervisor=user_data,
+        profile=profile_data,
+        errors=errors or {},
+        active_page="profile",
+    )
+
+
+def _save_supervisor_profile(user_id):
+    username = (request.form.get("username") or "").strip()
+    email = (request.form.get("email") or "").strip().lower()
+    payload = _profile_payload(request.form)
+    errors = {}
+
+    if not username or len(username) < 3 or not re.match(r"^[A-Za-z0-9_.-]+$", username):
+        errors["username"] = "Use at least 3 letters, numbers, dots, underscores, or hyphens."
+    if not email or not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email):
+        errors["email"] = "Enter a valid email address."
+    if not payload["first_name"]:
+        errors["first_name"] = "First name is required."
+    if not payload["last_name"]:
+        errors["last_name"] = "Last name is required."
+    if not payload["job_title"]:
+        errors["job_title"] = "Position/title is required."
+    if not payload["department"]:
+        errors["department"] = "Department is required."
+    try:
+        payload["years_experience"] = max(0, min(60, int(payload["years_experience"] or 0)))
+    except ValueError:
+        errors["years_experience"] = "Years of experience must be a whole number."
+        payload["years_experience"] = 0
+    if len(payload["bio"]) > 1500:
+        errors["bio"] = "About Me must be 1500 characters or fewer."
+    if len(payload["skills"]) > 500:
+        errors["skills"] = "Skills must be 500 characters or fewer."
+    if payload["employee_id"] and len(payload["employee_id"]) > 80:
+        errors["employee_id"] = "Employee ID is too long."
+
+    conn = get_db_connection()
+    try:
+        if not errors:
+            duplicate = conn.execute(
+                "SELECT id FROM users WHERE username = ? AND id != ?",
+                (username, user_id),
+            ).fetchone()
+            if duplicate:
+                errors["username"] = "Username already exists."
+            duplicate = conn.execute(
+                "SELECT id FROM users WHERE LOWER(email) = LOWER(?) AND id != ?",
+                (email, user_id),
+            ).fetchone()
+            if duplicate:
+                errors["email"] = "Email already exists."
+            if payload["employee_id"]:
+                duplicate = conn.execute(
+                    "SELECT id FROM supervisor_profiles WHERE employee_id = ? AND user_id != ?",
+                    (payload["employee_id"], user_id),
+                ).fetchone()
+                if duplicate:
+                    errors["employee_id"] = "Employee ID already exists."
+
+        if errors:
+            user = conn.execute(
+                "SELECT id, username, email, role, status, profile_picture FROM users WHERE id = ?",
+                (user_id,),
+            ).fetchone()
+            profile = conn.execute(
+                "SELECT * FROM supervisor_profiles WHERE user_id = ?",
+                (user_id,),
+            ).fetchone()
+            user_data = _row_to_dict(user)
+            user_data["username"] = username
+            user_data["email"] = email
+            profile_data = _row_to_dict(profile) or {}
+            profile_data.update(payload)
+            return _render_supervisor_profile_edit(
+                user_id,
+                errors=errors,
+                user_data=user_data,
+                profile_data=profile_data,
+            )
+
+        conn.execute(
+            "UPDATE users SET username = ?, email = ? WHERE id = ?",
+            (username, email, user_id),
+        )
+        conn.execute(
+            """
+            UPDATE supervisor_profiles
+            SET first_name = ?, middle_name = ?, last_name = ?, employee_id = ?, job_title = ?,
+                department = ?, specialization = ?, years_experience = ?, education = ?,
+                certifications = ?, phone_number = ?, office_location = ?, office_hours = ?,
+                preferred_contact = ?, response_time = ?, availability = ?, skills = ?, bio = ?,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE user_id = ?
+            """,
+            (
+                payload["first_name"], payload["middle_name"], payload["last_name"], payload["employee_id"] or None,
+                payload["job_title"], payload["department"], payload["specialization"], payload["years_experience"],
+                payload["education"], payload["certifications"], payload["phone_number"], payload["office_location"],
+                payload["office_hours"], payload["preferred_contact"], payload["response_time"], payload["availability"],
+                payload["skills"], payload["bio"], user_id,
+            ),
+        )
+        conn.commit()
+    except Exception as exc:
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+        flash(f"Unable to save profile: {exc}", "danger")
+        return _render_supervisor_profile_edit(user_id)
+    finally:
+        conn.close()
+
+    flash("Supervisor profile updated successfully.", "success")
+    return redirect(url_for("supervisor.supervisor_profile"))
+
+
 @supervisor_profile_photo.before_app_request
 def _supervisor_profile_page():
     if session.get("user_id") is not None and session.get("role") == "supervisor":
@@ -256,90 +393,24 @@ def _supervisor_profile_page():
     user_id = session["user_id"]
     get_or_create_supervisor_profile(user_id)
 
+    # Keep legacy POSTs working for already-open copies of the old profile page,
+    # while the current UI edits through /supervisor/profile/edit.
     if request.method == "POST":
-        username = (request.form.get("username") or "").strip()
-        email = (request.form.get("email") or "").strip().lower()
-        payload = _profile_payload(request.form)
-        errors = {}
-
-        if not username or len(username) < 3 or not re.match(r"^[A-Za-z0-9_.-]+$", username):
-            errors["username"] = "Use at least 3 letters, numbers, dots, underscores, or hyphens."
-        if not email or not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email):
-            errors["email"] = "Enter a valid email address."
-        if not payload["first_name"]:
-            errors["first_name"] = "First name is required."
-        if not payload["last_name"]:
-            errors["last_name"] = "Last name is required."
-        if not payload["job_title"]:
-            errors["job_title"] = "Position/title is required."
-        if not payload["department"]:
-            errors["department"] = "Department is required."
-        try:
-            payload["years_experience"] = max(0, min(60, int(payload["years_experience"] or 0)))
-        except ValueError:
-            errors["years_experience"] = "Years of experience must be a whole number."
-            payload["years_experience"] = 0
-        if len(payload["bio"]) > 1500:
-            errors["bio"] = "About Me must be 1500 characters or fewer."
-        if len(payload["skills"]) > 500:
-            errors["skills"] = "Skills must be 500 characters or fewer."
-        if payload["employee_id"] and len(payload["employee_id"]) > 80:
-            errors["employee_id"] = "Employee ID is too long."
-
-        conn = get_db_connection()
-        try:
-            if not errors:
-                duplicate = conn.execute("SELECT id FROM users WHERE username = ? AND id != ?", (username, user_id)).fetchone()
-                if duplicate:
-                    errors["username"] = "Username already exists."
-                duplicate = conn.execute("SELECT id FROM users WHERE LOWER(email) = LOWER(?) AND id != ?", (email, user_id)).fetchone()
-                if duplicate:
-                    errors["email"] = "Email already exists."
-                if payload["employee_id"]:
-                    duplicate = conn.execute("SELECT id FROM supervisor_profiles WHERE employee_id = ? AND user_id != ?", (payload["employee_id"], user_id)).fetchone()
-                    if duplicate:
-                        errors["employee_id"] = "Employee ID already exists."
-
-            if errors:
-                user = conn.execute("SELECT id, username, email, role, status, profile_picture FROM users WHERE id = ?", (user_id,)).fetchone()
-                profile = conn.execute("SELECT * FROM supervisor_profiles WHERE user_id = ?", (user_id,)).fetchone()
-                user_data = _row_to_dict(user)
-                profile_data = _row_to_dict(profile) or dict(payload)
-                for key, value in payload.items():
-                    profile_data[key] = value
-                return render_template("supervisor/profile.html", supervisor=user_data, profile=profile_data, errors=errors, active_page="profile", **_profile_stats(user_id))
-
-            conn.execute("UPDATE users SET username = ?, email = ? WHERE id = ?", (username, email, user_id))
-            conn.execute("""
-                UPDATE supervisor_profiles
-                SET first_name = ?, middle_name = ?, last_name = ?, employee_id = ?, job_title = ?,
-                    department = ?, specialization = ?, years_experience = ?, education = ?,
-                    certifications = ?, phone_number = ?, office_location = ?, office_hours = ?,
-                    preferred_contact = ?, response_time = ?, availability = ?, skills = ?, bio = ?,
-                    updated_at = CURRENT_TIMESTAMP
-                WHERE user_id = ?
-            """, (
-                payload["first_name"], payload["middle_name"], payload["last_name"], payload["employee_id"] or None,
-                payload["job_title"], payload["department"], payload["specialization"], payload["years_experience"],
-                payload["education"], payload["certifications"], payload["phone_number"], payload["office_location"],
-                payload["office_hours"], payload["preferred_contact"], payload["response_time"], payload["availability"],
-                payload["skills"], payload["bio"], user_id
-            ))
-            conn.commit()
-        except Exception as exc:
-            try:
-                conn.rollback()
-            except Exception:
-                pass
-            flash(f"Unable to save profile: {exc}", "danger")
-            return _render_supervisor_profile(user_id)
-        finally:
-            conn.close()
-
-        flash("Supervisor profile updated successfully.", "success")
-        return redirect(url_for("supervisor.supervisor_profile"))
+        return _save_supervisor_profile(user_id)
 
     return _render_supervisor_profile(user_id)
+
+
+@supervisor_profile_photo.route("/supervisor/profile/edit", methods=["GET", "POST"])
+@role_required("supervisor")
+def supervisor_profile_edit():
+    user_id = session["user_id"]
+    get_or_create_supervisor_profile(user_id)
+
+    if request.method == "POST":
+        return _save_supervisor_profile(user_id)
+
+    return _render_supervisor_profile_edit(user_id)
 
 
 @supervisor_profile_photo.route("/supervisor/profile/setup", methods=["GET", "POST"])
