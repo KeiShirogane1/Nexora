@@ -387,7 +387,7 @@ def admin_students():
             COALESCE(SUM(
                 CASE
                     WHEN role = 'student'
-                     AND COALESCE(u.status, 'active') = 'active'
+                     AND COALESCE(status, 'active') = 'active'
                     THEN 1 ELSE 0
                 END
             ), 0) AS active_students,
@@ -1531,7 +1531,7 @@ def internship_assign():
                     LEFT JOIN student_profiles sp ON sp.user_id = u.id
                     WHERE u.id = ?
                       AND u.role = 'student'
-                      AND COALESCE(status, 'active') = 'active'
+                      AND COALESCE(u.status, 'active') = 'active'
                     LIMIT 1
                     """,
                     (student_id,),
