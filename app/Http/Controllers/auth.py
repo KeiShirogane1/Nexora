@@ -42,7 +42,7 @@ def login():
   if user and user["role"] in ("pending_student","pending_supervisor"):session["login_error"]=f"Your account is awaiting approval. Nexora will approve it automatically within {AUTO_APPROVAL_MINUTES} minutes if an administrator does not act sooner. You will receive an email when it is ready.";session["login_username"]=username;return redirect(url_for("auth.login"))
   if user and user["role"]=="rejected":session["login_error"]="Your account request was not approved. Please contact the administrator.";session["login_username"]=username;return redirect(url_for("auth.login"))
   if user:
-   role=user["role"]; session.clear(); session["user_id"]=user["id"];session["role"]=role
+   role=user["role"]; session.clear(); session.permanent=True; session["user_id"]=user["id"];session["role"]=role
    if role=="supervisor":
     conn=get_db_connection();cur=conn.cursor()
     try:
