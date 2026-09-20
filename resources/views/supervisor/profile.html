@@ -199,7 +199,7 @@
       <span class="spv2-card-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>
       </span>
-      <div><h3>Personal Information</h3><p>Your basic personal and account details.</p></div>
+      <div><h3>Personal Information</h3><p>Your name and account identity.</p></div>
     </div>
 
     <div class="spv2-field-grid">
@@ -218,18 +218,9 @@
         <input name="middle_name" value="{{ profile.middle_name or '' }}" maxlength="80">
       </div>
       <div class="spv2-field">
-        <label>Phone Number</label>
-        <input name="phone_number" value="{{ profile.phone_number or '' }}" maxlength="40">
-      </div>
-      <div class="spv2-field">
         <label>Username</label>
         <input name="username" value="{{ supervisor.username }}" required minlength="3" maxlength="60" pattern="[A-Za-z0-9_.-]+">
         {% if errors.username %}<small class="spv2-error">{{ errors.username }}</small>{% endif %}
-      </div>
-      <div class="spv2-field">
-        <label>Account Email</label>
-        <input type="email" name="email" value="{{ supervisor.email or '' }}" required>
-        {% if errors.email %}<small class="spv2-error">{{ errors.email }}</small>{% endif %}
       </div>
     </div>
   </article>
@@ -265,7 +256,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="m7 15 3-3 3 3 3-4 4 5"></path></svg>
           Change Picture
         </button>
-        <small>Recommended: square image, at least 300×300px. Max 2MB.</small>
+        <small>Recommended: square image, at least 300×300px. Source images up to 12MB are optimized when saved.</small>
       </div>
     </div>
   </article>
@@ -323,10 +314,19 @@
       <span class="spv2-card-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M5 4h4l2 5-3 2a14 14 0 0 0 5 5l2-3 5 2v4c0 1.1-.9 2-2 2C9.7 21 3 14.3 3 6a2 2 0 0 1 2-2Z"></path></svg>
       </span>
-      <div><h3>Contact Information</h3><p>Set how students can reach you and when they can expect a response.</p></div>
+      <div><h3>Contact Information</h3><p>Your phone, email, and communication preferences.</p></div>
     </div>
 
     <div class="spv2-field-grid">
+      <div class="spv2-field">
+        <label>Phone Number</label>
+        <input name="phone_number" value="{{ profile.phone_number or '' }}" maxlength="40">
+      </div>
+      <div class="spv2-field">
+        <label>Account Email <span>*</span></label>
+        <input type="email" name="email" value="{{ supervisor.email or '' }}" required>
+        {% if errors.email %}<small class="spv2-error">{{ errors.email }}</small>{% endif %}
+      </div>
       <div class="spv2-field">
         <label>Preferred Contact</label>
         <select name="preferred_contact">
@@ -441,23 +441,56 @@ let cropper=null,objUrl=null;
 const up=document.getElementById('supervisorUpload');
 const modal=document.getElementById('supervisorCropModal');
 const img=document.getElementById('supervisorCropImage');
+const supervisorCropError=document.getElementById('supervisorCropError');
+const MAX_PROFILE_SOURCE_BYTES=12*1024*1024;
+
+function clearSupervisorCropError(){
+  supervisorCropError.hidden=true;
+  supervisorCropError.textContent='';
+}
 
 up.addEventListener('change',e=>{
   const f=e.target.files&&e.target.files[0];
   if(!f)return;
-  if(!f.type.startsWith('image/')||f.size>2*1024*1024){
-    const x=document.getElementById('supervisorCropError');
-    x.textContent='Please choose an image up to 2MB.';
-    x.hidden=false;
+
+  clearSupervisorCropError();
+  cropper&&cropper.destroy();
+  cropper=null;
+  if(objUrl)URL.revokeObjectURL(objUrl);
+  objUrl=null;
+  img.removeAttribute('src');
+
+  if(!f.type.startsWith('image/')){
+    supervisorCropError.textContent='Please choose a PNG, JPG, JPEG, or GIF image.';
+    supervisorCropError.hidden=false;
+    modal.style.display='flex';
     return;
   }
-  if(objUrl)URL.revokeObjectURL(objUrl);
+  if(f.size>MAX_PROFILE_SOURCE_BYTES){
+    supervisorCropError.textContent='Please choose an original image up to 12MB. Nexora optimizes the saved crop automatically.';
+    supervisorCropError.hidden=false;
+    modal.style.display='flex';
+    return;
+  }
+
   objUrl=URL.createObjectURL(f);
   modal.style.display='flex';
   img.onload=()=>{
-    cropper&&cropper.destroy();
-    cropper=new Cropper(img,{aspectRatio:1,viewMode:1,dragMode:'move',autoCropArea:.9,responsive:true});
+    cropper=new Cropper(img,{
+      aspectRatio:1,
+      viewMode:1,
+      dragMode:'move',
+      autoCropArea:.86,
+      background:false,
+      responsive:true,
+      zoomOnWheel:true,
+      zoomOnTouch:true
+    });
     document.getElementById('supervisorZoom').value=1;
+  };
+  img.onerror=()=>{
+    supervisorCropError.textContent='This image could not be loaded. Please choose another photo.';
+    supervisorCropError.hidden=false;
   };
   img.src=objUrl;
 });
@@ -469,7 +502,7 @@ function closeSupervisorCrop(){
   objUrl=null;
   up.value='';
   modal.style.display='none';
-  document.getElementById('supervisorCropError').hidden=true;
+  clearSupervisorCropError();
 }
 
 async function saveSupervisorPhoto(){
@@ -478,7 +511,12 @@ async function saveSupervisorPhoto(){
   b.disabled=true;
   b.textContent='Saving…';
   try{
-    const blob=await new Promise((res,rej)=>cropper.getCroppedCanvas({width:500,height:500}).toBlob(x=>x?res(x):rej(), 'image/jpeg',.92));
+    const blob=await new Promise((res,rej)=>cropper.getCroppedCanvas({
+      width:500,
+      height:500,
+      imageSmoothingEnabled:true,
+      imageSmoothingQuality:'high'
+    }).toBlob(x=>x?res(x):rej(), 'image/jpeg',.92));
     const fd=new FormData();
     fd.append('profile_picture',blob,'profile.jpg');
     const r=await fetch('/supervisor/profile/photo',{method:'POST',headers:{'X-CSRFToken':'{{ csrf_token() }}'},body:fd});
@@ -496,12 +534,12 @@ async function saveSupervisorPhoto(){
 
 modal.addEventListener('click',e=>{if(e.target===modal)closeSupervisorCrop()});
 
-const tracked=['first_name','last_name','employee_id','job_title','department','specialization','years_experience','education','certifications','phone_number','office_location','office_hours','preferred_contact','response_time','availability','skills','bio'];
+const tracked=['first_name','last_name','username','email','employee_id','job_title','department','specialization','years_experience','education','certifications','phone_number','office_location','office_hours','preferred_contact','response_time','availability','skills','bio'];
 
 const completionGroups={
-  personal:['first_name','last_name','phone_number','username','email'],
+  personal:['first_name','last_name','username'],
   professional:['employee_id','job_title','department','specialization','years_experience','education','certifications'],
-  contact:['preferred_contact','response_time','availability'],
+  contact:['phone_number','email','preferred_contact','response_time','availability'],
   office:['office_location','office_hours']
 };
 
@@ -537,7 +575,7 @@ function updateCompleteness(){
   }
 }
 
-tracked.concat(['username','email']).forEach(n=>{
+tracked.forEach(n=>{
   document.querySelector('[name="'+n+'"]')?.addEventListener('input',updateCompleteness);
   document.querySelector('[name="'+n+'"]')?.addEventListener('change',updateCompleteness);
 });

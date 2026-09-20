@@ -304,7 +304,7 @@
           </svg>
           Change Picture
         </button>
-        <small>Recommended: square image, at least 300×300px. Max 2MB.</small>
+        <small>Recommended: square image, at least 300×300px. Source images up to 12MB are optimized when saved.</small>
       </div>
     </div>
   </article>
@@ -322,11 +322,10 @@
       <div><h3>Student Information</h3><p>Your academic identity and program information.</p></div>
     </div>
 
-    <dl class="stv2-info-list is-two-column">
+    <dl class="stv2-info-list">
       <div><dt>Student ID</dt><dd>{{ profile[4] or 'Not provided' }}</dd></div>
-      <div><dt>Year Level</dt><dd>{{ profile[8] or 'Not provided' }}</dd></div>
       <div><dt>Program</dt><dd>{{ profile[9] or 'Not provided' }}</dd></div>
-      <div><dt>School Email</dt><dd>{{ profile[14] or 'Not provided' }}</dd></div>
+      <div><dt>Year Level</dt><dd>{{ profile[8] or 'Not provided' }}</dd></div>
     </dl>
   </article>
 </section>
@@ -446,6 +445,7 @@ const upload=document.getElementById('profileUpload');
 const modal=document.getElementById('cropModal');
 const image=document.getElementById('cropImage');
 const errorBox=document.getElementById('cropError');
+const MAX_PROFILE_SOURCE_BYTES=12*1024*1024;
 
 function showCropError(message){
   errorBox.textContent=message;
@@ -488,8 +488,9 @@ upload.addEventListener('change',function(e){
     showCropError('Please select a valid image.');
     return;
   }
-  if(file.size>2*1024*1024){
-    showCropError('Profile pictures must be 2MB or smaller.');
+  if(file.size>MAX_PROFILE_SOURCE_BYTES){
+    showCropError('Please choose an original image up to 12MB. Nexora optimizes the saved crop automatically.');
+    openCropModal();
     return;
   }
 
@@ -504,7 +505,7 @@ upload.addEventListener('change',function(e){
       aspectRatio:1,
       viewMode:1,
       dragMode:'move',
-      autoCropArea:.9,
+      autoCropArea:.86,
       background:false,
       responsive:true,
       zoomOnWheel:true,
