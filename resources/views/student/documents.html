@@ -311,8 +311,12 @@
             color: #173025;
             font-size: .9rem;
         }
-        .student-document-upload-form {
-            margin-bottom: 12px;
+        .student-document-drop-form {
+            width: 100%;
+            display: block;
+            margin: 0 0 12px;
+            padding: 0;
+            box-sizing: border-box;
         }
         .student-document-upload-zone {
             position: relative;
@@ -390,7 +394,11 @@
         .student-document-upload-actions {
             display: flex;
             justify-content: flex-end;
+            width: 100%;
             margin-top: 10px;
+        }
+        .student-document-upload-actions[hidden] {
+            display: none !important;
         }
         .student-document-upload-button {
             min-height: 40px;
@@ -904,7 +912,7 @@
                 {% endif %}
             </section>
 
-            <form method="POST" enctype="multipart/form-data" class="student-document-upload-form" id="document-upload">
+            <form method="POST" enctype="multipart/form-data" class="student-document-drop-form" id="document-upload">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div
                     class="student-document-upload-zone"
@@ -923,7 +931,7 @@
                     </div>
                     <input id="document-file" type="file" name="file" accept=".pdf,.docx,.doc,.xlsx,.xls,.pptx,.txt,.zip,.png,.jpg,.jpeg,.gif" required>
                 </div>
-                <div class="student-document-upload-actions">
+                <div class="student-document-upload-actions" id="document-upload-actions" hidden>
                     <button type="submit" class="student-document-upload-button" id="document-upload-button" disabled>Upload Document</button>
                 </div>
             </form>
@@ -1004,6 +1012,7 @@
             const uploadForm = document.getElementById('document-upload');
             const dropZone = document.getElementById('document-drop-zone');
             const uploadButton = document.getElementById('document-upload-button');
+            const uploadActions = document.getElementById('document-upload-actions');
             const renameModal = document.getElementById('document-rename-modal');
             const renameForm = document.getElementById('document-rename-form');
             const renameInput = document.getElementById('document-rename-input');
@@ -1133,7 +1142,7 @@
                 }
             });
 
-            if (fileInput && fileName && dropZone && uploadButton && uploadForm) {
+            if (fileInput && fileName && dropZone && uploadButton && uploadActions && uploadForm) {
                 const allowedExtensions = new Set([
                     'pdf', 'docx', 'doc', 'xlsx', 'xls', 'pptx', 'txt',
                     'zip', 'png', 'jpg', 'jpeg', 'gif'
@@ -1164,17 +1173,20 @@
                     if (!file) {
                         fileName.textContent = 'No file selected';
                         uploadButton.disabled = true;
+                        uploadActions.hidden = true;
                         return;
                     }
 
                     if (error) {
                         fileName.textContent = error;
                         uploadButton.disabled = true;
+                        uploadActions.hidden = true;
                         return;
                     }
 
                     fileName.textContent = 'Selected: ' + file.name;
                     uploadButton.disabled = false;
+                    uploadActions.hidden = false;
                 }
 
                 dropZone.addEventListener('click', function () {
@@ -1222,9 +1234,11 @@
                         event.preventDefault();
                         fileName.textContent = error;
                         uploadButton.disabled = true;
+                        uploadActions.hidden = true;
                         return;
                     }
 
+                    uploadActions.hidden = false;
                     uploadButton.disabled = true;
                     uploadButton.textContent = 'Uploading…';
                 });
