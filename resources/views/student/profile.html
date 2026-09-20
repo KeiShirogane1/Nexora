@@ -1,555 +1,574 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Profile - Nexora</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
-    <style>
-        /* Profile-only layout normalization. Dashboard is the Student visual reference. */
-        body.student-profile-page .student-profile-main {
-            min-height: 100vh !important;
-            padding: 0 !important;
-            background:
-                radial-gradient(circle at 80% 6%, rgba(232, 247, 237, .72), transparent 28rem),
-                linear-gradient(180deg, #f8fbf9 0%, #f4f8f5 100%) !important;
-        }
-
-        body.student-profile-page .student-profile-content {
-            width: 100% !important;
-            max-width: none !important;
-            margin: 0 !important;
-            padding: 96px 28px 28px !important;
-            box-sizing: border-box !important;
-        }
-
-        body.student-profile-page .student-profile-content .student-tasks-heading::before,
-        body.student-profile-page .student-profile-content .student-tasks-heading > div:first-child::before {
-            display: none !important;
-            content: none !important;
-        }
-
-        body.student-profile-page .student-profile-heading {
-            display: flex !important;
-            align-items: flex-end !important;
-            justify-content: space-between !important;
-            gap: 24px !important;
-            margin: 0 0 20px !important;
-            padding: 0 !important;
-        }
-
-        body.student-profile-page .student-profile-heading h1 {
-            margin: 0 !important;
-            color: #0d3b2b !important;
-            font-size: clamp(2rem, 2.15vw, 2.55rem) !important;
-            line-height: 1.03 !important;
-            font-weight: 800 !important;
-            letter-spacing: -.04em !important;
-        }
-
-        body.student-profile-page .student-profile-heading p {
-            max-width: 760px !important;
-            margin: 6px 0 0 !important;
-            color: #697970 !important;
-            font-size: .83rem !important;
-            line-height: 1.5 !important;
-        }
-
-        body.student-profile-page .profile-completion-pill {
-            flex: 0 0 auto;
-            padding: 7px 11px !important;
-            border: 1px solid #cfe9d7 !important;
-            border-radius: 999px !important;
-            background: #e7f7ed !important;
-            color: #08783b !important;
-            font-size: .68rem !important;
-            font-weight: 800 !important;
-            white-space: nowrap;
-        }
-
-        body.student-profile-page .ui-alert {
-            margin: 0 0 16px !important;
-        }
-
-        body.student-profile-page .profile-hero-card,
-        body.student-profile-page .profile-modern-card,
-        body.student-profile-page .profile-empty-card {
-            border: 1px solid #dde7e1 !important;
-            border-radius: 10px !important;
-            background: rgba(255, 255, 255, .98) !important;
-            box-shadow: 0 6px 20px rgba(20, 52, 38, .035) !important;
-        }
-
-        body.student-profile-page .profile-hero-card {
-            margin: 0 0 16px !important;
-            overflow: hidden !important;
-        }
-
-        body.student-profile-page .profile-hero-cover {
-            height: 64px !important;
-            background: linear-gradient(135deg, #e7f7ed, #f8fbf9) !important;
-            border-bottom: 1px solid #e7eee9;
-        }
-
-        body.student-profile-page .profile-hero-content {
-            display: grid !important;
-            grid-template-columns: 82px minmax(0, 1fr) auto !important;
-            align-items: end !important;
-            gap: 18px !important;
-            margin: -34px 0 0 !important;
-            padding: 0 20px 18px !important;
-        }
-
-        body.student-profile-page .profile-avatar-wrap {
-            width: 82px !important;
-            flex: 0 0 82px !important;
-        }
-
-        body.student-profile-page .profile-avatar-button {
-            position: relative;
-            width: 82px !important;
-            height: 82px !important;
-            border: 3px solid #fff !important;
-            box-shadow: 0 7px 18px rgba(20, 52, 38, .1) !important;
-        }
-
-        body.student-profile-page .profile-avatar-button span {
-            width: 25px !important;
-            height: 25px !important;
-            font-size: 11px !important;
-        }
-
-        body.student-profile-page .profile-hero-details,
-        body.student-profile-page .profile-actions {
-            margin-top: 38px !important;
-        }
-
-        body.student-profile-page .profile-role-tag {
-            margin: 0 0 5px !important;
-            padding: 3px 8px !important;
-            font-size: .58rem !important;
-        }
-
-        body.student-profile-page .profile-hero-details h2 {
-            margin: 0 !important;
-            color: #0f3427 !important;
-            font-size: 1.35rem !important;
-            line-height: 1.15 !important;
-            font-weight: 800 !important;
-            letter-spacing: -.03em !important;
-        }
-
-        body.student-profile-page .profile-meta-grid {
-            display: flex !important;
-            flex-wrap: wrap !important;
-            gap: 6px 14px !important;
-            margin: 8px 0 0 !important;
-        }
-
-        body.student-profile-page .profile-meta-grid span {
-            color: #6d7c74 !important;
-            font-size: .68rem !important;
-            line-height: 1.35 !important;
-        }
-
-        body.student-profile-page .profile-actions {
-            display: flex !important;
-            align-items: center !important;
-            justify-content: flex-end !important;
-            flex-wrap: wrap !important;
-            gap: 8px !important;
-            align-self: end;
-        }
-
-        body.student-profile-page .profile-actions .student-tasks-primary-button {
-            min-height: 38px !important;
-            display: inline-flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            gap: 6px !important;
-            padding: 0 14px !important;
-            border-radius: 8px !important;
-            font-size: .67rem !important;
-            font-weight: 800 !important;
-            text-decoration: none !important;
-            white-space: nowrap;
-        }
-
-        body.student-profile-page .profile-actions .profile-password-button {
-            border: 1px solid #c9dfd1 !important;
-            background: #fff !important;
-            color: #08783b !important;
-        }
-
-        body.student-profile-page .profile-actions .profile-password-button:hover {
-            background: #f2faf5 !important;
-            border-color: #a9ceb7 !important;
-        }
-
-        body.student-profile-page .profile-completion-card {
-            margin: 0 0 16px !important;
-            overflow: hidden;
-        }
-
-        body.student-profile-page .profile-completion-card .student-tasks-card-heading,
-        body.student-profile-page .profile-info-card .student-tasks-card-heading {
-            min-height: 54px !important;
-            box-sizing: border-box !important;
-            padding: 0 18px !important;
-            border-bottom: 1px solid #ebf0ed !important;
-        }
-
-        body.student-profile-page .student-tasks-card-heading h2 {
-            color: #0f3427 !important;
-            font-size: .84rem !important;
-            line-height: 1.2 !important;
-            font-weight: 800 !important;
-        }
-
-        body.student-profile-page .student-tasks-card-heading p {
-            margin: 3px 0 0 !important;
-            color: #7a8881 !important;
-            font-size: .62rem !important;
-        }
-
-        body.student-profile-page .student-tasks-card-heading strong {
-            color: #0f3427 !important;
-            font-size: 1.1rem !important;
-            font-weight: 800 !important;
-        }
-
-        body.student-profile-page .profile-completion-progress {
-            height: 7px !important;
-            margin: 14px 18px 12px !important;
-            padding: 0 !important;
-            border-radius: 999px !important;
-            background: #e9efeb !important;
-        }
-
-        body.student-profile-page .profile-completion-progress span {
-            background: linear-gradient(90deg, #0a994a, #17b45d) !important;
-        }
-
-        body.student-profile-page .profile-check-grid {
-            display: grid !important;
-            grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
-            gap: 8px !important;
-            padding: 0 18px 16px !important;
-        }
-
-        body.student-profile-page .profile-check {
-            min-width: 0;
-            min-height: 40px;
-            padding: 8px 10px !important;
-            border-radius: 8px !important;
-            font-size: .64rem !important;
-            line-height: 1.3 !important;
-        }
-
-        body.student-profile-page .profile-check span {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        body.student-profile-page .profile-info-grid {
-            display: grid !important;
-            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-            gap: 16px !important;
-            margin: 0 !important;
-        }
-
-        body.student-profile-page .profile-info-card {
-            min-width: 0;
-            overflow: hidden;
-        }
-
-        body.student-profile-page .profile-info-list {
-            display: grid !important;
-            gap: 0 !important;
-            padding: 4px 18px 12px !important;
-        }
-
-        body.student-profile-page .profile-info-list > div {
-            display: grid !important;
-            grid-template-columns: 126px minmax(0, 1fr) !important;
-            align-items: center !important;
-            gap: 12px !important;
-            min-height: 39px !important;
-            padding: 7px 0 !important;
-            border-bottom: 1px solid #edf1ee !important;
-        }
-
-        body.student-profile-page .profile-info-list > div:last-child {
-            border-bottom: 0 !important;
-        }
-
-        body.student-profile-page .profile-info-list b {
-            min-width: 0 !important;
-            color: #75837c !important;
-            font-size: .64rem !important;
-            font-weight: 700 !important;
-        }
-
-        body.student-profile-page .profile-info-list span {
-            min-width: 0;
-            overflow-wrap: anywhere;
-            color: #244838 !important;
-            font-size: .68rem !important;
-            font-weight: 700 !important;
-        }
-
-        body.student-profile-page .profile-empty-card {
-            grid-column: 1 / -1;
-            padding: 28px 22px !important;
-            text-align: center;
-        }
-
-        body.student-profile-page .profile-empty-icon {
-            margin-bottom: 8px;
-            font-size: 1.7rem;
-        }
-
-        body.student-profile-page .profile-empty-card h2 {
-            margin: 0 0 5px !important;
-            font-size: .9rem !important;
-            font-weight: 800 !important;
-        }
-
-        body.student-profile-page .profile-empty-card p {
-            margin: 0 0 13px !important;
-            color: #718078 !important;
-            font-size: .72rem !important;
-        }
-
-        body.student-profile-page .profile-empty-card .student-tasks-primary-button {
-            display: inline-flex;
-            min-height: 36px;
-            align-items: center;
-            padding: 0 13px;
-            border-radius: 8px;
-            background: #0a8f46;
-            color: #fff;
-            font-size: .68rem;
-            font-weight: 800;
-            text-decoration: none;
-        }
-
-        @media (max-width: 1180px) {
-            body.student-profile-page .profile-check-grid {
-                grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-            }
-        }
-
-        @media (max-width: 900px) {
-            body.student-profile-page .student-profile-content {
-                padding: 88px 18px 24px !important;
-            }
-
-            body.student-profile-page .profile-hero-content {
-                grid-template-columns: 82px minmax(0, 1fr) !important;
-            }
-
-            body.student-profile-page .profile-actions {
-                grid-column: 2;
-                margin-top: 10px !important;
-                justify-content: flex-start !important;
-            }
-
-            body.student-profile-page .profile-info-grid {
-                grid-template-columns: 1fr !important;
-            }
-        }
-
-        @media (max-width: 680px) {
-            body.student-profile-page .student-profile-heading {
-                align-items: flex-start !important;
-                flex-direction: column !important;
-                gap: 12px !important;
-            }
-
-            body.student-profile-page .profile-hero-content {
-                grid-template-columns: 1fr !important;
-                align-items: center !important;
-                margin-top: -30px !important;
-                text-align: center;
-            }
-
-            body.student-profile-page .profile-avatar-wrap {
-                justify-self: center;
-            }
-
-            body.student-profile-page .profile-hero-details,
-            body.student-profile-page .profile-actions {
-                grid-column: 1;
-                margin-top: 0 !important;
-            }
-
-            body.student-profile-page .profile-meta-grid,
-            body.student-profile-page .profile-actions {
-                justify-content: center !important;
-            }
-
-            body.student-profile-page .profile-check-grid {
-                grid-template-columns: 1fr !important;
-            }
-
-            body.student-profile-page .profile-info-list > div {
-                grid-template-columns: 1fr !important;
-                gap: 3px !important;
-                align-items: start !important;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>My Profile - Nexora</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/student.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/modals.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
 </head>
-<body class="student-page student-profile-page">
-    {% include 'components/student_sidebar.html' %}
-    <main class="student-tasks-main student-profile-main">
-        <div class="student-tasks-content student-profile-content">
-            <section class="student-tasks-heading student-section-heading student-profile-heading" aria-labelledby="profile-heading">
-                <div>
-                    <span class="student-section-eyebrow">Student Portal</span>
-                    <h1 id="profile-heading">My Profile</h1>
-                    <p>Manage your personal, academic, and contact information.</p>
-                </div>
-                <span class="profile-completion-pill">{{ profile_percentage|default(0) }}% complete</span>
-            </section>
 
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% for category, message in messages %}
-                    <div class="ui-alert ui-alert-{{ category }}">{{ message }}</div>
-                {% endfor %}
-            {% endwith %}
+<body class="student-page student-profile-v2">
+{% include 'components/student_sidebar.html' %}
 
-            <section class="student-tasks-list-card profile-hero-card" aria-label="Student profile summary">
-                <div class="profile-hero-cover"></div>
-                <div class="profile-hero-content">
-                    <div class="profile-avatar-wrap">
-                        <button type="button" class="profile-avatar-button" onclick="document.getElementById('profileUpload').click()" title="Change profile picture">
-                            {% if profile[5] %}<img id="profileCurrentImage" src="{{ url_for('profile_picture', filename=profile[5]) }}" alt="Profile picture" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/default_profile.png') }}';">
-                            {% else %}<img id="profileCurrentImage" src="{{ url_for('static', filename='images/default_profile.png') }}" alt="Default profile picture">{% endif %}
-                            <span aria-hidden="true">📷</span>
-                        </button>
-                        <input id="profileUpload" type="file" accept="image/png,image/jpeg,image/jpg,image/gif" hidden>
-                    </div>
+<main class="student-tasks-main student-profile-main-v2">
+<div class="student-tasks-content student-profile-shell-v2">
 
-                    <div class="profile-hero-details">
-                        <span class="profile-role-tag">Student</span>
-                        <h2>{{ profile[0] }}{% if profile[1] %} {{ profile[1] }}{% endif %} {{ profile[2] }}</h2>
-                        <div class="profile-meta-grid">
-                            <span>🎓 {{ profile[9] or 'Program not set' }}</span>
-                            <span>🆔 {{ profile[4] or 'Student ID not set' }}</span>
-                            <span>📚 {{ profile[8] or 'Year level not set' }}</span>
-                            <span>✉ {{ profile[14] or 'Email not set' }}</span>
-                        </div>
-                    </div>
+<header class="stv2-page-head">
+  <div>
+    <span class="stv2-eyebrow">STUDENT PORTAL</span>
+    <h1>My Profile</h1>
+    <p>Manage your personal, academic, and contact information.</p>
+  </div>
 
-                    <div class="profile-actions">
-                        <a href="{{ url_for('student.edit_profile') }}" class="student-tasks-primary-button ui-primary-btn">✏ Edit Profile</a>
-                        <a href="{{ url_for('password.change_password') }}" class="student-tasks-primary-button ui-secondary-btn profile-password-button">🔑 Change Password</a>
-                    </div>
-                </div>
-            </section>
+  <div class="stv2-head-side">
+    <nav class="stv2-breadcrumb" aria-label="Breadcrumb">
+      <a href="{{ url_for('student.student_dashboard') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true">
+          <path d="M3 11.5 12 4l9 7.5"></path>
+          <path d="M5.5 10.5V20h13v-9.5"></path>
+        </svg>
+        Dashboard
+      </a>
+      <span>›</span>
+      <strong>My Profile</strong>
+    </nav>
 
-            <section class="student-tasks-list-card profile-modern-card profile-completion-card" aria-labelledby="profile-completion-heading">
-                <div class="student-tasks-card-heading">
-                    <div>
-                        <h2 id="profile-completion-heading">Profile Completion</h2>
-                        <p>Keep your information complete and up to date.</p>
-                    </div>
-                    <strong>{{ profile_percentage|default(0) }}%</strong>
-                </div>
-                <div class="ui-progress profile-completion-progress"><span style="width:{{ profile_percentage|default(0) }}%"></span></div>
-                <div class="profile-check-grid">
-                    <div class="profile-check {{ 'done' if profile[0] and profile[2] else '' }}">✓ <span>Personal information</span></div>
-                    <div class="profile-check {{ 'done' if profile[4] and profile[8] and profile[9] else '' }}">✓ <span>Student information</span></div>
-                    <div class="profile-check {{ 'done' if profile[6] and profile[7] else '' }}">✓ <span>Contact information</span></div>
-                    <div class="profile-check {{ 'done' if profile[5] else '' }}">✓ <span>Profile picture</span></div>
-                    <div class="profile-check {{ 'done' if profile[10] and profile[11] and profile[12] else '' }}">✓ <span>Emergency contact</span></div>
-                </div>
-            </section>
+    <span class="stv2-account-badge">
+      <span class="stv2-account-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+          <path d="m3 10 9-5 9 5-9 5-9-5Z"></path>
+          <path d="M7 12.5v4.2c2.8 1.8 7.2 1.8 10 0v-4.2"></path>
+        </svg>
+      </span>
+      <span><small>Student Account</small><strong>{{ profile_percentage|default(0) }}% Complete</strong></span>
+    </span>
+  </div>
+</header>
 
-            <div class="profile-info-grid">
-                {% set has_personal = profile[0] or profile[2] %}
-                {% set has_student = profile[4] or profile[8] or profile[9] %}
-                {% set has_contact = profile[6] or profile[7] %}
-                {% set has_emergency = profile[10] or profile[12] %}
-                {% if not has_personal and not has_student and not has_contact and not has_emergency %}
-                    <section class="student-tasks-list-card profile-empty-card">
-                        <div class="profile-empty-icon" aria-hidden="true">👤</div>
-                        <h2>Your profile is empty</h2>
-                        <p>Complete your profile to help your supervisor and classmates get to know you.</p>
-                        <a href="{{ url_for('student.edit_profile') }}" class="student-tasks-primary-button">Complete Profile</a>
-                    </section>
-                {% endif %}
-
-                <section class="student-tasks-list-card profile-modern-card profile-info-card">
-                    <div class="student-tasks-card-heading"><h2>Personal Information</h2></div>
-                    <div class="info-list profile-info-list">
-                        <div><b>First Name</b><span>{{ profile[0] or 'Not provided' }}</span></div>
-                        <div><b>Middle Name</b><span>{{ profile[1] or 'Not provided' }}</span></div>
-                        <div><b>Last Name</b><span>{{ profile[2] or 'Not provided' }}</span></div>
-                        <div><b>Age</b><span>{{ profile[3] or 'Not provided' }}</span></div>
-                    </div>
-                </section>
-
-                <section class="student-tasks-list-card profile-modern-card profile-info-card">
-                    <div class="student-tasks-card-heading"><h2>Student Information</h2></div>
-                    <div class="info-list profile-info-list">
-                        <div><b>Student ID</b><span>{{ profile[4] or 'Not provided' }}</span></div>
-                        <div><b>Program</b><span>{{ profile[9] or 'Not provided' }}</span></div>
-                        <div><b>Department</b><span>Information Technology</span></div>
-                        <div><b>Year Level</b><span>{{ profile[8] or 'Not provided' }}</span></div>
-                        <div><b>School Email</b><span>{{ profile[14] or 'Not provided' }}</span></div>
-                    </div>
-                </section>
-
-                <section class="student-tasks-list-card profile-modern-card profile-info-card">
-                    <div class="student-tasks-card-heading"><h2>Contact Information</h2></div>
-                    <div class="info-list profile-info-list">
-                        <div><b>Phone</b><span>{{ profile[6] or 'Not provided' }}</span></div>
-                        <div><b>Address</b><span>{{ profile[7] or 'Not provided' }}</span></div>
-                    </div>
-                </section>
-
-                <section class="student-tasks-list-card profile-modern-card profile-info-card">
-                    <div class="student-tasks-card-heading"><h2>Emergency Contact</h2></div>
-                    <div class="info-list profile-info-list">
-                        <div><b>Name</b><span>{{ profile[10] or 'Not added' }}</span></div>
-                        <div><b>Relationship</b><span>{{ profile[11] or 'Not added' }}</span></div>
-                        <div><b>Phone</b><span>{{ profile[12] or 'Not added' }}</span></div>
-                        <div><b>Email</b><span>{{ profile[13] or 'Not added' }}</span></div>
-                    </div>
-                </section>
-            </div>
-        </div>
-    </main>
-
-    <div id="cropModal" class="crop-editor-overlay" aria-hidden="true">
-        <div class="crop-editor" role="dialog" aria-modal="true" aria-labelledby="cropTitle">
-            <div class="crop-editor-header"><div><span class="ui-eyebrow">Profile picture</span><h2 id="cropTitle">Adjust your photo</h2><p>Drag to position, scroll to zoom, or use the controls below.</p></div><button type="button" onclick="closeCropModal()" class="crop-close">×</button></div>
-            <div class="crop-editor-stage"><img id="cropImage" alt="Crop preview"></div>
-            <div class="crop-controls"><button type="button" onclick="cropper && cropper.zoom(-0.1)">−</button><input id="cropZoom" type="range" min="0.1" max="3" step="0.05" value="1" oninput="setCropZoom(this.value)"><button type="button" onclick="cropper && cropper.zoom(0.1)">+</button><button type="button" onclick="cropper && cropper.rotate(-90)">↶ Rotate</button><button type="button" onclick="cropper && cropper.rotate(90)">↷ Rotate</button><button type="button" onclick="resetCrop()">Reset</button></div>
-            <div class="crop-editor-footer"><button type="button" class="ui-secondary-btn" onclick="closeCropModal()">Cancel</button><button type="button" id="savePictureButton" class="ui-primary-btn" onclick="saveProfilePicture()">Save Picture</button></div>
-            <div id="cropError" class="crop-error" hidden></div>
-        </div>
+{% with messages=get_flashed_messages(with_categories=true) %}
+  {% for category,message in messages %}
+    <div class="stv2-alert {% if category in ['danger','error'] %}is-danger{% elif category=='warning' %}is-warning{% else %}is-success{% endif %}">
+      {{ message }}
     </div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
-    <script>
-    let cropper=null, selectedObjectUrl=null, cropReady=false;
-    const upload=document.getElementById('profileUpload'), modal=document.getElementById('cropModal'), image=document.getElementById('cropImage'), errorBox=document.getElementById('cropError');
-    function showCropError(message){ errorBox.textContent=message; errorBox.hidden=false; }
-    function clearCropError(){ errorBox.hidden=true; errorBox.textContent=''; }
-    function openCropModal(){ modal.style.display='flex'; modal.setAttribute('aria-hidden','false'); }
-    function closeCropModal(){ if(cropper){cropper.destroy();cropper=null;} cropReady=false; if(selectedObjectUrl){URL.revokeObjectURL(selectedObjectUrl);selectedObjectUrl=null;} image.removeAttribute('src'); upload.value=''; modal.style.display='none'; modal.setAttribute('aria-hidden','true'); clearCropError(); }
-    function resetCrop(){ if(cropper){cropper.reset(); document.getElementById('cropZoom').value=1;} }
-    function setCropZoom(value){ if(cropper) cropper.zoomTo(parseFloat(value)); }
-    upload.addEventListener('change',function(e){ const file=e.target.files && e.target.files[0]; if(!file)return; clearCropError(); if(!file.type.startsWith('image/')){showCropError('Please select a valid image.');return;} if(file.size>2*1024*1024){showCropError('Profile pictures must be 2MB or smaller.');return;} if(selectedObjectUrl)URL.revokeObjectURL(selectedObjectUrl); selectedObjectUrl=URL.createObjectURL(file); cropReady=false; openCropModal(); image.onload=function(){ if(cropper)cropper.destroy(); cropper=new Cropper(image,{aspectRatio:1,viewMode:1,dragMode:'move',autoCropArea:.9,background:false,responsive:true,zoomOnWheel:true,zoomOnTouch:true}); cropReady=true; document.getElementById('cropZoom').value=1; }; image.onerror=function(){cropReady=false;showCropError('This image could not be loaded. Please choose another photo.');}; image.src=selectedObjectUrl; });
-    async function saveProfilePicture(){ clearCropError(); const button=document.getElementById('savePictureButton'); if(!cropper||!cropReady){showCropError('Please wait for the photo editor to finish loading.');return;} button.disabled=true; button.textContent='Saving…'; try{ const blob=await new Promise((resolve,reject)=>cropper.getCroppedCanvas({width:500,height:500,imageSmoothingEnabled:true,imageSmoothingQuality:'high'}).toBlob(b=>b?resolve(b):reject(new Error('Could not prepare image.')),'image/jpeg',.92)); const fd=new FormData(); fd.append('profile_picture',blob,'profile.jpg'); const response=await fetch('/student/profile/photo',{method:'POST',headers:{'X-CSRFToken':'{{ csrf_token() }}'},body:fd}); if(!response.ok)throw new Error(await response.text()||'The server rejected the image.'); closeCropModal(); location.reload(); }catch(err){showCropError(err.message||'Unable to save the picture.');button.disabled=false;button.textContent='Save Picture';} }
-    modal.addEventListener('click',e=>{if(e.target===modal)closeCropModal();}); document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.style.display==='flex')closeCropModal();});
-    </script>
+  {% endfor %}
+{% endwith %}
+
+<section class="stv2-hero">
+  <div class="stv2-hero-main">
+    <div class="stv2-avatar-wrap">
+      <button type="button" class="stv2-avatar-button" onclick="document.getElementById('profileUpload').click()" aria-label="Change profile picture">
+        {% if profile[5] %}
+          <img id="profileCurrentImage" src="{{ url_for('profile_picture',filename=profile[5]) }}" alt="Student profile photo" onerror="this.onerror=null;this.src='{{ url_for('static',filename='images/default_profile.png') }}';">
+        {% else %}
+          <img id="profileCurrentImage" src="{{ url_for('static',filename='images/default_profile.png') }}" alt="Default student profile photo">
+        {% endif %}
+      </button>
+      <span class="stv2-online-dot" aria-hidden="true"></span>
+      <button type="button" class="stv2-avatar-camera" onclick="document.getElementById('profileUpload').click()" aria-label="Upload profile picture">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+          <path d="M8 7 9.4 5h5.2L16 7h3a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z"></path>
+          <circle cx="12" cy="13" r="3.5"></circle>
+        </svg>
+      </button>
+      <input id="profileUpload" type="file" accept="image/png,image/jpeg,image/jpg,image/gif" hidden>
+    </div>
+
+    <div class="stv2-identity">
+      <span class="stv2-role-pill">Student</span>
+      <h2>{{ profile[0] }}{% if profile[1] %} {{ profile[1] }}{% endif %} {{ profile[2] }}</h2>
+
+      <div class="stv2-identity-meta">
+        <span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+            <rect x="4" y="3" width="16" height="18" rx="2"></rect>
+            <path d="M8 8h8M8 12h5"></path>
+          </svg>
+          {{ profile[4] or 'Student ID not set' }}
+        </span>
+        <span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+            <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+            <path d="m3 7 9 6 9-6"></path>
+          </svg>
+          {{ profile[14] or 'Email not set' }}
+        </span>
+      </div>
+
+      <div class="stv2-identity-chips">
+        <span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+            <path d="m3 10 9-5 9 5-9 5-9-5Z"></path>
+            <path d="M7 12.5v4.2c2.8 1.8 7.2 1.8 10 0v-4.2"></path>
+          </svg>
+          {{ profile[9] or 'Program not set' }}
+        </span>
+        <span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+            <path d="M8 7V3m8 4V3M4 11h16"></path>
+            <rect x="4" y="5" width="16" height="16" rx="2"></rect>
+          </svg>
+          {{ profile[8] or 'Year level not set' }}
+        </span>
+        <span class="is-status"><i></i>Active Student</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="stv2-hero-side">
+    <blockquote>Build your profile.<br>Own your progress.</blockquote>
+    <div class="stv2-hero-actions">
+      <a class="stv2-hero-btn is-primary" href="{{ url_for('student.edit_profile') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+          <path d="M12 20h9"></path>
+          <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"></path>
+        </svg>
+        Edit Profile
+      </a>
+      <a class="stv2-hero-btn is-secondary" href="{{ url_for('password.change_password') }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+          <circle cx="7.5" cy="15.5" r="3.5"></circle>
+          <path d="m10 13 10-10M16 7l2 2M13 10l2 2"></path>
+        </svg>
+        Change Password
+      </a>
+    </div>
+  </div>
+</section>
+
+<section class="stv2-kpi-grid" aria-label="Student profile summary">
+  <article class="stv2-kpi">
+    <span class="stv2-kpi-icon is-green" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="4" y="3" width="16" height="18" rx="2"></rect>
+        <path d="M8 8h8M8 12h5"></path>
+      </svg>
+    </span>
+    <div><small>Student ID</small><strong class="is-text">{{ profile[4] or '—' }}</strong><span>Official student number</span></div>
+  </article>
+
+  <article class="stv2-kpi">
+    <span class="stv2-kpi-icon is-blue" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="m3 10 9-5 9 5-9 5-9-5Z"></path>
+        <path d="M7 12.5v4.2c2.8 1.8 7.2 1.8 10 0v-4.2"></path>
+      </svg>
+    </span>
+    <div><small>Program</small><strong class="is-text">{{ profile[9] or 'Not set' }}</strong><span>Current academic program</span></div>
+  </article>
+
+  <article class="stv2-kpi">
+    <span class="stv2-kpi-icon is-amber" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M8 7V3m8 4V3M4 11h16"></path>
+        <rect x="4" y="5" width="16" height="16" rx="2"></rect>
+      </svg>
+    </span>
+    <div><small>Year Level</small><strong class="is-text">{{ profile[8] or 'Not set' }}</strong><span>Current grade or year</span></div>
+  </article>
+
+  <article class="stv2-kpi">
+    <span class="stv2-kpi-icon is-violet" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="9"></circle>
+        <path d="m8.5 12 2.2 2.2 4.8-5"></path>
+      </svg>
+    </span>
+    <div><small>Profile Completion</small><strong>{{ profile_percentage|default(0) }}%</strong><span>Information completed</span></div>
+  </article>
+</section>
+
+<section class="stv2-completion">
+  <div class="stv2-completion-head">
+    <span class="stv2-completion-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+        <circle cx="12" cy="12" r="9"></circle>
+        <path d="m8.5 12 2.2 2.2 4.8-5"></path>
+      </svg>
+    </span>
+    <div>
+      <h3>Profile Completeness</h3>
+      <p>Keep your information complete and up to date.</p>
+    </div>
+    <strong>{{ profile_percentage|default(0) }}%</strong>
+  </div>
+
+  <div class="stv2-progress-track">
+    <span data-progress="{{ profile_percentage|default(0) }}"></span>
+  </div>
+
+  <div class="stv2-completion-checks">
+    <span class="{{ 'is-complete' if profile[0] and profile[2] else '' }}"><i>✓</i>Personal information</span>
+    <span class="{{ 'is-complete' if profile[4] and profile[8] and profile[9] else '' }}"><i>✓</i>Student information</span>
+    <span class="{{ 'is-complete' if profile[6] and profile[7] else '' }}"><i>✓</i>Contact information</span>
+    <span class="{{ 'is-complete' if profile[5] else '' }}"><i>✓</i>Profile picture</span>
+    <span class="{{ 'is-complete' if profile[10] and profile[11] and profile[12] else '' }}"><i>✓</i>Emergency contact</span>
+  </div>
+</section>
+
+<nav class="stv2-tabs" aria-label="Student profile sections">
+  <button type="button" class="is-active" data-st-tab="personal" aria-selected="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+      <circle cx="12" cy="8" r="4"></circle>
+      <path d="M4 21a8 8 0 0 1 16 0"></path>
+    </svg>
+    Personal Information
+  </button>
+  <button type="button" data-st-tab="academic" aria-selected="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+      <path d="m3 10 9-5 9 5-9 5-9-5Z"></path>
+      <path d="M7 12.5v4.2c2.8 1.8 7.2 1.8 10 0v-4.2"></path>
+    </svg>
+    Student Information
+  </button>
+  <button type="button" data-st-tab="contact" aria-selected="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+      <path d="M5 4h4l2 5-3 2a14 14 0 0 0 5 5l2-3 5 2v4c0 1.1-.9 2-2 2C9.7 21 3 14.3 3 6a2 2 0 0 1 2-2Z"></path>
+    </svg>
+    Contact Information
+  </button>
+  <button type="button" data-st-tab="emergency" aria-selected="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+      <path d="M12 21a8 8 0 1 0-8-8"></path>
+      <path d="M4 21v-5h5"></path>
+      <path d="M12 9v4l2.5 1.5"></path>
+    </svg>
+    Emergency Contact
+  </button>
+</nav>
+
+<div class="stv2-panels">
+
+<section class="stv2-panel is-active" data-st-panel="personal">
+  <article class="stv2-info-card">
+    <div class="stv2-card-head">
+      <span class="stv2-card-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+          <circle cx="12" cy="8" r="4"></circle>
+          <path d="M4 21a8 8 0 0 1 16 0"></path>
+        </svg>
+      </span>
+      <div><h3>Personal Information</h3><p>Your basic personal details.</p></div>
+    </div>
+
+    <dl class="stv2-info-list">
+      <div><dt>First Name</dt><dd>{{ profile[0] or 'Not provided' }}</dd></div>
+      <div><dt>Middle Name</dt><dd>{{ profile[1] or 'Not provided' }}</dd></div>
+      <div><dt>Last Name</dt><dd>{{ profile[2] or 'Not provided' }}</dd></div>
+      <div><dt>Age</dt><dd>{{ profile[3] or 'Not provided' }}</dd></div>
+    </dl>
+  </article>
+
+  <article class="stv2-picture-card">
+    <div class="stv2-card-head">
+      <span class="stv2-card-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+          <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+          <circle cx="8.5" cy="9" r="2"></circle>
+          <path d="m21 15-5-5L5 20"></path>
+        </svg>
+      </span>
+      <div><h3>Profile Picture</h3><p>Your profile picture as seen in Nexora.</p></div>
+    </div>
+
+    <div class="stv2-picture-body">
+      <button type="button" class="stv2-picture-preview" onclick="document.getElementById('profileUpload').click()">
+        {% if profile[5] %}
+          <img src="{{ url_for('profile_picture',filename=profile[5]) }}" alt="Student profile photo" onerror="this.onerror=null;this.src='{{ url_for('static',filename='images/default_profile.png') }}';">
+        {% else %}
+          <img src="{{ url_for('static',filename='images/default_profile.png') }}" alt="Default student profile photo">
+        {% endif %}
+        <span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+            <path d="M8 7 9.4 5h5.2L16 7h3a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z"></path>
+            <circle cx="12" cy="13" r="3.5"></circle>
+          </svg>
+        </span>
+      </button>
+
+      <div class="stv2-picture-copy">
+        <div class="stv2-picture-status {% if profile[5] %}is-complete{% endif %}">
+          <span class="stv2-picture-status-icon">{% if profile[5] %}✓{% else %}!{% endif %}</span>
+          <div>
+            <strong>{% if profile[5] %}Profile picture uploaded{% else %}Profile picture not uploaded{% endif %}</strong>
+            <p>{% if profile[5] %}Your current profile photo is active across the Student portal.{% else %}Add a clear profile photo to complete your student identity.{% endif %}</p>
+          </div>
+        </div>
+
+        <button type="button" class="stv2-picture-change" onclick="document.getElementById('profileUpload').click()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+            <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+            <path d="m7 15 3-3 3 3 3-4 4 5"></path>
+          </svg>
+          Change Picture
+        </button>
+        <small>Recommended: square image, at least 300×300px. Max 2MB.</small>
+      </div>
+    </div>
+  </article>
+</section>
+
+<section class="stv2-panel" data-st-panel="academic" hidden>
+  <article class="stv2-info-card is-full">
+    <div class="stv2-card-head">
+      <span class="stv2-card-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+          <path d="m3 10 9-5 9 5-9 5-9-5Z"></path>
+          <path d="M7 12.5v4.2c2.8 1.8 7.2 1.8 10 0v-4.2"></path>
+        </svg>
+      </span>
+      <div><h3>Student Information</h3><p>Your academic identity and program information.</p></div>
+    </div>
+
+    <dl class="stv2-info-list is-two-column">
+      <div><dt>Student ID</dt><dd>{{ profile[4] or 'Not provided' }}</dd></div>
+      <div><dt>Year Level</dt><dd>{{ profile[8] or 'Not provided' }}</dd></div>
+      <div><dt>Program</dt><dd>{{ profile[9] or 'Not provided' }}</dd></div>
+      <div><dt>School Email</dt><dd>{{ profile[14] or 'Not provided' }}</dd></div>
+    </dl>
+  </article>
+</section>
+
+<section class="stv2-panel" data-st-panel="contact" hidden>
+  <article class="stv2-info-card is-full">
+    <div class="stv2-card-head">
+      <span class="stv2-card-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+          <path d="M5 4h4l2 5-3 2a14 14 0 0 0 5 5l2-3 5 2v4c0 1.1-.9 2-2 2C9.7 21 3 14.3 3 6a2 2 0 0 1 2-2Z"></path>
+        </svg>
+      </span>
+      <div><h3>Contact Information</h3><p>Contact details linked to your profile.</p></div>
+    </div>
+
+    <dl class="stv2-info-list">
+      <div><dt>Phone Number</dt><dd>{{ profile[6] or 'Not provided' }}</dd></div>
+      <div><dt>Home Address</dt><dd>{{ profile[7] or 'Not provided' }}</dd></div>
+      <div><dt>Account Email</dt><dd>{{ profile[14] or 'Not provided' }}</dd></div>
+    </dl>
+  </article>
+</section>
+
+<section class="stv2-panel" data-st-panel="emergency" hidden>
+  <article class="stv2-info-card is-full">
+    <div class="stv2-card-head">
+      <span class="stv2-card-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+          <path d="M12 21a8 8 0 1 0-8-8"></path>
+          <path d="M4 21v-5h5"></path>
+          <path d="M12 9v4l2.5 1.5"></path>
+        </svg>
+      </span>
+      <div><h3>Emergency Contact</h3><p>Emergency contact information stored in your student profile.</p></div>
+    </div>
+
+    <dl class="stv2-info-list is-two-column">
+      <div><dt>Name</dt><dd>{{ profile[10] or 'Not added' }}</dd></div>
+      <div><dt>Relationship</dt><dd>{{ profile[11] or 'Not added' }}</dd></div>
+      <div><dt>Phone</dt><dd>{{ profile[12] or 'Not added' }}</dd></div>
+      <div><dt>Email</dt><dd>{{ profile[13] or 'Not added' }}</dd></div>
+    </dl>
+  </article>
+</section>
+
+</div>
+
+<div class="stv2-bottom-actions">
+  <a class="stv2-bottom-secondary" href="{{ url_for('student.student_dashboard') }}">Back to Dashboard</a>
+  <a class="stv2-bottom-primary" href="{{ url_for('student.edit_profile') }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+      <path d="M12 20h9"></path>
+      <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"></path>
+    </svg>
+    Edit Profile
+  </a>
+</div>
+
+</div>
+</main>
+
+<div id="cropModal" class="crop-editor-overlay" aria-hidden="true">
+  <div class="crop-editor" role="dialog" aria-modal="true" aria-labelledby="cropTitle">
+    <div class="crop-editor-header">
+      <div>
+        <span class="ui-eyebrow">Profile picture</span>
+        <h2 id="cropTitle">Adjust your photo</h2>
+        <p>Drag to position, scroll to zoom, or use the controls below.</p>
+      </div>
+      <button type="button" onclick="closeCropModal()" class="crop-close">×</button>
+    </div>
+    <div class="crop-editor-stage"><img id="cropImage" alt="Crop preview"></div>
+    <div class="crop-controls">
+      <button type="button" onclick="cropper&&cropper.zoom(-0.1)">−</button>
+      <input id="cropZoom" type="range" min="0.1" max="3" step="0.05" value="1" oninput="setCropZoom(this.value)">
+      <button type="button" onclick="cropper&&cropper.zoom(0.1)">+</button>
+      <button type="button" onclick="cropper&&cropper.rotate(-90)">↶ Rotate</button>
+      <button type="button" onclick="cropper&&cropper.rotate(90)">↷ Rotate</button>
+      <button type="button" onclick="resetCrop()">Reset</button>
+    </div>
+    <div class="crop-editor-footer">
+      <button type="button" class="ui-secondary-btn" onclick="closeCropModal()">Cancel</button>
+      <button type="button" id="savePictureButton" class="ui-primary-btn" onclick="saveProfilePicture()">Save Picture</button>
+    </div>
+    <div id="cropError" class="crop-error" hidden></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
+<script>
+const progressFill=document.querySelector('.stv2-progress-track span');
+if(progressFill){
+  const pct=Math.max(0,Math.min(100,Number(progressFill.dataset.progress)||0));
+  progressFill.style.width=pct+'%';
+}
+
+const tabs=[...document.querySelectorAll('[data-st-tab]')];
+const panels=[...document.querySelectorAll('[data-st-panel]')];
+
+function activateStudentProfileTab(name){
+  tabs.forEach(tab=>{
+    const active=tab.dataset.stTab===name;
+    tab.classList.toggle('is-active',active);
+    tab.setAttribute('aria-selected',active?'true':'false');
+  });
+  panels.forEach(panel=>{
+    const active=panel.dataset.stPanel===name;
+    panel.hidden=!active;
+    panel.classList.toggle('is-active',active);
+  });
+}
+
+tabs.forEach(tab=>tab.addEventListener('click',()=>activateStudentProfileTab(tab.dataset.stTab)));
+
+let cropper=null,selectedObjectUrl=null,cropReady=false;
+const upload=document.getElementById('profileUpload');
+const modal=document.getElementById('cropModal');
+const image=document.getElementById('cropImage');
+const errorBox=document.getElementById('cropError');
+
+function showCropError(message){
+  errorBox.textContent=message;
+  errorBox.hidden=false;
+}
+function clearCropError(){
+  errorBox.hidden=true;
+  errorBox.textContent='';
+}
+function openCropModal(){
+  modal.style.display='flex';
+  modal.setAttribute('aria-hidden','false');
+}
+function closeCropModal(){
+  if(cropper){cropper.destroy();cropper=null;}
+  cropReady=false;
+  if(selectedObjectUrl){URL.revokeObjectURL(selectedObjectUrl);selectedObjectUrl=null;}
+  image.removeAttribute('src');
+  upload.value='';
+  modal.style.display='none';
+  modal.setAttribute('aria-hidden','true');
+  clearCropError();
+}
+function resetCrop(){
+  if(cropper){
+    cropper.reset();
+    document.getElementById('cropZoom').value=1;
+  }
+}
+function setCropZoom(value){
+  if(cropper)cropper.zoomTo(parseFloat(value));
+}
+
+upload.addEventListener('change',function(e){
+  const file=e.target.files&&e.target.files[0];
+  if(!file)return;
+  clearCropError();
+
+  if(!file.type.startsWith('image/')){
+    showCropError('Please select a valid image.');
+    return;
+  }
+  if(file.size>2*1024*1024){
+    showCropError('Profile pictures must be 2MB or smaller.');
+    return;
+  }
+
+  if(selectedObjectUrl)URL.revokeObjectURL(selectedObjectUrl);
+  selectedObjectUrl=URL.createObjectURL(file);
+  cropReady=false;
+  openCropModal();
+
+  image.onload=function(){
+    if(cropper)cropper.destroy();
+    cropper=new Cropper(image,{
+      aspectRatio:1,
+      viewMode:1,
+      dragMode:'move',
+      autoCropArea:.9,
+      background:false,
+      responsive:true,
+      zoomOnWheel:true,
+      zoomOnTouch:true
+    });
+    cropReady=true;
+    document.getElementById('cropZoom').value=1;
+  };
+
+  image.onerror=function(){
+    cropReady=false;
+    showCropError('This image could not be loaded. Please choose another photo.');
+  };
+
+  image.src=selectedObjectUrl;
+});
+
+async function saveProfilePicture(){
+  clearCropError();
+  const button=document.getElementById('savePictureButton');
+
+  if(!cropper||!cropReady){
+    showCropError('Please wait for the photo editor to finish loading.');
+    return;
+  }
+
+  button.disabled=true;
+  button.textContent='Saving…';
+
+  try{
+    const blob=await new Promise((resolve,reject)=>
+      cropper.getCroppedCanvas({
+        width:500,
+        height:500,
+        imageSmoothingEnabled:true,
+        imageSmoothingQuality:'high'
+      }).toBlob(
+        b=>b?resolve(b):reject(new Error('Could not prepare image.')),
+        'image/jpeg',
+        .92
+      )
+    );
+
+    const fd=new FormData();
+    fd.append('profile_picture',blob,'profile.jpg');
+
+    const response=await fetch('/student/profile/photo',{
+      method:'POST',
+      headers:{'X-CSRFToken':'{{ csrf_token() }}'},
+      body:fd
+    });
+
+    if(!response.ok)throw new Error(await response.text()||'The server rejected the image.');
+    closeCropModal();
+    location.reload();
+  }catch(err){
+    showCropError(err.message||'Unable to save the picture.');
+    button.disabled=false;
+    button.textContent='Save Picture';
+  }
+}
+
+modal.addEventListener('click',e=>{if(e.target===modal)closeCropModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.style.display==='flex')closeCropModal();});
+</script>
 </body>
 </html>
