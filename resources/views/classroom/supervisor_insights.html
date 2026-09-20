@@ -65,45 +65,81 @@
                         </div>
                     </div>
 
-                    <div class="supervisor-insights-panel" id="overallInsightsPanel" role="tabpanel">
-                        <div class="supervisor-insights-panel-heading">
+                    <div class="supervisor-insights-panel supervisor-insights-overall-panel" id="overallInsightsPanel" role="tabpanel">
+                        <div class="supervisor-insights-overview-head">
                             <div>
+                                <span class="supervisor-insights-eyebrow">CLASSROOM OVERVIEW</span>
                                 <h2>Overall Intern Classroom</h2>
-                                <p>Classroom-level performance summary for {{ classroom.name }}.</p>
+                                <p>Performance and completion snapshot for {{ classroom.name }}.</p>
+                            </div>
+                            <span class="supervisor-insights-count-badge">{{ insights|length }} intern{{ '' if insights|length == 1 else 's' }}</span>
+                        </div>
+
+                        <div class="supervisor-insights-readiness supervisor-insights-readiness-primary">
+                            <div class="supervisor-insights-readiness-card">
+                                <span>Total Interns</span>
+                                <strong>{{ insights|length }}</strong>
+                                <small>Enrolled in this classroom</small>
+                            </div>
+                            <div class="supervisor-insights-readiness-card">
+                                <span>Work Average</span>
+                                <strong>{% if cohort_average is not none %}{{ "%.1f"|format(cohort_average) }}%{% else %}—{% endif %}</strong>
+                                <small>Reviewed numeric Work only</small>
+                            </div>
+                            <div class="supervisor-insights-readiness-card">
+                                <span>Average Completion</span>
+                                <strong>{% if average_completion is not none %}{{ "%.1f"|format(average_completion) }}%{% else %}—{% endif %}</strong>
+                                <small>Across enrolled interns</small>
+                            </div>
+                            <div class="supervisor-insights-readiness-card is-attention">
+                                <span>Needs Attention</span>
+                                <strong>{{ overall.needs_attention }}</strong>
+                                <small>Fair or Needs Improvement</small>
                             </div>
                         </div>
 
-                        <div class="supervisor-insights-readiness">
-                            <div class="supervisor-insights-readiness-card"><span>Total interns</span><strong>{{ insights|length }}</strong></div>
-                            <div class="supervisor-insights-readiness-card"><span>Cohort average</span><strong>{% if cohort_average is not none %}{{ "%.1f"|format(cohort_average) }}%{% else %}—{% endif %}</strong></div>
-                            <div class="supervisor-insights-readiness-card"><span>Average completion</span><strong>{% if average_completion is not none %}{{ "%.1f"|format(average_completion) }}%{% else %}—{% endif %}</strong></div>
-                            <div class="supervisor-insights-readiness-card is-attention"><span>Needs attention</span><strong>{{ overall.needs_attention }}</strong></div>
-                            <div class="supervisor-insights-readiness-card is-no-data"><span>No performance data</span><strong>{{ overall.no_data }}</strong></div>
-                        </div>
-
-                        <div class="supervisor-insights-visuals">
+                        <div class="supervisor-insights-visuals supervisor-insights-overall-visuals">
                             <section class="supervisor-insights-chart-card" aria-labelledby="performanceDistributionTitle">
-                                <div class="supervisor-insights-chart-header"><strong id="performanceDistributionTitle">Performance Distribution</strong><span>Counts across enrolled interns</span></div>
+                                <div class="supervisor-insights-chart-header">
+                                    <div><strong id="performanceDistributionTitle">Performance Distribution</strong><small>Work performance labels across enrolled interns</small></div>
+                                    <span>{{ insights|length }} total</span>
+                                </div>
                                 <div class="supervisor-insights-chart-body">
                                     <div class="supervisor-insights-chart-row"><span class="supervisor-insights-chart-label">Excellent</span><progress class="supervisor-insights-progress is-excellent" value="{{ overall.excellent }}" max="{{ distribution_max }}">{{ overall.excellent }}</progress><span class="supervisor-insights-chart-value">{{ overall.excellent }}</span></div>
                                     <div class="supervisor-insights-chart-row"><span class="supervisor-insights-chart-label">Very Satisfactory</span><progress class="supervisor-insights-progress is-very-satisfactory" value="{{ overall.very_satisfactory }}" max="{{ distribution_max }}">{{ overall.very_satisfactory }}</progress><span class="supervisor-insights-chart-value">{{ overall.very_satisfactory }}</span></div>
                                     <div class="supervisor-insights-chart-row"><span class="supervisor-insights-chart-label">Satisfactory</span><progress class="supervisor-insights-progress is-satisfactory" value="{{ overall.satisfactory }}" max="{{ distribution_max }}">{{ overall.satisfactory }}</progress><span class="supervisor-insights-chart-value">{{ overall.satisfactory }}</span></div>
                                     <div class="supervisor-insights-chart-row"><span class="supervisor-insights-chart-label">Fair</span><progress class="supervisor-insights-progress is-fair" value="{{ overall.fair }}" max="{{ distribution_max }}">{{ overall.fair }}</progress><span class="supervisor-insights-chart-value">{{ overall.fair }}</span></div>
                                     <div class="supervisor-insights-chart-row"><span class="supervisor-insights-chart-label">Needs Improvement</span><progress class="supervisor-insights-progress is-needs-improvement" value="{{ overall.needs_improvement }}" max="{{ distribution_max }}">{{ overall.needs_improvement }}</progress><span class="supervisor-insights-chart-value">{{ overall.needs_improvement }}</span></div>
-                                    <div class="supervisor-insights-chart-row"><span class="supervisor-insights-chart-label">No Performance Data</span><progress class="supervisor-insights-progress is-no-data" value="{{ overall.no_data }}" max="{{ distribution_max }}">{{ overall.no_data }}</progress><span class="supervisor-insights-chart-value">{{ overall.no_data }}</span></div>
+                                    <div class="supervisor-insights-chart-row"><span class="supervisor-insights-chart-label">No Data</span><progress class="supervisor-insights-progress is-no-data" value="{{ overall.no_data }}" max="{{ distribution_max }}">{{ overall.no_data }}</progress><span class="supervisor-insights-chart-value">{{ overall.no_data }}</span></div>
                                 </div>
                             </section>
 
-                            <section class="supervisor-insights-chart-card" aria-labelledby="classroomProgressTitle">
-                                <div class="supervisor-insights-chart-header"><strong id="classroomProgressTitle">Classroom Progress</strong><span>Average performance vs completion</span></div>
-                                <div class="supervisor-insights-chart-body">
-                                    <div class="supervisor-insights-chart-row"><span class="supervisor-insights-chart-label">Average Performance</span><progress class="supervisor-insights-progress" value="{{ cohort_average if cohort_average is not none else 0 }}" max="100">{{ cohort_average if cohort_average is not none else 0 }}</progress><span class="supervisor-insights-chart-value">{% if cohort_average is not none %}{{ "%.1f"|format(cohort_average) }}%{% else %}—{% endif %}</span></div>
-                                    <div class="supervisor-insights-chart-row"><span class="supervisor-insights-chart-label">Average Completion</span><progress class="supervisor-insights-progress is-completion" value="{{ average_completion if average_completion is not none else 0 }}" max="100">{{ average_completion if average_completion is not none else 0 }}</progress><span class="supervisor-insights-chart-value">{% if average_completion is not none %}{{ "%.1f"|format(average_completion) }}%{% else %}—{% endif %}</span></div>
-                                </div>
-                            </section>
+                            <div class="supervisor-insights-overall-side">
+                                <section class="supervisor-insights-chart-card" aria-labelledby="classroomProgressTitle">
+                                    <div class="supervisor-insights-chart-header">
+                                        <div><strong id="classroomProgressTitle">Classroom Progress</strong><small>Work performance compared with completion</small></div>
+                                    </div>
+                                    <div class="supervisor-insights-chart-body">
+                                        <div class="supervisor-insights-chart-row supervisor-insights-progress-row"><span class="supervisor-insights-chart-label">Work Average</span><progress class="supervisor-insights-progress" value="{{ cohort_average if cohort_average is not none else 0 }}" max="100">{{ cohort_average if cohort_average is not none else 0 }}</progress><span class="supervisor-insights-chart-value">{% if cohort_average is not none %}{{ "%.1f"|format(cohort_average) }}%{% else %}—{% endif %}</span></div>
+                                        <div class="supervisor-insights-chart-row supervisor-insights-progress-row"><span class="supervisor-insights-chart-label">Completion</span><progress class="supervisor-insights-progress is-completion" value="{{ average_completion if average_completion is not none else 0 }}" max="100">{{ average_completion if average_completion is not none else 0 }}</progress><span class="supervisor-insights-chart-value">{% if average_completion is not none %}{{ "%.1f"|format(average_completion) }}%{% else %}—{% endif %}</span></div>
+                                    </div>
+                                </section>
+
+                                <section class="supervisor-insights-evidence-card" aria-label="Performance evidence status">
+                                    <div>
+                                        <span class="supervisor-insights-eyebrow">PERFORMANCE EVIDENCE</span>
+                                        <h3>Classroom Data Status</h3>
+                                    </div>
+                                    <div class="supervisor-insights-evidence-list">
+                                        <div><span>With reviewed data</span><strong>{{ insights|length - overall.no_data }} / {{ insights|length }}</strong></div>
+                                        <div><span>No performance data</span><strong>{{ overall.no_data }}</strong></div>
+                                        <div><span>Needs attention</span><strong class="is-attention">{{ overall.needs_attention }}</strong></div>
+                                    </div>
+                                </section>
+                            </div>
                         </div>
 
-                        <div class="supervisor-insights-overall-note">Cohort average uses only interns with reviewed numeric work. Average completion includes all enrolled interns. Needs Attention counts interns whose current numeric performance label is Fair or Needs Improvement. Interns without numeric evidence remain separate under No Performance Data.</div>
+                        <div class="supervisor-insights-overall-note"><strong>How to read this:</strong> Work Average uses only reviewed numeric Work. Completion includes all enrolled interns. Needs Attention and No Data remain separate indicators; Nexora does not combine them into an overall OJT grade.</div>
                     </div>
 
                     <div class="supervisor-insights-panel" id="individualInsightsPanel" role="tabpanel" hidden>
