@@ -101,7 +101,7 @@
             {% if error %}
                 <div class="auth-error">{{ error }}</div>
             {% endif %}
-            <form method="POST" novalidate>
+            <form method="POST" novalidate data-nx-login-form>
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="auth-field">
                     <input type="text" name="username" placeholder="Username or email" value="{{ entered_username or '' }}" required autocomplete="username">
@@ -115,7 +115,7 @@
                 <p class="forgot-password-link" style="text-align:right; margin:8px 0 0; font-size:0.85rem;">
                     <a href="{{ url_for('password.forgot_password') }}" style="color:#2563eb; text-decoration:none; font-weight:600;">Forgot Password?</a>
                 </p>
-                <button type="submit" style="width:100%; margin-top:16px;">Login</button>
+                <button type="submit" data-nx-login-submit style="width:100%; margin-top:16px;">Login</button>
                 <p class="signup-link">Don't have an account? <a href="{{ url_for('auth.signup') }}">Sign Up</a>
                 </p>
             </form>
@@ -132,6 +132,37 @@
                     ? '<span aria-hidden="true">🙈</span>'
                     : '<span aria-hidden="true">👁</span>';
             }
+
+            (function () {
+                const form = document.querySelector('[data-nx-login-form]');
+                const submitButton = form ? form.querySelector('[data-nx-login-submit]') : null;
+                if (!form || !submitButton) return;
+
+                let submitting = false;
+
+                function resetSubmitState() {
+                    submitting = false;
+                    submitButton.disabled = false;
+                    submitButton.removeAttribute('aria-busy');
+                    submitButton.textContent = 'Login';
+                }
+
+                form.addEventListener('submit', function (event) {
+                    if (submitting) {
+                        event.preventDefault();
+                        return;
+                    }
+
+                    submitting = true;
+                    submitButton.disabled = true;
+                    submitButton.setAttribute('aria-busy', 'true');
+                    submitButton.textContent = 'Signing in…';
+                });
+
+                window.addEventListener('pageshow', function (event) {
+                    if (event.persisted) resetSubmitState();
+                });
+            })();
         </script>
     </body>
 </html>

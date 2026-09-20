@@ -101,6 +101,11 @@ body:has(.nx-role-sidebar-shell) {
         transform: translateX(0) !important;
     }
 
+    .nx-role-sidebar-shell.is-mobile-navigating .nx-role-sidebar,
+    .nx-role-sidebar-shell.is-mobile-navigating .nx-role-sidebar-backdrop {
+        transition: none !important;
+    }
+
     .nx-role-sidebar::-webkit-scrollbar {
         width: 6px !important;
         height: 6px !important;
@@ -495,7 +500,27 @@ body:has(.nx-role-sidebar-shell) {
         sidebar.addEventListener('click', function (event) {
             if (!isMobile()) return;
             var link = event.target.closest('a[href]');
-            if (link) setOpen(false, false);
+            if (!link) return;
+
+            var href = String(link.getAttribute('href') || '').trim();
+            var isPageNavigation =
+                href &&
+                href.charAt(0) !== '#' &&
+                !/^javascript:/i.test(href) &&
+                !link.hasAttribute('download') &&
+                String(link.getAttribute('target') || '').toLowerCase() !== '_blank';
+
+            if (isPageNavigation) {
+                shell.classList.add('is-mobile-navigating');
+            }
+
+            setOpen(false, false);
+
+            if (isPageNavigation) {
+                window.setTimeout(function () {
+                    shell.classList.remove('is-mobile-navigating');
+                }, 300);
+            }
         });
 
         document.addEventListener('keydown', function (event) {
