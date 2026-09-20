@@ -178,7 +178,7 @@ def overview(student_id):
         if not student: abort(404)
         attendance=conn.execute("SELECT clock_in,clock_out,hours_rendered,status FROM attendance WHERE student_id=? ORDER BY clock_in DESC",(student_id,)).fetchall()
         total_hours=sum(float((r[2] if len(r)>2 else 0) or 0) for r in attendance); sessions=len(attendance); completed=sum(1 for r in attendance if (r[3] if len(r)>3 else '')=='Completed')
-        feedback=conn.execute("SELECT comment,created_at,performance_label,users.username AS supervisor FROM feedback JOIN users ON users.id=feedback.supervisor_id WHERE feedback.student_id=? ORDER BY feedback.created_at DESC LIMIT 10",(student_id,)).fetchall()
+        feedback=conn.execute("SELECT feedback.comment, feedback.created_at, feedback.performance_label, users.username AS supervisor FROM feedback JOIN users ON users.id=feedback.supervisor_id WHERE feedback.student_id=? ORDER BY feedback.created_at DESC LIMIT 10",(student_id,)).fetchall()
         class_rows=conn.execute("SELECT classroom_id FROM classroom_students WHERE student_id=? ORDER BY classroom_id",(student_id,)).fetchall(); class_ids=[r[0] for r in class_rows]
     finally: conn.close()
     reports=[]

@@ -24,39 +24,52 @@
                 </div>
             </header>
 
-            <section class="admin-polish-panel admin-insights-selector" aria-label="Intern classroom directory">
-                <div class="admin-section-heading">
-                    <div>
-                        <span>INTERNSHIP CLASSROOMS</span>
-                        <h3>Choose a Room</h3>
+            {% if not selected_classroom %}
+                <section class="admin-polish-panel admin-insights-selector" aria-label="Intern classroom directory">
+                    <div class="admin-section-heading">
+                        <div>
+                            <span>INTERNSHIP CLASSROOMS</span>
+                            <h3>Choose a Room</h3>
+                        </div>
+                        <span class="admin-metric-tag">{{ classrooms|length }} room{% if classrooms|length != 1 %}s{% endif %}</span>
                     </div>
-                    <span class="admin-metric-tag">{{ classrooms|length }} room{% if classrooms|length != 1 %}s{% endif %}</span>
+                    <div class="admin-insights-room-grid">
+                        {% for classroom in classrooms %}
+                            <a class="admin-insights-room-card" href="{{ url_for('admin_reports_overview.student_insights', class_id=classroom.id) }}">
+                                <span class="admin-insights-room-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M7 8h3M14 8h3M7 12h3M14 12h3M7 16h3M14 16h3"></path></svg></span>
+                                <span class="admin-insights-room-copy">
+                                    <strong>{{ classroom.name }}</strong>
+                                    <span>{{ classroom.section or 'No section' }}{% if classroom.archived %} · Archived{% endif %}</span>
+                                    <small>{{ classroom.student_count }} student{% if classroom.student_count != 1 %}s{% endif %} · Supervisor: {{ classroom.supervisor_name or '—' }}</small>
+                                </span>
+                                <span class="admin-insights-room-arrow" aria-hidden="true">→</span>
+                            </a>
+                        {% endfor %}
+                    </div>
+                </section>
+            {% elif not admin_insights_modal %}
+                <div class="admin-insights-selected-room" aria-label="Selected classroom">
+                    <span class="admin-insights-room-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M7 8h3M14 8h3M7 12h3M14 12h3M7 16h3M14 16h3"></path></svg></span>
+                    <span>
+                        <small>SELECTED ROOM</small>
+                        <strong>{{ selected_classroom.name }}</strong>
+                        <span>{{ selected_classroom.section or 'No section' }} · Supervisor: {{ selected_classroom.supervisor_name or '—' }}</span>
+                    </span>
+                    <a href="{{ url_for('admin_reports_overview.student_insights') }}">Change Room</a>
                 </div>
-                <div class="admin-insights-room-grid">
-                    {% for classroom in classrooms %}
-                        <a class="admin-insights-room-card {% if selected_classroom and selected_classroom.id == classroom.id %}is-selected{% endif %}" href="{{ url_for('admin_reports_overview.student_insights', class_id=classroom.id) }}">
-                            <span class="admin-insights-room-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M7 8h3M14 8h3M7 12h3M14 12h3M7 16h3M14 16h3"></path></svg></span>
-                            <span class="admin-insights-room-copy">
-                                <strong>{{ classroom.name }}</strong>
-                                <span>{{ classroom.section or 'No section' }}{% if classroom.archived %} · Archived{% endif %}</span>
-                                <small>{{ classroom.student_count }} student{% if classroom.student_count != 1 %}s{% endif %} · Supervisor: {{ classroom.supervisor_name or '—' }}</small>
-                            </span>
-                            <span class="admin-insights-room-arrow" aria-hidden="true">→</span>
-                        </a>
-                    {% endfor %}
-                </div>
-            </section>
+            {% endif %}
 
             {% if not classrooms %}
                 <section class="admin-polish-empty"><div class="admin-polish-empty-icon">◎</div><h2>No Intern Classrooms yet</h2><p>Rooms will appear here after a supervisor creates an Intern Classroom.</p></section>
             {% elif not selected_classroom %}
                 <section class="admin-polish-empty"><div class="admin-polish-empty-icon">⌕</div><h2>Choose a classroom</h2><p>Select a room above to display the students enrolled in it.</p></section>
             {% else %}
-                <section class="admin-polish-panel admin-insights-student-directory" aria-label="Students in selected classroom">
+                <section class="admin-polish-panel admin-insights-student-directory" aria-label="Students in {{ selected_classroom.name }}">
                     <div class="admin-section-heading">
                         <div>
                             <span>STUDENTS IN ROOM</span>
                             <h3>{{ selected_classroom.name }}</h3>
+                            <p class="admin-insights-student-directory-copy">Select a student to open their classroom-scoped evidence.</p>
                         </div>
                         <span class="admin-metric-tag">{{ students|length }} student{% if students|length != 1 %}s{% endif %}</span>
                     </div>
@@ -68,7 +81,7 @@
                                     <strong>{{ student.display_name }}</strong>
                                     <span>{{ student.student_number or student.username }}{% if student.major_program %} · {{ student.major_program }}{% endif %}</span>
                                 </span>
-                                <span class="admin-insights-student-action">View Insights →</span>
+                                <span class="admin-insights-student-action">View Student Insights <span aria-hidden="true">→</span></span>
                             </a>
                         {% else %}
                             <div class="admin-polish-empty admin-polish-empty-compact"><h3>No students in this room</h3><p>Students will appear here after they enroll in this Intern Classroom.</p></div>
