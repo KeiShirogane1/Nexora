@@ -607,7 +607,9 @@ Force all legacy role widths to the real 76px rail.
     display: none !important;
   }
 }
-/* Mobile: remove desktop rail reservation completely. */
+/* Mobile: remove desktop rail reservation completely.
+   Start closed/off-canvas in this base stylesheet so the sidebar is never
+   painted full-width before sidebar_viewport_fix.html loads. */
 @media (max-width: 760px) {
   body:has(.nx-role-sidebar-shell) {
     --nexora-sidebar-width: 0px !important;
@@ -615,18 +617,40 @@ Force all legacy role widths to the real 76px rail.
     margin: 0 !important;
     padding: 0 !important;
   }
+  .nx-role-sidebar-shell {
+    position: fixed !important;
+    inset: 0 auto auto 0 !important;
+    z-index: 1290 !important;
+    width: 0 !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
   .nx-role-sidebar {
-    position: relative !important;
-    inset: auto !important;
-    width: 100% !important;
-    height: auto !important;
+    position: fixed !important;
+    inset: 0 auto 0 0 !important;
+    z-index: 1300 !important;
+    width: min(86vw, 320px) !important;
+    max-width: 320px !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
     min-height: 0 !important;
     margin: 0 !important;
-    padding: 18px !important;
-    box-shadow: none !important;
+    padding: 18px 16px calc(18px + env(safe-area-inset-bottom)) !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    box-shadow: 14px 0 38px var(--nx-sidebar-shadow) !important;
+    transform: translateX(calc(-100% - 18px)) !important;
+    transition: none !important;
   }
   .nx-role-sidebar-backdrop {
-    display: none !important;
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 1280 !important;
+    display: block !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
   }
   .nx-role-brand,
   .nx-role-profile,
