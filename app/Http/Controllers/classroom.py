@@ -24,6 +24,9 @@ def _is_safe_path_classroom(base, target):
     except:
         return False
 
+LATE_SUBMISSION_PERCENTAGE = 65.0
+
+
 def _parse_due(value):
     if not value:
         return None
@@ -37,6 +40,20 @@ def _parse_due(value):
         return datetime.fromisoformat(norm)
     except:
         return None
+
+
+def _late_submission_grade(points):
+    """Return the raw-point equivalent of the fixed 65% late-submission score."""
+    try:
+        max_points = float(points or 0)
+    except (TypeError, ValueError):
+        return None
+    if max_points <= 0:
+        return None
+    grade = max_points * (LATE_SUBMISSION_PERCENTAGE / 100.0)
+    grade = round(grade, 2)
+    return int(grade) if float(grade).is_integer() else grade
+
 
 classroom = Blueprint("classroom", __name__)
 
@@ -1013,11 +1030,10 @@ def student_submit_assignment(class_id, assignment_id):
     if not a:
         return "Assignment not found", 404
     due_str = a["due_at"] if "due_at" in a.keys() else a[4]
-    if due_str:
-        dt = _parse_due(due_str)
-        if dt and datetime.now() > dt:
-            flash("Deadline has passed.", "danger")
-            return redirect(url_for("classroom.student_assignment_detail", class_id=class_id, assignment_id=assignment_id))
+    due_at = _parse_due(due_str) if due_str else None
+    is_late = bool(due_at and datetime.now() > due_at)
+    points = a["points"] if "points" in a.keys() else a[5]
+    late_grade = _late_submission_grade(points) if is_late else None
     content = (request.form.get("content") or "").strip()
     file = request.files.get("file")
     filename = None
@@ -1055,6 +1071,7 @@ def student_submit_assignment(class_id, assignment_id):
     conn = get_db_connection()
     try:
         existing = conn.execute("SELECT id, filepath FROM classroom_submissions WHERE assignment_id = ? AND student_id = ?", (assignment_id, stu)).fetchone()
+        submission_status = "late" if is_late else "submitted"
         if existing:
             old_path = existing["filepath"] if "filepath" in existing.keys() else existing[1]
             if filename and old_path and os.path.exists(old_path) and old_path != filepath:
@@ -1065,9 +1082,21 @@ def student_submit_assignment(class_id, assignment_id):
             if not filename:
                 filename = existing["filename"] if "filename" in existing.keys() else None
                 filepath = existing["filepath"] if "filepath" in existing.keys() else None
-            conn.execute("UPDATE classroom_submissions SET content = ?, filename = ?, filepath = ?, submitted_at = CURRENT_TIMESTAMP, status = 'submitted' WHERE assignment_id = ? AND student_id = ?", (content, filename, filepath, assignment_id, stu))
+            if is_late and late_grade is not None:
+                conn.execute(
+                    "UPDATE classroom_submissions SET content = ?, filename = ?, filepath = ?, submitted_at = CURRENT_TIMESTAMP, status = ?, grade = ? WHERE assignment_id = ? AND student_id = ?",
+                    (content, filename, filepath, submission_status, late_grade, assignment_id, stu),
+                )
+            else:
+                conn.execute(
+                    "UPDATE classroom_submissions SET content = ?, filename = ?, filepath = ?, submitted_at = CURRENT_TIMESTAMP, status = ? WHERE assignment_id = ? AND student_id = ?",
+                    (content, filename, filepath, submission_status, assignment_id, stu),
+                )
         else:
-            conn.execute("INSERT INTO classroom_submissions (assignment_id, student_id, content, filename, filepath, status) VALUES (?, ?, ?, ?, ?, 'submitted')", (assignment_id, stu, content, filename, filepath))
+            conn.execute(
+                "INSERT INTO classroom_submissions (assignment_id, student_id, content, filename, filepath, status, grade) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (assignment_id, stu, content, filename, filepath, submission_status, late_grade),
+            )
         conn.commit()
         try:
             c = conn.execute("SELECT supervisor_id, name FROM classrooms WHERE id = ?", (class_id,)).fetchone()
@@ -1076,10 +1105,23 @@ def student_submit_assignment(class_id, assignment_id):
                 u = conn.execute("SELECT username FROM users WHERE id = ?", (stu,)).fetchone()
                 sname = (u["username"] if u and "username" in u.keys() else "Student")
                 a_title = (a["title"] if "title" in a.keys() else "assignment")
-                create_notification(int(sup_id), "Classwork Submitted", f"{sname} submitted {a_title} in classroom.", "classroom", link_url=f"/supervisor/classes/{class_id}/assignments/{assignment_id}")
+                notification_title = "Late Classwork Submitted" if is_late else "Classwork Submitted"
+                notification_message = (
+                    f"{sname} submitted {a_title} after the deadline. Automatic late score: {LATE_SUBMISSION_PERCENTAGE:g}%."
+                    if is_late and late_grade is not None else
+                    f"{sname} submitted {a_title} after the deadline."
+                    if is_late else
+                    f"{sname} submitted {a_title} in classroom."
+                )
+                create_notification(int(sup_id), notification_title, notification_message, "classroom", link_url=f"/supervisor/classes/{class_id}/assignments/{assignment_id}")
         except Exception as e:
             print("classroom submit notification failed:", e)
-        flash("Submission saved.", "success")
+        if is_late and late_grade is not None:
+            flash(f"Late submission saved. An automatic score of {LATE_SUBMISSION_PERCENTAGE:g}% was applied.", "warning")
+        elif is_late:
+            flash("Late submission saved.", "warning")
+        else:
+            flash("Submission saved.", "success")
     except Exception as e:
         try:
             conn.rollback()
