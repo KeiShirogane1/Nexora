@@ -2155,11 +2155,33 @@ body.supervisor-student-documents-page details.supervisor-doc-classroom-card > s
   content: "";
 }
 body.supervisor-student-documents-page .supervisor-doc-classroom-header {
-  transition: background .15s ease;
+  position: relative;
+  overflow: hidden;
+  border-radius: 14px 14px 0 0;
+  transition: filter .15s ease, box-shadow .15s ease;
+}
+body.supervisor-student-documents-page .supervisor-doc-classroom-header--blue { background: linear-gradient(135deg, #93c5fd 0%, #dbeafe 100%); }
+body.supervisor-student-documents-page .supervisor-doc-classroom-header--navy { background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); }
+body.supervisor-student-documents-page .supervisor-doc-classroom-header--green { background: linear-gradient(135deg, #6ee7b7 0%, #d1fae5 100%); }
+body.supervisor-student-documents-page .supervisor-doc-classroom-header--teal { background: linear-gradient(135deg, #5eead4 0%, #ccfbf1 100%); }
+body.supervisor-student-documents-page .supervisor-doc-classroom-header--purple { background: linear-gradient(135deg, #c4b5fd 0%, #ede9fe 100%); }
+body.supervisor-student-documents-page .supervisor-doc-classroom-header--orange { background: linear-gradient(135deg, #fdba74 0%, #ffedd5 100%); }
+body.supervisor-student-documents-page .supervisor-doc-classroom-header--amber { background: linear-gradient(135deg, #fcd34d 0%, #fef3c7 100%); }
+body.supervisor-student-documents-page .supervisor-doc-classroom-header--rose { background: linear-gradient(135deg, #fda4af 0%, #ffe4e6 100%); }
+body.supervisor-student-documents-page .supervisor-doc-classroom-header--slate { background: linear-gradient(135deg, #94a3b8 0%, #e2e8f0 100%); }
+body.supervisor-student-documents-page .supervisor-doc-classroom-header--navy h2,
+body.supervisor-student-documents-page .supervisor-doc-classroom-header--navy p {
+  color: #fff !important;
+}
+body.supervisor-student-documents-page .supervisor-doc-classroom-header--navy .supervisor-doc-type-pill,
+body.supervisor-student-documents-page .supervisor-doc-classroom-header--navy .supervisor-doc-status-pill {
+  border-color: rgba(255,255,255,.34);
+  background: rgba(255,255,255,.16);
+  color: #fff;
 }
 body.supervisor-student-documents-page details.supervisor-doc-classroom-card > summary:hover,
 body.supervisor-student-documents-page details.supervisor-doc-classroom-card > summary:focus-visible {
-  background: #f4f8ff;
+  filter: saturate(1.06) brightness(.99);
   outline: none;
 }
 body.supervisor-student-documents-page .supervisor-doc-classroom-toggle {
@@ -2169,23 +2191,36 @@ body.supervisor-student-documents-page .supervisor-doc-classroom-toggle {
   flex: 0 0 auto;
 }
 body.supervisor-student-documents-page .supervisor-doc-classroom-chevron {
-  width: 28px;
-  height: 28px;
-  display: grid;
-  place-items: center;
-  border: 1px solid #d8e3f3;
-  border-radius: 8px;
-  background: #fff;
-  color: #2563eb;
-  font-size: 16px;
-  font-weight: 900;
-  line-height: 1;
-  transition: transform .18s ease, border-color .15s ease, background .15s ease;
+  position: relative;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  display: inline-block;
+  border: 1px solid rgba(37, 99, 235, .22);
+  border-radius: 9px;
+  background: rgba(255,255,255,.82);
+  box-shadow: 0 3px 10px rgba(15, 23, 42, .05);
+  transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
+}
+body.supervisor-student-documents-page .supervisor-doc-classroom-chevron::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid #1d4ed8;
+  border-bottom: 2px solid #1d4ed8;
+  transform: translate(-50%, -65%) rotate(45deg);
+  transition: transform .18s ease;
 }
 body.supervisor-student-documents-page details.supervisor-doc-classroom-card[open] .supervisor-doc-classroom-chevron {
-  transform: rotate(180deg);
-  border-color: #bfd3f5;
-  background: #eaf2ff;
+  border-color: rgba(37, 99, 235, .36);
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, .10);
+}
+body.supervisor-student-documents-page details.supervisor-doc-classroom-card[open] .supervisor-doc-classroom-chevron::before {
+  transform: translate(-50%, -35%) rotate(225deg);
 }
 body.supervisor-student-documents-page details.supervisor-doc-classroom-card[open] > summary {
   border-bottom: 1px solid #e8edf3;

@@ -23,7 +23,8 @@ from app.Services.internship_schedule_service import (
 internship_classroom = Blueprint("internship_classroom", __name__)
 
 _WORK_ARRANGEMENTS = {"On-site", "Hybrid", "Remote"}
-_BANNER_THEMES = {"blue", "navy", "green", "teal", "purple", "orange", "amber", "rose", "slate"}
+_BANNER_THEME_ORDER = ("blue", "green", "purple", "orange", "teal", "amber", "rose", "navy", "slate")
+_BANNER_THEMES = set(_BANNER_THEME_ORDER)
 
 
 def _valid_date(value):
@@ -75,6 +76,24 @@ def _get_classroom_banner_theme(class_id):
         return "blue"
     finally:
         conn.close()
+
+
+def _next_classroom_banner_theme(conn, supervisor_id):
+    """Pick the first unused Supervisor classroom theme, then cycle safely."""
+    rows = conn.execute(
+        "SELECT COALESCE(banner_theme, 'blue') AS banner_theme "
+        "FROM classrooms WHERE supervisor_id = ? ORDER BY created_at ASC, id ASC",
+        (supervisor_id,),
+    ).fetchall()
+    used = {
+        str(_row_value(row, "banner_theme", 0, "blue")).lower()
+        for row in rows
+        if str(_row_value(row, "banner_theme", 0, "blue")).lower() in _BANNER_THEMES
+    }
+    for theme in _BANNER_THEME_ORDER:
+        if theme not in used:
+            return theme
+    return _BANNER_THEME_ORDER[len(rows) % len(_BANNER_THEME_ORDER)]
 
 
 def _get_classroom_internship_details(class_id):
@@ -324,13 +343,14 @@ def create_internship_classroom():
         cursor = conn.cursor()
         code = _generate_code(cursor)
         parent_description = f"Internship classroom for {company_name}"
+        banner_theme = _next_classroom_banner_theme(conn, session["user_id"])
         cursor.execute(
             """
             INSERT INTO classrooms
-            (supervisor_id, name, section, description, code, classroom_type, archived)
-            VALUES (?, ?, ?, ?, ?, 'internship', 0)
+            (supervisor_id, name, section, description, code, classroom_type, banner_theme, archived)
+            VALUES (?, ?, ?, ?, ?, 'internship', ?, 0)
             """,
-            (session["user_id"], internship_title, section, parent_description, code),
+            (session["user_id"], internship_title, section, parent_description, code, banner_theme),
         )
         cursor.execute("SELECT id FROM classrooms WHERE code = ?", (code,))
         classroom_row = cursor.fetchone()

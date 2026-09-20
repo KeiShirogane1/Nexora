@@ -5461,23 +5461,35 @@ body.admin-documents-page .admin-classroom-doc-toggle {
   flex: 0 0 auto;
 }
 body.admin-documents-page .admin-classroom-doc-chevron {
-  width: 28px;
-  height: 28px;
-  display: grid;
-  place-items: center;
+  position: relative;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  display: inline-block;
   border: 1px solid #e0e5ea;
-  border-radius: 8px;
+  border-radius: 9px;
   background: #fff;
-  color: #d9471b;
-  font-size: 16px;
-  font-weight: 900;
-  line-height: 1;
-  transition: transform .18s ease, border-color .15s ease, background .15s ease;
+  transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
+}
+body.admin-documents-page .admin-classroom-doc-chevron::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid #d9471b;
+  border-bottom: 2px solid #d9471b;
+  transform: translate(-50%, -65%) rotate(45deg);
+  transition: transform .18s ease;
 }
 body.admin-documents-page details.admin-classroom-doc-group[open] .admin-classroom-doc-chevron {
-  transform: rotate(180deg);
   border-color: #f1b09a;
   background: #fff0ea;
+  box-shadow: 0 3px 10px rgba(217, 71, 27, .08);
+}
+body.admin-documents-page details.admin-classroom-doc-group[open] .admin-classroom-doc-chevron::before {
+  transform: translate(-50%, -35%) rotate(225deg);
 }
 body.admin-documents-page details.admin-classroom-doc-group[open] > summary {
   border-bottom: 1px solid #eef1f3;
