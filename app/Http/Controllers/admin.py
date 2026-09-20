@@ -191,49 +191,272 @@ def admin_dashboard():
     conn = get_db_connection()
     cursor = conn.cursor()
 
+    def _row_value(row, key, index=0, default=None):
+        if row is None:
+            return default
+        try:
+            if hasattr(row, "keys") and key in row.keys():
+                value = row[key]
+            else:
+                value = row[index]
+        except (IndexError, KeyError, TypeError):
+            return default
+        return default if value is None else value
+
+    def _person_name(first_name, middle_name, last_name, fallback):
+        parts = [
+            str(value or "").strip()
+            for value in (first_name, middle_name, last_name)
+            if str(value or "").strip()
+        ]
+        return " ".join(parts) if parts else str(fallback or "").strip()
+
     try:
         cursor.execute("SELECT COUNT(*) FROM users WHERE role='student'")
-        students_count = cursor.fetchone()[0]
+        students_count = int(cursor.fetchone()[0] or 0)
 
         cursor.execute("SELECT COUNT(*) FROM users WHERE role='supervisor'")
-        supervisors_count = cursor.fetchone()[0]
+        supervisors_count = int(cursor.fetchone()[0] or 0)
 
-        cursor.execute("SELECT COUNT(*) FROM student_assignments")
-        assignments_count = cursor.fetchone()[0]
+        # Internship dashboard metrics use the same classroom-scoped source of
+        # truth as Assigned Interns and attendance_service.
+        cursor.execute(
+            """
+            SELECT
+                cs.classroom_id,
+                cs.student_id,
+                COALESCE(cid.hours_mode, 'not_specified') AS hours_mode,
+                COALESCE(cid.required_hours, 0) AS required_hours,
+                COALESCE(
+                    SUM(
+                        CASE
+                            WHEN a.status = 'Completed'
+                            THEN COALESCE(a.hours_rendered, 0)
+                            ELSE 0
+                        END
+                    ),
+                    0
+                ) AS rendered_hours
+            FROM classroom_students cs
+            JOIN classrooms c ON c.id = cs.classroom_id
+            LEFT JOIN classroom_internship_details cid ON cid.classroom_id = c.id
+            LEFT JOIN attendance a
+              ON a.student_id = cs.student_id
+             AND a.classroom_id = cs.classroom_id
+            WHERE COALESCE(c.classroom_type, 'classroom') = 'internship'
+              AND COALESCE(c.archived, 0) = 0
+            GROUP BY
+                cs.classroom_id,
+                cs.student_id,
+                COALESCE(cid.hours_mode, 'not_specified'),
+                COALESCE(cid.required_hours, 0)
+            """
+        )
+        placement_rows = cursor.fetchall()
+        assignments_count = len(placement_rows)
+
+        completed_internships = 0
+        for row in placement_rows:
+            hours_mode = str(_row_value(row, "hours_mode", 2, "not_specified") or "").lower()
+            required_hours = float(_row_value(row, "required_hours", 3, 0) or 0)
+            rendered_hours = float(_row_value(row, "rendered_hours", 4, 0) or 0)
+            if hours_mode == "specified" and required_hours > 0 and rendered_hours >= required_hours:
+                completed_internships += 1
+
+        active_internships = max(0, assignments_count - completed_internships)
+
+        cursor.execute(
+            """
+            SELECT COUNT(DISTINCT c.id)
+            FROM classrooms c
+            JOIN classroom_students cs ON cs.classroom_id = c.id
+            WHERE COALESCE(c.classroom_type, 'classroom') = 'internship'
+              AND COALESCE(c.archived, 0) = 0
+            """
+        )
+        active_classrooms = int(cursor.fetchone()[0] or 0)
 
         cursor.execute("SELECT COUNT(*) FROM feedback")
-        feedback_count = cursor.fetchone()[0]
+        feedback_count = int(cursor.fetchone()[0] or 0)
 
-        cursor.execute("SELECT COUNT(*) FROM attendance WHERE status = 'Open'")
-        online_interns = cursor.fetchone()[0]
+        cursor.execute(
+            """
+            SELECT COUNT(DISTINCT a.student_id)
+            FROM attendance a
+            JOIN classroom_students cs
+              ON cs.student_id = a.student_id
+             AND cs.classroom_id = a.classroom_id
+            JOIN classrooms c ON c.id = cs.classroom_id
+            WHERE a.status = 'Open'
+              AND COALESCE(c.classroom_type, 'classroom') = 'internship'
+              AND COALESCE(c.archived, 0) = 0
+            """
+        )
+        online_interns = int(cursor.fetchone()[0] or 0)
 
-        cursor.execute("SELECT COALESCE(SUM(hours_rendered), 0) FROM attendance WHERE status = 'Completed'")
-        total_hours = cursor.fetchone()[0]
-        
-            # INTERNSHIP STATUS SUMMARY
+        cursor.execute(
+            """
+            SELECT COALESCE(SUM(COALESCE(a.hours_rendered, 0)), 0)
+            FROM attendance a
+            JOIN classroom_students cs
+              ON cs.student_id = a.student_id
+             AND cs.classroom_id = a.classroom_id
+            JOIN classrooms c ON c.id = cs.classroom_id
+            WHERE a.status = 'Completed'
+              AND COALESCE(c.classroom_type, 'classroom') = 'internship'
+              AND COALESCE(c.archived, 0) = 0
+            """
+        )
+        total_hours = float(cursor.fetchone()[0] or 0)
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT COUNT(*)
             FROM users
-            WHERE role='pending_student'
-        """)
-        pending_students = cursor.fetchone()[0]
+            WHERE role IN ('pending_student', 'pending_supervisor')
+            """
+        )
+        pending_students = int(cursor.fetchone()[0] or 0)
 
-
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT COUNT(*)
-            FROM internships
-            WHERE status='Active'
-        """)
-        active_internships = cursor.fetchone()[0]
+            FROM users u
+            WHERE u.role = 'student'
+              AND COALESCE(u.status, 'active') = 'active'
+              AND NOT EXISTS (
+                    SELECT 1
+                    FROM classroom_students cs
+                    JOIN classrooms c ON c.id = cs.classroom_id
+                    WHERE cs.student_id = u.id
+                      AND COALESCE(c.classroom_type, 'classroom') = 'internship'
+                      AND COALESCE(c.archived, 0) = 0
+              )
+            """
+        )
+        unenrolled_students = int(cursor.fetchone()[0] or 0)
 
+        recent_activities = []
 
-        cursor.execute("""
-            SELECT COUNT(*)
-            FROM internships
-            WHERE status='Completed'
-        """)
-        completed_internships = cursor.fetchone()[0]
+        cursor.execute(
+            """
+            SELECT
+                f.created_at,
+                COALESCE(student.username, '') AS student_username,
+                COALESCE(sp.first_name, '') AS student_first_name,
+                COALESCE(sp.middle_name, '') AS student_middle_name,
+                COALESCE(sp.last_name, '') AS student_last_name,
+                COALESCE(supervisor.username, '') AS supervisor_username,
+                COALESCE(spp.first_name, '') AS supervisor_first_name,
+                COALESCE(spp.middle_name, '') AS supervisor_middle_name,
+                COALESCE(spp.last_name, '') AS supervisor_last_name
+            FROM feedback f
+            LEFT JOIN users student ON student.id = f.student_id
+            LEFT JOIN student_profiles sp ON sp.user_id = student.id
+            LEFT JOIN users supervisor ON supervisor.id = f.supervisor_id
+            LEFT JOIN supervisor_profiles spp ON spp.user_id = supervisor.id
+            WHERE f.created_at IS NOT NULL
+            ORDER BY f.created_at DESC
+            LIMIT 8
+            """
+        )
+        for row in cursor.fetchall():
+            created_at = _row_value(row, "created_at", 0)
+            student_name = _person_name(
+                _row_value(row, "student_first_name", 2, ""),
+                _row_value(row, "student_middle_name", 3, ""),
+                _row_value(row, "student_last_name", 4, ""),
+                _row_value(row, "student_username", 1, "Student"),
+            )
+            supervisor_name = _person_name(
+                _row_value(row, "supervisor_first_name", 6, ""),
+                _row_value(row, "supervisor_middle_name", 7, ""),
+                _row_value(row, "supervisor_last_name", 8, ""),
+                _row_value(row, "supervisor_username", 5, "Supervisor"),
+            )
+            recent_activities.append(
+                {
+                    "kind": "feedback",
+                    "title": f"Feedback submitted for {student_name}",
+                    "context": f"Submitted by {supervisor_name}",
+                    "raw_timestamp": created_at,
+                }
+            )
+
+        cursor.execute(
+            """
+            SELECT
+                cs.joined_at,
+                c.name AS classroom_name,
+                COALESCE(student.username, '') AS student_username,
+                COALESCE(sp.first_name, '') AS student_first_name,
+                COALESCE(sp.middle_name, '') AS student_middle_name,
+                COALESCE(sp.last_name, '') AS student_last_name,
+                COALESCE(supervisor.username, '') AS supervisor_username,
+                COALESCE(spp.first_name, '') AS supervisor_first_name,
+                COALESCE(spp.middle_name, '') AS supervisor_middle_name,
+                COALESCE(spp.last_name, '') AS supervisor_last_name
+            FROM classroom_students cs
+            JOIN classrooms c ON c.id = cs.classroom_id
+            JOIN users student ON student.id = cs.student_id
+            LEFT JOIN student_profiles sp ON sp.user_id = student.id
+            JOIN users supervisor ON supervisor.id = c.supervisor_id
+            LEFT JOIN supervisor_profiles spp ON spp.user_id = supervisor.id
+            WHERE COALESCE(c.classroom_type, 'classroom') = 'internship'
+              AND cs.joined_at IS NOT NULL
+            ORDER BY cs.joined_at DESC
+            LIMIT 8
+            """
+        )
+        for row in cursor.fetchall():
+            joined_at = _row_value(row, "joined_at", 0)
+            student_name = _person_name(
+                _row_value(row, "student_first_name", 3, ""),
+                _row_value(row, "student_middle_name", 4, ""),
+                _row_value(row, "student_last_name", 5, ""),
+                _row_value(row, "student_username", 2, "Student"),
+            )
+            supervisor_name = _person_name(
+                _row_value(row, "supervisor_first_name", 7, ""),
+                _row_value(row, "supervisor_middle_name", 8, ""),
+                _row_value(row, "supervisor_last_name", 9, ""),
+                _row_value(row, "supervisor_username", 6, "Supervisor"),
+            )
+            classroom_name = str(_row_value(row, "classroom_name", 1, "Intern Classroom") or "Intern Classroom")
+            recent_activities.append(
+                {
+                    "kind": "enrollment",
+                    "title": f"{student_name} joined {classroom_name}",
+                    "context": f"Supervisor: {supervisor_name}",
+                    "raw_timestamp": joined_at,
+                }
+            )
+
+        def _activity_sort_key(activity):
+            parsed = parse_datetime(activity.get("raw_timestamp"))
+            return parsed or datetime.min
+
+        recent_activities.sort(key=_activity_sort_key, reverse=True)
+        recent_activities = recent_activities[:6]
+        for activity in recent_activities:
+            raw_timestamp = activity.pop("raw_timestamp", None)
+            activity["timestamp"] = format_datetime(raw_timestamp) or "Recent"
+
+        dashboard_actionable_metrics = {
+            "unenrolled_students": unenrolled_students,
+            "trash_expiring_soon": 0,
+            "recent_activities": recent_activities,
+            "system_status": {
+                "database_status": "Connected",
+                "database_engine": "PostgreSQL" if using_postgres() else "SQLite",
+                "email_status": "Configured"
+                if os.environ.get("BREVO_API_KEY") and os.environ.get("BREVO_SENDER_EMAIL")
+                else "Not configured",
+                "email_configured": bool(
+                    os.environ.get("BREVO_API_KEY") and os.environ.get("BREVO_SENDER_EMAIL")
+                ),
+            },
+        }
 
         return render_template(
             "admin/dashboard.html",
@@ -242,11 +465,14 @@ def admin_dashboard():
             assignments_count=assignments_count,
             feedback_count=feedback_count,
             online_interns=online_interns,
-            total_hours=total_hours,
+            total_hours=round(total_hours, 2),
             active_page="dashboard",
             pending_students=pending_students,
+            active_classrooms=active_classrooms,
             active_internships=active_internships,
-            completed_internships=completed_internships
+            completed_internships=completed_internships,
+            dashboard_recent_activities=recent_activities,
+            dashboard_actionable_metrics=dashboard_actionable_metrics,
         )
     finally:
         cursor.close()
