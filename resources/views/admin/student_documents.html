@@ -70,18 +70,52 @@
             {% if classroom_groups %}
                 <div class="admin-classroom-doc-groups">
                     {% for classroom in classroom_groups %}
-                        <details class="admin-polish-panel admin-classroom-doc-group" {% if search %}open{% endif %}>
-                            <summary class="admin-classroom-doc-heading">
-                                <div>
+                        {% set admin_document_banner_theme = classroom_banner_theme(classroom.id) %}
+                        <details class="admin-polish-panel admin-classroom-doc-group admin-classroom-doc-group--{{ admin_document_banner_theme }}" {% if search %}open{% endif %}>
+                            <summary class="admin-classroom-doc-heading admin-classroom-doc-heading--{{ admin_document_banner_theme }}">
+                                <span class="admin-classroom-doc-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M3 10.5 12 6l9 4.5-9 4.5-9-4.5Z"></path>
+                                        <path d="M7 12.5v4.2c2.8 1.8 7.2 1.8 10 0v-4.2"></path>
+                                        <path d="M21 10.5v5"></path>
+                                    </svg>
+                                </span>
+
+                                <div class="admin-classroom-doc-copy">
                                     <div class="admin-doc-badges">
-                                        <span class="admin-status-pill">{{ 'Intern Classroom' if classroom.classroom_type == 'internship' else 'Classroom' }}</span>
+                                        <span class="admin-status-pill admin-classroom-doc-type-pill">{{ 'Intern Classroom' if classroom.classroom_type == 'internship' else 'Classroom' }}</span>
                                         {% if classroom.archived %}<span class="admin-status-pill is-muted">Archived</span>{% endif %}
                                     </div>
                                     <h2>{{ classroom.name }}</h2>
-                                    <p>{{ classroom.section or 'No section' }} · {{ classroom.supervisor_name }}{% if classroom.company_name %} · {{ classroom.company_name }}{% endif %}{% if classroom.internship_title %} · {{ classroom.internship_title }}{% endif %}</p>
+                                    <div class="admin-classroom-doc-meta">
+                                        <span>
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16v14H4z"></path><path d="M8 5v14M16 5v14"></path></svg>
+                                            {{ classroom.section or 'No section' }}
+                                        </span>
+                                        <span>
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+                                            {{ classroom.supervisor_name }}
+                                        </span>
+                                        {% if classroom.company_name %}
+                                            <span>
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21h18"></path><path d="M6 21V7h12v14"></path><path d="M9 10h2M13 10h2M9 14h2M13 14h2"></path></svg>
+                                                {{ classroom.company_name }}
+                                            </span>
+                                        {% endif %}
+                                        {% if classroom.internship_title %}
+                                            <span>
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 2h9l3 3v17H6z"></path><path d="M14 2v4h4"></path><path d="M9 11h6M9 15h6"></path></svg>
+                                                {{ classroom.internship_title }}
+                                            </span>
+                                        {% endif %}
+                                    </div>
                                 </div>
+
                                 <span class="admin-classroom-doc-toggle">
-                                    <span class="admin-count-chip">{{ classroom.students|length }} student{% if classroom.students|length != 1 %}s{% endif %}</span>
+                                    <span class="admin-count-chip admin-classroom-doc-count">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path></svg>
+                                        {{ classroom.students|length }} student{% if classroom.students|length != 1 %}s{% endif %}
+                                    </span>
                                     <span class="admin-classroom-doc-chevron" aria-hidden="true"></span>
                                 </span>
                             </summary>
@@ -107,11 +141,18 @@
             {% endif %}
 
             {% if unassigned_students %}
-                <section class="admin-polish-panel admin-classroom-doc-group">
-                    <div class="admin-classroom-doc-heading">
-                        <div><span class="admin-status-pill is-muted">Unassigned</span><h2>Students without a classroom</h2><p>Student accounts that are not currently enrolled in a classroom.</p></div>
-                        <span class="admin-count-chip">{{ unassigned_students|length }} student{% if unassigned_students|length != 1 %}s{% endif %}</span>
-                    </div>
+                <details class="admin-polish-panel admin-classroom-doc-group admin-classroom-doc-group--neutral" {% if search %}open{% endif %}>
+                    <summary class="admin-classroom-doc-heading admin-classroom-doc-heading--neutral">
+                        <div class="admin-classroom-doc-copy admin-classroom-doc-copy--unassigned">
+                            <div class="admin-doc-badges"><span class="admin-status-pill is-muted">Unassigned</span></div>
+                            <h2>Students without a classroom</h2>
+                            <div class="admin-classroom-doc-meta"><span>Student accounts that are not currently enrolled in a classroom.</span></div>
+                        </div>
+                        <span class="admin-classroom-doc-toggle">
+                            <span class="admin-count-chip admin-classroom-doc-count">{{ unassigned_students|length }} student{% if unassigned_students|length != 1 %}s{% endif %}</span>
+                            <span class="admin-classroom-doc-chevron" aria-hidden="true"></span>
+                        </span>
+                    </summary>
                     <div class="admin-doc-student-list">
                         {% for student in unassigned_students %}
                             <article class="admin-doc-student-row">
@@ -123,7 +164,7 @@
                             </article>
                         {% endfor %}
                     </div>
-                </section>
+                </details>
             {% endif %}
 
             {% if not classroom_groups and not unassigned_students %}
