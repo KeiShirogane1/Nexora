@@ -311,31 +311,48 @@
             color: #173025;
             font-size: .9rem;
         }
+        .student-document-upload-form {
+            margin-bottom: 12px;
+        }
         .student-document-upload-zone {
             position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 16px;
-            min-height: 104px;
-            margin-bottom: 12px;
-            padding: 18px 24px;
+            display: grid;
+            justify-items: center;
+            gap: 10px;
+            min-height: 168px;
+            padding: 26px 24px;
             border: 1.5px dashed #23ae63;
-            border-radius: 11px;
-            background: linear-gradient(90deg, #f5fcf7 0%, #effaf3 100%);
+            border-radius: 14px;
+            background: linear-gradient(135deg, #f7fdf9 0%, #edf9f2 100%);
             box-sizing: border-box;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color .15s ease, background .15s ease, box-shadow .15s ease, transform .15s ease;
+        }
+        .student-document-upload-zone:hover,
+        .student-document-upload-zone:focus-visible,
+        .student-document-upload-zone.is-dragging {
+            border-color: #0a8f46;
+            background: #effaf3;
+            box-shadow: 0 0 0 4px rgba(10,143,70,.08);
+            outline: 0;
+        }
+        .student-document-upload-zone.is-dragging {
+            transform: translateY(-1px);
         }
         .student-document-upload-icon {
-            width: 52px;
-            height: 52px;
-            min-width: 52px;
+            width: 58px;
+            height: 58px;
             display: grid;
             place-items: center;
-            border-radius: 50%;
+            border-radius: 16px;
             background: #ddf6e6;
             color: #0a8f46;
-            font-size: 25px;
+            font-size: 27px;
             font-weight: 900;
+        }
+        .student-document-upload-copy {
+            max-width: 720px;
         }
         .student-document-upload-copy strong,
         .student-document-upload-copy span {
@@ -343,22 +360,20 @@
         }
         .student-document-upload-copy strong {
             color: #173025;
-            font-size: .86rem;
+            font-size: .94rem;
             font-weight: 800;
         }
         .student-document-upload-copy span {
-            margin-top: 4px;
+            margin-top: 5px;
             color: #66776e;
-            font-size: .72rem;
-            line-height: 1.45;
+            font-size: .74rem;
+            line-height: 1.5;
         }
-        .student-document-upload-copy label {
+        .student-document-upload-copy .student-document-upload-browse {
             color: #08783b;
             font-weight: 800;
-            text-decoration: underline;
-            cursor: pointer;
         }
-        .student-document-upload-copy input[type="file"] {
+        .student-document-upload-zone input[type="file"] {
             position: absolute;
             width: 1px;
             height: 1px;
@@ -366,18 +381,40 @@
             opacity: 0;
             pointer-events: none;
         }
+        .student-document-file-selection {
+            min-height: 20px;
+            color: #08783b !important;
+            font-weight: 750;
+            overflow-wrap: anywhere;
+        }
+        .student-document-upload-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 10px;
+        }
         .student-document-upload-button {
-            flex: 0 0 auto;
-            min-height: 38px;
-            padding: 0 15px;
+            min-height: 40px;
+            padding: 0 18px;
             border: 0;
-            border-radius: 8px;
+            border-radius: 9px;
             background: #0a8f46;
             color: #fff;
-            font-size: .74rem;
+            font-size: .76rem;
             font-weight: 800;
             cursor: pointer;
             box-shadow: 0 6px 14px rgba(10,143,70,.14);
+            transition: background .15s ease, opacity .15s ease, transform .15s ease;
+        }
+        .student-document-upload-button:hover:not(:disabled) {
+            background: #08783b;
+            transform: translateY(-1px);
+        }
+        .student-document-upload-button:disabled {
+            background: #b8c9c0;
+            color: #f8fbf9;
+            cursor: not-allowed;
+            box-shadow: none;
+            opacity: .78;
         }
         .student-document-note {
             display: flex;
@@ -867,19 +904,28 @@
                 {% endif %}
             </section>
 
-            <form method="POST" enctype="multipart/form-data" class="student-document-upload-zone" id="document-upload">
+            <form method="POST" enctype="multipart/form-data" class="student-document-upload-form" id="document-upload">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <div class="student-document-upload-icon" aria-hidden="true">↥</div>
-                <div class="student-document-upload-copy">
-                    <strong>Upload Document</strong>
-                    <span>Choose a file to add it to your OJT documents.</span>
-                    <span>
-                        <label for="document-file">Click to browse</label> · PDF, DOCX, XLSX, PPTX, TXT, ZIP, PNG, JPG · Maximum 5 MB.
-                    </span>
+                <div
+                    class="student-document-upload-zone"
+                    id="document-drop-zone"
+                    role="button"
+                    tabindex="0"
+                    aria-controls="document-file"
+                    aria-label="Choose or drop a document to upload"
+                >
+                    <div class="student-document-upload-icon" aria-hidden="true">↥</div>
+                    <div class="student-document-upload-copy">
+                        <strong>Drag &amp; drop your document here</strong>
+                        <span>or <span class="student-document-upload-browse">click this box to browse</span></span>
+                        <span>PDF, DOCX, XLSX, PPTX, TXT, ZIP, PNG, JPG · Maximum 5 MB.</span>
+                        <span class="student-document-file-selection" id="document-file-name" aria-live="polite">No file selected</span>
+                    </div>
                     <input id="document-file" type="file" name="file" accept=".pdf,.docx,.doc,.xlsx,.xls,.pptx,.txt,.zip,.png,.jpg,.jpeg,.gif" required>
-                    <span id="document-file-name" aria-live="polite"></span>
                 </div>
-                <button type="submit" class="student-document-upload-button">Upload Document</button>
+                <div class="student-document-upload-actions">
+                    <button type="submit" class="student-document-upload-button" id="document-upload-button" disabled>Upload Document</button>
+                </div>
             </form>
 
             <div class="student-document-note">
@@ -955,6 +1001,9 @@
             const fallbackLink = document.getElementById('document-preview-open');
             const fileInput = document.getElementById('document-file');
             const fileName = document.getElementById('document-file-name');
+            const uploadForm = document.getElementById('document-upload');
+            const dropZone = document.getElementById('document-drop-zone');
+            const uploadButton = document.getElementById('document-upload-button');
             const renameModal = document.getElementById('document-rename-modal');
             const renameForm = document.getElementById('document-rename-form');
             const renameInput = document.getElementById('document-rename-input');
@@ -1084,12 +1133,103 @@
                 }
             });
 
-            if (fileInput && fileName) {
-                fileInput.addEventListener('change', function () {
-                    fileName.textContent = fileInput.files && fileInput.files[0]
-                        ? 'Selected: ' + fileInput.files[0].name
-                        : '';
+            if (fileInput && fileName && dropZone && uploadButton && uploadForm) {
+                const allowedExtensions = new Set([
+                    'pdf', 'docx', 'doc', 'xlsx', 'xls', 'pptx', 'txt',
+                    'zip', 'png', 'jpg', 'jpeg', 'gif'
+                ]);
+                const maxFileSize = 5 * 1024 * 1024;
+
+                function selectedFile() {
+                    return fileInput.files && fileInput.files.length ? fileInput.files[0] : null;
+                }
+
+                function validateFile(file) {
+                    if (!file) return 'Choose a document first.';
+                    const parts = String(file.name || '').toLowerCase().split('.');
+                    const extension = parts.length > 1 ? parts.pop() : '';
+                    if (!allowedExtensions.has(extension)) {
+                        return 'This file type is not allowed.';
+                    }
+                    if (file.size > maxFileSize) {
+                        return 'File is too large. Maximum size is 5 MB.';
+                    }
+                    return '';
+                }
+
+                function updateUploadState() {
+                    const file = selectedFile();
+                    const error = validateFile(file);
+
+                    if (!file) {
+                        fileName.textContent = 'No file selected';
+                        uploadButton.disabled = true;
+                        return;
+                    }
+
+                    if (error) {
+                        fileName.textContent = error;
+                        uploadButton.disabled = true;
+                        return;
+                    }
+
+                    fileName.textContent = 'Selected: ' + file.name;
+                    uploadButton.disabled = false;
+                }
+
+                dropZone.addEventListener('click', function () {
+                    fileInput.click();
                 });
+
+                dropZone.addEventListener('keydown', function (event) {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        fileInput.click();
+                    }
+                });
+
+                ['dragenter', 'dragover'].forEach(function (eventName) {
+                    dropZone.addEventListener(eventName, function (event) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        dropZone.classList.add('is-dragging');
+                    });
+                });
+
+                ['dragleave', 'drop'].forEach(function (eventName) {
+                    dropZone.addEventListener(eventName, function (event) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        dropZone.classList.remove('is-dragging');
+                    });
+                });
+
+                dropZone.addEventListener('drop', function (event) {
+                    const files = event.dataTransfer && event.dataTransfer.files;
+                    if (!files || !files.length) return;
+
+                    const transfer = new DataTransfer();
+                    transfer.items.add(files[0]);
+                    fileInput.files = transfer.files;
+                    updateUploadState();
+                });
+
+                fileInput.addEventListener('change', updateUploadState);
+
+                uploadForm.addEventListener('submit', function (event) {
+                    const error = validateFile(selectedFile());
+                    if (error) {
+                        event.preventDefault();
+                        fileName.textContent = error;
+                        uploadButton.disabled = true;
+                        return;
+                    }
+
+                    uploadButton.disabled = true;
+                    uploadButton.textContent = 'Uploading…';
+                });
+
+                updateUploadState();
             }
         })();
     </script>
