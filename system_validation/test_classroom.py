@@ -7,9 +7,20 @@ from app.Services.password_security import hash_password
 import re
 
 def _login_as(client, uid, role):
+    session_version = None
+    if role == "supervisor":
+        conn = get_db_connection()
+        try:
+            row = conn.execute("SELECT session_version FROM users WHERE id=?", (uid,)).fetchone()
+            if row is not None:
+                session_version = int(row[0] or 0)
+        finally:
+            conn.close()
     with client.session_transaction() as sess:
         sess["user_id"]=uid
         sess["role"]=role
+        if session_version is not None:
+            sess["session_version"]=session_version
 
 def _ensure_test_users():
     conn=get_db_connection()
@@ -448,11 +459,18 @@ def test_deadline_handling():
     client.post("/student/classes/join", data={"class_code":code})
     resp=client.post(f"/student/classes/{cid}/assignments/{aid}/submit", data={"content":"late"}, follow_redirects=False)
     assert resp.status_code in (302,303)
-    # should not create submission
+    # Late Work is still accepted, but it receives the fixed automatic 65% score.
     conn=get_db_connection()
-    cnt=conn.execute("SELECT COUNT(*) FROM classroom_submissions WHERE assignment_id=? AND student_id=99011", (aid,)).fetchone()[0]
+    row=conn.execute(
+        "SELECT status, grade FROM classroom_submissions WHERE assignment_id=? AND student_id=99011",
+        (aid,),
+    ).fetchone()
     conn.close()
-    assert cnt==0
+    assert row is not None
+    status = row["status"] if "status" in row.keys() else row[0]
+    grade = row["grade"] if "grade" in row.keys() else row[1]
+    assert status == "late"
+    assert float(grade) == 65.0
     _cleanup_classroom()
 
 def test_supervisor_submission_list_and_counts():

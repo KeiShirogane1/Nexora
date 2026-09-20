@@ -195,7 +195,7 @@ def test_supervisor_deactivate_works():
     mock_cursor.rowcount = 1
     mock_conn.cursor.return_value = mock_cursor
     with patch("app.Http.Controllers.admin.get_db_connection", return_value=mock_conn):
-        with patch("app.Http.Controllers.admin.send_email") as mock_email:
+        with patch("app.Http.Controllers.admin.open_account_appeal_case", return_value={"id": 1}):
             resp = client.post("/admin/supervisor/5/deactivate")
             assert resp.status_code in (302, 303)
 

@@ -2,69 +2,95 @@ import pathlib, sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 
 import pytest
+import uuid
 from unittest.mock import MagicMock, patch
 
-# Test 1-5: Internship assignment creates internship, student_assignments, supervisor_id
+# Test 1-5: Internship assignment creates internship, classroom membership, and supervisor assignment
 def test_internship_assign_creates_both(monkeypatch):
     from bootstrap.app import app
     from app.Models.db import get_db_connection
+    from app.Services.password_security import hash_password
+
     app.config["WTF_CSRF_ENABLED"] = False
     app.config["TESTING"] = True
+    suffix = uuid.uuid4().hex[:8]
+
+    conn = get_db_connection()
+    try:
+        admin_row = conn.execute(
+            "INSERT INTO users (username,email,password,role,status) VALUES (?,?,?,?,?) RETURNING id",
+            (f"admin_assign_{suffix}", f"admin_assign_{suffix}@example.com", hash_password("Pass12345"), "admin", "active"),
+        ).fetchone()
+        supervisor_row = conn.execute(
+            "INSERT INTO users (username,email,password,role,status) VALUES (?,?,?,?,?) RETURNING id",
+            (f"sup_assign_{suffix}", f"sup_assign_{suffix}@example.com", hash_password("Pass12345"), "supervisor", "active"),
+        ).fetchone()
+        student_row = conn.execute(
+            "INSERT INTO users (username,email,password,role,status) VALUES (?,?,?,?,?) RETURNING id",
+            (f"stu_assign_{suffix}", f"stu_assign_{suffix}@example.com", hash_password("Pass12345"), "student", "active"),
+        ).fetchone()
+        admin_id = int(admin_row[0])
+        supervisor_id = int(supervisor_row[0])
+        student_id = int(student_row[0])
+
+        classroom_row = conn.execute(
+            """
+            INSERT INTO classrooms (name,section,supervisor_id,code,archived,classroom_type)
+            VALUES (?,?,?,?,?,?) RETURNING id
+            """,
+            (f"Internship {suffix}", "A", supervisor_id, f"NXR-{suffix.upper()[:6]}", 0, "internship"),
+        ).fetchone()
+        classroom_id = int(classroom_row[0])
+        conn.commit()
+    finally:
+        conn.close()
+
     client = app.test_client()
-    # login as admin
     with client.session_transaction() as sess:
-        sess["user_id"] = 1
+        sess["user_id"] = admin_id
         sess["role"] = "admin"
-    # Mock DB
-    mock_conn = MagicMock()
-    mock_cursor = MagicMock()
-    # Setup for POST: need to mock SELECT for student/supervisor checks, then INSERT
-    def execute_side_effect(sql, params=None):
-        if "SELECT id FROM users WHERE id = ? AND role = 'student'" in sql:
-            mock_cursor.fetchone.return_value = {"id": 2}
-            return mock_cursor
-        elif "SELECT id FROM users WHERE id = ? AND role = 'supervisor'" in sql:
-            mock_cursor.fetchone.return_value = {"id": 3, "username": "sup1", "email": "sup@example.com"}
-            return mock_cursor
-        elif "SELECT username, email FROM users WHERE id = ?" in sql:
-            mock_cursor.fetchone.return_value = {"username": "sup1", "email": "sup@example.com"}
-            return mock_cursor
-        elif "SELECT id FROM users WHERE LOWER(email)" in sql:
-            mock_cursor.fetchone.return_value = None
-            return mock_cursor
-        elif "SELECT COUNT(*) FROM internships" in sql or "SELECT id FROM internships WHERE student_id" in sql:
-            mock_cursor.fetchone.return_value = None
-            return mock_cursor
-        elif "INSERT INTO internships" in sql:
-            mock_cursor.rowcount = 1
-            return mock_cursor
-        elif "INSERT INTO student_assignments" in sql:
-            mock_cursor.rowcount = 1
-            return mock_cursor
-        else:
-            mock_cursor.fetchone.return_value = None
-            return mock_cursor
-    mock_cursor.execute.side_effect = execute_side_effect
-    mock_conn.cursor.return_value = mock_cursor
-    with patch("app.Http.Controllers.admin.get_db_connection", return_value=mock_conn):
-        resp = client.post("/admin/internship-assign", data={
-            "student_id": "2",
-            "company_name": "Test Co",
-            "company_address": "123 St",
-            "supervisor_name": "Sup Name",
-            "supervisor_email": "sup@example.com",
-            "position": "Intern",
-            "start_date": "2024-01-01",
-            "end_date": "2024-06-01",
-            "required_hours": "400",
-            "supervisor_id": "3"
-        }, follow_redirects=False)
-        # Should redirect or 200, but not 500
-        assert resp.status_code in (200, 302, 303)
-        # Check that INSERT was called for internships with supervisor_id
-        calls = [c.args[0] for c in mock_cursor.execute.call_args_list]
-        assert any("INSERT INTO internships" in c and "supervisor_id" in c for c in calls)
-        assert any("student_assignments" in c for c in calls)
+
+    try:
+        with patch("app.Http.Controllers.admin.create_notification"):
+            resp = client.post(
+                "/admin/internship-assign",
+                data={"student_id": str(student_id), "classroom_id": str(classroom_id)},
+                follow_redirects=False,
+            )
+        assert resp.status_code in (302, 303)
+
+        conn = get_db_connection()
+        try:
+            internship = conn.execute(
+                "SELECT supervisor_id FROM internships WHERE student_id = ? AND status = 'Active' ORDER BY id DESC LIMIT 1",
+                (student_id,),
+            ).fetchone()
+            membership = conn.execute(
+                "SELECT 1 FROM classroom_students WHERE classroom_id = ? AND student_id = ?",
+                (classroom_id, student_id),
+            ).fetchone()
+            assignment = conn.execute(
+                "SELECT 1 FROM student_assignments WHERE student_id = ? AND supervisor_id = ?",
+                (student_id, supervisor_id),
+            ).fetchone()
+        finally:
+            conn.close()
+
+        assert internship is not None
+        assert int(internship[0]) == supervisor_id
+        assert membership is not None
+        assert assignment is not None
+    finally:
+        conn = get_db_connection()
+        try:
+            conn.execute("DELETE FROM internships WHERE student_id = ?", (student_id,))
+            conn.execute("DELETE FROM student_assignments WHERE student_id = ? AND supervisor_id = ?", (student_id, supervisor_id))
+            conn.execute("DELETE FROM classroom_students WHERE classroom_id = ? AND student_id = ?", (classroom_id, student_id))
+            conn.execute("DELETE FROM classrooms WHERE id = ?", (classroom_id,))
+            conn.execute("DELETE FROM users WHERE id IN (?, ?, ?)", (student_id, supervisor_id, admin_id))
+            conn.commit()
+        finally:
+            conn.close()
 
 def test_duplicate_active_internship_blocked(monkeypatch):
     from bootstrap.app import app

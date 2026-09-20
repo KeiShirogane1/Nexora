@@ -180,7 +180,7 @@ def test_successful_password_change_with_verification():
     client=app.test_client()
     _login_as(client, 99110, "student")
     # request code (mock email)
-    with patch("app.Http.Controllers.password.send_email") as mock_send:
+    with patch("app.Http.Controllers.password.send_change_password_code_email") as mock_send:
         resp=client.post("/change-password/request-code", follow_redirects=False)
         assert resp.status_code in (302,303)
         assert mock_send.called
@@ -191,7 +191,7 @@ def test_successful_password_change_with_verification():
     from app.Services.change_verification_service import create_change_code
     # create a new code and use it
     _cleanup_change_codes(99110)
-    with patch("app.Http.Controllers.password.send_email"):
+    with patch("app.Http.Controllers.password.send_change_password_code_email"):
         client.post("/change-password/request-code")
     conn=get_db_connection()
     # we need plain code, so generate and store manually to know it

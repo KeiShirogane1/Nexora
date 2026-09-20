@@ -34,12 +34,12 @@ def test_csrf_accepts_with_token():
     app.config["TESTING"] = True
     app.config["WTF_CSRF_TIME_LIMIT"] = None
     client = app.test_client()
+    # Get a CSRF token while anonymous; /login intentionally redirects authenticated users.
+    resp = client.get("/login")
+    assert resp.status_code == 200
     with client.session_transaction() as sess:
         sess["user_id"] = 1
         sess["role"] = "student"
-    # Get token from login page
-    resp = client.get("/login")
-    assert resp.status_code == 200
     import re
     m = re.search(r'name="csrf_token" value="([^"]+)"', resp.get_data(as_text=True))
     assert m, "CSRF token not found in login page"
@@ -59,11 +59,11 @@ def test_csrf_json_header():
     app.config["WTF_CSRF_ENABLED"] = True
     app.config["TESTING"] = True
     client = app.test_client()
+    # Get the login CSRF token before authenticating; authenticated GET /login redirects by design.
+    resp0 = client.get("/login")
     with client.session_transaction() as sess:
         sess["user_id"] = 1
         sess["role"] = "admin"
-    # Get token from login page (always has CSRF)
-    resp0 = client.get("/login")
     import re
     m = re.search(r'name="csrf_token" value="([^"]+)"', resp0.get_data(as_text=True))
     assert m, "CSRF token not found"

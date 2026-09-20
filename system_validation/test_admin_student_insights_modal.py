@@ -39,11 +39,13 @@ def test_admin_insights_modal_keeps_multi_classroom_selection_usable():
     assert "new URLSearchParams(new FormData(form))" in source
 
 
-def test_admin_insights_template_exposes_classroom_choices_for_multi_classroom_students():
+def test_admin_insights_template_exposes_classroom_first_student_choices():
     source = _read("resources/views/admin/student_insights.html")
 
-    assert "classrooms|length > 1 and not selected_classroom" in source
-    assert "admin_reports_overview.student_insights', student_id=selected_student.id, class_id=classroom.id" in source
+    assert "{% if not selected_classroom %}" in source
+    assert "admin-insights-room-grid" in source
+    assert "admin_reports_overview.student_insights', class_id=classroom.id" in source
+    assert "admin_reports_overview.student_insights', class_id=selected_classroom.id, student_id=student.id" in source
 
 
 def test_admin_insights_xhr_returns_clean_fragment_with_supervisor_evidence_dimensions():

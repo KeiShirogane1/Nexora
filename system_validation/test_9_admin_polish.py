@@ -187,7 +187,9 @@ def test_supervisor_activation_deactivation():
     mock_conn.cursor.return_value = mock_cursor
     mock_conn.execute.return_value.fetchone.return_value = {"status":"active"}
     with patch("app.Http.Controllers.admin.get_db_connection", return_value=mock_conn):
-        with patch("app.Http.Controllers.admin.send_email"):
+        with patch("app.Http.Controllers.admin.open_account_appeal_case", return_value={"id": 1}), patch(
+            "app.Http.Controllers.admin.reactivate_account", return_value=True
+        ):
             resp = client.post("/admin/supervisor/10/deactivate")
             assert resp.status_code in (302,303)
             resp2 = client.post("/admin/supervisor/10/activate")
@@ -330,7 +332,9 @@ def test_approval_workflow_works():
     mock_cursor.fetchone.return_value = {"username":"pending1","email":"p@test.com"}
     mock_conn.cursor.return_value = mock_cursor
     with patch("app.Http.Controllers.admin.get_db_connection", return_value=mock_conn):
-        with patch("app.Http.Controllers.admin.send_email"):
+        with patch("app.Http.Controllers.admin.approve_pending_user", return_value={"id": 99}), patch(
+            "app.Http.Controllers.admin.reject_pending_user", return_value={"id": 100}
+        ):
             resp = client.post("/admin/approve-student/99")
             assert resp.status_code in (302,303)
             resp2 = client.post("/admin/reject-supervisor/100")
@@ -386,7 +390,7 @@ def test_reports_list_works():
     _login_as(client, 1, "admin")
     mock_conn = MagicMock()
     mock_cursor = MagicMock()
-    mock_cursor.fetchall.return_value = [(1, "stu1", "sup1")]
+    mock_cursor.fetchall.return_value = [(1, "Internship A", "A", 0, "sup1", "Test Co", "Intern", 2, "stu1", "stu1@example.com")]
     mock_conn.cursor.return_value = mock_cursor
     with patch("app.Http.Controllers.admin.get_db_connection", return_value=mock_conn):
         resp = client.get("/admin/reports")

@@ -74,7 +74,7 @@ def test_student_management_keeps_actions_and_adds_richer_responsive_directory()
     assert 'data-program-cell' in template
     assert 'data-year-section' in template
     assert 'student-class-badge' in template
-    assert "cell.colSpan = 9;" in template
+    assert "cell.colSpan = 10;" in template
     assert 'row.querySelector("[data-program-cell]")' in template
     assert "csrf_token()" in template
     assert "admin.bulk_action" in template
@@ -156,7 +156,7 @@ def test_management_directories_have_mobile_card_responsive_guardrails():
     assert "management.css" not in responsive
 
 
-def test_student_directory_desktop_uses_nine_semantic_columns_without_forced_overflow():
+def test_student_directory_desktop_uses_ten_semantic_columns_without_forced_overflow():
     template = _source("resources/views/admin/students.html")
     responsive = _source("resources/views/components/admin_management_responsive.html")
 
@@ -165,7 +165,8 @@ def test_student_directory_desktop_uses_nine_semantic_columns_without_forced_ove
     assert 'class="student-col-program"' in template
     assert 'class="student-col-class"' in template
     assert 'class="student-col-actions"' in template
-    assert 'colspan="9"' in template
+    assert 'class="student-col-index"' in template
+    assert 'colspan="10"' in template
     assert "@media (min-width: 1280px)" in responsive
     assert "table-layout: fixed" in responsive
     assert ".student-col-identity" in responsive

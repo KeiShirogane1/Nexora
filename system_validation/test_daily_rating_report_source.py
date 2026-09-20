@@ -116,7 +116,7 @@ def test_report_work_item_uses_daily_performance_rating_directly():
             "recommendation": "",
             "priority": "none",
             "basis": [],
-        }
+        }, create=True
     ), patch.object(performance_report_service, "get_db_connection", return_value=conn):
         report = performance_report_service.build_student_report(3, 7, feedback_text="")
 

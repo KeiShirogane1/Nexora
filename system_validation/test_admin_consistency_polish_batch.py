@@ -42,7 +42,7 @@ def test_admin_student_program_choices_are_database_driven_and_saved_canonical()
     assert "'bachelor of science in computer engineering': 'BSCPE'" in template
     assert 'data-full-program="{{ (student.major_program or \'\')|trim }}"' in template
     assert "student.major_program|trim|lower" in template
-    assert 'class="table-meta text-nowrap"' in template
+    assert "table-meta text-nowrap" in template
     assert 'title="{{ student.major_program|trim }}"' in template
     assert "program_label[:13] ~ '…'" in template
     assert 'programCell.getAttribute("data-full-program")' in template
@@ -73,7 +73,8 @@ def test_admin_classroom_landing_removes_type_filter_but_keeps_type_display():
     assert 'id="classroomType"' not in template
     assert 'name="type"' not in template
     assert ">All Types<" not in template
-    assert '<th>Type</th>' in template
+    assert "classroom.classroom_type" in template
+    assert "nx-class-theme-pill" in template
     assert "Intern Classroom" in template
     assert 'name="search"' in template
     assert 'name="status"' in template

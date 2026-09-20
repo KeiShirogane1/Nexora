@@ -110,7 +110,7 @@
                         </div>
                         <div class="table-responsive">
                             <table class="table nexora-table align-middle" id="studentsTable">
-                                <thead><tr><th><input type="checkbox" id="headerCheckbox" class="custom-checkbox" title="Select all"></th><th>#</th><th>Student</th><th>Student ID</th><th>Program / Section</th><th>Class / Internship</th><th>Supervisor</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
+                                <thead><tr><th class="student-col-select"><input type="checkbox" id="headerCheckbox" class="custom-checkbox" title="Select all"></th><th class="student-col-index">#</th><th class="student-col-identity">Student</th><th class="student-col-id">Student ID</th><th class="student-col-program">Program / Section</th><th class="student-col-class">Class / Internship</th><th class="student-col-supervisor">Supervisor</th><th class="student-col-status">Status</th><th class="student-col-joined">Joined</th><th class="student-col-actions">Actions</th></tr></thead>
                                 <tbody>
                                     {% set program_abbreviations = {
                                         'bsit': 'BSIT',
@@ -124,9 +124,9 @@
                                     } %}
                                     {% for student in students %}
                                         <tr data-student-row data-original-index="{{ loop.index }}" data-username="{{ student.username|lower }}" data-username-value="{{ student.username }}" data-email="{{ (student.email|lower) if student.email else '' }}" data-email-value="{{ student.email or '' }}" data-name="{{ student.username|lower }}" data-student-number="" data-status="{{ 'pending' if student.role == 'pending_student' else 'active' }}" data-program="{{ (student.major_program|trim|lower) if student.major_program else '' }}" data-program-label="{{ student.major_program or 'No Program' }}" data-supervisor="{{ (student.supervisor_name|lower) if student.supervisor_name else '' }}" data-class-ids="" data-primary-class="No Class" data-year="" data-id="{{ student.id }}">
-                                            <td><input type="checkbox" class="custom-checkbox row-checkbox" value="{{ student.id }}"></td>
-                                            <td class="text-muted table-index-cell">{{ loop.index }}</td>
-                                            <td>
+                                            <td class="student-col-select"><input type="checkbox" class="custom-checkbox row-checkbox" value="{{ student.id }}"></td>
+                                            <td class="student-col-index text-muted table-index-cell">{{ loop.index }}</td>
+                                            <td class="student-col-identity">
                                                 <div class="supervisor-cell">
                                                     <img src="{{ url_for('user_profile_picture', user_id=student.id) }}" width="36" height="36" class="rounded-circle object-fit-cover flex-shrink-0" alt="">
                                                     <span>
@@ -136,8 +136,8 @@
                                                     </span>
                                                 </div>
                                             </td>
-                                            <td><span class="supervisor-truncate text-muted-placeholder" data-student-number>—</span></td>
-                                            <td data-program-cell data-full-program="{{ (student.major_program or '')|trim }}">
+                                            <td class="student-col-id"><span class="supervisor-truncate text-muted-placeholder" data-student-number>—</span></td>
+                                            <td class="student-col-program" data-program-cell data-full-program="{{ (student.major_program or '')|trim }}">
                                                 {% if student.major_program %}
                                                     {% set program_key = student.major_program|trim|lower %}
                                                     {% set program_label = program_abbreviations.get(program_key, student.major_program|trim) %}
@@ -145,17 +145,17 @@
                                                 {% else %}<span class="text-muted-placeholder">—</span>{% endif %}
                                                 <small class="d-block text-muted fw-normal text-muted-placeholder" data-year-section>—</small>
                                             </td>
-                                            <td><div data-class-list class="d-flex flex-wrap gap-1"><span class="text-muted-placeholder">—</span></div></td>
-                                            <td><span class="supervisor-truncate{% if not student.supervisor_name %} text-muted-placeholder{% endif %}" data-supervisor-cell>{% if student.supervisor_name %}{{ student.supervisor_name }}{% else %}Not Assigned{% endif %}</span></td>
-                                            <td data-status-cell>
+                                            <td class="student-col-class"><div data-class-list class="d-flex flex-wrap gap-1"><span class="text-muted-placeholder">—</span></div></td>
+                                            <td class="student-col-supervisor"><span class="supervisor-truncate{% if not student.supervisor_name %} text-muted-placeholder{% endif %}" data-supervisor-cell>{% if student.supervisor_name %}{{ student.supervisor_name }}{% else %}Not Assigned{% endif %}</span></td>
+                                            <td class="student-col-status" data-status-cell>
                                                 {% if student.role == "pending_student" %}
                                                     <span class="status-badge status-pending"><span class="status-dot"></span> Pending Approval</span>
                                                 {% else %}
                                                     <span class="status-badge status-active"><span class="status-dot"></span> Active</span>
                                                 {% endif %}
                                             </td>
-                                            <td data-joined-date>{% if student.joined_date %}<span class="text-nowrap">{{ student.joined_date }}</span>{% else %}<span class="text-muted-placeholder">—</span>{% endif %}</td>
-                                            <td><div class="actions-cell">
+                                            <td class="student-col-joined" data-joined-date>{% if student.joined_date %}<span class="text-nowrap">{{ student.joined_date }}</span>{% else %}<span class="text-muted-placeholder">—</span>{% endif %}</td>
+                                            <td class="student-col-actions"><div class="actions-cell">
                                                 <a href="{{ url_for('admin.student_profile', student_id=student.id) }}" class="btn-view">View Profile</a>
                                                 {% if student.role == "pending_student" %}
                                                     <form method="POST" action="{{ url_for('admin.approve_student', user_id=student.id) }}" class="d-inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="btn-approve">Approve</button></form>

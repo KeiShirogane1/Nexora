@@ -7,9 +7,20 @@ from app.Models.db import get_db_connection
 from app.Services.password_security import hash_password
 
 def _login_as(client, user_id, role):
+    session_version = None
+    if role == "supervisor":
+        conn = get_db_connection()
+        try:
+            row = conn.execute("SELECT session_version FROM users WHERE id = ?", (user_id,)).fetchone()
+            if row is not None:
+                session_version = int(row[0] or 0)
+        finally:
+            conn.close()
     with client.session_transaction() as sess:
         sess["user_id"] = user_id
         sess["role"] = role
+        if session_version is not None:
+            sess["session_version"] = session_version
 
 def _create_test_supervisor(prefix):
     username = f"{prefix}_{uuid.uuid4().hex[:10]}"
@@ -336,25 +347,29 @@ def test_task_edit_authorized():
 def test_task_delete_ownership():
     app.config["WTF_CSRF_ENABLED"] = False
     app.config["TESTING"] = True
+    supervisor_id = _create_test_supervisor("sup_delete_owner")
     client = app.test_client()
-    _login_as(client, 5, "supervisor")
-    mock_conn = MagicMock()
-    def exec_side(sql, params=None):
-        m = MagicMock()
-        if "SELECT status" in sql:
-            m.fetchone.return_value = {"status":"active"}
-        elif "SELECT student_id" in sql and "FROM tasks" in sql:
-            m.fetchone.return_value = None
-        else:
-            m.fetchone.return_value = None
-        return m
-    mock_conn.execute.side_effect = exec_side
-    with patch("app.Http.Controllers.supervisor.get_db_connection", return_value=mock_conn):
-        resp = client.post("/supervisor/task/999/delete")
-        assert resp.status_code == 404
-        # ensure GET not allowed
-        resp2 = client.get("/supervisor/task/999/delete")
-        assert resp2.status_code == 405
+    try:
+        _login_as(client, supervisor_id, "supervisor")
+        mock_conn = MagicMock()
+        def exec_side(sql, params=None):
+            m = MagicMock()
+            if "SELECT status" in sql:
+                m.fetchone.return_value = {"status":"active"}
+            elif "SELECT student_id" in sql and "FROM tasks" in sql:
+                m.fetchone.return_value = None
+            else:
+                m.fetchone.return_value = None
+            return m
+        mock_conn.execute.side_effect = exec_side
+        with patch("app.Http.Controllers.supervisor.get_db_connection", return_value=mock_conn):
+            resp = client.post("/supervisor/task/999/delete")
+            assert resp.status_code == 404
+            # ensure GET not allowed
+            resp2 = client.get("/supervisor/task/999/delete")
+            assert resp2.status_code == 405
+    finally:
+        _delete_test_user(supervisor_id)
 
 # 9 & 10 feedback
 def test_feedback_authorized():
@@ -558,32 +573,36 @@ def test_assign_task_csrf_rejection():
 def test_feedback_csrf_acceptance_with_token():
     app.config["WTF_CSRF_ENABLED"] = True
     app.config["TESTING"] = True
+    supervisor_id = _create_test_supervisor("sup_feedback_csrf")
     client = app.test_client()
-    with client.session_transaction() as sess:
-        sess["user_id"] = 5
-        sess["role"] = "supervisor"
-    resp0 = client.get("/login")
-    assert resp0.status_code == 200
-    import re
-    m = re.search(r'name="csrf_token" value="([^"]+)"', resp0.get_data(as_text=True))
-    assert m, "CSRF token not found"
-    token = m.group(1)
-    mock_conn = MagicMock()
-    def exec_side(sql, params=None):
-        mm = MagicMock()
-        if "SELECT status" in sql:
-            mm.fetchone.return_value = {"status":"active"}
-        elif "SELECT 1 FROM student_assignments" in sql:
-            mm.fetchone.return_value = (1,)
-        else:
-            mm.fetchone.return_value = None
-        return mm
-    mock_conn.execute.side_effect = exec_side
-    with patch("app.Http.Controllers.supervisor.get_db_connection", return_value=mock_conn):
-        with patch("app.Http.Controllers.supervisor.create_notification"):
-            resp = client.post("/supervisor/student/20/feedback", data={"comment":"Great job well done valid", "label":"Excellent", "csrf_token": token}, follow_redirects=False)
-            assert resp.status_code != 400, f"CSRF valid token should not be 400, got {resp.status_code} {resp.data[:200]}"
-            assert resp.status_code in (302,303)
+    try:
+        # Authenticated GET /login redirects by design, so obtain the CSRF token first.
+        resp0 = client.get("/login")
+        assert resp0.status_code == 200
+        import re
+        m = re.search(r'name="csrf_token" value="([^"]+)"', resp0.get_data(as_text=True))
+        assert m, "CSRF token not found"
+        token = m.group(1)
+        _login_as(client, supervisor_id, "supervisor")
+
+        mock_conn = MagicMock()
+        def exec_side(sql, params=None):
+            mm = MagicMock()
+            if "SELECT status" in sql:
+                mm.fetchone.return_value = {"status":"active"}
+            elif "SELECT 1 FROM student_assignments" in sql:
+                mm.fetchone.return_value = (1,)
+            else:
+                mm.fetchone.return_value = None
+            return mm
+        mock_conn.execute.side_effect = exec_side
+        with patch("app.Http.Controllers.supervisor.get_db_connection", return_value=mock_conn):
+            with patch("app.Http.Controllers.supervisor.create_notification"):
+                resp = client.post("/supervisor/student/20/feedback", data={"comment":"Great job well done valid", "label":"Excellent", "csrf_token": token}, follow_redirects=False)
+                assert resp.status_code != 400, f"CSRF valid token should not be 400, got {resp.status_code} {resp.data[:200]}"
+                assert resp.status_code in (302,303)
+    finally:
+        _delete_test_user(supervisor_id)
 
 # 15 POST-only
 def test_delete_requires_post():
