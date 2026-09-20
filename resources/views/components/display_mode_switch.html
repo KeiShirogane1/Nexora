@@ -78,8 +78,23 @@
 
         var mobileIcon = button.querySelector('[data-nx-display-mobile-icon]');
         var desktopIcon = button.querySelector('[data-nx-display-desktop-icon]');
-        if (mobileIcon) mobileIcon.hidden = nextMode !== 'mobile';
-        if (desktopIcon) desktopIcon.hidden = nextMode !== 'desktop';
+
+        /*
+         * The icon represents the mode the user can switch TO:
+         * Mobile View  -> show the PC/Desktop icon.
+         * Desktop View -> show the Phone icon.
+         * Use both hidden and inline display so page CSS cannot reverse it.
+         */
+        if (mobileIcon) {
+            var showPhone = mode === 'desktop';
+            mobileIcon.hidden = !showPhone;
+            mobileIcon.style.display = showPhone ? 'block' : 'none';
+        }
+        if (desktopIcon) {
+            var showDesktop = mode === 'mobile';
+            desktopIcon.hidden = !showDesktop;
+            desktopIcon.style.display = showDesktop ? 'block' : 'none';
+        }
     }
 
     function applyMode(mode, persist) {
