@@ -47,26 +47,13 @@
     }
 
     function naturalMode() {
-        if (!canSwitchDisplayMode()) return 'desktop';
-
         /*
-         * Respect the browser's current presentation on first visit:
-         * - normal phone viewport -> Mobile View
-         * - browser "Desktop site" / wide mobile viewport -> Desktop View
-         *
-         * Pages without a viewport meta tag fall back to Mobile View on
-         * phone-like touch devices instead of forcing a desktop canvas.
+         * Nexora owns its in-app display choice on phone-like touch devices.
+         * Browser "Desktop site" presentation must not silently change the
+         * portal mode or authentication state. Users switch views only with
+         * the Nexora display button.
          */
-        var viewport = document.querySelector('meta[name="viewport"]');
-        var hasDeviceViewport = !!(
-            viewport &&
-            /width\s*=\s*device-width/i.test(viewport.getAttribute('content') || '')
-        );
-
-        if (hasDeviceViewport && window.innerWidth > MOBILE_BREAKPOINT) {
-            return 'desktop';
-        }
-        return 'mobile';
+        return canSwitchDisplayMode() ? 'mobile' : 'desktop';
     }
 
     function desktopScale() {
@@ -88,9 +75,6 @@
         button.dataset.nextMode = nextMode;
         button.setAttribute('aria-label', 'Switch to ' + label);
         button.setAttribute('title', 'Switch to ' + label);
-
-        var text = button.querySelector('[data-nx-display-label]');
-        if (text) text.textContent = label;
 
         var mobileIcon = button.querySelector('[data-nx-display-mobile-icon]');
         var desktopIcon = button.querySelector('[data-nx-display-desktop-icon]');
@@ -148,8 +132,7 @@
                 '<rect x="3" y="4" width="18" height="12" rx="2"></rect>' +
                 '<path d="M8 20h8"></path>' +
                 '<path d="M12 16v4"></path>' +
-            '</svg>' +
-            '<span data-nx-display-label></span>';
+            '</svg>';
 
         button.addEventListener('click', function () {
             applyMode(button.dataset.nextMode === 'desktop' ? 'desktop' : 'mobile', true);
@@ -202,27 +185,22 @@
 <style id="nx-display-mode-styles">
 .nx-display-mode-toggle {
     position: fixed;
-    right: 16px;
+    right: 24px;
     bottom: 92px;
     z-index: 3150;
-    min-width: 124px;
-    height: 42px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 0 13px;
+    width: 52px;
+    min-width: 52px;
+    height: 58px;
+    display: inline-grid;
+    place-items: center;
+    padding: 0;
     border: 1px solid rgba(15, 23, 42, 0.14);
-    border-radius: 999px;
+    border-radius: 12px;
     background: rgba(255, 255, 255, 0.97);
-    color: var(--nx-topbar-ink, #17324d);
-    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.14);
+    color: var(--nx-topbar-accent, #2563eb);
+    box-shadow: 0 10px 26px rgba(15, 23, 42, 0.16);
     -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
-    font: inherit;
-    font-size: 12px;
-    font-weight: 800;
-    line-height: 1;
     cursor: pointer;
     touch-action: manipulation;
 }
@@ -230,14 +208,15 @@
 .nx-display-mode-toggle:hover,
 .nx-display-mode-toggle:focus-visible {
     border-color: var(--nx-topbar-accent, #2563eb);
+    background: var(--nx-topbar-accent-soft, #eff6ff);
     color: var(--nx-topbar-accent, #2563eb);
     outline: none;
 }
 
 .nx-display-mode-toggle svg {
-    width: 18px;
-    height: 18px;
-    flex: 0 0 18px;
+    width: 23px;
+    height: 23px;
+    display: block;
     fill: none;
     stroke: currentColor;
     stroke-width: 1.9;
@@ -245,15 +224,13 @@
     stroke-linejoin: round;
 }
 
-@media (max-width: 760px) {
-    .nx-display-mode-toggle {
-        right: 12px;
-        bottom: 84px;
-        min-width: 118px;
-        height: 40px;
-        padding: 0 11px;
-        font-size: 11px;
-    }
+html[data-nx-display-mode="mobile"] .nx-display-mode-toggle {
+    right: 14px;
+    bottom: 78px;
+    width: 48px;
+    min-width: 48px;
+    height: 54px;
+    border-radius: 11px;
 }
 
 @media (min-width: 1001px), (pointer: fine) and (min-width: 761px) {
