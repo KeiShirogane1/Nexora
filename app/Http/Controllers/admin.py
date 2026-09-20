@@ -387,7 +387,7 @@ def admin_students():
             COALESCE(SUM(
                 CASE
                     WHEN role = 'student'
-                     AND COALESCE(status, 'active') = 'active'
+                     AND COALESCE(u.status, 'active') = 'active'
                     THEN 1 ELSE 0
                 END
             ), 0) AS active_students,
@@ -1414,6 +1414,22 @@ def internship_assign():
         except (IndexError, KeyError, TypeError):
             return default
 
+    def person_name(first_name, middle_name, last_name, fallback):
+        parts = [
+            str(value or "").strip()
+            for value in (first_name, middle_name, last_name)
+            if str(value or "").strip()
+        ]
+        return " ".join(parts) if parts else str(fallback or "").strip()
+
+    def membership_supervisor_name(row):
+        return person_name(
+            row_value(row, "supervisor_first_name", 5, ""),
+            row_value(row, "supervisor_middle_name", 6, ""),
+            row_value(row, "supervisor_last_name", 7, ""),
+            row_value(row, "supervisor_name", 3, "Supervisor"),
+        )
+
     def get_active_membership(student_id):
         return cursor.execute(
             """
@@ -1422,10 +1438,14 @@ def internship_assign():
                 c.name AS classroom_name,
                 c.supervisor_id,
                 COALESCE(s.username, '') AS supervisor_name,
-                COALESCE(cid.company_name, '') AS company_name
+                COALESCE(cid.company_name, '') AS company_name,
+                COALESCE(spp.first_name, '') AS supervisor_first_name,
+                COALESCE(spp.middle_name, '') AS supervisor_middle_name,
+                COALESCE(spp.last_name, '') AS supervisor_last_name
             FROM classroom_students cs
             JOIN classrooms c ON c.id = cs.classroom_id
             LEFT JOIN users s ON s.id = c.supervisor_id
+            LEFT JOIN supervisor_profiles spp ON spp.user_id = s.id
             LEFT JOIN classroom_internship_details cid ON cid.classroom_id = c.id
             WHERE cs.student_id = ?
               AND COALESCE(c.classroom_type, 'classroom') = 'internship'
@@ -1457,9 +1477,13 @@ def internship_assign():
                 COALESCE(cid.end_date, '') AS end_date,
                 COALESCE(cid.enrollment_deadline, '') AS enrollment_deadline,
                 COALESCE(cid.required_hours, 0) AS required_hours,
-                COALESCE(cid.company_website, '') AS company_website
+                COALESCE(cid.company_website, '') AS company_website,
+                COALESCE(spp.first_name, '') AS supervisor_first_name,
+                COALESCE(spp.middle_name, '') AS supervisor_middle_name,
+                COALESCE(spp.last_name, '') AS supervisor_last_name
             FROM classrooms c
             JOIN users supervisor ON supervisor.id = c.supervisor_id
+            LEFT JOIN supervisor_profiles spp ON spp.user_id = supervisor.id
             LEFT JOIN classroom_internship_details cid ON cid.classroom_id = c.id
             WHERE c.id = ?
               AND COALESCE(c.classroom_type, 'classroom') = 'internship'
@@ -1488,7 +1512,7 @@ def internship_assign():
                 classroom_id = int(classroom_id_raw)
             except (TypeError, ValueError):
                 classroom_id = 0
-                errors.append("Available Supervisor is required")
+                errors.append("Intern Classroom is required")
 
             student_row = None
             placement_row = None
@@ -1497,10 +1521,16 @@ def internship_assign():
             if student_id:
                 student_row = cursor.execute(
                     """
-                    SELECT id, username
-                    FROM users
-                    WHERE id = ?
-                      AND role = 'student'
+                    SELECT
+                        u.id,
+                        u.username,
+                        COALESCE(sp.first_name, '') AS first_name,
+                        COALESCE(sp.middle_name, '') AS middle_name,
+                        COALESCE(sp.last_name, '') AS last_name
+                    FROM users u
+                    LEFT JOIN student_profiles sp ON sp.user_id = u.id
+                    WHERE u.id = ?
+                      AND u.role = 'student'
                       AND COALESCE(status, 'active') = 'active'
                     LIMIT 1
                     """,
@@ -1514,7 +1544,7 @@ def internship_assign():
             if classroom_id:
                 placement_row = get_target_placement(classroom_id)
                 if not placement_row:
-                    errors.append("Selected Supervisor / Intern Classroom is no longer available")
+                    errors.append("Selected Intern Classroom is no longer available")
 
             transfer_required = False
             if not errors and current_membership and placement_row:
@@ -1547,7 +1577,12 @@ def internship_assign():
                 flash("; ".join(errors), "danger")
             else:
                 supervisor_id = int(row_value(placement_row, "supervisor_id", 4, 0) or 0)
-                supervisor_name = str(row_value(placement_row, "supervisor_name", 5, "") or "")
+                supervisor_name = person_name(
+                    row_value(placement_row, "supervisor_first_name", 18, ""),
+                    row_value(placement_row, "supervisor_middle_name", 19, ""),
+                    row_value(placement_row, "supervisor_last_name", 20, ""),
+                    row_value(placement_row, "supervisor_name", 5, "Supervisor"),
+                )
                 supervisor_email = str(row_value(placement_row, "supervisor_email", 6, "") or "")
                 classroom_name = str(row_value(placement_row, "classroom_name", 1, "Intern Classroom") or "Intern Classroom")
                 company_name = str(row_value(placement_row, "company_name", 7, "") or "").strip() or classroom_name
@@ -1556,7 +1591,12 @@ def internship_assign():
                 start_date = str(row_value(placement_row, "start_date", 13, "") or "")
                 end_date = str(row_value(placement_row, "end_date", 14, "") or "")
                 required_hours = int(row_value(placement_row, "required_hours", 16, 0) or 0) or 486
-                student_name = str(row_value(student_row, "username", 1, "Student") or "Student")
+                student_name = person_name(
+                    row_value(student_row, "first_name", 2, ""),
+                    row_value(student_row, "middle_name", 3, ""),
+                    row_value(student_row, "last_name", 4, ""),
+                    row_value(student_row, "username", 1, "Student"),
+                )
 
                 old_classroom_id = None
                 old_classroom_name = None
@@ -1568,7 +1608,7 @@ def internship_assign():
                         old_classroom_id = int(row_value(current_membership, "classroom_id", 0, 0) or 0)
                         old_classroom_name = str(row_value(current_membership, "classroom_name", 1, "Intern Classroom") or "Intern Classroom")
                         old_supervisor_id = int(row_value(current_membership, "supervisor_id", 2, 0) or 0)
-                        old_supervisor_name = str(row_value(current_membership, "supervisor_name", 3, "Supervisor") or "Supervisor")
+                        old_supervisor_name = membership_supervisor_name(current_membership) or "Supervisor"
 
                         cursor.execute(
                             "DELETE FROM classroom_students WHERE classroom_id = ? AND student_id = ?",
@@ -1717,11 +1757,18 @@ def internship_assign():
 
         student_rows = cursor.execute(
             """
-            SELECT id, username
-            FROM users
-            WHERE role = 'student'
-              AND COALESCE(status, 'active') = 'active'
-            ORDER BY LOWER(username), id
+            SELECT
+                u.id,
+                u.username,
+                COALESCE(sp.first_name, '') AS first_name,
+                COALESCE(sp.middle_name, '') AS middle_name,
+                COALESCE(sp.last_name, '') AS last_name,
+                COALESCE(sp.student_id, '') AS student_number
+            FROM users u
+            LEFT JOIN student_profiles sp ON sp.user_id = u.id
+            WHERE u.role = 'student'
+              AND COALESCE(u.status, 'active') = 'active'
+            ORDER BY LOWER(COALESCE(sp.last_name, '')), LOWER(COALESCE(sp.first_name, '')), LOWER(u.username), u.id
             """
         ).fetchall()
 
@@ -1733,10 +1780,17 @@ def internship_assign():
                 {
                     "id": student_id,
                     "username": str(row_value(row, "username", 1, "") or ""),
+                    "display_name": person_name(
+                        row_value(row, "first_name", 2, ""),
+                        row_value(row, "middle_name", 3, ""),
+                        row_value(row, "last_name", 4, ""),
+                        row_value(row, "username", 1, ""),
+                    ),
+                    "student_number": str(row_value(row, "student_number", 5, "") or ""),
                     "current_classroom_id": int(row_value(membership, "classroom_id", 0, 0) or 0) if membership else 0,
                     "current_classroom_name": str(row_value(membership, "classroom_name", 1, "") or "") if membership else "",
                     "current_supervisor_id": int(row_value(membership, "supervisor_id", 2, 0) or 0) if membership else 0,
-                    "current_supervisor_name": str(row_value(membership, "supervisor_name", 3, "") or "") if membership else "",
+                    "current_supervisor_name": membership_supervisor_name(membership) if membership else "",
                     "current_company_name": str(row_value(membership, "company_name", 4, "") or "") if membership else "",
                 }
             )
@@ -1766,15 +1820,19 @@ def internship_assign():
                     SELECT COUNT(*)
                     FROM classroom_students cs
                     WHERE cs.classroom_id = c.id
-                ) AS student_count
+                ) AS student_count,
+                COALESCE(spp.first_name, '') AS supervisor_first_name,
+                COALESCE(spp.middle_name, '') AS supervisor_middle_name,
+                COALESCE(spp.last_name, '') AS supervisor_last_name
             FROM classrooms c
             JOIN users supervisor ON supervisor.id = c.supervisor_id
+            LEFT JOIN supervisor_profiles spp ON spp.user_id = supervisor.id
             LEFT JOIN classroom_internship_details cid ON cid.classroom_id = c.id
             WHERE COALESCE(c.classroom_type, 'classroom') = 'internship'
               AND COALESCE(c.archived, 0) = 0
               AND supervisor.role = 'supervisor'
               AND COALESCE(supervisor.status, 'active') = 'active'
-            ORDER BY LOWER(supervisor.username), LOWER(c.name), c.id
+            ORDER BY LOWER(COALESCE(spp.last_name, '')), LOWER(COALESCE(spp.first_name, '')), LOWER(supervisor.username), LOWER(c.name), c.id
             """
         ).fetchall()
 
@@ -1787,7 +1845,12 @@ def internship_assign():
                     "section": str(row_value(row, "section", 2, "") or ""),
                     "code": str(row_value(row, "code", 3, "") or ""),
                     "supervisor_id": int(row_value(row, "supervisor_id", 4, 0) or 0),
-                    "supervisor_name": str(row_value(row, "supervisor_name", 5, "") or ""),
+                    "supervisor_name": person_name(
+                        row_value(row, "supervisor_first_name", 19, ""),
+                        row_value(row, "supervisor_middle_name", 20, ""),
+                        row_value(row, "supervisor_last_name", 21, ""),
+                        row_value(row, "supervisor_name", 5, "Supervisor"),
+                    ),
                     "supervisor_email": str(row_value(row, "supervisor_email", 6, "") or ""),
                     "company_name": str(row_value(row, "company_name", 7, "") or ""),
                     "internship_title": str(row_value(row, "internship_title", 8, "") or ""),

@@ -46,14 +46,23 @@ def get_admin_assigned_interns():
     try:
         supervisors = conn.execute(
             """
-            SELECT u.id, u.username, COALESCE(u.email, '') AS email
+            SELECT
+                u.id,
+                u.username,
+                COALESCE(u.email, '') AS email,
+                COALESCE(sp.first_name, '') AS first_name,
+                COALESCE(sp.middle_name, '') AS middle_name,
+                COALESCE(sp.last_name, '') AS last_name
             FROM users u
+            LEFT JOIN supervisor_profiles sp ON sp.user_id = u.id
             WHERE u.role = 'supervisor'
-              AND (
-                    EXISTS (SELECT 1 FROM classrooms c WHERE c.supervisor_id = u.id)
-                    OR EXISTS (SELECT 1 FROM student_assignments sa WHERE sa.supervisor_id = u.id)
+              AND EXISTS (
+                    SELECT 1
+                    FROM classrooms c
+                    JOIN classroom_students cs ON cs.classroom_id = c.id
+                    WHERE c.supervisor_id = u.id
               )
-            ORDER BY LOWER(u.username), u.id
+            ORDER BY LOWER(COALESCE(sp.last_name, '')), LOWER(COALESCE(sp.first_name, '')), LOWER(u.username), u.id
             """
         ).fetchall()
     finally:
@@ -70,21 +79,27 @@ def get_admin_assigned_interns():
         supervisor_id = int(_value(row, "id", 0, 0) or 0)
         if not supervisor_id:
             continue
-        supervisor_name = str(_value(row, "username", 1, "Supervisor") or "Supervisor")
+        supervisor_name = _display_name(
+            _value(row, "first_name", 3, ""),
+            _value(row, "middle_name", 4, ""),
+            _value(row, "last_name", 5, ""),
+            _value(row, "username", 1, "Supervisor"),
+        )
         supervisor_email = str(_value(row, "email", 2, "") or "")
         context = get_supervisor_assigned_interns(supervisor_id)
-        if context.get("interns") or context.get("flat_interns"):
+        placed_groups = [
+            group for group in context.get("classrooms", [])
+            if group.get("interns")
+        ]
+        if placed_groups:
             supervisor_options.append({"id": supervisor_id, "name": supervisor_name, "email": supervisor_email})
         for intern in context.get("flat_interns", []):
-            intern_id = int(intern.get("id") or 0)
-            if not intern_id:
+            if not intern.get("placements"):
                 continue
-            state = intern_state.setdefault(intern_id, {"has_placement": False, "legacy_assigned": False})
-            if intern.get("placements"):
-                state["has_placement"] = True
-            if intern.get("legacy_assigned"):
-                state["legacy_assigned"] = True
-        for group in context.get("interns", []):
+            intern_id = int(intern.get("id") or 0)
+            if intern_id:
+                intern_state[intern_id] = {"has_placement": True}
+        for group in placed_groups:
             admin_group = dict(group)
             admin_group.update({"supervisor_id": supervisor_id, "supervisor_name": supervisor_name, "supervisor_email": supervisor_email})
             groups.append(admin_group)
@@ -94,13 +109,11 @@ def get_admin_assigned_interns():
         pending_reviews += int(summary.get("pending_reviews") or 0)
 
     groups.sort(key=lambda group: (
-        1 if group.get("is_legacy") else 0,
         1 if group.get("archived") else 0,
         str(group.get("supervisor_name") or "").lower(),
         str(group.get("classroom_name") or "").lower(),
         int(group.get("class_id") or 0),
     ))
-    legacy_only = sum(1 for state in intern_state.values() if state.get("legacy_assigned") and not state.get("has_placement"))
     return {
         "interns": groups,
         "supervisors": supervisor_options,
@@ -109,7 +122,7 @@ def get_admin_assigned_interns():
             "classroom_count": classroom_count,
             "classroom_placements": classroom_placements,
             "pending_reviews": pending_reviews,
-            "legacy_only": legacy_only,
+            "legacy_only": 0,
             "supervisor_count": len(supervisor_options),
         },
     }

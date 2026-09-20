@@ -32,7 +32,7 @@
     <section class="admin-assigned-summary nx-kpi-grid" aria-label="Assigned intern summary">
         <article class="nx-kpi-card">
             <span class="nx-kpi-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></span>
-            <div class="nx-kpi-copy"><small>Total Interns</small><strong>{{ summary.total_interns }}</strong><span>Unique interns across supervisors</span></div>
+            <div class="nx-kpi-copy"><small>Total Interns</small><strong>{{ summary.total_interns }}</strong><span>Students enrolled in Intern Classrooms</span></div>
         </article>
         <article class="nx-kpi-card">
             <span class="nx-kpi-icon is-green" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M3 9h18"></path><path d="M8 20v-4h8v4"></path></svg></span>
@@ -55,13 +55,24 @@
 
     <section aria-label="Assigned interns by classroom">
     {% for classroom in interns %}
-        <details class="admin-assigned-group" data-assigned-group data-supervisor-id="{{ classroom.supervisor_id }}" data-search="{{ (classroom.classroom_name ~ ' ' ~ classroom.section ~ ' ' ~ classroom.company_name ~ ' ' ~ classroom.internship_title ~ ' ' ~ classroom.supervisor_name ~ ' ' ~ classroom.supervisor_email)|lower|e }}" {% if loop.first %}open{% endif %}>
-            <summary>
-                <div class="admin-assigned-class"><h2>{{ classroom.classroom_name }}</h2><p>Supervisor: {{ classroom.supervisor_name }}{% if classroom.section %} · {{ classroom.section }}{% endif %}{% if classroom.company_name %} · {{ classroom.company_name }}{% endif %}</p></div>
+        {% set assigned_theme = classroom_banner_theme(classroom.class_id) %}
+        <details class="admin-assigned-group nx-class-theme nx-class-theme--{{ assigned_theme }}" data-assigned-group data-supervisor-id="{{ classroom.supervisor_id }}" data-search="{{ (classroom.classroom_name ~ ' ' ~ classroom.section ~ ' ' ~ classroom.company_name ~ ' ' ~ classroom.internship_title ~ ' ' ~ classroom.supervisor_name ~ ' ' ~ classroom.supervisor_email)|lower|e }}" {% if loop.first %}open{% endif %}>
+            <summary class="admin-assigned-classroom-summary nx-class-fade-banner">
+                <div class="admin-assigned-classroom-heading">
+                    <span class="admin-assigned-classroom-icon nx-class-theme-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 6l9 4.5-9 4.5-9-4.5Z"></path><path d="M7 12.5v4.2c2.8 1.8 7.2 1.8 10 0v-4.2"></path><path d="M21 10.5v5"></path></svg>
+                    </span>
+                    <div class="admin-assigned-class">
+                        <span class="admin-assigned-class-kicker">INTERN CLASSROOM</span>
+                        <h2>{{ classroom.classroom_name }}</h2>
+                        <p>Supervisor: <strong>{{ classroom.supervisor_name }}</strong>{% if classroom.section %} · {{ classroom.section }}{% endif %}{% if classroom.company_name %} · {{ classroom.company_name }}{% endif %}</p>
+                    </div>
+                </div>
                 <div class="admin-assigned-meta">
-                    {% if classroom.is_legacy %}<span class="admin-assigned-pill legacy">Legacy</span>{% elif classroom.archived %}<span class="admin-assigned-pill archived">Archived</span>{% else %}<span class="admin-assigned-pill active">Active</span>{% endif %}
-                    <span class="admin-assigned-pill">{{ classroom.intern_count }} intern{% if classroom.intern_count != 1 %}s{% endif %}</span>
-                    {% if not classroom.is_legacy and classroom.class_id %}<a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin_classrooms.classroom_detail', classroom_id=classroom.class_id) }}" onclick="event.stopPropagation()">View Classroom</a>{% endif %}
+                    {% if classroom.archived %}<span class="admin-assigned-pill archived">Archived</span>{% else %}<span class="admin-assigned-pill active">Active</span>{% endif %}
+                    <span class="admin-assigned-pill nx-class-theme-count">{{ classroom.intern_count }} intern{% if classroom.intern_count != 1 %}s{% endif %}</span>
+                    {% if classroom.class_id %}<a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin_classrooms.classroom_detail', classroom_id=classroom.class_id) }}" onclick="event.stopPropagation()">View Classroom</a>{% endif %}
+                    <span class="admin-assigned-chevron" aria-hidden="true"></span>
                 </div>
             </summary>
             {% if classroom.interns %}

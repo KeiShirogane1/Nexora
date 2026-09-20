@@ -52,13 +52,13 @@
                         </span>
                         <div>
                             <span>ASSIGNMENT</span>
-                            <h2 id="internshipAssignmentHeading">Student & Available Supervisor</h2>
-                            <p>Only active Supervisors with an active Intern Classroom are available here.</p>
+                            <h2 id="internshipAssignmentHeading">Student & Intern Classroom</h2>
+                            <p>Select the student first, then choose the Supervisor-owned Intern Classroom they should join.</p>
                         </div>
                     </div>
 
-                    <div class="admin-internship-form-grid admin-internship-assignment-grid">
-                        <div class="admin-internship-field">
+                    <div class="admin-internship-assignment-layout">
+                        <div class="admin-internship-field admin-internship-student-picker">
                             <label for="internshipStudent">Student <span class="admin-internship-required">*</span></label>
                             <select id="internshipStudent" name="student_id" class="form-select" required>
                                 <option value="">-- Select Student --</option>
@@ -70,41 +70,69 @@
                                         data-current-supervisor="{{ student.current_supervisor_name|e }}"
                                         data-current-company="{{ student.current_company_name|e }}"
                                         {% if request.form.get('student_id') == student.id|string %}selected{% endif %}
-                                    >{{ student.username }}{% if student.current_classroom_name %} — assigned to {{ student.current_classroom_name }}{% endif %}</option>
+                                    >{{ student.display_name }}{% if student.student_number %} · {{ student.student_number }}{% endif %}{% if student.current_classroom_name %} — assigned to {{ student.current_classroom_name }}{% endif %}</option>
                                 {% endfor %}
                             </select>
-                            <p class="admin-internship-help">Choose the active student account to enroll.</p>
+                            <p class="admin-internship-help">Choose the active student account to enroll or transfer.</p>
                         </div>
 
-                        <div class="admin-internship-field">
-                            <label for="internshipClassroom">Available Supervisor <span class="admin-internship-required">*</span></label>
-                            <select id="internshipClassroom" name="classroom_id" class="form-select" required>
-                                <option value="">-- Select Available Supervisor --</option>
+                        <div class="admin-internship-field admin-internship-classroom-picker">
+                            <div class="admin-internship-classroom-picker-heading">
+                                <div>
+                                    <label>Intern Classroom <span class="admin-internship-required">*</span></label>
+                                    <p class="admin-internship-help">Choose the classroom itself. The Supervisor and company information come directly from that room.</p>
+                                </div>
+                                <span>{{ placements|length }} available</span>
+                            </div>
+
+                            <div class="admin-internship-placement-options" id="internshipClassroomChoices" role="radiogroup" aria-label="Available Intern Classrooms">
                                 {% for placement in placements %}
-                                    <option
-                                        value="{{ placement.classroom_id }}"
-                                        data-supervisor="{{ placement.supervisor_name|e }}"
-                                        data-supervisor-email="{{ placement.supervisor_email|e }}"
-                                        data-classroom="{{ placement.classroom_name|e }}"
-                                        data-section="{{ placement.section|e }}"
-                                        data-code="{{ placement.code|e }}"
-                                        data-company="{{ placement.company_name|e }}"
-                                        data-title="{{ placement.internship_title|e }}"
-                                        data-industry="{{ placement.industry|e }}"
-                                        data-arrangement="{{ placement.work_arrangement|e }}"
-                                        data-compensation="{{ placement.compensation|e }}"
-                                        data-location="{{ placement.location|e }}"
-                                        data-start="{{ placement.start_date|e }}"
-                                        data-end="{{ placement.end_date|e }}"
-                                        data-deadline="{{ placement.enrollment_deadline|e }}"
-                                        data-hours="{{ placement.required_hours }}"
-                                        data-website="{{ placement.company_website|e }}"
-                                        data-students="{{ placement.student_count }}"
-                                        {% if request.form.get('classroom_id') == placement.classroom_id|string %}selected{% endif %}
-                                    >{{ placement.supervisor_name }} — {{ placement.classroom_name }}{% if placement.section %} · {{ placement.section }}{% endif %}</option>
+                                    {% set placement_theme = classroom_banner_theme(placement.classroom_id) %}
+                                    <label class="admin-internship-placement-option nx-class-theme nx-class-theme--{{ placement_theme }}">
+                                        <input
+                                            type="radio"
+                                            name="classroom_id"
+                                            value="{{ placement.classroom_id }}"
+                                            data-supervisor="{{ placement.supervisor_name|e }}"
+                                            data-supervisor-email="{{ placement.supervisor_email|e }}"
+                                            data-classroom="{{ placement.classroom_name|e }}"
+                                            data-section="{{ placement.section|e }}"
+                                            data-code="{{ placement.code|e }}"
+                                            data-company="{{ placement.company_name|e }}"
+                                            data-title="{{ placement.internship_title|e }}"
+                                            data-industry="{{ placement.industry|e }}"
+                                            data-arrangement="{{ placement.work_arrangement|e }}"
+                                            data-compensation="{{ placement.compensation|e }}"
+                                            data-location="{{ placement.location|e }}"
+                                            data-start="{{ placement.start_date|e }}"
+                                            data-end="{{ placement.end_date|e }}"
+                                            data-deadline="{{ placement.enrollment_deadline|e }}"
+                                            data-hours="{{ placement.required_hours }}"
+                                            data-website="{{ placement.company_website|e }}"
+                                            data-students="{{ placement.student_count }}"
+                                            {% if request.form.get('classroom_id') == placement.classroom_id|string %}checked{% endif %}
+                                            required
+                                        >
+                                        <span class="admin-internship-placement-surface nx-class-fade-banner">
+                                            <span class="admin-internship-placement-icon nx-class-theme-icon" aria-hidden="true">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 6l9 4.5-9 4.5-9-4.5Z"></path><path d="M7 12.5v4.2c2.8 1.8 7.2 1.8 10 0v-4.2"></path></svg>
+                                            </span>
+                                            <span class="admin-internship-placement-copy">
+                                                <small>INTERN CLASSROOM</small>
+                                                <strong>{{ placement.classroom_name }}</strong>
+                                                <span>Supervisor: <b>{{ placement.supervisor_name }}</b></span>
+                                                <span>{% if placement.section %}{{ placement.section }}{% endif %}{% if placement.company_name %}{% if placement.section %} · {% endif %}{{ placement.company_name }}{% endif %}</span>
+                                            </span>
+                                            <span class="admin-internship-placement-side">
+                                                <span class="admin-internship-placement-count nx-class-theme-count">{{ placement.student_count }} intern{% if placement.student_count != 1 %}s{% endif %}</span>
+                                                <span class="admin-internship-placement-check" aria-hidden="true">✓</span>
+                                            </span>
+                                        </span>
+                                    </label>
+                                {% else %}
+                                    <div class="admin-internship-placement-empty">No active Intern Classrooms are available.</div>
                                 {% endfor %}
-                            </select>
-                            <p class="admin-internship-help">If a Supervisor owns multiple Intern Classrooms, each room appears as a separate option.</p>
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -209,13 +237,13 @@
     (function () {
         var form = document.getElementById('adminInternshipAssignForm');
         var studentSelect = document.getElementById('internshipStudent');
-        var classroomSelect = document.getElementById('internshipClassroom');
+        var classroomChoices = [].slice.call(document.querySelectorAll('input[name="classroom_id"]'));
         var preview = document.getElementById('internshipClassroomPreview');
         var currentPanel = document.getElementById('adminCurrentPlacement');
         var confirmInput = document.getElementById('confirmTransferInput');
         var transferModal = document.getElementById('adminTransferModal');
         var transferConfirm = document.getElementById('adminTransferConfirm');
-        if (!form || !studentSelect || !classroomSelect || !preview) return;
+        if (!form || !studentSelect || !preview) return;
 
         function value(option, name, fallback) {
             var result = option ? option.dataset[name] : '';
@@ -227,10 +255,11 @@
         }
 
         function targetClassroomOption() {
-            return classroomSelect.options[classroomSelect.selectedIndex];
+            return document.querySelector('input[name="classroom_id"]:checked');
         }
 
         function updateCurrentPlacement() {
+            currentPanel.classList.remove('is-warning');
             var student = currentStudentOption();
             var classroomName = value(student, 'currentClassroom', '');
             if (!student || !student.value || !classroomName) {
@@ -300,9 +329,12 @@
             confirmInput.value = '0';
             updateCurrentPlacement();
         });
-        classroomSelect.addEventListener('change', function () {
-            confirmInput.value = '0';
-            updatePreview();
+        classroomChoices.forEach(function (choice) {
+            choice.addEventListener('change', function () {
+                confirmInput.value = '0';
+                currentPanel.classList.remove('is-warning');
+                updatePreview();
+            });
         });
 
         form.addEventListener('submit', function (event) {

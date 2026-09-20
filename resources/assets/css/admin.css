@@ -5840,3 +5840,366 @@ body.admin-classroom-detail-body .admin-classroom-hero.nx-class-fade-banner,
 .admin-insights-selected-room.nx-class-theme.nx-class-fade-banner {
   background: linear-gradient(90deg,var(--nx-class-start) 0%,var(--nx-class-mid) 40%,rgba(255,255,255,.97) 100%) !important;
 }
+
+
+/* =========================================================
+ADMIN INTERNSHIP / ASSIGNED INTERNS — unified classroom cards
+========================================================= */
+body.admin-internship-assign-page .admin-internship-assignment-layout {
+  display: grid;
+  gap: 17px;
+  padding: 16px 17px 18px;
+}
+body.admin-internship-assign-page .admin-internship-student-picker {
+  max-width: 720px;
+}
+body.admin-internship-assign-page .admin-internship-classroom-picker-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 9px;
+}
+body.admin-internship-assign-page .admin-internship-classroom-picker-heading > div {
+  min-width: 0;
+}
+body.admin-internship-assign-page .admin-internship-classroom-picker-heading > span {
+  flex: 0 0 auto;
+  padding: 5px 9px;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 9px;
+  font-weight: 850;
+}
+body.admin-internship-assign-page .admin-internship-placement-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+body.admin-internship-assign-page .admin-internship-placement-option {
+  min-width: 0;
+  cursor: pointer;
+}
+body.admin-internship-assign-page .admin-internship-placement-option > input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+body.admin-internship-assign-page .admin-internship-placement-surface {
+  min-height: 104px;
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 13px;
+  padding: 14px;
+  overflow: hidden;
+  border: 1.5px solid var(--nx-class-border);
+  border-radius: 13px;
+  background-color: #fff;
+  box-shadow: 0 5px 16px rgba(15, 23, 42, .045);
+  transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+body.admin-internship-assign-page .admin-internship-placement-surface::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  right: -44px;
+  bottom: -66px;
+  width: 220px;
+  height: 92px;
+  border-radius: 999px;
+  transform: rotate(-22deg);
+  background: rgba(255,255,255,.38);
+  pointer-events: none;
+}
+body.admin-internship-assign-page .admin-internship-placement-option:hover .admin-internship-placement-surface {
+  transform: translateY(-1px);
+  border-color: rgba(var(--nx-class-accent-rgb), .38);
+  box-shadow: 0 9px 22px rgba(var(--nx-class-accent-rgb), .10);
+}
+body.admin-internship-assign-page .admin-internship-placement-option > input:focus-visible + .admin-internship-placement-surface {
+  outline: 3px solid rgba(var(--nx-class-accent-rgb), .16);
+  outline-offset: 2px;
+}
+body.admin-internship-assign-page .admin-internship-placement-option > input:checked + .admin-internship-placement-surface {
+  border-color: var(--nx-class-accent);
+  box-shadow: 0 0 0 2px rgba(var(--nx-class-accent-rgb), .10), 0 10px 24px rgba(var(--nx-class-accent-rgb), .12);
+}
+body.admin-internship-assign-page .admin-internship-placement-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 13px;
+}
+body.admin-internship-assign-page .admin-internship-placement-icon svg {
+  width: 25px;
+  height: 25px;
+}
+body.admin-internship-assign-page .admin-internship-placement-copy {
+  min-width: 0;
+}
+body.admin-internship-assign-page .admin-internship-placement-copy > small,
+body.admin-internship-assign-page .admin-internship-placement-copy > strong,
+body.admin-internship-assign-page .admin-internship-placement-copy > span {
+  display: block;
+}
+body.admin-internship-assign-page .admin-internship-placement-copy > small {
+  color: var(--nx-class-accent);
+  font-size: 7px;
+  font-weight: 900;
+  letter-spacing: .11em;
+}
+body.admin-internship-assign-page .admin-internship-placement-copy > strong {
+  margin-top: 3px;
+  overflow: hidden;
+  color: #17283b;
+  font-size: 11px;
+  line-height: 1.25;
+  font-weight: 900;
+  text-overflow: ellipsis;
+}
+body.admin-internship-assign-page .admin-internship-placement-copy > span {
+  margin-top: 3px;
+  overflow: hidden;
+  color: #66768a;
+  font-size: 8px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+}
+body.admin-internship-assign-page .admin-internship-placement-copy b {
+  color: #43556b;
+  font-weight: 850;
+}
+body.admin-internship-assign-page .admin-internship-placement-side {
+  display: grid;
+  justify-items: end;
+  gap: 8px;
+}
+body.admin-internship-assign-page .admin-internship-placement-count {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 8px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+body.admin-internship-assign-page .admin-internship-placement-check {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(var(--nx-class-accent-rgb), .18);
+  border-radius: 50%;
+  background: rgba(255,255,255,.86);
+  color: transparent;
+  font-size: 12px;
+  font-weight: 900;
+}
+body.admin-internship-assign-page .admin-internship-placement-option > input:checked + .admin-internship-placement-surface .admin-internship-placement-check {
+  border-color: var(--nx-class-accent);
+  background: var(--nx-class-accent);
+  color: #fff;
+}
+body.admin-internship-assign-page .admin-internship-placement-empty {
+  grid-column: 1 / -1;
+  padding: 20px;
+  border: 1px dashed #e2e8f0;
+  border-radius: 12px;
+  background: #fbfcfd;
+  color: #7b8798;
+  font-size: 10px;
+  text-align: center;
+}
+
+body.admin-assigned-interns-page .admin-assigned-group.nx-class-theme {
+  overflow: hidden;
+  border-color: var(--nx-class-border);
+  border-radius: 15px;
+  box-shadow: 0 8px 24px rgba(26,39,57,.055);
+}
+body.admin-assigned-interns-page .admin-assigned-group > summary.admin-assigned-classroom-summary {
+  min-height: 108px;
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 17px 20px;
+  border-bottom: 0;
+}
+body.admin-assigned-interns-page .admin-assigned-group > summary.admin-assigned-classroom-summary::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  right: -42px;
+  bottom: -76px;
+  width: 320px;
+  height: 116px;
+  border-radius: 999px;
+  transform: rotate(-22deg);
+  background: rgba(255,255,255,.36);
+  pointer-events: none;
+}
+body.admin-assigned-interns-page .admin-assigned-group[open] > summary.admin-assigned-classroom-summary {
+  border-bottom: 1px solid rgba(var(--nx-class-accent-rgb), .12);
+}
+body.admin-assigned-interns-page .admin-assigned-classroom-heading {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+body.admin-assigned-interns-page .admin-assigned-classroom-icon {
+  width: 54px;
+  height: 54px;
+  flex: 0 0 54px;
+  border-radius: 14px;
+}
+body.admin-assigned-interns-page .admin-assigned-classroom-icon svg {
+  width: 27px;
+  height: 27px;
+}
+body.admin-assigned-interns-page .admin-assigned-class {
+  min-width: 0;
+}
+body.admin-assigned-interns-page .admin-assigned-class-kicker {
+  display: block;
+  color: var(--nx-class-accent);
+  font-size: 7px;
+  font-weight: 900;
+  letter-spacing: .11em;
+}
+body.admin-assigned-interns-page .admin-assigned-class h2 {
+  margin: 4px 0 4px;
+  color: #17233b;
+  font-size: 1rem;
+  font-weight: 900;
+  letter-spacing: -.015em;
+}
+body.admin-assigned-interns-page .admin-assigned-class p {
+  margin: 0;
+  color: #66768a;
+  font-size: .72rem;
+}
+body.admin-assigned-interns-page .admin-assigned-class p strong {
+  color: #43556b;
+  font-weight: 850;
+}
+body.admin-assigned-interns-page .admin-assigned-meta {
+  position: relative;
+  z-index: 1;
+  gap: 9px;
+}
+body.admin-assigned-interns-page .admin-assigned-pill.nx-class-theme-count {
+  min-height: 30px;
+  align-items: center;
+  padding: 0 10px;
+  border: 1px solid transparent;
+}
+body.admin-assigned-interns-page .admin-assigned-meta .btn-outline-primary {
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  border-color: rgba(var(--nx-class-accent-rgb), .30);
+  background: rgba(255,255,255,.70);
+  color: var(--nx-class-accent);
+}
+body.admin-assigned-interns-page .admin-assigned-meta .btn-outline-primary:hover {
+  border-color: var(--nx-class-accent);
+  background: var(--nx-class-accent);
+  color: #fff;
+}
+body.admin-assigned-interns-page .admin-assigned-chevron {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  border: 1px solid rgba(var(--nx-class-accent-rgb), .16);
+  border-radius: 50%;
+  background: rgba(255,255,255,.94);
+  box-shadow: 0 6px 16px rgba(20,35,55,.08);
+}
+body.admin-assigned-interns-page .admin-assigned-chevron::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid var(--nx-class-accent);
+  border-bottom: 2px solid var(--nx-class-accent);
+  transform: translate(-50%,-65%) rotate(45deg);
+  transition: transform .18s ease;
+}
+body.admin-assigned-interns-page .admin-assigned-group[open] .admin-assigned-chevron::before {
+  transform: translate(-50%,-35%) rotate(225deg);
+}
+body.admin-assigned-interns-page .admin-assigned-table th {
+  background: #fbfcfd;
+  border-bottom-color: #e9eef3;
+}
+body.admin-assigned-interns-page .admin-assigned-table tbody tr:hover {
+  background: rgba(var(--nx-class-accent-rgb), .035);
+}
+body.admin-assigned-interns-page .admin-assigned-actions .btn-outline-primary {
+  border-color: rgba(var(--nx-class-accent-rgb), .30);
+  color: var(--nx-class-accent);
+}
+body.admin-assigned-interns-page .admin-assigned-actions .btn-outline-primary:hover {
+  border-color: var(--nx-class-accent);
+  background: var(--nx-class-accent);
+  color: #fff;
+}
+@media (max-width: 900px) {
+  body.admin-internship-assign-page .admin-internship-placement-options {
+    grid-template-columns: 1fr;
+  }
+  body.admin-assigned-interns-page .admin-assigned-group > summary.admin-assigned-classroom-summary {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  body.admin-assigned-interns-page .admin-assigned-meta {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+@media (max-width: 620px) {
+  body.admin-internship-assign-page .admin-internship-classroom-picker-heading {
+    flex-direction: column;
+    gap: 7px;
+  }
+  body.admin-internship-assign-page .admin-internship-placement-surface {
+    grid-template-columns: 44px minmax(0, 1fr);
+    min-height: 94px;
+  }
+  body.admin-internship-assign-page .admin-internship-placement-icon {
+    width: 42px;
+    height: 42px;
+  }
+  body.admin-internship-assign-page .admin-internship-placement-side {
+    grid-column: 1 / -1;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    justify-items: stretch;
+  }
+  body.admin-internship-assign-page .admin-internship-placement-check {
+    justify-self: end;
+  }
+  body.admin-assigned-interns-page .admin-assigned-classroom-icon {
+    width: 46px;
+    height: 46px;
+    flex-basis: 46px;
+  }
+  body.admin-assigned-interns-page .admin-assigned-meta {
+    justify-content: flex-start;
+  }
+}
