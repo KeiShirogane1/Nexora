@@ -379,54 +379,6 @@ def supervisor_insights(class_id):
 
 
 # ------------------------------------------------------------------ #
-# Supervisor: cohort evidence overview
-# ------------------------------------------------------------------ #
-@classwork_ml_insights.route("/supervisor/classes/<int:class_id>/cohort-insights")
-@role_required("supervisor")
-def supervisor_cohort_insights(class_id):
-    supervisor_id = session["user_id"]
-    conn = get_db_connection()
-    try:
-        classroom = conn.execute(
-            """SELECT id, supervisor_id, name, section, description, code, archived
-               FROM classrooms WHERE id = ? AND supervisor_id = ?""",
-            (class_id, supervisor_id),
-        ).fetchone()
-        if not classroom:
-            abort(404)
-
-        students = conn.execute(
-            """SELECT u.id, u.username, u.email,
-                      COALESCE(p.student_id, '') AS student_number
-               FROM classroom_students cs
-               JOIN users u ON u.id = cs.student_id
-               LEFT JOIN student_profiles p ON p.user_id = u.id
-               WHERE cs.classroom_id = ?
-               ORDER BY LOWER(u.username), LOWER(u.email), u.id""",
-            (class_id,),
-        ).fetchall()
-
-        classroom_data = {
-            "id": _value(classroom, "id", 0),
-            "name": _value(classroom, "name", 2),
-            "section": _value(classroom, "section", 3),
-            "description": _value(classroom, "description", 4),
-            "code": _value(classroom, "code", 5),
-            "archived": _value(classroom, "archived", 6),
-        }
-    finally:
-        conn.close()
-
-    cohort = _build_cohort_summary(class_id, supervisor_id, students)
-    return render_template(
-        "classroom/supervisor_cohort_insights.html",
-        classroom=classroom_data,
-        cohort=cohort,
-        active_page="classes",
-    )
-
-
-# ------------------------------------------------------------------ #
 # Supervisor: one intern's separate evidence dimensions
 # ------------------------------------------------------------------ #
 @classwork_ml_insights.route("/supervisor/classes/<int:class_id>/insights/<int:student_id>")
