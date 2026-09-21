@@ -348,38 +348,45 @@ def test_task_delete_ownership():
     app.config["WTF_CSRF_ENABLED"] = False
     app.config["TESTING"] = True
     supervisor_id = _create_test_supervisor("sup_delete_owner")
-    client = app.test_client()
     try:
-        _login_as(client, supervisor_id, "supervisor")
         mock_conn = MagicMock()
+        task_lookup = MagicMock()
+        task_lookup.fetchone.return_value = None
+        mock_conn.execute.return_value = task_lookup
 
-        def exec_side(sql, params=None):
-            m = MagicMock()
-            if "SELECT session_version" in sql:
-                m.fetchone.return_value = (0,)
-            elif "SELECT role, status" in sql:
-                m.fetchone.return_value = {"role": "supervisor", "status": "active"}
-            elif "SELECT status" in sql:
-                m.fetchone.return_value = {"status": "active"}
-            elif "SELECT student_id" in sql and "FROM tasks" in sql:
-                m.fetchone.return_value = None
-            else:
-                m.fetchone.return_value = None
-            return m
+        # This test is specifically about delete_task() ownership behavior.
+        # Authentication/session middleware has separate coverage, so call the
+        # wrapped route directly inside a request context and isolate only its
+        # task lookup.
+        from flask import session
+        with app.test_request_context(
+            "/supervisor/task/999/delete",
+            method="POST",
+        ):
+            session["user_id"] = supervisor_id
+            session["role"] = "supervisor"
+            with patch(
+                "app.Http.Controllers.supervisor.get_db_connection",
+                return_value=mock_conn,
+            ):
+                response = app.view_functions["supervisor.delete_task"].__wrapped__(999)
 
-        mock_conn.execute.side_effect = exec_side
+        assert response == ("Task not found or access denied", 404)
+        mock_conn.execute.assert_called_once()
+        sql, params = mock_conn.execute.call_args.args
+        assert "FROM tasks" in sql
+        assert "supervisor_id" in sql
+        assert params == (999, supervisor_id)
 
-        # Isolate the route ownership assertion from the app-wide supervisor
-        # session guard and role middleware. All three layers perform their
-        # own DB lookup before delete_task() is reached.
-        with patch("bootstrap.app.get_db_connection", return_value=mock_conn), \
-             patch("app.Http.Middleware.security.get_db_connection", return_value=mock_conn), \
-             patch("app.Http.Controllers.supervisor.get_db_connection", return_value=mock_conn):
-            resp = client.post("/supervisor/task/999/delete")
-            assert resp.status_code == 404
-            # ensure GET not allowed
-            resp2 = client.get("/supervisor/task/999/delete")
-            assert resp2.status_code == 405
+        # Keep the route POST-only without depending on authentication
+        # middleware to produce a client-level 405 response.
+        rule = next(
+            rule
+            for rule in app.url_map.iter_rules()
+            if rule.endpoint == "supervisor.delete_task"
+        )
+        assert "POST" in rule.methods
+        assert "GET" not in rule.methods
     finally:
         _delete_test_user(supervisor_id)
 
