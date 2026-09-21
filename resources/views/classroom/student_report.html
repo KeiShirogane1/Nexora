@@ -1,3 +1,4 @@
+{% from 'components/nexora_icons.html' import nx_icon %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -28,7 +29,7 @@
                 </div>
 
                 <div class="student-report-status-card{% if report.overall_percentage is none %} is-empty{% endif %}">
-                    <span class="student-report-status-icon" aria-hidden="true">{% if report.overall_percentage is none %}!{% else %}✓{% endif %}</span>
+                    <span class="student-report-status-icon" aria-hidden="true">{% if report.overall_percentage is none %}{{ nx_icon('info') }}{% else %}{{ nx_icon('success') }}{% endif %}</span>
                     <span class="student-report-status-copy">
                         <strong>{% if report.overall_percentage is none %}No Work Performance Data{% else %}{{ report.performance_label }}{% endif %}</strong>
                         <span>{% if report.overall_percentage is none %}No graded Work evidence yet.{% else %}Based on current graded Work.{% endif %}</span>
@@ -37,17 +38,17 @@
             </header>
 
             <nav class="student-report-tabs" aria-label="Report sections">
-                <a href="#report-overview"><span aria-hidden="true">▥</span>Overview</a>
-                <a href="#report-feedback"><span aria-hidden="true">▢</span>Feedback Analysis</a>
-                <a href="#report-work"><span aria-hidden="true">▤</span>Work Items</a>
-                <a href="#report-recommendation"><span aria-hidden="true">◇</span>Recommendation</a>
+                <a href="#report-overview"><span aria-hidden="true">{{ nx_icon('overview') }}</span>Overview</a>
+                <a href="#report-feedback"><span aria-hidden="true">{{ nx_icon('feedback') }}</span>Feedback Analysis</a>
+                <a href="#report-work"><span aria-hidden="true">{{ nx_icon('work') }}</span>Work Items</a>
+                <a href="#report-recommendation"><span aria-hidden="true">{{ nx_icon('recommendation') }}</span>Recommendation</a>
             </nav>
 
             <section id="report-overview" class="student-report-overview-grid student-report-anchor" aria-label="Report overview">
                 <article class="student-report-card">
                     <div class="student-report-card-head">
                         <div class="student-report-card-title">
-                            <span class="student-report-card-icon" aria-hidden="true">▥</span>
+                            <span class="student-report-card-icon" aria-hidden="true">{{ nx_icon('overview') }}</span>
                             <div>
                                 <h2>Performance Summary</h2>
                                 <p class="student-report-card-subtitle">Overview of your Work performance in this class.</p>
@@ -75,7 +76,7 @@
                     </div>
 
                     <div class="student-report-classification">
-                        <span class="student-report-classification-icon" aria-hidden="true">◎</span>
+                        <span class="student-report-classification-icon" aria-hidden="true">{{ nx_icon('target') }}</span>
                         <span>
                             <span>Work Performance Classification</span>
                             <strong>{% if report.overall_percentage is not none %}{{ report.performance_label }}{% else %}No Work Performance Data{% endif %}</strong>
@@ -86,7 +87,7 @@
                 <article class="student-report-card">
                     <div class="student-report-card-head">
                         <div class="student-report-card-title">
-                            <span class="student-report-card-icon" aria-hidden="true">◔</span>
+                            <span class="student-report-card-icon" aria-hidden="true">{{ nx_icon('completion') }}</span>
                             <div>
                                 <h2>Completion Progress</h2>
                                 <p class="student-report-card-subtitle">Reviewed Work compared with all assigned Work.</p>
@@ -111,7 +112,7 @@
                 <article class="student-report-card">
                     <div class="student-report-card-head">
                         <div class="student-report-card-title">
-                            <span class="student-report-card-icon" aria-hidden="true">▤</span>
+                            <span class="student-report-card-icon" aria-hidden="true">{{ nx_icon('grading') }}</span>
                             <div>
                                 <h2>Grading Status</h2>
                                 <p class="student-report-card-subtitle">Current reviewed and ungraded Work counts.</p>
@@ -121,7 +122,7 @@
 
                     <div class="student-report-grading-list">
                         <div class="student-report-grading-item">
-                            <span class="student-report-grading-icon" aria-hidden="true">✓</span>
+                            <span class="student-report-grading-icon" aria-hidden="true">{{ nx_icon('success') }}</span>
                             <div class="student-report-grading-copy">
                                 <span>Graded Assignments</span>
                                 <strong>{{ report.graded_count }}</strong>
@@ -129,7 +130,7 @@
                             </div>
                         </div>
                         <div class="student-report-grading-item">
-                            <span class="student-report-grading-icon is-pending" aria-hidden="true">▤</span>
+                            <span class="student-report-grading-icon is-pending" aria-hidden="true">{{ nx_icon('work') }}</span>
                             <div class="student-report-grading-copy">
                                 <span>Pending / Ungraded</span>
                                 <strong>{{ pending_count }}</strong>
@@ -144,7 +145,7 @@
                 <article id="report-feedback" class="student-report-card student-report-anchor">
                     <div class="student-report-card-head">
                         <div class="student-report-card-title">
-                            <span class="student-report-card-icon" aria-hidden="true">▢</span>
+                            <span class="student-report-card-icon" aria-hidden="true">{{ nx_icon('feedback') }}</span>
                             <div>
                                 <h2>Work Feedback Analysis</h2>
                                 <p class="student-report-card-subtitle">Available ML signals derived from supervisor feedback evidence.</p>
@@ -154,7 +155,7 @@
 
                     {% if not report.has_feedback %}
                         <div class="student-report-empty">
-                            <span class="student-report-empty-icon" aria-hidden="true">▢</span>
+                            <span class="student-report-empty-icon" aria-hidden="true">{{ nx_icon('feedback') }}</span>
                             <strong>No feedback yet</strong>
                             <p>Your supervisor has not provided Work feedback evidence for this report yet.</p>
                         </div>
@@ -179,7 +180,7 @@
                 <article id="report-recommendation" class="student-report-card student-report-anchor">
                     <div class="student-report-card-head">
                         <div class="student-report-card-title">
-                            <span class="student-report-card-icon" aria-hidden="true">◇</span>
+                            <span class="student-report-card-icon" aria-hidden="true">{{ nx_icon('recommendation') }}</span>
                             <div>
                                 <h2>Work Recommendation</h2>
                                 <p class="student-report-card-subtitle">Decision-support guidance from available Work and feedback evidence.</p>
@@ -192,7 +193,7 @@
 
                     {% if report.overall_percentage is none and not report.has_feedback %}
                         <div class="student-report-empty">
-                            <span class="student-report-empty-icon" aria-hidden="true">◎</span>
+                            <span class="student-report-empty-icon" aria-hidden="true">{{ nx_icon('target') }}</span>
                             <strong>No recommendation yet</strong>
                             <p>Reviewed Work or supervisor feedback is needed first.</p>
                         </div>
@@ -212,7 +213,7 @@
             <section id="report-work" class="student-report-card student-report-work-card student-report-anchor">
                 <div class="student-report-card-head">
                     <div class="student-report-card-title">
-                        <span class="student-report-card-icon" aria-hidden="true">▤</span>
+                        <span class="student-report-card-icon" aria-hidden="true">{{ nx_icon('grading') }}</span>
                         <div>
                             <h2>Work Items</h2>
                             <p class="student-report-card-subtitle">Assignment scores currently included in this Work report.</p>
@@ -222,7 +223,7 @@
 
                 {% if not report.assignments %}
                     <div class="student-report-empty">
-                        <span class="student-report-empty-icon" aria-hidden="true">▤</span>
+                        <span class="student-report-empty-icon" aria-hidden="true">{{ nx_icon('work') }}</span>
                         <strong>No Work items yet</strong>
                         <p>No assignments are available in this class yet.</p>
                     </div>
@@ -272,7 +273,7 @@
             </section>
 
             <aside class="student-report-note" aria-label="Evidence boundary">
-                <span class="student-report-note-icon" aria-hidden="true">i</span>
+                <span class="student-report-note-icon" aria-hidden="true">{{ nx_icon('info') }}</span>
                 <span><strong>Important Note:</strong> This page does not calculate an overall OJT grade and does not generate an Official OJT Evaluation from Work analytics. Attendance/OJT Hours, Daily Performance, Logbook, and Official Evaluation are separate evidence dimensions.</span>
             </aside>
         </div>
