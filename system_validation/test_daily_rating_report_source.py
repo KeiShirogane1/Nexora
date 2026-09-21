@@ -129,10 +129,9 @@ def test_report_work_item_uses_daily_performance_rating_directly():
 
 
 def test_role_portals_share_documents_sized_desktop_gutter():
-    supervisor = open("resources/views/components/supervisor_topbar.html", encoding="utf-8").read()
-    admin = open("resources/views/components/admin_topbar.html", encoding="utf-8").read()
+    shell_css = open("resources/assets/css/sidebars.css", encoding="utf-8").read()
 
-    assert "--nx-supervisor-page-gutter: 30px" in supervisor
-    assert "--nx-admin-page-gutter: 30px" in admin
-    assert ".supervisor-classwork-shell" in supervisor
-    assert ".admin-command-center" in admin
+    assert "--nx-supervisor-page-gutter: 30px" in shell_css
+    assert "--nx-admin-page-gutter: 30px" in shell_css
+    assert ".supervisor-classwork-shell" in shell_css
+    assert ".admin-command-center" in shell_css

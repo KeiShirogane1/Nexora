@@ -1,8 +1,10 @@
 def test_student_logbook_badge_hides_when_attention_is_inactive():
     source = open("resources/views/components/student_topbar.html", encoding="utf-8").read()
+    css = open("resources/assets/css/sidebars.css", encoding="utf-8").read()
 
-    assert ".nx-role-student .nx-role-badge[hidden]" in source
-    assert "display: none !important" in source
+    assert ".nx-role-student .nx-role-badge[hidden]" in css
+    assert "display: none !important" in css
+    assert "<style" not in source.lower()
     assert "hasOpenAttendance" in source
     assert "completedToday" in source
     assert "logbookBadge.hidden = true" in source
