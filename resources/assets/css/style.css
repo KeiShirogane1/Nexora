@@ -6293,3 +6293,906 @@ body{margin:0;min-height:100vh;background:radial-gradient(circle at 82% 8%,rgba(
 .nx-extracted-auth-signup-3 { margin-bottom:4px; }
 .nx-extracted-auth-signup-4 { font-size:0.9rem; margin-bottom:14px; }
 .nx-extracted-auth-signup-5 { width:100%; margin-top:16px; }
+
+
+/* EXTRACTED FROM resources/views/components/auth_video_background.html */
+body.general-page {
+        position: relative;
+        isolation: isolate;
+        overflow-x: hidden;
+    }
+
+    .nexora-auth-loop-bg {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        overflow: hidden;
+        pointer-events: none;
+        background: #071d17 url("{{ url_for('static', filename='images/Nexora Login.png') }}") center center / cover no-repeat;
+    }
+
+    .nexora-auth-loop-bg video {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center center;
+        transform: none;
+        filter: none;
+    }
+
+    .nexora-auth-loop-bg::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+            radial-gradient(circle at 50% 34%, rgba(11, 106, 72, .06), transparent 42%),
+            linear-gradient(180deg, rgba(2, 24, 17, .24), rgba(2, 21, 15, .44));
+    }
+
+    body.general-page > .login-container {
+        position: relative;
+        z-index: 2;
+        background: rgba(255, 255, 255, .965);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+    }
+
+
+/* EXTRACTED FROM resources/views/components/document_fullscreen_viewer.html */
+.nx-document-viewer[hidden] { display: none !important; }
+.nx-document-viewer {
+    position: fixed;
+    inset: 0;
+    z-index: 4200;
+    display: flex;
+    flex-direction: column;
+    background: rgba(8, 15, 25, .96);
+    color: #fff;
+}
+.nx-document-viewer-toolbar {
+    min-height: 58px;
+    padding: 9px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid rgba(255,255,255,.12);
+    background: rgba(8, 15, 25, .92);
+}
+.nx-document-viewer-title {
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: .86rem;
+    font-weight: 800;
+}
+.nx-document-viewer-actions {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+.nx-document-viewer-button {
+    min-width: 36px;
+    height: 36px;
+    padding: 0 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: 9px;
+    background: rgba(255,255,255,.08);
+    color: #fff;
+    font: inherit;
+    font-size: .78rem;
+    font-weight: 800;
+    text-decoration: none !important;
+    cursor: pointer;
+}
+.nx-document-viewer-button:hover,
+.nx-document-viewer-button:focus-visible {
+    background: rgba(255,255,255,.16);
+    color: #fff;
+    outline: none;
+}
+.nx-document-viewer-button[hidden] { display: none !important; }
+.nx-document-viewer-stage {
+    position: relative;
+    min-height: 0;
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.nx-document-viewer-image-wrap {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    touch-action: none;
+}
+.nx-document-viewer-image-wrap.is-dragging { cursor: grabbing; }
+.nx-document-viewer-image {
+    max-width: 92vw;
+    max-height: calc(100vh - 82px);
+    object-fit: contain;
+    user-select: none;
+    -webkit-user-drag: none;
+    transform-origin: center center;
+    transition: transform .08s ease-out;
+}
+.nx-document-viewer-frame {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    background: #fff;
+}
+.nx-document-viewer-status {
+    max-width: min(520px, calc(100vw - 32px));
+    padding: 18px 20px;
+    border: 1px solid rgba(255,255,255,.16);
+    border-radius: 12px;
+    background: rgba(255,255,255,.08);
+    color: rgba(255,255,255,.88);
+    font-size: .8rem;
+    text-align: center;
+}
+.nx-document-viewer-hint {
+    position: absolute;
+    left: 50%;
+    bottom: 12px;
+    transform: translateX(-50%);
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(0,0,0,.55);
+    color: rgba(255,255,255,.88);
+    font-size: .68rem;
+    pointer-events: none;
+}
+@media (max-width: 640px) {
+    .nx-document-viewer-toolbar { min-height: 52px; padding: 7px 9px; }
+    .nx-document-viewer-title { font-size: .75rem; }
+    .nx-document-viewer-button { min-width: 32px; height: 32px; padding: 0 8px; }
+}
+
+
+/* EXTRACTED FROM resources/views/components/global_typography.html */
+:root {
+    --nexora-font-family: "Plus Jakarta Sans", Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body:has(.nx-role-sidebar-shell),
+body:has(.nx-role-sidebar-shell) *:not(code):not(pre):not(kbd):not(samp) {
+    font-family: var(--nexora-font-family) !important;
+}
+
+/* Retire legacy portal page artwork while keeping auth/welcome backgrounds intact. */
+body:has(.nx-role-sidebar-shell).content-page,
+body:has(.nx-role-sidebar-shell).work-page,
+body:has(.nx-role-sidebar-shell).analytics-aesthetic,
+body:has(.nx-role-sidebar-shell).deeper-metrics,
+body:has(.nx-role-sidebar-shell).report-page {
+    background: #f5f7fb !important;
+    background-image: none !important;
+    background-attachment: scroll !important;
+}
+
+body:has(.nx-role-sidebar-shell) code,
+body:has(.nx-role-sidebar-shell) pre,
+body:has(.nx-role-sidebar-shell) kbd,
+body:has(.nx-role-sidebar-shell) samp,
+body:has(.nx-role-sidebar-shell) :is(code, pre, kbd, samp) * {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+}
+/*
+   Keep every Admin page aligned to the same viewport gutters as the Command Center.
+   The shared sidebar still owns the 76px desktop rail; these rules only remove
+   legacy centered/max-width page shells inside the remaining Admin workspace.
+*/
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) {
+    --nx-admin-fluid-gutter: 28px;
+}
+
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main,
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .nexora-app-main,
+body.notification-role-admin:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .nx-notifications-main {
+    padding-left: var(--nx-admin-fluid-gutter) !important;
+    padding-right: var(--nx-admin-fluid-gutter) !important;
+    box-sizing: border-box !important;
+}
+
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main > :first-child,
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main > .nexora-page,
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main > .container,
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main > .container-fluid,
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main > .compact-dashboard,
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main > .admin-command-center,
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main > .admin-dashboard-content,
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main > .admin-documents-shell,
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main > .admin-document-folder-shell,
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main > .admin-report-page-shell,
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main > .admin-insights-page,
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main > .admin-polish-page,
+body.notification-role-admin:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .nx-notifications-wrap {
+    width: 100% !important;
+    max-width: none !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    box-sizing: border-box !important;
+}
+
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main > .nexora-page,
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main > .container,
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main > .container-fluid,
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main > .compact-dashboard,
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main > .admin-command-center,
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main > .admin-dashboard-content,
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main > .admin-documents-shell,
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main > .admin-document-folder-shell,
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main > .admin-report-page-shell,
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main > .admin-insights-page,
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main > .admin-polish-page,
+body.notification-role-admin:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .nx-notifications-wrap {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+@media (max-width: 900px) {
+    body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) {
+        --nx-admin-fluid-gutter: 20px;
+    }
+}
+
+@media (max-width: 760px) {
+    body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) {
+        --nx-admin-fluid-gutter: 16px;
+    }
+}
+/* Supervisor directory keeps Email and Program Focus available to filtering/search,
+   but removes those secondary columns from the visible management table. */
+body.admin-supervisors-page #supervisorsTable th:nth-child(6),
+body.admin-supervisors-page #supervisorsTable td:nth-child(6),
+body.admin-supervisors-page #supervisorsTable th:nth-child(8),
+body.admin-supervisors-page #supervisorsTable td:nth-child(8) {
+    display: none !important;
+}
+
+body.admin-supervisors-page .table-card-header > div > small.text-muted {
+    font-size: 0;
+}
+
+body.admin-supervisors-page .table-card-header > div > small.text-muted::after {
+    content: "Profile, department, classes, assigned students, and account status.";
+    color: #6f7f91;
+    font-size: 0.8rem;
+    font-weight: 400;
+    line-height: 1.45;
+}
+
+/* Keep Supervisor Management on the Admin orange/red visual language. */
+body.admin-supervisors-page .btn-view {
+    background: var(--admin-polish-accent, #f45125) !important;
+    border-color: var(--admin-polish-accent, #f45125) !important;
+    color: #fff !important;
+    box-shadow: 0 2px 8px rgba(244, 81, 37, 0.22) !important;
+}
+
+body.admin-supervisors-page .btn-view:hover,
+body.admin-supervisors-page .btn-view:focus-visible {
+    background: var(--admin-polish-accent-dark, #d9471b) !important;
+    border-color: var(--admin-polish-accent-dark, #d9471b) !important;
+    color: #fff !important;
+}
+
+body.admin-supervisors-page .nx-quick-chat-btn {
+    background: #fff !important;
+    border-color: #f2a086 !important;
+    color: var(--admin-polish-accent-dark, #d9471b) !important;
+}
+
+body.admin-supervisors-page .nx-quick-chat-btn:hover,
+body.admin-supervisors-page .nx-quick-chat-btn:focus-visible {
+    background: #fff7f3 !important;
+    border-color: var(--admin-polish-accent, #f45125) !important;
+    color: var(--admin-polish-accent-dark, #d9471b) !important;
+}
+
+body.admin-supervisors-page #supervisorsTable [data-assigned-students] .badge.bg-primary {
+    background: #f7f9fb !important;
+    border: 1px solid #e0e5ea !important;
+    color: #566577 !important;
+}
+
+body.admin-students-page .dropdown-menu-nexora,
+body.admin-supervisors-page .dropdown-menu-nexora {
+    max-height: min(360px, calc(100vh - 32px));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+body.admin-students-page .dropdown-menu-nexora.nx-drop-up,
+body.admin-supervisors-page .dropdown-menu-nexora.nx-drop-up {
+    top: auto !important;
+    left: auto !important;
+    right: calc(100% + 8px) !important;
+    bottom: calc(100% + 8px) !important;
+}
+
+@media (min-width: 1280px) {
+    body.admin-supervisors-page .table-responsive {
+        overflow-x: visible !important;
+    }
+
+    body.admin-supervisors-page #supervisorsTable {
+        width: 100% !important;
+        min-width: 0 !important;
+        table-layout: fixed !important;
+    }
+
+    body.admin-supervisors-page #supervisorsTable th,
+    body.admin-supervisors-page #supervisorsTable td {
+        min-width: 0 !important;
+        padding-left: 9px !important;
+        padding-right: 9px !important;
+        overflow-wrap: anywhere;
+    }
+
+    body.admin-supervisors-page #supervisorsTable th:nth-child(1),
+    body.admin-supervisors-page #supervisorsTable td:nth-child(1) { width: 3%; }
+    body.admin-supervisors-page #supervisorsTable th:nth-child(2),
+    body.admin-supervisors-page #supervisorsTable td:nth-child(2) { width: 4%; }
+    body.admin-supervisors-page #supervisorsTable th:nth-child(3),
+    body.admin-supervisors-page #supervisorsTable td:nth-child(3) { width: 18%; }
+    body.admin-supervisors-page #supervisorsTable th:nth-child(4),
+    body.admin-supervisors-page #supervisorsTable td:nth-child(4) { width: 12%; }
+    body.admin-supervisors-page #supervisorsTable th:nth-child(5),
+    body.admin-supervisors-page #supervisorsTable td:nth-child(5) { width: 13%; }
+    body.admin-supervisors-page #supervisorsTable th:nth-child(7),
+    body.admin-supervisors-page #supervisorsTable td:nth-child(7) { width: 16%; }
+    body.admin-supervisors-page #supervisorsTable th:nth-child(9),
+    body.admin-supervisors-page #supervisorsTable td:nth-child(9) { width: 9%; }
+    body.admin-supervisors-page #supervisorsTable th:nth-child(10),
+    body.admin-supervisors-page #supervisorsTable td:nth-child(10) { width: 8%; }
+    body.admin-supervisors-page #supervisorsTable th:nth-child(11),
+    body.admin-supervisors-page #supervisorsTable td:nth-child(11) { width: 17%; }
+
+    body.admin-supervisors-page .supervisor-cell {
+        min-width: 0 !important;
+    }
+
+    body.admin-students-page .actions-cell:has(.nx-quick-chat-btn),
+    body.admin-supervisors-page .actions-cell:has(.nx-quick-chat-btn) {
+        width: 100% !important;
+        min-width: 0 !important;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) 38px;
+        grid-template-rows: repeat(2, minmax(36px, auto));
+        gap: 6px 8px !important;
+        align-items: stretch !important;
+        justify-content: stretch !important;
+    }
+
+    body.admin-students-page .actions-cell:has(.nx-quick-chat-btn) .btn-view,
+    body.admin-supervisors-page .actions-cell:has(.nx-quick-chat-btn) .btn-view {
+        grid-column: 1;
+        grid-row: 1;
+        width: 100% !important;
+        min-width: 0 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-align: center !important;
+    }
+
+    body.admin-students-page .actions-cell:has(.nx-quick-chat-btn) .nx-quick-chat-btn,
+    body.admin-supervisors-page .actions-cell:has(.nx-quick-chat-btn) .nx-quick-chat-btn {
+        grid-column: 1;
+        grid-row: 2;
+        width: 100% !important;
+        min-width: 0 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-align: center !important;
+    }
+
+    body.admin-students-page .actions-cell:has(.nx-quick-chat-btn) .more-actions,
+    body.admin-supervisors-page .actions-cell:has(.nx-quick-chat-btn) .more-actions {
+        grid-column: 2;
+        grid-row: 1 / span 2;
+        align-self: stretch !important;
+        position: relative !important;
+        display: block !important;
+        min-height: 0 !important;
+    }
+
+    body.admin-students-page .actions-cell:has(.nx-quick-chat-btn) .btn-more,
+    body.admin-supervisors-page .actions-cell:has(.nx-quick-chat-btn) .btn-more {
+        position: absolute !important;
+        inset: 0 !important;
+        width: auto !important;
+        height: auto !important;
+        min-height: 0 !important;
+        padding: 0 !important;
+        font-size: 20px !important;
+        line-height: 1 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+}
+
+@media (min-width: 681px) and (max-width: 1279px) {
+    body.admin-supervisors-page #supervisorsTable {
+        min-width: 860px !important;
+    }
+}
+
+@media (max-width: 680px) {
+    body.admin-supervisors-page #supervisorsTable {
+        min-width: 760px !important;
+    }
+}
+
+
+/* EXTRACTED FROM resources/views/components/nexora_assistant.html */
+.nx-assistant{--nx-assistant-accent:#2563eb;--nx-assistant-accent-dark:#1d4ed8;--nx-assistant-soft:#eff6ff;position:fixed;right:24px;bottom:24px;z-index:3200;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.nx-assistant-student{--nx-assistant-accent:#0a8f46;--nx-assistant-accent-dark:#08783b;--nx-assistant-soft:#e7f7ed}.nx-assistant-admin{--nx-assistant-accent:#f45125;--nx-assistant-accent-dark:#d9431c;--nx-assistant-soft:#fff1eb}.nx-assistant-launcher{position:relative;width:58px;height:58px;display:grid;place-items:center;margin-left:auto;border:0;border-radius:50%;background:var(--nx-assistant-accent);box-shadow:0 12px 30px rgba(15,23,42,.22);cursor:pointer;transition:transform .16s ease,box-shadow .16s ease}.nx-assistant-launcher:hover{transform:translateY(-2px);box-shadow:0 16px 36px rgba(15,23,42,.26)}.nx-assistant-launcher img{width:31px;height:31px;object-fit:contain}.nx-assistant-launcher-dot{position:absolute;top:3px;right:3px;width:12px;height:12px;border:3px solid #fff;border-radius:50%;background:#22c55e}.nx-assistant-panel{width:min(390px,calc(100vw - 32px));height:min(600px,calc(100vh - 110px));display:none;flex-direction:column;margin-bottom:12px;overflow:hidden;border:1px solid #e2e8f0;border-radius:18px;background:#fff;box-shadow:0 24px 70px rgba(15,23,42,.22)}.nx-assistant.is-open .nx-assistant-panel{display:flex}.nx-assistant.is-open .nx-assistant-launcher{display:none}.nx-assistant.is-expanded .nx-assistant-panel{width:min(680px,calc(100vw - 48px));height:min(760px,calc(100vh - 48px))}.nx-assistant.is-minimized .nx-assistant-panel{height:auto}.nx-assistant.is-minimized .nx-assistant-body,.nx-assistant.is-minimized .nx-assistant-composer{display:none}.nx-assistant-header{min-height:72px;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 14px 13px 16px;background:var(--nx-assistant-accent);color:#fff}.nx-assistant-back{width:31px;height:31px;display:none;place-items:center;flex:0 0 31px;border:0;border-radius:8px;background:rgba(255,255,255,.12);color:#fff;font-size:1.05rem;font-weight:800;cursor:pointer}.nx-assistant-back:hover{background:rgba(255,255,255,.22)}.nx-assistant-panel.is-live-thread .nx-assistant-back{display:grid}.nx-assistant-brand{display:flex;align-items:center;gap:11px;min-width:0}.nx-assistant-brand img{width:38px;height:38px;flex:0 0 38px;object-fit:contain}.nx-assistant-brand strong,.nx-assistant-brand span{display:block}.nx-assistant-brand strong{font-size:.96rem;font-weight:800}.nx-assistant-brand span{margin-top:2px;font-size:.7rem;opacity:.82}.nx-assistant-window-actions{display:flex;align-items:center;gap:3px}.nx-assistant-window-actions button{width:31px;height:31px;border:0;border-radius:8px;background:rgba(255,255,255,.12);color:#fff;font-size:1rem;cursor:pointer}.nx-assistant-window-actions button:hover{background:rgba(255,255,255,.22)}.nx-assistant-body{flex:1;min-height:0;padding:18px;overflow-y:auto;background:#f8fafc}.nx-assistant-welcome{display:flex;gap:12px;padding:15px;border:1px solid #e7edf3;border-radius:14px;background:#fff}.nx-assistant-mark{width:34px;height:34px;flex:0 0 34px;display:grid;place-items:center;border-radius:10px;background:var(--nx-assistant-soft);color:var(--nx-assistant-accent);font-size:.88rem}.nx-assistant-welcome strong{color:#0f172a;font-size:.88rem}.nx-assistant-welcome p{margin:5px 0 0;color:#64748b;font-size:.76rem;line-height:1.45}.nx-assistant-preview-label{margin:20px 0 9px;color:#94a3b8;font-size:.65rem;font-weight:900;letter-spacing:.09em;text-transform:uppercase}.nx-assistant-shortcuts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.nx-assistant-shortcuts button{min-width:0;padding:9px 10px;border:1px solid #dfe7ee;border-radius:11px;background:#fff;color:#475569;text-align:left;cursor:pointer;transition:border-color .16s ease,box-shadow .16s ease,transform .16s ease}.nx-assistant-shortcuts button:hover,.nx-assistant-shortcuts button:focus-visible{border-color:var(--nx-assistant-accent);box-shadow:0 5px 16px rgba(15,23,42,.08);transform:translateY(-1px);outline:none}.nx-assistant-shortcuts strong,.nx-assistant-shortcuts span{display:block}.nx-assistant-shortcuts strong{color:var(--nx-assistant-accent);font-size:.72rem;font-weight:900}.nx-assistant-shortcuts span{margin-top:2px;color:#64748b;font-size:.64rem}.nx-assistant-conversation{display:flex;flex-direction:column;gap:10px;margin-top:18px}.nx-assistant-message{display:flex;align-items:flex-start;gap:9px;max-width:92%}.nx-assistant-message>span{width:26px;height:26px;flex:0 0 26px;display:grid;place-items:center;border-radius:8px;background:var(--nx-assistant-accent);color:#fff;font-size:.65rem;font-weight:900}.nx-assistant-message p{margin:0;padding:9px 11px;border:1px solid #e2e8f0;border-radius:4px 12px 12px 12px;background:#fff;color:#475569;font-size:.72rem;line-height:1.5;white-space:pre-line}.nx-assistant-message.is-user{align-self:flex-end;flex-direction:row-reverse}.nx-assistant-message.is-user>span{background:#64748b}.nx-assistant-message.is-user p{border-color:transparent;border-radius:12px 4px 12px 12px;background:var(--nx-assistant-accent);color:#fff;white-space:normal}.nx-assistant-message-time{display:block;margin-top:4px;font-size:.6rem;opacity:.68}.nx-assistant-contact-list{display:grid;gap:7px;width:100%;max-width:92%}.nx-assistant-contact{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 10px;border:1px solid #dfe7ee;border-radius:10px;background:#fff;color:#334155;text-align:left;cursor:pointer}.nx-assistant-contact:hover{border-color:var(--nx-assistant-accent)}.nx-assistant-contact strong,.nx-assistant-contact small{display:block}.nx-assistant-contact strong{font-size:.72rem}.nx-assistant-contact small{margin-top:2px;color:#64748b;font-size:.63rem}.nx-assistant-contact em{min-width:20px;padding:2px 6px;border-radius:999px;background:var(--nx-assistant-accent);color:#fff;font-size:.6rem;font-style:normal;text-align:center}.nx-assistant-composer{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;padding:13px;border-top:1px solid #e8edf2;background:#fff}.nx-assistant-composer textarea{min-height:42px;max-height:96px;resize:none;padding:10px 12px;border:1px solid #dbe3ea;border-radius:11px;background:#f8fafc;color:#334155;font:inherit;font-size:.78rem;outline:none}.nx-assistant-composer textarea:focus{border-color:var(--nx-assistant-accent);box-shadow:0 0 0 3px var(--nx-assistant-soft)}.nx-assistant-composer button{min-width:66px;border:0;border-radius:10px;background:var(--nx-assistant-accent);color:#fff;font-size:.75rem;font-weight:800;cursor:pointer}.nx-assistant-composer button:hover{background:var(--nx-assistant-accent-dark)}.nx-assistant-composer button:disabled{opacity:.55;cursor:wait}@media(max-width:760px){.nx-assistant{right:14px;bottom:14px}.nx-assistant-panel,.nx-assistant.is-expanded .nx-assistant-panel{width:calc(100vw - 28px);height:min(620px,calc(100vh - 86px));border-radius:16px}.nx-assistant-launcher{width:54px;height:54px}.nx-assistant-launcher img{width:28px;height:28px}.nx-assistant-shortcuts{grid-template-columns:1fr 1fr}}
+
+
+/* EXTRACTED FROM resources/views/components/nexora_assistant_ai.html */
+.nx-assistant .nx-assistant-panel { position: relative; }
+.nx-assistant .nx-assistant-body {
+    position: relative;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.nx-assistant .nx-assistant-body::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+}
+.nx-assistant .nx-assistant-panel.has-chat-rail .nx-assistant-body {
+    padding-left: 74px;
+}
+.nx-assistant .nx-assistant-chat-rail {
+    position: absolute;
+    top: 72px;
+    bottom: 70px;
+    left: 0;
+    z-index: 6;
+    width: 58px;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 7px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    box-sizing: border-box;
+    border-right: 1px solid #e3ebe7;
+    background: rgba(248, 250, 252, .97);
+    scrollbar-width: thin;
+    scrollbar-color: #bcc9c2 transparent;
+}
+.nx-assistant .nx-assistant-panel.has-chat-rail .nx-assistant-chat-rail { display: flex; }
+.nx-assistant.is-minimized .nx-assistant-chat-rail { display: none !important; }
+.nx-assistant .nx-assistant-chat-rail::-webkit-scrollbar { width: 4px; }
+.nx-assistant .nx-assistant-chat-rail::-webkit-scrollbar-track { background: transparent; }
+.nx-assistant .nx-assistant-chat-rail::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: #bcc9c2;
+}
+.nx-assistant .nx-assistant-chat-head {
+    position: relative;
+    width: 42px;
+    min-width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+    padding: 0;
+    border: 2px solid transparent;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, .08);
+    cursor: pointer;
+    transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+.nx-assistant .nx-assistant-chat-head:hover,
+.nx-assistant .nx-assistant-chat-head:focus-visible {
+    outline: 0;
+    transform: translateY(-1px);
+    border-color: var(--nx-assistant-accent);
+    box-shadow: 0 7px 16px rgba(15, 23, 42, .13);
+}
+.nx-assistant .nx-assistant-chat-head.is-active {
+    border-color: var(--nx-assistant-accent);
+    box-shadow: 0 0 0 3px var(--nx-assistant-soft);
+}
+.nx-assistant .nx-assistant-chat-head img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    border-radius: 50%;
+    object-fit: cover;
+}
+.nx-assistant .nx-assistant-chat-head-badge {
+    position: absolute;
+    right: -4px;
+    bottom: -2px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    display: grid;
+    place-items: center;
+    box-sizing: border-box;
+    border: 2px solid #fff;
+    border-radius: 999px;
+    background: var(--nx-assistant-accent);
+    color: #fff;
+    font-size: .52rem;
+    font-weight: 900;
+    line-height: 1;
+}
+.nx-assistant .nx-assistant-message {
+    max-width: 96%;
+    gap: 10px;
+    align-items: flex-start;
+}
+.nx-assistant .nx-assistant-message > span {
+    position: relative;
+    width: 32px;
+    min-width: 32px;
+    height: 32px;
+    flex-basis: 32px;
+    overflow: visible;
+    border: 1px solid #dfe7e3;
+    border-radius: 50%;
+    background-position: center;
+    background-repeat: no-repeat;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, .09);
+    color: transparent;
+    font-size: 0;
+}
+.nx-assistant .nx-assistant-message.is-assistant > span {
+    background-color: #fff;
+    background-image: url({{ url_for('static', filename=nx_ai_logo)|tojson }});
+    background-size: 20px 20px;
+}
+.nx-assistant .nx-assistant-message.is-assistant > span::after {
+    content: "";
+    position: absolute;
+    right: -1px;
+    bottom: -1px;
+    width: 8px;
+    height: 8px;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    background: #22c55e;
+}
+.nx-assistant .nx-assistant-message.is-user > span {
+    background-color: #e2e8f0;
+    background-image: url({{ nx_ai_user_avatar|tojson }});
+    background-size: cover;
+}
+.nx-assistant .nx-assistant-message p {
+    max-width: calc(100% - 42px);
+    padding: 11px 13px;
+    border-radius: 5px 14px 14px 14px;
+    background: #fff;
+    color: #334155;
+    font-size: .76rem;
+    line-height: 1.62;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, .045);
+}
+.nx-assistant .nx-assistant-message.is-user p {
+    border-radius: 14px 5px 14px 14px;
+    background: var(--nx-assistant-accent);
+    color: #fff;
+    box-shadow: 0 5px 16px rgba(15, 23, 42, .09);
+}
+.nx-assistant .nx-assistant-message p strong {
+    color: #0f172a;
+    font-weight: 850;
+}
+.nx-assistant .nx-assistant-message.is-user p strong { color: inherit; }
+.nx-assistant .nx-assistant-message p code {
+    padding: 1px 5px;
+    border-radius: 5px;
+    background: #eef3f1;
+    color: #0f5132;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: .71rem;
+}
+.nx-assistant .nx-ai-line {
+    display: block;
+    margin: 0 0 4px;
+}
+.nx-assistant .nx-ai-line:last-child { margin-bottom: 0; }
+.nx-assistant .nx-ai-line.is-heading {
+    margin: 2px 0 6px;
+    color: #0f172a;
+    font-weight: 850;
+}
+.nx-assistant .nx-ai-line.is-bullet {
+    position: relative;
+    padding-left: 14px;
+}
+.nx-assistant .nx-ai-line.is-bullet::before {
+    content: "•";
+    position: absolute;
+    left: 1px;
+    color: var(--nx-assistant-accent);
+    font-weight: 900;
+}
+.nx-assistant .nx-ai-line.is-spacer {
+    height: 6px;
+    margin: 0;
+}
+.nx-assistant .nx-assistant-message.is-thinking p {
+    min-width: 104px;
+    color: #64748b;
+}
+.nx-assistant .nx-ai-thinking {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+}
+.nx-assistant .nx-ai-thinking-label { margin-right: 4px; }
+.nx-assistant .nx-ai-thinking-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--nx-assistant-accent);
+    animation: nxAssistantThinking 1s ease-in-out infinite;
+}
+.nx-assistant .nx-ai-thinking-dot:nth-child(3) { animation-delay: .14s; }
+.nx-assistant .nx-ai-thinking-dot:nth-child(4) { animation-delay: .28s; }
+@keyframes nxAssistantThinking {
+    0%, 60%, 100% { opacity: .35; transform: translateY(0); }
+    30% { opacity: 1; transform: translateY(-2px); }
+}
+@media (max-width: 760px) {
+    .nx-assistant .nx-assistant-chat-rail {
+        width: 54px;
+        bottom: 68px;
+        padding: 10px 6px;
+    }
+    .nx-assistant .nx-assistant-panel.has-chat-rail .nx-assistant-body { padding-left: 66px; }
+    .nx-assistant .nx-assistant-chat-head {
+        width: 38px;
+        min-width: 38px;
+        height: 38px;
+        flex-basis: 38px;
+    }
+}
+
+
+/* EXTRACTED FROM resources/views/components/nexora_assistant_live.html */
+.nx-assistant .nx-assistant-header {
+    padding-left: 14px;
+}
+.nx-assistant .nx-assistant-brand {
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: 9px;
+}
+.nx-assistant .nx-assistant-brand > img {
+    width: 32px;
+    height: 32px;
+    flex: 0 0 32px;
+}
+.nx-assistant .nx-assistant-brand > div {
+    min-width: 0;
+}
+.nx-assistant .nx-assistant-brand strong {
+    overflow: hidden;
+    font-size: .9rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.nx-assistant .nx-assistant-brand span {
+    font-size: .66rem;
+    white-space: nowrap;
+}
+.nx-assistant .nx-assistant-live-chat-count {
+    display: none;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+    padding: 4px 7px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.15);
+    color: #fff;
+    font-size: .56rem;
+    font-weight: 800;
+    line-height: 1;
+    white-space: nowrap;
+}
+.nx-assistant .nx-assistant-live-chat-count.is-visible { display: inline-flex; }
+.nx-assistant .nx-assistant-live-chat-count b {
+    min-width: 15px;
+    height: 15px;
+    display: grid;
+    place-items: center;
+    padding: 0 3px;
+    border-radius: 999px;
+    background: #fff;
+    color: var(--nx-assistant-accent);
+    font-size: .54rem;
+}
+.nx-assistant .nx-assistant-live-unread {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    z-index: 2;
+    min-width: 20px;
+    height: 20px;
+    display: none;
+    place-items: center;
+    padding: 0 5px;
+    box-sizing: border-box;
+    border: 2px solid #fff;
+    border-radius: 999px;
+    background: #ef4444;
+    color: #fff;
+    font-size: .62rem;
+    font-weight: 900;
+    line-height: 1;
+}
+.nx-assistant .nx-assistant-live-unread.is-visible { display: grid; }
+
+/* Compact recent-conversation rail. The rail, not the message area, owns a visible scrollbar. */
+.nx-assistant .nx-assistant-chat-rail {
+    width: 46px;
+    gap: 8px;
+    padding: 10px 5px;
+    border-right-color: #e7ece9;
+    background: #f8fafc;
+    scrollbar-width: thin;
+    scrollbar-color: #c4cec9 transparent;
+}
+.nx-assistant .nx-assistant-chat-rail::-webkit-scrollbar { width: 3px; }
+.nx-assistant .nx-assistant-chat-rail::-webkit-scrollbar-track { background: transparent; }
+.nx-assistant .nx-assistant-chat-rail::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: #c4cec9;
+}
+.nx-assistant .nx-assistant-panel.has-chat-rail .nx-assistant-body {
+    padding-left: 58px;
+}
+.nx-assistant .nx-assistant-chat-head {
+    width: 34px;
+    min-width: 34px;
+    height: 34px;
+    flex-basis: 34px;
+    border-width: 2px;
+    box-shadow: 0 3px 9px rgba(15,23,42,.08);
+}
+.nx-assistant .nx-assistant-chat-head.is-active {
+    box-shadow: 0 0 0 2px var(--nx-assistant-soft);
+}
+.nx-assistant .nx-assistant-chat-head-badge {
+    right: -5px;
+    bottom: -3px;
+    min-width: 15px;
+    height: 15px;
+    padding: 0 3px;
+    font-size: .48rem;
+}
+
+/* A direct-message thread gets the full panel instead of sharing space with quick actions. */
+.nx-assistant .nx-assistant-panel.is-live-thread .nx-assistant-welcome,
+.nx-assistant .nx-assistant-panel.is-live-thread .nx-assistant-preview-label,
+.nx-assistant .nx-assistant-panel.is-live-thread .nx-assistant-shortcuts {
+    display: none !important;
+}
+.nx-assistant .nx-assistant-panel.is-live-thread .nx-assistant-body {
+    padding-top: 12px;
+    padding-bottom: 12px;
+}
+.nx-assistant .nx-assistant-panel.is-live-thread .nx-assistant-conversation {
+    margin-top: 0;
+    gap: 9px;
+}
+.nx-assistant .nx-live-thread-header {
+    position: sticky;
+    top: -12px;
+    z-index: 4;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin: 0 0 5px;
+    padding: 10px 10px 10px 8px;
+    border: 1px solid #e3e9e6;
+    border-radius: 12px;
+    background: rgba(255,255,255,.96);
+    box-shadow: 0 5px 14px rgba(15,23,42,.05);
+    backdrop-filter: blur(8px);
+}
+.nx-assistant .nx-live-thread-header img {
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    border: 1px solid #dde6e1;
+    border-radius: 50%;
+    background: #eef2f1;
+    object-fit: cover;
+}
+.nx-assistant .nx-live-thread-header-copy {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+.nx-assistant .nx-live-thread-header-copy strong,
+.nx-assistant .nx-live-thread-header-copy span {
+    display: block;
+}
+.nx-assistant .nx-live-thread-header-copy strong {
+    overflow: hidden;
+    color: #0f172a;
+    font-size: .77rem;
+    font-weight: 850;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.nx-assistant .nx-live-thread-header-copy span {
+    margin-top: 2px;
+    color: #64748b;
+    font-size: .62rem;
+}
+.nx-assistant .nx-live-thread-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex: 0 0 auto;
+    color: #15803d;
+    font-size: .58rem;
+    font-weight: 800;
+}
+.nx-assistant .nx-live-thread-status::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #22c55e;
+}
+
+.nx-assistant .nx-assistant-message.is-contact-message > span {
+    background-color: #e2e8f0;
+    background-image: var(--nx-contact-avatar) !important;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover !important;
+}
+.nx-assistant .nx-assistant-message.is-contact-message > span::after { display: none; }
+.nx-assistant .nx-assistant-message.is-direct-message {
+    max-width: 92%;
+}
+.nx-assistant .nx-assistant-message.is-direct-message p {
+    white-space: pre-wrap;
+}
+.nx-assistant .nx-assistant-panel.is-live-thread .nx-assistant-message p {
+    font-size: .74rem;
+    line-height: 1.55;
+}
+
+@media (max-width: 760px) {
+    .nx-assistant .nx-assistant-chat-rail {
+        width: 44px;
+        padding: 9px 5px;
+    }
+    .nx-assistant .nx-assistant-panel.has-chat-rail .nx-assistant-body { padding-left: 54px; }
+    .nx-assistant .nx-assistant-chat-head {
+        width: 32px;
+        min-width: 32px;
+        height: 32px;
+        flex-basis: 32px;
+    }
+    .nx-assistant .nx-assistant-live-chat-count { padding: 4px 6px; }
+}
