@@ -284,9 +284,9 @@ def test_templates_keep_css_out_of_html():
 
     for template in sorted(root.rglob("*.html")):
         source = template.read_text(encoding="utf-8")
-        if re.search(r"<style\\b", source, flags=re.IGNORECASE):
+        if re.search(r"<style\b", source, flags=re.IGNORECASE):
             offenders.append(f"{template}: embedded <style> block")
-        if re.search(r"\\sstyle\\s*=\\s*[\"']", source, flags=re.IGNORECASE):
+        if re.search(r"\sstyle\s*=\s*[\"']", source, flags=re.IGNORECASE):
             offenders.append(f"{template}: inline style attribute")
 
-    assert not offenders, "Template CSS must live in resources/assets/css/:\\n" + "\\n".join(offenders)
+    assert not offenders, "Template CSS must live in resources/assets/css/:\n" + "\n".join(offenders)
