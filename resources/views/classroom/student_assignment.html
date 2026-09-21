@@ -1,3 +1,4 @@
+{% from 'components/nexora_icons.html' import nx_icon %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -57,7 +58,7 @@
                                 {% if submission.grade is not none %}<div class="submission-detail"><span>Score</span><p>{{ submission.grade }} / {{ assignment.points }}{% if submission.status == 'late' %} <small class="text-muted">(automatic 65% late score)</small>{% endif %}</p></div>{% endif %}
                                 {% if submission.feedback %}<div class="submission-detail"><span>Feedback</span><p>{{ submission.feedback }}</p></div>{% endif %}
                                 {% if submission.content %}<div class="submission-detail"><span>Text response</span><p>{{ submission.content }}</p></div>{% endif %}
-                                {% if submission.filename %}<div class="submission-detail"><span>File attachment</span><p><a href="{{ url_for('classroom.download_own_submission', class_id=classroom.id, assignment_id=assignment.id) }}">📎 {{ submission.filename }}</a></p></div>{% endif %}
+                                {% if submission.filename %}<div class="submission-detail"><span>File attachment</span><p><a href="{{ url_for('classroom.download_own_submission', class_id=classroom.id, assignment_id=assignment.id) }}">{{ nx_icon('attachment') }} {{ submission.filename }}</a></p></div>{% endif %}
                                 <div class="submission-detail"><span>Submitted</span><p>{{ submission.submitted_at }}</p></div>
                             </div>
                             <h3>Resubmit your Work</h3>
