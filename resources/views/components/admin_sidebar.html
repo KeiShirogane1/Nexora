@@ -1,3 +1,4 @@
+{% from 'components/nexora_icons.html' import nx_icon %}
 {#
     Shared Admin Sidebar
     Uses the same global sidebar geometry and hover behavior as Student.
@@ -37,33 +38,33 @@
         <div class="nx-role-section-label">Menu</div>
 
         <nav class="nx-role-nav" aria-label="Admin menu">
-            <a href="{{ url_for('admin.admin_dashboard') }}" aria-label="Dashboard" class="{% if request.path == '/admin/dashboard' %}active{% endif %}"><span class="nx-role-icon">▦</span><span class="nx-role-nav-text">Dashboard</span></a>
+            <a href="{{ url_for('admin.admin_dashboard') }}" aria-label="Dashboard" class="{% if request.path == '/admin/dashboard' %}active{% endif %}"><span class="nx-role-icon">{{ nx_icon('dashboard') }}</span><span class="nx-role-nav-text">Dashboard</span></a>
 
             <div class="nx-role-nav-group {% if request.path.startswith('/admin/users') %}open{% endif %}">
-                <button class="nx-role-nav-parent {% if request.path.startswith('/admin/users') %}active-parent{% endif %}" type="button" aria-label="Users" onclick="this.parentElement.classList.toggle('open')"><span class="nx-role-icon">♟</span><span class="nx-role-nav-text">Users</span><span class="nx-role-nav-arrow">›</span></button>
+                <button class="nx-role-nav-parent {% if request.path.startswith('/admin/users') %}active-parent{% endif %}" type="button" aria-label="Users" onclick="this.parentElement.classList.toggle('open')"><span class="nx-role-icon">{{ nx_icon('users') }}</span><span class="nx-role-nav-text">Users</span><span class="nx-role-nav-arrow">›</span></button>
                 <div class="nx-role-submenu">
-                    <a href="{{ url_for('admin.admin_users') }}" class="{% if request.path == '/admin/users' %}active{% endif %}"><span class="nx-role-icon">✓</span><span>Approvals</span>{% if admin_pending_approval_count|default(0) > 0 %}<span class="nx-role-badge">{{ admin_pending_approval_count }}</span>{% endif %}</a>
-                    <a href="{{ url_for('admin.admin_students') }}" class="{% if request.path == '/admin/users/students' %}active{% endif %}"><span class="nx-role-icon">♙</span><span>Students</span></a>
-                    <a href="{{ url_for('admin.admin_supervisors') }}" class="{% if request.path == '/admin/users/supervisors' %}active{% endif %}"><span class="nx-role-icon">♙</span><span>Supervisors</span></a>
+                    <a href="{{ url_for('admin.admin_users') }}" class="{% if request.path == '/admin/users' %}active{% endif %}"><span class="nx-role-icon">{{ nx_icon('approval') }}</span><span>Approvals</span>{% if admin_pending_approval_count|default(0) > 0 %}<span class="nx-role-badge">{{ admin_pending_approval_count }}</span>{% endif %}</a>
+                    <a href="{{ url_for('admin.admin_students') }}" class="{% if request.path == '/admin/users/students' %}active{% endif %}"><span class="nx-role-icon">{{ nx_icon('student') }}</span><span>Students</span></a>
+                    <a href="{{ url_for('admin.admin_supervisors') }}" class="{% if request.path == '/admin/users/supervisors' %}active{% endif %}"><span class="nx-role-icon">{{ nx_icon('student') }}</span><span>Supervisors</span></a>
                 </div>
             </div>
 
             <div class="nx-role-nav-group {% if request.path == '/admin/internship-assign' or request.path == '/admin/assigned-interns' %}open{% endif %}">
-                <button class="nx-role-nav-parent {% if request.path == '/admin/internship-assign' or request.path == '/admin/assigned-interns' %}active-parent{% endif %}" type="button" aria-label="Internship" onclick="this.parentElement.classList.toggle('open')"><span class="nx-role-icon">▣</span><span class="nx-role-nav-text">Internship</span><span class="nx-role-nav-arrow">›</span></button>
+                <button class="nx-role-nav-parent {% if request.path == '/admin/internship-assign' or request.path == '/admin/assigned-interns' %}active-parent{% endif %}" type="button" aria-label="Internship" onclick="this.parentElement.classList.toggle('open')"><span class="nx-role-icon">{{ nx_icon('internship') }}</span><span class="nx-role-nav-text">Internship</span><span class="nx-role-nav-arrow">›</span></button>
                 <div class="nx-role-submenu">
-                    <a href="{{ url_for('admin.internship_assign') }}" class="{% if request.path == '/admin/internship-assign' %}active{% endif %}"><span class="nx-role-icon">＋</span><span>Assign Internship</span></a>
-                    <a href="{{ url_for('admin_assigned_interns.assigned_interns') }}" class="{% if request.path == '/admin/assigned-interns' %}active{% endif %}"><span class="nx-role-icon">♙</span><span>Assigned Interns</span></a>
+                    <a href="{{ url_for('admin.internship_assign') }}" class="{% if request.path == '/admin/internship-assign' %}active{% endif %}"><span class="nx-role-icon">{{ nx_icon('add') }}</span><span>Assign Internship</span></a>
+                    <a href="{{ url_for('admin_assigned_interns.assigned_interns') }}" class="{% if request.path == '/admin/assigned-interns' %}active{% endif %}"><span class="nx-role-icon">{{ nx_icon('student') }}</span><span>Assigned Interns</span></a>
                 </div>
             </div>
 
-            <a href="{{ url_for('admin_classrooms.classrooms') }}" aria-label="Classrooms" class="{% if request.path.startswith('/admin/classrooms') %}active{% endif %}"><span class="nx-role-icon">▧</span><span class="nx-role-nav-text">Classrooms</span></a>
-            <a href="{{ url_for('admin_classrooms.student_documents') }}" aria-label="Student Documents" class="{% if request.path.startswith('/admin/student-documents') %}active{% endif %}"><span class="nx-role-icon">▤</span><span class="nx-role-nav-text">Student Documents</span></a>
+            <a href="{{ url_for('admin_classrooms.classrooms') }}" aria-label="Classrooms" class="{% if request.path.startswith('/admin/classrooms') %}active{% endif %}"><span class="nx-role-icon">{{ nx_icon('classroom') }}</span><span class="nx-role-nav-text">Classrooms</span></a>
+            <a href="{{ url_for('admin_classrooms.student_documents') }}" aria-label="Student Documents" class="{% if request.path.startswith('/admin/student-documents') %}active{% endif %}"><span class="nx-role-icon">{{ nx_icon('documents') }}</span><span class="nx-role-nav-text">Student Documents</span></a>
 
             <div class="nx-role-nav-group {% if request.path.startswith('/admin/reports') or request.path == '/admin/insights' %}open{% endif %}">
-                <button class="nx-role-nav-parent {% if request.path.startswith('/admin/reports') or request.path == '/admin/insights' %}active-parent{% endif %}" type="button" aria-label="Reports" onclick="this.parentElement.classList.toggle('open')"><span class="nx-role-icon">▥</span><span class="nx-role-nav-text">Reports</span><span class="nx-role-nav-arrow">›</span></button>
+                <button class="nx-role-nav-parent {% if request.path.startswith('/admin/reports') or request.path == '/admin/insights' %}active-parent{% endif %}" type="button" aria-label="Reports" onclick="this.parentElement.classList.toggle('open')"><span class="nx-role-icon">{{ nx_icon('reports') }}</span><span class="nx-role-nav-text">Reports</span><span class="nx-role-nav-arrow">›</span></button>
                 <div class="nx-role-submenu">
-                    <a href="{{ url_for('admin.admin_reports_list') }}" class="{% if request.path == '/admin/reports' %}active{% endif %}"><span class="nx-role-icon">▤</span><span>Overview</span></a>
-                    <a href="{{ url_for('admin_reports_overview.student_insights') }}" class="{% if request.path == '/admin/insights' %}active{% endif %}"><span class="nx-role-icon">◇</span><span>Student Insights</span></a>
+                    <a href="{{ url_for('admin.admin_reports_list') }}" class="{% if request.path == '/admin/reports' %}active{% endif %}"><span class="nx-role-icon">{{ nx_icon('documents') }}</span><span>Overview</span></a>
+                    <a href="{{ url_for('admin_reports_overview.student_insights') }}" class="{% if request.path == '/admin/insights' %}active{% endif %}"><span class="nx-role-icon">{{ nx_icon('insights') }}</span><span>Student Insights</span></a>
                 </div>
             </div>
 
@@ -75,11 +76,11 @@
         <div class="nx-role-divider"></div>
         <div class="nx-role-section-label">Account</div>
         <nav class="nx-role-nav nx-role-account-nav" aria-label="Admin account">
-            <a href="{{ url_for('admin.admin_profile') }}" aria-label="Profile" class="{% if request.path == '/admin/profile' %}active{% endif %}"><span class="nx-role-icon">◎</span><span class="nx-role-nav-text">Profile</span></a>
-            <a href="javascript:void(0)" aria-label="Logout" onclick="openLogoutModal(); return false;"><span class="nx-role-icon">↪</span><span class="nx-role-nav-text">Logout</span></a>
+            <a href="{{ url_for('admin.admin_profile') }}" aria-label="Profile" class="{% if request.path == '/admin/profile' %}active{% endif %}"><span class="nx-role-icon">{{ nx_icon('profile') }}</span><span class="nx-role-nav-text">Profile</span></a>
+            <a href="javascript:void(0)" aria-label="Logout" onclick="openLogoutModal(); return false;"><span class="nx-role-icon">{{ nx_icon('logout') }}</span><span class="nx-role-nav-text">Logout</span></a>
         </nav>
 
-        <div class="nx-role-footer"><span class="nx-role-footer-mark">◆</span><span class="nx-role-footer-copy"><strong>Nexora Coding</strong><span>Empowering Future</span><span>Developers</span></span></div>
+        <div class="nx-role-footer"><span class="nx-role-footer-mark">{{ nx_icon('brand') }}</span><span class="nx-role-footer-copy"><strong>Nexora Coding</strong><span>Empowering Future</span><span>Developers</span></span></div>
     </aside>
     <div class="nx-role-sidebar-backdrop" aria-hidden="true"></div>
 </div>

@@ -1,3 +1,4 @@
+{% from 'components/nexora_icons.html' import nx_icon %}
 {#
     Shared Supervisor Sidebar
     Uses the same global sidebar geometry and hover behavior as Student.
@@ -45,24 +46,24 @@
 
         <nav class="nx-role-nav" aria-label="Supervisor menu">
             <a href="{{ url_for('supervisor.supervisor_dashboard') }}" aria-label="Dashboard" class="{% if active_page|default('') == 'dashboard' or request.path == '/supervisor/dashboard' %}active{% endif %}">
-                <span class="nx-role-icon">▦</span><span class="nx-role-nav-text">Dashboard</span>
+                <span class="nx-role-icon">{{ nx_icon('dashboard') }}</span><span class="nx-role-nav-text">Dashboard</span>
             </a>
             <a href="{{ url_for('classroom.supervisor_classes') }}" aria-label="Intern Classrooms" class="{% if active_page|default('') == 'classes' or (active_page|default('') not in ['evaluations', 'reports'] and request.path.startswith('/supervisor/classes')) %}active{% endif %}">
                 <span class="nx-role-icon">▣</span><span class="nx-role-nav-text">Intern Classrooms</span>
                 {% if supervisor_classroom_pending_count|default(0) > 0 %}<span class="nx-role-badge">{{ supervisor_classroom_pending_count }}</span>{% endif %}
             </a>
             <a href="{{ url_for('supervisor.view_interns') }}" aria-label="Assigned Interns" class="{% if active_page|default('') == 'interns' or request.path.startswith('/supervisor/intern') %}active{% endif %}">
-                <span class="nx-role-icon">♙</span><span class="nx-role-nav-text">Assigned Interns</span>
+                <span class="nx-role-icon">{{ nx_icon('users') }}</span><span class="nx-role-nav-text">Assigned Interns</span>
             </a>
             <a href="{{ url_for('supervisor_documents.student_documents') }}" aria-label="Student Documents" class="{% if active_page|default('') == 'student_documents' or request.path.startswith('/supervisor/student-documents') %}active{% endif %}">
-                <span class="nx-role-icon">▤</span><span class="nx-role-nav-text">Student Documents</span>
+                <span class="nx-role-icon">{{ nx_icon('documents') }}</span><span class="nx-role-nav-text">Student Documents</span>
             </a>
             <a href="{{ url_for('ojt_evaluation.supervisor_evaluation_directory') }}" aria-label="Evaluations" class="{% if active_page|default('') == 'evaluations' or request.path == '/supervisor/evaluations' %}active{% endif %}">
-                <span class="nx-role-icon">▤</span><span class="nx-role-nav-text">Evaluations</span>
+                <span class="nx-role-icon">{{ nx_icon('documents') }}</span><span class="nx-role-nav-text">Evaluations</span>
                 {% if supervisor_evaluation_pending_count|default(0) > 0 %}<span class="nx-role-badge">{{ supervisor_evaluation_pending_count }}</span>{% endif %}
             </a>
             <a href="{{ url_for('performance_reports.supervisor_reports_directory') }}" aria-label="Reports" class="{% if active_page|default('') == 'reports' or request.path == '/supervisor/reports' %}active{% endif %}">
-                <span class="nx-role-icon">▥</span><span class="nx-role-nav-text">Reports</span>
+                <span class="nx-role-icon">{{ nx_icon('reports') }}</span><span class="nx-role-nav-text">Reports</span>
             </a>
             <a href="{{ url_for('notifications.notification_list') }}" aria-label="Notifications" class="{% if request.path == '/notifications' %}active{% endif %}">
                 <span class="nx-role-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg></span><span class="nx-role-nav-text">Notifications</span>
@@ -77,12 +78,12 @@
         <div class="nx-role-section-label">Account</div>
 
         <nav class="nx-role-nav nx-role-account-nav" aria-label="Supervisor account">
-            <a href="{{ url_for('supervisor.supervisor_profile') }}" aria-label="Profile"><span class="nx-role-icon">◎</span><span class="nx-role-nav-text">Profile</span></a>
-            <a href="javascript:void(0)" aria-label="Logout" onclick="openLogoutModal(); return false;"><span class="nx-role-icon">↪</span><span class="nx-role-nav-text">Logout</span></a>
+            <a href="{{ url_for('supervisor.supervisor_profile') }}" aria-label="Profile"><span class="nx-role-icon">{{ nx_icon('profile') }}</span><span class="nx-role-nav-text">Profile</span></a>
+            <a href="javascript:void(0)" aria-label="Logout" onclick="openLogoutModal(); return false;"><span class="nx-role-icon">{{ nx_icon('logout') }}</span><span class="nx-role-nav-text">Logout</span></a>
         </nav>
 
         <div class="nx-role-footer">
-            <span class="nx-role-footer-mark">◆</span>
+            <span class="nx-role-footer-mark">{{ nx_icon('brand') }}</span>
             <span class="nx-role-footer-copy">
                 <strong>Nexora Internships</strong>
                 <span>Internship Management</span>
