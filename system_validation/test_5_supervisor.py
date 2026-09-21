@@ -352,17 +352,29 @@ def test_task_delete_ownership():
     try:
         _login_as(client, supervisor_id, "supervisor")
         mock_conn = MagicMock()
+
         def exec_side(sql, params=None):
             m = MagicMock()
-            if "SELECT status" in sql:
-                m.fetchone.return_value = {"status":"active"}
+            if "SELECT session_version" in sql:
+                m.fetchone.return_value = (0,)
+            elif "SELECT role, status" in sql:
+                m.fetchone.return_value = {"role": "supervisor", "status": "active"}
+            elif "SELECT status" in sql:
+                m.fetchone.return_value = {"status": "active"}
             elif "SELECT student_id" in sql and "FROM tasks" in sql:
                 m.fetchone.return_value = None
             else:
                 m.fetchone.return_value = None
             return m
+
         mock_conn.execute.side_effect = exec_side
-        with patch("app.Http.Controllers.supervisor.get_db_connection", return_value=mock_conn):
+
+        # Isolate the route ownership assertion from the app-wide supervisor
+        # session guard and role middleware. All three layers perform their
+        # own DB lookup before delete_task() is reached.
+        with patch("bootstrap.app.get_db_connection", return_value=mock_conn), \
+             patch("app.Http.Middleware.security.get_db_connection", return_value=mock_conn), \
+             patch("app.Http.Controllers.supervisor.get_db_connection", return_value=mock_conn):
             resp = client.post("/supervisor/task/999/delete")
             assert resp.status_code == 404
             # ensure GET not allowed
