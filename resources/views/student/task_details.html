@@ -1,3 +1,4 @@
+{% from 'components/nexora_icons.html' import nx_icon %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -16,7 +17,7 @@
       <header class="nx-top">
         <div class="nx-top-tools">
           <label class="nx-search" aria-label="Search dashboard"><span class="nx-search-icon">⌕</span><input id="nx-search-input" type="search" placeholder="Search dashboard…" autocomplete="off"></label>
-          <a class="nx-notif" href="{{ url_for('notifications.notification_list') }}" aria-label="Notifications"><span class="bell">♧</span>{% if unread_count|default(0) > 0 %}<span class="nx-badge">{{ unread_count }}</span>{% endif %}</a>
+          <a class="nx-notif" href="{{ url_for('notifications.notification_list') }}" aria-label="Notifications"><span class="bell">{{ nx_icon('bell') }}</span>{% if unread_count|default(0) > 0 %}<span class="nx-badge">{{ unread_count }}</span>{% endif %}</a>
           <a class="nx-top-profile" href="{{ url_for('student.student_profile') }}">{% if profile[5] %}<img src="{{ url_for('profile_picture',filename=profile[5]) }}" alt="Profile">{% else %}<img src="{{ url_for('static',filename='images/default_profile.png') }}" alt="Profile">{% endif %}<span>{{ profile[0] }}</span></a>
         </div>
       </header>
@@ -32,7 +33,7 @@
         <section class="nx-card">
           <div class="nx-card-head"><h2>Task Information</h2><span>Details &amp; instructions</span></div>
           <div class="nx-info">
-            <div class="nx-deadline"><div class="nx-deadline-icon">◷</div><div><small>Deadline</small><strong>{% if task[3] %}{{ task[3] }}{% else %}No deadline{% endif %}</strong></div></div>
+            <div class="nx-deadline"><div class="nx-deadline-icon">{{ nx_icon('clock') }}</div><div><small>Deadline</small><strong>{% if task[3] %}{{ task[3] }}{% else %}No deadline{% endif %}</strong></div></div>
             <div class="nx-description-label">Description</div>
             <div class="nx-description">{% if task[1] %}{{ task[1] }}{% else %}<span class="nx-empty-description">No additional instructions were provided for this task.</span>{% endif %}</div>
           </div>
@@ -54,7 +55,7 @@
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input class="nx-file" type="file" name="file" required><button class="nx-primary" type="submit">Upload File</button>
               </form>
               <div class="nx-upload-list"><div class="nx-upload-list-title">Submitted Files</div>
-                {% if uploads %}{% for upload in uploads %}<div class="nx-upload-item"><div class="nx-file-icon">↗</div><div class="nx-upload-meta"><a href="/student/task/submission/{{ upload[0] }}" target="_blank">{{ upload[1] }}</a><small>Uploaded {{ upload[2] }}</small></div><form method="POST" action="/student/task/submission/{{ upload[0] }}/delete" onsubmit="return confirm('Are you sure you want to delete this upload?')"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="nx-delete" type="submit" aria-label="Delete upload">✕</button></form></div>{% endfor %}{% else %}<p class="nx-empty">No uploads yet.</p>{% endif %}
+                {% if uploads %}{% for upload in uploads %}<div class="nx-upload-item"><div class="nx-file-icon">{{ nx_icon('external') }}</div><div class="nx-upload-meta"><a href="/student/task/submission/{{ upload[0] }}" target="_blank">{{ upload[1] }}</a><small>Uploaded {{ upload[2] }}</small></div><form method="POST" action="/student/task/submission/{{ upload[0] }}/delete" onsubmit="return confirm('Are you sure you want to delete this upload?')"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="nx-delete" type="submit" aria-label="Delete upload">✕</button></form></div>{% endfor %}{% else %}<p class="nx-empty">No uploads yet.</p>{% endif %}
               </div>
             {% else %}<div class="nx-no-upload">This task does not require a file upload.</div>{% endif %}
           </section>

@@ -1,3 +1,4 @@
+{% from 'components/nexora_icons.html' import nx_icon %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -95,7 +96,7 @@
             <div class="nx-card-head"><h2>Additional Activity Timeline</h2><span>{% if extra.count %}{{ extra.count }} entries{% else %}No additional entries{% endif %}</span></div>
             <div class="nx-timeline">
               {% if extra.count %}
-                {% for log in logs %}{% if not daily_log or log[0] != daily_log.id %}<div class="nx-timeline-item"><span class="nx-dot"></span><div class="nx-time">◷ {{ log[2] }}</div><div class="nx-log">{{ log[1] }}</div></div>{% endif %}{% endfor %}
+                {% for log in logs %}{% if not daily_log or log[0] != daily_log.id %}<div class="nx-timeline-item"><span class="nx-dot"></span><div class="nx-time">{{ nx_icon('clock') }} {{ log[2] }}</div><div class="nx-log">{{ log[1] }}</div></div>{% endif %}{% endfor %}
               {% else %}
                 <div class="nx-empty">No additional legacy activity notes were recorded for this internship session.</div>
               {% endif %}

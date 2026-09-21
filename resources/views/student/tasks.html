@@ -1,3 +1,4 @@
+{% from 'components/nexora_icons.html' import nx_icon %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -19,8 +20,8 @@
             </section>
             <section class="student-tasks-stats" aria-label="Task summary">
                 <article class="student-tasks-stat"><span class="student-tasks-stat-icon" aria-hidden="true">▣</span><div class="student-tasks-stat-copy"><span>Total Tasks</span><strong>{{ total_count|default(0) }}</strong><small>All assigned tasks</small></div></article>
-                <article class="student-tasks-stat"><span class="student-tasks-stat-icon" aria-hidden="true">⌛</span><div class="student-tasks-stat-copy"><span>Pending</span><strong>{{ pending_count }}</strong><small>Awaiting completion</small></div></article>
-                <article class="student-tasks-stat"><span class="student-tasks-stat-icon" aria-hidden="true">✓</span><div class="student-tasks-stat-copy"><span>Completed</span><strong>{{ completed_count }}</strong><small>Submitted or reviewed</small></div></article>
+                <article class="student-tasks-stat"><span class="student-tasks-stat-icon" aria-hidden="true">{{ nx_icon('clock') }}</span><div class="student-tasks-stat-copy"><span>Pending</span><strong>{{ pending_count }}</strong><small>Awaiting completion</small></div></article>
+                <article class="student-tasks-stat"><span class="student-tasks-stat-icon" aria-hidden="true">{{ nx_icon('success') }}</span><div class="student-tasks-stat-copy"><span>Completed</span><strong>{{ completed_count }}</strong><small>Submitted or reviewed</small></div></article>
                 <article class="student-tasks-stat"><span class="student-tasks-stat-icon" aria-hidden="true">□</span><div class="student-tasks-stat-copy"><span>Overdue</span><strong>{{ overdue_count }}</strong><small>Need attention</small></div></article>
             </section>
             <section class="student-tasks-toolbar" aria-label="Task filters">
@@ -33,7 +34,7 @@
                     {% if tasks %}{% for task in tasks %}
                         {% set is_complete = task[4] == 'Submitted' or task[4] == 'Reviewed' %}{% set is_overdue = task[4] == 'Overdue' %}
                         <article class="student-task-row">
-                            <div class="student-task-title"><span class="student-task-icon" aria-hidden="true">{% if is_complete %}✓{% else %}▤{% endif %}</span><div><strong>{{ task[1] }}</strong><span>Assigned {{ task[2] }} · Due {{ task[3] or 'No deadline' }}</span></div></div>
+                            <div class="student-task-title"><span class="student-task-icon" aria-hidden="true">{% if is_complete %}{{ nx_icon('success') }}{% else %}{{ nx_icon('work') }}{% endif %}</span><div><strong>{{ task[1] }}</strong><span>Assigned {{ task[2] }} · Due {{ task[3] or 'No deadline' }}</span></div></div>
                             <span class="student-task-priority {% if is_complete %}is-low{% endif %}">{% if is_complete %}Done{% elif is_overdue %}High{% else %}Pending{% endif %}</span>
                             <div class="student-task-due {% if is_overdue %}is-overdue{% endif %}"><strong>{% if is_overdue %}Needs attention{% elif task[3] %}Due {{ task[3] }}{% else %}No deadline{% endif %}</strong><span>{{ task[4] or 'Pending' }}</span></div>
                             <div class="student-task-progress {% if is_complete %}is-complete{% endif %}" aria-label="{% if is_complete %}100{% else %}0{% endif %} percent complete"><span>{% if is_complete %}100%{% else %}0%{% endif %}</span></div>
@@ -44,7 +45,7 @@
                 </section>
                 <aside class="student-tasks-side" aria-label="Task information">
                     <section class="student-tasks-side-card"><h2>Task Summary</h2><div class="student-task-chart"><div class="student-task-donut"><div class="student-task-donut-copy"><strong>{{ total_count|default(0) }}</strong><span>Total Tasks</span></div></div><div class="student-task-legend"><div class="student-task-legend-row"><span class="student-task-dot"></span>Completed <strong>{{ completed_count }}</strong></div><div class="student-task-legend-row"><span class="student-task-dot pending"></span>Pending <strong>{{ pending_count }}</strong></div><div class="student-task-legend-row"><span class="student-task-dot overdue"></span>Overdue <strong>{{ overdue_count }}</strong></div></div></div></section>
-                    <section class="student-tasks-side-card"><h2>Upcoming Deadlines</h2>{% if tasks %}{% for task in tasks[:3] %}<div class="student-task-deadline"><span class="student-task-deadline-icon" aria-hidden="true">▤</span><div><strong>{{ task[1] }}</strong><span>{{ task[3] or 'No deadline' }}</span></div><em>{% if task[4] == 'Submitted' or task[4] == 'Reviewed' %}Completed{% else %}Pending{% endif %}</em></div>{% endfor %}{% else %}<div class="student-tasks-empty">No upcoming deadlines.</div>{% endif %}<a class="student-tasks-view-all" href="#task-list">View All Tasks</a></section>
+                    <section class="student-tasks-side-card"><h2>Upcoming Deadlines</h2>{% if tasks %}{% for task in tasks[:3] %}<div class="student-task-deadline"><span class="student-task-deadline-icon" aria-hidden="true">{{ nx_icon('calendar') }}</span><div><strong>{{ task[1] }}</strong><span>{{ task[3] or 'No deadline' }}</span></div><em>{% if task[4] == 'Submitted' or task[4] == 'Reviewed' %}Completed{% else %}Pending{% endif %}</em></div>{% endfor %}{% else %}<div class="student-tasks-empty">No upcoming deadlines.</div>{% endif %}<a class="student-tasks-view-all" href="#task-list">View All Tasks</a></section>
                     <section class="student-tasks-side-card student-tasks-tip"><span class="student-tasks-tip-icon" aria-hidden="true">💡</span><div><strong>Productivity Tip</strong><span>Break larger tasks into smaller, manageable steps to stay productive.</span></div></section>
                 </aside>
             </section>
