@@ -21,26 +21,26 @@
                     {% endif %}
                 {% endwith %}
 
-                <div class="card shadow-sm mb-4" style="border:1px solid #f1f5f9; border-radius:12px; overflow:hidden;">
+                <div class="card shadow-sm mb-4 nx-extracted-classroom-supervisor-submission-1">
                     <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0" style="font-weight:700;">{{ assignment.title }}</h5>
-                        <span class="badge bg-primary" style="font-size:0.85rem;">{{ student.username }}</span>
+                        <h5 class="mb-0 nx-extracted-classroom-supervisor-submission-2">{{ assignment.title }}</h5>
+                        <span class="badge bg-primary nx-extracted-classroom-supervisor-submission-3">{{ student.username }}</span>
                     </div>
                     <div class="card-body">
                         <div class="d-flex flex-wrap gap-2 mb-3">
-                            <span class="badge {% if submission.status=='graded' %}bg-success{% else %}bg-primary{% endif %}" style="padding:8px 12px;">{{ submission.status }}</span>
-                            {% if submission.grade %}<span class="badge bg-dark" style="padding:8px 12px;">Grade: {{ submission.grade }}</span>{% endif %}
+                            <span class="badge {% if submission.status=='graded' %}bg-success{% else %}bg-primary{% endif %} nx-extracted-classroom-supervisor-submission-4">{{ submission.status }}</span>
+                            {% if submission.grade %}<span class="badge bg-dark nx-extracted-classroom-supervisor-submission-5">Grade: {{ submission.grade }}</span>{% endif %}
                         </div>
                         <p class="mb-2"><strong>Student:</strong> {{ student.username }} <span class="text-muted">({{ student.email }})</span></p>
                         {% if submission.content %}
-                            <div class="border rounded p-3 mb-3" style="background:#f8fafc; border-color:#e2e8f0;">
-                                <h6 style="font-weight:700; font-size:0.9rem; color:#0f172a;">Text Submission</h6>
-                                <p class="mb-0" style="white-space:pre-wrap;">{{ submission.content }}</p>
+                            <div class="border rounded p-3 mb-3 nx-extracted-classroom-supervisor-submission-6">
+                                <h6 class="nx-extracted-classroom-supervisor-submission-7">Text Submission</h6>
+                                <p class="mb-0 nx-extracted-classroom-supervisor-submission-8">{{ submission.content }}</p>
                             </div>
                         {% endif %}
                         {% if submission.filename %}
-                            <div class="d-flex align-items-center gap-2 mb-3 p-3 border rounded" style="background:#f0f9ff; border-color:#bae6fd;">
-                                <span style="font-size:1.2rem;">📎</span>
+                            <div class="d-flex align-items-center gap-2 mb-3 p-3 border rounded nx-extracted-classroom-supervisor-submission-9">
+                                <span class="nx-extracted-classroom-supervisor-submission-10">📎</span>
                                 <span><strong>File:</strong> {{ submission.filename }}</span>
                                 <a href="{{ url_for('classroom.download_submission_supervisor', class_id=classroom.id, assignment_id=assignment.id, submission_id=submission.id) }}" class="btn btn-sm btn-primary ms-auto">Download</a>
                             </div>
@@ -54,8 +54,8 @@
                     </div>
                 </div>
 
-                <div class="card shadow-sm" style="border:1px solid #f1f5f9; border-radius:12px; overflow:hidden;">
-                    <div class="card-header bg-white"><h6 class="mb-0" style="font-weight:700;">Grade & Feedback</h6></div>
+                <div class="card shadow-sm nx-extracted-classroom-supervisor-submission-11">
+                    <div class="card-header bg-white"><h6 class="mb-0 nx-extracted-classroom-supervisor-submission-12">Grade & Feedback</h6></div>
                     <div class="card-body">
                         <form method="POST" action="{{ url_for('classroom.grade_submission', class_id=classroom.id, assignment_id=assignment.id, submission_id=submission.id) }}">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
