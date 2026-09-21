@@ -147,7 +147,7 @@
                     <div class="student-logbook-compact-toolbar" aria-label="Log entry tools">
                         <div class="student-logbook-compact-filter">{% if selected_classroom %}{{ selected_classroom.company_name or selected_classroom.name }}{% else %}Legacy attendance{% endif %}</div>
                         <div class="student-logbook-compact-filter">Attendance-linked daily records</div>
-                        <label class="student-logbook-compact-search"><span>⌕</span><input type="search" placeholder="Search logs..." aria-label="Search logs"></label>
+                        <label class="student-logbook-compact-search"><span aria-hidden="true">{{ nx_icon('search') }}</span><input type="search" placeholder="Search logs..." aria-label="Search logs"></label>
                     </div>
 
                     {% if daily_entries %}
@@ -168,14 +168,14 @@
                                                 </div>
                                             </td>
                                             <td><span class="student-logbook-hours">{% if entry.status == 'Open' %}In progress{% elif entry.hours_rendered is not none %}{{ '%.2f'|format(entry.hours_rendered) }} hrs{% else %}—{% endif %}</span></td>
-                                            <td><span class="student-logbook-pill student-logbook-pill-status">{% if entry.status == 'Open' %}Active{% else %}✓ Recorded{% endif %}</span></td>
+                                            <td><span class="student-logbook-pill student-logbook-pill-status">{% if entry.status == 'Open' %}Active{% else %}{{ nx_icon('success') }} Recorded{% endif %}</span></td>
                                             <td>
                                                 <div class="student-logbook-entry-actions">
-                                                    <a class="student-logbook-icon-button" href="/student/session/{{ entry.attendance_id }}" aria-label="View Daily OJT entry">↗</a>
+                                                    <a class="student-logbook-icon-button" href="/student/session/{{ entry.attendance_id }}" aria-label="View Daily OJT entry">{{ nx_icon('eye') }}</a>
                                                     {% if attendance and entry.attendance_id == attendance[0] %}
                                                         <form method="POST" action="/student/log/{{ entry.id }}/delete" onsubmit="return confirm('Delete this Daily OJT entry?')">
                                                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                            <button class="student-logbook-icon-button" type="submit" aria-label="Delete Daily OJT entry">×</button>
+                                                            <button class="student-logbook-icon-button" type="submit" aria-label="Delete Daily OJT entry">{{ nx_icon('trash') }}</button>
                                                         </form>
                                                     {% endif %}
                                                 </div>
@@ -212,7 +212,7 @@
                                             <td>{{ attendance_record[2] or '—' }}</td>
                                             <td>{% if attendance_record[3] is not none %}{{ '%.2f'|format(attendance_record[3]) }} hrs{% else %}—{% endif %}</td>
                                             <td><span class="student-logbook-history-status{% if attendance_record[4] == 'Open' %} is-open{% endif %}">{{ attendance_record[4] }}</span></td>
-                                            <td><a class="student-logbook-history-link" href="/student/session/{{ attendance_record[0] }}">View Day ↗</a></td>
+                                            <td><a class="student-logbook-history-link" href="/student/session/{{ attendance_record[0] }}">{{ nx_icon('external') }} View Day</a></td>
                                         </tr>
                                     {% endfor %}
                                 </tbody>
@@ -274,7 +274,7 @@
                     <div class="nexora-modal-header">
                         <h2 id="daily-entry-modal-title">Today's Daily OJT Entry</h2>
                         <p>Day {{ current_day_number }} · Complete this record before ending today's attendance session.</p>
-                        <button class="nexora-modal-close" type="button" aria-label="Close Daily Entry modal" onclick="closeLogbookModal('dailyEntryModal')">×</button>
+                        <button class="nexora-modal-close" type="button" aria-label="Close Daily Entry modal" onclick="closeLogbookModal('dailyEntryModal')">{{ nx_icon('close') }}</button>
                     </div>
                     <div class="nexora-modal-body">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -324,7 +324,7 @@
                 <div class="nexora-modal-header">
                     <h2 id="clock-out-modal-title">Clock Out</h2>
                     <p>Confirm the end of today's attendance session.</p>
-                    <button class="nexora-modal-close" type="button" aria-label="Close Clock Out modal" onclick="closeLogbookModal('clockOutModal')">×</button>
+                    <button class="nexora-modal-close" type="button" aria-label="Close Clock Out modal" onclick="closeLogbookModal('clockOutModal')">{{ nx_icon('close') }}</button>
                 </div>
                 <div class="nexora-modal-body">
                     <p class="mb-0">Clock out and close today's attendance session?</p>
