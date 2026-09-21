@@ -7196,3 +7196,1465 @@ body.admin-supervisors-page .dropdown-menu-nexora.nx-drop-up {
     }
     .nx-assistant .nx-assistant-live-chat-count { padding: 4px 6px; }
 }
+
+
+/* EXTRACTED FROM resources/views/components/nexora_people_actions.html */
+:root{--nx-button-radius:12px}
+/* One button geometry across portals. Deliberately circular identity/floating controls are restored below. */
+button,
+a.btn,
+.btn,
+.ui-primary-btn,
+.ui-secondary-btn,
+.student-tasks-primary-button,
+.btn-nexora-primary,
+.btn-nexora-secondary,
+.btn-view,
+.btn-more,
+.btn-approve,
+.btn-reject,
+.btn-bulk-activate,
+.btn-bulk-deactivate,
+.btn-bulk-delete,
+.admin-file-action,
+.supervisor-doc-action,
+.nx-quick-chat-btn,
+.nx-copy-username,
+.nx-export-choice{
+    border-radius:var(--nx-button-radius)!important;
+}
+.rounded-circle,
+[class*="avatar-button"],
+[class*="avatar-wrap"] button,
+.nx-assistant-fab,
+.nx-assistant-launcher,
+.nx-assistant-trigger,
+.nexora-assistant-fab{
+    border-radius:50%!important;
+}
+
+/* Keep opened row menus above the table but below the role sidebar/drawer. */
+.more-actions{position:relative;z-index:20}
+.dropdown-menu-nexora.show{z-index:1200!important}
+tr:has(.dropdown-menu-nexora.show),
+td:has(.dropdown-menu-nexora.show),
+.actions-cell:has(.dropdown-menu-nexora.show){position:relative!important;z-index:1190!important}
+.table-responsive:has(.dropdown-menu-nexora.show),
+.table-card:has(.dropdown-menu-nexora.show),
+.nexora-card:has(.dropdown-menu-nexora.show){overflow:visible!important}
+
+.nx-username-line{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:5px 0 0;color:#64748b;font-size:.76rem;font-weight:750;line-height:1.3}
+.nx-username-text{overflow-wrap:anywhere}
+.nx-copy-username{width:1.05em;height:1.05em;min-width:0;padding:0;border:0!important;background:transparent!important;color:inherit;display:inline-grid;place-items:center;line-height:1;cursor:pointer;box-shadow:none!important}
+.nx-copy-username:hover{border:0!important;background:transparent!important;color:var(--nx-role-kpi-accent,#2563eb)}
+.nx-copy-username:active{background:transparent!important;color:color-mix(in srgb,var(--nx-role-kpi-accent,#2563eb) 78%,#0f172a)}
+.nx-copy-username:focus-visible{outline:2px solid var(--nx-role-kpi-accent,#2563eb);outline-offset:2px}
+.nx-copy-username svg{width:.95em;height:.95em;display:block;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+.nx-quick-chat-btn{min-height:36px;padding:0 12px;border:1px solid color-mix(in srgb,var(--nx-role-kpi-accent,#2563eb) 52%,#d7e0ec);background:#fff;color:var(--nx-role-kpi-accent,#2563eb);display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;font-size:.75rem;font-weight:800;white-space:nowrap}
+.nx-quick-chat-btn:hover{background:var(--nx-role-kpi-soft,#eff5ff);border-color:var(--nx-role-kpi-accent,#2563eb);color:var(--nx-role-kpi-accent,#2563eb)}
+.nx-quick-chat-btn svg{width:15px;height:15px;display:block;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.nx-profile-quick-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:9px}
+
+.nx-export-modal .nexora-modal{max-width:610px}
+.nx-export-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.nx-export-choice{min-height:118px;padding:16px;border:1px solid #dce5ef;background:#fff;color:#17233d;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;text-align:center;cursor:pointer}
+.nx-export-choice:hover{border-color:var(--nx-role-kpi-accent,#e7512d);background:var(--nx-role-kpi-soft,#fff0ea);transform:translateY(-1px)}
+.nx-export-choice svg{width:28px;height:28px;fill:none;stroke:var(--nx-role-kpi-accent,#e7512d);stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.nx-export-choice strong{font-size:.84rem;font-weight:900}
+.nx-export-choice small{color:#718096;font-size:.66rem;line-height:1.35}
+.nx-export-note{margin:14px 0 0;padding:10px 12px;border-radius:12px;background:#f8fafc;color:#64748b;font-size:.68rem;line-height:1.45}
+
+@media(max-width:680px){.nx-export-grid{grid-template-columns:1fr}.nx-export-choice{min-height:82px;flex-direction:row;text-align:left;justify-content:flex-start}.nx-quick-chat-btn{min-height:34px;padding:0 10px}}
+
+
+/* EXTRACTED FROM resources/views/components/nexora_select_control.html */
+.nx-select-shell {
+    --nx-select-accent: #0a8f46;
+    --nx-select-ring: rgba(10, 143, 70, .12);
+    position: relative;
+    width: 100%;
+    min-width: 0;
+}
+body:has(.nx-role-sidebar-shell.nx-role-supervisor) .nx-select-shell {
+    --nx-select-accent: #2563eb;
+    --nx-select-ring: rgba(37, 99, 235, .12);
+}
+body:has(.nx-role-sidebar-shell.nx-role-admin) .nx-select-shell {
+    --nx-select-accent: #f45125;
+    --nx-select-ring: rgba(244, 81, 37, .12);
+}
+.nx-select-native {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+.nx-select-trigger {
+    width: 100%;
+    min-height: 42px;
+    padding: 0 12px 0 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border: 1.5px solid #b8c4d4;
+    border-radius: 10px;
+    background: #fff;
+    color: #243247;
+    box-shadow: inset 0 0 0 .25px rgba(15, 23, 42, .05);
+    font: inherit;
+    font-size: .82rem;
+    font-weight: 650;
+    line-height: 1.2;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+}
+.nx-select-trigger:hover { border-color: #94a3b8; }
+.nx-select-trigger:focus-visible,
+.nx-select-shell.is-open .nx-select-trigger {
+    outline: 0;
+    border-color: var(--nx-select-accent);
+    box-shadow: 0 0 0 3px var(--nx-select-ring);
+}
+.nx-select-trigger-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.nx-select-chevron {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+    display: grid;
+    place-items: center;
+    color: #64748b;
+    transition: transform .15s ease, color .15s ease;
+}
+.nx-select-chevron svg {
+    width: 16px;
+    height: 16px;
+    display: block;
+}
+.nx-select-shell.is-open .nx-select-chevron {
+    transform: rotate(180deg);
+    color: var(--nx-select-accent);
+}
+.nx-select-menu {
+    position: absolute;
+    top: calc(100% + 7px);
+    left: 0;
+    z-index: 2600;
+    width: 100%;
+    min-width: 180px;
+    max-height: 260px;
+    overflow-y: auto;
+    padding: 6px;
+    border: 1px solid #dfe6ee;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 18px 42px rgba(15, 23, 42, .16), 0 3px 10px rgba(15, 23, 42, .05);
+}
+.nx-select-menu[hidden] { display: none !important; }
+.nx-select-option {
+    width: 100%;
+    min-height: 38px;
+    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #334155;
+    font: inherit;
+    font-size: .8rem;
+    font-weight: 650;
+    text-align: left;
+    cursor: pointer;
+}
+.nx-select-option:hover,
+.nx-select-option:focus-visible,
+.nx-select-option.is-selected {
+    outline: 0;
+    background: color-mix(in srgb, var(--nx-select-accent) 9%, white);
+    color: var(--nx-select-accent);
+}
+.nx-select-option.is-selected::after {
+    content: "";
+    width: 15px;
+    height: 15px;
+    flex: 0 0 15px;
+    background: currentColor;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='m9.55 18-5.7-5.7 1.4-1.4 4.3 4.3 9.2-9.2 1.4 1.4z'/%3E%3C/svg%3E") center/contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='m9.55 18-5.7-5.7 1.4-1.4 4.3 4.3 9.2-9.2 1.4 1.4z'/%3E%3C/svg%3E") center/contain no-repeat;
+}
+.nx-select-option:disabled {
+    color: #a3afbf;
+    cursor: not-allowed;
+}
+
+
+/* EXTRACTED FROM resources/views/components/nexora_ui_defaults.html */
+:root {
+    --nx-kpi-border: #dfe7f1;
+    --nx-kpi-shadow: 0 8px 24px rgba(15, 23, 42, .055);
+    --nx-kpi-text: #0f172a;
+    --nx-kpi-muted: #64748b;
+    --nx-kpi-label: #475569;
+}
+
+body.student-page,
+body.student-dashboard-page {
+    --nx-role-kpi-accent: #0a8f46;
+    --nx-role-kpi-soft: #e7f7ed;
+}
+
+body.supervisor-page,
+body.supervisor-dashboard-page,
+body.supervisor-classwork-page,
+body.supervisor-assigned-interns-page {
+    --nx-role-kpi-accent: #2563eb;
+    --nx-role-kpi-soft: #eaf2ff;
+}
+
+body.admin-page,
+body.nexora-admin-body,
+body.admin-dashboard-page,
+body.admin-documents-page {
+    --nx-role-kpi-accent: #e7512d;
+    --nx-role-kpi-soft: #fff0ea;
+}
+
+/* One default grid for dashboard/summary cards across Student, Supervisor, Admin. */
+.nx-kpi-grid,
+.nx-supervisor-kpi-grid,
+.supervisor-stat-grid,
+.supervisor-insights-readiness,
+.supervisor-doc-summary,
+.student-tasks-stats,
+.admin-metric-grid,
+.admin-documents-metrics {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 14px !important;
+    margin-bottom: 18px !important;
+}
+
+/* Shared card surface. Structure-specific layout follows below. */
+.nx-kpi-card,
+.nx-supervisor-kpi-card,
+.supervisor-stat-card,
+.supervisor-insights-readiness-card,
+.supervisor-doc-summary-card,
+.student-tasks-stat,
+.admin-metric-card,
+.admin-documents-metric {
+    position: relative !important;
+    min-width: 0 !important;
+    min-height: 112px !important;
+    box-sizing: border-box !important;
+    padding: 18px 20px !important;
+    border: 1px solid var(--nx-kpi-border) !important;
+    border-radius: 16px !important;
+    background: #fff !important;
+    box-shadow: var(--nx-kpi-shadow) !important;
+    color: var(--nx-kpi-text) !important;
+}
+
+/* Cards that already have an icon + copy wrapper. */
+.nx-kpi-card,
+.nx-supervisor-kpi-card,
+.supervisor-stat-card,
+.supervisor-doc-summary-card,
+.student-tasks-stat,
+.admin-metric-card,
+.admin-documents-metric {
+    display: flex !important;
+    align-items: center !important;
+    gap: 14px !important;
+}
+
+/* Assigned Interns/legacy readiness cards have no wrapper/icon in markup. */
+.supervisor-insights-readiness-card {
+    display: grid !important;
+    grid-template-columns: 48px minmax(0, 1fr) !important;
+    grid-template-rows: auto auto auto !important;
+    column-gap: 14px !important;
+    row-gap: 0 !important;
+    align-items: center !important;
+}
+
+.supervisor-insights-readiness-card::before {
+    content: "";
+    width: 48px;
+    height: 48px;
+    grid-column: 1;
+    grid-row: 1 / 4;
+    align-self: center;
+    border-radius: 14px;
+    background-color: #eaf2ff;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 24px 24px;
+}
+
+.supervisor-insights-readiness-card:nth-child(1)::before {
+    background-color: #eaf2ff;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2'/%3E%3Ccircle cx='9' cy='7' r='4'/%3E%3Cpath d='M22 21v-2a4 4 0 0 0-3-3.87'/%3E%3Cpath d='M16 3.13a4 4 0 0 1 0 7.75'/%3E%3C/svg%3E");
+}
+
+.supervisor-insights-readiness-card:nth-child(2)::before {
+    background-color: #e9f9f0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2316a34a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='16' rx='2'/%3E%3Cpath d='M3 9h18'/%3E%3Cpath d='M8 20v-4h8v4'/%3E%3C/svg%3E");
+}
+
+.supervisor-insights-readiness-card:nth-child(3)::before {
+    background-color: #f1ebff;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237c3aed' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='7' width='18' height='13' rx='2'/%3E%3Cpath d='M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2'/%3E%3Cpath d='M3 12h18'/%3E%3C/svg%3E");
+}
+
+.supervisor-insights-readiness-card:nth-child(4)::before {
+    background-color: #fff4df;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d97706' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'/%3E%3Cpath d='M14 2v6h6'/%3E%3Cpath d='M8 13h8'/%3E%3Cpath d='M8 17h6'/%3E%3C/svg%3E");
+}
+
+.supervisor-insights-readiness-card > span,
+.supervisor-insights-readiness-card > strong,
+.supervisor-insights-readiness-card > small {
+    grid-column: 2;
+    min-width: 0;
+}
+
+/* Default 48px icon tile. */
+.nx-kpi-icon,
+.nx-supervisor-kpi-icon,
+.supervisor-stat-icon,
+.supervisor-doc-summary-icon,
+.student-tasks-stat-icon,
+.admin-metric-icon,
+.admin-documents-metric-icon {
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
+    flex: 0 0 48px !important;
+    display: grid !important;
+    place-items: center !important;
+    border-radius: 14px !important;
+    background: var(--nx-role-kpi-soft, #eaf2ff) !important;
+    color: var(--nx-role-kpi-accent, #2563eb) !important;
+    line-height: 1 !important;
+}
+
+.nx-kpi-icon svg,
+.nx-supervisor-kpi-icon svg,
+.supervisor-stat-icon svg,
+.supervisor-doc-summary-icon svg,
+.student-tasks-stat-icon svg,
+.admin-metric-icon svg,
+.admin-documents-metric-icon svg {
+    width: 24px !important;
+    height: 24px !important;
+    display: block !important;
+}
+
+/* Contextual icon tile colors follow the established Nexora dashboard palette. */
+.nx-kpi-icon.is-blue,
+.nx-supervisor-kpi-icon.is-blue,
+.supervisor-stat-card.stat-blue .supervisor-stat-icon {
+    background: #eaf2ff !important;
+    color: #2563eb !important;
+}
+
+.nx-kpi-icon.is-green,
+.nx-supervisor-kpi-icon.is-green,
+.supervisor-stat-card.stat-green .supervisor-stat-icon {
+    background: #e9f9f0 !important;
+    color: #16a34a !important;
+}
+
+.nx-kpi-icon.is-violet,
+.nx-supervisor-kpi-icon.is-violet,
+.supervisor-stat-card.stat-violet .supervisor-stat-icon {
+    background: #f1ebff !important;
+    color: #7c3aed !important;
+}
+
+.nx-kpi-icon.is-amber,
+.nx-supervisor-kpi-icon.is-amber,
+.supervisor-stat-card.stat-amber .supervisor-stat-icon {
+    background: #fff4df !important;
+    color: #d97706 !important;
+}
+
+/* Student summary cards retain Student green as the primary identity while using contextual tiles. */
+body.student-page .student-tasks-stat:nth-child(1) .student-tasks-stat-icon,
+body.student-dashboard-page .student-tasks-stat:nth-child(1) .student-tasks-stat-icon {
+    background: #e7f7ed !important;
+    color: #0a8f46 !important;
+}
+body.student-page .student-tasks-stat:nth-child(2) .student-tasks-stat-icon,
+body.student-dashboard-page .student-tasks-stat:nth-child(2) .student-tasks-stat-icon {
+    background: #fff4df !important;
+    color: #d97706 !important;
+}
+body.student-page .student-tasks-stat:nth-child(3) .student-tasks-stat-icon,
+body.student-dashboard-page .student-tasks-stat:nth-child(3) .student-tasks-stat-icon {
+    background: #eaf2ff !important;
+    color: #2563eb !important;
+}
+body.student-page .student-tasks-stat:nth-child(4) .student-tasks-stat-icon,
+body.student-dashboard-page .student-tasks-stat:nth-child(4) .student-tasks-stat-icon {
+    background: #f1ebff !important;
+    color: #7c3aed !important;
+}
+
+/* Admin tile colors keep the Admin warm/red identity with contextual accents. */
+body.admin-dashboard-page .admin-metric-card:nth-child(1) .admin-metric-icon,
+body.admin-documents-page .admin-documents-metric:nth-child(1) .admin-documents-metric-icon {
+    background: #fff0ea !important;
+    color: #e7512d !important;
+}
+body.admin-dashboard-page .admin-metric-card:nth-child(2) .admin-metric-icon,
+body.admin-documents-page .admin-documents-metric:nth-child(2) .admin-documents-metric-icon {
+    background: #feeceb !important;
+    color: #dc3f3f !important;
+}
+body.admin-dashboard-page .admin-metric-card:nth-child(3) .admin-metric-icon,
+body.admin-documents-page .admin-documents-metric:nth-child(3) .admin-documents-metric-icon {
+    background: #fff4df !important;
+    color: #d97706 !important;
+}
+body.admin-dashboard-page .admin-metric-card:nth-child(4) .admin-metric-icon,
+body.admin-documents-page .admin-documents-metric:nth-child(4) .admin-documents-metric-icon {
+    background: #f1ebff !important;
+    color: #7c3aed !important;
+}
+
+/* Copy block geometry/typography. */
+.nx-kpi-copy,
+.nx-supervisor-kpi-copy,
+.supervisor-stat-copy,
+.supervisor-doc-summary-card > div,
+.student-tasks-stat-copy,
+.admin-metric-copy,
+.admin-documents-metric > div {
+    min-width: 0 !important;
+    align-self: stretch !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+}
+
+.nx-kpi-copy > span,
+.nx-kpi-copy > small,
+.nx-supervisor-kpi-copy > span,
+.nx-supervisor-kpi-copy > small,
+.supervisor-stat-copy > span,
+.supervisor-stat-copy > small,
+.supervisor-doc-summary-card > div > span,
+.supervisor-doc-summary-card > div > small,
+.student-tasks-stat-copy > span,
+.student-tasks-stat-copy > small,
+.admin-metric-copy > span,
+.admin-metric-copy > small,
+.admin-documents-metric > div > span,
+.admin-documents-metric > div > small,
+.supervisor-insights-readiness-card > span,
+.supervisor-insights-readiness-card > small {
+    display: block !important;
+    margin: 0 !important;
+    color: var(--nx-kpi-muted) !important;
+    font-size: .72rem !important;
+    line-height: 1.35 !important;
+}
+
+.nx-kpi-copy > span:first-child,
+.nx-kpi-copy > small:first-child,
+.nx-supervisor-kpi-copy > span:first-child,
+.nx-supervisor-kpi-copy > small:first-child,
+.supervisor-stat-copy > span:first-child,
+.supervisor-doc-summary-card > div > small:first-child,
+.student-tasks-stat-copy > span:first-child,
+.admin-metric-copy > span:first-child,
+.admin-documents-metric > div > span:first-child,
+.supervisor-insights-readiness-card > span:first-child {
+    color: var(--nx-kpi-label) !important;
+    font-size: .71rem !important;
+    font-weight: 800 !important;
+}
+
+.nx-kpi-copy > strong,
+.nx-supervisor-kpi-copy > strong,
+.supervisor-stat-copy > strong,
+.supervisor-doc-summary-card > div > strong,
+.student-tasks-stat-copy > strong,
+.admin-metric-copy > strong,
+.admin-documents-metric > div > strong,
+.supervisor-insights-readiness-card > strong {
+    display: block !important;
+    margin: 5px 0 6px !important;
+    color: var(--nx-kpi-text) !important;
+    font-size: 1.62rem !important;
+    line-height: 1 !important;
+    font-weight: 900 !important;
+    letter-spacing: -.03em !important;
+}
+
+/* Classroom names are values, but should not become oversized KPI numerals. */
+body.student-dashboard-page .student-tasks-stat:nth-child(2) .student-tasks-stat-copy > strong {
+    font-size: 1.05rem !important;
+    line-height: 1.18 !important;
+    overflow-wrap: anywhere;
+}
+
+/* Dashboard action arrow uses the same subtle top-right treatment. */
+.supervisor-stat-card > a,
+.nx-kpi-arrow,
+.nx-supervisor-kpi-arrow {
+    position: absolute !important;
+    top: 15px !important;
+    right: 16px !important;
+    display: inline-grid !important;
+    place-items: center !important;
+    color: #94a3b8 !important;
+    text-decoration: none !important;
+    line-height: 1 !important;
+}
+.supervisor-stat-card > a:hover,
+.nx-kpi-arrow:hover,
+.nx-supervisor-kpi-arrow:hover {
+    color: var(--nx-role-kpi-accent, #2563eb) !important;
+}
+
+/* Replace small raw dashboard glyphs with consistent vector masks where semantics are stable. */
+body.student-dashboard-page .student-tasks-stat-icon,
+body.admin-dashboard-page .admin-metric-icon,
+body.admin-documents-page .admin-documents-metric-icon {
+    font-size: 0 !important;
+}
+body.student-dashboard-page .student-tasks-stat-icon::before,
+body.admin-dashboard-page .admin-metric-icon::before,
+body.admin-documents-page .admin-documents-metric-icon::before {
+    content: "";
+    width: 24px;
+    height: 24px;
+    display: block;
+    background: currentColor;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+}
+
+body.student-dashboard-page .student-tasks-stat:nth-child(1) .student-tasks-stat-icon::before,
+body.admin-dashboard-page .admin-metric-card:nth-child(7) .admin-metric-icon::before {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='%23000' stroke-width='2'/%3E%3Cpath d='M12 7v5l3 2' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='%23000' stroke-width='2'/%3E%3Cpath d='M12 7v5l3 2' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+body.student-dashboard-page .student-tasks-stat:nth-child(2) .student-tasks-stat-icon::before,
+body.admin-dashboard-page .admin-metric-card:nth-child(4) .admin-metric-icon::before,
+body.admin-documents-page .admin-documents-metric:nth-child(4) .admin-documents-metric-icon::before {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='3' y='4' width='18' height='16' rx='2' fill='none' stroke='%23000' stroke-width='2'/%3E%3Cpath d='M3 9h18M8 20v-4h8v4' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='3' y='4' width='18' height='16' rx='2' fill='none' stroke='%23000' stroke-width='2'/%3E%3Cpath d='M3 9h18M8 20v-4h8v4' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+body.student-dashboard-page .student-tasks-stat:nth-child(3) .student-tasks-stat-icon::before,
+body.admin-documents-page .admin-documents-metric:nth-child(2) .admin-documents-metric-icon::before,
+body.admin-documents-page .admin-documents-metric:nth-child(3) .admin-documents-metric-icon::before {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M8 13h8M8 17h6' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M8 13h8M8 17h6' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+body.student-dashboard-page .student-tasks-stat:nth-child(4) .student-tasks-stat-icon::before {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 4h16v16H4zM8 9h8M8 13h5' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 4h16v16H4zM8 9h8M8 13h5' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+body.admin-dashboard-page .admin-metric-card:nth-child(1) .admin-metric-icon::before,
+body.admin-dashboard-page .admin-metric-card:nth-child(3) .admin-metric-icon::before,
+body.admin-documents-page .admin-documents-metric:nth-child(1) .admin-documents-metric-icon::before {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'/%3E%3Ccircle cx='9' cy='7' r='4' fill='none' stroke='%23000' stroke-width='2'/%3E%3Cpath d='M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'/%3E%3Ccircle cx='9' cy='7' r='4' fill='none' stroke='%23000' stroke-width='2'/%3E%3Cpath d='M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+
+body.admin-dashboard-page .admin-metric-card:nth-child(2) .admin-metric-icon::before,
+body.admin-dashboard-page .admin-metric-card:nth-child(5) .admin-metric-icon::before,
+body.admin-dashboard-page .admin-metric-card:nth-child(6) .admin-metric-icon::before {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='8' fill='none' stroke='%23000' stroke-width='2'/%3E%3Cpath d='M8.5 12.5 11 15l4.5-5' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='8' fill='none' stroke='%23000' stroke-width='2'/%3E%3Cpath d='M8.5 12.5 11 15l4.5-5' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+/* Truly centered vector chevrons. No font baseline and no border-rotation shape. */
+[data-classroom-toggle],
+[data-folder-toggle] {
+    width: 38px !important;
+    min-width: 38px !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    padding: 0 !important;
+    display: inline-grid !important;
+    place-items: center !important;
+    border-radius: 10px !important;
+    line-height: 1 !important;
+}
+
+[data-classroom-toggle] > span[aria-hidden="true"] {
+    font-size: 0 !important;
+}
+
+[data-classroom-toggle] > span[aria-hidden="true"],
+[data-folder-toggle]::before {
+    content: "";
+    width: 16px !important;
+    height: 16px !important;
+    display: block !important;
+    background: currentColor !important;
+    border: 0 !important;
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='m6 9 6 6 6-6' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='m6 9 6 6 6-6' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    transform: none !important;
+    transform-origin: center !important;
+}
+
+[data-classroom-toggle][aria-expanded="true"] > span[aria-hidden="true"],
+[data-folder-toggle][aria-expanded="true"]::before {
+    transform: rotate(180deg) !important;
+}
+
+[data-folder-toggle] {
+    font-size: 0 !important;
+}
+
+/* Sidebar disclosure arrows use the same vector treatment. */
+.nx-role-nav-arrow {
+    width: 16px !important;
+    height: 16px !important;
+    display: inline-block !important;
+    flex: 0 0 16px !important;
+    background: currentColor !important;
+    font-size: 0 !important;
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='m9 6 6 6-6 6' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='m9 6 6 6-6 6' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    transition: transform .15s ease;
+}
+.nx-role-nav-group.open > .nx-role-nav-parent .nx-role-nav-arrow {
+    transform: rotate(90deg);
+}
+
+@media (max-width: 1100px) {
+    .nx-kpi-grid,
+    .nx-supervisor-kpi-grid,
+    .supervisor-stat-grid,
+    .supervisor-insights-readiness,
+    .supervisor-doc-summary,
+    .student-tasks-stats,
+    .admin-metric-grid,
+    .admin-documents-metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (max-width: 640px) {
+    .nx-kpi-grid,
+    .nx-supervisor-kpi-grid,
+    .supervisor-stat-grid,
+    .supervisor-insights-readiness,
+    .supervisor-doc-summary,
+    .student-tasks-stats,
+    .admin-metric-grid,
+    .admin-documents-metrics {
+        grid-template-columns: 1fr !important;
+    }
+
+    .nx-kpi-card,
+    .nx-supervisor-kpi-card,
+    .supervisor-stat-card,
+    .supervisor-insights-readiness-card,
+    .supervisor-doc-summary-card,
+    .student-tasks-stat,
+    .admin-metric-card,
+    .admin-documents-metric {
+        min-height: 100px !important;
+        padding: 16px !important;
+    }
+}
+
+
+/* EXTRACTED FROM resources/views/components/quick_search_input_fix.html */
+/*
+ * The global portal form-control pass intentionally strengthens normal inputs.
+ * Quick Search is the exception: its rounded shell is the control, so the
+ * nested search input must remain visually transparent and borderless.
+ */
+body:has(.nx-role-sidebar-shell) .nx-role-topbar .nx-quick-search-control > input[type="search"][data-nx-quick-search-input] {
+    all: unset !important;
+    box-sizing: border-box !important;
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    display: block !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    outline: 0 !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    color: var(--nx-topbar-ink) !important;
+    font-family: inherit !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    line-height: 1.35 !important;
+    -webkit-appearance: none !important;
+    appearance: none !important;
+}
+
+body:has(.nx-role-sidebar-shell) .nx-role-topbar .nx-quick-search-control > input[type="search"][data-nx-quick-search-input]:focus,
+body:has(.nx-role-sidebar-shell) .nx-role-topbar .nx-quick-search-control > input[type="search"][data-nx-quick-search-input]:focus-visible {
+    border: 0 !important;
+    outline: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+body:has(.nx-role-sidebar-shell) .nx-role-topbar .nx-quick-search-control > input[type="search"][data-nx-quick-search-input]::placeholder {
+    color: #92a0ae !important;
+    opacity: 1 !important;
+    font-weight: 500 !important;
+}
+
+body:has(.nx-role-sidebar-shell) .nx-role-topbar .nx-quick-search-control > input[type="search"][data-nx-quick-search-input]::-webkit-search-decoration,
+body:has(.nx-role-sidebar-shell) .nx-role-topbar .nx-quick-search-control > input[type="search"][data-nx-quick-search-input]::-webkit-search-cancel-button,
+body:has(.nx-role-sidebar-shell) .nx-role-topbar .nx-quick-search-control > input[type="search"][data-nx-quick-search-input]::-webkit-search-results-button,
+body:has(.nx-role-sidebar-shell) .nx-role-topbar .nx-quick-search-control > input[type="search"][data-nx-quick-search-input]::-webkit-search-results-decoration {
+    -webkit-appearance: none !important;
+    appearance: none !important;
+}
+/* Keep submenu disclosure arrows out of the 76px rail so parent icons sit on the true centerline. */
+@media (min-width: 761px) {
+    .nx-role-sidebar:not(:hover):not(:focus-within) .nx-role-nav-parent {
+        justify-content: center !important;
+        gap: 0 !important;
+    }
+    .nx-role-sidebar:not(:hover):not(:focus-within) .nx-role-nav-parent .nx-role-nav-arrow {
+        display: none !important;
+        width: 0 !important;
+        min-width: 0 !important;
+        flex: 0 0 0 !important;
+        margin: 0 !important;
+    }
+}
+
+
+/* EXTRACTED FROM resources/views/notifications/_notification_page.html */
+body.nx-notifications-page {
+    --nx-notify-page-accent: #0a8f46;
+    --nx-notify-page-accent-dark: #08783b;
+    --nx-notify-page-soft: #e7f7ed;
+    --nx-notify-page-bg: var(--nx-role-page-bg, linear-gradient(135deg, #e8f5ec 0%, #e2f2e8 50%, #edf7f1 100%));
+    --nx-notify-page-ink: #10261d;
+    --nx-notify-page-muted: #718078;
+    --nx-notify-page-border: #e3eae5;
+    --nx-notify-page-unread: #fbfefc;
+    margin: 0;
+    background: var(--nx-notify-page-bg) !important;
+}
+
+body.notification-role-supervisor {
+    --nx-notify-page-accent: #2563eb;
+    --nx-notify-page-accent-dark: #1d4ed8;
+    --nx-notify-page-soft: #eff6ff;
+    --nx-notify-page-bg: var(--nx-role-page-bg, linear-gradient(135deg, #e5effc 0%, #e9f1fa 50%, #e1ecfa 100%));
+    --nx-notify-page-ink: #17233b;
+    --nx-notify-page-muted: #64748b;
+    --nx-notify-page-border: #e4eaf2;
+    --nx-notify-page-unread: #f7faff;
+}
+
+body.notification-role-admin {
+    --nx-notify-page-accent: #f45125;
+    --nx-notify-page-accent-dark: #d9431c;
+    --nx-notify-page-soft: #fff1eb;
+    --nx-notify-page-bg: var(--nx-role-page-bg, linear-gradient(135deg, #fbece5 0%, #f4e8e4 50%, #faeee9 100%));
+    --nx-notify-page-ink: #173028;
+    --nx-notify-page-muted: #6f817b;
+    --nx-notify-page-border: #e2ebe7;
+    --nx-notify-page-unread: #fffaf8;
+}
+
+body.nx-notifications-page .nx-notifications-main {
+    min-height: 100vh !important;
+    padding: 98px 32px 42px !important;
+    box-sizing: border-box !important;
+    background: var(--nx-notify-page-bg) !important;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body.nx-notifications-page .nx-notifications-wrap {
+    width: 100% !important;
+    max-width: 1440px !important;
+    margin: 0 auto !important;
+}
+
+body.nx-notifications-page .nx-notifications-heading {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    margin: 0 0 18px;
+}
+
+body.nx-notifications-page .nx-notifications-eyebrow {
+    display: block;
+    margin: 0 0 7px;
+    color: var(--nx-notify-page-accent);
+    font-size: .72rem;
+    font-weight: 900;
+    letter-spacing: .11em;
+    text-transform: uppercase;
+}
+
+body.nx-notifications-page .nx-notifications-heading h1 {
+    margin: 0;
+    color: var(--nx-notify-page-ink) !important;
+    font-size: clamp(2rem, 2.6vw, 2.5rem);
+    line-height: 1.06;
+    font-weight: 800;
+    letter-spacing: -.04em;
+}
+
+body.nx-notifications-page .nx-notifications-heading p {
+    max-width: 760px;
+    margin: 7px 0 0;
+    color: var(--nx-notify-page-muted);
+    font-size: .9rem;
+    line-height: 1.5;
+}
+
+body.nx-notifications-page .nx-notifications-action {
+    min-height: 40px;
+    padding: 0 14px;
+    border: 1px solid var(--nx-notify-page-accent);
+    border-radius: 9px;
+    background: var(--nx-notify-page-accent);
+    color: #fff;
+    font-size: .76rem;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+body.nx-notifications-page .nx-notifications-action:hover {
+    border-color: var(--nx-notify-page-accent-dark);
+    background: var(--nx-notify-page-accent-dark);
+}
+
+body.nx-notifications-page .nx-notifications-flash {
+    margin: 0 0 14px;
+    padding: 11px 14px;
+    border: 1px solid var(--nx-notify-page-border);
+    border-radius: 9px;
+    background: #fff;
+    color: var(--nx-notify-page-ink);
+    font-size: .76rem;
+    font-weight: 700;
+}
+
+body.nx-notifications-page .nx-notifications-flash.success {
+    border-color: rgba(10, 143, 70, .24);
+    background: #f1fbf5;
+    color: #08783b;
+}
+
+body.nx-notifications-page .nx-notifications-flash.error {
+    border-color: #fecaca;
+    background: #fff7f7;
+    color: #b42318;
+}
+
+body.nx-notifications-page .nx-notifications-summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin: 0 0 16px;
+    overflow: hidden;
+    border: 1px solid var(--nx-notify-page-border);
+    border-radius: 11px;
+    background: #fff;
+    box-shadow: 0 6px 20px rgba(20, 52, 38, .035);
+}
+
+body.nx-notifications-page .nx-notifications-summary-item {
+    min-width: 0;
+    padding: 17px 20px;
+    border-right: 1px solid var(--nx-notify-page-border);
+}
+
+body.notification-role-admin .nx-notifications-summary-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+body.notification-role-admin .nx-notifications-summary-icon {
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+    display: grid;
+    place-items: center;
+    border-radius: 11px;
+    background: var(--nx-notify-page-soft);
+    color: var(--nx-notify-page-accent);
+}
+
+body.notification-role-admin .nx-notifications-summary-icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+body.notification-role-admin .nx-notifications-summary-copy {
+    min-width: 0;
+}
+
+body.nx-notifications-page .nx-notifications-summary-item:last-child {
+    border-right: 0;
+}
+
+body.nx-notifications-page .nx-notifications-summary-item strong,
+body.nx-notifications-page .nx-notifications-summary-item span,
+body.nx-notifications-page .nx-notifications-summary-item small {
+    display: block;
+}
+
+body.nx-notifications-page .nx-notifications-summary-item strong {
+    color: var(--nx-notify-page-ink);
+    font-size: 1.45rem;
+    line-height: 1;
+    font-weight: 800;
+    letter-spacing: -.03em;
+}
+
+body.nx-notifications-page .nx-notifications-summary-item span {
+    margin-top: 5px;
+    color: var(--nx-notify-page-ink);
+    font-size: .75rem;
+    font-weight: 800;
+}
+
+body.nx-notifications-page .nx-notifications-summary-item small {
+    margin-top: 3px;
+    color: var(--nx-notify-page-muted);
+    font-size: .66rem;
+}
+
+body.nx-notifications-page .nx-notifications-card {
+    overflow: hidden;
+    border: 1px solid var(--nx-notify-page-border);
+    border-radius: 11px;
+    background: #fff;
+    box-shadow: 0 6px 20px rgba(20, 52, 38, .035);
+}
+
+body.nx-notifications-page .nx-notifications-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 17px 20px;
+    border-bottom: 1px solid var(--nx-notify-page-border);
+}
+
+body.nx-notifications-page .nx-notifications-card-header h2 {
+    margin: 0;
+    color: var(--nx-notify-page-ink);
+    font-size: 1.05rem;
+    font-weight: 800;
+    letter-spacing: -.025em;
+}
+
+body.nx-notifications-page .nx-notifications-card-header p {
+    margin: 4px 0 0;
+    color: var(--nx-notify-page-muted);
+    font-size: .75rem;
+}
+
+body.nx-notifications-page .nx-notifications-page-status {
+    flex: 0 0 auto;
+    padding: 7px 10px;
+    border-radius: 999px;
+    background: var(--nx-notify-page-soft);
+    color: var(--nx-notify-page-accent-dark);
+    font-size: .68rem;
+    font-weight: 900;
+    white-space: nowrap;
+}
+
+body.nx-notifications-page .nx-notifications-selection-bar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--nx-notify-page-border);
+    background: #fbfdfc;
+}
+
+body.nx-notifications-page .nx-notifications-select-all,
+body.nx-notifications-page .nx-notification-select {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--nx-notify-page-ink);
+    font-size: .7rem;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+body.nx-notifications-page .nx-notifications-select-all input,
+body.nx-notifications-page .nx-notification-select input {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: var(--nx-notify-page-accent);
+    cursor: pointer;
+}
+
+body.nx-notifications-page .nx-notification-history-row {
+    display: grid;
+    grid-template-columns: 22px 40px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+    padding: 15px 20px;
+    border-bottom: 1px solid #edf1ee;
+    background: #fff;
+}
+
+body.nx-notifications-page .nx-notification-history-row.is-unread {
+    background: var(--nx-notify-page-unread);
+    box-shadow: inset 3px 0 0 var(--nx-notify-page-accent);
+}
+
+body.nx-notifications-page .nx-notification-select {
+    justify-content: center;
+}
+
+body.nx-notifications-page .nx-notification-history-icon {
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    border-radius: 11px;
+    background: var(--nx-notify-page-soft);
+    color: var(--nx-notify-page-accent);
+    font-size: 16px;
+    font-weight: 900;
+}
+
+body.nx-notifications-page .nx-notification-history-copy {
+    min-width: 0;
+}
+
+body.nx-notifications-page .nx-notification-history-title {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+body.nx-notifications-page .nx-notification-history-title strong {
+    overflow: hidden;
+    color: var(--nx-notify-page-ink);
+    font-size: .86rem;
+    font-weight: 800;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+body.nx-notifications-page .nx-notification-history-title span {
+    padding: 2px 6px;
+    border-radius: 999px;
+    background: var(--nx-notify-page-soft);
+    color: var(--nx-notify-page-accent-dark);
+    font-size: .55rem;
+    font-weight: 900;
+    letter-spacing: .04em;
+}
+
+body.nx-notifications-page .nx-notification-history-copy p {
+    margin: 4px 0 3px;
+    color: #68776f;
+    font-size: .76rem;
+    line-height: 1.4;
+}
+
+body.notification-role-supervisor .nx-notification-history-copy p {
+    color: #64748b;
+}
+
+body.nx-notifications-page .nx-notification-history-copy small {
+    color: #98a39d;
+    font-size: .64rem;
+}
+
+body.nx-notifications-page .nx-notification-history-open {
+    color: var(--nx-notify-page-accent);
+    text-decoration: none;
+    font-size: .72rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+body.nx-notifications-page .nx-notification-history-open:hover {
+    color: var(--nx-notify-page-accent-dark);
+}
+
+body.nx-notifications-page .nx-notifications-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 210px;
+    padding: 32px 20px;
+    text-align: center;
+}
+
+body.nx-notifications-page .nx-notifications-empty-icon {
+    width: 46px;
+    height: 46px;
+    display: grid;
+    place-items: center;
+    margin-bottom: 10px;
+    border-radius: 13px;
+    background: var(--nx-notify-page-soft);
+    color: var(--nx-notify-page-accent);
+    font-size: 19px;
+}
+
+body.nx-notifications-page .nx-notifications-empty strong {
+    color: var(--nx-notify-page-ink);
+    font-size: .92rem;
+    font-weight: 800;
+}
+
+body.nx-notifications-page .nx-notifications-empty span {
+    max-width: 420px;
+    margin-top: 5px;
+    color: var(--nx-notify-page-muted);
+    font-size: .74rem;
+    line-height: 1.5;
+}
+
+body.nx-notifications-page .nx-notifications-pagination {
+    min-height: 62px;
+    padding: 11px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    border-top: 1px solid var(--nx-notify-page-border);
+}
+
+body.nx-notifications-page .nx-notifications-range {
+    color: var(--nx-notify-page-muted);
+    font-size: .68rem;
+    font-weight: 700;
+}
+
+body.nx-notifications-page .nx-notifications-range strong {
+    color: var(--nx-notify-page-ink);
+}
+
+body.nx-notifications-page .nx-notifications-range small {
+    display: block;
+    margin-top: 2px;
+    font-size: .61rem;
+    font-weight: 600;
+}
+
+body.nx-notifications-page .nx-notifications-page-buttons {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+body.nx-notifications-page .nx-notifications-page-button,
+body.nx-notifications-page .nx-notifications-page-ellipsis {
+    min-width: 31px;
+    height: 31px;
+    padding: 0 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    border-radius: 8px;
+    font-size: .68rem;
+    font-weight: 800;
+}
+
+body.nx-notifications-page .nx-notifications-page-button {
+    border: 1px solid var(--nx-notify-page-border);
+    background: #fff;
+    color: var(--nx-notify-page-ink);
+    text-decoration: none;
+}
+
+body.nx-notifications-page .nx-notifications-page-button.is-active {
+    border-color: var(--nx-notify-page-accent);
+    background: var(--nx-notify-page-accent);
+    color: #fff;
+}
+
+body.nx-notifications-page .nx-notifications-page-button[aria-disabled="true"] {
+    opacity: .42;
+}
+
+body.nx-notifications-page .nx-notifications-page-ellipsis {
+    min-width: 22px;
+    padding: 0;
+    color: var(--nx-notify-page-muted);
+}
+
+body.nx-notifications-page .nx-notifications-manage {
+    margin-top: 16px;
+    padding: 18px 20px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 22px;
+    border: 1px solid var(--nx-notify-page-border);
+    border-radius: 11px;
+    background: #fff;
+    box-shadow: 0 6px 20px rgba(20, 52, 38, .03);
+}
+
+body.nx-notifications-page .nx-notifications-manage-copy {
+    min-width: 0;
+}
+
+body.nx-notifications-page .nx-notifications-manage-copy span {
+    display: block;
+    margin-bottom: 5px;
+    color: #b42318;
+    font-size: .64rem;
+    font-weight: 900;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+}
+
+body.nx-notifications-page .nx-notifications-manage-copy h2 {
+    margin: 0;
+    color: var(--nx-notify-page-ink);
+    font-size: 1rem;
+    font-weight: 800;
+}
+
+body.nx-notifications-page .nx-notifications-manage-copy p {
+    max-width: 650px;
+    margin: 5px 0 0;
+    color: var(--nx-notify-page-muted);
+    font-size: .72rem;
+    line-height: 1.45;
+}
+
+body.nx-notifications-page .nx-notifications-delete-controls {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: flex-end;
+    gap: 9px;
+}
+
+body.nx-notifications-page .nx-notifications-delete-form {
+    display: flex;
+    align-items: flex-end;
+}
+
+body.nx-notifications-page .nx-notifications-date-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+body.nx-notifications-page .nx-notifications-date-field span {
+    color: var(--nx-notify-page-muted);
+    font-size: .64rem;
+    font-weight: 800;
+}
+
+body.nx-notifications-page .nx-notifications-date-field input {
+    height: 39px;
+    min-width: 170px;
+    padding: 0 10px;
+    box-sizing: border-box;
+    border: 1px solid var(--nx-notify-page-border);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--nx-notify-page-ink);
+    font: inherit;
+    font-size: .72rem;
+    outline: none;
+}
+
+body.nx-notifications-page .nx-notifications-date-field input:focus {
+    border-color: var(--nx-notify-page-accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--nx-notify-page-accent) 12%, transparent);
+}
+
+body.nx-notifications-page .nx-notifications-delete-button {
+    height: 39px;
+    padding: 0 13px;
+    border: 1px solid #dc2626;
+    border-radius: 8px;
+    background: #dc2626;
+    color: #fff;
+    font-size: .7rem;
+    font-weight: 800;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+body.nx-notifications-page .nx-notifications-delete-button:hover:not(:disabled) {
+    border-color: #b91c1c;
+    background: #b91c1c;
+}
+
+body.nx-notifications-page .nx-notifications-delete-button:disabled {
+    opacity: .42;
+    cursor: not-allowed;
+}
+
+@media (max-width: 900px) {
+    body.nx-notifications-page .nx-notifications-manage {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    body.nx-notifications-page .nx-notifications-delete-controls,
+    body.nx-notifications-page .nx-notifications-delete-form {
+        width: 100%;
+    }
+
+    body.nx-notifications-page .nx-notifications-date-field {
+        flex: 1;
+    }
+
+    body.nx-notifications-page .nx-notifications-date-field input {
+        width: 100%;
+    }
+}
+
+@media (max-width: 760px) {
+    body.nx-notifications-page .nx-notifications-main {
+        padding: 82px 16px 30px !important;
+    }
+
+    body.nx-notifications-page .nx-notifications-heading {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    body.nx-notifications-page .nx-notifications-action {
+        width: 100%;
+    }
+
+    body.nx-notifications-page .nx-notifications-summary {
+        grid-template-columns: 1fr;
+    }
+
+    body.nx-notifications-page .nx-notifications-summary-item {
+        border-right: 0;
+        border-bottom: 1px solid var(--nx-notify-page-border);
+    }
+
+    body.nx-notifications-page .nx-notifications-summary-item:last-child {
+        border-bottom: 0;
+    }
+
+    body.nx-notifications-page .nx-notification-history-row {
+        grid-template-columns: 20px 38px minmax(0, 1fr);
+        padding: 14px 16px;
+    }
+
+    body.nx-notifications-page .nx-notification-history-open {
+        grid-column: 3;
+        justify-self: start;
+    }
+
+    body.nx-notifications-page .nx-notifications-pagination {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    body.nx-notifications-page .nx-notifications-page-buttons {
+        max-width: 100%;
+        flex-wrap: wrap;
+    }
+
+    body.nx-notifications-page .nx-notifications-delete-controls {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    body.nx-notifications-page .nx-notifications-delete-button {
+        width: 100%;
+    }
+}
+
+
+/* EXTRACTED FROM resources/views/notifications/index.html */
+body.student-notifications-page .student-notifications-content {
+            padding-top: 102px !important;
+        }
+
+        body.notification-role-admin .student-notifications-content {
+            padding-top: 32px !important;
+        }
+
+        body.student-notifications-page .student-notifications-card {
+            margin-bottom: 0;
+        }
+
+        body.student-notifications-page .student-notification-stat:nth-child(2) .student-notification-stat-icon {
+            background: #fff4df;
+            color: #d98200;
+        }
+
+        body.student-notifications-page .student-notification-stat:nth-child(3) .student-notification-stat-icon {
+            background: #e7f7ed;
+            color: #0a8f46;
+        }
+
+        body.student-notifications-page .student-notification-row:last-child {
+            border-bottom: 0;
+        }
+
+        @media (max-width: 760px) {
+            body.student-notifications-page .student-notifications-content,
+            body.notification-role-admin .student-notifications-content {
+                padding-top: 28px !important;
+            }
+        }
