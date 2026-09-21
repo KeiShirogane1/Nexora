@@ -11,71 +11,7 @@
     {% else %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">
     {% endif %}
-    <style>
-        .role-trash-page {
-            --trash-accent: #2563eb;
-            --trash-accent-soft: #eff6ff;
-            --trash-border: #e2e8f0;
-            --trash-text: #0f172a;
-            --trash-muted: #64748b;
-            margin: 0;
-            min-height: 100vh;
-            background: #f8fafc;
-            color: var(--trash-text);
-        }
-        .role-trash-page.is-student { --trash-accent: #0f9f72; --trash-accent-soft: #ecfdf5; }
-        .role-trash-main { margin-left: 76px; padding: 94px 28px 36px; }
-        .role-trash-shell { width: 100%; max-width: 1480px; margin: 0 auto; }
-        .role-trash-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; margin-bottom: 18px; }
-        .role-trash-kicker { display: block; margin-bottom: 5px; color: var(--trash-accent); font-size: .7rem; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
-        .role-trash-heading h1 { margin: 0; font-size: 2rem; line-height: 1.1; font-weight: 850; letter-spacing: -.035em; }
-        .role-trash-heading p { margin: 7px 0 0; color: var(--trash-muted); font-size: .86rem; }
-        .role-trash-retention { flex: 0 0 auto; padding: 8px 12px; border: 1px solid var(--trash-border); border-radius: 999px; background: #fff; color: #475569; font-size: .76rem; font-weight: 800; }
-        .role-trash-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
-        .role-trash-summary-card { padding: 17px 18px; border: 1px solid var(--trash-border); border-radius: 15px; background: #fff; box-shadow: 0 5px 18px rgba(15, 23, 42, .04); }
-        .role-trash-summary-card span { display: block; color: var(--trash-muted); font-size: .7rem; font-weight: 800; text-transform: uppercase; letter-spacing: .055em; }
-        .role-trash-summary-card strong { display: block; margin-top: 5px; font-size: 1.5rem; line-height: 1; font-weight: 900; }
-        .role-trash-panel { overflow: hidden; border: 1px solid var(--trash-border); border-radius: 16px; background: #fff; box-shadow: 0 8px 26px rgba(15, 23, 42, .045); }
-        .role-trash-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 18px 20px; border-bottom: 1px solid #edf2f7; }
-        .role-trash-panel-head h2 { margin: 0; font-size: 1rem; font-weight: 850; }
-        .role-trash-panel-head p { margin: 4px 0 0; color: var(--trash-muted); font-size: .76rem; }
-        .role-trash-count { min-width: 34px; padding: 5px 9px; border-radius: 999px; background: var(--trash-accent-soft); color: var(--trash-accent); text-align: center; font-size: .72rem; font-weight: 900; }
-        .role-trash-list { display: grid; }
-        .role-trash-row { display: grid; grid-template-columns: 46px minmax(220px, 1.4fr) minmax(150px, .65fr) minmax(145px, .55fr) auto; gap: 14px; align-items: center; padding: 15px 20px; border-bottom: 1px solid #edf2f7; }
-        .role-trash-row:last-child { border-bottom: 0; }
-        .role-trash-icon { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 12px; background: var(--trash-accent-soft); color: var(--trash-accent); font-size: 1rem; font-weight: 900; }
-        .role-trash-primary { min-width: 0; }
-        .role-trash-primary strong, .role-trash-primary span, .role-trash-meta strong, .role-trash-meta span { display: block; }
-        .role-trash-primary strong { overflow: hidden; color: #1e293b; font-size: .82rem; font-weight: 850; text-overflow: ellipsis; white-space: nowrap; }
-        .role-trash-primary span { margin-top: 4px; color: var(--trash-muted); font-size: .72rem; line-height: 1.45; }
-        .role-trash-type { display: inline-flex; align-items: center; width: max-content; margin-bottom: 5px; padding: 4px 8px; border-radius: 999px; background: #f1f5f9; color: #475569; font-size: .64rem; font-weight: 850; text-transform: uppercase; letter-spacing: .04em; }
-        .role-trash-meta strong { color: #334155; font-size: .75rem; font-weight: 800; }
-        .role-trash-meta span { margin-top: 3px; color: #94a3b8; font-size: .68rem; }
-        .role-trash-expiry strong { color: #b45309; }
-        .role-trash-actions { display: flex; align-items: center; justify-content: flex-end; gap: 7px; }
-        .role-trash-actions form { margin: 0; }
-        .role-trash-button { min-height: 36px; display: inline-flex; align-items: center; justify-content: center; padding: 0 11px; border-radius: 9px; font: inherit; font-size: .72rem; font-weight: 850; cursor: pointer; white-space: nowrap; }
-        .role-trash-button.restore { border: 1px solid var(--trash-accent); background: var(--trash-accent); color: #fff; }
-        .role-trash-button.permanent { border: 1px solid #fecaca; background: #fff; color: #dc2626; }
-        .role-trash-empty { display: grid; justify-items: center; padding: 58px 24px; text-align: center; }
-        .role-trash-empty-icon { width: 54px; height: 54px; display: grid; place-items: center; margin-bottom: 12px; border-radius: 15px; background: var(--trash-accent-soft); color: var(--trash-accent); font-size: 1.25rem; }
-        .role-trash-empty h2 { margin: 0; font-size: 1rem; font-weight: 850; }
-        .role-trash-empty p { max-width: 460px; margin: 7px 0 0; color: var(--trash-muted); font-size: .78rem; line-height: 1.5; }
-        @media (max-width: 1050px) {
-            .role-trash-row { grid-template-columns: 42px minmax(200px, 1fr) minmax(135px, .6fr) auto; }
-            .role-trash-row .role-trash-meta.role-trash-deleted { display: none; }
-        }
-        @media (max-width: 760px) {
-            .role-trash-main { margin-left: 0; padding: 82px 16px 28px; }
-            .role-trash-heading { align-items: flex-start; flex-direction: column; }
-            .role-trash-summary { grid-template-columns: 1fr; }
-            .role-trash-row { grid-template-columns: 42px minmax(0, 1fr); gap: 10px 12px; padding: 14px 16px; }
-            .role-trash-primary, .role-trash-meta, .role-trash-actions { grid-column: 2; }
-            .role-trash-meta.role-trash-deleted { display: block; }
-            .role-trash-actions { justify-content: flex-start; flex-wrap: wrap; }
-        }
-    </style>
-</head>
+    </head>
 <body class="role-trash-page {% if trash_role == 'student' %}student-page is-student{% else %}supervisor-page is-supervisor{% endif %}">
     {% if trash_role == 'student' %}
         {% include 'components/student_sidebar.html' %}
