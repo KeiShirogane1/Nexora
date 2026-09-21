@@ -79,7 +79,7 @@ def test_student_management_keeps_actions_and_adds_richer_responsive_directory()
     assert "csrf_token()" in template
     assert "admin.bulk_action" in template
     assert "admin.create_student" in template
-    assert "col-12 col-sm-6 col-xl-3" in template
+    assert "col-12 col-lg-6 col-xl-3" in template
 
     for stylesheet in ("css/style.css", "css/admin.css", "css/modals.css"):
         assert stylesheet in template

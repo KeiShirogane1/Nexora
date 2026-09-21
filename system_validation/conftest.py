@@ -1,7 +1,10 @@
+import gc
 import os
 import pathlib
+import shutil
 import sys
 import tempfile
+import time
 from contextlib import contextmanager
 
 import pytest
@@ -12,8 +15,8 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 # Tests must never use the developer SQLite database or a configured Render
 # PostgreSQL database. Set explicit test-only environment values before
 # importing bootstrap.app because bootstrap loads .env during import.
-_TEST_DB_DIR = tempfile.TemporaryDirectory(prefix="nexora-pytest-")
-_TEST_DB_PATH = pathlib.Path(_TEST_DB_DIR.name) / "nexora_test.db"
+_TEST_DB_DIR = pathlib.Path(tempfile.mkdtemp(prefix="nexora-pytest-"))
+_TEST_DB_PATH = _TEST_DB_DIR / "nexora_test.db"
 _TEST_IDENTITY_PREFIX = "__nexora_pytest_identity_"
 
 os.environ["DATABASE_URL"] = ""
@@ -127,3 +130,19 @@ def db():
             conn.close()
         except Exception:
             pass
+
+
+def pytest_sessionfinish(session, exitstatus):
+    """Best-effort Windows cleanup for the isolated pytest SQLite database."""
+    gc.collect()
+    for _ in range(5):
+        try:
+            shutil.rmtree(_TEST_DB_DIR)
+            return
+        except FileNotFoundError:
+            return
+        except PermissionError:
+            gc.collect()
+            time.sleep(0.05)
+    shutil.rmtree(_TEST_DB_DIR, ignore_errors=True)
+
