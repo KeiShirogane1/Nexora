@@ -15,58 +15,6 @@
     favicon.href = "{{ url_for('static', filename='images/nexora_logo_student.png') }}";
 })();
 </script>
-<style>
-@media (min-width: 761px) {
-    .nx-role-student .nx-role-sidebar { overflow: hidden !important; padding-bottom: 0 !important; }
-    .nx-role-student #studentSidebar > .nx-role-brand,
-    .nx-role-student #studentSidebar > .nx-role-profile,
-    .nx-role-student #studentSidebar > .nx-role-rule,
-    .nx-role-student #studentSidebar > .nx-role-section-label,
-    .nx-role-student #studentSidebar > .nx-role-account-nav,
-    .nx-role-student #studentSidebar > .nx-role-footer { flex-shrink: 0 !important; }
-    .nx-role-student #studentSidebar > .nx-role-nav[aria-label="Student menu"] { flex:1 1 auto!important;min-height:0!important;overflow-x:hidden!important;overflow-y:auto!important;overscroll-behavior:contain;scrollbar-width:none; }
-    .nx-role-student #studentSidebar > .nx-role-nav[aria-label="Student menu"]::-webkit-scrollbar { width:0; }
-    .nx-role-student .nx-role-sidebar:hover > .nx-role-nav[aria-label="Student menu"],
-    .nx-role-student .nx-role-sidebar:focus-within > .nx-role-nav[aria-label="Student menu"] { padding-right:4px!important;scrollbar-width:thin;scrollbar-color:rgba(94,229,138,.42) transparent; }
-    .nx-role-student .nx-role-sidebar:hover > .nx-role-nav[aria-label="Student menu"]::-webkit-scrollbar,
-    .nx-role-student .nx-role-sidebar:focus-within > .nx-role-nav[aria-label="Student menu"]::-webkit-scrollbar { width:6px; }
-    .nx-role-student #studentSidebar > .nx-role-nav[aria-label="Student menu"]::-webkit-scrollbar-track { background:transparent; }
-    .nx-role-student #studentSidebar > .nx-role-nav[aria-label="Student menu"]::-webkit-scrollbar-thumb { border-radius:999px;background:rgba(94,229,138,.38); }
-    .nx-role-student #studentSidebar > .nx-role-nav[aria-label="Student menu"]::-webkit-scrollbar-thumb:hover { background:rgba(94,229,138,.58); }
-    .nx-role-student #studentSidebar > .nx-role-account-nav { margin:8px 0 16px!important; }
-    body.student-logbook-page .student-logbook-main { width:calc(100% - 76px)!important; margin-left:76px!important; }
-}
-
-/* Daily OJT Entry uses the page overlay for overflow instead of an inner side scrollbar. */
-body.student-logbook-page .student-logbook-daily-modal.open { align-items:flex-start; padding-top:24px; padding-bottom:24px; }
-body.student-logbook-page .student-logbook-daily-modal .nexora-modal { width:min(900px,calc(100vw - 32px)); max-width:900px; max-height:none; margin:auto; }
-body.student-logbook-page .student-logbook-daily-modal .nexora-modal-body { max-height:none!important; overflow:visible!important; }
-body.student-logbook-page .student-logbook-daily-modal .student-logbook-field-grid.nx-daily-work-layout {
-    grid-template-columns:repeat(2,minmax(0,1fr));
-    grid-template-areas:
-        "accomplishment reflection"
-        "accomplishment challenges"
-        "work photos";
-    align-items:start;
-}
-body.student-logbook-page .student-logbook-daily-modal .nx-daily-accomplishment { grid-area:accomplishment; grid-column:auto!important; }
-body.student-logbook-page .student-logbook-daily-modal .nx-daily-reflection { grid-area:reflection; grid-column:auto!important; }
-body.student-logbook-page .student-logbook-daily-modal .nx-daily-challenges { grid-area:challenges; grid-column:auto!important; }
-body.student-logbook-page .student-logbook-daily-modal .nx-daily-work { grid-area:work; grid-column:auto!important; }
-body.student-logbook-page .student-logbook-daily-modal .nx-daily-photos { grid-area:photos; grid-column:auto!important; }
-body.student-logbook-page .student-logbook-daily-modal .nx-daily-accomplishment textarea { min-height:188px; }
-@media (max-width:760px) {
-    body.student-logbook-page .student-logbook-main { width:100%!important; margin-left:0!important; }
-    body.student-logbook-page .student-logbook-daily-modal.open { padding:14px; }
-    body.student-logbook-page .student-logbook-daily-modal .nexora-modal { width:100%; }
-    body.student-logbook-page .student-logbook-daily-modal .student-logbook-field-grid.nx-daily-work-layout {
-        grid-template-columns:1fr;
-        grid-template-areas:"accomplishment" "reflection" "challenges" "work" "photos";
-    }
-    body.student-logbook-page .student-logbook-daily-modal .nx-daily-accomplishment textarea { min-height:110px; }
-}
-</style>
-
 {% set sidebar_route_class_id = request.view_args.get('class_id') if request.view_args else none %}
 {% set sidebar_query_class_id = request.args.get('classroom_id') %}
 {% set sidebar_requested_class_id = sidebar_route_class_id or sidebar_query_class_id %}

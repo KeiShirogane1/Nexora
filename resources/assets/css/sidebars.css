@@ -2777,3 +2777,619 @@ body:has(.nx-role-sidebar-shell) {
         min-width: 0 !important;
     }
 }
+
+
+/* EXTRACTED FROM resources/views/components/student_sidebar.html */
+@media (min-width: 761px) {
+    .nx-role-student .nx-role-sidebar { overflow: hidden !important; padding-bottom: 0 !important; }
+    .nx-role-student #studentSidebar > .nx-role-brand,
+    .nx-role-student #studentSidebar > .nx-role-profile,
+    .nx-role-student #studentSidebar > .nx-role-rule,
+    .nx-role-student #studentSidebar > .nx-role-section-label,
+    .nx-role-student #studentSidebar > .nx-role-account-nav,
+    .nx-role-student #studentSidebar > .nx-role-footer { flex-shrink: 0 !important; }
+    .nx-role-student #studentSidebar > .nx-role-nav[aria-label="Student menu"] { flex:1 1 auto!important;min-height:0!important;overflow-x:hidden!important;overflow-y:auto!important;overscroll-behavior:contain;scrollbar-width:none; }
+    .nx-role-student #studentSidebar > .nx-role-nav[aria-label="Student menu"]::-webkit-scrollbar { width:0; }
+    .nx-role-student .nx-role-sidebar:hover > .nx-role-nav[aria-label="Student menu"],
+    .nx-role-student .nx-role-sidebar:focus-within > .nx-role-nav[aria-label="Student menu"] { padding-right:4px!important;scrollbar-width:thin;scrollbar-color:rgba(94,229,138,.42) transparent; }
+    .nx-role-student .nx-role-sidebar:hover > .nx-role-nav[aria-label="Student menu"]::-webkit-scrollbar,
+    .nx-role-student .nx-role-sidebar:focus-within > .nx-role-nav[aria-label="Student menu"]::-webkit-scrollbar { width:6px; }
+    .nx-role-student #studentSidebar > .nx-role-nav[aria-label="Student menu"]::-webkit-scrollbar-track { background:transparent; }
+    .nx-role-student #studentSidebar > .nx-role-nav[aria-label="Student menu"]::-webkit-scrollbar-thumb { border-radius:999px;background:rgba(94,229,138,.38); }
+    .nx-role-student #studentSidebar > .nx-role-nav[aria-label="Student menu"]::-webkit-scrollbar-thumb:hover { background:rgba(94,229,138,.58); }
+    .nx-role-student #studentSidebar > .nx-role-account-nav { margin:8px 0 16px!important; }
+    body.student-logbook-page .student-logbook-main { width:calc(100% - 76px)!important; margin-left:76px!important; }
+}
+
+/* Daily OJT Entry uses the page overlay for overflow instead of an inner side scrollbar. */
+body.student-logbook-page .student-logbook-daily-modal.open { align-items:flex-start; padding-top:24px; padding-bottom:24px; }
+body.student-logbook-page .student-logbook-daily-modal .nexora-modal { width:min(900px,calc(100vw - 32px)); max-width:900px; max-height:none; margin:auto; }
+body.student-logbook-page .student-logbook-daily-modal .nexora-modal-body { max-height:none!important; overflow:visible!important; }
+body.student-logbook-page .student-logbook-daily-modal .student-logbook-field-grid.nx-daily-work-layout {
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    grid-template-areas:
+        "accomplishment reflection"
+        "accomplishment challenges"
+        "work photos";
+    align-items:start;
+}
+body.student-logbook-page .student-logbook-daily-modal .nx-daily-accomplishment { grid-area:accomplishment; grid-column:auto!important; }
+body.student-logbook-page .student-logbook-daily-modal .nx-daily-reflection { grid-area:reflection; grid-column:auto!important; }
+body.student-logbook-page .student-logbook-daily-modal .nx-daily-challenges { grid-area:challenges; grid-column:auto!important; }
+body.student-logbook-page .student-logbook-daily-modal .nx-daily-work { grid-area:work; grid-column:auto!important; }
+body.student-logbook-page .student-logbook-daily-modal .nx-daily-photos { grid-area:photos; grid-column:auto!important; }
+body.student-logbook-page .student-logbook-daily-modal .nx-daily-accomplishment textarea { min-height:188px; }
+@media (max-width:760px) {
+    body.student-logbook-page .student-logbook-main { width:100%!important; margin-left:0!important; }
+    body.student-logbook-page .student-logbook-daily-modal.open { padding:14px; }
+    body.student-logbook-page .student-logbook-daily-modal .nexora-modal { width:100%; }
+    body.student-logbook-page .student-logbook-daily-modal .student-logbook-field-grid.nx-daily-work-layout {
+        grid-template-columns:1fr;
+        grid-template-areas:"accomplishment" "reflection" "challenges" "work" "photos";
+    }
+    body.student-logbook-page .student-logbook-daily-modal .nx-daily-accomplishment textarea { min-height:110px; }
+}
+
+
+/* EXTRACTED FROM resources/views/components/student_topbar.html */
+.nx-role-student .nx-role-badge[hidden] { display: none !important; }
+
+    /*
+       Shared Student portal desktop gutter.
+       Documents is the spacing reference: 30px from the usable page edge.
+       Keep the 76px role sidebar reservation owned by sidebars.css and only
+       normalize the inner Student content widths here.
+    */
+    @media (min-width: 761px) {
+        body:has(.nx-role-student) {
+            --nx-student-page-gutter: 30px;
+        }
+
+        body:has(.nx-role-student) .student-tasks-content,
+        body:has(.nx-role-student) .student-logbook-page-content,
+        body:has(.nx-role-student) .student-profile-content {
+            width: 100% !important;
+            max-width: none !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            padding-left: var(--nx-student-page-gutter) !important;
+            padding-right: var(--nx-student-page-gutter) !important;
+            box-sizing: border-box !important;
+        }
+
+        body:has(.nx-role-student) .nx-notifications-main {
+            padding-left: var(--nx-student-page-gutter) !important;
+            padding-right: var(--nx-student-page-gutter) !important;
+            box-sizing: border-box !important;
+        }
+
+        body:has(.nx-role-student) .class-main,
+        body:has(.nx-role-student) .join-main,
+        body:has(.nx-role-student) .nx-log-main,
+        body.nx-task-page:has(.nx-role-student) .nx-main {
+            padding-left: var(--nx-student-page-gutter) !important;
+            padding-right: var(--nx-student-page-gutter) !important;
+            box-sizing: border-box !important;
+        }
+
+        body:has(.nx-role-student) .class-wrap,
+        body:has(.nx-role-student) .join-wrap,
+        body:has(.nx-role-student) .student-classwork-shell,
+        body:has(.nx-role-student) .student-insights-shell,
+        body:has(.nx-role-student) .nx-notifications-wrap,
+        body:has(.nx-role-student) .nx-log-wrap,
+        body.nx-task-page:has(.nx-role-student) .nx-wrap,
+        body.nx-session:has(.nx-role-student) .nx-wrap {
+            width: 100% !important;
+            max-width: none !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            box-sizing: border-box !important;
+        }
+    }
+
+
+/* EXTRACTED FROM resources/views/components/supervisor_sidebar.html */
+@media (min-width: 761px) {
+    .nx-role-supervisor .nx-role-sidebar {
+        overflow: hidden !important;
+        padding-bottom: 0 !important;
+    }
+
+    .nx-role-supervisor #supervisorSidebar > .nx-role-brand,
+    .nx-role-supervisor #supervisorSidebar > .nx-role-profile,
+    .nx-role-supervisor #supervisorSidebar > .nx-role-rule,
+    .nx-role-supervisor #supervisorSidebar > .nx-role-section-label,
+    .nx-role-supervisor #supervisorSidebar > .nx-role-account-nav,
+    .nx-role-supervisor #supervisorSidebar > .nx-role-footer {
+        flex-shrink: 0 !important;
+    }
+
+    .nx-role-supervisor #supervisorSidebar > .nx-role-nav[aria-label="Supervisor menu"] {
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        overscroll-behavior: contain;
+        scrollbar-width: none;
+    }
+
+    .nx-role-supervisor #supervisorSidebar > .nx-role-nav[aria-label="Supervisor menu"]::-webkit-scrollbar {
+        width: 0;
+    }
+
+    .nx-role-supervisor .nx-role-sidebar:hover > .nx-role-nav[aria-label="Supervisor menu"],
+    .nx-role-supervisor .nx-role-sidebar:focus-within > .nx-role-nav[aria-label="Supervisor menu"] {
+        padding-right: 4px !important;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(96, 165, 250, .42) transparent;
+    }
+
+    .nx-role-supervisor .nx-role-sidebar:hover > .nx-role-nav[aria-label="Supervisor menu"]::-webkit-scrollbar,
+    .nx-role-supervisor .nx-role-sidebar:focus-within > .nx-role-nav[aria-label="Supervisor menu"]::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .nx-role-supervisor #supervisorSidebar > .nx-role-nav[aria-label="Supervisor menu"]::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .nx-role-supervisor #supervisorSidebar > .nx-role-nav[aria-label="Supervisor menu"]::-webkit-scrollbar-thumb {
+        border-radius: 999px;
+        background: rgba(96, 165, 250, .38);
+    }
+
+    .nx-role-supervisor #supervisorSidebar > .nx-role-nav[aria-label="Supervisor menu"]::-webkit-scrollbar-thumb:hover {
+        background: rgba(96, 165, 250, .58);
+    }
+
+    .nx-role-supervisor #supervisorSidebar > .nx-role-account-nav {
+        margin: 8px 0 16px !important;
+    }
+}
+
+.nx-supervisor-kpi-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 14px !important;
+    margin-bottom: 18px !important;
+}
+
+.nx-supervisor-kpi-card,
+.nx-supervisor-kpi-card.is-no-data,
+.nx-supervisor-kpi-card.is-attention {
+    position: relative;
+    min-width: 0;
+    min-height: 112px;
+    padding: 18px 20px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 14px !important;
+    border: 1px solid #dfe7f1 !important;
+    border-radius: 16px !important;
+    background: #fff !important;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, .055) !important;
+    color: #0f172a !important;
+}
+
+.nx-supervisor-kpi-icon {
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
+    flex: 0 0 48px !important;
+    display: grid !important;
+    place-items: center !important;
+    border-radius: 14px !important;
+}
+
+.nx-supervisor-kpi-icon svg {
+    width: 24px;
+    height: 24px;
+    display: block;
+}
+
+.nx-supervisor-kpi-icon.is-blue {
+    background: #eaf2ff !important;
+    color: #2563eb !important;
+}
+
+.nx-supervisor-kpi-icon.is-green {
+    background: #e9f9f0 !important;
+    color: #16a34a !important;
+}
+
+.nx-supervisor-kpi-icon.is-violet {
+    background: #f1ebff !important;
+    color: #7c3aed !important;
+}
+
+.nx-supervisor-kpi-icon.is-amber {
+    background: #fff4df !important;
+    color: #d97706 !important;
+}
+
+.nx-supervisor-kpi-copy {
+    min-width: 0;
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.nx-supervisor-kpi-copy > small,
+.nx-supervisor-kpi-copy > span {
+    display: block !important;
+    margin: 0 !important;
+    color: #64748b !important;
+    font-size: .72rem !important;
+    line-height: 1.35 !important;
+}
+
+.nx-supervisor-kpi-copy > small:first-child {
+    color: #475569 !important;
+    font-size: .71rem !important;
+    font-weight: 800 !important;
+}
+
+.nx-supervisor-kpi-copy > strong {
+    display: block !important;
+    margin: 5px 0 6px !important;
+    color: #0f172a !important;
+    font-size: 1.62rem !important;
+    line-height: 1 !important;
+    font-weight: 900 !important;
+    letter-spacing: -.03em !important;
+}
+
+.nx-supervisor-kpi-arrow {
+    position: absolute;
+    top: 15px;
+    right: 16px;
+    display: inline-grid;
+    place-items: center;
+    color: #94a3b8;
+}
+
+.nx-supervisor-kpi-arrow svg {
+    width: 16px;
+    height: 16px;
+}
+
+.nx-supervisor-btn {
+    min-height: 40px;
+    padding: 0 15px;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 7px;
+    border: 1px solid #2563eb !important;
+    border-radius: 10px !important;
+    font: inherit;
+    font-size: .76rem !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+    text-decoration: none !important;
+    cursor: pointer;
+    transition: background .15s ease, border-color .15s ease, color .15s ease, transform .15s ease, box-shadow .15s ease;
+}
+
+.nx-supervisor-btn.is-primary {
+    background: #2563eb !important;
+    color: #fff !important;
+    box-shadow: 0 6px 14px rgba(37, 99, 235, .16);
+}
+
+.nx-supervisor-btn.is-primary:hover,
+.nx-supervisor-btn.is-primary:focus-visible {
+    border-color: #1d4ed8 !important;
+    background: #1d4ed8 !important;
+    color: #fff !important;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgba(37, 99, 235, .22);
+}
+
+.nx-supervisor-btn.is-secondary {
+    background: #fff !important;
+    color: #2563eb !important;
+}
+
+.nx-supervisor-btn.is-secondary:hover,
+.nx-supervisor-btn.is-secondary:focus-visible {
+    background: #eff6ff !important;
+    color: #1d4ed8 !important;
+}
+
+.nx-supervisor-btn.is-compact {
+    min-height: 36px;
+    padding: 0 13px;
+    border-radius: 9px !important;
+    font-size: .73rem !important;
+}
+
+.supervisor-doc-count {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+
+.supervisor-doc-count-icon,
+.supervisor-doc-membership-icon {
+    width: 20px;
+    height: 20px;
+    display: inline-grid !important;
+    place-items: center !important;
+    flex: 0 0 20px;
+    color: #2563eb !important;
+}
+
+.supervisor-doc-count-icon svg,
+.supervisor-doc-membership-icon svg {
+    width: 17px;
+    height: 17px;
+    display: block;
+}
+
+.supervisor-doc-file-type {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #475569;
+    font-weight: 750;
+}
+
+.supervisor-doc-file-icon {
+    min-width: 34px;
+    height: 30px;
+    padding: 0 6px;
+    display: inline-grid;
+    place-items: center;
+    border-radius: 8px;
+    background: #eaf2ff;
+    color: #1d4ed8;
+    font-size: .61rem;
+    font-weight: 900;
+    letter-spacing: .02em;
+}
+
+.supervisor-student-documents-page .supervisor-doc-table tbody tr,
+.supervisor-student-document-folder-page .supervisor-doc-table tbody tr {
+    transition: background .15s ease;
+}
+
+.supervisor-student-documents-page .supervisor-doc-table tbody tr:hover,
+.supervisor-student-document-folder-page .supervisor-doc-table tbody tr:hover {
+    background: #f8fbff;
+}
+
+[data-classroom-toggle] {
+    width: 38px !important;
+    min-width: 38px !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    padding: 0 !important;
+    display: inline-grid !important;
+    place-items: center !important;
+    border-radius: 10px !important;
+}
+
+[data-classroom-toggle] > span[aria-hidden="true"] {
+    width: 18px;
+    height: 18px;
+    display: grid !important;
+    place-items: center !important;
+    font-size: 0 !important;
+    line-height: 1 !important;
+}
+
+[data-classroom-toggle] > span[aria-hidden="true"]::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(-135deg);
+    transform-origin: center;
+}
+
+[data-classroom-toggle][aria-expanded="false"] > span[aria-hidden="true"]::before {
+    transform: rotate(45deg);
+}
+
+@media (max-width: 1100px) {
+    .nx-supervisor-kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (max-width: 640px) {
+    .nx-supervisor-kpi-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .nx-supervisor-kpi-card,
+    .nx-supervisor-kpi-card.is-no-data,
+    .nx-supervisor-kpi-card.is-attention {
+        min-height: 100px;
+        padding: 16px !important;
+    }
+}
+
+
+/* EXTRACTED FROM resources/views/components/supervisor_topbar.html */
+[data-classroom-toggle] > span[aria-hidden="true"]::before {
+    content: none !important;
+    display: none !important;
+}
+@media (min-width: 761px) {
+    body:has(.nx-role-sidebar-shell.nx-role-supervisor) {
+        --nx-supervisor-page-gutter: 30px;
+    }
+
+    body:has(.nx-role-sidebar-shell.nx-role-supervisor) .page-content,
+    body:has(.nx-role-sidebar-shell.nx-role-supervisor) .nexora-app-main,
+    body.supervisor-classes-page:has(.nx-role-sidebar-shell.nx-role-supervisor) .supervisor-classes-main,
+    body.notification-role-supervisor:has(.nx-role-sidebar-shell.nx-role-supervisor) .nx-notifications-main {
+        padding-left: var(--nx-supervisor-page-gutter) !important;
+        padding-right: var(--nx-supervisor-page-gutter) !important;
+        box-sizing: border-box !important;
+    }
+
+    body:has(.nx-role-sidebar-shell.nx-role-supervisor) .page-content > :first-child,
+    body:has(.nx-role-sidebar-shell.nx-role-supervisor) .nexora-app-main > :first-child,
+    body:has(.nx-role-sidebar-shell.nx-role-supervisor) .nexora-page,
+    body:has(.nx-role-sidebar-shell.nx-role-supervisor) .nexora-class-page,
+    body:has(.nx-role-sidebar-shell.nx-role-supervisor) .supervisor-classwork-shell,
+    body:has(.nx-role-sidebar-shell.nx-role-supervisor) .supervisor-classwork-import-shell,
+    body:has(.nx-role-sidebar-shell.nx-role-supervisor) .supervisor-review-shell,
+    body:has(.nx-role-sidebar-shell.nx-role-supervisor) .supervisor-insights-shell,
+    body:has(.nx-role-sidebar-shell.nx-role-supervisor) .supervisor-reports-shell,
+    body:has(.nx-role-sidebar-shell.nx-role-supervisor) .nx-notifications-wrap,
+    body:has(.nx-role-sidebar-shell.nx-role-supervisor) .supervisor-classes-page-inner {
+        width: 100% !important;
+        max-width: none !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    body:has(.nx-role-sidebar-shell.nx-role-supervisor) .nexora-class-page {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+}
+.nx-daily-rating-helper {
+    margin: 10px 0 2px;
+    padding: 10px 12px;
+    border: 1px solid #dbeafe;
+    border-radius: 10px;
+    background: #f8fbff;
+    color: #52647b;
+    font-size: .7rem;
+    line-height: 1.45;
+}
+.nx-rating-criteria {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid #edf2f7;
+}
+.nx-rating-criteria-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+.nx-rating-criteria-head strong { color: #10213d; font-size: .76rem; }
+.nx-rating-criteria-head small { display: block; margin-top: 3px; color: #7b8ba0; font-size: .64rem; }
+.nx-add-criterion {
+    min-height: 32px;
+    padding: 0 10px;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font: inherit;
+    font-size: .66rem;
+    font-weight: 800;
+    cursor: pointer;
+}
+.nx-rating-criteria-list { display: grid; gap: 9px; }
+.nx-rating-criterion-row {
+    display: grid;
+    grid-template-columns: minmax(150px, 1fr) auto 34px;
+    gap: 9px;
+    align-items: center;
+    padding: 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #fbfdff;
+}
+.nx-rating-criterion-name {
+    min-height: 38px;
+    width: 100%;
+    padding: 0 10px;
+    border: 1px solid #d8e2ee;
+    border-radius: 8px;
+    background: #fff;
+    color: #10213d;
+    font: inherit;
+    font-size: .72rem;
+    outline: none;
+}
+.nx-rating-criterion-name:focus { border-color: #60a5fa; box-shadow: 0 0 0 3px rgba(37,99,235,.08); }
+.nx-criterion-rating { display: flex; align-items: center; gap: 3px; white-space: nowrap; }
+.nx-criterion-star { padding: 0; border: 0; background: transparent; color: #cbd5e1; font-size: 1.35rem; line-height: 1; cursor: pointer; }
+.nx-criterion-star.is-filled { color: #f59e0b; }
+.nx-criterion-step { width: 24px; height: 24px; padding: 0; border: 1px solid #cbd5e1; border-radius: 6px; background: #fff; color: #475569; font-size: .68rem; font-weight: 800; cursor: pointer; }
+.nx-criterion-value { min-width: 46px; color: #334155; font-size: .66rem; font-weight: 800; text-align: center; }
+.nx-remove-criterion { width: 32px; height: 32px; padding: 0; border: 1px solid #fecaca; border-radius: 8px; background: #fff; color: #dc2626; font-size: 1rem; cursor: pointer; }
+.nx-logbook-delete-form { order: 0; margin-right: auto; }
+.nx-logbook-delete-button { border: 1px solid #ef4444 !important; background: #fff !important; color: #dc2626 !important; }
+.nx-logbook-remove-modal .nexora-modal { width: min(580px, 100%) !important; max-width: 580px !important; }
+.nx-logbook-remove-options { display: grid; gap: 10px; margin-top: 12px; }
+.nx-logbook-remove-option { display: grid; grid-template-columns: 20px minmax(0,1fr); gap: 10px; align-items: start; padding: 13px 14px; border: 1px solid #dbe3ed; border-radius: 12px; background: #fff; cursor: pointer; }
+.nx-logbook-remove-option:has(input:checked) { border-color: #60a5fa; background: #f8fbff; box-shadow: 0 0 0 3px rgba(37,99,235,.07); }
+.nx-logbook-remove-option strong { display: block; color: #10213d; font-size: .78rem; }
+.nx-logbook-remove-option small { display: block; margin-top: 3px; color: #64748b; font-size: .68rem; line-height: 1.45; }
+.nx-logbook-remove-warning { margin-top: 12px; padding: 10px 12px; border: 1px solid #fecaca; border-radius: 10px; background: #fff7f7; color: #991b1b; font-size: .68rem; line-height: 1.45; }
+.nx-logbook-remove-danger { border-color: #dc2626 !important; background: #dc2626 !important; color: #fff !important; }
+@media (max-width: 760px) {
+    .nx-rating-criterion-row { grid-template-columns: 1fr 34px; }
+    .nx-criterion-rating { grid-column: 1 / -1; grid-row: 2; flex-wrap: wrap; }
+}
+
+
+/* EXTRACTED FROM resources/views/components/display_mode_switch.html */
+.nx-display-mode-toggle {
+    position: fixed;
+    right: 24px;
+    bottom: 92px;
+    z-index: 3150;
+    width: 52px;
+    min-width: 52px;
+    height: 58px;
+    display: inline-grid;
+    place-items: center;
+    padding: 0;
+    border: 1px solid rgba(15, 23, 42, 0.14);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.97);
+    color: var(--nx-display-accent, #2563eb);
+    box-shadow: 0 10px 26px rgba(15, 23, 42, 0.16);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    cursor: pointer;
+    touch-action: manipulation;
+}
+
+.nx-display-mode-toggle:hover,
+.nx-display-mode-toggle:focus-visible {
+    border-color: var(--nx-display-accent, #2563eb);
+    background: var(--nx-display-accent-soft, #eff6ff);
+    color: var(--nx-display-accent, #2563eb);
+    outline: none;
+}
+
+.nx-display-mode-toggle svg {
+    width: 23px;
+    height: 23px;
+    display: block;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.9;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+html[data-nx-display-mode="mobile"] .nx-display-mode-toggle {
+    right: 14px;
+    bottom: 78px;
+    width: 48px;
+    min-width: 48px;
+    height: 54px;
+    border-radius: 11px;
+}
+
+html[data-nx-browser-desktop-site="true"] .nx-display-mode-toggle {
+    display: none !important;
+}
