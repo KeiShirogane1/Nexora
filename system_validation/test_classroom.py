@@ -758,10 +758,30 @@ def test_remove_authorization_and_idor():
     client=app.test_client()
     _login_as(client, 99011, "student")
     client.post("/student/classes/join", data={"class_code":code})
-    # other supervisor cannot remove
-    _login_as(client, 99002, "supervisor")
-    resp=client.post(f"/supervisor/classes/{cid}/students/99011/remove")
-    assert resp.status_code==403
+
+    # Test the classroom IDOR guard directly. Supervisor session middleware has
+    # separate coverage and can redirect before remove_student() is reached.
+    from flask import session
+    with app.test_request_context(
+        f"/supervisor/classes/{cid}/students/99011/remove",
+        method="POST",
+    ):
+        session["user_id"]=99002
+        session["role"]="supervisor"
+        resp=app.view_functions["classroom.remove_student"].__wrapped__(cid, 99011)
+    assert resp==("Forbidden", 403)
+
+    # Confirm the unauthorized attempt did not alter classroom membership.
+    conn=get_db_connection()
+    try:
+        membership=conn.execute(
+            "SELECT 1 FROM classroom_students WHERE classroom_id=? AND student_id=?",
+            (cid, 99011),
+        ).fetchone()
+    finally:
+        conn.close()
+    assert membership is not None
+
     # student cannot use a supervisor route; middleware redirects by actual role
     _login_as(client, 99011, "student")
     resp2=client.post(f"/supervisor/classes/{cid}/students/99011/remove", follow_redirects=False)
