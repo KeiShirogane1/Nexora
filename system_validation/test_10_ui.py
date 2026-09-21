@@ -274,3 +274,19 @@ def test_no_removed_important_routes():
     assert "def admin_students" in admin_py
     assert "def student_report" in admin_py
     assert "def bulk_action" in admin_py
+
+def test_templates_keep_css_out_of_html():
+    """Templates must use external stylesheets instead of embedded or inline CSS."""
+    import re
+
+    root = pathlib.Path("resources/views")
+    offenders = []
+
+    for template in sorted(root.rglob("*.html")):
+        source = template.read_text(encoding="utf-8")
+        if re.search(r"<style\\b", source, flags=re.IGNORECASE):
+            offenders.append(f"{template}: embedded <style> block")
+        if re.search(r"\\sstyle\\s*=\\s*[\"']", source, flags=re.IGNORECASE):
+            offenders.append(f"{template}: inline style attribute")
+
+    assert not offenders, "Template CSS must live in resources/assets/css/:\\n" + "\\n".join(offenders)
