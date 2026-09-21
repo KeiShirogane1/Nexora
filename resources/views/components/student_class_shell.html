@@ -1,3 +1,4 @@
+{% from 'components/nexora_icons.html' import nx_icon %}
 {% set hide_class_context = request.endpoint in ['classwork_ml_insights.student_insights', 'performance_reports.student_reports'] %}
 {% if not hide_class_context %}
     {% set current_class_tab = class_active_tab|default('stream') %}
@@ -13,7 +14,7 @@
                 <div class="class-banner-menu">
                     <button type="button" class="class-banner-menu-button" id="studentClassMenuButton" aria-label="Intern Classroom options" aria-expanded="false" onclick="toggleStudentClassMenu(event)">⋮</button>
                     <div class="class-banner-menu-panel" id="studentClassMenuPanel" role="menu">
-                        <button type="button" class="class-banner-menu-item" onclick="copyStudentCode(event)"><span class="class-banner-menu-icon" aria-hidden="true">▣</span>Copy Classroom Code</button>
+                        <button type="button" class="class-banner-menu-item" onclick="copyStudentCode(event)"><span class="class-banner-menu-icon" aria-hidden="true">{{ nx_icon('copy') }}</span>Copy Classroom Code</button>
                         <div class="class-banner-menu-divider"></div>
                         <button type="button" class="class-banner-menu-item is-danger" onclick="openStudentLeaveModal(event)"><span class="class-banner-menu-icon" aria-hidden="true">↪</span>Leave Intern Classroom</button>
                     </div>
