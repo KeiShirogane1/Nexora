@@ -1,3 +1,4 @@
+{% from 'components/nexora_icons.html' import nx_icon %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -49,7 +50,7 @@
                 <div class="role-trash-list">
                     {% for item in trash_items %}
                     <article class="role-trash-row">
-                        <div class="role-trash-icon" aria-hidden="true">{{ '▤' if item.item_type == 'logbook' else '☑' }}</div>
+                        <div class="role-trash-icon" aria-hidden="true">{% if item.item_type == 'logbook' %}{{ nx_icon('logbook') }}{% else %}{{ nx_icon('tasks') }}{% endif %}</div>
                         <div class="role-trash-primary">
                             <span class="role-trash-type">{{ item.type_label }}</span>
                             <strong title="{{ item.title }}">{{ item.title }}</strong>

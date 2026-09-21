@@ -1,3 +1,4 @@
+{% from 'components/nexora_icons.html' import nx_icon %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -37,7 +38,7 @@
                         type="button"
                         onclick="markAllNotificationsRead()"
                     >
-                        ✓ Mark all as read
+                        {{ nx_icon('success') }} Mark all as read
                     </button>
                 {% endif %}
             </section>
@@ -53,7 +54,7 @@
                 </article>
 
                 <article class="student-notification-stat">
-                    <span class="student-notification-stat-icon" aria-hidden="true">●</span>
+                    <span class="student-notification-stat-icon" aria-hidden="true">{{ nx_icon('bell') }}</span>
                     <div>
                         <span>Unread</span>
                         <strong>{{ unread_count|default(0) }}</strong>
@@ -62,7 +63,7 @@
                 </article>
 
                 <article class="student-notification-stat">
-                    <span class="student-notification-stat-icon" aria-hidden="true">✓</span>
+                    <span class="student-notification-stat-icon" aria-hidden="true">{{ nx_icon('success') }}</span>
                     <div>
                         <span>Read</span>
                         <strong>{{ (total_count|default(0)) - (unread_count|default(0)) }}</strong>
