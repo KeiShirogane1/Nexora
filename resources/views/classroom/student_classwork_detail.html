@@ -8,27 +8,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
-    <style>
-        .student-work-detail-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin:0 0 22px}
-        .student-work-detail-heading h1{margin:6px 0 5px;font-size:2rem;font-weight:800;letter-spacing:-.025em}
-        .student-work-detail-heading p{margin:0;color:#64748b}
-        .student-work-detail-back{display:inline-flex;align-items:center;padding:10px 14px;border:1px solid #dfe7ef;border-radius:10px;background:#fff;color:#07865f;font-size:13px;font-weight:800;text-decoration:none;white-space:nowrap}
-        .student-work-detail-grid{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:20px;align-items:start;padding-bottom:42px}
-        .student-work-card{overflow:hidden;border:1px solid #e6eaf0;border-radius:18px;background:#fff;box-shadow:0 8px 28px rgba(15,23,42,.06)}
-        .student-work-card+.student-work-card{margin-top:18px}.student-work-card-pad{padding:22px}
-        .student-work-activity-head{padding:24px 26px 20px;border-bottom:1px solid #e6eaf0}.student-work-type{display:inline-flex;padding:6px 10px;border-radius:8px;background:#eaf8f3;color:#07865f;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
-        .student-work-activity-head h2{margin:12px 0 6px;font-size:1.45rem;font-weight:800;letter-spacing:-.02em}.student-work-activity-head p{margin:0;color:#64748b;font-size:13px}
-        .student-work-meta{display:flex;flex-wrap:wrap;gap:8px;padding:14px 26px;border-bottom:1px solid #e6eaf0;background:#f8fafc}.student-work-meta span{padding:7px 10px;border:1px solid #e6eaf0;border-radius:9px;background:#fff;color:#64748b;font-size:12px}
-        .student-work-section{padding:23px 26px}.student-work-section+.student-work-section{border-top:1px solid #e6eaf0}.student-work-section h3,.student-work-side h3{margin:0 0 12px;font-size:14px;font-weight:800}.student-work-copy{color:#334155;font-size:14px;line-height:1.7;white-space:pre-wrap}
-        .student-work-resource{display:flex;align-items:center;gap:12px;margin-top:9px;padding:13px 14px;border:1px solid #e6eaf0;border-radius:11px;color:#142033;text-decoration:none}.student-work-resource:hover{border-color:#9ddbc6;background:#fbfefc}.student-work-resource-icon{display:grid;place-items:center;width:36px;height:36px;border-radius:9px;background:#eaf8f3}.student-work-resource-main{flex:1}.student-work-resource strong{display:block;font-size:13px}.student-work-resource small{display:block;margin-top:2px;color:#64748b;font-size:11px}
-        .student-work-completion-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px}.student-work-completion-head h2{margin:4px 0;font-size:1.12rem;font-weight:800}.student-work-completion-head p{margin:0;color:#64748b;font-size:12px}.student-work-pill{display:inline-flex;padding:6px 9px;border-radius:8px;background:#f1f5f9;color:#64748b;font-size:10px;font-weight:800;text-transform:uppercase}.student-work-pill.is-complete{background:#eaf8f3;color:#07865f}
-        .student-work-steps{display:grid;gap:10px;margin:0 0 18px;padding:0;list-style:none;counter-reset:workstep}.student-work-steps li{position:relative;padding:12px 14px 12px 46px;border:1px solid #e6eaf0;border-radius:11px;background:#fbfdfc;color:#334155;font-size:13px;line-height:1.5}.student-work-steps li::before{counter-increment:workstep;content:counter(workstep);position:absolute;left:13px;top:12px;display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:#12a879;color:#fff;font-size:11px;font-weight:900}
-        .student-work-logbook-btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 18px;border-radius:11px;background:#12a879;color:#fff;text-decoration:none;font-size:13px;font-weight:800}.student-work-logbook-btn:hover{background:#07865f;color:#fff}.student-work-complete-note{margin-top:14px;padding:13px 14px;border:1px solid #ccebdd;border-radius:11px;background:#f0fbf6;color:#166534;font-size:12px;line-height:1.55}
-        .student-work-status{margin:16px 0;padding:10px 12px;border-radius:9px;background:#eaf8f3;color:#07865f;font-size:12px;font-weight:800}.student-work-status.is-pending{background:#f1f5f9;color:#64748b}.student-work-side-list{margin:0;padding:0;list-style:none}.student-work-side-list li{display:flex;justify-content:space-between;gap:14px;padding:10px 0;border-bottom:1px solid #e6eaf0;font-size:12px}.student-work-side-list li:last-child{border-bottom:0}.student-work-side-list span{color:#64748b}.student-work-side-list strong{text-align:right}.student-work-side-card+.student-work-side-card{margin-top:18px}.student-work-alert{margin:18px 26px 0!important;border:0!important;border-radius:10px!important;font-size:12px!important}
-        @media(max-width:900px){.student-work-detail-grid{grid-template-columns:1fr}.student-work-detail-heading{align-items:flex-start;flex-direction:column}}
-        @media(max-width:620px){.student-work-detail-heading h1{font-size:1.6rem}.student-work-activity-head{padding:20px}.student-work-meta,.student-work-section{padding-left:20px;padding-right:20px}.student-work-detail-back,.student-work-logbook-btn{width:100%;justify-content:center}.student-work-completion-head{flex-direction:column}}
-    </style>
-</head>
+    </head>
 <body class="student-page nx-class-page student-classwork-page">
     {% include 'components/student_sidebar.html' %}
 
