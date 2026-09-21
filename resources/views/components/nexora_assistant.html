@@ -1,3 +1,4 @@
+{% from 'components/nexora_icons.html' import nx_icon %}
 {% set assistant_role = nx_topbar_role|default(session.get('role', 'student')) %}
 {% if assistant_role in ['student', 'supervisor', 'admin'] %}
 {% set assistant_logo = 'images/nexora_logo_student.png' if assistant_role == 'student' else 'images/nexora_logo_admin.png' if assistant_role == 'admin' else 'images/nexora_logo_supervisor.png' %}
@@ -11,15 +12,15 @@
                 <div><strong id="nxAssistantHeaderTitle">Nexora Assistant</strong><span id="nxAssistantHeaderSubtitle">{{ assistant_role|title }} workspace</span></div>
             </div>
             <div class="nx-assistant-window-actions">
-                <button type="button" data-assistant-action="minimize" aria-label="Minimize Assistant">−</button>
-                <button type="button" data-assistant-action="expand" aria-label="Expand Assistant">□</button>
-                <button type="button" data-assistant-action="close" aria-label="Close Assistant">×</button>
+                <button type="button" data-assistant-action="minimize" aria-label="Minimize Assistant">{{ nx_icon('minimize') }}</button>
+                <button type="button" data-assistant-action="expand" aria-label="Expand Assistant">{{ nx_icon('expand') }}</button>
+                <button type="button" data-assistant-action="close" aria-label="Close Assistant">{{ nx_icon('close') }}</button>
             </div>
         </header>
 
         <div class="nx-assistant-body" id="nxAssistantBody">
             <div class="nx-assistant-welcome">
-                <span class="nx-assistant-mark">◆</span>
+                <span class="nx-assistant-mark">{{ nx_icon('assistant') }}</span>
                 <div>
                     <strong>How can Nexora help?</strong>
                     {% if assistant_role == 'student' %}

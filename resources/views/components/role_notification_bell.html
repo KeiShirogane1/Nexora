@@ -1,3 +1,4 @@
+{% from 'components/nexora_icons.html' import nx_icon %}
 {#
     Shared role notification bell/popover.
     Visual reference: Student notification design.
@@ -30,7 +31,7 @@
                 {% for notif in recent_notifications[:5] %}
                     <button type="button" class="nx-notification-item {% if notif['is_read'] == 0 %}is-unread{% endif %}" data-notification-id="{{ notif['id'] }}" data-link="{{ (notif['link_url'] or '')|e }}" onclick="openNexoraNotification(this)">
                         <span class="nx-notification-item-icon {% if notif['notification_type'] == 'warning' %}is-warning{% elif notif['notification_type'] == 'error' %}is-error{% elif notif['notification_type'] in ['success', 'task', 'classroom'] %}is-success{% else %}is-info{% endif %}" aria-hidden="true">
-                            {% if notif['notification_type'] == 'warning' %}!{% elif notif['notification_type'] == 'error' %}×{% elif notif['notification_type'] in ['success', 'task', 'classroom'] %}✓{% else %}i{% endif %}
+                            {% if notif['notification_type'] == 'warning' %}{{ nx_icon('warning') }}{% elif notif['notification_type'] == 'error' %}{{ nx_icon('close') }}{% elif notif['notification_type'] == 'success' %}{{ nx_icon('success') }}{% elif notif['notification_type'] == 'task' %}{{ nx_icon('tasks') }}{% elif notif['notification_type'] == 'classroom' %}{{ nx_icon('classroom') }}{% else %}{{ nx_icon('info') }}{% endif %}
                         </span>
                         <span class="nx-notification-item-copy">
                             <strong>{{ notif['title'] }}</strong>
@@ -42,7 +43,7 @@
                 {% endfor %}
             {% else %}
                 <div class="nx-notification-empty">
-                    <span class="nx-notification-empty-icon" aria-hidden="true">✓</span>
+                    <span class="nx-notification-empty-icon" aria-hidden="true">{{ nx_icon('success') }}</span>
                     <strong>You're all caught up</strong>
                     <p>No notifications were received in the last 7 days.</p>
                 </div>
