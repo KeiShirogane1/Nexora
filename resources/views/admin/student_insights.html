@@ -1,3 +1,4 @@
+{% from 'components/nexora_icons.html' import nx_icon %}
 {% set admin_insights_modal = request.headers.get('X-Requested-With') == 'XMLHttpRequest' %}
 {% if not admin_insights_modal %}
 <!DOCTYPE html>
@@ -62,7 +63,7 @@
             {% endif %}
 
             {% if not classrooms %}
-                <section class="admin-polish-empty"><div class="admin-polish-empty-icon">◎</div><h2>No Intern Classrooms yet</h2><p>Rooms will appear here after a supervisor creates an Intern Classroom.</p></section>
+                <section class="admin-polish-empty"><div class="admin-polish-empty-icon">{{ nx_icon('target') }}</div><h2>No Intern Classrooms yet</h2><p>Rooms will appear here after a supervisor creates an Intern Classroom.</p></section>
             {% elif not selected_classroom %}
                 <section class="admin-polish-empty"><div class="admin-polish-empty-icon">⌕</div><h2>Choose a classroom</h2><p>Select a room above to display the students enrolled in it.</p></section>
             {% else %}
@@ -141,7 +142,7 @@
                     </div>
                 </section>
                 {% if students and not selected_student %}
-                    <section class="admin-polish-empty"><div class="admin-polish-empty-icon">◎</div><h2>Choose a student</h2><p>Select a student above to load their classroom-scoped evidence.</p></section>
+                    <section class="admin-polish-empty"><div class="admin-polish-empty-icon">{{ nx_icon('target') }}</div><h2>Choose a student</h2><p>Select a student above to load their classroom-scoped evidence.</p></section>
                 {% endif %}
             {% endif %}
 
@@ -233,7 +234,7 @@
 
                         <section class="admin-polish-panel">
                             <div class="admin-section-heading"><div><span>DECISION SUPPORT</span><h3>Recommendation</h3></div></div>
-                            {% if report.recommendation %}<p class="admin-recommendation-copy">{{ report.recommendation }}</p><span class="admin-metric-tag">Priority: {{ (report.priority or 'none')|title }}</span>{% if report.basis %}<div class="admin-basis-list">{% for item in report.basis %}<span>✓ {{ item }}</span>{% endfor %}</div>{% endif %}{% else %}<p class="admin-empty-copy">No Work-based recommendation is available yet.</p>{% endif %}
+                            {% if report.recommendation %}<p class="admin-recommendation-copy">{{ report.recommendation }}</p><span class="admin-metric-tag">Priority: {{ (report.priority or 'none')|title }}</span>{% if report.basis %}<div class="admin-basis-list">{% for item in report.basis %}<span>{{ nx_icon('success') }} {{ item }}</span>{% endfor %}</div>{% endif %}{% else %}<p class="admin-empty-copy">No Work-based recommendation is available yet.</p>{% endif %}
                         </section>
 
                         <section class="admin-polish-panel admin-official-evaluation-panel">

@@ -1,3 +1,4 @@
+{% from 'components/nexora_icons.html' import nx_icon %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -25,10 +26,10 @@
             </header>
 
             <section class="admin-report-metric-grid" aria-label="Internship report summary">
-                <article class="admin-report-metric-card"><span class="admin-report-metric-icon is-orange" aria-hidden="true">◷</span><span class="admin-report-metric-copy"><small>Total Hours Rendered</small><strong>{{ '%.1f'|format(total_hours) }}</strong><span>{{ completed_sessions }} completed of {{ sessions }} sessions</span></span></article>
-                <article class="admin-report-metric-card"><span class="admin-report-metric-icon is-red" aria-hidden="true">↗</span><span class="admin-report-metric-copy"><small>Performance</small><strong>{% if report.average_percentage is not none %}{{ '%.1f'|format(report.average_percentage) }}%{% else %}—{% endif %}</strong><span>{{ report.graded_count }}/{{ report.total_count }} graded</span></span></article>
-                <article class="admin-report-metric-card"><span class="admin-report-metric-icon is-amber" aria-hidden="true">✓</span><span class="admin-report-metric-copy"><small>Completion</small><strong>{{ '%.1f'|format(report.completion_rate) }}%</strong><span>Classwork completion</span></span></article>
-                <article class="admin-report-metric-card"><span class="admin-report-metric-icon is-slate" aria-hidden="true">!</span><span class="admin-report-metric-copy"><small>Priority</small><strong>{{ (report.priority or 'Medium')|title }}</strong><span>Recommendation priority</span></span></article>
+                <article class="admin-report-metric-card"><span class="admin-report-metric-icon is-orange" aria-hidden="true">{{ nx_icon('clock') }}</span><span class="admin-report-metric-copy"><small>Total Hours Rendered</small><strong>{{ '%.1f'|format(total_hours) }}</strong><span>{{ completed_sessions }} completed of {{ sessions }} sessions</span></span></article>
+                <article class="admin-report-metric-card"><span class="admin-report-metric-icon is-red" aria-hidden="true">{{ nx_icon('insights') }}</span><span class="admin-report-metric-copy"><small>Performance</small><strong>{% if report.average_percentage is not none %}{{ '%.1f'|format(report.average_percentage) }}%{% else %}—{% endif %}</strong><span>{{ report.graded_count }}/{{ report.total_count }} graded</span></span></article>
+                <article class="admin-report-metric-card"><span class="admin-report-metric-icon is-amber" aria-hidden="true">{{ nx_icon('success') }}</span><span class="admin-report-metric-copy"><small>Completion</small><strong>{{ '%.1f'|format(report.completion_rate) }}%</strong><span>Classwork completion</span></span></article>
+                <article class="admin-report-metric-card"><span class="admin-report-metric-icon is-slate" aria-hidden="true">{{ nx_icon('warning') }}</span><span class="admin-report-metric-copy"><small>Priority</small><strong>{{ (report.priority or 'Medium')|title }}</strong><span>Recommendation priority</span></span></article>
             </section>
 
             <div class="admin-report-overview-grid">
