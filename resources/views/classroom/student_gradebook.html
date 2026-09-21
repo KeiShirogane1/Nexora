@@ -1,3 +1,4 @@
+{% from 'components/nexora_icons.html' import nx_icon %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -29,9 +30,9 @@
             </header>
 
             <div class="gradebook-actions">
-                <a href="{{ url_for('classwork_ml_insights.student_insights', class_id=classroom.id) }}" class="ui-secondary-btn">📈 Performance Insights</a>
-                <a href="{{ url_for('classwork_ml_insights.student_insights', class_id=classroom.id) }}" class="ui-primary-btn">✦ ML Insights</a>
-                <a href="{{ url_for('performance_reports.student_reports', class_id=classroom.id) }}" class="ui-secondary-btn">📄 Report</a>
+                <a href="{{ url_for('classwork_ml_insights.student_insights', class_id=classroom.id) }}" class="ui-secondary-btn">{{ nx_icon('insights') }} Performance Insights</a>
+                <a href="{{ url_for('classwork_ml_insights.student_insights', class_id=classroom.id) }}" class="ui-primary-btn">{{ nx_icon('assistant') }} ML Insights</a>
+                <a href="{{ url_for('performance_reports.student_reports', class_id=classroom.id) }}" class="ui-secondary-btn">{{ nx_icon('reports') }} Report</a>
             </div>
 
             <section class="gradebook-stats">
@@ -102,7 +103,7 @@
                     </div>
                 {% else %}
                     <div class="student-classwork-empty">
-                        <div class="student-classwork-empty-icon">📊</div>
+                        <div class="student-classwork-empty-icon">{{ nx_icon('reports') }}</div>
                         <h2>No Work items yet</h2>
                         <p>Your supervisor has not added Work to this Intern Classroom.</p>
                     </div>

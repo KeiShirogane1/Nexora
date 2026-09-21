@@ -1,3 +1,4 @@
+{% from 'components/nexora_icons.html' import nx_icon %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -36,8 +37,8 @@
                         {% if assignment.team_members %}<section class="student-work-section"><h3>{{ assignment.team_name or 'Team Members' }}</h3><div class="student-work-copy">{% for member in assignment.team_members %}{{ member.username }}{% if member.email %} · {{ member.email }}{% endif %}{% if not loop.last %}<br>{% endif %}{% endfor %}</div></section>{% endif %}
                         {% if assignment.external_url or assignment.resource_filepath %}
                             <section class="student-work-section"><h3>Resources</h3>
-                                {% if assignment.external_url %}<a href="{{ assignment.external_url }}" target="_blank" rel="noopener noreferrer" class="student-work-resource"><span class="student-work-resource-icon">↗</span><span class="student-work-resource-main"><strong>{{ assignment.resource_label or 'Open Work link' }}</strong><small>Opens in a new tab</small></span><span>›</span></a>{% endif %}
-                                {% if assignment.resource_filepath %}<a href="{{ url_for('uploaded_file', filename=assignment.resource_filepath) }}" target="_blank" rel="noopener noreferrer" class="student-work-resource"><span class="student-work-resource-icon">⌕</span><span class="student-work-resource-main"><strong>{{ assignment.resource_filename or 'Open attached file' }}</strong><small>Reference material</small></span><span>›</span></a>{% endif %}
+                                {% if assignment.external_url %}<a href="{{ assignment.external_url }}" target="_blank" rel="noopener noreferrer" class="student-work-resource"><span class="student-work-resource-icon">{{ nx_icon('external') }}</span><span class="student-work-resource-main"><strong>{{ assignment.resource_label or 'Open Work link' }}</strong><small>Opens in a new tab</small></span><span aria-hidden="true">{{ nx_icon('chevron-right') }}</span></a>{% endif %}
+                                {% if assignment.resource_filepath %}<a href="{{ url_for('uploaded_file', filename=assignment.resource_filepath) }}" target="_blank" rel="noopener noreferrer" class="student-work-resource"><span class="student-work-resource-icon">{{ nx_icon('documents') }}</span><span class="student-work-resource-main"><strong>{{ assignment.resource_filename or 'Open attached file' }}</strong><small>Reference material</small></span><span aria-hidden="true">{{ nx_icon('chevron-right') }}</span></a>{% endif %}
                             </section>
                         {% endif %}
                     </article>
