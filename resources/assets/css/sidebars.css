@@ -1090,3 +1090,1690 @@ body:has(.nx-role-sidebar-shell)
   font-weight: 900 !important;
   line-height: 1 !important;
 }
+
+
+/* EXTRACTED FROM resources/views/components/admin_sidebar.html */
+@media (min-width: 761px) {
+    .nx-role-admin .nx-role-sidebar {
+        overflow: hidden !important;
+        padding-bottom: 14px !important;
+        background: linear-gradient(180deg, rgba(75, 8, 8, .96), rgba(48, 6, 7, .92)) !important;
+        -webkit-backdrop-filter: blur(14px) saturate(1.05);
+        backdrop-filter: blur(14px) saturate(1.05);
+    }
+    .nx-role-admin #adminSidebar > .nx-role-brand,
+    .nx-role-admin #adminSidebar > .nx-role-profile,
+    .nx-role-admin #adminSidebar > .nx-role-rule,
+    .nx-role-admin #adminSidebar > .nx-role-divider,
+    .nx-role-admin #adminSidebar > .nx-role-section-label,
+    .nx-role-admin #adminSidebar > .nx-role-account-nav,
+    .nx-role-admin #adminSidebar > .nx-role-footer { flex-shrink: 0 !important; }
+    .nx-role-admin #adminSidebar > .nx-role-nav[aria-label="Admin menu"] {
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        overscroll-behavior: contain;
+        scrollbar-width: none;
+    }
+    .nx-role-admin #adminSidebar > .nx-role-nav[aria-label="Admin menu"]::-webkit-scrollbar { width: 0; }
+    .nx-role-admin .nx-role-sidebar:hover > .nx-role-nav[aria-label="Admin menu"],
+    .nx-role-admin .nx-role-sidebar:focus-within > .nx-role-nav[aria-label="Admin menu"] {
+        padding-right: 4px !important;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255, 154, 123, .42) transparent;
+    }
+    .nx-role-admin .nx-role-sidebar:hover > .nx-role-nav[aria-label="Admin menu"]::-webkit-scrollbar,
+    .nx-role-admin .nx-role-sidebar:focus-within > .nx-role-nav[aria-label="Admin menu"]::-webkit-scrollbar { width: 6px; }
+    .nx-role-admin #adminSidebar > .nx-role-nav[aria-label="Admin menu"]::-webkit-scrollbar-track { background: transparent; }
+    .nx-role-admin #adminSidebar > .nx-role-nav[aria-label="Admin menu"]::-webkit-scrollbar-thumb { border-radius: 999px; background: rgba(255, 154, 123, .38); }
+    .nx-role-admin #adminSidebar > .nx-role-nav[aria-label="Admin menu"]::-webkit-scrollbar-thumb:hover { background: rgba(255, 154, 123, .58); }
+    .nx-role-admin #adminSidebar > .nx-role-account-nav { margin: 8px 0 16px !important; }
+    .nx-role-admin .nx-role-sidebar:hover,
+    .nx-role-admin .nx-role-sidebar:focus-within { background: linear-gradient(180deg, rgba(75, 8, 8, .93), rgba(48, 6, 7, .89)) !important; }
+}
+
+/* Admin consistency polish: shared only by Admin pages that use this shell. */
+.nexora-admin-body {
+    --admin-polish-accent: #f45125;
+    --admin-polish-accent-dark: #d9471b;
+    --admin-polish-accent-soft: #fff1eb;
+    --admin-polish-border: #e4e9ee;
+    --admin-polish-text: #172536;
+    --admin-polish-muted: #718096;
+}
+.admin-polish-header { display:flex; align-items:flex-end; justify-content:space-between; gap:18px; margin:0 0 18px; }
+.admin-polish-eyebrow,
+.admin-section-heading > div > span { display:block; margin-bottom:4px; color:var(--admin-polish-accent); font-size:10px; font-weight:900; letter-spacing:.09em; text-transform:uppercase; }
+.admin-polish-header h1 { margin:0; color:var(--admin-polish-text); font-size:28px; font-weight:850; letter-spacing:-.025em; }
+.admin-polish-header p { max-width:780px; margin:6px 0 0; color:var(--admin-polish-muted); font-size:13px; line-height:1.55; }
+.admin-polish-panel { border:1px solid var(--admin-polish-border); border-radius:14px; background:#fff; box-shadow:0 6px 20px rgba(15,23,42,.045); }
+.admin-kpi-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin-bottom:16px; }
+.admin-kpi-card { min-width:0; padding:16px; border:1px solid var(--admin-polish-border); border-radius:12px; background:#fff; box-shadow:0 4px 14px rgba(15,23,42,.035); }
+.admin-kpi-card span,.admin-doc-student-stat span,.admin-folder-profile-stats span { display:block; color:#7a8797; font-size:10px; font-weight:750; }
+.admin-kpi-card strong { display:block; margin-top:5px; color:#1b2b3d; font-size:22px; line-height:1.1; font-weight:900; }
+.admin-kpi-card small { display:block; margin-top:5px; color:#98a3af; font-size:9px; line-height:1.4; }
+.admin-filter-grid { display:grid; grid-template-columns:minmax(240px,1.5fr) minmax(190px,.75fr) auto; gap:12px; align-items:end; }
+.admin-documents-filter-panel,.admin-insights-selector { padding:15px; margin-bottom:14px; }
+.admin-filter-field label { display:block; margin-bottom:6px; color:#4b5b6e; font-size:10px; font-weight:850; }
+.admin-filter-field input,.admin-filter-field select { width:100%; min-height:40px; padding:8px 11px; border:1px solid #dce3e9; border-radius:10px; background:#fff; color:#243448; font-size:12px; outline:none; }
+.admin-filter-field input:focus,.admin-filter-field select:focus { border-color:#f3a88f; box-shadow:0 0 0 3px rgba(244,81,37,.1); }
+.admin-filter-actions,.admin-inline-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.admin-primary-button,.admin-secondary-button,.admin-compact-action { min-height:38px; display:inline-flex; align-items:center; justify-content:center; padding:0 13px; border-radius:10px; font-size:11px; font-weight:850; text-decoration:none; cursor:pointer; }
+.admin-primary-button { border:1px solid var(--admin-polish-accent); background:var(--admin-polish-accent); color:#fff; }
+.admin-primary-button:hover { border-color:var(--admin-polish-accent-dark); background:var(--admin-polish-accent-dark); color:#fff; }
+.admin-secondary-button,.admin-compact-action { border:1px solid #d9e1e8; background:#fff; color:#415369; }
+.admin-secondary-button:hover,.admin-compact-action:hover { border-color:#f2a086; background:#fff8f5; color:var(--admin-polish-accent-dark); }
+.admin-documents-results-line { margin:0 0 12px; color:#7c8998; font-size:11px; }
+.admin-documents-results-line strong { color:#27394c; }
+.admin-classroom-doc-groups { display:grid; gap:12px; }
+.admin-classroom-doc-group { overflow:hidden; margin-bottom:12px; }
+.admin-classroom-doc-heading,.admin-section-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; padding:16px 17px 12px; }
+.admin-classroom-doc-heading h2,.admin-section-heading h2,.admin-section-heading h3 { margin:3px 0 0; color:#1a2a3b; font-size:15px; font-weight:900; }
+.admin-classroom-doc-heading p { margin:5px 0 0; color:#7b8897; font-size:10px; }
+.admin-doc-badges { display:flex; gap:6px; flex-wrap:wrap; }
+.admin-status-pill,.admin-count-chip,.admin-metric-tag { display:inline-flex; align-items:center; width:max-content; min-height:25px; padding:4px 9px; border:1px solid #e0e5ea; border-radius:999px; background:#f7f9fb; color:#566577; font-size:9px; font-weight:850; }
+.admin-status-pill.is-success { border-color:#cce8d8; background:#effaf4; color:#177347; }
+.admin-status-pill.is-muted { background:#f2f4f6; color:#84909d; }
+.admin-doc-student-list { display:grid; border-top:1px solid #eef1f3; }
+.admin-doc-student-row { display:grid; grid-template-columns:38px minmax(180px,1fr) minmax(85px,.3fr) minmax(115px,.45fr) auto; gap:12px; align-items:center; min-height:68px; padding:11px 16px; border-bottom:1px solid #eef1f3; }
+.admin-doc-student-row:last-child { border-bottom:0; }
+.admin-doc-student-avatar { width:38px; height:38px; display:grid; place-items:center; border-radius:11px; background:var(--admin-polish-accent-soft); color:var(--admin-polish-accent-dark); font-size:11px; font-weight:900; }
+.admin-doc-student-main { min-width:0; }
+.admin-doc-student-main strong { display:block; color:#26384a; font-size:11px; font-weight:900; }
+.admin-doc-student-main span,.admin-doc-student-main small { display:block; margin-top:2px; color:#7c8998; font-size:9px; overflow-wrap:anywhere; }
+.admin-doc-student-stat strong,.admin-folder-profile-stats strong { display:block; color:#27384b; font-size:12px; font-weight:900; }
+.admin-compact-action { min-height:32px; padding:0 10px; white-space:nowrap; }
+.admin-latest-documents-panel { margin-top:14px; }
+.admin-latest-upload-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:9px; padding:0 16px 16px; }
+.admin-latest-upload-card { min-width:0; padding:12px; border:1px solid #e8ecef; border-radius:10px; background:#fbfcfd; color:inherit; text-decoration:none; }
+.admin-latest-upload-card:hover { border-color:#f3b29d; background:#fff9f7; }
+.admin-latest-upload-card strong,.admin-latest-upload-card span,.admin-latest-upload-card small { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.admin-latest-upload-card strong { color:#2c3d50; font-size:10px; }.admin-latest-upload-card span { margin-top:4px; color:#6f7f91; font-size:9px; }.admin-latest-upload-card small { margin-top:5px; color:#9aa5b0; font-size:8px; }
+.admin-polish-empty { padding:38px 22px; border:1px dashed #dce2e7; border-radius:14px; background:#fff; text-align:center; }
+.admin-polish-empty-compact { padding:25px 18px; border:0; }.admin-polish-empty-icon { margin-bottom:8px; color:var(--admin-polish-accent); font-size:28px; }.admin-polish-empty h2,.admin-polish-empty h3 { margin:0; color:#28394c; font-size:15px; font-weight:900; }.admin-polish-empty p,.admin-empty-copy { margin:6px 0 0; color:#84909e; font-size:10px; line-height:1.5; }
+
+/* Student Management uses the exact Supervisor Management KPI design. */
+body.admin-students-page [aria-label="Student summary"] .nexora-card {
+    background:#fff;
+    border-radius:16px;
+    box-shadow:0 4px 24px rgba(15,23,42,.06);
+    border:1px solid #eef2f7;
+    padding:18px 20px;
+    margin-bottom:18px;
+}
+body.admin-students-page [aria-label="Student summary"] .summary-icon {
+    width:44px;
+    height:44px;
+    border-radius:12px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    font-size:1.25rem;
+    flex-shrink:0;
+}
+body.admin-students-page [aria-label="Student summary"] .summary-icon.total { background:#eff6ff; color:#2563eb; }
+body.admin-students-page [aria-label="Student summary"] .summary-icon.active { background:#f0fdf4; color:#16a34a; }
+body.admin-students-page [aria-label="Student summary"] .summary-icon.pending { background:#fefce8; color:#ca8a04; }
+body.admin-students-page [aria-label="Student summary"] .summary-icon.assigned { background:#f5f3ff; color:#7c3aed; }
+body.admin-students-page [aria-label="Student summary"] .summary-icon svg { width:20px; height:20px; }
+body.admin-students-page [aria-label="Student summary"] .summary-label {
+    font-size:.78rem;
+    font-weight:600;
+    color:#64748b;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+    margin-bottom:2px;
+}
+body.admin-students-page [aria-label="Student summary"] .summary-value {
+    font-size:1.45rem;
+    font-weight:800;
+    color:#0f172a;
+    line-height:1;
+}
+@media (min-width:576px) and (max-width:1199.98px) {
+    body.admin-students-page [aria-label="Student summary"] > .col { flex:0 0 auto; width:50%; }
+}
+@media (min-width:1200px) {
+    body.admin-students-page [aria-label="Student summary"] > .col { flex:1 0 0%; width:auto; }
+}
+
+.admin-folder-profile { display:flex; justify-content:space-between; gap:20px; align-items:center; padding:17px; margin-bottom:14px; }
+.admin-folder-profile-main { display:flex; align-items:center; gap:13px; }.admin-folder-avatar { width:48px; height:48px; }.admin-folder-title-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }.admin-folder-title-row h1 { margin:0; color:#1e2e40; font-size:20px; font-weight:900; }.admin-folder-profile-main p,.admin-folder-profile-main small { display:block; margin:3px 0 0; color:#778697; font-size:10px; }
+.admin-folder-profile-stats { display:grid; grid-template-columns:repeat(3,minmax(90px,1fr)); gap:9px; }.admin-folder-profile-stats > div { min-width:0; padding:10px 11px; border:1px solid #e7ebef; border-radius:10px; background:#fafbfc; }.admin-folder-profile-stats strong { overflow-wrap:anywhere; }
+.admin-folder-tabs { display:flex; gap:4px; margin:0 0 12px; border-bottom:1px solid #e4e9ed; }.admin-folder-tab { padding:10px 13px; border:0; border-bottom:2px solid transparent; background:transparent; color:#748293; font-size:11px; font-weight:850; cursor:pointer; }.admin-folder-tab.is-active { color:var(--admin-polish-accent-dark); border-bottom-color:var(--admin-polish-accent); }.admin-folder-tab span { margin-left:4px; }
+.admin-document-folder-grid { display:grid; grid-template-columns:minmax(0,1.65fr) minmax(260px,.65fr); gap:13px; }.admin-document-list-panel,.admin-membership-panel { overflow:hidden; }.admin-membership-list { display:grid; gap:8px; padding:0 15px 15px; }.admin-membership-row { display:flex; justify-content:space-between; gap:10px; padding:11px; border:1px solid #e8ecef; border-radius:10px; background:#fbfcfd; }.admin-membership-row strong,.admin-membership-row span,.admin-membership-row small { display:block; }.admin-membership-row strong { color:#2d3e50; font-size:10px; }.admin-membership-row span,.admin-membership-row small { margin-top:3px; color:#7b8998; font-size:9px; }
+.admin-compact-table-wrap { overflow:auto; }.admin-compact-table { width:100%; border-collapse:collapse; }.admin-compact-table th { padding:9px 12px; border-top:1px solid #edf0f2; border-bottom:1px solid #e6eaee; background:#fafbfc; color:#718092; font-size:9px; font-weight:850; text-transform:uppercase; letter-spacing:.035em; }.admin-compact-table td { padding:10px 12px; border-bottom:1px solid #eef1f3; color:#46576a; font-size:10px; vertical-align:middle; }.admin-compact-table tbody tr:last-child td { border-bottom:0; }
+.admin-file-cell { display:flex; align-items:center; gap:9px; min-width:180px; }.admin-file-icon { width:30px; height:34px; flex:0 0 30px; display:grid; place-items:center; border-radius:7px; background:#eef2f5; color:#536579; font-size:7px; font-weight:900; }.admin-file-icon.is-pdf { background:#ffebe8; color:#ce3f31; }.admin-file-icon.is-png,.admin-file-icon.is-jpg,.admin-file-icon.is-jpeg,.admin-file-icon.is-gif,.admin-file-icon.is-webp { background:#eaf8ef; color:#258354; }.admin-file-cell strong { max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#293a4c; font-size:10px; }
+.admin-profile-info-section { padding:0 17px 17px; }.admin-profile-info-section + .admin-profile-info-section { padding-top:16px; border-top:1px solid #edf0f2; }.admin-profile-info-section h3 { margin:0 0 10px; color:#44566a; font-size:11px; font-weight:900; }.admin-profile-info-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:9px; }.admin-profile-info-grid > div { padding:11px; border:1px solid #e8ecef; border-radius:9px; background:#fbfcfd; }.admin-profile-info-grid > div.is-wide { grid-column:span 2; }.admin-profile-info-grid span { display:block; color:#8693a1; font-size:8px; font-weight:800; text-transform:uppercase; }.admin-profile-info-grid strong { display:block; margin-top:4px; color:#2a3b4d; font-size:10px; font-weight:850; overflow-wrap:anywhere; }
+
+.admin-insights-context { display:flex; align-items:flex-end; justify-content:space-between; gap:18px; margin:0 0 12px; padding:4px 2px; }.admin-insights-context h2 { margin:7px 0 2px; color:#1d2d3f; font-size:21px; font-weight:900; }.admin-insights-context p,.admin-insights-class-meta span { margin:0; color:#788697; font-size:10px; }.admin-insights-class-meta { text-align:right; }.admin-insights-class-meta strong { display:block; color:#34465a; font-size:11px; }.admin-polish-notice { margin-bottom:13px; padding:11px 13px; border:1px solid #f1d6cc; border-radius:10px; background:#fff8f5; color:#6c5147; font-size:10px; line-height:1.55; }.admin-insights-kpis { grid-template-columns:repeat(5,minmax(0,1fr)); }.admin-insights-grid { display:grid; grid-template-columns:minmax(0,1.35fr) minmax(300px,.65fr); gap:13px; }.admin-insights-stack { display:grid; align-content:start; gap:13px; }.admin-evidence-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; padding:0 16px 16px; }.admin-evidence-grid > div { padding:10px; border:1px solid #e8ecef; border-radius:9px; background:#fbfcfd; }.admin-evidence-grid span { display:block; color:#84909e; font-size:8px; font-weight:800; text-transform:uppercase; }.admin-evidence-grid strong { display:block; margin-top:4px; color:#2b3c4f; font-size:11px; overflow-wrap:anywhere; }.admin-evidence-list { border-top:1px solid #eef1f3; }.admin-evidence-row { display:flex; justify-content:space-between; gap:12px; padding:11px 16px; border-bottom:1px solid #eef1f3; }.admin-evidence-row:last-child { border-bottom:0; }.admin-evidence-row strong,.admin-evidence-row span { display:block; }.admin-evidence-row strong { color:#334559; font-size:10px; }.admin-evidence-row span,.admin-evidence-row p { margin:3px 0 0; color:#84909e; font-size:9px; }.admin-evidence-value { color:var(--admin-polish-accent-dark); font-size:10px; font-weight:900; white-space:nowrap; }.admin-definition-list { display:grid; gap:0; margin:0; padding:0 16px 16px; }.admin-definition-list > div { display:grid; grid-template-columns:minmax(115px,.45fr) 1fr; gap:12px; padding:9px 0; border-top:1px solid #eef1f3; }.admin-definition-list > div:first-child { border-top:0; }.admin-definition-list dt { color:#84909e; font-size:9px; font-weight:800; }.admin-definition-list dd { margin:0; color:#34465a; font-size:10px; font-weight:800; overflow-wrap:anywhere; }.admin-recommendation-copy,.admin-official-evaluation-panel > p { margin:0; padding:0 16px 12px; color:#56677a; font-size:10px; line-height:1.6; }.admin-basis-list { display:grid; gap:5px; padding:10px 16px 16px; color:#6d7c8d; font-size:9px; }.admin-evaluation-status { display:flex; gap:9px; align-items:center; flex-wrap:wrap; padding:0 16px 10px; }.admin-evaluation-status strong { color:#34465a; font-size:10px; }
+
+.admin-classroom-hero { display:flex; align-items:center; justify-content:space-between; gap:22px; margin-bottom:14px; padding:19px; }.admin-classroom-hero h1 { margin:8px 0 0; color:#18293b; font-size:24px; font-weight:900; }.admin-classroom-hero p { max-width:720px; margin:5px 0 0; color:#758496; font-size:11px; line-height:1.5; }.admin-classroom-course-name { color:#4e6074!important; font-weight:800; }.admin-classroom-code-card { min-width:185px; padding:13px; border:1px solid #e5e9ed; border-radius:11px; background:#fafbfc; }.admin-classroom-code-card span,.admin-classroom-code-card small { display:block; color:#82909e; font-size:8px; }.admin-classroom-code-card strong { display:block; margin:5px 0; color:var(--admin-polish-accent-dark); font-size:18px; font-weight:900; letter-spacing:.08em; }.admin-classroom-kpis { grid-template-columns:repeat(6,minmax(0,1fr)); }.admin-classroom-main-grid { display:grid; grid-template-columns:minmax(0,1.15fr) minmax(330px,.85fr); gap:13px; margin-bottom:13px; }.admin-definition-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; padding:0 16px 16px; }.admin-definition-grid > div { display:block; padding:10px; border:1px solid #e8ecef!important; border-radius:9px; background:#fbfcfd; }.admin-definition-grid > div.is-wide { grid-column:1/-1; }.admin-definition-grid dd { margin-top:4px; }.admin-detail-columns { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; padding:0 16px 16px; }.admin-detail-columns > div { padding:11px; border:1px solid #e8ecef; border-radius:10px; background:#fbfcfd; }.admin-detail-columns h3,.admin-performance-distribution h3 { margin:0 0 8px; color:#44566a; font-size:10px; font-weight:900; }.admin-detail-columns ul { margin:0; padding-left:17px; color:#647589; font-size:9px; line-height:1.65; }.admin-supervisor-card { display:grid; grid-template-columns:38px minmax(0,1fr) auto; gap:11px; align-items:center; padding:0 16px 16px; }.admin-supervisor-card strong,.admin-supervisor-card span { display:block; }.admin-supervisor-card strong { color:#304256; font-size:11px; }.admin-supervisor-card span { margin-top:3px; color:#82909e; font-size:9px; }.admin-insight-bars { display:grid; gap:11px; padding:0 16px 12px; }.admin-insight-bar-row > div { display:flex; justify-content:space-between; gap:12px; margin-bottom:5px; color:#66778a; font-size:9px; }.admin-insight-bar-row strong { color:#324559; }.admin-insight-bar-row progress { width:100%; height:7px; accent-color:var(--admin-polish-accent); }.admin-evidence-note { margin:0 16px 13px; padding:9px 10px; border-radius:9px; background:#f8fafc; color:#748396; font-size:9px; line-height:1.55; }.admin-classroom-evidence-summary { padding-top:0; }.admin-performance-distribution { padding:0 16px 16px; }.admin-performance-distribution > div { display:flex; justify-content:space-between; gap:10px; padding:6px 0; border-top:1px solid #eef1f3; color:#6d7c8d; font-size:9px; }.admin-roster-panel { overflow:hidden; }
+
+@media (max-width:1180px) {
+    .admin-classroom-kpis { grid-template-columns:repeat(3,minmax(0,1fr)); }
+    .admin-insights-kpis { grid-template-columns:repeat(3,minmax(0,1fr)); }
+    .admin-latest-upload-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media (max-width:960px) {
+    .admin-kpi-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .admin-filter-grid,.admin-document-folder-grid,.admin-insights-grid,.admin-classroom-main-grid { grid-template-columns:1fr; }
+    .admin-doc-student-row { grid-template-columns:38px minmax(0,1fr) auto; }
+    .admin-doc-student-stat { display:none; }
+    .admin-folder-profile { align-items:flex-start; flex-direction:column; }
+    .admin-folder-profile-stats { width:100%; }
+}
+@media (max-width:620px) {
+    .admin-polish-header,.admin-classroom-hero,.admin-insights-context { align-items:flex-start; flex-direction:column; }
+    .admin-kpi-grid,.admin-classroom-kpis,.admin-insights-kpis,.admin-profile-info-grid,.admin-definition-grid,.admin-detail-columns,.admin-evidence-grid,.admin-latest-upload-grid { grid-template-columns:1fr; }
+    .admin-profile-info-grid > div.is-wide,.admin-definition-grid > div.is-wide { grid-column:auto; }
+    .admin-doc-student-row { grid-template-columns:34px minmax(0,1fr); }
+    .admin-doc-student-row > .admin-compact-action,.admin-doc-student-row > .admin-status-pill { grid-column:2; justify-self:start; }
+    .admin-folder-profile-stats { grid-template-columns:1fr; }
+    .admin-classroom-code-card { width:100%; min-width:0; }
+    .admin-insights-class-meta { text-align:left; }
+}
+
+
+/* EXTRACTED FROM resources/views/components/admin_topbar.html */
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main {
+    padding-top: 68px !important;
+}
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar):not(.admin-dashboard-page) .admin-main > :first-child {
+    margin-top: 24px !important;
+}
+@media (max-width: 760px) {
+    body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main {
+        padding-top: 64px !important;
+    }
+    body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar):not(.admin-dashboard-page) .admin-main > :first-child {
+        margin-top: 20px !important;
+    }
+}
+@media (min-width: 761px) {
+    body:has(.nx-role-sidebar-shell.nx-role-admin) {
+        --nx-admin-page-gutter: 30px;
+    }
+
+    body:has(.nx-role-sidebar-shell.nx-role-admin) .admin-main,
+    body:has(.nx-role-sidebar-shell.nx-role-admin) .nexora-app-main,
+    body.notification-role-admin:has(.nx-role-sidebar-shell.nx-role-admin) .nx-notifications-main {
+        padding-left: var(--nx-admin-page-gutter) !important;
+        padding-right: var(--nx-admin-page-gutter) !important;
+        box-sizing: border-box !important;
+    }
+
+    body:has(.nx-role-sidebar-shell.nx-role-admin) .admin-main > :first-child,
+    body:has(.nx-role-sidebar-shell.nx-role-admin) .nexora-app-main > :first-child,
+    body:has(.nx-role-sidebar-shell.nx-role-admin) .compact-dashboard,
+    body:has(.nx-role-sidebar-shell.nx-role-admin) .admin-command-center,
+    body:has(.nx-role-sidebar-shell.nx-role-admin) .admin-report-page-shell,
+    body:has(.nx-role-sidebar-shell.nx-role-admin) .admin-dashboard-content,
+    body:has(.nx-role-sidebar-shell.nx-role-admin) .admin-insights-page,
+    body:has(.nx-role-sidebar-shell.nx-role-admin) .admin-polish-page,
+    body:has(.nx-role-sidebar-shell.nx-role-admin) .nexora-page,
+    body:has(.nx-role-sidebar-shell.nx-role-admin) .nx-notifications-wrap {
+        width: 100% !important;
+        max-width: none !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    body:has(.nx-role-sidebar-shell.nx-role-admin) .admin-command-center,
+    body:has(.nx-role-sidebar-shell.nx-role-admin) .admin-report-page-shell,
+    body:has(.nx-role-sidebar-shell.nx-role-admin) .admin-dashboard-content {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+}
+body.admin-dashboard-page .acc-service-list .acc-service-row:nth-child(3) .acc-service-status,
+body.admin-dashboard-page .acc-service-list .acc-service-row:nth-child(5) .acc-service-status {
+    background: #e8f8ef !important;
+    color: #118448 !important;
+}
+body.admin-students-page #studentsTable td[data-full-program] {
+    overflow: hidden !important;
+}
+body.admin-students-page #studentsTable td[data-full-program] .table-meta {
+    display: block !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+.nx-admin-insights-modal .nexora-modal {
+    width: min(1120px, 100%) !important;
+    max-width: 1120px !important;
+    max-height: calc(100vh - 32px);
+}
+.nx-admin-insights-modal .nexora-modal-header {
+    flex: 0 0 auto;
+}
+.nx-admin-insights-modal .nexora-modal-body {
+    max-height: calc(100vh - 128px) !important;
+    padding: 18px !important;
+    overflow: auto !important;
+}
+.nx-admin-insights-modal .admin-insights-page {
+    width: 100%;
+    min-width: 0;
+}
+.nx-admin-insights-loading {
+    min-height: 180px;
+    display: grid;
+    place-items: center;
+    color: #718096;
+    font-size: .82rem;
+    font-weight: 700;
+}
+@media (max-width: 760px) {
+    .nx-admin-insights-modal {
+        padding: 8px !important;
+    }
+    .nx-admin-insights-modal .nexora-modal {
+        width: 100% !important;
+        max-height: calc(100vh - 16px);
+        border-radius: 16px;
+    }
+    .nx-admin-insights-modal .nexora-modal-header {
+        padding: 18px 52px 14px 18px;
+    }
+    .nx-admin-insights-modal .nexora-modal-body {
+        max-height: calc(100vh - 112px) !important;
+        padding: 14px !important;
+    }
+}
+.nx-extracted-components-admin-topbar-1 { justify-content:center;margin-top:12px }
+
+
+/* EXTRACTED FROM resources/views/components/role_notification_bell.html */
+.nx-notification-menu {
+    --nx-notify-accent: #0a8f46;
+    --nx-notify-accent-dark: #08783b;
+    --nx-notify-soft: #e7f7ed;
+    --nx-notify-ink: #10382a;
+    --nx-notify-border: #dfe8e2;
+    --nx-notify-unread: #f3fbf6;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
+    overflow: visible;
+    margin: 0;
+}
+
+.nx-notification-menu.nx-notification-supervisor {
+    --nx-notify-accent: #2563eb;
+    --nx-notify-accent-dark: #1d4ed8;
+    --nx-notify-soft: #eff6ff;
+    --nx-notify-ink: #17233b;
+    --nx-notify-border: #dbe5f3;
+    --nx-notify-unread: #f4f8ff;
+}
+
+.nx-notification-menu.nx-notification-admin {
+    --nx-notify-accent: #f45125;
+    --nx-notify-accent-dark: #d9431c;
+    --nx-notify-soft: #fff1eb;
+    --nx-notify-ink: #3a1b12;
+    --nx-notify-border: #efdfd9;
+    --nx-notify-unread: #fff8f5;
+}
+
+.nx-notification-menu > summary {
+    list-style: none;
+}
+
+.nx-notification-menu > summary::-webkit-details-marker {
+    display: none;
+}
+
+.nx-notification-trigger {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--nx-notify-ink);
+    cursor: pointer;
+    user-select: none;
+    transition: background .15s ease, color .15s ease, transform .15s ease;
+}
+
+.nx-notification-trigger:hover,
+.nx-notification-menu[open] > .nx-notification-trigger {
+    background: var(--nx-notify-soft);
+    color: var(--nx-notify-accent);
+}
+
+.nx-notification-trigger:active {
+    transform: scale(.96);
+}
+
+.nx-notification-trigger:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--nx-notify-accent) 35%, transparent);
+    outline-offset: 2px;
+}
+
+.nx-notification-trigger svg {
+    display: block;
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+}
+
+.nx-notification-badge {
+    position: absolute;
+    top: 1px;
+    right: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 17px;
+    height: 17px;
+    padding: 0 4px;
+    border: 2px solid #fff;
+    border-radius: 999px;
+    background: #ef4444;
+    color: #fff;
+    font-size: 8px;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.nx-notification-popover {
+    position: absolute;
+    top: calc(100% + 12px);
+    right: 0;
+    z-index: 2200;
+    width: min(390px, calc(100vw - 32px));
+    max-height: min(610px, calc(100vh - 90px));
+    overflow: hidden;
+    border: 1px solid var(--nx-notify-border);
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 24px 60px rgba(10,42,30,.16), 0 6px 20px rgba(10,42,30,.08);
+}
+
+.nx-notification-popover::before {
+    content: "";
+    position: absolute;
+    top: -7px;
+    right: 12px;
+    width: 14px;
+    height: 14px;
+    border-top: 1px solid var(--nx-notify-border);
+    border-left: 1px solid var(--nx-notify-border);
+    background: #fff;
+    transform: rotate(45deg);
+}
+
+.nx-notification-header {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 18px 18px 16px;
+    border-bottom: 1px solid #edf2ef;
+}
+
+.nx-notification-eyebrow {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--nx-notify-accent);
+    font-size: .64rem;
+    font-weight: 800;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+}
+
+.nx-notification-header h2 {
+    margin: 0;
+    color: var(--nx-notify-ink);
+    font-size: 1.06rem;
+    font-weight: 800;
+    letter-spacing: -.02em;
+}
+
+.nx-notification-header p {
+    margin: 4px 0 0;
+    color: #7d8b84;
+    font-size: .68rem;
+    line-height: 1.45;
+}
+
+.nx-notification-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #65766d;
+    font-size: 1.2rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.nx-notification-close:hover {
+    background: #f2f7f4;
+    color: var(--nx-notify-ink);
+}
+
+.nx-notification-body {
+    max-height: 410px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.nx-notification-item {
+    position: relative;
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 11px;
+    width: 100%;
+    min-height: 76px;
+    padding: 13px 16px;
+    border: 0;
+    border-bottom: 1px solid #edf2ef;
+    background: #fff;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.nx-notification-item:hover {
+    background: #f8fbf9;
+}
+
+.nx-notification-item.is-unread {
+    background: var(--nx-notify-unread);
+}
+
+.nx-notification-item-icon {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 11px;
+    font-size: .78rem;
+    font-weight: 900;
+}
+
+.nx-notification-item-icon.is-info { background: #e7f1ff; color: #2e7ac5; }
+.nx-notification-item-icon.is-success { background: #e4f6ea; color: #0a8f46; }
+.nx-notification-item-icon.is-warning { background: #fff2d8; color: #b86d00; }
+.nx-notification-item-icon.is-error { background: #fde8eb; color: #d93f4f; }
+
+.nx-notification-item-copy {
+    display: grid;
+    min-width: 0;
+    gap: 3px;
+}
+
+.nx-notification-item-copy strong {
+    overflow: hidden;
+    color: var(--nx-notify-ink);
+    font-size: .76rem;
+    font-weight: 800;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.nx-notification-item-copy > span {
+    display: -webkit-box;
+    overflow: hidden;
+    color: #687970;
+    font-size: .67rem;
+    line-height: 1.45;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+.nx-notification-item-copy small {
+    margin-top: 2px;
+    color: #9aa59f;
+    font-size: .59rem;
+}
+
+.nx-notification-unread-dot {
+    width: 8px;
+    height: 8px;
+    margin-top: 5px;
+    border-radius: 50%;
+    background: var(--nx-notify-accent);
+}
+
+.nx-notification-empty {
+    display: grid;
+    place-items: center;
+    padding: 38px 24px;
+    text-align: center;
+}
+
+.nx-notification-empty-icon {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 12px;
+    border-radius: 15px;
+    background: var(--nx-notify-soft);
+    color: var(--nx-notify-accent);
+    font-size: 1.15rem;
+    font-weight: 900;
+}
+
+.nx-notification-empty strong {
+    color: var(--nx-notify-ink);
+    font-size: .82rem;
+    font-weight: 800;
+}
+
+.nx-notification-empty p {
+    max-width: 245px;
+    margin: 6px 0 0;
+    color: #819087;
+    font-size: .68rem;
+    line-height: 1.5;
+}
+
+.nx-notification-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 58px;
+    padding: 10px 14px;
+    border-top: 1px solid #edf2ef;
+    background: #fbfdfb;
+}
+
+.nx-notification-mark-all,
+.nx-notification-read-status {
+    flex: 0 0 auto;
+    border: 0;
+    background: transparent;
+    color: #718078;
+    font-size: .64rem;
+    font-weight: 700;
+}
+
+.nx-notification-mark-all {
+    padding: 7px 4px;
+    cursor: pointer;
+}
+
+.nx-notification-mark-all:hover {
+    color: var(--nx-notify-accent);
+}
+
+.nx-notification-view-all {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 36px;
+    padding: 0 12px;
+    border: 1px solid var(--nx-notify-accent);
+    border-radius: 9px;
+    background: var(--nx-notify-accent);
+    color: #fff;
+    font-size: .68rem;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.nx-notification-view-all:hover {
+    border-color: var(--nx-notify-accent-dark);
+    background: var(--nx-notify-accent-dark);
+    color: #fff;
+}
+
+@media (max-width: 760px) {
+    .nx-notification-popover {
+        position: fixed;
+        top: 70px;
+        left: 12px;
+        right: 12px;
+        width: auto;
+        max-height: calc(100vh - 82px);
+        max-height: calc(100dvh - 82px);
+    }
+
+    .nx-notification-popover::before {
+        display: none;
+    }
+}
+
+@media (max-width: 430px) {
+    .nx-notification-footer {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .nx-notification-mark-all,
+    .nx-notification-read-status,
+    .nx-notification-view-all {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+
+/* EXTRACTED FROM resources/views/components/role_page_heading.html */
+body.student-page {
+    --nx-page-heading-accent: #0a8f46;
+    --nx-page-heading-ink: #10261d;
+    --nx-page-heading-muted: #718078;
+}
+body.supervisor-dashboard-page,
+body.supervisor-page,
+body.work-page,
+body.supervisor-classes-page {
+    --nx-page-heading-accent: #2563eb;
+    --nx-page-heading-ink: #17233b;
+    --nx-page-heading-muted: #64748b;
+}
+body.nexora-admin-body,
+body.admin-page {
+    --nx-page-heading-accent: #ea5b2a;
+    --nx-page-heading-ink: #10251f;
+    --nx-page-heading-muted: #6c7d78;
+}
+body.nx-notifications-page.notification-role-student {
+    --nx-page-heading-accent: #0a8f46;
+    --nx-page-heading-ink: #10261d;
+    --nx-page-heading-muted: #718078;
+}
+body.nx-notifications-page.notification-role-supervisor {
+    --nx-page-heading-accent: #2563eb;
+    --nx-page-heading-ink: #17233b;
+    --nx-page-heading-muted: #64748b;
+}
+body.nx-notifications-page.notification-role-admin {
+    --nx-page-heading-accent: #ea5b2a;
+    --nx-page-heading-ink: #173028;
+    --nx-page-heading-muted: #6f817b;
+}
+
+/* Canonical page-heading geometry. Existing page actions remain on the right. */
+body.student-page .student-section-heading,
+body.supervisor-dashboard-page .supervisor-heading-row,
+body.work-page .supervisor-classwork-heading,
+body.supervisor-page .sp-heading,
+body.supervisor-classes-page .supervisor-classes-header,
+body.nexora-admin-body .students-page-header,
+body.nexora-admin-body .supervisors-page-header,
+body.nexora-admin-body .dashboard-header,
+body.admin-page .ui-page-heading,
+body.nx-notifications-page .nx-notifications-heading {
+    display: flex !important;
+    align-items: flex-end !important;
+    justify-content: space-between !important;
+    gap: 24px !important;
+}
+
+body.student-page .student-section-heading,
+body.work-page .supervisor-classwork-heading,
+body.supervisor-page .sp-heading,
+body.supervisor-classes-page .supervisor-classes-header,
+body.nexora-admin-body .students-page-header,
+body.nexora-admin-body .supervisors-page-header,
+body.nexora-admin-body .dashboard-header,
+body.admin-page .ui-page-heading,
+body.nx-notifications-page .nx-notifications-heading {
+    margin-top: 0 !important;
+    margin-bottom: 24px !important;
+}
+
+/* Old Admin page headers were cards. Page headings are now open like Student. */
+body.nexora-admin-body .students-page-header,
+body.nexora-admin-body .supervisors-page-header,
+body.nexora-admin-body .dashboard-header,
+body.admin-page .ui-page-heading {
+    min-height: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+/* Student Dashboard heading typography is the canonical role-page scale. */
+body.student-page .student-section-heading h1,
+body.student-documents-page .student-documents-title h1,
+body.supervisor-dashboard-page .supervisor-dashboard-heading h1,
+body.work-page .supervisor-classwork-heading h1,
+body.supervisor-page .sp-heading h1,
+body.supervisor-classes-page .supervisor-classes-header h1,
+body.nexora-admin-body .students-page-header h1,
+body.nexora-admin-body .supervisors-page-header h1,
+body.nexora-admin-body .dashboard-header h1,
+body.admin-dashboard-page .admin-hero-card h1,
+body.admin-documents-page .admin-documents-title h1,
+body.admin-page .ui-page-heading h1,
+body.nx-notifications-page .nx-notifications-heading h1 {
+    margin: 0 !important;
+    color: var(--nx-page-heading-ink, #10261d) !important;
+    font-size: 2rem !important;
+    line-height: 1.1 !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.035em !important;
+}
+
+body.student-page .student-section-heading p,
+body.student-documents-page .student-documents-title p,
+body.supervisor-dashboard-page .supervisor-dashboard-heading p,
+body.work-page .supervisor-classwork-heading p,
+body.supervisor-page .sp-heading p,
+body.supervisor-classes-page .supervisor-classes-header p,
+body.nexora-admin-body .students-page-header p,
+body.nexora-admin-body .supervisors-page-header p,
+body.nexora-admin-body .dashboard-header p,
+body.admin-dashboard-page .admin-hero-copy > p,
+body.admin-documents-page .admin-documents-title p,
+body.admin-page .ui-page-heading p,
+body.nx-notifications-page .nx-notifications-heading p {
+    margin: 7px 0 0 !important;
+    color: var(--nx-page-heading-muted, #718078) !important;
+    font-size: 0.9rem !important;
+    line-height: 1.5 !important;
+}
+
+body.student-page .student-section-eyebrow,
+body.student-documents-page .student-documents-eyebrow,
+body.supervisor-dashboard-page .supervisor-breadcrumb,
+body.supervisor-page .sp-heading .ui-eyebrow,
+body.admin-dashboard-page .admin-eyebrow,
+body.admin-documents-page .admin-documents-eyebrow,
+body.admin-page .ui-page-heading .ui-eyebrow,
+body.nx-notifications-page .nx-notifications-eyebrow,
+body.work-page .supervisor-classwork-heading > div:first-child::before,
+body.supervisor-classes-page .supervisor-classes-header > div:first-child::before,
+body.nexora-admin-body .students-page-header > div:first-child::before,
+body.nexora-admin-body .supervisors-page-header > div:first-child::before,
+body.nexora-admin-body .dashboard-header > div:first-child::before {
+    display: block !important;
+    width: auto !important;
+    margin: 0 0 7px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    color: var(--nx-page-heading-accent, #0a8f46) !important;
+    font-size: 0.7rem !important;
+    line-height: 1.2 !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.1em !important;
+    text-transform: uppercase !important;
+}
+
+body.work-page .supervisor-classwork-heading > div:first-child::before,
+body.supervisor-classes-page .supervisor-classes-header > div:first-child::before {
+    content: "Supervisor Portal";
+}
+body.nexora-admin-body .students-page-header > div:first-child::before,
+body.nexora-admin-body .supervisors-page-header > div:first-child::before,
+body.nexora-admin-body .dashboard-header > div:first-child::before {
+    content: "Admin Portal";
+}
+
+/* Supervisor Dashboard: the eyebrow belongs to the same heading block as Student. */
+body.supervisor-dashboard-page .supervisor-dashboard-heading {
+    margin: 0 0 24px !important;
+}
+body.supervisor-dashboard-page .supervisor-breadcrumb {
+    margin-bottom: 7px !important;
+}
+
+/* Admin Dashboard used to stack a 96px shell reserve + 28px content padding.
+   Keep the fixed 68px topbar reserve, then the normal page breathing room. */
+body.admin-dashboard-page .admin-main {
+    padding-top: 68px !important;
+}
+body.admin-dashboard-page .admin-dashboard-content {
+    width: min(100%, 1440px) !important;
+    max-width: 1440px !important;
+    margin: 0 auto !important;
+    padding: 28px 30px 46px !important;
+}
+body.admin-dashboard-page .admin-breadcrumb {
+    display: none !important;
+}
+
+/* Convert the Admin dashboard hero from a large card into the canonical
+   open page heading while keeping the dashboard data/cards below untouched. */
+body.admin-dashboard-page .admin-hero-card {
+    position: relative !important;
+    overflow: visible !important;
+    min-height: 0 !important;
+    margin: 0 0 24px !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: flex-end !important;
+    justify-content: space-between !important;
+    gap: 24px !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+body.admin-dashboard-page .admin-hero-card::after {
+    display: none !important;
+    content: none !important;
+}
+body.admin-dashboard-page .admin-hero-copy {
+    min-width: 0;
+}
+body.admin-dashboard-page .admin-hero-copy > p:not(.admin-hero-description) {
+    display: none !important;
+}
+body.admin-dashboard-page .admin-hero-copy .admin-hero-description {
+    display: block !important;
+    margin-top: 7px !important;
+}
+
+/* Shared dashboard date + live clock presentation. */
+body.student-dashboard-page .student-dashboard-greeting,
+body.supervisor-dashboard-page .supervisor-heading-row > .text-end,
+body.admin-dashboard-page .admin-hero-status.nx-dashboard-live-clock {
+    flex: 0 0 auto !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    text-align: right !important;
+}
+body.student-dashboard-page .student-dashboard-greeting-copy strong,
+body.supervisor-dashboard-page .supervisor-heading-row > .text-end > strong,
+body.admin-dashboard-page .admin-hero-status.nx-dashboard-live-clock strong {
+    display: block !important;
+    margin: 0 !important;
+    color: var(--nx-page-heading-ink, #10261d) !important;
+    font-size: 1rem !important;
+    line-height: 1.25 !important;
+    font-weight: 800 !important;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+body.student-dashboard-page .student-dashboard-greeting-copy span,
+body.supervisor-dashboard-page .supervisor-heading-row > .text-end > span,
+body.admin-dashboard-page .admin-hero-status.nx-dashboard-live-clock span {
+    display: block !important;
+    margin: 5px 0 0 !important;
+    color: var(--nx-page-heading-muted, #718078) !important;
+    font-size: 0.78rem !important;
+    line-height: 1.3 !important;
+    font-weight: 700 !important;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+}
+
+@media (max-width: 680px) {
+    body.student-page .student-section-heading,
+    body.supervisor-dashboard-page .supervisor-heading-row,
+    body.work-page .supervisor-classwork-heading,
+    body.supervisor-page .sp-heading,
+    body.supervisor-classes-page .supervisor-classes-header,
+    body.nexora-admin-body .students-page-header,
+    body.nexora-admin-body .supervisors-page-header,
+    body.nexora-admin-body .dashboard-header,
+    body.admin-page .ui-page-heading,
+    body.nx-notifications-page .nx-notifications-heading,
+    body.admin-dashboard-page .admin-hero-card {
+        align-items: flex-start !important;
+        flex-direction: column !important;
+        gap: 12px !important;
+    }
+
+    body.student-page .student-section-heading h1,
+    body.student-documents-page .student-documents-title h1,
+    body.supervisor-dashboard-page .supervisor-dashboard-heading h1,
+    body.work-page .supervisor-classwork-heading h1,
+    body.supervisor-page .sp-heading h1,
+    body.supervisor-classes-page .supervisor-classes-header h1,
+    body.nexora-admin-body .students-page-header h1,
+    body.nexora-admin-body .supervisors-page-header h1,
+    body.nexora-admin-body .dashboard-header h1,
+    body.admin-dashboard-page .admin-hero-card h1,
+    body.admin-documents-page .admin-documents-title h1,
+    body.admin-page .ui-page-heading h1,
+    body.nx-notifications-page .nx-notifications-heading h1 {
+        font-size: 1.65rem !important;
+    }
+
+    body.admin-dashboard-page .admin-main {
+        padding-top: 64px !important;
+    }
+    body.admin-dashboard-page .admin-dashboard-content {
+        padding: 22px 16px 36px !important;
+    }
+    body.student-dashboard-page .student-dashboard-greeting,
+    body.supervisor-dashboard-page .supervisor-heading-row > .text-end,
+    body.admin-dashboard-page .admin-hero-status.nx-dashboard-live-clock {
+        text-align: left !important;
+    }
+}
+
+
+/* EXTRACTED FROM resources/views/components/role_topbar.html */
+.nx-role-topbar {
+    --nx-topbar-accent: #0a8f46;
+    --nx-topbar-accent-soft: #edf8f1;
+    --nx-topbar-ink: #17233b;
+    --nx-topbar-muted: #7b8797;
+    --nx-topbar-border: #e4eaf0;
+    position: fixed !important;
+    top: 0 !important;
+    z-index: 1150 !important;
+    height: 68px !important;
+    min-height: 68px !important;
+    padding: 0 28px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 22px !important;
+    overflow: visible !important;
+    box-sizing: border-box !important;
+    background: rgba(255, 255, 255, .97) !important;
+    border-bottom: 1px solid var(--nx-topbar-border) !important;
+    box-shadow: 0 2px 12px rgba(15, 23, 42, .035) !important;
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+}
+body:has(.nx-role-sidebar-shell.nx-role-admin) .nx-role-topbar.admin-global-topbar {
+    position: fixed !important;
+    top: 0 !important;
+}
+.nx-role-topbar--supervisor {
+    --nx-topbar-accent: #2563eb;
+    --nx-topbar-accent-soft: #eff6ff;
+}
+.nx-role-topbar--admin {
+    --nx-topbar-accent: #f45125;
+    --nx-topbar-accent-soft: #fff1eb;
+}
+.nx-role-topbar-left,
+.nx-role-topbar-right {
+    display: flex;
+    align-items: center;
+}
+.nx-role-topbar-left {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.nx-role-topbar-right {
+    flex: 0 0 auto;
+    gap: 18px;
+}
+.nx-quick-search {
+    position: relative;
+    width: min(460px, 100%);
+    min-width: 0;
+}
+.nx-quick-search-control {
+    height: 40px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 10px 0 12px;
+    border: 1px solid #dfe6eb;
+    border-radius: 10px;
+    background: #f8fafb;
+    color: #8190a0;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .65);
+    transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
+}
+.nx-quick-search:focus-within .nx-quick-search-control {
+    border-color: var(--nx-topbar-accent);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(15, 23, 42, .05);
+}
+.nx-quick-search-control svg {
+    width: 17px;
+    height: 17px;
+    flex: 0 0 17px;
+    stroke: currentColor;
+}
+.nx-quick-search-control input {
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--nx-topbar-ink);
+    font: inherit;
+    font-size: 12px;
+}
+.nx-quick-search-control input::placeholder { color: #92a0ae; }
+.nx-quick-search-shortcut {
+    flex: 0 0 auto;
+    min-width: 43px;
+    padding: 4px 6px;
+    border: 1px solid #e1e7ec;
+    border-bottom-color: #d4dce3;
+    border-radius: 6px;
+    background: #fff;
+    color: #8995a2;
+    font-family: inherit;
+    font-size: 8px;
+    font-weight: 800;
+    line-height: 1;
+    text-align: center;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+}
+.nx-quick-search-panel {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    z-index: 2400;
+    width: 100%;
+    max-height: min(420px, calc(100vh - 96px));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 8px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 20px 45px rgba(15, 23, 42, .16), 0 4px 14px rgba(15, 23, 42, .06);
+}
+.nx-quick-search-panel[hidden] { display: none !important; }
+.nx-quick-search-label {
+    padding: 5px 9px 7px;
+    color: #94a3b8;
+    font-size: 8px;
+    font-weight: 900;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+.nx-quick-search-item {
+    min-height: 42px;
+    padding: 0 11px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border-radius: 8px;
+    color: #334155;
+    text-decoration: none !important;
+    font-size: 12px;
+    font-weight: 750;
+}
+.nx-quick-search-item small {
+    flex: 0 0 auto;
+    color: #94a3b8;
+    font-size: 9px;
+    font-weight: 700;
+}
+.nx-quick-search-item:hover,
+.nx-quick-search-item:focus-visible,
+.nx-quick-search-item.is-selected {
+    outline: 0;
+    background: var(--nx-topbar-accent-soft);
+    color: var(--nx-topbar-accent);
+}
+.nx-quick-search-item:hover small,
+.nx-quick-search-item:focus-visible small,
+.nx-quick-search-item.is-selected small { color: currentColor; opacity: .72; }
+.nx-quick-search-empty {
+    padding: 18px 11px;
+    color: #94a3b8;
+    font-size: 11px;
+    text-align: center;
+}
+.nx-role-topbar-user {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: inherit !important;
+    text-decoration: none !important;
+}
+.nx-role-topbar-user img {
+    width: 36px !important;
+    min-width: 36px !important;
+    height: 36px !important;
+    margin: 0 !important;
+    flex: 0 0 36px;
+    border: 1px solid #e2e8f0;
+    border-radius: 50%;
+    background: #fff;
+    object-fit: cover;
+}
+.nx-role-topbar-user-copy {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
+}
+.nx-role-topbar-user-copy strong {
+    max-width: 180px;
+    overflow: hidden;
+    color: #1e293b;
+    font-size: 11px;
+    font-weight: 800;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.nx-role-topbar-user-copy span {
+    margin-top: 4px;
+    color: var(--nx-topbar-muted);
+    font-size: 9px;
+    font-weight: 650;
+}
+.nx-role-topbar-chevron {
+    color: #94a3b8;
+    font-size: 12px;
+}
+
+/* Admin pages historically used a sticky topbar. Reserve the same space now
+   that the shared role topbar is fixed like Student and Supervisor. */
+body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main {
+    padding-top: 96px !important;
+}
+body.admin-documents-page:has(.nx-role-topbar) .admin-main,
+body.admin-document-folder-page:has(.nx-role-topbar) .admin-main {
+    padding-top: 68px !important;
+}
+
+@media (max-width: 760px) {
+    .nx-role-topbar {
+        height: 64px !important;
+        min-height: 64px !important;
+        padding: 0 14px !important;
+        gap: 12px !important;
+    }
+    .nx-role-topbar-right { gap: 10px; }
+    .nx-quick-search { width: min(100%, 420px); }
+    .nx-quick-search-shortcut,
+    .nx-role-topbar-user-copy,
+    .nx-role-topbar-chevron { display: none !important; }
+    .nx-role-topbar-user img {
+        width: 34px !important;
+        min-width: 34px !important;
+        height: 34px !important;
+        flex-basis: 34px;
+    }
+    body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main {
+        padding-top: 84px !important;
+    }
+    body.admin-documents-page:has(.nx-role-topbar) .admin-main,
+    body.admin-document-folder-page:has(.nx-role-topbar) .admin-main {
+        padding-top: 64px !important;
+    }
+}
+@media (max-width: 480px) {
+    .nx-role-topbar { padding: 0 10px !important; }
+    .nx-quick-search-control { height: 38px; padding: 0 9px; }
+    .nx-role-topbar-user { display: none !important; }
+    .nx-quick-search-panel { width: min(360px, calc(100vw - 20px)); }
+}
+
+
+/* EXTRACTED FROM resources/views/components/sidebar_viewport_fix.html */
+html:has(.nx-role-sidebar-shell),
+body:has(.nx-role-sidebar-shell) {
+    min-height: 100% !important;
+    min-height: 100dvh !important;
+}
+
+.nx-role-sidebar {
+    top: 0 !important;
+    bottom: 0 !important;
+    height: auto !important;
+    min-height: 0 !important;
+}
+
+.nx-mobile-menu-button {
+    display: none;
+}
+
+@media (min-width: 761px) {
+    .nx-role-admin .nx-role-sidebar {
+        padding-bottom: 0 !important;
+    }
+
+    .nx-role-sidebar-shell::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 1290;
+        width: 76px;
+        pointer-events: none;
+        background: linear-gradient(
+            180deg,
+            var(--nx-sidebar-bg-start),
+            var(--nx-sidebar-bg-end)
+        );
+    }
+}
+
+@media (max-width: 760px) {
+    html:has(.nx-role-sidebar-shell),
+    body:has(.nx-role-sidebar-shell) {
+        max-width: 100% !important;
+        overflow-x: hidden !important;
+    }
+
+    body:has(.nx-role-sidebar-shell) {
+        --nexora-sidebar-width: 0px !important;
+        --nexora-sidebar-collapsed: 0px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    body.nx-mobile-nav-open {
+        overflow: hidden !important;
+    }
+
+    .nx-role-sidebar-shell {
+        position: fixed !important;
+        inset: 0 auto auto 0 !important;
+        z-index: 1290 !important;
+        width: 0 !important;
+        height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .nx-role-sidebar-shell::before {
+        display: none !important;
+    }
+
+    .nx-role-sidebar,
+    .nx-role-sidebar:hover,
+    .nx-role-sidebar:focus-within {
+        position: fixed !important;
+        inset: 0 auto 0 0 !important;
+        z-index: 1300 !important;
+        width: min(86vw, 320px) !important;
+        max-width: 320px !important;
+        height: 100dvh !important;
+        max-height: 100dvh !important;
+        min-height: 0 !important;
+        margin: 0 !important;
+        padding: 18px 16px calc(18px + env(safe-area-inset-bottom)) !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        overscroll-behavior: contain !important;
+        scrollbar-width: thin !important;
+        scrollbar-color: rgba(255, 255, 255, 0.28) transparent !important;
+        box-shadow: 14px 0 38px var(--nx-sidebar-shadow) !important;
+        transform: translateX(calc(-100% - 18px)) !important;
+        transition: transform 0.2s ease !important;
+    }
+
+    .nx-role-sidebar-shell.is-mobile-open .nx-role-sidebar,
+    .nx-role-sidebar-shell.is-mobile-open .nx-role-sidebar:hover,
+    .nx-role-sidebar-shell.is-mobile-open .nx-role-sidebar:focus-within {
+        transform: translateX(0) !important;
+    }
+
+    .nx-role-sidebar-shell.is-mobile-initializing .nx-role-sidebar,
+    .nx-role-sidebar-shell.is-mobile-initializing .nx-role-sidebar-backdrop,
+    .nx-role-sidebar-shell.is-mobile-navigating .nx-role-sidebar,
+    .nx-role-sidebar-shell.is-mobile-navigating .nx-role-sidebar-backdrop {
+        transition: none !important;
+    }
+
+    .nx-role-sidebar::-webkit-scrollbar {
+        width: 6px !important;
+        height: 6px !important;
+    }
+
+    .nx-role-sidebar::-webkit-scrollbar-track {
+        background: transparent !important;
+    }
+
+    .nx-role-sidebar::-webkit-scrollbar-thumb {
+        border-radius: 999px !important;
+        background: rgba(255, 255, 255, 0.24) !important;
+    }
+
+    .nx-role-sidebar-backdrop,
+    .nx-role-sidebar:hover + .nx-role-sidebar-backdrop,
+    .nx-role-sidebar:focus-within + .nx-role-sidebar-backdrop {
+        position: fixed !important;
+        inset: 0 !important;
+        z-index: 1280 !important;
+        display: block !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+        background: var(--nx-sidebar-backdrop) !important;
+        -webkit-backdrop-filter: blur(3px);
+        backdrop-filter: blur(3px);
+        transition: opacity 0.2s ease, visibility 0.2s ease !important;
+    }
+
+    .nx-role-sidebar-shell.is-mobile-open .nx-role-sidebar-backdrop {
+        opacity: 1 !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+    }
+
+    .nx-role-brand,
+    .nx-role-profile,
+    .nx-role-nav,
+    .nx-role-nav-group,
+    .nx-role-sidebar:hover .nx-role-brand,
+    .nx-role-sidebar:focus-within .nx-role-brand,
+    .nx-role-sidebar:hover .nx-role-profile,
+    .nx-role-sidebar:focus-within .nx-role-profile,
+    .nx-role-sidebar:hover .nx-role-nav,
+    .nx-role-sidebar:focus-within .nx-role-nav,
+    .nx-role-sidebar:hover .nx-role-nav-group,
+    .nx-role-sidebar:focus-within .nx-role-nav-group {
+        width: 100% !important;
+        max-width: none !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    .nx-role-brand,
+    .nx-role-sidebar:hover .nx-role-brand,
+    .nx-role-sidebar:focus-within .nx-role-brand {
+        min-width: 0 !important;
+        height: 44px !important;
+        margin: 0 !important;
+        padding: 0 4px !important;
+        justify-content: flex-start !important;
+        gap: 10px !important;
+        overflow: visible !important;
+    }
+
+    .nx-role-logo,
+    .nx-role-sidebar:hover .nx-role-logo,
+    .nx-role-sidebar:focus-within .nx-role-logo {
+        max-width: 44px !important;
+        max-height: 44px !important;
+    }
+
+    .nx-role-brand-copy,
+    .nx-role-profile-copy,
+    .nx-role-nav-text,
+    .nx-role-nav-arrow,
+    .nx-role-rule,
+    .nx-role-divider,
+    .nx-role-section-label,
+    .nx-role-footer,
+    .nx-role-sidebar:hover .nx-role-brand-copy,
+    .nx-role-sidebar:focus-within .nx-role-brand-copy,
+    .nx-role-sidebar:hover .nx-role-profile-copy,
+    .nx-role-sidebar:focus-within .nx-role-profile-copy,
+    .nx-role-sidebar:hover .nx-role-nav-text,
+    .nx-role-sidebar:focus-within .nx-role-nav-text,
+    .nx-role-sidebar:hover .nx-role-nav-arrow,
+    .nx-role-sidebar:focus-within .nx-role-nav-arrow,
+    .nx-role-sidebar:hover .nx-role-rule,
+    .nx-role-sidebar:focus-within .nx-role-rule,
+    .nx-role-sidebar:hover .nx-role-divider,
+    .nx-role-sidebar:focus-within .nx-role-divider,
+    .nx-role-sidebar:hover .nx-role-section-label,
+    .nx-role-sidebar:focus-within .nx-role-section-label,
+    .nx-role-sidebar:hover .nx-role-footer,
+    .nx-role-sidebar:focus-within .nx-role-footer {
+        display: revert !important;
+    }
+
+    .nx-role-brand-copy {
+        display: flex !important;
+    }
+
+    .nx-role-profile-copy {
+        display: block !important;
+    }
+
+    .nx-role-rule,
+    .nx-role-divider,
+    .nx-role-section-label {
+        display: block !important;
+    }
+
+    .nx-role-footer {
+        display: flex !important;
+        margin: 18px -16px -18px !important;
+    }
+
+    .nx-role-profile,
+    .nx-role-sidebar:hover .nx-role-profile,
+    .nx-role-sidebar:focus-within .nx-role-profile {
+        min-width: 0 !important;
+        height: auto !important;
+        margin: 22px 0 !important;
+        padding: 0 4px !important;
+        justify-content: flex-start !important;
+        gap: 12px !important;
+    }
+
+    .nx-role-profile img,
+    .nx-role-sidebar:hover .nx-role-profile img,
+    .nx-role-sidebar:focus-within .nx-role-profile img {
+        width: 46px !important;
+        min-width: 46px !important;
+        height: 46px !important;
+        flex-basis: 46px !important;
+    }
+
+    .nx-role-nav,
+    .nx-role-sidebar:hover .nx-role-nav,
+    .nx-role-sidebar:focus-within .nx-role-nav {
+        align-items: stretch !important;
+        gap: 4px !important;
+    }
+
+    .nx-role-nav > a,
+    .nx-role-nav-parent,
+    .nx-role-sidebar:hover .nx-role-nav > a,
+    .nx-role-sidebar:focus-within .nx-role-nav > a,
+    .nx-role-sidebar:hover .nx-role-nav-parent,
+    .nx-role-sidebar:focus-within .nx-role-nav-parent {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        height: auto !important;
+        min-height: 44px !important;
+        max-height: none !important;
+        margin: 0 !important;
+        padding: 0 13px !important;
+        justify-content: flex-start !important;
+        gap: 13px !important;
+        font-size: 12px !important;
+    }
+
+    .nx-role-icon,
+    .nx-role-sidebar:hover .nx-role-icon,
+    .nx-role-sidebar:focus-within .nx-role-icon {
+        width: 20px !important;
+        min-width: 20px !important;
+        height: 20px !important;
+        flex: 0 0 20px !important;
+        display: grid !important;
+        place-items: center !important;
+        font-size: 17px !important;
+    }
+
+    .nx-role-nav-text,
+    .nx-role-nav-arrow {
+        display: inline !important;
+    }
+
+    .nx-role-nav-arrow {
+        margin-left: auto !important;
+    }
+
+    .nx-role-nav-group.open > .nx-role-submenu {
+        margin: 3px 0 5px 17px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 3px !important;
+    }
+
+    .nx-role-submenu a {
+        min-height: 40px !important;
+        padding: 0 10px !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 9px !important;
+        color: rgba(255, 255, 255, 0.84) !important;
+        text-decoration: none !important;
+    }
+
+    .nx-role-account-nav {
+        margin-bottom: 10px !important;
+        padding-bottom: 8px !important;
+    }
+
+    body:has(.nx-role-sidebar-shell) > main,
+    body:has(.nx-role-sidebar-shell) > .page-content,
+    body:has(.nx-role-sidebar-shell) .nx-main,
+    body:has(.nx-role-sidebar-shell) .student-main-content,
+    body:has(.nx-role-sidebar-shell) .classes-main,
+    body:has(.nx-role-sidebar-shell) .join-main,
+    body:has(.nx-role-sidebar-shell) .class-main,
+    body:has(.nx-role-sidebar-shell) .assignment-main,
+    body:has(.nx-role-sidebar-shell) .nx-classwork-main,
+    body:has(.nx-role-sidebar-shell) .student-logbook-main,
+    body:has(.nx-role-sidebar-shell) .student-tasks-main,
+    body:has(.nx-role-sidebar-shell) .admin-main,
+    body:has(.nx-role-sidebar-shell) .nexora-app-main,
+    body:has(.nx-role-sidebar-shell) .supervisor-classes-main {
+        margin-left: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    body:has(.nx-role-sidebar-shell) .student-global-topbar,
+    body:has(.nx-role-sidebar-shell) .admin-global-topbar,
+    body:has(.nx-role-sidebar-shell) .supervisor-topbar {
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        margin-left: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    body:has(.nx-role-sidebar-shell) .supervisor-create-bar {
+        left: 16px !important;
+        right: 16px !important;
+    }
+
+    .nx-mobile-menu-button {
+        width: 44px;
+        min-width: 44px;
+        height: 44px;
+        flex: 0 0 44px;
+        margin: 0 10px 0 0;
+        padding: 0;
+        display: inline-grid !important;
+        place-items: center;
+        border: 1px solid #dfe6eb;
+        border-radius: 10px;
+        background: #fff;
+        color: var(--nx-topbar-ink, #17233b);
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+        cursor: pointer;
+    }
+
+    .nx-mobile-menu-button:hover,
+    .nx-mobile-menu-button:focus-visible,
+    .nx-mobile-menu-button[aria-expanded="true"] {
+        border-color: var(--nx-topbar-accent, #2563eb);
+        background: var(--nx-topbar-accent-soft, #eff6ff);
+        color: var(--nx-topbar-accent, #2563eb);
+        outline: none;
+    }
+
+    .nx-mobile-menu-button svg {
+        width: 21px;
+        height: 21px;
+        stroke: currentColor;
+    }
+
+    .student-logbook-table-wrap,
+    .student-gradebook-table-wrap,
+    .admin-compact-table-wrap,
+    .table-responsive {
+        max-width: 100% !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .student-logbook-icon-button,
+    .student-task-menu,
+    .admin-students-page .btn-more {
+        min-width: 44px !important;
+        min-height: 44px !important;
+    }
+
+    .student-task-menu {
+        display: inline-grid !important;
+        place-items: center !important;
+    }
+
+    .admin-students-page .dropdown-item-nexora {
+        min-height: 44px !important;
+    }
+
+    .crop-box {
+        width: min(450px, calc(100vw - 32px)) !important;
+        max-width: none !important;
+        padding: 18px !important;
+        box-sizing: border-box !important;
+    }
+
+    .crop-area {
+        width: min(350px, 100%) !important;
+        height: min(350px, calc(100vw - 68px)) !important;
+        max-width: 100% !important;
+        max-height: 60dvh !important;
+    }
+
+    .flash-container {
+        top: 12px !important;
+        left: 12px !important;
+        right: 12px !important;
+        width: auto !important;
+    }
+
+    .flash-popup {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        box-sizing: border-box !important;
+    }
+
+    .student-main-content .edit-row {
+        align-items: stretch !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+    }
+
+    .student-main-content .edit-row label {
+        width: auto !important;
+        min-width: 0 !important;
+    }
+}

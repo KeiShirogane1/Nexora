@@ -8,123 +8,6 @@
 {% include 'components/nexora_select_control.html' %}
 {% include 'components/role_page_heading.html' %}
 {% include 'components/sidebar_viewport_fix.html' %}
-<style id="nx-admin-compact-topbar-reserve-fix">
-body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main {
-    padding-top: 68px !important;
-}
-body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar):not(.admin-dashboard-page) .admin-main > :first-child {
-    margin-top: 24px !important;
-}
-@media (max-width: 760px) {
-    body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar) .admin-main {
-        padding-top: 64px !important;
-    }
-    body:has(.nx-role-sidebar-shell.nx-role-admin):has(.nx-role-topbar):not(.admin-dashboard-page) .admin-main > :first-child {
-        margin-top: 20px !important;
-    }
-}
-</style>
-<style id="nx-admin-shared-desktop-gutter">
-@media (min-width: 761px) {
-    body:has(.nx-role-sidebar-shell.nx-role-admin) {
-        --nx-admin-page-gutter: 30px;
-    }
-
-    body:has(.nx-role-sidebar-shell.nx-role-admin) .admin-main,
-    body:has(.nx-role-sidebar-shell.nx-role-admin) .nexora-app-main,
-    body.notification-role-admin:has(.nx-role-sidebar-shell.nx-role-admin) .nx-notifications-main {
-        padding-left: var(--nx-admin-page-gutter) !important;
-        padding-right: var(--nx-admin-page-gutter) !important;
-        box-sizing: border-box !important;
-    }
-
-    body:has(.nx-role-sidebar-shell.nx-role-admin) .admin-main > :first-child,
-    body:has(.nx-role-sidebar-shell.nx-role-admin) .nexora-app-main > :first-child,
-    body:has(.nx-role-sidebar-shell.nx-role-admin) .compact-dashboard,
-    body:has(.nx-role-sidebar-shell.nx-role-admin) .admin-command-center,
-    body:has(.nx-role-sidebar-shell.nx-role-admin) .admin-report-page-shell,
-    body:has(.nx-role-sidebar-shell.nx-role-admin) .admin-dashboard-content,
-    body:has(.nx-role-sidebar-shell.nx-role-admin) .admin-insights-page,
-    body:has(.nx-role-sidebar-shell.nx-role-admin) .admin-polish-page,
-    body:has(.nx-role-sidebar-shell.nx-role-admin) .nexora-page,
-    body:has(.nx-role-sidebar-shell.nx-role-admin) .nx-notifications-wrap {
-        width: 100% !important;
-        max-width: none !important;
-        margin-left: 0 !important;
-        margin-right: 0 !important;
-        box-sizing: border-box !important;
-    }
-
-    body:has(.nx-role-sidebar-shell.nx-role-admin) .admin-command-center,
-    body:has(.nx-role-sidebar-shell.nx-role-admin) .admin-report-page-shell,
-    body:has(.nx-role-sidebar-shell.nx-role-admin) .admin-dashboard-content {
-        padding-left: 0 !important;
-        padding-right: 0 !important;
-    }
-}
-</style>
-<style id="nx-admin-platform-status-availability">
-body.admin-dashboard-page .acc-service-list .acc-service-row:nth-child(3) .acc-service-status,
-body.admin-dashboard-page .acc-service-list .acc-service-row:nth-child(5) .acc-service-status {
-    background: #e8f8ef !important;
-    color: #118448 !important;
-}
-</style>
-<style id="nx-admin-insights-modal-fix">
-body.admin-students-page #studentsTable td[data-full-program] {
-    overflow: hidden !important;
-}
-body.admin-students-page #studentsTable td[data-full-program] .table-meta {
-    display: block !important;
-    max-width: 100% !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    white-space: nowrap !important;
-}
-.nx-admin-insights-modal .nexora-modal {
-    width: min(1120px, 100%) !important;
-    max-width: 1120px !important;
-    max-height: calc(100vh - 32px);
-}
-.nx-admin-insights-modal .nexora-modal-header {
-    flex: 0 0 auto;
-}
-.nx-admin-insights-modal .nexora-modal-body {
-    max-height: calc(100vh - 128px) !important;
-    padding: 18px !important;
-    overflow: auto !important;
-}
-.nx-admin-insights-modal .admin-insights-page {
-    width: 100%;
-    min-width: 0;
-}
-.nx-admin-insights-loading {
-    min-height: 180px;
-    display: grid;
-    place-items: center;
-    color: #718096;
-    font-size: .82rem;
-    font-weight: 700;
-}
-@media (max-width: 760px) {
-    .nx-admin-insights-modal {
-        padding: 8px !important;
-    }
-    .nx-admin-insights-modal .nexora-modal {
-        width: 100% !important;
-        max-height: calc(100vh - 16px);
-        border-radius: 16px;
-    }
-    .nx-admin-insights-modal .nexora-modal-header {
-        padding: 18px 52px 14px 18px;
-    }
-    .nx-admin-insights-modal .nexora-modal-body {
-        max-height: calc(100vh - 112px) !important;
-        padding: 14px !important;
-    }
-}
-</style>
-
 <script>
 (function () {
     function normalizeAdminInternshipBranding() {
@@ -299,7 +182,7 @@ body.admin-students-page #studentsTable td[data-full-program] .table-meta {
 
         function renderLoadError(url) {
             title.textContent = 'Student Insights';
-            body.innerHTML = '<section class="admin-polish-empty"><div class="admin-polish-empty-icon">!</div><h3>Unable to load Student Insights</h3><p>The evidence could not be loaded right now. The error has been kept inside this modal instead of replacing the Admin page.</p><div class="admin-inline-actions" style="justify-content:center;margin-top:12px"><a class="admin-secondary-button" href="' + url.replace(/"/g, '&quot;') + '">Retry full page</a></div></section>';
+            body.innerHTML = '<section class="admin-polish-empty"><div class="admin-polish-empty-icon">!</div><h3>Unable to load Student Insights</h3><p>The evidence could not be loaded right now. The error has been kept inside this modal instead of replacing the Admin page.</p><div class="admin-inline-actions nx-extracted-components-admin-topbar-1"><a class="admin-secondary-button" href="' + url.replace(/"/g, '&quot;') + '">Retry full page</a></div></section>';
         }
 
         function loadInsights(url) {
