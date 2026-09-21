@@ -7,34 +7,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
-    <style>
-        body.student-tasks-page > .student-global-topbar {
-            display: flex !important;
-        }
-
-        body.student-tasks-page .student-tasks-content {
-            padding-top: 92px !important;
-        }
-
-        body.student-tasks-page .student-tasks-heading {
-            padding-top: 0 !important;
-            margin-top: 0 !important;
-            margin-bottom: 22px !important;
-        }
-
-        body.student-tasks-page .student-tasks-heading::before,
-        body.student-tasks-page .student-tasks-heading > div:first-child::before {
-            display: none !important;
-            content: none !important;
-        }
-
-        @media (max-width: 760px) {
-            body.student-tasks-page .student-tasks-content {
-                padding-top: 78px !important;
-            }
-        }
-    </style>
-</head>
+    </head>
 <body class="student-page student-tasks-page">
     {% include 'components/student_sidebar.html' %}
     <main class="student-tasks-main">
@@ -67,7 +40,7 @@
                             <a class="student-task-menu" href="/student/task/{{ task[0] }}" aria-label="View {{ task[1] }}">⋮</a>
                         </article>
                     {% endfor %}{% else %}<div class="student-tasks-empty"><strong>No tasks have been assigned yet</strong><span>Your supervisor will assign tasks here.</span></div>{% endif %}
-                    <div class="student-tasks-pagination"><span>Showing {{ tasks|length }} of {{ total_count|default(0) }} tasks</span><div class="student-tasks-page-buttons" aria-label="Pagination">{% if page > 1 %}<a class="student-tasks-page-button" href="?page={{ page - 1 }}">‹</a>{% else %}<span class="student-tasks-page-button" style="opacity:.4">‹</span>{% endif %}{% for p in range(1, total_pages + 1) %}<a class="student-tasks-page-button {% if p == page %}is-active{% endif %}" href="?page={{ p }}">{{ p }}</a>{% endfor %}{% if page < total_pages %}<a class="student-tasks-page-button" href="?page={{ page + 1 }}">›</a>{% else %}<span class="student-tasks-page-button" style="opacity:.4">›</span>{% endif %}</div></div>
+                    <div class="student-tasks-pagination"><span>Showing {{ tasks|length }} of {{ total_count|default(0) }} tasks</span><div class="student-tasks-page-buttons" aria-label="Pagination">{% if page > 1 %}<a class="student-tasks-page-button" href="?page={{ page - 1 }}">‹</a>{% else %}<span class="student-tasks-page-button nx-extracted-student-tasks-1">‹</span>{% endif %}{% for p in range(1, total_pages + 1) %}<a class="student-tasks-page-button {% if p == page %}is-active{% endif %}" href="?page={{ p }}">{{ p }}</a>{% endfor %}{% if page < total_pages %}<a class="student-tasks-page-button" href="?page={{ page + 1 }}">›</a>{% else %}<span class="student-tasks-page-button nx-extracted-student-tasks-2">›</span>{% endif %}</div></div>
                 </section>
                 <aside class="student-tasks-side" aria-label="Task information">
                     <section class="student-tasks-side-card"><h2>Task Summary</h2><div class="student-task-chart"><div class="student-task-donut"><div class="student-task-donut-copy"><strong>{{ total_count|default(0) }}</strong><span>Total Tasks</span></div></div><div class="student-task-legend"><div class="student-task-legend-row"><span class="student-task-dot"></span>Completed <strong>{{ completed_count }}</strong></div><div class="student-task-legend-row"><span class="student-task-dot pending"></span>Pending <strong>{{ pending_count }}</strong></div><div class="student-task-legend-row"><span class="student-task-dot overdue"></span>Overdue <strong>{{ overdue_count }}</strong></div></div></div></section>

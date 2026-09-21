@@ -12683,3 +12683,296 @@ body.student-documents-page > .student-global-topbar {
         .nx-btn-primary:hover { background:var(--nx-green-dark); color:#fff; box-shadow:0 9px 22px rgba(18,168,121,.24); }
         @media (max-width:800px) { .nx-log-main{padding:24px 18px 42px}.nx-card-header{align-items:flex-start} }
         @media (max-width:560px) { .nx-log-main{padding:20px 14px 36px}.nx-card-header,.nx-editor-body{padding-left:18px;padding-right:18px}.nx-edit-label{display:none}.nx-actions{flex-direction:column-reverse;align-items:stretch}.nx-btn{width:100%}.nx-help{flex-direction:column;gap:3px} }
+
+
+/* EXTRACTED FROM resources/views/student/logbook.html */
+body.student-logbook-page > .student-global-topbar { display: flex !important; }
+        body.student-logbook-page .student-logbook-page-content { padding-top: 92px !important; }
+        body.student-logbook-page .student-logbook-page-heading { padding-top: 0 !important; margin-top: 0 !important; margin-bottom: -10px !important; }
+        body.student-logbook-page .student-logbook-page-heading::before,
+        body.student-logbook-page .student-logbook-page-heading > div:first-child::before { display: none !important; content: none !important; }
+
+        .student-logbook-compact { display: grid; gap: 14px; width: 100%; }
+        .student-logbook-compact-card { border: 1px solid #e2ebe6; border-radius: 16px; background: #fff; box-shadow: 0 6px 22px rgba(15,45,35,.04); }
+        .student-logbook-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
+        .student-logbook-actions form { margin: 0; }
+        .student-logbook-action-note { width: 100%; margin: 2px 0 0; color: #b42318; font-size: .7rem; font-weight: 700; text-align: right; }
+
+        .student-logbook-button {
+            min-height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            padding: 0 14px;
+            border: 1px solid transparent;
+            border-radius: 10px;
+            font: inherit;
+            font-size: .76rem;
+            font-weight: 800;
+            line-height: 1;
+            text-decoration: none;
+            cursor: pointer;
+            transition: transform .15s ease, box-shadow .15s ease, background .15s ease, border-color .15s ease;
+        }
+        .student-logbook-button:hover:not(:disabled) { transform: translateY(-1px); text-decoration: none; }
+        .student-logbook-button:disabled { opacity: .48; cursor: not-allowed; transform: none; box-shadow: none; }
+        .student-logbook-button-primary { border-color: #0f9f72; background: #0f9f72; color: #fff; box-shadow: 0 6px 15px rgba(15,159,114,.16); }
+        .student-logbook-button-primary:hover:not(:disabled) { background: #07865f; border-color: #07865f; color: #fff; }
+        .student-logbook-button-success { border-color: #15803d; background: #15803d; color: #fff; box-shadow: 0 6px 15px rgba(21,128,61,.16); }
+        .student-logbook-button-success:hover:not(:disabled) { border-color: #166534; background: #166534; color: #fff; }
+        .student-logbook-button-danger { border-color: #dc2626; background: #dc2626; color: #fff; box-shadow: 0 6px 15px rgba(220,38,38,.16); }
+        .student-logbook-button-danger:hover:not(:disabled) { border-color: #b91c1c; background: #b91c1c; color: #fff; }
+        .student-logbook-button-outline { border-color: #dce7e1; background: #fff; color: #365149; }
+        .student-logbook-button-outline:hover:not(:disabled) { border-color: #a8c9bd; color: #07865f; }
+
+        .student-logbook-classroom-scope { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 14px 18px; }
+        .student-logbook-classroom-scope-copy strong,
+        .student-logbook-classroom-scope-copy span { display: block; }
+        .student-logbook-classroom-scope-copy strong { color: #173b31; font-size: .82rem; font-weight: 800; }
+        .student-logbook-classroom-scope-copy span { margin-top: 2px; color: #7a8984; font-size: .7rem; }
+        .student-logbook-classroom-form { min-width: min(360px, 100%); }
+        .student-logbook-classroom-form select,
+        .student-logbook-session-form select { width: 100%; min-height: 40px; padding: 0 38px 0 12px; border: 1px solid #dfe9e4; border-radius: 10px; background: #fff; color: #243b34; font: inherit; font-size: .76rem; font-weight: 700; }
+        .student-logbook-classroom-form select:disabled { background: #f5f7f6; color: #62736d; }
+
+        .student-logbook-compact-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); overflow: hidden; border: 1px solid #e2ebe6; border-radius: 16px; background: #fff; box-shadow: 0 6px 22px rgba(15,45,35,.045); }
+        .student-logbook-compact-stat { min-width: 0; padding: 17px 20px; border-right: 1px solid #edf2ef; }
+        .student-logbook-compact-stat:last-child { border-right: 0; }
+        .student-logbook-compact-stat strong { display: block; margin-bottom: 3px; color: #082f2b; font-size: 1.45rem; line-height: 1.1; font-weight: 800; letter-spacing: -.035em; }
+        .student-logbook-compact-stat span { display: block; color: #2f453f; font-size: .76rem; font-weight: 800; }
+        .student-logbook-compact-stat small { display: block; margin-top: 3px; color: #7a8984; font-size: .68rem; }
+
+        .student-logbook-session { padding: 20px; }
+        .student-logbook-session-head,
+        .student-logbook-entries-head,
+        .student-logbook-history-head,
+        .student-logbook-bottom-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+        .student-logbook-session-head { margin-bottom: 15px; }
+        .student-logbook-section-kicker { display: block; margin-bottom: 3px; color: #07865f; font-size: .65rem; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; }
+        .student-logbook-session h2,
+        .student-logbook-entries-head h2,
+        .student-logbook-history-head h2,
+        .student-logbook-bottom-card h3 { margin: 0; color: #082f2b; font-weight: 800; letter-spacing: -.035em; }
+        .student-logbook-session h2,
+        .student-logbook-entries-head h2,
+        .student-logbook-history-head h2 { font-size: 1.12rem; }
+        .student-logbook-session-state { display: inline-flex; align-items: center; gap: 7px; padding: 7px 10px; border-radius: 999px; background: #eaf8f3; color: #07865f; font-size: .72rem; font-weight: 800; white-space: nowrap; }
+        .student-logbook-session-state::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+        .student-logbook-session-state.is-idle { background: #f3f5f4; color: #6d7d78; }
+        .student-logbook-time-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+        .student-logbook-time-item { padding: 11px 12px; border: 1px solid #e4ece8; border-radius: 11px; background: #fbfdfc; }
+        .student-logbook-time-item strong,
+        .student-logbook-time-item span { display: block; }
+        .student-logbook-time-item strong { color: #183a31; font-size: .82rem; font-weight: 800; }
+        .student-logbook-time-item span { margin-top: 2px; color: #7b8985; font-size: .66rem; font-weight: 700; }
+        .student-logbook-session-reminder { display: flex; align-items: flex-start; gap: 9px; margin-top: 14px; padding: 11px 13px; border: 1px solid #fde2a7; border-radius: 11px; background: #fff9e8; color: #7c4a03; font-size: .73rem; line-height: 1.45; }
+        .student-logbook-session-reminder.is-ready { border-color: #ccebdd; background: #f0fbf6; color: #166534; }
+        .student-logbook-idle-copy strong,
+        .student-logbook-idle-copy span { display: block; }
+        .student-logbook-idle-copy strong { color: #183a31; font-size: .86rem; }
+        .student-logbook-idle-copy span { margin-top: 3px; color: #74837e; font-size: .76rem; }
+
+        .student-logbook-session-form { display: grid; gap: 11px; }
+        .student-logbook-field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+        .student-logbook-field { display: grid; gap: 6px; min-width: 0; }
+        .student-logbook-field.is-full { grid-column: 1 / -1; }
+        .student-logbook-session-form label { color: #203a33; font-size: .78rem; font-weight: 800; }
+        .student-logbook-session-form textarea { width: 100%; min-height: 88px; resize: vertical; padding: 13px 14px; border: 1px solid #dce7e1; border-radius: 12px; outline: 0; background: #fbfdfc; color: #172b25; font: inherit; font-size: .84rem; line-height: 1.5; transition: border-color .15s ease, box-shadow .15s ease; }
+        .student-logbook-session-form textarea:focus,
+        .student-logbook-session-form select:focus { border-color: #12a879; box-shadow: 0 0 0 3px rgba(18,168,121,.1); background: #fff; outline: 0; }
+        .student-logbook-photo-input { width: 100%; min-height: 44px; padding: 7px 9px; border: 1px solid #dce7e1; border-radius: 10px; background: #fbfdfc; color: #40534d; font-size: .74rem; }
+        .student-logbook-photo-input::file-selector-button { margin-right: 10px; padding: 7px 10px; border: 0; border-radius: 8px; background: #eaf8f3; color: #07865f; font-weight: 800; cursor: pointer; }
+        .student-logbook-form-help { margin: 0; color: #7a8984; font-size: .68rem; line-height: 1.45; }
+
+        .student-logbook-entries,
+        .student-logbook-history { overflow: hidden; }
+        .student-logbook-entries-head,
+        .student-logbook-history-head { padding: 17px 19px; border-bottom: 1px solid #edf2ef; }
+        .student-logbook-entries-count,
+        .student-logbook-history-count { color: #83908c; font-size: .72rem; font-weight: 700; }
+        .student-logbook-compact-toolbar { display: grid; grid-template-columns: auto auto minmax(220px, 1fr); gap: 10px; padding: 13px 19px; border-bottom: 1px solid #edf2ef; background: #fbfdfc; }
+        .student-logbook-compact-filter,
+        .student-logbook-compact-search { min-height: 38px; border: 1px solid #dfe9e4; border-radius: 10px; background: #fff; }
+        .student-logbook-compact-filter { display: inline-flex; align-items: center; padding: 0 12px; color: #42554f; font-size: .74rem; font-weight: 700; white-space: nowrap; }
+        .student-logbook-compact-search { display: flex; align-items: center; gap: 8px; padding: 0 12px; color: #82908b; }
+        .student-logbook-compact-search input {
+            width: 100% !important;
+            min-width: 0 !important;
+            height: auto !important;
+            min-height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border: 0 !important;
+            border-radius: 0 !important;
+            outline: 0 !important;
+            background: transparent !important;
+            background-color: transparent !important;
+            box-shadow: none !important;
+            color: #243b34 !important;
+            font: inherit !important;
+            font-size: .76rem !important;
+            -webkit-appearance: none !important;
+            appearance: none !important;
+        }
+        .student-logbook-compact-search input:focus,
+        .student-logbook-compact-search input:focus-visible {
+            border: 0 !important;
+            outline: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
+        }
+        .student-logbook-entry-copy strong,
+        .student-logbook-entry-copy span { display: block; }
+        .student-logbook-entry-copy span { margin-top: 3px; color: #7a8984; font-size: .68rem; line-height: 1.45; }
+        .student-logbook-entry-meta { display: flex; flex-wrap: wrap; gap: 5px 10px; margin-top: 5px; color: #82908b; font-size: .66rem; }
+        .student-logbook-compact-table-wrap { overflow-x: auto; }
+        .student-logbook-history table { width: 100%; min-width: 720px; margin: 0; border-collapse: collapse; }
+        .student-logbook-history th { padding: 11px 14px; border-bottom: 1px solid #e5ede9; background: #f8fbf9; color: #657770; font-size: .66rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; white-space: nowrap; }
+        .student-logbook-history td { padding: 13px 14px; border-bottom: 1px solid #edf2ef; color: #314940; font-size: .76rem; vertical-align: middle; }
+        .student-logbook-history tbody tr:last-child td { border-bottom: 0; }
+        .student-logbook-history-day { color: #173b31; font-weight: 800; }
+        .student-logbook-history-status { display: inline-flex; align-items: center; gap: 6px; min-height: 27px; padding: 0 9px; border-radius: 999px; background: #eef7f3; color: #07865f; font-size: .68rem; font-weight: 800; }
+        .student-logbook-history-status.is-open { background: #fff7df; color: #9a6700; }
+        .student-logbook-history-link { color: #07865f; font-size: .72rem; font-weight: 800; text-decoration: none; }
+        .student-logbook-pagination { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 13px 18px; border-top: 1px solid #edf2ef; background: #fbfdfc; color: #74837e; font-size: .72rem; font-weight: 700; }
+
+        .student-logbook-compact-empty { display: grid; justify-items: center; padding: 42px 22px; text-align: center; }
+        .student-logbook-compact-empty-icon { display: grid; place-items: center; width: 42px; height: 42px; margin-bottom: 10px; border-radius: 12px; background: #eaf8f3; color: #07865f; font-size: 1.15rem; font-weight: 800; }
+        .student-logbook-compact-empty strong { color: #173b31; font-size: .86rem; }
+        .student-logbook-compact-empty span { max-width: 420px; margin-top: 4px; color: #7a8984; font-size: .74rem; line-height: 1.5; }
+
+        .student-logbook-bottom-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+        .student-logbook-bottom-card { padding: 17px 18px; }
+        .student-logbook-bottom-card h3 { font-size: .9rem; }
+        .student-logbook-week-values { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 13px; }
+        .student-logbook-week-value strong,
+        .student-logbook-week-value span { display: block; }
+        .student-logbook-week-value strong { color: #173b31; font-size: .84rem; font-weight: 800; }
+        .student-logbook-week-value span { margin-top: 2px; color: #82908b; font-size: .66rem; }
+        .student-logbook-recent-list { display: grid; gap: 9px; margin-top: 13px; }
+        .student-logbook-recent-item { display: flex; align-items: flex-start; gap: 9px; color: #40534d; font-size: .74rem; }
+        .student-logbook-recent-dot { flex: 0 0 auto; width: 8px; height: 8px; margin-top: 4px; border-radius: 50%; background: #12a879; }
+        .student-logbook-recent-item strong,
+        .student-logbook-recent-item span { display: block; }
+        .student-logbook-recent-item strong { color: #263f37; font-size: .74rem; }
+        .student-logbook-recent-item span { margin-top: 2px; color: #82908b; font-size: .68rem; }
+
+        .student-logbook-daily-modal .nexora-modal { max-width: 760px; }
+        .student-logbook-clock-modal .nexora-modal { max-width: 470px; }
+        .student-logbook-modal-warning { padding: 12px 14px; border: 1px solid #fde2a7; border-radius: 12px; background: #fff9e8; color: #7c4a03; font-size: .8rem; line-height: 1.5; }
+        .student-logbook-modal-warning.is-error { border-color: #fecaca; background: #fff1f2; color: #b42318; }
+        .student-logbook-clock-modal .nexora-modal-footer form { margin: 0; }
+
+        @media (max-width: 1000px) {
+            .student-logbook-compact-summary,
+            .student-logbook-time-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .student-logbook-compact-stat:nth-child(2) { border-right: 0; }
+            .student-logbook-compact-stat:nth-child(-n + 2) { border-bottom: 1px solid #edf2ef; }
+            .student-logbook-week-values { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        @media (max-width: 760px) {
+            body.student-logbook-page .student-logbook-page-content { padding-top: 78px !important; }
+            .student-logbook-page-heading { align-items: flex-start !important; }
+            .student-logbook-actions { width: 100%; justify-content: flex-start; }
+            .student-logbook-actions form { flex: 1 1 130px; }
+            .student-logbook-actions .student-logbook-button { flex: 1 1 130px; }
+            .student-logbook-actions form .student-logbook-button { width: 100%; }
+            .student-logbook-action-note { text-align: left; }
+            .student-logbook-classroom-scope,
+            .student-logbook-compact-toolbar,
+            .student-logbook-bottom-grid,
+            .student-logbook-field-grid { grid-template-columns: 1fr; }
+            .student-logbook-classroom-scope { align-items: stretch; flex-direction: column; }
+            .student-logbook-field.is-full { grid-column: auto; }
+            .student-logbook-pagination { align-items: flex-start; flex-direction: column; }
+        }
+        @media (max-width: 520px) {
+            .student-logbook-compact-summary,
+            .student-logbook-time-grid { grid-template-columns: 1fr; }
+            .student-logbook-compact-stat,
+            .student-logbook-compact-stat:nth-child(2) { border-right: 0; border-bottom: 1px solid #edf2ef; }
+            .student-logbook-compact-stat:last-child { border-bottom: 0; }
+            .student-logbook-session-head { align-items: flex-start; flex-direction: column; }
+            .student-logbook-week-values { grid-template-columns: 1fr 1fr; }
+        }
+
+
+/* EXTRACTED FROM resources/views/student/logbook_review.html */
+body.student-logbook-review-page > .student-global-topbar { display: flex !important; }
+        body.student-logbook-review-page .student-tasks-content { padding-top: 92px !important; }
+        body.student-logbook-review-page .student-tasks-heading { padding-top: 0 !important; margin-top: 0 !important; margin-bottom: 22px !important; }
+        body.student-logbook-review-page .student-tasks-heading::before,
+        body.student-logbook-review-page .student-tasks-heading > div:first-child::before { display: none !important; content: none !important; }
+        body.student-logbook-review-page .student-review-card { border: 1px solid #e3eae5; border-radius: 10px; box-shadow: 0 6px 20px rgba(20, 52, 38, 0.035); overflow: hidden; }
+        body.student-logbook-review-page .student-review-card .card-header { border-bottom-color: #e8eee9; }
+        body.student-logbook-review-page .student-review-metric { border-color: #e3eae5 !important; background: #f8faf9; }
+        body.student-logbook-review-page .student-review-copy { border-color: #e3eae5 !important; background: #f8faf9 !important; color: #31453c; white-space: pre-wrap; }
+        body.student-logbook-review-page .student-review-rating { color: #0a8f46 !important; }
+        .student-rating-criteria { display: grid; gap: 8px; margin-top: 14px; }
+        .student-rating-criterion { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border: 1px solid #e3eae5; border-radius: 9px; background: #f8faf9; }
+        .student-rating-criterion span { min-width: 0; color: #40564c; font-size: .76rem; font-weight: 700; }
+        .student-rating-criterion strong { flex: 0 0 auto; color: #0a8f46; font-size: .78rem; }
+        @media (max-width: 760px) { body.student-logbook-review-page .student-tasks-content { padding-top: 78px !important; } }
+
+
+/* EXTRACTED FROM resources/views/student/profile_setup.html */
+body{min-height:100vh;margin:0;padding:40px 20px;display:flex;align-items:flex-start;justify-content:center;background:radial-gradient(circle at 80% 6%,rgba(205,238,216,.90),transparent 32rem),linear-gradient(180deg,#f1f9f4 0%,#e8f5ed 100%);color:#0f172a;font-family:Arial,Helvetica,sans-serif}.profile-modal{width:min(680px,100%);margin:0 auto;padding:36px;background:#fff;border:1px solid #e2e8f0;border-radius:20px;box-shadow:0 20px 55px rgba(15,23,42,.12)}.profile-modal h2{margin:0;font-size:2rem;font-weight:800}.progress{margin:8px 0 28px;color:#64748b;font-size:.9rem;font-weight:600}.flash-messages{margin:0 0 18px}.flash-message{padding:11px 13px;border-radius:9px;margin-bottom:8px;font-size:.88rem;font-weight:600}.flash-message.danger,.flash-message.error{background:#fef2f2;border:1px solid #fecaca;color:#b91c1c}.flash-message.success{background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d}.step{display:none}.step.active{display:block}.step h3{margin:0 0 18px;font-size:1.15rem;font-weight:800}.step>input,.step>textarea{display:block;width:100%;min-height:44px;margin:0 0 12px;padding:11px 13px;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:10px;background:#fff;font:inherit}.step>textarea{min-height:120px;resize:vertical}.program-hint{display:block;margin:-5px 0 14px;color:#64748b;font-size:.78rem;line-height:1.45}.upload{display:flex;align-items:center;gap:10px;margin:14px 0;padding:13px 15px;border:1px dashed #94a3b8;border-radius:10px;background:#f8fafc;font-weight:700;cursor:pointer}.upload input{flex:1;min-width:0}.selected-photo{display:none;margin:10px 0 14px;padding:10px;border:1px solid #dbeafe;border-radius:10px;background:#eff6ff;color:#1d4ed8;font-weight:700}.selected-photo.show{display:block}.step>button,.crop-buttons button{min-height:42px;padding:10px 16px;border:0;border-radius:12px;background:#2563eb;color:#fff;font:inherit;font-weight:700;cursor:pointer}.step>button:not(.back){width:100%;margin-top:6px}.step>.back{background:#fff;color:#334155;border:1px solid #cbd5e1;margin-right:8px}.input-error{border-color:#ef4444!important;background:#fff7f7!important}.input-success{border-color:#22c55e!important}.image-error{display:none;margin:8px 0 12px;padding:10px 12px;border:1px solid #fecaca;border-radius:8px;background:#fef2f2;color:#dc2626;font-size:.85rem;font-weight:600}.image-error.show{display:block}
+.crop-modal{position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(15,23,42,.72)}.crop-modal.show{display:flex}.crop-box{width:min(620px,95vw);max-height:90vh;overflow:auto;background:#fff;border-radius:18px;padding:22px;box-shadow:0 25px 70px rgba(0,0,0,.35)}.crop-box h3{margin:0 0 14px;font-size:1.2rem}.crop-area{width:100%;height:min(55vh,440px);background:#0f172a;border-radius:12px;overflow:hidden}.crop-area img{display:block;max-width:100%}.crop-modal-actions{display:flex;gap:10px;margin-top:14px}.crop-modal-actions button{flex:1;min-height:44px;border:0;border-radius:12px;font:inherit;font-weight:700;cursor:pointer}.save-picture-btn{background:#2563eb;color:#fff}.cancel-picture-btn{background:#f1f5f9;color:#334155}.zoom-row{display:flex;gap:10px;margin-top:10px}.zoom-row button{flex:1;padding:9px;border:1px solid #bfdbfe;border-radius:12px;background:#eff6ff;color:#1d4ed8;font-weight:700;cursor:pointer}
+@media(max-width:700px){body{padding:20px 12px}.profile-modal{padding:24px 18px}.profile-modal h2{font-size:1.55rem}}
+
+
+/* EXTRACTED FROM resources/views/student/session_details.html */
+.nx-session{--green:#12a879;--green-dark:#07865f;--green-soft:#eaf8f3;--ink:#142033;--muted:#697486;--line:#e6eaf0;--bg:#f7f9fb;min-height:100vh;background:var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.nx-session *{box-sizing:border-box}
+    body.student-logbook-page > .student-global-topbar{display:flex!important}.nx-session-content{padding-top:92px!important;padding-bottom:40px}.nx-wrap{max-width:1160px;margin:0 auto}
+    .nx-breadcrumb{display:flex;align-items:center;gap:7px;margin:7px 0 18px;color:#87919f;font-size:10px;font-weight:600}.nx-breadcrumb a{color:var(--green-dark);text-decoration:none}.nx-breadcrumb .arrow{color:#a5adb7;font-size:12px}.nx-heading{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin-bottom:22px}.nx-eyebrow{font-size:9px;letter-spacing:.08em;text-transform:uppercase;font-weight:800;color:var(--green-dark);margin-bottom:7px}.nx-heading h1{margin:0;font-size:25px;letter-spacing:-.7px;line-height:1.15}.nx-heading p{margin:7px 0 0;color:var(--muted);font-size:11px}.nx-back{display:inline-flex;align-items:center;gap:7px;padding:9px 13px;border:1px solid var(--line);background:#fff;border-radius:8px;color:#526073;text-decoration:none;font-size:10px;font-weight:800;white-space:nowrap}
+    .nx-grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:14px;align-items:start}.nx-card{background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 5px 18px rgba(20,32,51,.035)}.nx-card-head{padding:16px 18px;border-bottom:1px solid #f0f2f5;display:flex;align-items:center;justify-content:space-between}.nx-card-head h2{font-size:13px;margin:0}.nx-card-head span{font-size:9px;color:#8993a0}
+    .nx-summary{padding:20px}.nx-summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.nx-stat{padding:13px;border:1px solid #edf0f2;background:#fbfcfc;border-radius:9px}.nx-stat small{display:block;color:#7e8896;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}.nx-stat strong{display:block;color:var(--ink);font-size:12px;margin-top:5px;line-height:1.35}.nx-stat.active strong{color:var(--green-dark)}
+    .nx-daily-card{margin-top:14px}.nx-daily{padding:18px;display:grid;gap:12px}.nx-daily-field{padding:13px 14px;border:1px solid #edf0f2;background:#fbfcfc;border-radius:9px}.nx-daily-field small{display:block;color:#7e8896;font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px}.nx-daily-field p{margin:0;color:#445164;font-size:11px;line-height:1.6;white-space:pre-line}.nx-daily-work{display:inline-flex;width:fit-content;padding:6px 9px;border-radius:999px;background:var(--green-soft);color:var(--green-dark);font-size:9px;font-weight:800}
+    .nx-photo-card{margin-top:14px}.nx-photo-body{padding:18px}.nx-photo-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.nx-photo-item{overflow:hidden;border:1px solid #e7ece9;border-radius:10px;background:#fbfcfc}.nx-photo-item>a{display:block;background:#edf3f0}.nx-photo-item img{display:block;width:100%;height:145px;object-fit:cover}.nx-photo-meta{padding:9px 10px;display:flex;align-items:center;justify-content:space-between;gap:8px}.nx-photo-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#50605b;font-size:9px;font-weight:700}.nx-photo-actions{display:flex;align-items:center;gap:7px;flex:0 0 auto}.nx-photo-download{color:var(--green-dark);font-size:9px;font-weight:800;text-decoration:none}.nx-photo-download:hover{text-decoration:underline}.nx-photo-delete{border:0;background:transparent;color:#a13b3b;font-size:9px;font-weight:800;cursor:pointer;padding:0}.nx-photo-upload{display:flex;align-items:center;gap:10px;margin-top:12px;padding-top:12px;border-top:1px solid #eef1ef}.nx-photo-upload input{min-width:0;flex:1;font-size:9px}.nx-photo-upload button{border:1px solid var(--green);border-radius:8px;background:var(--green);color:#fff;padding:8px 11px;font-size:9px;font-weight:800;white-space:nowrap;cursor:pointer}.nx-photo-note{margin:7px 0 0;color:#89948f;font-size:8px;line-height:1.45}
+    .nx-timeline-card{margin-top:14px}.nx-timeline{padding:20px 22px 21px}.nx-timeline-item{position:relative;padding:0 0 22px 29px}.nx-timeline-item:last-child{padding-bottom:0}.nx-timeline-item:before{content:"";position:absolute;left:7px;top:19px;bottom:-1px;width:1px;background:#dfe8e4}.nx-timeline-item:last-child:before{display:none}.nx-dot{position:absolute;left:0;top:4px;width:15px;height:15px;border-radius:50%;background:var(--green-soft);border:3px solid #fff;box-shadow:0 0 0 1px #b9ded2}.nx-time{font-size:9px;color:var(--green-dark);font-weight:800}.nx-log{margin-top:7px;font-size:11px;line-height:1.65;color:#4d596b;white-space:pre-line}.nx-empty{padding:18px;border:1px dashed #dfe5e9;border-radius:9px;color:#7f8997;background:#fafbfc;font-size:10px;line-height:1.5}
+    .nx-side{display:flex;flex-direction:column;gap:12px}.nx-side-card{padding:17px}.nx-side-title{font-size:12px;font-weight:800;margin:0 0 13px}.nx-status{display:flex;align-items:center;gap:10px;padding:11px;border:1px solid #e8eeeb;background:#f8fbfa;border-radius:9px}.nx-status-dot{width:9px;height:9px;border-radius:50%;background:#aab3bd}.nx-status.open .nx-status-dot{background:var(--green)}.nx-status strong{display:block;font-size:11px}.nx-status small{display:block;color:#7d8795;font-size:8px;margin-top:3px}.nx-hours{font-size:28px;letter-spacing:-1px;font-weight:800}.nx-hours small{font-size:10px;letter-spacing:0;color:#7d8795;font-weight:600}.nx-hours-note{margin:6px 0 0;color:#8a94a1;font-size:8px;line-height:1.45}.nx-progress{height:6px;border-radius:99px;background:#edf1f3;overflow:hidden;margin-top:13px}.nx-progress i{display:block;height:100%;width:100%;background:var(--green);border-radius:99px}.nx-action{display:block;width:100%;text-align:center;border:1px solid var(--line);border-radius:8px;padding:10px;color:var(--green-dark);background:#fff;text-decoration:none;font-size:10px;font-weight:800}
+    @media(max-width:900px){.nx-grid{grid-template-columns:1fr 280px}.nx-summary-grid{grid-template-columns:1fr 1fr}.nx-photo-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:760px){.nx-session-content{padding-top:78px!important}.nx-heading{align-items:flex-start;flex-direction:column;gap:12px}.nx-heading h1{font-size:21px}.nx-back{align-self:stretch;justify-content:center}.nx-grid{grid-template-columns:1fr}.nx-summary-grid{grid-template-columns:1fr}.nx-photo-grid{grid-template-columns:1fr}.nx-photo-upload{align-items:stretch;flex-direction:column}.nx-timeline{padding:18px 15px}}
+
+
+/* EXTRACTED FROM resources/views/student/task_details.html */
+.nx-task-page{--green:#12a879;--green-dark:#07865f;--green-soft:#eaf8f3;--ink:#142033;--muted:#697486;--line:#e6eaf0;--bg:#f7f9fb;min-height:100vh;background:var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    .nx-task-page *{box-sizing:border-box}.nx-main{margin-left:262px;min-height:100vh;padding:0 34px 40px}.nx-wrap{max-width:1160px;margin:0 auto}
+    .nx-top{height:76px;display:flex;align-items:center;justify-content:flex-end}.nx-top-tools{display:flex;align-items:center;gap:17px}.nx-search{width:30px;height:36px;display:flex;align-items:center;justify-content:center;background:transparent;border:0;padding:0;cursor:text}.nx-search-icon{font-size:24px;color:#142033;line-height:1}.nx-search input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}.nx-notif{position:relative;width:30px;height:36px;display:grid;place-items:center;text-decoration:none;color:#253146}.nx-notif .bell{font-size:18px;line-height:1;filter:grayscale(1)}.nx-notif .nx-badge{position:absolute;right:-4px;top:0;min-width:17px;height:17px;padding:0 4px;font-size:8px;border:2px solid var(--bg);border-radius:999px;background:#ef4444;color:#fff;display:grid;place-items:center;font-weight:800}.nx-top-profile{display:flex;align-items:center;gap:9px;text-decoration:none;color:var(--ink);font-size:12px;font-weight:700;margin-left:2px}.nx-top-profile img{width:34px;height:34px;border-radius:50%;object-fit:cover}
+    .nx-breadcrumb{display:flex;align-items:center;gap:7px;margin:7px 0 18px;color:#87919f;font-size:10px;font-weight:600}.nx-breadcrumb a{color:var(--green-dark);text-decoration:none}.nx-breadcrumb .arrow{font-size:12px;color:#a5adb7}.nx-heading{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin-bottom:22px}.nx-eyebrow{font-size:9px;letter-spacing:.08em;text-transform:uppercase;font-weight:800;color:var(--green-dark);margin-bottom:7px}.nx-heading h1{margin:0;font-size:25px;letter-spacing:-.7px;line-height:1.15}.nx-heading p{margin:7px 0 0;color:var(--muted);font-size:11px}.nx-back{display:inline-flex;align-items:center;gap:7px;padding:9px 13px;border:1px solid var(--line);background:#fff;border-radius:8px;color:#526073;text-decoration:none;font-size:10px;font-weight:800;white-space:nowrap}
+    .nx-grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:14px;align-items:start}.nx-card{background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 5px 18px rgba(20,32,51,.035)}.nx-card-head{padding:16px 18px;border-bottom:1px solid #f0f2f5;display:flex;align-items:center;justify-content:space-between}.nx-card-head h2{font-size:13px;margin:0}.nx-card-head span{font-size:9px;color:#8993a0}.nx-info{padding:20px}
+    .nx-deadline{display:flex;align-items:center;gap:12px;padding:12px 13px;background:#f8fafb;border:1px solid #eef1f3;border-radius:9px;margin-bottom:18px}.nx-deadline-icon{width:35px;height:35px;border-radius:9px;background:var(--green-soft);display:grid;place-items:center;color:var(--green-dark);font-size:16px}.nx-deadline small{display:block;color:#7a8593;font-size:9px;font-weight:700}.nx-deadline strong{display:block;margin-top:3px;font-size:11px;color:var(--ink)}.nx-description-label{font-size:9px;text-transform:uppercase;letter-spacing:.06em;font-weight:800;color:#7d8795;margin-bottom:8px}.nx-description{font-size:12px;line-height:1.7;color:#4d596b;white-space:pre-line;min-height:90px}.nx-empty-description{color:#9099a6;font-style:italic}
+    .nx-side-stack{display:flex;flex-direction:column;gap:12px}.nx-side-card{padding:17px}.nx-side-title{font-size:12px;font-weight:800;margin:0 0 13px}.nx-status{display:flex;align-items:center;gap:10px;padding:10px 11px;border-radius:9px;background:#f8fafb;border:1px solid #eef1f3}.nx-status-dot{width:9px;height:9px;border-radius:50%;background:#f2a313}.nx-status.submitted .nx-status-dot{background:#12a879}.nx-status.reviewed .nx-status-dot{background:#2779df}.nx-status.reopened .nx-status-dot{background:#ef4444}.nx-status strong{font-size:11px}.nx-status small{display:block;color:#7d8795;font-size:8px;margin-top:3px}
+    .nx-upload-form{display:flex;flex-direction:column;gap:10px}.nx-file{width:100%;font-size:9px;color:#667285;border:1px solid var(--line);border-radius:8px;padding:9px;background:#fff}.nx-primary,.nx-submit-btn{width:100%;border:0;border-radius:8px;background:var(--green);color:#fff;padding:10px 13px;font-size:10px;font-weight:800;cursor:pointer}.nx-primary:hover,.nx-submit-btn:hover{background:var(--green-dark)}.nx-primary:disabled,.nx-submit-btn:disabled{opacity:.65;cursor:not-allowed}
+    .nx-upload-list{border-top:1px solid var(--line);margin-top:15px;padding-top:13px}.nx-upload-list-title{font-size:9px;text-transform:uppercase;letter-spacing:.06em;font-weight:800;color:#7d8795;margin-bottom:8px}.nx-upload-item{display:flex;align-items:center;gap:9px;padding:9px;border:1px solid #edf0f2;border-radius:8px;margin-bottom:7px;background:#fcfdfd}.nx-file-icon{width:27px;height:27px;border-radius:7px;background:#eef9f5;color:var(--green);display:grid;place-items:center;font-size:13px;flex:none}.nx-upload-meta{min-width:0;flex:1}.nx-upload-meta a{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#344154;text-decoration:none;font-size:9px;font-weight:800}.nx-upload-meta small{display:block;color:#8a94a1;font-size:8px;margin-top:3px}.nx-delete{border:1px solid #f1c9c9;background:#fff;color:#e34b4b;width:25px;height:25px;border-radius:6px;font-size:11px;cursor:pointer}.nx-empty{color:#8a94a1;font-size:9px;margin:0}.nx-no-upload{padding:12px;border:1px dashed #dfe5e9;border-radius:8px;color:#7f8997;font-size:9px;line-height:1.5;background:#fafbfc}.nx-submit{padding:17px}.nx-submit-note{font-size:8px;color:#8a94a1;line-height:1.5;margin:0 0 11px}
+    @media(max-width:950px){.nx-main{margin-left:235px}.nx-grid{grid-template-columns:1fr 300px}}@media(max-width:760px){.nx-main{margin-left:0;padding:0 14px 25px}.nx-top{height:58px}.nx-heading{align-items:flex-start;flex-direction:column;gap:12px}.nx-heading h1{font-size:21px}.nx-back{align-self:stretch;justify-content:center}.nx-grid{grid-template-columns:1fr}}
+
+
+/* EXTRACTED FROM resources/views/student/tasks.html */
+body.student-tasks-page > .student-global-topbar {
+            display: flex !important;
+        }
+
+        body.student-tasks-page .student-tasks-content {
+            padding-top: 92px !important;
+        }
+
+        body.student-tasks-page .student-tasks-heading {
+            padding-top: 0 !important;
+            margin-top: 0 !important;
+            margin-bottom: 22px !important;
+        }
+
+        body.student-tasks-page .student-tasks-heading::before,
+        body.student-tasks-page .student-tasks-heading > div:first-child::before {
+            display: none !important;
+            content: none !important;
+        }
+
+        @media (max-width: 760px) {
+            body.student-tasks-page .student-tasks-content {
+                padding-top: 78px !important;
+            }
+        }
+.nx-extracted-student-tasks-1 { opacity:.4 }
+.nx-extracted-student-tasks-2 { opacity:.4 }
