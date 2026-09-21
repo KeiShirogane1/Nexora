@@ -15,7 +15,7 @@
 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="cropped_image" id="croppedImage">
 <div class="step{% if current_step == 1 %} active{% endif %}"><h3>Basic Information</h3>
 <input name="first_name" placeholder="First Name" value="{{ form_data.get('first_name', '') }}"><input name="middle_name" placeholder="Middle Name (Optional)" value="{{ form_data.get('middle_name', '') }}"><input name="last_name" placeholder="Last Name" value="{{ form_data.get('last_name', '') }}"><input type="number" name="age" placeholder="Age" value="{{ form_data.get('age', '') }}"><input name="student_id" placeholder="Student ID" value="{{ form_data.get('student_id', '') }}">
-<label class="upload">📷 Upload Profile Picture<input type="file" name="profile_picture" id="profilePictureInput" accept="image/*"></label>
+<label class="upload">{{ nx_icon('camera') }} Upload Profile Picture<input type="file" name="profile_picture" id="profilePictureInput" accept="image/*"></label>
 <div id="selectedPhoto" class="selected-photo">{{ nx_icon('success') }} Profile picture cropped and ready</div><div id="imageError" class="image-error" role="alert"></div>
 <button type="button" onclick="validateStep1()">Next →</button></div>
 <div class="step{% if current_step == 2 %} active{% endif %}"><h3>Contact Information</h3><input name="phone_number" placeholder="09XXXXXXXXX" maxlength="11" value="{{ form_data.get('phone_number', '') }}"><textarea name="home_address" placeholder="House Number, Street, Barangay, City/Municipality, Province">{{ form_data.get('home_address', '') }}</textarea><button type="button" class="back" onclick="previousStep()">← Back</button><button type="button" onclick="validateStep2()">Next →</button></div>
