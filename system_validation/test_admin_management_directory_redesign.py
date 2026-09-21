@@ -136,11 +136,12 @@ def test_directory_grouping_is_client_side_and_preserves_existing_rows():
 
 def test_management_directories_have_mobile_card_responsive_guardrails():
     typography = _source("resources/views/components/global_typography.html")
-    responsive = _source("resources/views/components/admin_management_responsive.html")
+    responsive_component = _source("resources/views/components/admin_management_responsive.html")
+    responsive = _source("resources/assets/css/admin.css")
 
     assert "nx_topbar_role|default('') == 'admin'" in typography
     assert "components/admin_management_responsive.html" in typography
-    assert '<style id="nx-admin-management-responsive">' in responsive
+    assert "<style" not in responsive_component.lower()
     assert "@media (min-width: 681px) and (max-width: 1279px)" in responsive
     assert "@media (max-width: 680px)" in responsive
     assert "body.admin-students-page #studentsTable thead" in responsive
@@ -158,7 +159,7 @@ def test_management_directories_have_mobile_card_responsive_guardrails():
 
 def test_student_directory_desktop_uses_ten_semantic_columns_without_forced_overflow():
     template = _source("resources/views/admin/students.html")
-    responsive = _source("resources/views/components/admin_management_responsive.html")
+    responsive = _source("resources/assets/css/admin.css")
 
     assert template.count("<th") >= 9
     assert 'class="student-col-identity"' in template

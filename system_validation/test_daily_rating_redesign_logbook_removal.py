@@ -101,12 +101,11 @@ def test_logbook_removal_resyncs_affected_work_scores_from_remaining_rated_days(
 
 
 def test_supervisor_and_admin_shared_desktop_gutters_remove_nested_width_caps():
-    supervisor_topbar = _source("resources/views/components/supervisor_topbar.html")
-    admin_topbar = _source("resources/views/components/admin_topbar.html")
+    shell_css = _source("resources/assets/css/sidebars.css")
 
-    assert "--nx-supervisor-page-gutter: 30px" in supervisor_topbar
-    assert ".nexora-class-page" in supervisor_topbar
-    assert "padding-left: 0 !important" in supervisor_topbar
-    assert "--nx-admin-page-gutter: 30px" in admin_topbar
-    assert ".admin-main > :first-child" in admin_topbar
-    assert ".admin-polish-page" in admin_topbar
+    assert "--nx-supervisor-page-gutter: 30px" in shell_css
+    assert ".nexora-class-page" in shell_css
+    assert "padding-left: 0 !important" in shell_css
+    assert "--nx-admin-page-gutter: 30px" in shell_css
+    assert ".admin-main > :first-child" in shell_css
+    assert ".admin-polish-page" in shell_css

@@ -74,11 +74,12 @@ def test_assigned_interns_replaces_documents_action_with_insights():
 
 def test_admin_student_program_label_is_compact_and_filter_value_stays_full():
     source = _read("resources/views/components/admin_topbar.html")
+    css = _read("resources/assets/css/sidebars.css")
 
     assert "restoreCompactAdminPrograms" in source
     assert "'bachelor of science in information technology': 'BSIT'" in source
     assert "row.dataset.program = full.toLowerCase()" in source
-    assert "#studentsTable td[data-full-program] .table-meta" in source
+    assert "#studentsTable td[data-full-program] .table-meta" in css
 
 
 def test_admin_classroom_roster_keeps_existing_insights_destination():

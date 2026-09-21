@@ -85,6 +85,7 @@ def test_admin_classroom_landing_removes_type_filter_but_keeps_type_display():
 def test_admin_shared_shell_matches_dashboard_heading_and_gutters():
     css = _read("resources/assets/css/admin.css")
     shared = _read("resources/views/components/admin_topbar.html")
+    sidebar_css = _read("resources/assets/css/sidebars.css")
     assert "ADMIN SHARED DASHBOARD-ALIGNED PAGE SHELL" in css
     assert "--nx-admin-ui-shell-max: 1480px" in css
     assert "--nx-admin-ui-gutter: 28px" in css
@@ -95,12 +96,12 @@ def test_admin_shared_shell_matches_dashboard_heading_and_gutters():
     assert ":not(.admin-dashboard-page) .admin-main" in css
     assert "grid-template-columns: minmax(260px, 1fr) 190px auto" in css
     assert 'id="nx-admin-dashboard-aligned-ui"' not in shared
-    assert 'id="nx-admin-compact-topbar-reserve-fix"' in shared
-    assert "padding-top: 68px !important" in shared
-    assert "padding-top: 64px !important" in shared
-    assert ":not(.admin-dashboard-page) .admin-main > :first-child" in shared
-    assert "margin-top: 24px !important" in shared
-    assert "margin-top: 20px !important" in shared
+    assert "<style" not in shared.lower()
+    assert "padding-top: 68px !important" in sidebar_css
+    assert "padding-top: 64px !important" in sidebar_css
+    assert ":not(.admin-dashboard-page) .admin-main > :first-child" in sidebar_css
+    assert "margin-top: 24px !important" in sidebar_css
+    assert "margin-top: 20px !important" in sidebar_css
 
 
 def test_admin_document_route_remains_protected_and_txt_can_download():
@@ -170,9 +171,11 @@ def test_student_class_menu_removes_duplicate_information_action_only():
 
 def test_username_copy_control_is_subtle_and_accessible():
     shared = _read("resources/views/components/nexora_people_actions.html")
-    assert ".nx-copy-username{width:1.05em" in shared
-    assert "border:0!important" in shared
-    assert "background:transparent!important" in shared
+    css = _read("resources/assets/css/style.css")
+    assert ".nx-copy-username{width:1.05em" in css
+    assert "border:0!important" in css
+    assert "background:transparent!important" in css
+    assert "<style" not in shared.lower()
     assert "copy.title='Copy username'" in shared
     assert "copy.setAttribute('aria-label','Copy @'+username)" in shared
     assert "Username copied." in shared
