@@ -7434,7 +7434,8 @@ body.admin-documents-page {
     --nx-role-kpi-soft: #fff0ea;
 }
 
-/* One default grid for dashboard/summary cards across Student, Supervisor, Admin. */
+/* Canonical Nexora KPI grid: mirrors the Admin Command Center. */
+.acc-kpi-grid,
 .nx-kpi-grid,
 .nx-supervisor-kpi-grid,
 .supervisor-stat-grid,
@@ -7442,14 +7443,16 @@ body.admin-documents-page {
 .supervisor-doc-summary,
 .student-tasks-stats,
 .admin-metric-grid,
-.admin-documents-metrics {
+.admin-documents-metrics,
+.admin-report-metric-grid {
     display: grid !important;
     grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
     gap: 14px !important;
-    margin-bottom: 18px !important;
+    margin-bottom: 14px !important;
 }
 
-/* Shared card surface. Structure-specific layout follows below. */
+/* Canonical Admin KPI card geometry across all portals. */
+.acc-kpi-card,
 .nx-kpi-card,
 .nx-supervisor-kpi-card,
 .supervisor-stat-card,
@@ -7457,7 +7460,8 @@ body.admin-documents-page {
 .supervisor-doc-summary-card,
 .student-tasks-stat,
 .admin-metric-card,
-.admin-documents-metric {
+.admin-documents-metric,
+.admin-report-metric-card {
     position: relative !important;
     min-width: 0 !important;
     min-height: 112px !important;
@@ -7471,13 +7475,15 @@ body.admin-documents-page {
 }
 
 /* Cards that already have an icon + copy wrapper. */
+.acc-kpi-card,
 .nx-kpi-card,
 .nx-supervisor-kpi-card,
 .supervisor-stat-card,
 .supervisor-doc-summary-card,
 .student-tasks-stat,
 .admin-metric-card,
-.admin-documents-metric {
+.admin-documents-metric,
+.admin-report-metric-card {
     display: flex !important;
     align-items: center !important;
     gap: 14px !important;
@@ -7486,7 +7492,7 @@ body.admin-documents-page {
 /* Assigned Interns/legacy readiness cards have no wrapper/icon in markup. */
 .supervisor-insights-readiness-card {
     display: grid !important;
-    grid-template-columns: 48px minmax(0, 1fr) !important;
+    grid-template-columns: 50px minmax(0, 1fr) !important;
     grid-template-rows: auto auto auto !important;
     column-gap: 14px !important;
     row-gap: 0 !important;
@@ -7495,12 +7501,12 @@ body.admin-documents-page {
 
 .supervisor-insights-readiness-card::before {
     content: "";
-    width: 48px;
-    height: 48px;
+    width: 50px;
+    height: 50px;
     grid-column: 1;
     grid-row: 1 / 4;
     align-self: center;
-    border-radius: 14px;
+    border-radius: 12px;
     background-color: #eaf2ff;
     background-position: center;
     background-repeat: no-repeat;
@@ -7534,35 +7540,39 @@ body.admin-documents-page {
     min-width: 0;
 }
 
-/* Default 48px icon tile. */
+/* Canonical 50px Admin KPI icon tile. */
+.acc-kpi-icon,
 .nx-kpi-icon,
 .nx-supervisor-kpi-icon,
 .supervisor-stat-icon,
 .supervisor-doc-summary-icon,
 .student-tasks-stat-icon,
 .admin-metric-icon,
-.admin-documents-metric-icon {
-    width: 48px !important;
-    height: 48px !important;
-    min-width: 48px !important;
-    flex: 0 0 48px !important;
+.admin-documents-metric-icon,
+.admin-report-metric-icon {
+    width: 50px !important;
+    height: 50px !important;
+    min-width: 50px !important;
+    flex: 0 0 50px !important;
     display: grid !important;
     place-items: center !important;
-    border-radius: 14px !important;
+    border-radius: 12px !important;
     background: var(--nx-role-kpi-soft, #eaf2ff) !important;
     color: var(--nx-role-kpi-accent, #2563eb) !important;
     line-height: 1 !important;
 }
 
+.acc-kpi-icon svg,
 .nx-kpi-icon svg,
 .nx-supervisor-kpi-icon svg,
 .supervisor-stat-icon svg,
 .supervisor-doc-summary-icon svg,
 .student-tasks-stat-icon svg,
 .admin-metric-icon svg,
-.admin-documents-metric-icon svg {
-    width: 24px !important;
-    height: 24px !important;
+.admin-documents-metric-icon svg,
+.admin-report-metric-icon svg {
+    width: 25px !important;
+    height: 25px !important;
     display: block !important;
 }
 
@@ -7639,21 +7649,23 @@ body.admin-documents-page .admin-documents-metric:nth-child(4) .admin-documents-
     color: #7c3aed !important;
 }
 
-/* Copy block geometry/typography. */
+/* Copy block geometry/typography: centered exactly like Admin Command Center KPIs. */
+.acc-kpi-copy,
 .nx-kpi-copy,
 .nx-supervisor-kpi-copy,
 .supervisor-stat-copy,
 .supervisor-doc-summary-card > div,
 .student-tasks-stat-copy,
 .admin-metric-copy,
-.admin-documents-metric > div {
+.admin-documents-metric > div,
+.admin-report-metric-copy {
     min-width: 0 !important;
-    align-self: stretch !important;
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: center !important;
+    align-self: center !important;
+    display: block !important;
 }
 
+.acc-kpi-copy > span,
+.acc-kpi-copy > small,
 .nx-kpi-copy > span,
 .nx-kpi-copy > small,
 .nx-supervisor-kpi-copy > span,
@@ -7668,15 +7680,19 @@ body.admin-documents-page .admin-documents-metric:nth-child(4) .admin-documents-
 .admin-metric-copy > small,
 .admin-documents-metric > div > span,
 .admin-documents-metric > div > small,
+.admin-report-metric-copy > span,
+.admin-report-metric-copy > small,
 .supervisor-insights-readiness-card > span,
 .supervisor-insights-readiness-card > small {
     display: block !important;
     margin: 0 !important;
     color: var(--nx-kpi-muted) !important;
-    font-size: .72rem !important;
+    font-size: .66rem !important;
     line-height: 1.35 !important;
 }
 
+.acc-kpi-copy > span:first-child,
+.acc-kpi-copy > small:first-child,
 .nx-kpi-copy > span:first-child,
 .nx-kpi-copy > small:first-child,
 .nx-supervisor-kpi-copy > span:first-child,
@@ -7686,12 +7702,15 @@ body.admin-documents-page .admin-documents-metric:nth-child(4) .admin-documents-
 .student-tasks-stat-copy > span:first-child,
 .admin-metric-copy > span:first-child,
 .admin-documents-metric > div > span:first-child,
+.admin-report-metric-copy > span:first-child,
+.admin-report-metric-copy > small:first-child,
 .supervisor-insights-readiness-card > span:first-child {
     color: var(--nx-kpi-label) !important;
-    font-size: .71rem !important;
-    font-weight: 800 !important;
+    font-size: .72rem !important;
+    font-weight: 850 !important;
 }
 
+.acc-kpi-copy > strong,
 .nx-kpi-copy > strong,
 .nx-supervisor-kpi-copy > strong,
 .supervisor-stat-copy > strong,
@@ -7699,11 +7718,12 @@ body.admin-documents-page .admin-documents-metric:nth-child(4) .admin-documents-
 .student-tasks-stat-copy > strong,
 .admin-metric-copy > strong,
 .admin-documents-metric > div > strong,
+.admin-report-metric-copy > strong,
 .supervisor-insights-readiness-card > strong {
     display: block !important;
-    margin: 5px 0 6px !important;
+    margin: 4px 0 5px !important;
     color: var(--nx-kpi-text) !important;
-    font-size: 1.62rem !important;
+    font-size: 1.65rem !important;
     line-height: 1 !important;
     font-weight: 900 !important;
     letter-spacing: -.03em !important;
@@ -7865,7 +7885,8 @@ body.admin-dashboard-page .admin-metric-card:nth-child(6) .admin-metric-icon::be
     transform: rotate(90deg);
 }
 
-@media (max-width: 1100px) {
+@media (max-width: 900px) {
+    .acc-kpi-grid,
     .nx-kpi-grid,
     .nx-supervisor-kpi-grid,
     .supervisor-stat-grid,
@@ -7873,12 +7894,14 @@ body.admin-dashboard-page .admin-metric-card:nth-child(6) .admin-metric-icon::be
     .supervisor-doc-summary,
     .student-tasks-stats,
     .admin-metric-grid,
-    .admin-documents-metrics {
+    .admin-documents-metrics,
+    .admin-report-metric-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 700px) {
+    .acc-kpi-grid,
     .nx-kpi-grid,
     .nx-supervisor-kpi-grid,
     .supervisor-stat-grid,
@@ -7886,20 +7909,9 @@ body.admin-dashboard-page .admin-metric-card:nth-child(6) .admin-metric-icon::be
     .supervisor-doc-summary,
     .student-tasks-stats,
     .admin-metric-grid,
-    .admin-documents-metrics {
+    .admin-documents-metrics,
+    .admin-report-metric-grid {
         grid-template-columns: 1fr !important;
-    }
-
-    .nx-kpi-card,
-    .nx-supervisor-kpi-card,
-    .supervisor-stat-card,
-    .supervisor-insights-readiness-card,
-    .supervisor-doc-summary-card,
-    .student-tasks-stat,
-    .admin-metric-card,
-    .admin-documents-metric {
-        min-height: 100px !important;
-        padding: 16px !important;
     }
 }
 
