@@ -1,3 +1,4 @@
+{% from 'components/nexora_icons.html' import nx_icon %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -21,7 +22,7 @@
                     <p>{{ entry.company_name or entry.classroom_name }}{% if entry.section %} · {{ entry.section }}{% endif %} · {{ entry.date }}</p>
                 </div>
                 <div class="d-flex flex-wrap gap-2">
-                    <a class="btn btn-outline-secondary" href="{{ url_for('student.logbook', classroom_id=entry.classroom_id) }}">← Back to Logbook</a>
+                    <a class="btn btn-outline-secondary" href="{{ url_for('student.logbook', classroom_id=entry.classroom_id) }}">{{ nx_icon('arrow-left', 'student-link-icon') }}Back to Logbook</a>
                     <a class="student-tasks-primary-button" href="{{ url_for('student.view_session', attendance_id=entry.attendance_id) }}">View Session</a>
                 </div>
             </section>
@@ -92,14 +93,14 @@
                         <div class="card-header bg-white py-3 px-4"><h2 class="h6 fw-bold mb-0">Daily Performance</h2></div>
                         <div class="card-body p-4">
                             {% if daily_rating %}
-                                <div class="d-flex align-items-end gap-2 mb-3"><div class="student-review-rating display-6 fw-bold lh-1">{{ '%.1f'|format(daily_rating.star_rating) }}</div><div class="student-review-rating fw-bold">★</div></div>
+                                <div class="d-flex align-items-end gap-2 mb-3"><div class="student-review-rating display-6 fw-bold lh-1">{{ '%.1f'|format(daily_rating.star_rating) }}</div><div class="student-review-rating fw-bold">{{ nx_icon('star-filled') }}</div></div>
                                 <div class="student-review-metric border rounded-3 p-3 mb-3"><div class="text-muted small">Overall Daily Rating · Work score source</div><div class="fs-4 fw-bold">{{ '%.1f'|format(daily_rating.percentage) }}%</div><div class="text-muted small mt-1">This percentage is applied to the Work linked to this Logbook day and is used by ML Insights and Reports.</div></div>
 
                                 {% if daily_rating.criteria %}
                                     <div class="text-muted small fw-bold mb-1">Additional rating criteria</div>
                                     <div class="student-rating-criteria mb-3">
                                         {% for criterion in daily_rating.criteria %}
-                                            <div class="student-rating-criterion"><span>{{ criterion.criterion_name }}</span><strong>{{ '%.1f'|format(criterion.rating_value) }} / {{ '%.1f'|format(criterion.max_value) }} ★</strong></div>
+                                            <div class="student-rating-criterion"><span>{{ criterion.criterion_name }}</span><strong>{{ '%.1f'|format(criterion.rating_value) }} / {{ '%.1f'|format(criterion.max_value) }} {{ nx_icon('star-filled', 'student-inline-rating-star') }}</strong></div>
                                         {% endfor %}
                                     </div>
                                     <div class="text-muted small mb-3">These criteria explain the supervisor's assessment. They do not replace or automatically re-weight the Overall Daily Rating.</div>

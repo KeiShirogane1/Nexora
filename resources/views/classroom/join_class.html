@@ -1,3 +1,4 @@
+{% from 'components/nexora_icons.html' import nx_icon %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,13 +13,13 @@
   {% include 'components/student_sidebar.html' %}
   <main class="join-main">
     <div class="join-wrap">
-      <nav class="join-breadcrumb" aria-label="Breadcrumb"><a href="{{ url_for('classroom.student_classes') }}">Intern Classrooms</a><span aria-hidden="true">›</span><span class="current">Join Intern Classroom</span></nav>
+      <nav class="join-breadcrumb" aria-label="Breadcrumb"><a href="{{ url_for('classroom.student_classes') }}">Intern Classrooms</a><span aria-hidden="true">{{ nx_icon('chevron-right') }}</span><span class="current">Join Intern Classroom</span></nav>
       <section class="join-hero student-section-heading" aria-labelledby="join-class-heading">
         <div><div class="join-eyebrow student-section-eyebrow">Student Portal</div><h1 id="join-class-heading">Join an Intern Classroom</h1><p>Enter the classroom code provided by your supervisor to join your internship workspace.</p></div>
-        <a href="{{ url_for('classroom.student_classes') }}" class="back-link">← Back to Intern Classrooms</a>
+        <a href="{{ url_for('classroom.student_classes') }}" class="back-link">{{ nx_icon('arrow-left', 'student-link-icon') }}Back to Intern Classrooms</a>
       </section>
       <section class="join-card">
-        <div class="join-card-head"><div class="join-symbol" aria-hidden="true">🔑</div><div><h2>Intern Classroom access code</h2><p>Use the code shared by your supervisor.</p></div></div>
+        <div class="join-card-head"><div class="join-symbol" aria-hidden="true">{{ nx_icon('id-card') }}</div><div><h2>Intern Classroom access code</h2><p>Use the code shared by your supervisor.</p></div></div>
         <div class="join-card-body">
           <form method="POST" novalidate>
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

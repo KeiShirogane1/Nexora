@@ -1,3 +1,4 @@
+{% from 'components/nexora_icons.html' import nx_icon %}
 <!DOCTYPE html>
 <html lang="en">
     <head>
@@ -12,14 +13,14 @@
         {% include 'components/supervisor_sidebar.html' %}
         <main class="page-content nexora-app-main">
             <div class="nexora-page supervisor-classwork-import-shell">
-                <a href="{{ url_for('classwork.manage_classwork', class_id=assignment.classroom_id) }}" class="supervisor-classwork-back">← Back to Classwork</a>
+                <a href="{{ url_for('classwork.manage_classwork', class_id=assignment.classroom_id) }}" class="supervisor-classwork-back">{{ nx_icon('arrow-left', 'supervisor-link-icon') }}Back to Classwork</a>
                 <div class="supervisor-import-heading"><div><span class="supervisor-classwork-eyebrow">SCORE IMPORT</span><h1>{{ assignment.title }}</h1><p>Import grades exported from Google Forms or another CSV/XLSX source.</p></div></div>
                 {% with messages = get_flashed_messages(with_categories=true) %}{% for category, message in messages %}<div class="alert alert-{{ 'danger' if category == 'danger' else 'success' if category == 'success' else 'warning' if category == 'warning' else 'info' }}">{{ message }}</div>{% endfor %}{% endwith %}
                 <section class="supervisor-import-card">
                     {% if not preview %}
                         <form method="POST" enctype="multipart/form-data">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <div class="supervisor-import-dropzone"><div class="supervisor-import-icon">📊</div><h2>Upload score file</h2><p>Export your Google Form results as CSV or Excel, then upload the file here.</p><input id="score_file" name="score_file" type="file" accept=".csv,.xlsx" class="form-control" required><small>CSV/XLSX · Maximum 5 MB · Up to 2,000 rows</small></div>
+                            <div class="supervisor-import-dropzone"><div class="supervisor-import-icon">{{ nx_icon('reports') }}</div><h2>Upload score file</h2><p>Export your Google Form results as CSV or Excel, then upload the file here.</p><input id="score_file" name="score_file" type="file" accept=".csv,.xlsx" class="form-control" required><small>CSV/XLSX · Maximum 5 MB · Up to 2,000 rows</small></div>
                             <div class="supervisor-import-footer"><a href="{{ url_for('classwork.manage_classwork', class_id=assignment.classroom_id) }}" class="btn btn-light">Cancel</a><button type="submit" class="btn btn-primary">Preview Import</button></div>
                         </form>
                     {% else %}

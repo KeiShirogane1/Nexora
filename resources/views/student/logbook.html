@@ -223,9 +223,9 @@
                                 <span>Page {{ page }} of {{ total_pages }}</span>
                                 <div class="student-tasks-page-buttons">
                                     {% set scope_prefix = 'classroom_id=' ~ selected_classroom_id ~ '&' if selected_classroom_id else '' %}
-                                    {% if page > 1 %}<a class="student-tasks-page-button" href="?{{ scope_prefix }}page={{ page - 1 }}">‹</a>{% else %}<span class="student-tasks-page-button">‹</span>{% endif %}
+                                    {% if page > 1 %}<a class="student-tasks-page-button" href="?{{ scope_prefix }}page={{ page - 1 }}">{{ nx_icon('chevron-left') }}</a>{% else %}<span class="student-tasks-page-button" aria-disabled="true">{{ nx_icon('chevron-left') }}</span>{% endif %}
                                     {% for p in range(1, total_pages + 1) %}<a class="student-tasks-page-button {% if p == page %}is-active{% endif %}" href="?{{ scope_prefix }}page={{ p }}">{{ p }}</a>{% endfor %}
-                                    {% if page < total_pages %}<a class="student-tasks-page-button" href="?{{ scope_prefix }}page={{ page + 1 }}">›</a>{% else %}<span class="student-tasks-page-button">›</span>{% endif %}
+                                    {% if page < total_pages %}<a class="student-tasks-page-button" href="?{{ scope_prefix }}page={{ page + 1 }}">{{ nx_icon('chevron-right') }}</a>{% else %}<span class="student-tasks-page-button" aria-disabled="true">{{ nx_icon('chevron-right') }}</span>{% endif %}
                                 </div>
                             </div>
                         {% endif %}

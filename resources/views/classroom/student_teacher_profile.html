@@ -11,7 +11,7 @@
 <body class="student-page">
 {% include 'components/student_sidebar.html' %}
 <main class="student-main-content nexora-app-main"><div class="nexora-page teacher-public">
-<a class="ui-secondary-btn tp-back" href="{{ url_for('classroom.student_class',class_id=classroom.id) }}">← Back to {{ classroom.name }}</a>
+<a class="ui-secondary-btn tp-back" href="{{ url_for('classroom.student_class',class_id=classroom.id) }}">{{ nx_icon('arrow-left', 'student-link-icon') }}Back to {{ classroom.name }}</a>
 <section class="tp-hero"><div class="tp-cover"></div><div class="tp-body"><img class="tp-avatar" src="{% if supervisor.profile_picture %}{{ url_for('profile_picture',filename=supervisor.profile_picture) }}{% else %}{{ url_for('static',filename='images/default_profile.png') }}{% endif %}" alt="{{ profile.first_name or supervisor.username }} profile photo"><div class="tp-name"><span class="tp-role">Supervisor</span><h1>{{ profile.first_name ~ ' ' ~ profile.last_name if profile.first_name or profile.last_name else supervisor.username }} <span class="tp-verified">{{ nx_icon('success') }}</span></h1><p>{{ profile.job_title or 'Faculty Supervisor' }} · {{ profile.department or 'Nexora' }}</p></div></div></section>
 <div class="tp-grid">
 <div>

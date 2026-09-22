@@ -1,3 +1,4 @@
+{% from 'components/nexora_icons.html' import nx_icon %}
 <!DOCTYPE html>
 <html>
     <head>
@@ -11,7 +12,7 @@
         {% include 'components/supervisor_sidebar.html' %}
         <div class="page-content nexora-app-main">
             <div class="nexora-page">
-                <a href="{{ url_for('classroom.supervisor_class', class_id=classroom.id) }}" class="btn btn-light btn-sm mb-3">← Back to Class</a>
+                <a href="{{ url_for('classroom.supervisor_class', class_id=classroom.id) }}" class="btn btn-light btn-sm mb-3">{{ nx_icon('arrow-left', 'supervisor-link-icon') }}Back to Class</a>
 
                 {% with messages = get_flashed_messages(with_categories=true) %}
                     {% if messages %}
@@ -24,7 +25,7 @@
                 <div class="card shadow-sm mb-4 nx-extracted-classroom-supervisor-assignment-1">
                     <div class="card-body">
                         <div class="d-flex align-items-center gap-3 mb-2">
-                            <div class="nx-extracted-classroom-supervisor-assignment-2">📝</div>
+                            <div class="nx-extracted-classroom-supervisor-assignment-2">{{ nx_icon('work') }}</div>
                             <div>
                                 <h3 class="mb-1 nx-extracted-classroom-supervisor-assignment-3">{{ assignment.title }}</h3>
                                 <p class="text-muted mb-0">{{ assignment.description or 'No description.' }}</p>
@@ -40,21 +41,21 @@
                 <div class="row g-3 mb-4">
                     <div class="col-md-4">
                         <div class="card shadow-sm p-3 text-center nx-extracted-classroom-supervisor-assignment-4">
-                            <div class="nx-extracted-classroom-supervisor-assignment-5">👥</div>
+                            <div class="nx-extracted-classroom-supervisor-assignment-5">{{ nx_icon('users') }}</div>
                             <h4 class="mb-0">{{ enrolled }}</h4>
                             <small class="text-muted">Enrolled</small>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="card shadow-sm p-3 text-center nx-extracted-classroom-supervisor-assignment-6">
-                            <div class="nx-extracted-classroom-supervisor-assignment-7">✅</div>
+                            <div class="nx-extracted-classroom-supervisor-assignment-7">{{ nx_icon('success') }}</div>
                             <h4 class="mb-0 nx-extracted-classroom-supervisor-assignment-8">{{ submitted }}</h4>
                             <small class="text-muted">Submitted</small>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="card shadow-sm p-3 text-center nx-extracted-classroom-supervisor-assignment-9">
-                            <div class="nx-extracted-classroom-supervisor-assignment-10">⏳</div>
+                            <div class="nx-extracted-classroom-supervisor-assignment-10">{{ nx_icon('clock') }}</div>
                             <h4 class="mb-0 nx-extracted-classroom-supervisor-assignment-11">{{ missing }}</h4>
                             <small class="text-muted">Missing</small>
                         </div>

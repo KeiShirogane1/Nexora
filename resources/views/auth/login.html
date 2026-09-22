@@ -1,3 +1,4 @@
+{% from 'components/nexora_icons.html' import nx_icon %}
 <!DOCTYPE html>
 <html>
     <head>
@@ -34,7 +35,7 @@
                 <div class="auth-field">
                     <input type="password" id="loginPassword" name="password" placeholder="Password" required autocomplete="current-password">
                     <button type="button" class="toggle-pass" onclick="togglePass('loginPassword', this)" aria-label="Show password" title="Show password">
-                        <span aria-hidden="true">👁</span>
+                        {{ nx_icon('eye') }}
                     </button>
                 </div>
                 <p class="forgot-password-link nx-extracted-auth-login-5">
@@ -46,6 +47,8 @@
             </form>
         </div>
         <script>
+            const authEyeSvg = {{ nx_icon('eye')|tojson }};
+            const authEyeOffSvg = {{ nx_icon('eye-off')|tojson }};
             function togglePass(id, btn) {
                 const el = document.getElementById(id);
                 if (!el) return;
@@ -53,9 +56,7 @@
                 el.type = visible ? "text" : "password";
                 btn.setAttribute("aria-label", visible ? "Hide password" : "Show password");
                 btn.setAttribute("title", visible ? "Hide password" : "Show password");
-                btn.innerHTML = visible
-                    ? '<span aria-hidden="true">🙈</span>'
-                    : '<span aria-hidden="true">👁</span>';
+                btn.innerHTML = visible ? authEyeOffSvg : authEyeSvg;
             }
 
             (function () {
