@@ -290,3 +290,39 @@ def test_templates_keep_css_out_of_html():
             offenders.append(f"{template}: inline style attribute")
 
     assert not offenders, "Template CSS must live in resources/assets/css/:\n" + "\n".join(offenders)
+
+def test_templates_avoid_raw_ui_icon_glyphs():
+    """UI icons must use the shared Nexora SVG macro instead of raw Unicode glyphs."""
+    forbidden = {
+        "📎": "attachment",
+        "⋮": "more-vertical",
+        "↶": "rotate-left",
+        "↷": "rotate-right",
+        "◷": "clock",
+        "♙": "profile",
+        "▤": "list",
+        "▧": "grid",
+        "⌛": "clock",
+        "▦": "grid",
+        "▥": "list",
+        "★": "star-filled",
+        "›": "chevron-right",
+        "‹": "chevron-left",
+    }
+
+    root = pathlib.Path("resources/views")
+    offenders = []
+
+    for template in sorted(root.rglob("*.html")):
+        source = template.read_text(encoding="utf-8")
+        for glyph, icon_name in forbidden.items():
+            if glyph in source:
+                offenders.append(
+                    f"{template}: raw {glyph!r}; use nx_icon('{icon_name}')"
+                )
+
+    assert not offenders, (
+        "Template UI icons must use components/nexora_icons.html:\n"
+        + "\n".join(offenders)
+    )
+
