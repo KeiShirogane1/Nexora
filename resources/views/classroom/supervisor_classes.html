@@ -52,7 +52,7 @@
                                             <span class="supervisor-status {% if c.status == 'Active' %}is-active{% endif %}"><span class="supervisor-status-dot"></span>{{ c.status }}</span>
                                             {% if pending_total > 0 %}<a href="{{ url_for('classroom.supervisor_class', class_id=c.id) }}" class="supervisor-class-pending-pill" title="{{ pending.get('logbook', 0) }} Daily OJT review{% if pending.get('logbook', 0) != 1 %}s{% endif %} · {{ pending.get('work', 0) }} Work review{% if pending.get('work', 0) != 1 %}s{% endif %}">{{ pending_total }} pending</a>{% endif %}
                                             <div class="dropdown position-relative">
-                                                <button type="button" class="btn btn-light border btn-sm px-2" aria-label="Manage {{ c.name }}" aria-expanded="false" onclick="toggleClassMenu(event, 'class-menu-{{ c.id }}', this)">⋮</button>
+                                                <button type="button" class="btn btn-light border btn-sm px-2" aria-label="Manage {{ c.name }}" aria-expanded="false" onclick="toggleClassMenu(event, 'class-menu-{{ c.id }}', this)">{{ nx_icon('more-vertical') }}</button>
                                                 <div class="dropdown-menu dropdown-menu-end shadow-sm" id="class-menu-{{ c.id }}">
                                                     <a class="dropdown-item" href="{{ url_for('internship_classroom.edit_intern_classroom', class_id=c.id) }}">Edit Intern Classroom</a>
                                                     <button type="button" class="dropdown-item" onclick="toggleCardBannerColorChoices(event, 'class-banner-colors-{{ c.id }}')">Change Banner Color</button>

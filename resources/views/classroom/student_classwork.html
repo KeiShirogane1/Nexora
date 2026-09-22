@@ -1,3 +1,4 @@
+{% from 'components/nexora_icons.html' import nx_icon %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -53,7 +54,7 @@
                                 <span class="student-task-priority {% if item.logbook_entry %}is-low{% endif %}">{% if item.logbook_entry %}Recorded{% else %}Pending{% endif %}</span>
                                 <div class="student-task-due"><strong>{% if item.due_at %}Due {{ item.due_at }}{% else %}No deadline{% endif %}</strong><span>{% if item.team_members %}{{ item.team_name or 'Team' }} · {{ item.team_members|length }} members{% elif item.group_mode %}Collaborative Work{% else %}Assigned OJT Work{% endif %}</span></div>
                                 <div class="student-task-progress {% if item.logbook_entry %}is-complete{% endif %}" aria-label="{% if item.logbook_entry %}Recorded in Daily OJT Logbook{% else %}Pending Work{% endif %}"><span>{% if item.logbook_entry %}<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 12 3 3 7-7"></path></svg>{% else %}—{% endif %}</span></div>
-                                <span class="student-task-menu" aria-hidden="true">›</span>
+                                <span class="student-task-menu" aria-hidden="true">{{ nx_icon('chevron-right') }}</span>
                             </a>
                         {% endfor %}
                     {% else %}

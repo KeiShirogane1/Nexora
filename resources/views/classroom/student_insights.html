@@ -83,7 +83,7 @@
                     <div class="student-insights-kpi-copy">
                         <span>OJT Average</span>
                         <strong>{% if has_daily_performance %}{{ "%.1f"|format(daily_average_percentage) }}%{% else %}—{% endif %}</strong>
-                        <small>{% if daily_average_star is not none %}{{ "%.1f"|format(daily_average_star) }} ★ average Daily Rating{% else %}No supervisor rating yet{% endif %}</small>
+                        <small>{% if daily_average_star is not none %}{{ "%.1f"|format(daily_average_star) }} {{ nx_icon('star-filled', 'student-inline-rating-star') }} average Daily Rating{% else %}No supervisor rating yet{% endif %}</small>
                     </div>
                 </article>
                 <article class="student-insights-kpi">
@@ -126,7 +126,7 @@
                     </div>
                     <div class="student-insights-card-body">
                         <div class="student-insights-metric-grid">
-                            <div class="student-insights-metric"><span>Average Grade</span><strong>{% if has_daily_performance %}{{ "%.1f"|format(daily_average_percentage) }}%{% else %}—{% endif %}</strong><small>{% if daily_average_star is not none %}{{ "%.1f"|format(daily_average_star) }} ★{% else %}No rating{% endif %}</small></div>
+                            <div class="student-insights-metric"><span>Average Grade</span><strong>{% if has_daily_performance %}{{ "%.1f"|format(daily_average_percentage) }}%{% else %}—{% endif %}</strong><small>{% if daily_average_star is not none %}{{ "%.1f"|format(daily_average_star) }} {{ nx_icon('star-filled', 'student-inline-rating-star') }}{% else %}No rating{% endif %}</small></div>
                             <div class="student-insights-metric"><span>Latest Grade</span><strong>{% if daily_latest_percentage is not none %}{{ "%.1f"|format(daily_latest_percentage) }}%{% else %}—{% endif %}</strong><small>Most recent rated day</small></div>
                             <div class="student-insights-metric"><span>Highest Grade</span><strong>{% if daily_highest_percentage is not none %}{{ "%.1f"|format(daily_highest_percentage) }}%{% else %}—{% endif %}</strong><small>Best rated day</small></div>
                             <div class="student-insights-metric"><span>Lowest Grade</span><strong>{% if daily_lowest_percentage is not none %}{{ "%.1f"|format(daily_lowest_percentage) }}%{% else %}—{% endif %}</strong><small>Lowest rated day</small></div>
@@ -145,7 +145,7 @@
                                         <div class="student-insights-day-score{% if not item.is_rated %} is-empty{% endif %}">
                                             {% if item.is_rated %}
                                                 <strong>{{ "%.1f"|format(item.percentage) }}%</strong>
-                                                <span>{{ "%.1f"|format(item.star_rating) }} ★</span>
+                                                <span>{{ "%.1f"|format(item.star_rating) }} {{ nx_icon('star-filled', 'student-inline-rating-star') }}</span>
                                             {% else %}
                                                 <strong>Not rated</strong>
                                                 <span>Awaiting supervisor</span>
