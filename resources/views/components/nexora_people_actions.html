@@ -1,11 +1,16 @@
+{% from 'components/nexora_icons.html' import nx_icon %}
 {# Shared identity, action, chat, export, and consistency layer for all Nexora roles. #}
 <script>
 (function(){
     'use strict';
     var role={{ (session.get('role') or '')|tojson }};
     var currentUsername={{ (session.get('username') or '')|tojson }};
-    var copySvg='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M15 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h3"></path></svg>';
-    var chatSvg='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path></svg>';
+    var copySvg={{ nx_icon('copy')|tojson }};
+    var chatSvg={{ nx_icon('feedback')|tojson }};
+    var closeSvg={{ nx_icon('close')|tojson }};
+    var documentSvg={{ nx_icon('documents')|tojson }};
+    var tableSvg={{ nx_icon('grid')|tojson }};
+    var reportSvg={{ nx_icon('reports')|tojson }};
     var programAliases={
         'bsit':'Bachelor of Science in Information Technology',
         'bs information technology':'Bachelor of Science in Information Technology',
@@ -214,7 +219,7 @@
     function decorateTeacherProfile(){
         if(!/^\/student\/classes\/\d+\/teacher\/?$/.test(window.location.pathname))return;
         var nameNode=document.querySelector('.tp-name h1');if(!nameNode)return;
-        var display=String(nameNode.textContent||'').replace('✓','').trim();
+        var display=String(nameNode.textContent||'').replace('\u2713','').trim();
         fetch('/messages/contacts?role=supervisor',{headers:{Accept:'application/json'},cache:'no-store'}).then(function(r){return r.ok?r.json():Promise.reject();}).then(function(data){var contacts=data.contacts||[];var contact=contacts.find(function(item){return String(item.display_name||'').trim().toLowerCase()===display.toLowerCase();})||(contacts.length===1?contacts[0]:null);if(!contact)return;if(!nameNode.parentElement.querySelector('.nx-username-line'))nameNode.insertAdjacentElement('afterend',usernameLine(contact.username));var actions=nameNode.parentElement.querySelector('.nx-profile-quick-actions');if(!actions){actions=document.createElement('div');actions.className='nx-profile-quick-actions';nameNode.parentElement.appendChild(actions);}appendChat(actions,contact.id);}).catch(function(){});
     }
 
@@ -241,7 +246,7 @@
         var originalTrigger=document.getElementById('exportSupervisorsBtn');if(!originalTrigger||originalTrigger.dataset.nxExportReady==='1')return;
         /* Replace the legacy trigger node so its old CSV listener cannot fire alongside the new modal flow. */
         var trigger=originalTrigger.cloneNode(true);originalTrigger.replaceWith(trigger);trigger.dataset.nxExportReady='1';trigger.title='Export visible supervisors';
-        var overlay=document.createElement('div');overlay.className='nexora-modal-overlay nx-export-modal';overlay.id='nxSupervisorExportModal';overlay.setAttribute('aria-hidden','true');overlay.innerHTML='<div class="nexora-modal" role="dialog" aria-modal="true" aria-labelledby="nxExportTitle"><div class="nexora-modal-header"><h2 id="nxExportTitle">Export Supervisor List</h2><p>Choose a file format. Only supervisors currently visible in the filtered directory will be exported.</p><button type="button" class="nexora-modal-close" data-nx-export-close aria-label="Close">×</button></div><div class="nexora-modal-body"><div class="nx-export-grid"><button type="button" class="nx-export-choice" data-format="csv"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6M8 13h8M8 17h8"></path></svg><strong>CSV</strong><small>Supervisor-List.csv</small></button><button type="button" class="nx-export-choice" data-format="xlsx"><svg viewBox="0 0 24 24"><path d="M4 3h16v18H4zM4 9h16M10 9v12"></path></svg><strong>Excel</strong><small>Supervisor-List.xlsx</small></button><button type="button" class="nx-export-choice" data-format="pdf"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6M8 13h8M8 17h5"></path></svg><strong>PDF</strong><small>Supervisor-List.pdf</small></button></div><p class="nx-export-note">CSV is best for simple data exchange, Excel preserves a spreadsheet workbook, and PDF creates a formatted read-only directory report.</p></div><div class="nexora-modal-footer"><button type="button" class="btn-nexora-secondary" data-nx-export-close>Cancel</button></div></div>';
+        var overlay=document.createElement('div');overlay.className='nexora-modal-overlay nx-export-modal';overlay.id='nxSupervisorExportModal';overlay.setAttribute('aria-hidden','true');overlay.innerHTML='<div class="nexora-modal" role="dialog" aria-modal="true" aria-labelledby="nxExportTitle"><div class="nexora-modal-header"><h2 id="nxExportTitle">Export Supervisor List</h2><p>Choose a file format. Only supervisors currently visible in the filtered directory will be exported.</p><button type="button" class="nexora-modal-close" data-nx-export-close aria-label="Close">' + closeSvg + '</button></div><div class="nexora-modal-body"><div class="nx-export-grid"><button type="button" class="nx-export-choice" data-format="csv">' + documentSvg + '<strong>CSV</strong><small>Supervisor-List.csv</small></button><button type="button" class="nx-export-choice" data-format="xlsx">' + tableSvg + '<strong>Excel</strong><small>Supervisor-List.xlsx</small></button><button type="button" class="nx-export-choice" data-format="pdf">' + reportSvg + '<strong>PDF</strong><small>Supervisor-List.pdf</small></button></div><p class="nx-export-note">CSV is best for simple data exchange, Excel preserves a spreadsheet workbook, and PDF creates a formatted read-only directory report.</p></div><div class="nexora-modal-footer"><button type="button" class="btn-nexora-secondary" data-nx-export-close>Cancel</button></div></div>';
         document.body.appendChild(overlay);
         function open(){overlay.classList.add('open');overlay.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';}
         function close(){overlay.classList.remove('open');overlay.setAttribute('aria-hidden','true');document.body.style.overflow='';}

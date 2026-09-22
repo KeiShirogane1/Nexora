@@ -4,9 +4,9 @@
     <div class="nx-document-viewer-toolbar">
         <div class="nx-document-viewer-title" id="nxDocumentViewerTitle">Document Preview</div>
         <div class="nx-document-viewer-actions">
-            <button type="button" class="nx-document-viewer-button" id="nxDocumentZoomOut" aria-label="Zoom out">−</button>
+            <button type="button" class="nx-document-viewer-button" id="nxDocumentZoomOut" aria-label="Zoom out">{{ nx_icon('minus') }}</button>
             <button type="button" class="nx-document-viewer-button" id="nxDocumentZoomReset" aria-label="Reset zoom">100%</button>
-            <button type="button" class="nx-document-viewer-button" id="nxDocumentZoomIn" aria-label="Zoom in">+</button>
+            <button type="button" class="nx-document-viewer-button" id="nxDocumentZoomIn" aria-label="Zoom in">{{ nx_icon('plus') }}</button>
             <a class="nx-document-viewer-button" id="nxDocumentOpenNew" href="#" target="_blank" rel="noopener" aria-label="Open document in a new tab">{{ nx_icon('external') }}</a>
             <button type="button" class="nx-document-viewer-button" id="nxDocumentViewerClose" aria-label="Close fullscreen preview">{{ nx_icon('close') }}</button>
         </div>
@@ -17,7 +17,7 @@
         </div>
         <iframe class="nx-document-viewer-frame" id="nxDocumentViewerFrame" title="Document preview" hidden></iframe>
         <div class="nx-document-viewer-status" id="nxDocumentViewerStatus" hidden>Loading document…</div>
-        <div class="nx-document-viewer-hint" id="nxDocumentViewerHint" hidden>Mouse wheel or + / − to zoom · drag to pan · Esc to close</div>
+        <div class="nx-document-viewer-hint" id="nxDocumentViewerHint" hidden>Mouse wheel or the zoom controls to zoom · drag to pan · Esc to close</div>
     </div>
 </div>
 
@@ -125,7 +125,7 @@
             })
             .catch(function () {
                 if (sequence !== loadSequence || viewer.hidden) return;
-                status.textContent = 'This file could not be embedded. Use ↗ to open it in a new tab.';
+                status.textContent = 'This file could not be embedded. Use Open in new tab.';
                 status.hidden = false;
             });
     }

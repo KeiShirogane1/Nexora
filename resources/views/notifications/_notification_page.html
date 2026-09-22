@@ -24,7 +24,7 @@
 
         <section class="nx-notifications-summary" aria-label="Notification summary">
             <article class="nx-notifications-summary-item">
-                {% if role == 'admin' %}<div class="nx-notifications-summary-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M10 21h4"></path></svg></div>{% endif %}
+                {% if role == 'admin' %}<div class="nx-notifications-summary-icon" aria-hidden="true">{{ nx_icon('bell') }}</div>{% endif %}
                 <div class="{% if role == 'admin' %}nx-notifications-summary-copy{% endif %}">
                     <strong>{{ total_count|default(0) }}</strong>
                     <span>Total Notifications</span>
@@ -32,7 +32,7 @@
                 </div>
             </article>
             <article class="nx-notifications-summary-item">
-                {% if role == 'admin' %}<div class="nx-notifications-summary-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="2.5" fill="currentColor" stroke="none"></circle></svg></div>{% endif %}
+                {% if role == 'admin' %}<div class="nx-notifications-summary-icon" aria-hidden="true">{{ nx_icon('target') }}</div>{% endif %}
                 <div class="{% if role == 'admin' %}nx-notifications-summary-copy{% endif %}">
                     <strong>{{ unread_count|default(0) }}</strong>
                     <span>Unread</span>
@@ -40,7 +40,7 @@
                 </div>
             </article>
             <article class="nx-notifications-summary-item">
-                {% if role == 'admin' %}<div class="nx-notifications-summary-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="m8.5 12 2.2 2.2 4.8-5"></path></svg></div>{% endif %}
+                {% if role == 'admin' %}<div class="nx-notifications-summary-icon" aria-hidden="true">{{ nx_icon('success') }}</div>{% endif %}
                 <div class="{% if role == 'admin' %}nx-notifications-summary-copy{% endif %}">
                     <strong>{{ (total_count|default(0)) - (unread_count|default(0)) }}</strong>
                     <span>Read</span>
@@ -88,7 +88,7 @@
                                     <small>{{ notif['created_at'] }}</small>
                                 </div>
                                 {% if notif['link_url'] %}
-                                    <a class="nx-notification-history-open" href="{{ notif['link_url'] }}" onclick="markOne({{ notif['id'] }})">Open →</a>
+                                    <a class="nx-notification-history-open" href="{{ notif['link_url'] }}" onclick="markOne({{ notif['id'] }})">Open {{ nx_icon('arrow-right', 'nx-notification-open-icon') }}</a>
                                 {% endif %}
                             </article>
                         {% endfor %}
@@ -114,9 +114,9 @@
 
                 <div class="nx-notifications-page-buttons" aria-label="Notification pages">
                     {% if page > 1 %}
-                        <a class="nx-notifications-page-button" href="{{ url_for('notifications.notification_list', page=page - 1) }}" aria-label="Previous page">‹</a>
+                        <a class="nx-notifications-page-button" href="{{ url_for('notifications.notification_list', page=page - 1) }}" aria-label="Previous page">{{ nx_icon('chevron-left') }}</a>
                     {% else %}
-                        <span class="nx-notifications-page-button" aria-disabled="true">‹</span>
+                        <span class="nx-notifications-page-button" aria-disabled="true">{{ nx_icon('chevron-left') }}</span>
                     {% endif %}
 
                     {% for p in pagination_items %}
@@ -128,9 +128,9 @@
                     {% endfor %}
 
                     {% if page < total_pages %}
-                        <a class="nx-notifications-page-button" href="{{ url_for('notifications.notification_list', page=page + 1) }}" aria-label="Next page">›</a>
+                        <a class="nx-notifications-page-button" href="{{ url_for('notifications.notification_list', page=page + 1) }}" aria-label="Next page">{{ nx_icon('chevron-right') }}</a>
                     {% else %}
-                        <span class="nx-notifications-page-button" aria-disabled="true">›</span>
+                        <span class="nx-notifications-page-button" aria-disabled="true">{{ nx_icon('chevron-right') }}</span>
                     {% endif %}
                 </div>
             </div>

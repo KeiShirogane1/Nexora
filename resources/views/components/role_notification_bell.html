@@ -9,10 +9,7 @@
 
 <details class="nx-notification-menu nx-notification-{{ role }}">
     <summary class="nx-notification-trigger" aria-label="Open notifications" title="Notifications">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path>
-            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-        </svg>
+        {{ nx_icon('bell') }}
         {% if unread_count|default(0) > 0 %}<span class="nx-notification-badge">{{ unread_count }}</span>{% endif %}
     </summary>
 
@@ -23,7 +20,7 @@
                 <h2>Recent Updates</h2>
                 <p>Latest notifications from the last 7 days.</p>
             </div>
-            <button type="button" class="nx-notification-close" aria-label="Close notifications" onclick="closeNexoraNotifications(this)">×</button>
+            <button type="button" class="nx-notification-close" aria-label="Close notifications" onclick="closeNexoraNotifications(this)">{{ nx_icon('close') }}</button>
         </div>
 
         <div class="nx-notification-body">
@@ -56,7 +53,7 @@
             {% else %}
                 <span class="nx-notification-read-status">All caught up</span>
             {% endif %}
-            <a href="{{ url_for('notifications.notification_list') }}" class="nx-notification-view-all">View All Notifications <span aria-hidden="true">→</span></a>
+            <a href="{{ url_for('notifications.notification_list') }}" class="nx-notification-view-all">View All Notifications <span aria-hidden="true">{{ nx_icon('arrow-right') }}</span></a>
         </div>
     </section>
 </details>

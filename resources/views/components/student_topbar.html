@@ -1,3 +1,4 @@
+{% from 'components/nexora_icons.html' import nx_icon %}
 {% set nx_topbar_role = 'student' %}
 {% include 'components/global_typography.html' %}
 {% include 'components/nexora_ui_defaults.html' %}
@@ -18,6 +19,7 @@
     {% set nx_logbook_day_numbers = sidebar_work_context.attendance_day_numbers if sidebar_work_context and sidebar_work_context.attendance_day_numbers is defined else {} %}
     <script>
     document.addEventListener('DOMContentLoaded', function () {
+        var editIconSvg = {{ nx_icon('edit')|tojson }};
         var canClockIn = {{ 'true' if nx_logbook_can_clock_in else 'false' }};
         var hasOpenAttendance = {{ 'true' if nx_logbook_has_open_attendance else 'false' }};
         var completedToday = {{ 'true' if nx_logbook_completed_today else 'false' }};
@@ -76,7 +78,7 @@
             editLink.setAttribute('aria-label', "Edit today's Daily OJT entry");
             editLink.setAttribute('title', "Edit today's Daily OJT entry");
             editLink.setAttribute('data-edit-today-logbook', '1');
-            editLink.textContent = '✎';
+            editLink.innerHTML = editIconSvg;
             actionBox.insertBefore(editLink, viewLink);
         });
 

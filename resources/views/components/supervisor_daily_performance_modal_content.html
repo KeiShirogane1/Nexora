@@ -1,3 +1,4 @@
+{% from 'components/nexora_icons.html' import nx_icon %}
 <div class="nexora-modal mw-100 col-12 col-lg-11 col-xl-10" role="dialog" aria-modal="true" aria-labelledby="dailyPerformanceModalTitle">
     <div class="nexora-modal-header d-flex align-items-start gap-3">
         <div class="d-flex align-items-center gap-3 min-w-0 pe-5">
@@ -7,7 +8,7 @@
                 <p>{{ selected_student.email or selected_student.username or 'Enrolled intern' }} · {{ classroom.name }}</p>
             </div>
         </div>
-        <button type="button" class="nexora-modal-close" aria-label="Close performance history" data-daily-performance-modal-close>×</button>
+        <button type="button" class="nexora-modal-close" aria-label="Close performance history" data-daily-performance-modal-close>{{ nx_icon('close') }}</button>
     </div>
 
     <div class="nexora-modal-body">
@@ -29,10 +30,10 @@
         </section>
 
         <div class="row g-3">
-            <div class="col-6 col-xl-3"><article class="card h-100 shadow-sm"><div class="card-body"><div class="text-muted small">Average Rating</div><div class="fs-4 fw-bold">{% if summary.average_star is not none %}{{ '%.1f'|format(summary.average_star) }} ★{% else %}—{% endif %}</div><div class="text-muted small">{% if summary.average_percentage is not none %}{{ '%.1f'|format(summary.average_percentage) }}% average{% else %}No ratings yet{% endif %}</div></div></article></div>
-            <div class="col-6 col-xl-3"><article class="card h-100 shadow-sm"><div class="card-body"><div class="text-muted small">Latest Rating</div><div class="fs-4 fw-bold text-primary">{% if summary.latest_star is not none %}{{ '%.1f'|format(summary.latest_star) }} ★{% else %}—{% endif %}</div><div class="text-muted small">{% if summary.latest_percentage is not none %}{{ '%.1f'|format(summary.latest_percentage) }}%{% else %}No rating yet{% endif %}</div></div></article></div>
+            <div class="col-6 col-xl-3"><article class="card h-100 shadow-sm"><div class="card-body"><div class="text-muted small">Average Rating</div><div class="fs-4 fw-bold">{% if summary.average_star is not none %}{{ '%.1f'|format(summary.average_star) }} {{ nx_icon('star-filled', 'supervisor-inline-rating-star') }}{% else %}—{% endif %}</div><div class="text-muted small">{% if summary.average_percentage is not none %}{{ '%.1f'|format(summary.average_percentage) }}% average{% else %}No ratings yet{% endif %}</div></div></article></div>
+            <div class="col-6 col-xl-3"><article class="card h-100 shadow-sm"><div class="card-body"><div class="text-muted small">Latest Rating</div><div class="fs-4 fw-bold text-primary">{% if summary.latest_star is not none %}{{ '%.1f'|format(summary.latest_star) }} {{ nx_icon('star-filled', 'supervisor-inline-rating-star') }}{% else %}—{% endif %}</div><div class="text-muted small">{% if summary.latest_percentage is not none %}{{ '%.1f'|format(summary.latest_percentage) }}%{% else %}No rating yet{% endif %}</div></div></article></div>
             <div class="col-6 col-xl-3"><article class="card h-100 shadow-sm"><div class="card-body"><div class="text-muted small">Highest Percentage</div><div class="fs-4 fw-bold text-success">{% if summary.highest_percentage is not none %}{{ '%.1f'|format(summary.highest_percentage) }}%{% else %}—{% endif %}</div><div class="text-muted small">Supervisor-entered daily ratings</div></div></article></div>
-            <div class="col-6 col-xl-3"><article class="card h-100 shadow-sm"><div class="card-body"><div class="text-muted small">Latest Trend</div>{% if summary.latest_trend_direction == 'up' %}<div class="fs-4 fw-bold text-success">↑ {{ '%+.1f'|format(summary.latest_trend_delta) }} pts</div>{% elif summary.latest_trend_direction == 'down' %}<div class="fs-4 fw-bold text-danger">↓ {{ '%+.1f'|format(summary.latest_trend_delta) }} pts</div>{% elif summary.latest_trend_direction == 'same' %}<div class="fs-4 fw-bold text-secondary">→ 0.0 pts</div>{% elif summary.latest_percentage is not none %}<div class="fs-4 fw-bold text-secondary">Baseline</div>{% else %}<div class="fs-4 fw-bold">—</div>{% endif %}<div class="text-muted small">Compared with previous rated day</div></div></article></div>
+            <div class="col-6 col-xl-3"><article class="card h-100 shadow-sm"><div class="card-body"><div class="text-muted small">Latest Trend</div>{% if summary.latest_trend_direction == 'up' %}<div class="fs-4 fw-bold text-success"><span class="d-inline-flex align-items-center gap-1">{{ nx_icon('arrow-up', 'supervisor-inline-trend-icon') }}<span>{{ '%+.1f'|format(summary.latest_trend_delta) }} pts</span></span></div>{% elif summary.latest_trend_direction == 'down' %}<div class="fs-4 fw-bold text-danger"><span class="d-inline-flex align-items-center gap-1">{{ nx_icon('arrow-down', 'supervisor-inline-trend-icon') }}<span>{{ '%+.1f'|format(summary.latest_trend_delta) }} pts</span></span></div>{% elif summary.latest_trend_direction == 'same' %}<div class="fs-4 fw-bold text-secondary"><span class="d-inline-flex align-items-center gap-1">{{ nx_icon('arrow-right', 'supervisor-inline-trend-icon') }}<span>0.0 pts</span></span></div>{% elif summary.latest_percentage is not none %}<div class="fs-4 fw-bold text-secondary">Baseline</div>{% else %}<div class="fs-4 fw-bold">—</div>{% endif %}<div class="text-muted small">Compared with previous rated day</div></div></article></div>
         </div>
 
         <section class="card shadow-sm">
@@ -55,9 +56,9 @@
                                     <td><strong>Day {{ item.day_number }}</strong></td>
                                     <td>{{ item.date }}</td>
                                     {% if item.is_rated %}
-                                        <td><span class="fw-bold text-primary">{{ '%.1f'|format(item.star_rating) }} ★</span></td>
+                                        <td><span class="fw-bold text-primary">{{ '%.1f'|format(item.star_rating) }} {{ nx_icon('star-filled', 'supervisor-inline-rating-star') }}</span></td>
                                         <td><strong>{{ '%.1f'|format(item.percentage) }}%</strong></td>
-                                        <td>{% if item.trend_direction == 'up' %}<span class="badge text-bg-success">↑ {{ '%+.1f'|format(item.trend_delta) }} pts</span>{% elif item.trend_direction == 'down' %}<span class="badge text-bg-danger">↓ {{ '%+.1f'|format(item.trend_delta) }} pts</span>{% elif item.trend_direction == 'same' %}<span class="badge text-bg-secondary">→ 0.0 pts</span>{% else %}<span class="badge text-bg-light border">Baseline</span>{% endif %}</td>
+                                        <td>{% if item.trend_direction == 'up' %}<span class="badge text-bg-success"><span class="d-inline-flex align-items-center gap-1">{{ nx_icon('arrow-up', 'supervisor-inline-trend-icon') }}<span>{{ '%+.1f'|format(item.trend_delta) }} pts</span></span></span>{% elif item.trend_direction == 'down' %}<span class="badge text-bg-danger"><span class="d-inline-flex align-items-center gap-1">{{ nx_icon('arrow-down', 'supervisor-inline-trend-icon') }}<span>{{ '%+.1f'|format(item.trend_delta) }} pts</span></span></span>{% elif item.trend_direction == 'same' %}<span class="badge text-bg-secondary"><span class="d-inline-flex align-items-center gap-1">{{ nx_icon('arrow-right', 'supervisor-inline-trend-icon') }}<span>0.0 pts</span></span></span>{% else %}<span class="badge text-bg-light border">Baseline</span>{% endif %}</td>
                                         <td class="text-body-secondary">{{ item.comment or 'No performance comment.' }}</td>
                                     {% else %}
                                         <td><span class="text-muted">—</span></td>

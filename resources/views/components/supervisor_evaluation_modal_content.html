@@ -1,3 +1,4 @@
+{% from 'components/nexora_icons.html' import nx_icon %}
 {% set evaluation_theme = classroom_banner_theme(classroom.id) %}
 {% set weighted_rating = namespace(total=0, count=0, ready=true) %}
 {% for item in evaluation_items %}
@@ -30,7 +31,7 @@
             {% else %}
                 <span class="badge rounded-pill text-bg-light border text-secondary px-3 py-1">Not Started</span>
             {% endif %}
-            <button type="button" class="nexora-modal-close position-static flex-shrink-0" aria-label="Close evaluation" data-evaluation-modal-close>&times;</button>
+            <button type="button" class="nexora-modal-close position-static flex-shrink-0" aria-label="Close evaluation" data-evaluation-modal-close>{{ nx_icon('close') }}</button>
         </div>
     </div>
 
@@ -89,7 +90,7 @@
                                                 {% if item.max_value == 5 and item.rating_value >= 1 and item.rating_value <= 5 %}
                                                     <span class="d-inline-flex gap-1" aria-label="{{ item.rating_value }} out of 5 stars">
                                                         {% for star in range(1, 6) %}
-                                                            <span class="{{ 'text-warning' if star <= item.rating_value else 'text-secondary' }}" aria-hidden="true">★</span>
+                                                            <span class="{{ 'text-warning' if star <= item.rating_value else 'text-secondary' }}" aria-hidden="true">{{ nx_icon('star-filled') }}</span>
                                                         {% endfor %}
                                                     </span>
                                                     <span class="small fw-bold ms-2">{{ item.rating_value }} / 5</span>
@@ -136,7 +137,7 @@
                             type="button"
                             class="btn btn-sm btn-outline-primary"
                             data-evaluation-add-criterion
-                            onclick="setTimeout(()=>{ const form=this.closest('form'); if(form) form.dispatchEvent(new Event('input',{bubbles:true})); },0);">+ Add Criterion</button>
+                            onclick="setTimeout(()=>{ const form=this.closest('form'); if(form) form.dispatchEvent(new Event('input',{bubbles:true})); },0);"><span class="d-inline-flex align-items-center gap-1">{{ nx_icon('plus') }}<span>Add Criterion</span></span></button>
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
@@ -187,7 +188,7 @@
                                                                     data-rating-value="{{ star }}"
                                                                     aria-label="Rate {{ star }} out of 5 stars"
                                                                     aria-pressed="{{ 'true' if item.rating_value == star else 'false' }}"
-                                                                    onclick="const group=this.closest('[data-evaluation-star-group]'); const input=group ? group.querySelector('[data-evaluation-rating-value]') : null; if(input){ input.value=this.dataset.ratingValue; input.dispatchEvent(new Event('input',{bubbles:true})); }">★</button>
+                                                                    onclick="const group=this.closest('[data-evaluation-star-group]'); const input=group ? group.querySelector('[data-evaluation-rating-value]') : null; if(input){ input.value=this.dataset.ratingValue; input.dispatchEvent(new Event('input',{bubbles:true})); }">{{ nx_icon('star-filled') }}</button>
                                                             {% endfor %}
                                                         </span>
                                                         <div class="input-group input-group-sm w-auto flex-nowrap">
@@ -224,7 +225,7 @@
                                                                     data-rating-value="{{ star }}"
                                                                     aria-label="Rate {{ star }} out of 5 stars"
                                                                     aria-pressed="false"
-                                                                    onclick="const group=this.closest('[data-evaluation-star-group]'); const input=group ? group.querySelector('[data-evaluation-rating-value]') : null; if(input){ input.value=this.dataset.ratingValue; input.dispatchEvent(new Event('input',{bubbles:true})); }">★</button>
+                                                                    onclick="const group=this.closest('[data-evaluation-star-group]'); const input=group ? group.querySelector('[data-evaluation-rating-value]') : null; if(input){ input.value=this.dataset.ratingValue; input.dispatchEvent(new Event('input',{bubbles:true})); }">{{ nx_icon('star-filled') }}</button>
                                                             {% endfor %}
                                                         </span>
                                                         <div class="input-group input-group-sm w-auto flex-nowrap">
@@ -259,7 +260,7 @@
                                                                 data-rating-value="{{ star }}"
                                                                 aria-label="Rate {{ star }} out of 5 stars"
                                                                 aria-pressed="false"
-                                                                onclick="const group=this.closest('[data-evaluation-star-group]'); const input=group ? group.querySelector('[data-evaluation-rating-value]') : null; if(input){ input.value=this.dataset.ratingValue; input.dispatchEvent(new Event('input',{bubbles:true})); }">★</button>
+                                                                onclick="const group=this.closest('[data-evaluation-star-group]'); const input=group ? group.querySelector('[data-evaluation-rating-value]') : null; if(input){ input.value=this.dataset.ratingValue; input.dispatchEvent(new Event('input',{bubbles:true})); }">{{ nx_icon('star-filled') }}</button>
                                                         {% endfor %}
                                                     </span>
                                                     <div class="input-group input-group-sm w-auto flex-nowrap">
@@ -348,7 +349,7 @@
                                         data-rating-value="{{ star }}"
                                         aria-label="Rate {{ star }} out of 5 stars"
                                         aria-pressed="false"
-                                        onclick="const group=this.closest('[data-evaluation-star-group]'); const input=group ? group.querySelector('[data-evaluation-rating-value]') : null; if(input){ input.value=this.dataset.ratingValue; input.dispatchEvent(new Event('input',{bubbles:true})); }">★</button>
+                                        onclick="const group=this.closest('[data-evaluation-star-group]'); const input=group ? group.querySelector('[data-evaluation-rating-value]') : null; if(input){ input.value=this.dataset.ratingValue; input.dispatchEvent(new Event('input',{bubbles:true})); }">{{ nx_icon('star-filled') }}</button>
                                 {% endfor %}
                             </span>
                             <div class="input-group input-group-sm w-auto flex-nowrap">
