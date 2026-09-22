@@ -20,7 +20,7 @@
         <div class="class-wrap">
             <header class="student-work-detail-heading">
                 <div><span class="student-section-eyebrow">Intern Portal · Work</span><h1>Work Details</h1><p>Review the assignment, complete the activity, then document it in your Daily OJT Logbook.</p></div>
-                <a href="{{ url_for('student_classwork.index', class_id=classroom.id) }}" class="student-work-detail-back">← Back to Work</a>
+                <a href="{{ url_for('student_classwork.index', class_id=classroom.id) }}" class="student-work-detail-back">{{ nx_icon('arrow-left', 'student-link-icon') }}Back to Work</a>
             </header>
 
             <div class="student-work-detail-grid">
@@ -54,7 +54,7 @@
                             <li>Use <strong>+ Daily Entry</strong> and choose <strong>{{ assignment.title }}</strong> under Related Assigned Work.</li>
                             <li>Describe what you completed and attach photo evidence when appropriate, then save the Daily OJT Entry.</li>
                         </ol>
-                        {% if classroom.archived %}<div class="alert alert-secondary mb-0">This Intern Classroom is archived. Existing Logbook evidence remains available, but new activity may be restricted.</div>{% else %}<a class="student-work-logbook-btn" href="{{ logbook_url }}">Open Daily OJT Logbook →</a>{% endif %}
+                        {% if classroom.archived %}<div class="alert alert-secondary mb-0">This Intern Classroom is archived. Existing Logbook evidence remains available, but new activity may be restricted.</div>{% else %}<a class="student-work-logbook-btn" href="{{ logbook_url }}">Open Daily OJT Logbook{{ nx_icon('arrow-right', 'student-link-icon') }}</a>{% endif %}
                         {% if logbook_entry %}<div class="student-work-complete-note"><strong>Recorded in Logbook.</strong> Your Daily OJT entry is linked to this Work{% if logbook_entry.accomplishment %}: {{ logbook_entry.accomplishment|truncate(140, True) }}{% endif %}.</div>{% endif %}
                     </section>
                 </div>

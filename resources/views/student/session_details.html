@@ -19,7 +19,7 @@
   <main class="student-tasks-main student-logbook-main">
     <div class="student-tasks-content nx-wrap nx-session-content">
       <div class="nx-breadcrumb"><a href="{{ url_for('student.logbook') }}">Daily OJT Logbook</a><span class="arrow">›</span><span>{% if daily_log %}Day {{ daily_log.day_number }}{% else %}Internship Session{% endif %}</span></div>
-      <section class="nx-heading"><div><div class="nx-eyebrow">Daily OJT Logbook</div><h1>{% if daily_log %}Day {{ daily_log.day_number }}{% else %}Internship Session{% endif %}</h1><p>{% if daily_log %}{{ daily_log.date }} · attendance-backed daily internship record.{% else %}Detailed session timeline and attendance summary.{% endif %}</p></div><a class="nx-back" href="{{ url_for('student.logbook') }}">← Back to Logbook</a></section>
+      <section class="nx-heading"><div><div class="nx-eyebrow">Daily OJT Logbook</div><h1>{% if daily_log %}Day {{ daily_log.day_number }}{% else %}Internship Session{% endif %}</h1><p>{% if daily_log %}{{ daily_log.date }} · attendance-backed daily internship record.{% else %}Detailed session timeline and attendance summary.{% endif %}</p></div><a class="nx-back" href="{{ url_for('student.logbook') }}">{{ nx_icon('arrow-left', 'student-link-icon') }}Back to Logbook</a></section>
 
       <div class="nx-grid">
         <div>
@@ -107,7 +107,7 @@
         <aside class="nx-side">
           <section class="nx-card nx-side-card"><h2 class="nx-side-title">Session Status</h2>{% if attendance[4] == 'Open' %}<div class="nx-status open"><span class="nx-status-dot"></span><div><strong>Currently Active</strong><small>This internship session is still open.</small></div></div>{% else %}<div class="nx-status"><span class="nx-status-dot"></span><div><strong>Closed</strong><small>This internship session has ended.</small></div></div>{% endif %}</section>
           <section class="nx-card nx-side-card"><h2 class="nx-side-title">Hours Rendered</h2><div class="nx-hours">{% if attendance[3] is not none %}{{ attendance[3] }} <small>hrs</small>{% else %}—{% endif %}</div><p class="nx-hours-note">{% if attendance[3] is not none %}Recorded time for this internship session.{% else %}Hours will appear once the session is completed.{% endif %}</p><div class="nx-progress"><i></i></div></section>
-          <section class="nx-card nx-side-card"><a class="nx-action" href="{{ url_for('student.logbook') }}">View All Daily OJT Entries →</a></section>
+          <section class="nx-card nx-side-card"><a class="nx-action" href="{{ url_for('student.logbook') }}">View All Daily OJT Entries{{ nx_icon('arrow-right', 'student-link-icon') }}</a></section>
         </aside>
       </div>
     </div>

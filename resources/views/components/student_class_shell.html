@@ -46,7 +46,7 @@
 
     <div id="studentInfoModal" class="nexora-modal-overlay student-class-info-modal" aria-hidden="true" onclick="if(event.target===this)closeStudentClassInfo()">
         <div class="nexora-modal" role="dialog" aria-modal="true" aria-labelledby="studentInfoModalTitle">
-            <div class="nexora-modal-header"><h2 id="studentInfoModalTitle">Intern Classroom Information</h2><p>Complete internship workspace, placement, weekly attendance schedule, and eligibility details.</p><button type="button" class="nexora-modal-close" aria-label="Close" onclick="closeStudentClassInfo()">×</button></div>
+            <div class="nexora-modal-header"><h2 id="studentInfoModalTitle">Intern Classroom Information</h2><p>Complete internship workspace, placement, weekly attendance schedule, and eligibility details.</p><button type="button" class="nexora-modal-close" aria-label="Close" onclick="closeStudentClassInfo()">{{ nx_icon('close') }}</button></div>
             <div class="nexora-modal-body">
                 <div class="class-info-summary">
                     <div class="class-info-summary-copy"><span>Intern Classroom</span><strong id="studentInfoTitle">{{ classroom.name }}</strong><small id="studentInfoSummary">{{ classroom.section }}{% if classroom.supervisor %} · {{ classroom.supervisor }}{% endif %}</small></div>
@@ -94,7 +94,7 @@
 
     <div id="studentLeaveModal" class="nexora-modal-overlay student-leave-modal" aria-hidden="true" onclick="if(event.target===this)closeStudentLeaveModal()">
         <div class="nexora-modal" role="dialog" aria-modal="true" aria-labelledby="studentLeaveModalTitle">
-            <div class="nexora-modal-header"><h2 id="studentLeaveModalTitle">Leave Intern Classroom?</h2><p>This changes your active internship enrollment.</p><button type="button" class="nexora-modal-close" aria-label="Close" onclick="closeStudentLeaveModal()">×</button></div>
+            <div class="nexora-modal-header"><h2 id="studentLeaveModalTitle">Leave Intern Classroom?</h2><p>This changes your active internship enrollment.</p><button type="button" class="nexora-modal-close" aria-label="Close" onclick="closeStudentLeaveModal()">{{ nx_icon('close') }}</button></div>
             <div class="nexora-modal-body"><p class="student-leave-copy">You are about to leave <strong>{{ classroom.name }}</strong>.</p><div class="student-leave-warning">You will stop receiving new Work from this internship. Your completed attendance and Daily OJT history remain preserved.</div><form method="POST" action="{{ url_for('classroom.leave_class', class_id=classroom.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><div class="modal-actions"><button type="button" onclick="closeStudentLeaveModal()">Keep Classroom</button><button type="submit" class="student-leave-submit">Leave Classroom</button></div></form></div>
         </div>
     </div>

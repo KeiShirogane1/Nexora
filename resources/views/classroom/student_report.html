@@ -38,17 +38,17 @@
             </header>
 
             <nav class="student-report-tabs" aria-label="Report sections">
-                <a href="#report-overview"><span aria-hidden="true">{{ nx_icon('overview') }}</span>Overview</a>
+                <a href="#report-overview"><span aria-hidden="true">{{ nx_icon('dashboard') }}</span>Overview</a>
                 <a href="#report-feedback"><span aria-hidden="true">{{ nx_icon('feedback') }}</span>Feedback Analysis</a>
                 <a href="#report-work"><span aria-hidden="true">{{ nx_icon('work') }}</span>Work Items</a>
-                <a href="#report-recommendation"><span aria-hidden="true">{{ nx_icon('recommendation') }}</span>Recommendation</a>
+                <a href="#report-recommendation"><span aria-hidden="true">{{ nx_icon('lightbulb') }}</span>Recommendation</a>
             </nav>
 
             <section id="report-overview" class="student-report-overview-grid student-report-anchor" aria-label="Report overview">
                 <article class="student-report-card">
                     <div class="student-report-card-head">
                         <div class="student-report-card-title">
-                            <span class="student-report-card-icon" aria-hidden="true">{{ nx_icon('overview') }}</span>
+                            <span class="student-report-card-icon" aria-hidden="true">{{ nx_icon('insights') }}</span>
                             <div>
                                 <h2>Performance Summary</h2>
                                 <p class="student-report-card-subtitle">Overview of your Work performance in this class.</p>
@@ -130,7 +130,7 @@
                             </div>
                         </div>
                         <div class="student-report-grading-item">
-                            <span class="student-report-grading-icon is-pending" aria-hidden="true">{{ nx_icon('work') }}</span>
+                            <span class="student-report-grading-icon is-pending" aria-hidden="true">{{ nx_icon('clock') }}</span>
                             <div class="student-report-grading-copy">
                                 <span>Pending / Ungraded</span>
                                 <strong>{{ pending_count }}</strong>
@@ -180,7 +180,7 @@
                 <article id="report-recommendation" class="student-report-card student-report-anchor">
                     <div class="student-report-card-head">
                         <div class="student-report-card-title">
-                            <span class="student-report-card-icon" aria-hidden="true">{{ nx_icon('recommendation') }}</span>
+                            <span class="student-report-card-icon" aria-hidden="true">{{ nx_icon('lightbulb') }}</span>
                             <div>
                                 <h2>Work Recommendation</h2>
                                 <p class="student-report-card-subtitle">Decision-support guidance from available Work and feedback evidence.</p>
@@ -193,7 +193,7 @@
 
                     {% if report.overall_percentage is none and not report.has_feedback %}
                         <div class="student-report-empty">
-                            <span class="student-report-empty-icon" aria-hidden="true">{{ nx_icon('target') }}</span>
+                            <span class="student-report-empty-icon" aria-hidden="true">{{ nx_icon('lightbulb') }}</span>
                             <strong>No recommendation yet</strong>
                             <p>Reviewed Work or supervisor feedback is needed first.</p>
                         </div>
@@ -202,7 +202,7 @@
                         {% if report.basis %}
                             <div class="student-report-basis" aria-label="Recommendation basis">
                                 {% for item in report.basis %}
-                                    <div class="student-report-basis-item">{{ item }}</div>
+                                    <div class="student-report-basis-item"><span class="student-report-basis-icon" aria-hidden="true">{{ nx_icon('check') }}</span><span>{{ item }}</span></div>
                                 {% endfor %}
                             </div>
                         {% endif %}
@@ -213,7 +213,7 @@
             <section id="report-work" class="student-report-card student-report-work-card student-report-anchor">
                 <div class="student-report-card-head">
                     <div class="student-report-card-title">
-                        <span class="student-report-card-icon" aria-hidden="true">{{ nx_icon('grading') }}</span>
+                        <span class="student-report-card-icon" aria-hidden="true">{{ nx_icon('work') }}</span>
                         <div>
                             <h2>Work Items</h2>
                             <p class="student-report-card-subtitle">Assignment scores currently included in this Work report.</p>
