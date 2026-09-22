@@ -162,7 +162,7 @@
                                                     <form method="POST" action="{{ url_for('admin.approve_student', user_id=student.id) }}" class="d-inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="btn-approve">Approve</button></form>
                                                     <form method="POST" action="{{ url_for('admin.reject_student', user_id=student.id) }}" class="d-inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="btn-reject">Reject</button></form>
                                                 {% endif %}
-                                                <div class="more-actions"><button type="button" class="btn-more" onclick="toggleMenu('menu-{{ student.id }}')" aria-label="More actions">⋮</button><div id="menu-{{ student.id }}" class="dropdown-menu-nexora">
+                                                <div class="more-actions"><button type="button" class="btn-more" onclick="toggleMenu('menu-{{ student.id }}')" aria-label="More actions">{{ nx_icon('more-vertical') }}</button><div id="menu-{{ student.id }}" class="dropdown-menu-nexora">
                                                     <a href="{{ url_for('admin.student_profile', student_id=student.id) }}" class="dropdown-item-nexora"><span>{{ nx_icon('eye') }}</span> View Profile</a>
                                                     <a href="{{ url_for('admin.edit_student', student_id=student.id) }}" class="dropdown-item-nexora"><span>{{ nx_icon('edit') }}</span> Edit Student</a>
                                                     <form method="POST" action="{{ url_for('admin.deactivate_student', student_id=student.id) }}" class="d-block student-deactivate-form"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="dropdown-item-nexora dropdown-item-deactivate w-100 text-start bg-transparent border-0"><span>{{ nx_icon('pause') }}</span> Deactivate</button></form>
@@ -173,7 +173,7 @@
                                             </div></td>
                                         </tr>
                                     {% else %}
-                                        <tr><td colspan="10"><div class="empty-state"><div class="icon">🎓</div><div class="empty-state-title">No students found</div><div class="empty-state-copy">Try adjusting your search or filter.</div></div></td></tr>
+                                        <tr><td colspan="10"><div class="empty-state"><div class="icon">{{ nx_icon('education') }}</div><div class="empty-state-title">No students found</div><div class="empty-state-copy">Try adjusting your search or filter.</div></div></td></tr>
                                     {% endfor %}
                                 </tbody>
                             </table>
@@ -188,7 +188,7 @@
                 <div class="nexora-modal-header">
                     <h2 id="studentModalTitle">Create Student Account</h2>
                     <p>Create a new student account. The student will be added directly to the system.</p>
-                    <button type="button" class="nexora-modal-close" id="closeStudentModal" aria-label="Close">×</button>
+                    <button type="button" class="nexora-modal-close" id="closeStudentModal" aria-label="Close">{{ nx_icon('close') }}</button>
                 </div>
                 <form id="createStudentForm" novalidate>
                     <div class="nexora-modal-body">
@@ -223,7 +223,7 @@
                             <p id="studentActionConfirmDescription">Review this action before continuing.</p>
                         </div>
                     </div>
-                    <button type="button" class="nexora-modal-close" id="closeStudentActionConfirm" aria-label="Close">×</button>
+                    <button type="button" class="nexora-modal-close" id="closeStudentActionConfirm" aria-label="Close">{{ nx_icon('close') }}</button>
                 </div>
 
                 <div class="nexora-modal-body nexora-confirm-body">

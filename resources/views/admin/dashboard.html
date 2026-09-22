@@ -1,3 +1,4 @@
+{% from 'components/nexora_icons.html' import nx_icon %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -51,10 +52,10 @@
             {% if pending_approvals > 0 or actionable_metrics.trash_expiring_soon|default(0)|int > 0 %}
             <div class="acc-alert-stack">
                 {% if pending_approvals > 0 %}
-                <div class="acc-alert"><span><strong>{{ pending_approvals }} account{% if pending_approvals != 1 %}s{% endif %} awaiting approval.</strong> Review pending registrations so approved users can continue into Nexora.</span><a href="{{ url_for('admin.admin_users') }}">Review approvals →</a></div>
+                <div class="acc-alert"><span><strong>{{ pending_approvals }} account{% if pending_approvals != 1 %}s{% endif %} awaiting approval.</strong> Review pending registrations so approved users can continue into Nexora.</span><a href="{{ url_for('admin.admin_users') }}">Review approvals{{ nx_icon('arrow-right', 'admin-link-icon') }}</a></div>
                 {% endif %}
                 {% if actionable_metrics.trash_expiring_soon|default(0)|int > 0 %}
-                <div class="acc-alert is-danger"><span><strong>{{ actionable_metrics.trash_expiring_soon }} account{% if actionable_metrics.trash_expiring_soon != 1 %}s{% endif %} nearing Trash expiry.</strong> Restore anything that should remain available.</span><a href="{{ url_for('admin_trash.trash') }}">Open Trash →</a></div>
+                <div class="acc-alert is-danger"><span><strong>{{ actionable_metrics.trash_expiring_soon }} account{% if actionable_metrics.trash_expiring_soon != 1 %}s{% endif %} nearing Trash expiry.</strong> Restore anything that should remain available.</span><a href="{{ url_for('admin_trash.trash') }}">Open Trash{{ nx_icon('arrow-right', 'admin-link-icon') }}</a></div>
                 {% endif %}
             </div>
             {% endif %}
@@ -75,7 +76,7 @@
 
             <section class="acc-main-grid">
                 <article class="acc-card">
-                    <div class="acc-card-head"><div><span class="acc-section-kicker">INTERNSHIP OPERATIONS</span><h2>Internship Overview</h2><p>Current internship activity across the platform.</p></div><a href="{{ url_for('admin.internship_assign') }}" class="acc-text-link">Manage assignments →</a></div>
+                    <div class="acc-card-head"><div><span class="acc-section-kicker">INTERNSHIP OPERATIONS</span><h2>Internship Overview</h2><p>Current internship activity across the platform.</p></div><a href="{{ url_for('admin.internship_assign') }}" class="acc-text-link">Manage assignments{{ nx_icon('arrow-right', 'admin-link-icon') }}</a></div>
                     <div class="acc-overview-grid">
                         <div class="acc-overview-stat is-enrolled"><div class="acc-overview-top"><span>Enrolled Interns</span><strong>{{ assignments_count }}</strong></div><small>Across {{ active_classrooms|default(0) }} active Intern Classroom{% if active_classrooms|default(0)|int != 1 %}s{% endif %}</small></div>
                         <div class="acc-overview-stat is-progress"><div class="acc-overview-top"><span>In Progress</span><strong>{{ active_internships }}</strong></div><small>Enrolled interns still completing required OJT hours</small></div>
@@ -117,18 +118,18 @@
                 <article class="acc-card">
                     <div class="acc-card-head"><div><span class="acc-section-kicker">ADMIN TOOLS</span><h2>Quick Actions</h2><p>Common administrator workflows.</p></div></div>
                     <div class="acc-action-grid">
-                        <a href="{{ url_for('admin.admin_users') }}" class="acc-action"><span class="acc-action-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 4 4L19 6"></path></svg></span><span><strong>Review Account Approvals</strong><small>Pending student and supervisor requests</small></span><b>→</b></a>
-                        <a href="{{ url_for('admin.admin_users') }}" class="acc-action"><span class="acc-action-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path></svg></span><span><strong>Manage Users</strong><small>Manage platform accounts</small></span><b>→</b></a>
-                        <a href="{{ url_for('admin.internship_assign') }}" class="acc-action"><span class="acc-action-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="13" rx="2"></rect><path d="M8 7V5h8v2M3 12h18"></path></svg></span><span><strong>Assign Internships</strong><small>Create or update assignments</small></span><b>→</b></a>
-                        <a href="{{ url_for('admin.admin_reports_list') }}" class="acc-action"><span class="acc-action-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V9M10 19V5M16 19v-7M22 19V3"></path></svg></span><span><strong>View Reports</strong><small>Open administrative reports</small></span><b>→</b></a>
+                        <a href="{{ url_for('admin.admin_users') }}" class="acc-action"><span class="acc-action-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 4 4L19 6"></path></svg></span><span><strong>Review Account Approvals</strong><small>Pending student and supervisor requests</small></span><b aria-hidden="true">{{ nx_icon('arrow-right', 'admin-link-icon') }}</b></a>
+                        <a href="{{ url_for('admin.admin_users') }}" class="acc-action"><span class="acc-action-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path></svg></span><span><strong>Manage Users</strong><small>Manage platform accounts</small></span><b aria-hidden="true">{{ nx_icon('arrow-right', 'admin-link-icon') }}</b></a>
+                        <a href="{{ url_for('admin.internship_assign') }}" class="acc-action"><span class="acc-action-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="13" rx="2"></rect><path d="M8 7V5h8v2M3 12h18"></path></svg></span><span><strong>Assign Internships</strong><small>Create or update assignments</small></span><b aria-hidden="true">{{ nx_icon('arrow-right', 'admin-link-icon') }}</b></a>
+                        <a href="{{ url_for('admin.admin_reports_list') }}" class="acc-action"><span class="acc-action-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V9M10 19V5M16 19v-7M22 19V3"></path></svg></span><span><strong>View Reports</strong><small>Open administrative reports</small></span><b aria-hidden="true">{{ nx_icon('arrow-right', 'admin-link-icon') }}</b></a>
                     </div>
                 </article>
                 <article class="acc-card">
-                    <div class="acc-card-head"><div><span class="acc-section-kicker">REPORTING</span><h2>Reports Center</h2><p>Open key administrative reports.</p></div><a href="{{ url_for('admin.admin_reports_list') }}" class="acc-text-link">All reports →</a></div>
+                    <div class="acc-card-head"><div><span class="acc-section-kicker">REPORTING</span><h2>Reports Center</h2><p>Open key administrative reports.</p></div><a href="{{ url_for('admin.admin_reports_list') }}" class="acc-text-link">All reports{{ nx_icon('arrow-right', 'admin-link-icon') }}</a></div>
                     <div class="acc-report-list">
-                        <a class="acc-report-link" href="{{ url_for('admin.attendance_report') }}"><span>Attendance &amp; Logbook</span><span>→</span></a>
-                        <a class="acc-report-link" href="{{ url_for('admin.admin_reports_list') }}"><span>Supervisor Evaluation</span><span>→</span></a>
-                        <a class="acc-report-link" href="{{ url_for('admin.admin_reports_list') }}"><span>Internship Progress</span><span>→</span></a>
+                        <a class="acc-report-link" href="{{ url_for('admin.attendance_report') }}"><span>Attendance &amp; Logbook</span><span aria-hidden="true">{{ nx_icon('arrow-right', 'admin-link-icon') }}</span></a>
+                        <a class="acc-report-link" href="{{ url_for('admin.admin_reports_list') }}"><span>Supervisor Evaluation</span><span aria-hidden="true">{{ nx_icon('arrow-right', 'admin-link-icon') }}</span></a>
+                        <a class="acc-report-link" href="{{ url_for('admin.admin_reports_list') }}"><span>Internship Progress</span><span aria-hidden="true">{{ nx_icon('arrow-right', 'admin-link-icon') }}</span></a>
                     </div>
                 </article>
             </section>

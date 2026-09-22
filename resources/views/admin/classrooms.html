@@ -1,3 +1,4 @@
+{% from 'components/nexora_icons.html' import nx_icon %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -85,7 +86,7 @@
                                         <div class="admin-classroom-directory-meta"><span>{{ classroom.section or 'No section' }}</span><span>Supervisor: <strong>{{ classroom.supervisor_name }}</strong></span>{% if classroom.company_name %}<span>{{ classroom.company_name }}</span>{% endif %}{% if classroom.internship_title and classroom.internship_title != classroom.name %}<span>{{ classroom.internship_title }}</span>{% endif %}</div>
                                     </div>
                                     <div class="admin-classroom-directory-stats" aria-label="Classroom summary"><span><small>Enrolled</small><strong>{{ classroom.student_count }}</strong></span><span><small>Work</small><strong>{{ classroom.classwork_count }}</strong></span><span><small>Created</small><strong>{{ classroom.created_at }}</strong></span></div>
-                                    <a href="{{ url_for('admin_classrooms.classroom_detail', classroom_id=classroom.id) }}" class="btn-view admin-classroom-directory-view js-admin-classroom-modal" data-classroom-url="{{ url_for('admin_classrooms.classroom_detail', classroom_id=classroom.id, modal=1) }}" data-classroom-name="{{ classroom.name|e }}">View <span aria-hidden="true">→</span></a>
+                                    <a href="{{ url_for('admin_classrooms.classroom_detail', classroom_id=classroom.id) }}" class="btn-view admin-classroom-directory-view js-admin-classroom-modal" data-classroom-url="{{ url_for('admin_classrooms.classroom_detail', classroom_id=classroom.id, modal=1) }}" data-classroom-name="{{ classroom.name|e }}">View <span aria-hidden="true">{{ nx_icon('arrow-right', 'admin-link-icon') }}</span></a>
                                 </div>
                             </article>
                         {% else %}
@@ -111,7 +112,7 @@
                     <h2 id="adminClassroomViewModalTitle">Classroom</h2>
                     <p>Read-only Admin view</p>
                 </div>
-                <button type="button" class="admin-classroom-view-modal-close" data-admin-classroom-close aria-label="Close classroom details">×</button>
+                <button type="button" class="admin-classroom-view-modal-close" data-admin-classroom-close aria-label="Close classroom details">{{ nx_icon('close') }}</button>
             </header>
             <div class="admin-classroom-view-modal-body">
                 <div class="admin-classroom-view-modal-loading" id="adminClassroomViewModalLoading">Loading classroom details…</div>

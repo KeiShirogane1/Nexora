@@ -14,7 +14,7 @@
 
     <main class="admin-main nexora-app-main">
         <div class="admin-report-page-shell">
-            <a href="{{ url_for('admin.admin_reports_list') }}" class="admin-report-back-link">← Back to Reports</a>
+            <a href="{{ url_for('admin.admin_reports_list') }}" class="admin-report-back-link">{{ nx_icon('arrow-left', 'admin-link-icon') }}Back to Reports</a>
 
             <header class="admin-report-overview-heading">
                 <div>
@@ -57,7 +57,7 @@
             </div>
 
             <section class="admin-report-section-card admin-report-performance-section">
-                <div class="admin-report-section-heading admin-report-section-heading-action"><div><span class="admin-report-card-kicker">CLASSWORK RESULTS</span><h2>Performance</h2><p>Scores currently available to the system.</p></div><a class="admin-report-secondary-btn" href="{{ url_for('admin.student_report', student_id=student[0]) }}">Detailed Report <span aria-hidden="true">→</span></a></div>
+                <div class="admin-report-section-heading admin-report-section-heading-action"><div><span class="admin-report-card-kicker">CLASSWORK RESULTS</span><h2>Performance</h2><p>Scores currently available to the system.</p></div><a class="admin-report-secondary-btn" href="{{ url_for('admin.student_report', student_id=student[0]) }}">Detailed Report <span aria-hidden="true">{{ nx_icon('arrow-right', 'admin-link-icon') }}</span></a></div>
                 <div class="admin-report-performance-grid">
                     {% for item in report.assignments %}
                         <article class="admin-report-performance-item"><span>{{ item.title }}</span><strong>{% if item.percentage is not none %}{{ '%.1f'|format(item.percentage) }}%{% else %}Not graded{% endif %}</strong><small>{% if item.graded %}{{ '%g'|format(item.score) }}/{{ '%g'|format(item.max_score) }}{% else %}Awaiting grade{% endif %}</small></article>

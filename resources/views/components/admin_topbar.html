@@ -1,3 +1,4 @@
+{% from 'components/nexora_icons.html' import nx_icon %}
 {% set nx_topbar_role = 'admin' %}
 {% include 'components/global_typography.html' %}
 {% include 'components/nexora_ui_defaults.html' %}
@@ -10,6 +11,8 @@
 {% include 'components/sidebar_viewport_fix.html' %}
 <script>
 (function () {
+    var closeSvg = {{ nx_icon('close')|tojson }};
+
     function normalizeAdminInternshipBranding() {
         var brand = document.querySelector('.nx-role-admin .nx-role-brand-copy small');
         if (brand) brand.textContent = 'INTERNSHIPS';
@@ -33,7 +36,7 @@
             var link = item.querySelector('a.btn');
             if (!nameNode || !link) return;
 
-            var filename = (nameNode.textContent || '').trim().replace(/^📄\s*/, '').trim();
+            var filename = (nameNode.textContent || '').trim();
             if (!filename) return;
 
             link.href = '/admin/student-documents/' + encodeURIComponent(studentId) + '?preview=' + encodeURIComponent(filename);
@@ -151,7 +154,7 @@
         overlay.className = 'nexora-modal-overlay nx-admin-insights-modal';
         overlay.setAttribute('aria-hidden', 'true');
         overlay.innerHTML = '<div class="nexora-modal" role="dialog" aria-modal="true" aria-labelledby="nxAdminInsightsTitle">' +
-            '<div class="nexora-modal-header"><h2 id="nxAdminInsightsTitle">Student Insights</h2><p>Read-only classroom-scoped Work, ML, OJT, Logbook, and Official Evaluation evidence.</p><button type="button" class="nexora-modal-close" data-admin-insights-close aria-label="Close">×</button></div>' +
+            '<div class="nexora-modal-header"><h2 id="nxAdminInsightsTitle">Student Insights</h2><p>Read-only classroom-scoped Work, ML, OJT, Logbook, and Official Evaluation evidence.</p><button type="button" class="nexora-modal-close" data-admin-insights-close aria-label="Close">' + closeSvg + '</button></div>' +
             '<div class="nexora-modal-body" data-admin-insights-body><div class="nx-admin-insights-loading">Loading student insights…</div></div>' +
             '</div>';
         document.body.appendChild(overlay);

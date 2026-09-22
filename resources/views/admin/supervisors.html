@@ -108,7 +108,7 @@
                                             <td><div class="actions-cell">
                                                 <a href="{{ url_for('admin.supervisor_profile', supervisor_id=supervisor.id) }}" class="btn-view">View Profile</a>
                                                 {% if supervisor.role == "pending_supervisor" %}<form method="POST" action="{{ url_for('admin.approve_supervisor', user_id=supervisor.id) }}" class="d-inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="btn-approve">Approve</button></form><form method="POST" action="{{ url_for('admin.reject_supervisor', user_id=supervisor.id) }}" class="d-inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="btn-reject">Reject</button></form>{% endif %}
-                                                <div class="more-actions"><button type="button" class="btn-more" onclick="toggleMenu('menu-{{ supervisor.id }}')" aria-label="More actions">⋮</button><div id="menu-{{ supervisor.id }}" class="dropdown-menu-nexora">
+                                                <div class="more-actions"><button type="button" class="btn-more" onclick="toggleMenu('menu-{{ supervisor.id }}')" aria-label="More actions">{{ nx_icon('more-vertical') }}</button><div id="menu-{{ supervisor.id }}" class="dropdown-menu-nexora">
                                                     <a href="{{ url_for('admin.supervisor_profile', supervisor_id=supervisor.id) }}" class="dropdown-item-nexora"><span>{{ nx_icon('eye') }}</span> View Profile</a>
                                                     <a href="{{ url_for('admin.edit_supervisor', supervisor_id=supervisor.id) }}" class="dropdown-item-nexora"><span>{{ nx_icon('edit') }}</span> Edit Supervisor</a>
                                                     <form method="POST" action="{{ url_for('admin.deactivate_supervisor', supervisor_id=supervisor.id) }}" class="d-block" onsubmit="return confirm('Deactivate this supervisor?')"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="dropdown-item-nexora w-100 text-start bg-transparent border-0"><span>{{ nx_icon('pause') }}</span> Deactivate Supervisor</button></form>
@@ -122,16 +122,16 @@
                                 </tbody>
                             </table>
                         </div>
-                        {% if not supervisors %}<div class="empty-state"><div class="icon">👔</div><div class="empty-state-title">No supervisors found</div><div class="empty-state-copy">Try adjusting your search or filter.</div></div>{% endif %}
+                        {% if not supervisors %}<div class="empty-state"><div class="icon">{{ nx_icon('supervisor') }}</div><div class="empty-state-title">No supervisors found</div><div class="empty-state-copy">Try adjusting your search or filter.</div></div>{% endif %}
                     </div>
-                    <a href="{{ url_for('admin.admin_users') }}" class="btn-nexora-secondary mt-2 back-to-users-link">← Back to Users</a>
+                    <a href="{{ url_for('admin.admin_users') }}" class="btn-nexora-secondary mt-2 back-to-users-link">{{ nx_icon('arrow-left', 'admin-link-icon') }}Back to Users</a>
                 </div>
             </div>
         </main>
 
         <div id="supervisorModal" class="nexora-modal-overlay" aria-hidden="true">
             <div class="nexora-modal" role="dialog" aria-modal="true" aria-labelledby="supervisorModalTitle">
-                <div class="nexora-modal-header"><h2 id="supervisorModalTitle">Create Supervisor Account</h2><p>Create a new supervisor account. The supervisor will be added directly to the system.</p><button type="button" class="nexora-modal-close" id="closeSupervisorModal" aria-label="Close">×</button></div>
+                <div class="nexora-modal-header"><h2 id="supervisorModalTitle">Create Supervisor Account</h2><p>Create a new supervisor account. The supervisor will be added directly to the system.</p><button type="button" class="nexora-modal-close" id="closeSupervisorModal" aria-label="Close">{{ nx_icon('close') }}</button></div>
                 <form id="createSupervisorForm" novalidate>
                     <div class="nexora-modal-body">
                         <div id="supervisorFormGeneralError" class="field-error field-error-general"></div>

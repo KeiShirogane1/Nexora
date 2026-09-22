@@ -1,3 +1,4 @@
+{% from 'components/nexora_icons.html' import nx_icon %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -56,7 +57,7 @@
                                                 <tr>
                                                     <td><div class="admin-report-intern-cell"><span class="admin-report-intern-avatar" aria-hidden="true">{{ (student.username or 'I')[0]|upper }}</span><span><strong>{{ student.username }}</strong><small>Student account</small></span></div></td>
                                                     <td>{{ student.email or 'No email' }}</td>
-                                                    <td class="admin-report-action-cell"><button type="button" class="admin-report-open-btn" data-report-view data-student="{{ student.username|e }}" data-classroom="{{ classroom.name|e }}" data-report-url="{{ url_for('admin_reports_overview.overview', student_id=student.id) }}" data-insights-url="{{ url_for('admin_reports_overview.student_insights', class_id=classroom.id, student_id=student.id) }}">View <span aria-hidden="true">→</span></button></td>
+                                                    <td class="admin-report-action-cell"><button type="button" class="admin-report-open-btn" data-report-view data-student="{{ student.username|e }}" data-classroom="{{ classroom.name|e }}" data-report-url="{{ url_for('admin_reports_overview.overview', student_id=student.id) }}" data-insights-url="{{ url_for('admin_reports_overview.student_insights', class_id=classroom.id, student_id=student.id) }}">View <span aria-hidden="true">{{ nx_icon('arrow-right', 'admin-link-icon') }}</span></button></td>
                                                 </tr>
                                             {% endfor %}
                                         </tbody>
@@ -88,7 +89,7 @@
                     <h2 id="adminReportChoiceTitle">Choose a view</h2>
                     <p id="adminReportChoiceContext"></p>
                 </div>
-                <button type="button" class="admin-report-choice-close" id="adminReportChoiceClose" aria-label="Close">×</button>
+                <button type="button" class="admin-report-choice-close" id="adminReportChoiceClose" aria-label="Close">{{ nx_icon('close') }}</button>
             </div>
             <div class="admin-report-choice-body">
                 <a id="adminReportChoiceReport" class="admin-report-choice-option" href="#">
@@ -112,7 +113,7 @@
                     <h2 id="adminReportDetailTitle">Student Report</h2>
                     <p id="adminReportDetailContext"></p>
                 </div>
-                <button type="button" class="admin-report-detail-close" id="adminReportDetailClose" aria-label="Close report view">×</button>
+                <button type="button" class="admin-report-detail-close" id="adminReportDetailClose" aria-label="Close report view">{{ nx_icon('close') }}</button>
             </header>
             <div class="admin-report-detail-body">
                 <div class="admin-report-detail-loading" id="adminReportDetailLoading">Loading report…</div>
