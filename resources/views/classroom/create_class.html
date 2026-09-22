@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Intern Classroom - Nexora</title>
+    <title>Create Classroom - Nexora</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">
@@ -18,8 +18,112 @@
     {% set qualification_items = qualifications if qualifications else ['', ''] %}
     {% set supervisor_display = ((sidebar_profile.first_name ~ ' ' ~ (sidebar_profile.last_name or ''))|trim) if sidebar_profile and sidebar_profile.first_name else (sidebar_profile.username if sidebar_profile else 'Supervisor') %}
 
-    <main class="page-content nexora-app-main create-space-main">
+    <main class="page-content nexora-app-main create-space-main" data-initial-view="{{ initial_view|default('choice') }}">
         <div class="create-space-shell">
+            <a href="{{ url_for('classroom.supervisor_classes') }}" class="create-space-back">{{ nx_icon('arrow-left', 'nx-inline-icon') }}<span>Back to My Classes</span></a>
+
+            <section id="create-space-choice" class="create-space-view"{% if initial_view|default('choice') != 'choice' %} hidden{% endif %} aria-labelledby="create-space-title">
+                <header class="create-space-header">
+                    <span class="create-space-eyebrow">Create a Space</span>
+                    <h1 id="create-space-title">What would you like to create?</h1>
+                    <p>Choose the space that matches how you will supervise students. Both options keep Nexora's existing classroom workflow and Supervisor design.</p>
+                </header>
+
+                <div class="create-space-choice-grid">
+                    <article class="create-space-choice-card" data-show-view="classroom" role="button" tabindex="0">
+                        <div class="create-space-choice-icon" aria-hidden="true">{{ nx_icon('classroom') }}</div>
+                        <span class="create-space-choice-label">Ordinary Academic Use</span>
+                        <h2>Create Classroom</h2>
+                        <p>Create a standard classroom for enrollment, teaching activity, grading, monitoring, and reports.</p>
+                        <ul class="create-space-feature-list">
+                            <li>{{ nx_icon('check') }}<span>Student enrollment and generated class code</span></li>
+                            <li>{{ nx_icon('check') }}<span>Stream and announcements</span></li>
+                            <li>{{ nx_icon('check') }}<span>Classwork and submissions</span></li>
+                            <li>{{ nx_icon('check') }}<span>Gradebook and Performance Insights</span></li>
+                            <li>{{ nx_icon('check') }}<span>Classroom reports</span></li>
+                        </ul>
+                        <button type="button" class="create-space-choice-button">Create Classroom</button>
+                    </article>
+
+                    <article class="create-space-choice-card" data-show-view="internship" role="button" tabindex="0">
+                        <div class="create-space-choice-icon" aria-hidden="true">{{ nx_icon('internship') }}</div>
+                        <span class="create-space-choice-label">OJT / Internship Use</span>
+                        <h2>Create Internship Classroom</h2>
+                        <p>Use Nexora's current internship workflow for company details, schedules, required hours, responsibilities, eligibility, and student OJT records.</p>
+                        <ul class="create-space-feature-list">
+                            <li>{{ nx_icon('check') }}<span>Internship title, company, program, section, and work arrangement</span></li>
+                            <li>{{ nx_icon('check') }}<span>Location and enrollment deadline</span></li>
+                            <li>{{ nx_icon('check') }}<span>Required OJT days, hours, and attendance schedule</span></li>
+                            <li>{{ nx_icon('check') }}<span>Company and internship descriptions</span></li>
+                            <li>{{ nx_icon('check') }}<span>Responsibilities and qualifications</span></li>
+                        </ul>
+                        <button type="button" class="create-space-choice-button">Create Internship Classroom</button>
+                    </article>
+                </div>
+            </section>
+
+            <section id="create-space-classroom" class="create-space-view"{% if initial_view|default('choice') != 'classroom' %} hidden{% endif %} aria-labelledby="create-classroom-title">
+                <div class="create-space-form-card">
+                    <header class="create-space-form-head">
+                        <span class="create-space-eyebrow">Create Classroom</span>
+                        <h1 id="create-classroom-title">Set up your classroom</h1>
+                        <p>Create an ordinary academic classroom using only the fields supported by the existing Classroom backend.</p>
+                    </header>
+
+                    <form method="POST" action="{{ url_for('classroom.create_class') }}" novalidate class="create-space-form-body">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="form_type" value="classroom">
+
+                        <section class="create-space-section">
+                            <div class="create-space-section-title">
+                                <h2>Classroom Details</h2>
+                                <p>Enter the class name, section, and an optional short description.</p>
+                            </div>
+                            <div class="create-space-fields">
+                                <div class="create-space-field">
+                                    <label for="class_name">Classroom Name <span class="create-space-required">*</span></label>
+                                    <input type="text" id="class_name" name="class_name" minlength="3" maxlength="100" placeholder="Example: Web Development 3A" value="{{ form.get('class_name', '') }}" required>
+                                    {% if errors and errors.class_name %}<div class="create-space-error">{{ errors.class_name }}</div>{% endif %}
+                                </div>
+                                <div class="create-space-field">
+                                    <label for="section">Section <span class="create-space-required">*</span></label>
+                                    <input type="text" id="section" name="section" maxlength="100" placeholder="Example: BSIT 3A" value="{{ form.get('section', '') }}" required>
+                                    {% if errors and errors.section %}<div class="create-space-error">{{ errors.section }}</div>{% endif %}
+                                </div>
+                                <div class="create-space-field is-full">
+                                    <label for="description">Description</label>
+                                    <textarea id="description" name="description" maxlength="500" placeholder="Add a short classroom description.">{{ form.get('description', '') }}</textarea>
+                                    <small>Optional. Maximum 500 characters.</small>
+                                    {% if errors and errors.description %}<div class="create-space-error">{{ errors.description }}</div>{% endif %}
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="create-space-section">
+                            <div class="create-space-section-title">
+                                <h2>What you'll get</h2>
+                                <p>Nexora connects this classroom to the existing academic workflow automatically.</p>
+                            </div>
+                            <ul class="create-space-benefits">
+                                <li>{{ nx_icon('check') }}<span>Generated class code</span></li>
+                                <li>{{ nx_icon('check') }}<span>Student enrollment</span></li>
+                                <li>{{ nx_icon('check') }}<span>Stream and announcements</span></li>
+                                <li>{{ nx_icon('check') }}<span>Classwork</span></li>
+                                <li>{{ nx_icon('check') }}<span>Gradebook</span></li>
+                                <li>{{ nx_icon('check') }}<span>Performance Insights</span></li>
+                                <li>{{ nx_icon('check') }}<span>Reports</span></li>
+                            </ul>
+                        </section>
+
+                        <div class="create-space-footer">
+                            <button type="button" class="create-space-secondary-button" data-show-view="choice">Back</button>
+                            <button type="submit" class="create-space-primary-button">Create Classroom</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <section id="create-space-internship" class="create-space-view"{% if initial_view|default('choice') != 'internship' %} hidden{% endif %} aria-labelledby="create-internship-title">
             <header class="create-space-header">
                 <span class="create-space-eyebrow">Supervisor Portal</span>
                 <h1>Create Intern Classroom</h1>
@@ -199,7 +303,7 @@
                                 </section>
 
                                 <div class="create-space-footer">
-                                    <button type="button" class="create-space-secondary-button" onclick="window.location.href='{{ url_for('classroom.supervisor_classes') }}'">Cancel</button>
+                                    <button type="button" class="create-space-secondary-button" data-show-view="choice">Back</button>
                                     <button type="submit" class="create-space-primary-button">Create Intern Classroom</button>
                                 </div>
                             </div>
@@ -257,11 +361,41 @@
                     </aside>
                 </div>
             </form>
+            </section>
         </div>
     </main>
 
     <script>
         (function () {
+            const main = document.querySelector('.create-space-main');
+            const validViews = new Set(['choice', 'classroom', 'internship']);
+
+            function showCreateSpaceView(name) {
+                const nextView = validViews.has(name) ? name : 'choice';
+                document.querySelectorAll('.create-space-view').forEach(function (view) {
+                    view.hidden = view.id !== 'create-space-' + nextView;
+                });
+                if (main) main.dataset.initialView = nextView;
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+
+            document.querySelectorAll('[data-show-view]').forEach(function (control) {
+                control.addEventListener('click', function (event) {
+                    if (control.tagName === 'ARTICLE') event.preventDefault();
+                    showCreateSpaceView(control.getAttribute('data-show-view'));
+                });
+                if (control.getAttribute('role') === 'button') {
+                    control.addEventListener('keydown', function (event) {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            showCreateSpaceView(control.getAttribute('data-show-view'));
+                        }
+                    });
+                }
+            });
+
+            showCreateSpaceView(main ? main.dataset.initialView : 'choice');
+
             const dayLabels = {mon:'Mon', tue:'Tue', wed:'Wed', thu:'Thu', fri:'Fri', sat:'Sat', sun:'Sun'};
             const removeIconSvg = {{ nx_icon('close')|tojson }};
 
