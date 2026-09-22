@@ -1,3 +1,4 @@
+{% from 'components/nexora_icons.html' import nx_icon %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -59,15 +60,15 @@
                                         <span>Completion recorded in Daily OJT Logbook</span>
                                     </div>
                                     <div class="supervisor-classwork-resource-links">
-                                        {% if item.external_url %}<a href="{{ item.external_url }}" target="_blank" rel="noopener noreferrer">{{ item.resource_label or 'Open link' }} ↗</a>{% endif %}
-                                        {% if item.resource_filepath %}<a href="{{ url_for('uploaded_file', filename=item.resource_filepath) }}" target="_blank" rel="noopener noreferrer">{{ item.resource_filename or 'Open file' }} ↗</a>{% endif %}
-                                        <a href="{{ url_for('logbook_review.supervisor_logbook', class_id=classroom.id) }}">Open Logbook Review →</a>
+                                        {% if item.external_url %}<a href="{{ item.external_url }}" target="_blank" rel="noopener noreferrer">{{ item.resource_label or 'Open link' }} {{ nx_icon('external', 'supervisor-link-icon') }}</a>{% endif %}
+                                        {% if item.resource_filepath %}<a href="{{ url_for('uploaded_file', filename=item.resource_filepath) }}" target="_blank" rel="noopener noreferrer">{{ item.resource_filename or 'Open file' }} {{ nx_icon('external', 'supervisor-link-icon') }}</a>{% endif %}
+                                        <a href="{{ url_for('logbook_review.supervisor_logbook', class_id=classroom.id) }}">Open Logbook Review{{ nx_icon('arrow-right', 'supervisor-link-icon') }}</a>
                                     </div>
                                 </article>
 
                                 <div id="edit-work-{{ item.id }}" class="nexora-modal-overlay" aria-hidden="true" onclick="if(event.target===this)closeWorkModal('edit-work-{{ item.id }}')">
                                     <div class="nexora-modal" role="dialog" aria-modal="true" aria-labelledby="edit-work-title-{{ item.id }}">
-                                        <div class="nexora-modal-header bg-primary-subtle"><h2 id="edit-work-title-{{ item.id }}">Edit Work</h2><p>Update instructions or resources without changing existing Daily OJT history.</p><button type="button" class="nexora-modal-close" aria-label="Close Edit Work" onclick="closeWorkModal('edit-work-{{ item.id }}')">×</button></div>
+                                        <div class="nexora-modal-header bg-primary-subtle"><h2 id="edit-work-title-{{ item.id }}">Edit Work</h2><p>Update instructions or resources without changing existing Daily OJT history.</p><button type="button" class="nexora-modal-close" aria-label="Close Edit Work" onclick="closeWorkModal('edit-work-{{ item.id }}')">{{ nx_icon('close') }}</button></div>
                                         <form method="POST" action="{{ url_for('classwork.edit_work', class_id=classroom.id, assignment_id=item.id) }}">
                                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                             <div class="nexora-modal-body">
@@ -97,7 +98,7 @@
     <div id="createWorkModal" class="nexora-modal-overlay" aria-hidden="true" onclick="if(event.target===this)closeWorkModal('createWorkModal')">
         <div class="container-fluid px-0"><div class="row justify-content-center g-0"><div class="col-12 col-lg-10 col-xl-8 col-xxl-7 px-2">
             <div class="nexora-modal mw-100" role="dialog" aria-modal="true" aria-labelledby="createWorkModalTitle">
-                <div class="nexora-modal-header bg-primary-subtle"><h2 id="createWorkModalTitle">Create Work</h2><p>Assign non-scored OJT Work. Interns record completion in their Daily OJT Logbook.</p><button type="button" class="nexora-modal-close" aria-label="Close Create Work" onclick="closeWorkModal('createWorkModal')">×</button></div>
+                <div class="nexora-modal-header bg-primary-subtle"><h2 id="createWorkModalTitle">Create Work</h2><p>Assign non-scored OJT Work. Interns record completion in their Daily OJT Logbook.</p><button type="button" class="nexora-modal-close" aria-label="Close Create Work" onclick="closeWorkModal('createWorkModal')">{{ nx_icon('close') }}</button></div>
                 <form id="createWorkForm" method="POST" enctype="multipart/form-data" class="supervisor-classwork-form">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="nexora-modal-body">
@@ -134,7 +135,7 @@
                                 <div class="col-12"><label class="supervisor-form-label" for="resource_file">Attach reference file <span class="text-muted">(optional)</span></label><input id="resource_file" name="resource_file" type="file" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.png,.jpg,.jpeg,.gif,.zip"><small class="text-muted">Reference material only. Intern completion evidence belongs in Daily OJT Logbook. Maximum 5 MB.</small></div>
                             </div>
                         </section>
-                        <div class="alert alert-info mb-0" role="note"><strong>Completion flow:</strong> Intern completes the Work → opens Daily OJT Logbook → selects this Work under Related Assigned Work → records accomplishment and optional photo evidence.</div>
+                        <div class="alert alert-info mb-0" role="note"><strong>Completion flow:</strong> Intern completes the Work, opens Daily OJT Logbook, selects this Work under Related Assigned Work, and records accomplishment with optional photo evidence.</div>
                     </div>
                     <div class="nexora-modal-footer"><button type="button" class="btn btn-light" onclick="closeWorkModal('createWorkModal')">Cancel</button><button type="submit" class="btn btn-primary" {% if classroom.archived %}disabled{% endif %}>Create Work</button></div>
                 </form>
@@ -147,7 +148,7 @@
             <div class="nexora-modal-header bg-primary-subtle">
                 <h2 id="removeWorkModalTitle">Remove Work?</h2>
                 <p>This removes the Work item without deleting the student's Daily OJT Logbook history.</p>
-                <button type="button" class="nexora-modal-close" aria-label="Close Remove Work" onclick="closeRemoveWorkModal()">×</button>
+                <button type="button" class="nexora-modal-close" aria-label="Close Remove Work" onclick="closeRemoveWorkModal()">{{ nx_icon('close') }}</button>
             </div>
             <div class="nexora-modal-body">
                 <div class="alert alert-warning mb-3" role="note"><strong>Logbook history is preserved.</strong> Existing Daily OJT entries and review history stay intact.</div>

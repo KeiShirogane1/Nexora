@@ -1,3 +1,4 @@
+{% from 'components/nexora_icons.html' import nx_icon %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -179,22 +180,22 @@
                                     <div class="create-space-section-title"><h2>Responsibilities</h2><p>Add the work students are expected to perform.</p></div>
                                     <div id="responsibility-list" class="create-space-repeat-list">
                                         {% for item in responsibility_items %}
-                                            <div class="create-space-repeat-row"><input type="text" name="responsibilities[]" maxlength="500" value="{{ item }}" placeholder="Example: Complete assigned company work and document it in Daily OJT Logbook."><button type="button" class="create-space-remove-button" aria-label="Remove responsibility">×</button></div>
+                                            <div class="create-space-repeat-row"><input type="text" name="responsibilities[]" maxlength="500" value="{{ item }}" placeholder="Example: Complete assigned company work and document it in Daily OJT Logbook."><button type="button" class="create-space-remove-button" aria-label="Remove responsibility">{{ nx_icon('close') }}</button></div>
                                         {% endfor %}
                                     </div>
                                     {% if errors and errors.responsibilities %}<div class="create-space-error">{{ errors.responsibilities }}</div>{% endif %}
-                                    <button type="button" class="create-space-add-button" data-add-row="responsibility-list" data-input-name="responsibilities[]" data-placeholder="Add another responsibility">+ Add Responsibility</button>
+                                    <button type="button" class="create-space-add-button" data-add-row="responsibility-list" data-input-name="responsibilities[]" data-placeholder="Add another responsibility">{{ nx_icon('plus') }}<span>Add Responsibility</span></button>
                                 </section>
 
                                 <section class="create-space-section">
                                     <div class="create-space-section-title"><h2>Eligibility / Qualifications</h2><p>List the requirements for students joining this internship.</p></div>
                                     <div id="qualification-list" class="create-space-repeat-list">
                                         {% for item in qualification_items %}
-                                            <div class="create-space-repeat-row"><input type="text" name="qualifications[]" maxlength="500" value="{{ item }}" placeholder="Example: Currently enrolled in the required OJT/practicum program."><button type="button" class="create-space-remove-button" aria-label="Remove qualification">×</button></div>
+                                            <div class="create-space-repeat-row"><input type="text" name="qualifications[]" maxlength="500" value="{{ item }}" placeholder="Example: Currently enrolled in the required OJT/practicum program."><button type="button" class="create-space-remove-button" aria-label="Remove qualification">{{ nx_icon('close') }}</button></div>
                                         {% endfor %}
                                     </div>
                                     {% if errors and errors.qualifications %}<div class="create-space-error">{{ errors.qualifications }}</div>{% endif %}
-                                    <button type="button" class="create-space-add-button" data-add-row="qualification-list" data-input-name="qualifications[]" data-placeholder="Add another qualification">+ Add Qualification</button>
+                                    <button type="button" class="create-space-add-button" data-add-row="qualification-list" data-input-name="qualifications[]" data-placeholder="Add another qualification">{{ nx_icon('plus') }}<span>Add Qualification</span></button>
                                 </section>
 
                                 <div class="create-space-footer">
@@ -262,6 +263,7 @@
     <script>
         (function () {
             const dayLabels = {mon:'Mon', tue:'Tue', wed:'Wed', thu:'Thu', fri:'Fri', sat:'Sat', sun:'Sun'};
+            const removeIconSvg = {{ nx_icon('close')|tojson }};
 
             function formatTime(value) {
                 if (!value) return '—';
@@ -302,7 +304,7 @@
                     if (!list || list.children.length >= 20) return;
                     const row = document.createElement('div');
                     row.className = 'create-space-repeat-row';
-                    row.innerHTML = '<input type="text" name="' + button.getAttribute('data-input-name') + '" maxlength="500" placeholder="' + (button.getAttribute('data-placeholder') || '') + '"><button type="button" class="create-space-remove-button" aria-label="Remove item">×</button>';
+                    row.innerHTML = '<input type="text" name="' + button.getAttribute('data-input-name') + '" maxlength="500" placeholder="' + (button.getAttribute('data-placeholder') || '') + '"><button type="button" class="create-space-remove-button" aria-label="Remove item">' + removeIconSvg + '</button>';
                     list.appendChild(row);
                 });
             });

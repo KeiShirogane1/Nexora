@@ -1,3 +1,4 @@
+{% from 'components/nexora_icons.html' import nx_icon %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -54,7 +55,7 @@
                     </article>
                     <article class="supervisor-insights-readiness-card">
                         <span>Daily Performance</span>
-                        <strong>{% if daily_performance.summary.average_star is not none %}{{ '%.1f'|format(daily_performance.summary.average_star) }} ★{% else %}—{% endif %}</strong>
+                        <strong>{% if daily_performance.summary.average_star is not none %}{{ '%.1f'|format(daily_performance.summary.average_star) }} {{ nx_icon('star-filled', 'supervisor-inline-rating-star') }}{% else %}—{% endif %}</strong>
                         <small class="text-muted">
                             {% if daily_performance.summary.average_percentage is not none %}{{ '%.1f'|format(daily_performance.summary.average_percentage) }}% manual day average · {{ daily_performance.summary.rated_days }} rated{% else %}No manual day ratings yet{% endif %}
                         </small>
@@ -143,7 +144,7 @@
                                                 </div>
                                                 <div class="text-end">
                                                     {% if item.is_rated %}
-                                                        <strong>{{ '%.1f'|format(item.star_rating) }} ★</strong>
+                                                        <strong>{{ '%.1f'|format(item.star_rating) }} {{ nx_icon('star-filled', 'supervisor-inline-rating-star') }}</strong>
                                                         <div class="text-muted small">{{ '%.1f'|format(item.percentage) }}%</div>
                                                     {% else %}
                                                         <span class="badge text-bg-light">Not rated</span>

@@ -1,3 +1,4 @@
+{% from 'components/nexora_icons.html' import nx_icon %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -152,7 +153,7 @@
                         {% if entry.challenges %}<p><strong>Challenges / notes:</strong> {{ entry.challenges }}</p>{% endif %}
                         {% if entry.related_work_title %}<p><strong>Related Work:</strong> {{ entry.related_work_title }}</p>{% endif %}
                         <small>{{ entry.photo_count }} proof / evidence photo{% if entry.photo_count != 1 %}s{% endif %}</small><br>
-                        <a href="{{ url_for('logbook_review.supervisor_logbook', class_id=classroom.id, log_id=entry.id, open_review=1) }}" target="_blank" rel="noopener">Open full evidence &amp; review ↗</a>
+                        <a href="{{ url_for('logbook_review.supervisor_logbook', class_id=classroom.id, log_id=entry.id, open_review=1) }}" target="_blank" rel="noopener">Open full evidence &amp; review {{ nx_icon('external', 'supervisor-link-icon') }}</a>
                     </div>
                 </template>
             {% endfor %}
@@ -167,7 +168,7 @@
                         <h2 id="ojtIndividualModalTitle">Rate &amp; Review Daily OJT Entry</h2>
                         <p>Review the student's daily accomplishment, evidence, ratings, and supervisor feedback.</p>
                     </div>
-                    <button type="button" class="ojt-modal-close" onclick="closeIndividualReviewModal()" aria-label="Close">×</button>
+                    <button type="button" class="ojt-modal-close" onclick="closeIndividualReviewModal()" aria-label="Close">{{ nx_icon('close') }}</button>
                 </div>
 
                 <div class="ojt-review-modal-body ojt-individual-body">
@@ -204,20 +205,20 @@
                             </section>
 
                             <section class="ojt-panel-card ojt-info-block">
-                                <h3>⚠ Challenges / Notes</h3>
+                                <h3><span class="ojt-heading-icon" aria-hidden="true">{{ nx_icon('warning') }}</span>Challenges / Notes</h3>
                                 <p>{{ selected_entry.challenges or 'No challenges or notes recorded.' }}</p>
                             </section>
 
                             {% if selected_entry.related_work_title %}
                                 <section class="ojt-panel-card ojt-info-block">
-                                    <h3>✓ Related Work</h3>
+                                    <h3><span class="ojt-heading-icon" aria-hidden="true">{{ nx_icon('work') }}</span>Related Work</h3>
                                     <p>{{ selected_entry.related_work_title }}</p>
                                 </section>
                             {% endif %}
 
                             <section class="ojt-panel-card ojt-info-block">
                                 <div class="ojt-panel-heading">
-                                    <h3 class="mb-0">▧ Proof / Evidence</h3>
+                                    <h3 class="mb-0"><span class="ojt-heading-icon" aria-hidden="true">{{ nx_icon('image') }}</span>Proof / Evidence</h3>
                                     <span>{{ selected_photos|length }} photo{% if selected_photos|length != 1 %}s{% endif %}</span>
                                 </div>
                                 {% if selected_photos %}
@@ -244,21 +245,21 @@
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <div class="ojt-rating-section">
                                         <div class="ojt-panel-heading">
-                                            <h3>★ Ratings</h3>
+                                            <h3><span class="ojt-heading-icon" aria-hidden="true">{{ nx_icon('star-filled') }}</span>Ratings</h3>
                                             <span>Rate performance for this OJT day.</span>
                                         </div>
 
                                         <div class="ojt-rating-title">
                                             <strong>Overall Daily Rating</strong>
-                                            {% if daily_rating %}<span class="badge text-bg-primary">{{ '%.1f'|format(daily_rating.star_rating) }} ★ · {{ '%.1f'|format(daily_rating.percentage) }}%</span>{% endif %}
+                                            {% if daily_rating %}<span class="badge text-bg-primary">{{ '%.1f'|format(daily_rating.star_rating) }} <span class="ojt-inline-rating-star" aria-hidden="true">{{ nx_icon('star-filled') }}</span> · {{ '%.1f'|format(daily_rating.percentage) }}%</span>{% endif %}
                                         </div>
                                         <div class="ojt-overall-rating-row">
                                             <div class="ojt-star-picker" data-star-picker data-star-required="1" data-input-id="ojt-individual-star-rating">
                                                 <input id="ojt-individual-star-rating" name="star_rating" type="hidden" value="{% if daily_rating %}{{ '%.1f'|format(daily_rating.star_rating) }}{% endif %}">
-                                                {% for star in range(1,6) %}<button type="button" class="ojt-star" data-star-value="{{ star }}" aria-label="Set {{ star }} star rating">☆</button>{% endfor %}
-                                                <button type="button" class="ojt-star-step" data-star-step="-0.1" aria-label="Decrease by 0.1">−</button>
+                                                {% for star in range(1,6) %}<button type="button" class="ojt-star" data-star-value="{{ star }}" aria-label="Set {{ star }} star rating">{{ nx_icon('star') }}</button>{% endfor %}
+                                                <button type="button" class="ojt-star-step" data-star-step="-0.1" aria-label="Decrease by 0.1">{{ nx_icon('minus') }}</button>
                                                 <span class="ojt-star-label" data-star-label>Choose</span>
-                                                <button type="button" class="ojt-star-step" data-star-step="0.1" aria-label="Increase by 0.1">+</button>
+                                                <button type="button" class="ojt-star-step" data-star-step="0.1" aria-label="Increase by 0.1">{{ nx_icon('plus') }}</button>
                                             </div>
                                         </div>
                                         <div class="text-danger small mt-1" data-star-error hidden>Choose a star rating before saving.</div>
@@ -293,7 +294,7 @@
                                                     <div class="ojt-star-picker" data-star-picker data-input-id="ojt-criterion-rating-{{ loop.index }}">
                                                         <input type="hidden" name="criterion_name" value="{{ criterion_label }}" data-criterion-name-input {% if not saved_criterion.value %}disabled{% endif %}>
                                                         <input id="ojt-criterion-rating-{{ loop.index }}" name="criterion_rating" type="hidden" value="{{ saved_criterion.value }}" {% if not saved_criterion.value %}disabled{% endif %}>
-                                                        {% for star in range(1,6) %}<button type="button" class="ojt-star" data-star-value="{{ star }}" aria-label="Rate {{ criterion_label }} {{ star }} stars">☆</button>{% endfor %}
+                                                        {% for star in range(1,6) %}<button type="button" class="ojt-star" data-star-value="{{ star }}" aria-label="Rate {{ criterion_label }} {{ star }} stars">{{ nx_icon('star') }}</button>{% endfor %}
                                                         <span class="ojt-star-label" data-star-label>Optional</span>
                                                     </div>
                                                 </div>
@@ -308,7 +309,7 @@
                                 <form id="ojt-individual-review-form" class="ojt-review-note-card" method="POST" action="{{ url_for('logbook_review.review_daily_log', class_id=classroom.id, log_id=selected_entry.id) }}">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <div class="ojt-panel-heading">
-                                        <h3>● Supervisor Review Note</h3>
+                                        <h3><span class="ojt-heading-icon" aria-hidden="true">{{ nx_icon('feedback') }}</span>Supervisor Review Note</h3>
                                         <span>Used for review status and revision requests.</span>
                                     </div>
                                     <textarea class="ojt-modal-textarea" name="comments" maxlength="3000" placeholder="Supervisor comments (optional for Reviewed/Approved; required for Revision Requested)...">{{ selected_entry.review_comments }}</textarea>
@@ -340,7 +341,7 @@
         <div class="ojt-review-dialog" role="dialog" aria-modal="true" aria-labelledby="ojtBatchModalTitle">
             <div class="ojt-review-modal-header">
                 <h2 id="ojtBatchModalTitle">Bulk Daily Performance Rating</h2>
-                <button type="button" class="ojt-modal-close" onclick="closeBatchRatingModal()" aria-label="Close">×</button>
+                <button type="button" class="ojt-modal-close" onclick="closeBatchRatingModal()" aria-label="Close">{{ nx_icon('close') }}</button>
             </div>
             <form id="ojt-batch-rating-form" method="POST" action="{{ url_for('logbook_review.bulk_rate_daily_performance', class_id=classroom.id) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -349,11 +350,11 @@
                     <p id="ojt-batch-modal-note" class="text-muted small mb-3">Review the selected entries before applying one shared manual rating.</p>
                     <div id="ojt-batch-selection" class="ojt-batch-selection"></div>
                     <div class="ojt-rating-section">
-                        <div class="ojt-rating-title"><strong>★ Shared Daily Performance Rating</strong></div>
+                        <div class="ojt-rating-title"><strong><span class="ojt-heading-icon" aria-hidden="true">{{ nx_icon('star-filled') }}</span>Shared Daily Performance Rating</strong></div>
                         <div class="ojt-star-picker" data-star-picker data-star-required="1" data-input-id="ojt-batch-star-rating">
                             <input id="ojt-batch-star-rating" name="star_rating" type="hidden" value="">
-                            {% for star in range(1,6) %}<button type="button" class="ojt-star" data-star-value="{{ star }}" aria-label="Set {{ star }} star rating">☆</button>{% endfor %}
-                            <button type="button" class="ojt-star-step" data-star-step="-0.1" aria-label="Decrease by 0.1">−</button><span class="ojt-star-label" data-star-label>Choose</span><button type="button" class="ojt-star-step" data-star-step="0.1" aria-label="Increase by 0.1">+</button>
+                            {% for star in range(1,6) %}<button type="button" class="ojt-star" data-star-value="{{ star }}" aria-label="Set {{ star }} star rating">{{ nx_icon('star') }}</button>{% endfor %}
+                            <button type="button" class="ojt-star-step" data-star-step="-0.1" aria-label="Decrease by 0.1">{{ nx_icon('minus') }}</button><span class="ojt-star-label" data-star-label>Choose</span><button type="button" class="ojt-star-step" data-star-step="0.1" aria-label="Increase by 0.1">{{ nx_icon('plus') }}</button>
                         </div>
                         <div class="text-danger small mt-1" data-star-error hidden>Choose a star rating before applying it.</div>
                         <textarea class="ojt-modal-textarea mt-2" name="rating_comment" maxlength="2000" placeholder="Performance comment applied to every selected Daily OJT rating (optional)..."></textarea>
@@ -475,6 +476,9 @@
         function openIndividualReviewModal() { const modal = document.getElementById('ojt-individual-modal'); if (!modal) return; modal.classList.add('open'); modal.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden'; }
         function closeIndividualReviewModal() { const modal = document.getElementById('ojt-individual-modal'); if (!modal) return; modal.classList.remove('open'); modal.setAttribute('aria-hidden','true'); document.body.style.overflow=''; if (window.history?.replaceState) window.history.replaceState({}, '', '{{ url_for('logbook_review.supervisor_logbook', class_id=classroom.id) }}'); }
 
+        const ojtStarOutlineSvg = {{ nx_icon('star')|tojson }};
+        const ojtStarFilledSvg = {{ nx_icon('star-filled')|tojson }};
+
         function bindStarPicker(picker) {
             const input = document.getElementById(picker.dataset.inputId || '');
             if (!input) return;
@@ -488,7 +492,7 @@
             let value = Number.parseFloat(input.value) || 0;
             const render = () => {
                 const whole = Math.floor(value); const hasFraction = value > whole;
-                starButtons.forEach((button) => { const star = Number(button.dataset.starValue || 0); button.classList.remove('is-filled','is-fraction'); if (value && star <= whole) { button.textContent='★'; button.classList.add('is-filled'); } else if (value && hasFraction && star === whole + 1) { button.textContent='★'; button.classList.add('is-fraction'); } else { button.textContent='☆'; } });
+                starButtons.forEach((button) => { const star = Number(button.dataset.starValue || 0); button.classList.remove('is-filled','is-fraction'); if (value && star <= whole) { button.innerHTML=ojtStarFilledSvg; button.classList.add('is-filled'); } else if (value && hasFraction && star === whole + 1) { button.innerHTML=ojtStarFilledSvg; button.classList.add('is-fraction'); } else { button.innerHTML=ojtStarOutlineSvg; } });
                 if (label) label.textContent = value ? `${value.toFixed(1)} / 5` : (isCriterion ? 'Optional' : 'Choose');
                 if (isCriterion) {
                     const enabled = value > 0;

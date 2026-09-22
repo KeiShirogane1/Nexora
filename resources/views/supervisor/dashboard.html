@@ -1,3 +1,4 @@
+{% from 'components/nexora_icons.html' import nx_icon %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -39,10 +40,10 @@
                     <div class="supervisor-stat-copy">
                         <span>Assigned Interns</span>
                         <strong>{{ total_interns }}</strong>
-                        {% if new_interns_this_month|default(0) > 0 %}<small class="text-success fw-bold">↑ +{{ new_interns_this_month }} this month</small>{% endif %}
+                        {% if new_interns_this_month|default(0) > 0 %}<small class="text-success fw-bold supervisor-trend-copy">{{ nx_icon('insights', 'supervisor-inline-trend-icon') }}<span>+{{ new_interns_this_month }} this month</span></small>{% endif %}
                         <small>Across your intern classrooms</small>
                     </div>
-                    <a href="{{ url_for('supervisor.view_interns') }}" aria-label="View assigned interns">→</a>
+                    <a href="{{ url_for('supervisor.view_interns') }}" aria-label="View assigned interns">{{ nx_icon('arrow-right', 'supervisor-link-icon') }}</a>
                 </article>
 
                 <article class="supervisor-stat-card stat-green">
@@ -52,10 +53,10 @@
                     <div class="supervisor-stat-copy">
                         <span>Active Classrooms</span>
                         <strong>{{ active_classrooms|default(0) }}</strong>
-                        {% if archived_classrooms|default(0) > 0 %}<small>● {{ archived_classrooms }} archived</small>{% endif %}
+                        {% if archived_classrooms|default(0) > 0 %}<small class="supervisor-archived-count"><span class="supervisor-inline-status-dot" aria-hidden="true"></span>{{ archived_classrooms }} archived</small>{% endif %}
                         <small>Current internship spaces</small>
                     </div>
-                    <a href="{{ url_for('classroom.supervisor_classes') }}" aria-label="View Intern Classrooms">→</a>
+                    <a href="{{ url_for('classroom.supervisor_classes') }}" aria-label="View Intern Classrooms">{{ nx_icon('arrow-right', 'supervisor-link-icon') }}</a>
                 </article>
 
                 <article class="supervisor-stat-card stat-violet">
@@ -67,7 +68,7 @@
                         <strong>{{ active_sessions }}</strong>
                         <small>Interns currently clocked in</small>
                     </div>
-                    <a href="{{ url_for('supervisor.view_interns') }}" aria-label="View active interns">→</a>
+                    <a href="{{ url_for('supervisor.view_interns') }}" aria-label="View active interns">{{ nx_icon('arrow-right', 'supervisor-link-icon') }}</a>
                 </article>
 
                 <article class="supervisor-stat-card stat-amber">
@@ -79,7 +80,7 @@
                         <strong>{{ pending_reviews|default(0) }}</strong>
                         <small>Logbook entries awaiting review</small>
                     </div>
-                    <a href="{{ url_for('supervisor.view_interns') }}" aria-label="View pending reviews">→</a>
+                    <a href="{{ url_for('supervisor.view_interns') }}" aria-label="View pending reviews">{{ nx_icon('arrow-right', 'supervisor-link-icon') }}</a>
                 </article>
             </section>
 
@@ -110,14 +111,15 @@
                     <article class="supervisor-dashboard-card h-100">
                         <header class="supervisor-dashboard-card-heading">
                             <div><h2 class="fs-6 mb-0">Recent Activity</h2></div>
-                            <a href="{{ url_for('supervisor.view_interns') }}" class="section-link">View All →</a>
+                            <a href="{{ url_for('supervisor.view_interns') }}" class="section-link">View All{{ nx_icon('arrow-right', 'supervisor-link-icon') }}</a>
                         </header>
                         <div class="supervisor-dashboard-card-body px-3">
                             {% if recent_activity %}
                                 <div class="supervisor-activity-list">
                                     {% for activity in recent_activity[:5] %}
                                         <a href="{{ activity.url }}" class="supervisor-activity-item text-decoration-none">
-                                            <span class="supervisor-activity-icon {% if activity.tone == 'green' %}bg-success-subtle text-success{% elif activity.tone == 'orange' %}bg-warning-subtle text-warning{% elif activity.tone == 'rose' %}bg-danger-subtle text-danger{% else %}bg-primary-subtle text-primary{% endif %}" aria-hidden="true">{{ activity.icon }}</span>
+                                            {% set activity_icon = 'logbook' if activity.tone == 'green' else 'student' if activity.tone == 'orange' else 'grading' if activity.tone == 'rose' else 'upload' %}
+                                            <span class="supervisor-activity-icon {% if activity.tone == 'green' %}bg-success-subtle text-success{% elif activity.tone == 'orange' %}bg-warning-subtle text-warning{% elif activity.tone == 'rose' %}bg-danger-subtle text-danger{% else %}bg-primary-subtle text-primary{% endif %}" aria-hidden="true">{{ nx_icon(activity_icon) }}</span>
                                             <span class="supervisor-activity-copy">
                                                 <strong>{{ activity.name }} {{ activity.summary }}</strong>
                                                 <p>{{ activity.context }}</p>
@@ -128,7 +130,7 @@
                                 </div>
                             {% else %}
                                 <div class="supervisor-empty-state compact">
-                                    <div class="empty-state-icon">↗</div>
+                                    <div class="empty-state-icon">{{ nx_icon('insights') }}</div>
                                     <strong>No recent activities</strong>
                                     <p>Classroom joins, Daily OJT entries, Work submissions, and Evaluation activity will appear here.</p>
                                 </div>
@@ -143,21 +145,21 @@
                     <article class="supervisor-dashboard-card h-100">
                         <header class="supervisor-dashboard-card-heading">
                             <div><h2 class="fs-6 mb-0">Your Intern Classrooms</h2></div>
-                            <a href="{{ url_for('classroom.supervisor_classes') }}" class="section-link">View All →</a>
+                            <a href="{{ url_for('classroom.supervisor_classes') }}" class="section-link">View All{{ nx_icon('arrow-right', 'supervisor-link-icon') }}</a>
                         </header>
                         <div class="supervisor-dashboard-card-body px-3">
                             {% if dashboard_classrooms %}
                                 <div class="supervisor-activity-list">
                                     {% for classroom in dashboard_classrooms[:3] %}
                                         <div class="supervisor-activity-item">
-                                            <span class="supervisor-activity-icon {% if loop.index == 2 %}bg-success text-white{% elif classroom.archived %}bg-secondary-subtle text-secondary{% else %}bg-primary text-white{% endif %}" aria-hidden="true">▣</span>
+                                            <span class="supervisor-activity-icon {% if loop.index == 2 %}bg-success text-white{% elif classroom.archived %}bg-secondary-subtle text-secondary{% else %}bg-primary text-white{% endif %}" aria-hidden="true">{{ nx_icon('classroom') }}</span>
                                             <div class="supervisor-activity-copy">
                                                 <strong>{{ classroom.classroom_name }}</strong>
                                                 <p>{% if classroom.company_name %}{{ classroom.company_name }}{% else %}Intern Classroom{% endif %}{% if classroom.section %} · {{ classroom.section }}{% endif %}</p>
                                             </div>
                                             <span class="text-muted small text-nowrap me-2">{{ classroom.intern_count }} intern{% if classroom.intern_count != 1 %}s{% endif %}</span>
                                             <span class="badge rounded-pill {% if classroom.archived %}text-bg-secondary{% else %}bg-success-subtle text-success{% endif %}">{% if classroom.archived %}Archived{% else %}Active{% endif %}</span>
-                                            <a href="{{ url_for('classroom.supervisor_class', class_id=classroom.class_id) }}" class="supervisor-activity-action ms-2">Open →</a>
+                                            <a href="{{ url_for('classroom.supervisor_class', class_id=classroom.class_id) }}" class="supervisor-activity-action ms-2">Open{{ nx_icon('arrow-right', 'supervisor-link-icon') }}</a>
                                         </div>
                                     {% endfor %}
                                 </div>
@@ -176,27 +178,27 @@
                     <article class="supervisor-dashboard-card h-100">
                         <header class="supervisor-dashboard-card-heading">
                             <div><h2 class="fs-6 mb-0">Needs Your Attention</h2></div>
-                            <a href="{{ url_for('supervisor.view_interns') }}" class="section-link">View All →</a>
+                            <a href="{{ url_for('supervisor.view_interns') }}" class="section-link">View All{{ nx_icon('arrow-right', 'supervisor-link-icon') }}</a>
                         </header>
                         <div class="supervisor-dashboard-card-body px-3">
                             <div class="supervisor-task-list">
                                 <a href="{{ url_for('supervisor.view_interns') }}" class="supervisor-task-item align-items-center text-decoration-none">
-                                    <span class="supervisor-activity-icon bg-danger-subtle text-danger" aria-hidden="true">▤</span>
+                                    <span class="supervisor-activity-icon bg-danger-subtle text-danger" aria-hidden="true">{{ nx_icon('logbook') }}</span>
                                     <span class="task-copy"><strong>Pending Logbook Reviews</strong><small>Logbook entries awaiting your feedback</small></span>
                                     <span class="badge rounded-pill bg-danger-subtle text-danger">{{ dashboard_attention.pending_reviews }}</span>
                                 </a>
                                 <a href="{{ url_for('classroom.supervisor_classes') }}" class="supervisor-task-item align-items-center text-decoration-none">
-                                    <span class="supervisor-activity-icon bg-warning-subtle text-warning" aria-hidden="true">!</span>
+                                    <span class="supervisor-activity-icon bg-warning-subtle text-warning" aria-hidden="true">{{ nx_icon('warning') }}</span>
                                     <span class="task-copy"><strong>Upcoming Deadlines</strong><small>Work items due within the next 7 days</small></span>
                                     <span class="badge rounded-pill bg-warning-subtle text-warning">{{ dashboard_attention.upcoming_deadlines }}</span>
                                 </a>
                                 <a href="{{ url_for('supervisor.view_interns') }}" class="supervisor-task-item align-items-center text-decoration-none">
-                                    <span class="supervisor-activity-icon bg-warning-subtle text-warning" aria-hidden="true">♙</span>
+                                    <span class="supervisor-activity-icon bg-warning-subtle text-warning" aria-hidden="true">{{ nx_icon('student') }}</span>
                                     <span class="task-copy"><strong>Inactive Interns</strong><small>No classroom activity for 7+ days</small></span>
                                     <span class="badge rounded-pill bg-warning-subtle text-warning">{{ dashboard_attention.inactive_interns }}</span>
                                 </a>
                                 <a href="{{ url_for('ojt_evaluation.supervisor_evaluation_directory') }}" class="supervisor-task-item align-items-center text-decoration-none">
-                                    <span class="supervisor-activity-icon bg-primary-subtle text-primary" aria-hidden="true">▤</span>
+                                    <span class="supervisor-activity-icon bg-primary-subtle text-primary" aria-hidden="true">{{ nx_icon('grading') }}</span>
                                     <span class="task-copy"><strong>Evaluation Drafts</strong><small>In progress, not yet submitted</small></span>
                                     <span class="badge rounded-pill bg-primary-subtle text-primary">{{ dashboard_attention.evaluation_drafts }}</span>
                                 </a>

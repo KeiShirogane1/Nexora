@@ -1,3 +1,4 @@
+{% from 'components/nexora_icons.html' import nx_icon %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,7 +14,7 @@
 
     <main class="page-content nexora-app-main">
         <div class="nexora-page supervisor-reports-shell">
-            <a href="{{ url_for('performance_reports.supervisor_reports_directory', class_id=classroom.id) }}" class="text-decoration-none fw-bold small">← Back to Reports</a>
+            <a href="{{ url_for('performance_reports.supervisor_reports_directory', class_id=classroom.id) }}" class="text-decoration-none fw-bold small">{{ nx_icon('arrow-left', 'supervisor-link-icon') }}Back to Reports</a>
 
             <div class="supervisor-classwork-heading mt-3">
                 <div>
@@ -148,7 +149,7 @@
                                 <span class="badge rounded-pill text-bg-light border text-secondary">Priority: {{ (report.priority or 'none')|title }}</span>
                                 {% if report.basis %}
                                     <div class="mt-3 d-grid gap-2">
-                                        {% for item in report.basis %}<div class="small text-secondary">✓ {{ item }}</div>{% endfor %}
+                                        {% for item in report.basis %}<div class="small text-secondary supervisor-report-basis-item"><span aria-hidden="true">{{ nx_icon('check') }}</span><span>{{ item }}</span></div>{% endfor %}
                                     </div>
                                 {% endif %}
                             {% else %}

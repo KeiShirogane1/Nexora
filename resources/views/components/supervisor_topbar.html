@@ -1,3 +1,4 @@
+{% from 'components/nexora_icons.html' import nx_icon %}
 {% set nx_topbar_role = 'supervisor' %}
 {% include 'components/global_typography.html' %}
 {% include 'components/nexora_ui_defaults.html' %}
@@ -149,6 +150,11 @@
     var initialCriteria = {% if daily_rating is defined and daily_rating %}{{ daily_rating.criteria|default([])|tojson }}{% else %}[]{% endif %};
     var MAX_CRITERIA = 8;
     var pendingRemovalForm = null;
+    var starOutlineSvg = {{ nx_icon('star')|tojson }};
+    var starFilledSvg = {{ nx_icon('star-filled')|tojson }};
+    var minusSvg = {{ nx_icon('minus')|tojson }};
+    var plusSvg = {{ nx_icon('plus')|tojson }};
+    var closeSvg = {{ nx_icon('close')|tojson }};
 
     function setCriterionRating(row, next) {
         var input = row.querySelector('input[name="criterion_rating"]');
@@ -161,7 +167,7 @@
         row.querySelectorAll('.nx-criterion-star').forEach(function (star) {
             var starValue = Number(star.dataset.value || 0);
             star.classList.toggle('is-filled', starValue <= Math.ceil(value));
-            star.textContent = starValue <= Math.ceil(value) ? '★' : '☆';
+            star.innerHTML = starValue <= Math.ceil(value) ? starFilledSvg : starOutlineSvg;
             if (starValue === Math.ceil(value) && value % 1 !== 0) star.style.opacity = '.55';
             else star.style.opacity = '';
         });
@@ -173,16 +179,16 @@
         row.innerHTML = '<input class="nx-rating-criterion-name" type="text" name="criterion_name" maxlength="100" placeholder="Criterion name" required>' +
             '<div class="nx-criterion-rating" aria-label="Criterion rating">' +
             '<input type="hidden" name="criterion_rating" value="">' +
-            '<button type="button" class="nx-criterion-star" data-value="1">☆</button>' +
-            '<button type="button" class="nx-criterion-star" data-value="2">☆</button>' +
-            '<button type="button" class="nx-criterion-star" data-value="3">☆</button>' +
-            '<button type="button" class="nx-criterion-star" data-value="4">☆</button>' +
-            '<button type="button" class="nx-criterion-star" data-value="5">☆</button>' +
-            '<button type="button" class="nx-criterion-step" data-step="-0.1">−</button>' +
+            '<button type="button" class="nx-criterion-star" data-value="1">' + starOutlineSvg + '</button>' +
+            '<button type="button" class="nx-criterion-star" data-value="2">' + starOutlineSvg + '</button>' +
+            '<button type="button" class="nx-criterion-star" data-value="3">' + starOutlineSvg + '</button>' +
+            '<button type="button" class="nx-criterion-star" data-value="4">' + starOutlineSvg + '</button>' +
+            '<button type="button" class="nx-criterion-star" data-value="5">' + starOutlineSvg + '</button>' +
+            '<button type="button" class="nx-criterion-step" data-step="-0.1" aria-label="Decrease rating">' + minusSvg + '</button>' +
             '<span class="nx-criterion-value">Choose</span>' +
-            '<button type="button" class="nx-criterion-step" data-step="0.1">+</button>' +
+            '<button type="button" class="nx-criterion-step" data-step="0.1" aria-label="Increase rating">' + plusSvg + '</button>' +
             '</div>' +
-            '<button type="button" class="nx-remove-criterion" aria-label="Remove criterion">×</button>';
+            '<button type="button" class="nx-remove-criterion" aria-label="Remove criterion">' + closeSvg + '</button>';
 
         var name = row.querySelector('input[name="criterion_name"]');
         name.value = item && item.criterion_name ? String(item.criterion_name) : '';
@@ -211,7 +217,7 @@
         var comment = section.querySelector('textarea[name="rating_comment"]');
         var shell = document.createElement('div');
         shell.className = 'nx-rating-criteria';
-        shell.innerHTML = '<div class="nx-rating-criteria-head"><div><strong>Additional Rating Criteria</strong><small>Optional detail only. These criteria explain the assessment; they do not silently change the Overall Daily Rating.</small></div><button type="button" class="nx-add-criterion">+ Add Criterion</button></div><div class="nx-rating-criteria-list"></div>';
+        shell.innerHTML = '<div class="nx-rating-criteria-head"><div><strong>Additional Rating Criteria</strong><small>Optional detail only. These criteria explain the assessment; they do not silently change the Overall Daily Rating.</small></div><button type="button" class="nx-add-criterion">' + plusSvg + '<span>Add Criterion</span></button></div><div class="nx-rating-criteria-list"></div>';
         var list = shell.querySelector('.nx-rating-criteria-list');
         (items || []).slice(0, MAX_CRITERIA).forEach(function (item) { createCriterionRow(list, item); });
         shell.querySelector('.nx-add-criterion').addEventListener('click', function () {
@@ -246,7 +252,7 @@
         overlay.className = 'nexora-modal-overlay nx-logbook-remove-modal';
         overlay.setAttribute('aria-hidden', 'true');
         overlay.innerHTML = '<div class="nexora-modal" role="dialog" aria-modal="true" aria-labelledby="nxRemoveLogbookTitle">' +
-            '<div class="nexora-modal-header"><h2 id="nxRemoveLogbookTitle">Remove Daily OJT Record</h2><p>Choose exactly what should be removed from this OJT day.</p><button type="button" class="nexora-modal-close" data-remove-close aria-label="Close">×</button></div>' +
+            '<div class="nexora-modal-header"><h2 id="nxRemoveLogbookTitle">Remove Daily OJT Record</h2><p>Choose exactly what should be removed from this OJT day.</p><button type="button" class="nexora-modal-close" data-remove-close aria-label="Close">' + closeSvg + '</button></div>' +
             '<div class="nexora-modal-body"><div class="nx-logbook-remove-options">' +
             '<label class="nx-logbook-remove-option"><input type="radio" name="nx_remove_mode" value="logbook" checked><span><strong>Logbook only</strong><small>Removes the Daily OJT entry, review, rating, linked Work evidence, and photos. Time In/Out and rendered hours remain.</small></span></label>' +
             '<label class="nx-logbook-remove-option"><input type="radio" name="nx_remove_mode" value="attendance"><span><strong>Logbook + Attendance Session</strong><small>Use this only for a duplicate or incorrect attendance session. Its Time In/Out and rendered hours are removed too.</small></span></label>' +
