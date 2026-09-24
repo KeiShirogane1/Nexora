@@ -19,7 +19,7 @@
 
     </head>
 
-    <body class="report-page">
+    <body class="report-page admin-student-report-page">
 
         {% include 'components/admin_sidebar.html' %}
 
@@ -27,261 +27,113 @@
             <div class="nexora-page">
 
         <!-- REPORT HEADER -->
-
-                <div class="card shadow-sm mb-4">
-
-                    <div class="card-body">
-
-                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
-
-                            <div>
-
-                                <h1 class="mb-1">
-
-                                    {{ student[1] }}
-
-                                </h1>
-
-                                <p class="text-muted mb-1">
-
-                                    Course · University · Company Name
-
-                                </p>
-
-                                <p class="text-muted mb-0">
-
-                                    Individual Internship Report
-
-                                </p>
-
-                            </div>
-
-                            <div>
-
-                                <a href="{{ url_for('admin.attendance_report') }}"
-                                   class="btn btn-outline-secondary">
-
-                                    {{ nx_icon('arrow-left', 'admin-link-icon') }}Back to Attendance Report
-
-                                </a>
-                                <a href="{{ url_for('admin.admin_reports_list') }}"
-                                   class="btn btn-outline-secondary">
-
-                                    {{ nx_icon('arrow-left', 'admin-link-icon') }}Back to Reports
-
-                                </a>
-
-                            </div>
-
+                <section class="admin-report-hero mb-4">
+                    <div class="admin-report-hero-copy">
+                        <span class="admin-report-eyebrow">Admin Portal</span>
+                        <h1>{{ student[1] }}</h1>
+                        <p>Individual Internship Report</p>
+                        <div class="admin-report-hero-meta" aria-label="Report summary">
+                            <span>{{ nx_icon('clock') }} {{ total_sessions }} attendance session{% if total_sessions != 1 %}s{% endif %}</span>
+                            <span>{{ nx_icon('logbook') }} {{ total_logs }} logbook entr{% if total_logs != 1 %}ies{% else %}y{% endif %}</span>
+                            <span>{{ nx_icon('grading') }} {{ feedback|length }} evaluation{% if feedback|length != 1 %}s{% endif %}</span>
                         </div>
-
                     </div>
-
-                </div>
+                    <div class="admin-report-hero-actions">
+                        <a href="{{ url_for('admin.attendance_report') }}" class="admin-report-back">
+                            {{ nx_icon('arrow-left') }}<span>Attendance Report</span>
+                        </a>
+                        <a href="{{ url_for('admin.admin_reports_list') }}" class="admin-report-back">
+                            {{ nx_icon('arrow-left') }}<span>All Reports</span>
+                        </a>
+                    </div>
+                </section>
 
         <!-- REPORT TABS -->
-
-                <div class="profile-tabs mb-4">
-
-                    <button class="profile-tab-button active" data-tab="overview" onclick="openReportTab('overview', this)">
-
-                        Overview
-
+                <nav class="profile-tabs admin-report-tabs mb-4" role="tablist" aria-label="Student report sections">
+                    <button type="button" class="profile-tab-button{% if active_tab == 'overview' %} active{% endif %}" data-tab="overview" role="tab" aria-selected="{{ 'true' if active_tab == 'overview' else 'false' }}" onclick="openReportTab('overview', this)">
+                        {{ nx_icon('overview') }}<span>Overview</span>
                     </button>
-
-                    <button class="profile-tab-button" data-tab="attendance" onclick="openReportTab('attendance', this)">
-
-                        Attendance & Logbook
-
+                    <button type="button" class="profile-tab-button{% if active_tab == 'attendance' %} active{% endif %}" data-tab="attendance" role="tab" aria-selected="{{ 'true' if active_tab == 'attendance' else 'false' }}" onclick="openReportTab('attendance', this)">
+                        {{ nx_icon('clock') }}<span>Attendance & Logbook</span>
                     </button>
-
-                    <button class="profile-tab-button" data-tab="evaluation" onclick="openReportTab('evaluation', this)">
-
-                        Evaluation
-
+                    <button type="button" class="profile-tab-button{% if active_tab == 'evaluation' %} active{% endif %}" data-tab="evaluation" role="tab" aria-selected="{{ 'true' if active_tab == 'evaluation' else 'false' }}" onclick="openReportTab('evaluation', this)">
+                        {{ nx_icon('grading') }}<span>Evaluation</span>
                     </button>
-
-                    <button class="profile-tab-button" data-tab="progress" onclick="openReportTab('progress', this)">
-
-                        Progress
-
+                    <button type="button" class="profile-tab-button{% if active_tab == 'progress' %} active{% endif %}" data-tab="progress" role="tab" aria-selected="{{ 'true' if active_tab == 'progress' else 'false' }}" onclick="openReportTab('progress', this)">
+                        {{ nx_icon('completion') }}<span>Progress</span>
                     </button>
-
-                    <button class="profile-tab-button" data-tab="performance" onclick="openReportTab('performance', this)">
-
-                        Performance
-
+                    <button type="button" class="profile-tab-button{% if active_tab == 'performance' %} active{% endif %}" data-tab="performance" role="tab" aria-selected="{{ 'true' if active_tab == 'performance' else 'false' }}" onclick="openReportTab('performance', this)">
+                        {{ nx_icon('insights') }}<span>Performance</span>
                     </button>
-
-                    <button class="profile-tab-button" data-tab="recommendations" onclick="openReportTab('recommendations', this)">
-
-                        Recommendations
-
+                    <button type="button" class="profile-tab-button{% if active_tab == 'recommendations' %} active{% endif %}" data-tab="recommendations" role="tab" aria-selected="{{ 'true' if active_tab == 'recommendations' else 'false' }}" onclick="openReportTab('recommendations', this)">
+                        {{ nx_icon('recommendation') }}<span>Recommendations</span>
                     </button>
-
-                </div>
+                </nav>
 
         <!-- OVERVIEW TAB -->
+                <div id="overview" class="report-tab{% if active_tab == 'overview' %} active{% endif %} mb-3" role="tabpanel">
+                    <section class="admin-report-metric-grid mb-4" aria-label="Internship report overview">
+                        <article class="admin-report-metric-card is-red">
+                            <span class="admin-report-metric-icon">{{ nx_icon('clock') }}</span>
+                            <div><strong>{{ total_sessions }}</strong><span>Attendance Sessions</span></div>
+                        </article>
+                        <article class="admin-report-metric-card is-orange">
+                            <span class="admin-report-metric-icon">{{ nx_icon('completion') }}</span>
+                            <div><strong>{{ '%.1f'|format(total_hours) }}</strong><span>Total Hours Rendered</span></div>
+                        </article>
+                        <article class="admin-report-metric-card is-amber">
+                            <span class="admin-report-metric-icon">{{ nx_icon('logbook') }}</span>
+                            <div><strong>{{ total_logs }}</strong><span>Logbook Entries</span></div>
+                        </article>
+                        <article class="admin-report-metric-card is-rose">
+                            <span class="admin-report-metric-icon">{{ nx_icon('tasks') }}</span>
+                            <div><strong>{{ '%.1f'|format(task_progress) }}%</strong><span>Task Completion</span></div>
+                        </article>
+                    </section>
 
-                <div id="overview" class="report-tab active mb-3">
-
-            <!-- SUMMARY METRICS -->
-
-                    <div class="row g-4 mb-4">
-
-                <!-- ATTENDANCE -->
-
-                        <div class="col-md-4">
-
-                            <div class="card shadow-sm p-4 h-100">
-
-                                <h2>
-
-                                    {{ total_sessions }}
-
-                                </h2>
-
-                                <p class="text-muted mb-0">
-
-                                    Attendance Sessions
-
-                                </p>
-
+                    <section class="admin-report-panel mb-4">
+                        <div class="admin-report-panel-head">
+                            <div>
+                                <span class="admin-report-section-eyebrow">Current Activity</span>
+                                <h2>Internship Summary</h2>
                             </div>
-
+                            <span class="admin-report-status-pill">{{ total_tasks }} assigned task{% if total_tasks != 1 %}s{% endif %}</span>
                         </div>
+                        <p class="admin-report-summary-copy">{{ attendance_interpretation }}</p>
+                    </section>
 
-                <!-- HOURS -->
-
-                        <div class="col-md-4">
-
-                            <div class="card shadow-sm p-4 h-100">
-
-                                <h2>
-
-                                    {{ total_hours }}
-
-                                </h2>
-
-                                <p class="text-muted mb-0">
-
-                                    Total Hours Rendered
-
-                                </p>
-
-                            </div>
-
-                        </div>
-
-                <!-- LOGBOOK -->
-
-                        <div class="col-md-4">
-
-                            <div class="card shadow-sm p-4 h-100">
-
-                                <h2>
-
-                                    {{ total_logs }}
-
-                                </h2>
-
-                                <p class="text-muted mb-0">
-
-                                    Logbook Entries
-
-                                </p>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-            <!-- INTERNSHIP SUMMARY -->
-
-                    <div class="card shadow-sm mb-4">
-
-                        <div class="card-header">
-
-                            <h5 class="mb-0">
-
-                                Internship Summary
-
-                            </h5>
-
-                        </div>
-
-                        <div class="card-body">
-
-                            <p class="text-muted mb-0">
-
-                                This overview summarizes the intern's current internship activity.
-                                Additional calculated insights from evaluation, task, and progress
-                                data will appear here as the corresponding report modules are
-                                implemented.
-
-                            </p>
-
-                        </div>
-
-                    </div>
-
-            <!-- REPORT STATUS -->
-
-                    <div class="row g-4">
-
-                        <div class="col-md-6">
-
-                            <div class="card shadow-sm h-100">
-
-                                <div class="card-body">
-
-                                    <h5>
-
-                                        Evaluation
-
-                                    </h5>
-
-                                    <p class="text-muted mb-0">
-
-                                        Supervisor evaluation data and performance classifications
-                                        will appear here.
-
-                                    </p>
-
+                    <section class="admin-report-overview-grid">
+                        <article class="admin-report-panel">
+                            <div class="admin-report-panel-head compact">
+                                <div>
+                                    <span class="admin-report-section-eyebrow">Evaluation</span>
+                                    <h2>Supervisor Evidence</h2>
                                 </div>
-
+                                <span class="admin-report-status-pill">{{ feedback|length }}</span>
                             </div>
-
-                        </div>
-
-                        <div class="col-md-6">
-
-                            <div class="card shadow-sm h-100">
-
-                                <div class="card-body">
-
-                                    <h5>
-
-                                        Progress
-
-                                    </h5>
-
-                                    <p class="text-muted mb-0">
-
-                                        Calculated internship progress and performance insights
-                                        will appear here.
-
-                                    </p>
-
+                            <p>{% if feedback %}Latest manual rating: <strong>{{ feedback[0][2] }}</strong>.{% else %}No supervisor evaluation has been recorded yet.{% endif %}</p>
+                        </article>
+                        <article class="admin-report-panel">
+                            <div class="admin-report-panel-head compact">
+                                <div>
+                                    <span class="admin-report-section-eyebrow">Progress</span>
+                                    <h2>Task Completion</h2>
                                 </div>
-
+                                <span class="admin-report-status-pill">{{ '%.1f'|format(task_progress) }}%</span>
                             </div>
-
-                        </div>
-
-                    </div>
-
+                            <p>{{ progress_interpretation }}</p>
+                        </article>
+                        <article class="admin-report-panel">
+                            <div class="admin-report-panel-head compact">
+                                <div>
+                                    <span class="admin-report-section-eyebrow">Performance</span>
+                                    <h2>Feedback Classification</h2>
+                                </div>
+                                <span class="admin-report-status-pill">{{ overall_ml_analysis or 'No data' }}</span>
+                            </div>
+                            <p>{{ ml_insight }}</p>
+                        </article>
+                    </section>
                 </div>
 
     <!-- ATTENDANCE & LOGBOOK TAB -->
@@ -1350,83 +1202,120 @@
                 </div>
 
         <!-- Performance Metrics -->
-                <div id="performance" class="report-tab active mb-3">
+                <div id="performance" class="report-tab{% if active_tab == 'performance' %} active{% endif %} mb-3" role="tabpanel">
+                    <section class="admin-report-metric-grid mb-4" aria-label="Performance summary">
+                        <article class="admin-report-metric-card is-red">
+                            <span class="admin-report-metric-icon">{{ nx_icon('insights') }}</span>
+                            <div><strong>{{ overall_ml_analysis or '—' }}</strong><span>Overall Classification</span></div>
+                        </article>
+                        <article class="admin-report-metric-card is-orange">
+                            <span class="admin-report-metric-icon">{{ nx_icon('feedback') }}</span>
+                            <div><strong>{{ total_feedback }}</strong><span>Feedback Records</span></div>
+                        </article>
+                        <article class="admin-report-metric-card is-amber">
+                            <span class="admin-report-metric-icon">{{ nx_icon('target') }}</span>
+                            <div><strong>{{ '%.1f'|format((average_confidence or 0) * 100) }}%</strong><span>Average ML Confidence</span></div>
+                        </article>
+                        <article class="admin-report-metric-card is-rose">
+                            <span class="admin-report-metric-icon">{{ nx_icon('completion') }}</span>
+                            <div><strong>{% if model_comparison.agreement_rate is not none %}{{ '%.1f'|format(model_comparison.agreement_rate * 100) }}%{% else %}—{% endif %}</strong><span>NB / SVM Agreement</span></div>
+                        </article>
+                    </section>
 
+                    <section class="admin-report-panel mb-4">
+                        <div class="admin-report-panel-head">
+                            <div>
+                                <span class="admin-report-section-eyebrow">Feedback Models</span>
+                                <h2>Performance Classification</h2>
+                            </div>
+                        </div>
+                        {% if total_feedback %}
+                            <div class="admin-report-distribution">
+                                {% for item in ml_distribution %}
+                                    <div class="admin-report-distribution-row"><span>{{ item.label }}</span><strong>{{ item.count }}</strong></div>
+                                {% endfor %}
+                            </div>
+                            <p class="admin-report-summary-copy mt-3">{{ ml_insight }}</p>
+                        {% else %}
+                            <div class="admin-report-empty">{{ nx_icon('insights') }}<div><strong>No performance analysis yet</strong><span>Supervisor feedback is required before ML classifications can be summarized.</span></div></div>
+                        {% endif %}
+                    </section>
+
+                    <div class="admin-report-two-column">
+                        <section class="admin-report-panel">
+                            <div class="admin-report-panel-head compact"><div><span class="admin-report-section-eyebrow">Sentiment</span><h2>Feedback Sentiment</h2></div></div>
+                            <div class="admin-report-distribution">
+                                {% for item in sentiment_distribution %}
+                                    <div class="admin-report-distribution-row"><span>{{ item.label }}</span><strong>{{ item.count }}</strong></div>
+                                {% endfor %}
+                            </div>
+                        </section>
+                        <section class="admin-report-panel">
+                            <div class="admin-report-panel-head compact"><div><span class="admin-report-section-eyebrow">Competency</span><h2>Competency Signals</h2></div></div>
+                            <div class="admin-report-distribution">
+                                {% for item in competency_distribution %}
+                                    <div class="admin-report-distribution-row"><span>{{ item.label }}</span><strong>{{ item.count }}</strong></div>
+                                {% endfor %}
+                            </div>
+                        </section>
+                    </div>
                 </div>
 
-         <!-- Recommendations -->
-                <div id="recommendations" class="report-tab active mb-3">
-
+        <!-- Recommendations -->
+                <div id="recommendations" class="report-tab{% if active_tab == 'recommendations' %} active{% endif %} mb-3" role="tabpanel">
+                    <section class="admin-report-panel">
+                        <div class="admin-report-panel-head">
+                            <div>
+                                <span class="admin-report-section-eyebrow">Decision Support</span>
+                                <h2>Recommendations</h2>
+                                <p>Recommendations already produced from the intern's stored supervisor feedback analysis.</p>
+                            </div>
+                            <span class="admin-report-status-pill">{{ recommendation_summary|length }}</span>
+                        </div>
+                        {% if recommendation_summary %}
+                            <div class="admin-report-recommendations">
+                                {% for recommendation in recommendation_summary %}
+                                    <article class="admin-report-recommendation">
+                                        <span class="admin-report-recommendation-icon">{{ nx_icon('recommendation') }}</span>
+                                        <p>{{ recommendation }}</p>
+                                    </article>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="admin-report-empty">{{ nx_icon('recommendation') }}<div><strong>No recommendations yet</strong><span>Recommendations will appear after supervisor feedback has enough stored analysis to summarize.</span></div></div>
+                        {% endif %}
+                    </section>
                 </div>
 
             </div>
         </div>
 
-<!-- script -->
-
         <script>
-
-// NAVIGATIONS
-
             function openReportTab(tabName, button) {
+                const selectedTab = document.getElementById(tabName);
+                if (!selectedTab) return;
 
-                const tabs =
-                    document.querySelectorAll(".report-tab");
-
-                tabs.forEach(function(tab) {
-
-                    tab.classList.remove("active");
-
+                document.querySelectorAll('.report-tab').forEach(function (tab) {
+                    tab.classList.toggle('active', tab === selectedTab);
                 });
 
-                const selectedTab =
-                    document.getElementById(tabName);
-
-                if (selectedTab) {
-
-                    selectedTab.classList.add("active");
-
-                }
-
-                const buttons =
-                    document.querySelectorAll(".profile-tab-button");
-
-                buttons.forEach(function(btn) {
-
-                    btn.classList.remove("active");
-
+                document.querySelectorAll('.profile-tab-button').forEach(function (tabButton) {
+                    const isActive = tabButton === button;
+                    tabButton.classList.toggle('active', isActive);
+                    tabButton.setAttribute('aria-selected', isActive ? 'true' : 'false');
                 });
 
-                if (button) {
-
-                    button.classList.add("active");
-
-                }
-
+                const url = new URL(window.location.href);
+                url.searchParams.set('tab', tabName);
+                window.history.replaceState({}, '', url);
             }
 
-// RESTORE ACTIVE TAB AFTER PAGE LOAD
-
-            document.addEventListener("DOMContentLoaded", function() {
-
-                const activeTab =
-                    "{{ active_tab }}";
-
-                const activeButton =
-                    document.querySelector(
-                        '.profile-tab-button[data-tab="' + activeTab + '"]'
-                    );
-
-                if (activeButton) {
-
-                    openReportTab(activeTab, activeButton);
-
-                }
-
+            document.addEventListener('DOMContentLoaded', function () {
+                const requestedTab = {{ active_tab|tojson }};
+                const activeButton = document.querySelector('.profile-tab-button[data-tab="' + requestedTab + '"]')
+                    || document.querySelector('.profile-tab-button[data-tab="overview"]');
+                if (activeButton) openReportTab(activeButton.dataset.tab, activeButton);
             });
-
-// SIDEBAR
-
-            </body>
-
-            </html>
+        </script>
+    </body>
+</html>

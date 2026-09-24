@@ -70,7 +70,8 @@
                         <strong>{% if work_summary.average_percentage is not none %}{{ '%.1f'|format(work_summary.average_percentage) }}%{% else %}—{% endif %}</strong>
                         <small class="text-muted">{{ work_summary.graded_count }} reviewed of {{ work_summary.assigned_count }} assigned · {{ work_performance_label }}</small>
                     </article>
-                    <article class="supervisor-insights-readiness-card{% if not official_evaluation %} is-no-data{% endif %}">
+                    <article class="supervisor-insights-readiness-card supervisor-insights-readiness-card--explicit{% if not official_evaluation %} is-no-data{% endif %}">
+                        <span class="supervisor-insights-readiness-explicit-icon" aria-hidden="true">{{ nx_icon('grading') }}</span>
                         <span>Official Evaluation</span>
                         <strong>{% if official_evaluation %}{{ official_evaluation.status|title }}{% else %}Not started{% endif %}</strong>
                         <small class="text-muted">{% if official_evaluation and official_evaluation.overall_score is not none %}Manual overall score: {{ '%g'|format(official_evaluation.overall_score) }}{% elif official_evaluation %}No manual overall score{% else %}No official evaluation saved{% endif %}</small>

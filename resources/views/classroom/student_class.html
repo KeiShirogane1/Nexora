@@ -50,7 +50,7 @@
                 </div>
             </section>
 
-            <section id="people" class="class-tab-panel nx-extracted-classroom-student-class-1">
+            <section id="people" class="class-tab-panel" hidden>
                 <div class="class-card">
                     <div class="class-heading">
                         <div>
@@ -119,14 +119,16 @@
     <script>
         function openClassTab(name, btn) {
             document.querySelectorAll('.class-tab-panel').forEach((panel) => {
-                panel.style.display = panel.id === name ? '' : 'none';
+                panel.hidden = panel.id !== name;
             });
 
             document.querySelectorAll('.class-tabs .class-tab').forEach((tab) => {
-                tab.classList.remove('active');
+                const isActive = tab === btn;
+                tab.classList.toggle('active', isActive);
+                if (tab.tagName === 'BUTTON') {
+                    tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+                }
             });
-
-            if (btn) btn.classList.add('active');
         }
 
         if (window.location.hash === '#people') {
