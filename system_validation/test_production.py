@@ -51,23 +51,20 @@ def test_hybridrow_and_placeholder_conversion():
 
 def test_app_base_url_behavior(monkeypatch):
     import os
-    monkeypatch.setenv("APP_BASE_URL", "https://nexora.onrender.com")
-    assert os.environ.get("APP_BASE_URL") == "https://nexora.onrender.com"
+    monkeypatch.setenv("APP_BASE_URL", "https://nexora.example.com")
+    assert os.environ.get("APP_BASE_URL") == "https://nexora.example.com"
     monkeypatch.delenv("APP_BASE_URL", raising=False)
     assert os.environ.get("APP_BASE_URL") is None
 
-def test_render_yaml_valid():
-    p = pathlib.Path("render.yaml")
+def test_production_dockerfile_valid():
+    p = pathlib.Path("Dockerfile")
     assert p.exists()
     txt = p.read_text(encoding="utf-8")
-    assert "gunicorn bootstrap.app:app" in txt
-    assert "healthCheckPath: /health" in txt
-    for required in ["SECRET_KEY", "DATABASE_URL", "BREVO_API_KEY", "APP_BASE_URL", "PYTHON_VERSION"]:
-        assert required in txt, f"Missing {required} in render.yaml"
-    assert "mountPath:" in txt and "storage/uploads" in txt
-    assert "sizeGB:" in txt
-    assert "runtime: python" in txt
-    assert "pip install -r requirements.txt" in txt
+    assert "FROM python:3.12-slim" in txt
+    assert "pip install --no-cache-dir -r requirements.txt" in txt
+    assert "USER appuser" in txt
+    assert "gunicorn app:app" in txt
+    assert "PORT" in txt
 
 def test_required_production_settings():
     from bootstrap.app import app

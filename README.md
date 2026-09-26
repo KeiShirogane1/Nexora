@@ -33,27 +33,21 @@ Do not use `pytest tests/` for this repository; Nexora intentionally keeps its v
 | Variable | Required | Description |
 |---|---|---|
 | `SECRET_KEY` | production | Flask session secret (generate random string) |
-| `DATABASE_URL` | production (Render) | PostgreSQL URL, e.g. `postgresql://user:pass@host/db`. If unset, falls back to `nexora.db` SQLite |
+| `DATABASE_URL` | production (Railway) | PostgreSQL URL, e.g. `postgresql://user:pass@host/db`. If unset, falls back to `nexora.db` SQLite |
 | `BREVO_API_KEY` | for email | Brevo SMTP API key |
 | `BREVO_SENDER_EMAIL` | for email | Verified sender email for Brevo |
 | `BREVO_SENDER_NAME` | optional | Sender name, default `Nexora` |
-| `APP_BASE_URL` | recommended | Base URL for password-reset links, e.g. `https://your-app.onrender.com` |
-| `FLASK_ENV` | Render | Set `production` on Render (enables secure cookies, requires `SECRET_KEY`) |
+| `APP_BASE_URL` | recommended | Public base URL for password-reset links, e.g. your Railway service domain |
+| `FLASK_ENV` | Railway | Set `production` in Railway (enables secure cookies, requires `SECRET_KEY`) |
 | `ADMIN_USERNAME` / `ADMIN_PASSWORD` | optional | Initial admin provisioning (min 12 chars) |
-| `PYTHON_VERSION` | Render | `3.12.0` per `render.yaml` |
 
 See `.env.example` for template. Never commit `.env`.
 
-## Render Deployment
+## Railway Deployment
 
-`render.yaml` configures:
+Railway deploys Nexora from the root `Dockerfile`, which installs `requirements.txt` and starts Gunicorn on Railway's `PORT`. The service health check is `/health`.
 
-- **Build:** `pip install -r requirements.txt`
-- **Start:** `gunicorn bootstrap.app:app`
-- **Health check:** `/health`
-- **Disk:** `storage/uploads` (mounted at `/opt/render/project/src/storage/uploads`, 1GB)
-
-Required Render env vars: `SECRET_KEY` (generate), `DATABASE_URL`, `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, `APP_BASE_URL`, `ADMIN_USERNAME`/`ADMIN_PASSWORD` if needed.
+Required Railway env vars: `SECRET_KEY`, `DATABASE_URL`, `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, and `APP_BASE_URL`. Configure `ADMIN_USERNAME`/`ADMIN_PASSWORD` only when initial admin provisioning is needed.
 
 ## ML Model Files
 

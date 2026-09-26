@@ -18,7 +18,10 @@ def test_login_ui():
     assert 'csrf_token' in txt
     assert 'Forgot Password' in txt
     assert 'togglePass' in txt
-    assert 'show/hide' in txt.lower() or '👁' in txt
+    assert "nx_icon('eye')" in txt
+    assert "nx_icon('eye-off')" in txt
+    assert "Show password" in txt
+    assert "Hide password" in txt
 
 def test_signup_ui():
     txt=pathlib.Path("resources/views/auth/signup.html").read_text(encoding="utf-8")

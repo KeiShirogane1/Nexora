@@ -1,7 +1,7 @@
 """
 run.py
 Laravel-inspired entry point for Nexora.
-Keeps Render and local development runnable via `python run.py` or `gunicorn run:app`.
+Keeps local and production entry points runnable via `python run.py` or `gunicorn run:app`.
 Preserves bootstrap/app.py as source of truth.
 """
 from bootstrap.app import app
