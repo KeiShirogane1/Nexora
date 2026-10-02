@@ -187,6 +187,15 @@
                                             </div>
                                             {% if errors and errors.work_arrangement %}<div class="create-space-error">{{ errors.work_arrangement }}</div>{% endif %}
                                         </div>
+
+                                        <div class="create-space-field is-full">
+                                            <span class="create-space-option-label">Compensation</span>
+                                            <div class="create-space-option-row is-two" aria-label="Compensation options">
+                                                <span class="create-space-option" aria-disabled="true"><span>Paid</span></span>
+                                                <span class="create-space-option" aria-disabled="true"><span>Unpaid</span></span>
+                                            </div>
+                                            <small>Planning field only in this UI phase. The current create backend stores compensation as “Not Specified”, so Paid/Unpaid is not saved yet.</small>
+                                        </div>
                                     </div>
                                 </section>
 
@@ -200,6 +209,16 @@
                                     </div>
 
                                     <div class="create-space-fields">
+                                        <div class="create-space-field">
+                                            <label for="internship_start_preview">Internship Start Date</label>
+                                            <input type="date" id="internship_start_preview" disabled>
+                                            <small>Planning field only. Start date is not saved by the current create route yet.</small>
+                                        </div>
+                                        <div class="create-space-field">
+                                            <label for="internship_end_preview">End Date / Duration</label>
+                                            <input type="text" id="internship_end_preview" placeholder="Example: Oct 1, 2026 or 3 months" disabled>
+                                            <small>Planning field only. End date / duration is not saved by the current create route yet.</small>
+                                        </div>
                                         <div class="create-space-field">
                                             <label for="hours_per_day">Hours per Day <span class="create-space-required">*</span></label>
                                             <input type="number" id="hours_per_day" name="hours_per_day" min="1" max="24" step="1" value="{{ form.get('hours_per_day', 8) }}" required>
@@ -242,10 +261,18 @@
                                         </div>
                                     </div>
 
-                                    <div class="alert alert-primary mt-3 mb-0">
-                                        <strong>Total required OJT hours:</strong>
-                                        <span id="totalRequiredHours">480 hours</span>
-                                        <div class="small mt-1">Students receive Logbook reminders for scheduled check-in and for Daily OJT Entry / clock-out when the daily schedule is complete.</div>
+                                    <div class="create-space-stat-grid mt-3">
+                                        <div class="create-space-stat-card">
+                                            <span>Duration</span>
+                                            <strong id="durationPreview">60 scheduled days</strong>
+                                        </div>
+                                        <div class="create-space-stat-card">
+                                            <span>Required Hours</span>
+                                            <strong id="totalRequiredHours">480 hours</strong>
+                                        </div>
+                                    </div>
+                                    <div class="create-space-notice">
+                                        Students receive Logbook reminders for scheduled check-in and for Daily OJT Entry / clock-out when the daily schedule is complete.
                                     </div>
                                 </section>
 
@@ -419,6 +446,8 @@
                 const checkedDays = Array.from(document.querySelectorAll('input[name="attendance_days"]:checked')).map((input) => dayLabels[input.value] || input.value);
 
                 document.getElementById('totalRequiredHours').textContent = total + ' hours';
+                const durationPreview = document.getElementById('durationPreview');
+                if (durationPreview) durationPreview.textContent = days + (days === 1 ? ' scheduled day' : ' scheduled days');
                 document.getElementById('reviewProgram').textContent = program;
                 document.getElementById('reviewHoursDay').textContent = hours + (hours === 1 ? ' hour' : ' hours');
                 document.getElementById('reviewRequiredDays').textContent = days + (days === 1 ? ' day' : ' days');
