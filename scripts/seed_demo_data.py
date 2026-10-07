@@ -177,12 +177,12 @@ def create_seed_user(conn,class_id,slot,password_hash):
     return student_id
 
 
-def backfill_demo_account(conn,student_id,class_id):
+def backfill_student_account(conn,student_id,class_id):
     row=conn.execute("SELECT id,username,email,role,status,password_changed_at FROM users WHERE id=?",(student_id,)).fetchone()
-    if not row or not demo_username(getv(row,"username",1,"")): return
+    if not row or str(getv(row,"role",3,"") or "")!="student": return
     updates=[]; params=[]
     if blank(getv(row,"email",2,None)):
-        updates.append("email=?"); params.append(f"demo.c{class_id}.u{student_id}@nexora.demo")
+        updates.append("email=?"); params.append(f"student.c{class_id}.u{student_id}@nexora.demo")
     if blank(getv(row,"status",4,None)): updates.append("status='active'")
     if getv(row,"password_changed_at",5,None) is None: updates.append("password_changed_at=CURRENT_TIMESTAMP")
     if updates:
@@ -191,14 +191,25 @@ def backfill_demo_account(conn,student_id,class_id):
 
 
 def backfill_profile(conn,student_id,class_id,slot):
-    row=conn.execute("SELECT username,email FROM users WHERE id=?",(student_id,)).fetchone()
-    username=str(getv(row,"username",0,"") or "")
-    if not demo_username(username): return
+    row=conn.execute("SELECT username,email,role FROM users WHERE id=?",(student_id,)).fetchone()
+    if not row or str(getv(row,"role",2,"") or "")!="student": return
+    username=str(getv(row,"username",0,"") or f"student{student_id}")
     email=str(getv(row,"email",1,"") or "")
     idx=(slot-1)%20
+
+    preferred_student_number=f"NXR-{class_id:02d}-{slot:03d}"
+    collision=conn.execute(
+        "SELECT user_id FROM student_profiles WHERE student_id=? AND user_id<>? LIMIT 1",
+        (preferred_student_number,student_id),
+    ).fetchone()
+    generated_student_number=(
+        f"NXR-{class_id:02d}-U{student_id:05d}"
+        if collision else preferred_student_number
+    )
+
     data={
         "first_name":FIRST[idx],"middle_name":MIDDLE[idx],"last_name":LAST[(idx+class_id-1)%20],
-        "age":20+(slot%4),"student_id":f"NXR-{class_id:02d}-{slot:03d}",
+        "age":20+(slot%4),"student_id":generated_student_number,
         "school_email":email or f"{username}@nexora.demo",
         "phone_number":f"0917{class_id:02d}{slot:05d}"[-11:],
         "home_address":ADDRESSES[idx%len(ADDRESSES)],"grade_year":"4th Year",
@@ -492,15 +503,14 @@ def populate_classroom(conn,classroom,password_hash):
            ORDER BY cs.joined_at,u.id""",
         (class_id,),
     ).fetchall()
-    demo=[row for row in roster if demo_username(getv(row,"username",1,""))]
-    if not demo: raise RuntimeError(f"No demo/seed students found in classroom {class_id}")
+    if not roster: raise RuntimeError(f"No students found in classroom {class_id}")
 
     ensure_posts(conn,class_id,supervisor_id)
     assignment_ids=ensure_work_items(conn,class_id,supervisor_id)
 
-    for slot,row in enumerate(demo,start=1):
+    for slot,row in enumerate(roster,start=1):
         student_id=int(getv(row,"id",0,0))
-        backfill_demo_account(conn,student_id,class_id)
+        backfill_student_account(conn,student_id,class_id)
         backfill_profile(conn,student_id,class_id,slot)
         ensure_assignment_link(conn,student_id,supervisor_id)
         ensure_internship(conn,student_id,supervisor_id,supervisor_name,supervisor_email,company,slot)
@@ -513,7 +523,7 @@ def populate_classroom(conn,classroom,password_hash):
         ensure_history(conn,student_id,supervisor_id)
         ensure_evaluation(conn,class_id,student_id,supervisor_id,score_base,slot)
 
-    return class_id,class_name,roster_count(conn,class_id),len(demo)
+    return class_id,class_name,roster_count(conn,class_id),len(roster)
 
 
 def schema_check(conn):
@@ -567,8 +577,8 @@ def main():
         summaries=[populate_classroom(conn,classroom,password_hash) for classroom in classrooms]
         conn.commit()
         print("Seed applied successfully.")
-        for class_id,name,roster,demo_count in summaries:
-            print(f"  - {class_id}: {name!r}, roster={roster}, demo accounts populated={demo_count}")
+        for class_id,name,roster,populated_count in summaries:
+            print(f"  - {class_id}: {name!r}, roster={roster}, student accounts populated={populated_count}")
         return 0
     except Exception as error:
         try: conn.rollback()
