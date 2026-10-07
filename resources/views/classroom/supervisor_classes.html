@@ -17,8 +17,11 @@
                     <div><h1>My Intern Classrooms</h1><p>Manage your internship cohorts by company and section.</p></div>
                     {% if classes and classes|length > 0 %}
                         <div class="supervisor-classes-view-tools">
-                            <div class="supervisor-view-toggle" role="group" aria-label="Classroom display"><button type="button" class="is-active" data-class-view="cards" onclick="setClassView('cards')">{{ nx_icon('grid') }}<span>Card View</span></button><button type="button" data-class-view="list" onclick="setClassView('list')">{{ nx_icon('list') }}<span>List View</span></button></div>
-                            <span>{{ classes|length }} classroom{% if classes|length != 1 %}s{% endif %}</span>
+                            <div class="supervisor-view-toggle" role="group" aria-label="Classroom display">
+                                <button type="button" class="is-active" data-class-view="cards" onclick="setClassView('cards')">{{ nx_icon('grid') }}<span>Card View</span></button>
+                                <button type="button" data-class-view="list" onclick="setClassView('list')">{{ nx_icon('list') }}<span>List View</span></button>
+                            </div>
+                            <span class="supervisor-classes-count"><strong>{{ classes|length }}</strong><span>classroom{% if classes|length != 1 %}s{% endif %}</span></span>
                         </div>
                     {% endif %}
                     <a href="{{ url_for('classroom.create_class') }}" class="supervisor-create-class-btn supervisor-create-class-mobile">{{ nx_icon('add') }}<span>Create Intern Classroom</span></a>
