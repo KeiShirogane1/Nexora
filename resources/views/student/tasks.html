@@ -26,7 +26,7 @@
             </section>
             <section class="student-tasks-toolbar" aria-label="Task filters">
                 <div class="student-tasks-filter">All Status <span aria-hidden="true">{{ nx_icon('chevron-down') }}</span></div><div class="student-tasks-filter">All Classes <span aria-hidden="true">{{ nx_icon('chevron-down') }}</span></div><div class="student-tasks-filter">All Priorities <span aria-hidden="true">{{ nx_icon('chevron-down') }}</span></div>
-                <label class="student-tasks-filter-search"><span aria-hidden="true">{{ nx_icon('search') }}</span><input class="student-tasks-filter-search-input" type="text" inputmode="search" enterkeyhint="search" aria-label="Search tasks" placeholder="Search tasks..."></label>
+                <div class="student-tasks-filter-search" role="search"><span aria-hidden="true">{{ nx_icon('search') }}</span><div class="student-tasks-filter-search-box" contenteditable="true" role="searchbox" aria-label="Search tasks" aria-multiline="false" data-placeholder="Search tasks..."></div></div>
             </section>
             <section class="student-tasks-grid">
                 <section class="student-tasks-list-card" id="task-list" aria-label="Task list">
@@ -51,5 +51,30 @@
             </section>
         </div>
     </main>
+    <script>
+    (function () {
+        'use strict';
+
+        var searchBox = document.querySelector('.student-tasks-filter-search-box');
+        var rows = Array.prototype.slice.call(document.querySelectorAll('.student-task-row'));
+
+        if (!searchBox || !rows.length) return;
+
+        function applyTaskSearch() {
+            var query = (searchBox.textContent || '').trim().toLowerCase();
+            rows.forEach(function (row) {
+                var haystack = (row.textContent || '').toLowerCase();
+                row.hidden = Boolean(query) && haystack.indexOf(query) === -1;
+            });
+        }
+
+        searchBox.addEventListener('input', applyTaskSearch);
+        searchBox.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+            }
+        });
+    })();
+    </script>
 </body>
 </html>
