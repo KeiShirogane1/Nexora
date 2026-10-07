@@ -264,9 +264,30 @@
             if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
             var link = event.target.closest('main a[href*="/admin/insights"]');
             if (!link || link.closest('#nxAdminStudentInsightsModal')) return;
+
+            var targetUrl;
+            try {
+                targetUrl = new URL(link.href, window.location.href);
+            } catch (error) {
+                return;
+            }
+
+            if (targetUrl.pathname !== '/admin/insights' || !targetUrl.searchParams.get('student_id')) return;
             event.preventDefault();
-            loadInsights(link.href);
+            loadInsights(targetUrl.href);
         });
+
+        var autoLoadTarget = document.querySelector('.admin-insights-page[data-admin-insights-autoload-url]');
+        if (autoLoadTarget && autoLoadTarget.dataset.adminInsightsAutoloadUrl) {
+            var autoLoadUrl = autoLoadTarget.dataset.adminInsightsAutoloadUrl;
+            try {
+                var cleanUrl = new URL(window.location.href);
+                cleanUrl.searchParams.delete('student_id');
+                window.history.replaceState({}, document.title, cleanUrl.pathname + cleanUrl.search + cleanUrl.hash);
+            } catch (error) {}
+            loadInsights(autoLoadUrl);
+        }
+
         document.addEventListener('keydown', function (event) {
             if (event.key === 'Escape' && overlay.classList.contains('open')) closeModal();
         });

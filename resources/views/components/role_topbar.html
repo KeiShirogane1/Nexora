@@ -108,15 +108,20 @@
         {% set notification_role = nx_role %}
         {% include 'components/role_notification_bell.html' %}
 
-        {% if nx_profile_url %}
+        {% if nx_role == 'admin' %}
+            <div class="nx-role-topbar-user" aria-label="Administrator account">
+                <img src="{{ nx_avatar }}" alt="Administrator profile" onerror="this.onerror=null;this.src='{{ nx_default_avatar }}';">
+                <span class="nx-role-topbar-user-copy"><strong>{{ nx_display_name }}</strong><span>{{ nx_role_label }}</span></span>
+            </div>
+        {% elif nx_profile_url %}
             <a class="nx-role-topbar-user" href="{{ nx_profile_url }}" aria-label="Open {{ nx_role_label }} profile">
                 <img src="{{ nx_avatar }}" alt="{{ nx_role_label }} profile" onerror="this.onerror=null;this.src='{{ nx_default_avatar }}';">
                 <span class="nx-role-topbar-user-copy"><strong>{{ nx_display_name }}</strong><span>{{ nx_role_label }}</span></span>
                 <span class="nx-role-topbar-chevron" aria-hidden="true">⌄</span>
             </a>
         {% else %}
-            <div class="nx-role-topbar-user" aria-label="Administrator account">
-                <img src="{{ nx_default_avatar }}" alt="Administrator profile">
+            <div class="nx-role-topbar-user" aria-label="{{ nx_role_label }} account">
+                <img src="{{ nx_avatar }}" alt="{{ nx_role_label }} profile" onerror="this.onerror=null;this.src='{{ nx_default_avatar }}';">
                 <span class="nx-role-topbar-user-copy"><strong>{{ nx_display_name }}</strong><span>{{ nx_role_label }}</span></span>
             </div>
         {% endif %}

@@ -16,7 +16,8 @@
 
     <main class="admin-main nexora-app-main">
 {% endif %}
-        <div class="nexora-page admin-insights-page{% if admin_insights_modal %} admin-insights-modal-fragment{% endif %}">
+        <div class="nexora-page admin-insights-page{% if admin_insights_modal %} admin-insights-modal-fragment{% endif %}"{% if not admin_insights_modal and selected_classroom and selected_student %} data-admin-insights-autoload-url="{{ url_for('admin_reports_overview.student_insights', class_id=selected_classroom.id, student_id=selected_student.id) }}"{% endif %}>
+            {% if not admin_insights_modal %}
             <header class="admin-polish-header">
                 <div>
                     <div class="admin-polish-eyebrow">ADMIN PORTAL / READ-ONLY ADMINISTRATION</div>
@@ -128,7 +129,7 @@
                     </div>
                     <div class="admin-insights-student-list">
                         {% for student in students %}
-                            <a class="admin-insights-student-row {% if selected_student and selected_student.id == student.id %}is-selected{% endif %}" href="{{ url_for('admin_reports_overview.student_insights', class_id=selected_classroom.id, student_id=student.id) }}">
+                            <a class="admin-insights-student-row {% if selected_student and selected_student.id == student.id %}is-selected{% endif %}" data-admin-insights-modal-trigger href="{{ url_for('admin_reports_overview.student_insights', class_id=selected_classroom.id, student_id=student.id) }}">
                                 <span class="admin-insights-student-avatar" aria-hidden="true">{{ (student.display_name or student.username or 'S')[0]|upper }}</span>
                                 <span class="admin-insights-student-copy">
                                     <strong>{{ student.display_name }}</strong>
@@ -145,8 +146,9 @@
                     <section class="admin-polish-empty"><div class="admin-polish-empty-icon">{{ nx_icon('target') }}</div><h2>Choose a student</h2><p>Select a student above to load their classroom-scoped evidence.</p></section>
                 {% endif %}
             {% endif %}
+            {% endif %}
 
-            {% if selected_classroom and selected_student and insights %}
+            {% if admin_insights_modal and selected_classroom and selected_student and insights %}
                 {% set report = insights.report or {} %}
                 {% set attendance = insights.attendance or {} %}
                 {% set daily = insights.daily_performance or {} %}
