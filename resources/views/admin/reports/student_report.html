@@ -60,9 +60,9 @@
                         </div>
                         {% if attendance_total_pages > 1 %}
                             <nav class="admin-report-pager" aria-label="Attendance pages">
-                                {% if attendance_page > 1 %}<a href="?attendance_page={{ attendance_page - 1 }}&logbook_page={{ logbook_page }}">Previous</a>{% endif %}
+                                {% if attendance_page > 1 %}<a href="{{ url_for('admin.student_report', student_id=student[0], attendance_page=attendance_page - 1, logbook_page=logbook_page) }}">Previous</a>{% endif %}
                                 <span>Page {{ attendance_page }} of {{ attendance_total_pages }}</span>
-                                {% if attendance_page < attendance_total_pages %}<a href="?attendance_page={{ attendance_page + 1 }}&logbook_page={{ logbook_page }}">Next</a>{% endif %}
+                                {% if attendance_page < attendance_total_pages %}<a href="{{ url_for('admin.student_report', student_id=student[0], attendance_page=attendance_page + 1, logbook_page=logbook_page) }}">Next</a>{% endif %}
                             </nav>
                         {% endif %}
                     {% else %}
@@ -86,9 +86,9 @@
                         </div>
                         {% if logbook_total_pages > 1 %}
                             <nav class="admin-report-pager" aria-label="Logbook pages">
-                                {% if logbook_page > 1 %}<a href="?attendance_page={{ attendance_page }}&logbook_page={{ logbook_page - 1 }}">Previous</a>{% endif %}
+                                {% if logbook_page > 1 %}<a href="{{ url_for('admin.student_report', student_id=student[0], attendance_page=attendance_page, logbook_page=logbook_page - 1) }}">Previous</a>{% endif %}
                                 <span>Page {{ logbook_page }} of {{ logbook_total_pages }}</span>
-                                {% if logbook_page < logbook_total_pages %}<a href="?attendance_page={{ attendance_page }}&logbook_page={{ logbook_page + 1 }}">Next</a>{% endif %}
+                                {% if logbook_page < logbook_total_pages %}<a href="{{ url_for('admin.student_report', student_id=student[0], attendance_page=attendance_page, logbook_page=logbook_page + 1) }}">Next</a>{% endif %}
                             </nav>
                         {% endif %}
                     {% else %}
