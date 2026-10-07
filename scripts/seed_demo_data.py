@@ -7,6 +7,11 @@ This script never changes database schema and never deletes classrooms/users.
 import os
 import sys
 from datetime import datetime, timedelta
+from pathlib import Path
+
+ROOT_DIR = Path(__file__).resolve().parents[1]
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
 
 from app.Models.db import get_db_connection, using_postgres
 from app.Services.password_security import hash_password
