@@ -154,7 +154,7 @@ def supervisor_needs_attention(class_id):
         conn.close()
 
     review_items = []
-    category_counts = {"performance": 0, "evidence_gap": 0, "workflow": 0}
+    review_threshold = 75.0
 
     for row in students:
         student_id = int(_value(row, "id", 0, 0) or 0)
@@ -166,18 +166,20 @@ def supervisor_needs_attention(class_id):
         if not profile.get("ok"):
             continue
 
-        evaluation_context = get_supervisor_evaluation_context(
-            supervisor_id=supervisor_id,
-            classroom_id=class_id,
-            student_id=student_id,
-        )
-        official_evaluation = evaluation_context.get("evaluation") if evaluation_context.get("ok") else None
-        signals = _build_attention_signals(profile, official_evaluation)
-        if not signals:
+        work = profile.get("work_summary") or {}
+        graded_count = int(work.get("graded_count", 0) or 0)
+        assigned_count = int(work.get("assigned_count", 0) or 0)
+        work_average = work.get("average_percentage")
+        if graded_count <= 0 or work_average is None:
             continue
 
-        for signal in signals:
-            category_counts[signal["category"]] += 1
+        try:
+            work_average = float(work_average)
+        except (TypeError, ValueError):
+            continue
+
+        if work_average >= review_threshold:
+            continue
 
         student = profile.get("student") or {}
         review_items.append(
@@ -186,7 +188,10 @@ def supervisor_needs_attention(class_id):
                 "name": student.get("display_name") or _value(row, "username", 1, "Student"),
                 "student_number": student.get("student_number") or _value(row, "student_number", 3, ""),
                 "email": student.get("email") or _value(row, "email", 2, ""),
-                "signals": signals,
+                "work_average": work_average,
+                "performance_label": classify_numeric_performance(work_average),
+                "graded_count": graded_count,
+                "assigned_count": assigned_count,
             }
         )
 
@@ -195,6 +200,6 @@ def supervisor_needs_attention(class_id):
         classroom=classroom,
         review_items=review_items,
         total_interns=len(students),
-        category_counts=category_counts,
+        review_threshold=review_threshold,
         active_page="classes",
     )
