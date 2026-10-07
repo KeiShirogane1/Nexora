@@ -60,7 +60,7 @@
                                                     <td>{{ student.email or 'No email' }}</td>
                                                     <td class="admin-report-action-cell">
                                                         {% if logbook_mode %}
-                                                            <a class="admin-report-open-btn" href="{{ url_for('logbook_review.admin_student_logbooks', student_id=student.id) }}">Open Logbook <span aria-hidden="true">{{ nx_icon('arrow-right', 'admin-link-icon') }}</span></a>
+                                                            <a class="admin-report-open-btn" data-admin-logbook-modal-trigger href="{{ url_for('logbook_review.admin_student_logbooks', student_id=student.id) }}">Open Logbook <span aria-hidden="true">{{ nx_icon('arrow-right', 'admin-link-icon') }}</span></a>
                                                         {% else %}
                                                             <button type="button" class="admin-report-open-btn" data-report-view data-student="{{ student.username|e }}" data-classroom="{{ classroom.name|e }}" data-report-url="{{ url_for('admin_reports_overview.overview', student_id=student.id) }}" data-insights-url="{{ url_for('admin_reports_overview.student_insights', class_id=classroom.id, student_id=student.id) }}">View <span aria-hidden="true">{{ nx_icon('arrow-right', 'admin-link-icon') }}</span></button>
                                                         {% endif %}

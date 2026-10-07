@@ -262,7 +262,7 @@
 
         document.addEventListener('click', function (event) {
             if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-            var link = event.target.closest('main a[href*="/admin/insights"]');
+            var link = event.target.closest('a[data-admin-insights-modal-trigger], main a[href*="/admin/insights"]');
             if (!link || link.closest('#nxAdminStudentInsightsModal')) return;
 
             var targetUrl;
@@ -293,10 +293,159 @@
         });
     }
 
+    function createLogbookModal() {
+        var existing = document.getElementById('nxAdminStudentLogbookModal');
+        if (existing) return existing;
+
+        var overlay = document.createElement('div');
+        overlay.id = 'nxAdminStudentLogbookModal';
+        overlay.className = 'nexora-modal-overlay nx-admin-logbook-modal';
+        overlay.setAttribute('aria-hidden', 'true');
+        overlay.innerHTML = '<div class="nexora-modal" role="dialog" aria-modal="true" aria-labelledby="nxAdminLogbookTitle">' +
+            '<div class="nexora-modal-header"><h2 id="nxAdminLogbookTitle">Student Logbook</h2><p>Daily OJT records, attendance context, Work evidence, supervisor review, and Daily Performance.</p><button type="button" class="nexora-modal-close" data-admin-logbook-close aria-label="Close">' + closeSvg + '</button></div>' +
+            '<div class="nexora-modal-body" data-admin-logbook-body><div class="nx-admin-insights-loading">Loading student logbook…</div></div>' +
+            '</div>';
+        document.body.appendChild(overlay);
+        return overlay;
+    }
+
+    function setupAdminLogbookModal() {
+        var overlay = createLogbookModal();
+        var body = overlay.querySelector('[data-admin-logbook-body]');
+        var title = overlay.querySelector('#nxAdminLogbookTitle');
+        var previousOverflow = '';
+        var currentUrl = '';
+        var requestSequence = 0;
+        var addedLogbookBodyClass = false;
+
+        function closeModal() {
+            overlay.classList.remove('open');
+            overlay.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = previousOverflow;
+            if (addedLogbookBodyClass) {
+                document.body.classList.remove('admin-student-logbook-page');
+                addedLogbookBodyClass = false;
+            }
+        }
+
+        function openShell() {
+            previousOverflow = document.body.style.overflow;
+            document.body.style.overflow = 'hidden';
+            if (!document.body.classList.contains('admin-student-logbook-page')) {
+                document.body.classList.add('admin-student-logbook-page');
+                addedLogbookBodyClass = true;
+            }
+            overlay.classList.add('open');
+            overlay.setAttribute('aria-hidden', 'false');
+        }
+
+        function renderLoadError(url) {
+            title.textContent = 'Student Logbook';
+            body.innerHTML = '<section class="admin-logbook-empty"><strong>Unable to load this Logbook</strong><p>The Logbook could not be loaded inside the modal right now.</p><div class="admin-inline-actions"><a class="admin-secondary-button" href="' + url.replace(/"/g, '&quot;') + '">Open full page</a></div></section>';
+        }
+
+        function renderLogbook(html, url) {
+            var parsed = new DOMParser().parseFromString(html, 'text/html');
+            var page = parsed.querySelector('.admin-logbook-page');
+            if (!page) throw new Error('Student Logbook content was not found');
+
+            var content = page.cloneNode(true);
+            var backLink = content.querySelector('.admin-logbook-back');
+            if (backLink) backLink.remove();
+
+            var studentHeading = content.querySelector('.admin-logbook-hero h1');
+            title.textContent = studentHeading ? studentHeading.textContent.trim() : 'Student Logbook';
+            body.innerHTML = content.outerHTML;
+            currentUrl = url;
+            body.removeAttribute('aria-busy');
+        }
+
+        function loadLogbook(url) {
+            requestSequence += 1;
+            var sequence = requestSequence;
+            currentUrl = url;
+            title.textContent = 'Student Logbook';
+            body.setAttribute('aria-busy', 'true');
+            body.innerHTML = '<div class="nx-admin-insights-loading">Loading student logbook…</div>';
+            openShell();
+
+            fetch(url, {
+                credentials: 'same-origin',
+                headers: {'X-Requested-With': 'XMLHttpRequest'},
+                cache: 'no-store'
+            })
+                .then(function (response) {
+                    if (!response.ok) throw new Error('Student Logbook request failed with status ' + response.status);
+                    return response.text();
+                })
+                .then(function (html) {
+                    if (sequence !== requestSequence) return;
+                    renderLogbook(html, url);
+                })
+                .catch(function () {
+                    if (sequence !== requestSequence) return;
+                    body.removeAttribute('aria-busy');
+                    renderLoadError(url);
+                });
+        }
+
+        overlay.querySelector('[data-admin-logbook-close]').addEventListener('click', closeModal);
+        overlay.addEventListener('click', function (event) {
+            if (event.target === overlay) closeModal();
+        });
+
+        overlay.addEventListener('submit', function (event) {
+            var form = event.target.closest('.admin-logbook-remove-form');
+            if (!form || event.defaultPrevented) return;
+
+            event.preventDefault();
+            var button = form.querySelector('button[type="submit"]');
+            var originalText = button ? button.textContent : '';
+            if (button) {
+                button.disabled = true;
+                button.textContent = 'Removing…';
+            }
+
+            fetch(form.action, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {'X-Requested-With': 'XMLHttpRequest'},
+                body: new FormData(form)
+            })
+                .then(function (response) {
+                    if (!response.ok) throw new Error('Remove Logbook request failed with status ' + response.status);
+                    return response.text();
+                })
+                .then(function (html) {
+                    renderLogbook(html, currentUrl);
+                })
+                .catch(function () {
+                    if (button) {
+                        button.disabled = false;
+                        button.textContent = originalText;
+                    }
+                    renderLoadError(currentUrl);
+                });
+        });
+
+        document.addEventListener('click', function (event) {
+            if (event.defaultPrevented || (typeof event.button === 'number' && event.button !== 0) || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+            var link = event.target.closest('a[data-admin-logbook-modal-trigger]');
+            if (!link || link.closest('#nxAdminStudentLogbookModal')) return;
+            event.preventDefault();
+            loadLogbook(link.href);
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && overlay.classList.contains('open')) closeModal();
+        });
+    }
+
     function bootAdminInsightFixes() {
         restoreCompactAdminPrograms();
         window.setTimeout(restoreCompactAdminPrograms, 50);
         setupAdminInsightsModal();
+        setupAdminLogbookModal();
     }
 
     if (document.readyState === 'loading') {

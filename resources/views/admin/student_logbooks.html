@@ -1,4 +1,6 @@
 {% from 'components/nexora_icons.html' import nx_icon %}
+{% set admin_logbook_modal = request.headers.get('X-Requested-With') == 'XMLHttpRequest' %}
+{% if not admin_logbook_modal %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,7 +15,8 @@
     {% include 'components/admin_sidebar.html' %}
 
     <main class="admin-main nexora-app-main">
-        <div class="nexora-page admin-logbook-page">
+{% endif %}
+        <div class="nexora-page admin-logbook-page{% if admin_logbook_modal %} admin-logbook-modal-fragment{% endif %}">
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% for category, message in messages %}
                     <div class="admin-logbook-flash {% if category == 'danger' %}is-danger{% elif category == 'success' %}is-success{% elif category == 'warning' %}is-warning{% endif %}" role="alert">{{ message }}</div>
@@ -162,6 +165,8 @@
                 {% endif %}
             </section>
         </div>
+{% if not admin_logbook_modal %}
     </main>
 </body>
 </html>
+{% endif %}
