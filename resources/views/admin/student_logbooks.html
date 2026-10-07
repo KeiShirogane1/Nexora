@@ -9,134 +9,158 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
 </head>
-<body class="nexora-admin-body">
+<body class="nexora-admin-body admin-student-logbook-page">
     {% include 'components/admin_sidebar.html' %}
 
     <main class="admin-main nexora-app-main">
-        <div class="nexora-page">
-            <div class="compact-dashboard">
-                {% with messages = get_flashed_messages(with_categories=true) %}
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ 'danger' if category == 'danger' else 'success' if category == 'success' else 'warning' if category == 'warning' else 'info' }}" role="alert">{{ message }}</div>
-                    {% endfor %}
-                {% endwith %}
+        <div class="nexora-page admin-logbook-page">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% for category, message in messages %}
+                    <div class="admin-logbook-flash {% if category == 'danger' %}is-danger{% elif category == 'success' %}is-success{% elif category == 'warning' %}is-warning{% endif %}" role="alert">{{ message }}</div>
+                {% endfor %}
+            {% endwith %}
 
-                <div class="dashboard-header mb-3">
+            <header class="admin-logbook-hero">
+                <div class="admin-logbook-hero-copy">
+                    <div class="admin-logbook-eyebrow">ADMIN PORTAL / OJT RECORD MANAGEMENT</div>
+                    <h1>{{ student.display_name or student.username }} · Daily Logbook</h1>
+                    <p>Review Daily OJT records, supervisor evidence, linked Work, and attendance context without changing the student's attendance Time In/Out or rendered hours.</p>
+                    <div class="admin-logbook-identity">
+                        <span>@{{ student.username }}</span>
+                        {% if student.email %}<span>{{ student.email }}</span>{% endif %}
+                    </div>
+                </div>
+                <a class="admin-logbook-back" href="{{ url_for('admin.student_profile', student_id=student.id) }}">{{ nx_icon('arrow-left', 'admin-link-icon') }} Student Profile</a>
+            </header>
+
+            <section class="admin-logbook-warning" role="note">
+                <div>
+                    <strong>Deletion impact</strong>
+                    <p>Removing a Logbook entry also removes that entry's supervisor review, Daily Performance rating, linked Work evidence, and Logbook photos. The attendance session and rendered hours remain, and the student receives a notification with the affected OJT day and date.</p>
+                </div>
+            </section>
+
+            <section class="admin-logbook-directory" aria-label="Daily OJT Logbook entries">
+                <div class="admin-logbook-directory-heading">
                     <div>
-                        <div class="text-uppercase fw-bold text-danger small mb-1">Admin · OJT Record Management</div>
-                        <h1>{{ student.display_name or student.username }} · Daily Logbook</h1>
-                        <p class="text-muted mb-0">Review Daily OJT entries and remove duplicates or invalid Logbook records without deleting attendance Time In/Out or rendered hours.</p>
+                        <span>DAILY OJT RECORDS</span>
+                        <h2>Logbook Entries</h2>
+                        <p>Each card represents one Daily OJT entry and keeps its attendance, review, Work, and performance evidence together.</p>
                     </div>
-                    <a class="btn btn-outline-secondary" href="{{ url_for('admin.student_profile', student_id=student.id) }}">{{ nx_icon('arrow-left', 'admin-link-icon') }}Student Profile</a>
+                    <span class="admin-logbook-count">{{ entries|length }} entr{% if entries|length == 1 %}y{% else %}ies{% endif %}</span>
                 </div>
 
-                <div class="alert alert-warning border-0 shadow-sm">
-                    Removing a Logbook entry also removes that entry's supervisor review, Daily Performance rating, linked Work evidence, and Logbook photos. The attendance session and rendered hours remain. A notification is sent to the student with the affected OJT day and date.
-                </div>
+                {% if entries %}
+                    <div class="admin-logbook-entry-list">
+                        {% for entry in entries %}
+                            <article class="admin-logbook-entry">
+                                <header class="admin-logbook-entry-header">
+                                    <div class="admin-logbook-day">
+                                        <span>OJT DAY</span>
+                                        <strong>Day {{ entry.day_number or '—' }}</strong>
+                                        <small>{{ entry.date }}</small>
+                                    </div>
 
-                <section class="dashboard-box">
-                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
-                        <div>
-                            <h3 class="mb-1">Daily OJT Entries</h3>
-                            <p class="text-muted small mb-0">{{ entries|length }} recorded entr{% if entries|length == 1 %}y{% else %}ies{% endif %} for @{{ student.username }}.</p>
-                        </div>
-                    </div>
+                                    <div class="admin-logbook-classroom">
+                                        <span>INTERN CLASSROOM</span>
+                                        <strong>{{ entry.classroom_name }}</strong>
+                                        <small>{{ entry.section or 'No section' }}{% if entry.supervisor_name %} · Supervisor: {{ entry.supervisor_name }}{% endif %}</small>
+                                    </div>
 
-                    {% if entries %}
-                        <div class="table-responsive">
-                            <table class="table align-middle mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>OJT Day</th>
-                                        <th>Intern Classroom</th>
-                                        <th>Work</th>
-                                        <th>Daily Performance</th>
-                                        <th>Review</th>
-                                        <th>Attendance</th>
-                                        <th class="text-end">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for entry in entries %}
-                                        <tr>
-                                            <td>
-                                                <strong>Day {{ entry.day_number or '—' }}</strong>
-                                                <div class="text-muted small">{{ entry.date }}</div>
-                                            </td>
-                                            <td>
-                                                <strong>{{ entry.classroom_name }}</strong>
-                                                <div class="text-muted small">{{ entry.section or 'No section' }}{% if entry.supervisor_name %} · {{ entry.supervisor_name }}{% endif %}</div>
-                                            </td>
-                                            <td>
-                                                {% if entry.work_titles %}
-                                                    {% for title in entry.work_titles %}<div class="small">{{ title }}</div>{% endfor %}
-                                                {% else %}
-                                                    <span class="text-muted small">No linked Work</span>
-                                                {% endif %}
-                                            </td>
-                                            <td>
-                                                {% if entry.percentage is not none %}
-                                                    <strong>{{ '%.1f'|format(entry.percentage) }}%</strong>
-                                                    <div class="text-muted small">{{ '%.1f'|format(entry.star_rating) }} {{ nx_icon('star-filled', 'admin-inline-star') }}</div>
-                                                    {% if entry.criteria %}<div class="text-muted small mt-1">{{ entry.criteria|length }} detailed criteria</div>{% endif %}
-                                                {% else %}
-                                                    <span class="text-muted small">Not rated</span>
-                                                {% endif %}
-                                            </td>
-                                            <td><span class="badge text-bg-light border">{{ entry.review_status|replace('_', ' ')|title }}</span></td>
-                                            <td>
-                                                <span class="badge {% if entry.attendance_status == 'Open' %}text-bg-warning{% else %}text-bg-success{% endif %}">{{ entry.attendance_status }}</span>
-                                                <div class="text-muted small mt-1">{% if entry.hours_rendered is not none %}{{ '%.2f'|format(entry.hours_rendered) }} hrs{% else %}—{% endif %}</div>
-                                            </td>
-                                            <td class="text-end">
-                                                <form method="POST" action="{{ url_for('logbook_review.admin_delete_daily_log', student_id=student.id, log_id=entry.id) }}" onsubmit="return confirm('Remove Day {{ entry.day_number or '—' }} Logbook dated {{ entry.date|e }}? Attendance and rendered hours will remain, but this Logbook review, rating, Work links, and photos will be removed.')">
-                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger">Remove Logbook</button>
-                                                </form>
-                                            </td>
-                                        </tr>
-                                        {% if entry.percentage is not none and (entry.criteria or entry.rating_comment) %}
-                                            <tr class="table-light">
-                                                <td colspan="7">
-                                                    <div class="row g-3 px-2 py-2">
-                                                        <div class="col-lg-8">
-                                                            <div class="text-uppercase fw-bold text-secondary small mb-2">Daily Performance Rating · Read-only</div>
-                                                            {% if entry.criteria %}
-                                                                <div class="row g-2">
-                                                                    {% for criterion in entry.criteria %}
-                                                                        <div class="col-md-6 col-xl-3">
-                                                                            <div class="border rounded-3 bg-white p-2 h-100">
-                                                                                <div class="small fw-semibold mb-1">{{ criterion.criterion_name }}</div>
-                                                                                <div class="text-warning" aria-label="{{ '%.1f'|format(criterion.rating_value) }} out of 5 stars">
-                                                                                    {% for star in range(1,6) %}<span class="admin-rating-star{% if criterion.rating_value >= star %} is-filled{% endif %}" aria-hidden="true">{{ nx_icon('star-filled' if criterion.rating_value >= star else 'star') }}</span>{% endfor %}
-                                                                                    <span class="text-dark ms-1 small">{{ '%.1f'|format(criterion.rating_value) }} / 5</span>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    {% endfor %}
-                                                                </div>
-                                                            {% else %}
-                                                                <div class="text-muted small">No detailed rating criteria were recorded for this entry.</div>
-                                                            {% endif %}
-                                                        </div>
-                                                        <div class="col-lg-4">
-                                                            <div class="text-uppercase fw-bold text-secondary small mb-2">Supervisor Comment</div>
-                                                            <div class="border rounded-3 bg-white p-3 small">{{ entry.rating_comment or 'No performance comment was recorded.' }}</div>
-                                                            <div class="text-muted small mt-2">Rated by {{ entry.supervisor_name or 'Supervisor' }}{% if entry.rated_at %} · {{ entry.rated_at }}{% endif %}</div>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                            </tr>
+                                    <div class="admin-logbook-statuses" aria-label="Entry statuses">
+                                        <span class="admin-logbook-status {% if entry.review_status in ['approved', 'reviewed'] %}is-success{% elif entry.review_status == 'revision_requested' %}is-warning{% endif %}">{{ entry.review_status|replace('_', ' ')|title }}</span>
+                                        <span class="admin-logbook-status {% if entry.attendance_status == 'Open' %}is-warning{% else %}is-success{% endif %}">{{ entry.attendance_status }}</span>
+                                    </div>
+
+                                    <form class="admin-logbook-remove-form" method="POST" action="{{ url_for('logbook_review.admin_delete_daily_log', student_id=student.id, log_id=entry.id) }}" onsubmit="return confirm('Remove Day {{ entry.day_number or '—' }} Logbook dated {{ entry.date|e }}? Attendance and rendered hours will remain, but this Logbook review, rating, Work links, and photos will be removed.')">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="admin-logbook-remove-button">Remove Logbook</button>
+                                    </form>
+                                </header>
+
+                                <div class="admin-logbook-summary-grid">
+                                    <section class="admin-logbook-summary-card">
+                                        <span>WORK</span>
+                                        {% if entry.work_titles %}
+                                            <div class="admin-logbook-work-list">
+                                                {% for title in entry.work_titles %}<span>{{ title }}</span>{% endfor %}
+                                            </div>
+                                        {% else %}
+                                            <strong class="is-muted">No linked Work</strong>
                                         {% endif %}
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% else %}
-                        <div class="alert alert-info mb-0">This student has no Daily OJT Logbook entries.</div>
-                    {% endif %}
-                </section>
-            </div>
+                                    </section>
+
+                                    <section class="admin-logbook-summary-card">
+                                        <span>DAILY PERFORMANCE</span>
+                                        {% if entry.percentage is not none %}
+                                            <strong>{{ '%.1f'|format(entry.percentage) }}%</strong>
+                                            <small>{% if entry.star_rating is not none %}{{ '%.1f'|format(entry.star_rating) }} {{ nx_icon('star-filled', 'admin-inline-star') }}{% endif %}{% if entry.criteria %}{% if entry.star_rating is not none %} · {% endif %}{{ entry.criteria|length }} detailed criteri{% if entry.criteria|length == 1 %}on{% else %}a{% endif %}{% endif %}</small>
+                                        {% else %}
+                                            <strong class="is-muted">Not rated</strong>
+                                            <small>No Daily Performance rating recorded</small>
+                                        {% endif %}
+                                    </section>
+
+                                    <section class="admin-logbook-summary-card">
+                                        <span>REVIEW</span>
+                                        <strong>{{ entry.review_status|replace('_', ' ')|title }}</strong>
+                                        <small>Supervisor review status</small>
+                                    </section>
+
+                                    <section class="admin-logbook-summary-card">
+                                        <span>ATTENDANCE</span>
+                                        <strong>{% if entry.hours_rendered is not none %}{{ '%.2f'|format(entry.hours_rendered) }} hrs{% else %}—{% endif %}</strong>
+                                        <small>{{ entry.attendance_status }} attendance session</small>
+                                    </section>
+                                </div>
+
+                                {% if entry.percentage is not none and (entry.criteria or entry.rating_comment) %}
+                                    <details class="admin-logbook-details">
+                                        <summary>
+                                            <span>Daily Performance Details</span>
+                                            <small>Read-only supervisor-entered evidence</small>
+                                        </summary>
+                                        <div class="admin-logbook-details-body">
+                                            <div class="admin-logbook-criteria">
+                                                <div class="admin-logbook-detail-heading">
+                                                    <span>RATING CRITERIA</span>
+                                                    <strong>{% if entry.criteria %}{{ entry.criteria|length }} criterion{% if entry.criteria|length != 1 %}s{% endif %}{% else %}No detailed criteria{% endif %}</strong>
+                                                </div>
+                                                {% if entry.criteria %}
+                                                    <div class="admin-logbook-criteria-grid">
+                                                        {% for criterion in entry.criteria %}
+                                                            <div class="admin-logbook-criterion">
+                                                                <strong>{{ criterion.criterion_name }}</strong>
+                                                                <div class="admin-logbook-stars" aria-label="{{ '%.1f'|format(criterion.rating_value) }} out of 5 stars">
+                                                                    {% for star in range(1,6) %}<span class="admin-rating-star{% if criterion.rating_value >= star %} is-filled{% endif %}" aria-hidden="true">{{ nx_icon('star-filled' if criterion.rating_value >= star else 'star') }}</span>{% endfor %}
+                                                                    <span>{{ '%.1f'|format(criterion.rating_value) }} / 5</span>
+                                                                </div>
+                                                            </div>
+                                                        {% endfor %}
+                                                    </div>
+                                                {% else %}
+                                                    <p class="admin-logbook-empty-copy">No detailed rating criteria were recorded for this entry.</p>
+                                                {% endif %}
+                                            </div>
+
+                                            <aside class="admin-logbook-comment">
+                                                <span>SUPERVISOR COMMENT</span>
+                                                <p>{{ entry.rating_comment or 'No performance comment was recorded.' }}</p>
+                                                <small>Rated by {{ entry.supervisor_name or 'Supervisor' }}{% if entry.rated_at %} · {{ entry.rated_at }}{% endif %}</small>
+                                            </aside>
+                                        </div>
+                                    </details>
+                                {% endif %}
+                            </article>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="admin-logbook-empty">
+                        <strong>No Daily OJT Logbook entries</strong>
+                        <p>This student does not have any Daily OJT Logbook records to review.</p>
+                    </div>
+                {% endif %}
+            </section>
         </div>
     </main>
 </body>
