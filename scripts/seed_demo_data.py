@@ -360,7 +360,7 @@ def ensure_attendance_logbook(conn,student_id,class_id,supervisor_id,assignment_
         assignment_id=assignment_ids[day%len(assignment_ids)]
 
         log=conn.execute(
-            "SELECT id FROM logs WHERE attendance_id=? AND student_id=? AND entry_type='daily' ORDER BY id LIMIT 1",
+            "SELECT id,content FROM logs WHERE attendance_id=? AND student_id=? AND entry_type='daily' ORDER BY id LIMIT 1",
             (attendance_id,student_id),
         ).fetchone()
         if not log:
@@ -377,11 +377,14 @@ def ensure_attendance_logbook(conn,student_id,class_id,supervisor_id,assignment_
                 ),
             )
             log=conn.execute(
-                "SELECT id FROM logs WHERE attendance_id=? AND student_id=? AND entry_type='daily' ORDER BY id LIMIT 1",
+                "SELECT id,content FROM logs WHERE attendance_id=? AND student_id=? AND entry_type='daily' ORDER BY id LIMIT 1",
                 (attendance_id,student_id),
             ).fetchone()
+        log_id=None
+        log_is_seeded=False
         if log:
             log_id=int(getv(log,"id",0,0))
+            log_is_seeded=str(getv(log,"content",1,"") or "").startswith(TAG)
             if not conn.execute("SELECT 1 FROM daily_log_work_links WHERE log_id=? AND assignment_id=? LIMIT 1",(log_id,assignment_id)).fetchone():
                 conn.execute("INSERT INTO daily_log_work_links (log_id,assignment_id,sort_order) VALUES (?,?,0)",(log_id,assignment_id))
 
@@ -406,6 +409,29 @@ def ensure_attendance_logbook(conn,student_id,class_id,supervisor_id,assignment_
                        (attendance_id,criterion_key,criterion_name,rating_value,max_value,sort_order)
                        VALUES (?,?,?,?,5.0,?)""",
                     (attendance_id,key,name,round(rating_value,1),sort_order),
+                )
+
+        if log_id and log_is_seeded:
+            existing_review=conn.execute(
+                "SELECT 1 FROM logbook_reviews WHERE log_id=? LIMIT 1",
+                (log_id,),
+            ).fetchone()
+            if not existing_review:
+                review_status="approved" if pct>=75.0 else "reviewed"
+                review_comment=(
+                    f"{TAG} Supervisor review: Daily Performance {pct:.1f}% "
+                    f"({label(pct)}). "
+                    + (
+                        "OJT evidence is complete and approved."
+                        if review_status=="approved"
+                        else "OJT evidence was reviewed; continue improving the lowest-scoring areas."
+                    )
+                )
+                conn.execute(
+                    """INSERT INTO logbook_reviews
+                       (log_id,supervisor_id,status,comments,reviewed_at,updated_at)
+                       VALUES (?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)""",
+                    (log_id,supervisor_id,review_status,review_comment),
                 )
 
 
@@ -531,7 +557,7 @@ def schema_check(conn):
         "users","student_profiles","classrooms","classroom_students","classroom_posts",
         "classroom_assignments","classroom_submissions","classwork_scores","student_assignments",
         "internships","attendance","logs","daily_log_work_links","daily_performance_ratings",
-        "daily_performance_rating_items","feedback","tasks","notifications","profile_history",
+        "daily_performance_rating_items","logbook_reviews","feedback","tasks","notifications","profile_history",
         "ojt_evaluations","ojt_evaluation_items",
     ]
     missing=[name for name in required if not table_exists(conn,name)]
