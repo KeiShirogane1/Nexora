@@ -60,11 +60,12 @@
             <a href="{{ url_for('admin_classrooms.classrooms') }}" aria-label="Classrooms" class="{% if request.path.startswith('/admin/classrooms') %}active{% endif %}"><span class="nx-role-icon">{{ nx_icon('classroom') }}</span><span class="nx-role-nav-text">Classrooms</span></a>
             <a href="{{ url_for('admin_classrooms.student_documents') }}" aria-label="Student Documents" class="{% if request.path.startswith('/admin/student-documents') %}active{% endif %}"><span class="nx-role-icon">{{ nx_icon('documents') }}</span><span class="nx-role-nav-text">Student Documents</span></a>
 
-            <div class="nx-role-nav-group {% if request.path.startswith('/admin/reports') or request.path == '/admin/insights' %}open{% endif %}">
-                <button class="nx-role-nav-parent {% if request.path.startswith('/admin/reports') or request.path == '/admin/insights' %}active-parent{% endif %}" type="button" aria-label="Reports" onclick="this.parentElement.classList.toggle('open')"><span class="nx-role-icon">{{ nx_icon('reports') }}</span><span class="nx-role-nav-text">Reports</span><span class="nx-role-nav-arrow" aria-hidden="true">{{ nx_icon('chevron-right') }}</span></button>
+            {% set admin_reports_open = request.path.startswith('/admin/reports') or request.path == '/admin/insights' or request.endpoint == 'logbook_review.admin_student_logbooks' %}
+            <div class="nx-role-nav-group {% if admin_reports_open %}open{% endif %}">
+                <button class="nx-role-nav-parent {% if admin_reports_open %}active-parent{% endif %}" type="button" aria-label="Reports" onclick="this.parentElement.classList.toggle('open')"><span class="nx-role-icon">{{ nx_icon('reports') }}</span><span class="nx-role-nav-text">Reports</span><span class="nx-role-nav-arrow" aria-hidden="true">{{ nx_icon('chevron-right') }}</span></button>
                 <div class="nx-role-submenu">
-                    <a href="{{ url_for('admin.admin_reports_list') }}" class="{% if request.path == '/admin/reports' %}active{% endif %}"><span class="nx-role-icon">{{ nx_icon('documents') }}</span><span>Overview</span></a>
-                    <a href="{{ url_for('admin_reports_overview.student_insights') }}" class="{% if request.path == '/admin/insights' %}active{% endif %}"><span class="nx-role-icon">{{ nx_icon('insights') }}</span><span>Student Insights</span></a>
+                    <a href="{{ url_for('admin_reports_overview.student_insights') }}" class="{% if request.path == '/admin/insights' %}active{% endif %}"><span class="nx-role-icon">{{ nx_icon('insights') }}</span><span>Overview</span></a>
+                    <a href="{{ url_for('admin.admin_reports_list', view='logbook') }}" class="{% if (request.path == '/admin/reports' and request.args.get('view') == 'logbook') or request.endpoint == 'logbook_review.admin_student_logbooks' %}active{% endif %}"><span class="nx-role-icon">{{ nx_icon('logbook') }}</span><span>Logbook</span></a>
                 </div>
             </div>
 

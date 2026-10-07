@@ -1,24 +1,25 @@
 {% from 'components/nexora_icons.html' import nx_icon %}
+{% set logbook_mode = request.args.get('view') == 'logbook' %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Internship Reports - Nexora</title>
+    <title>{{ 'Student Logbooks' if logbook_mode else 'Internship Reports' }} - Nexora</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modals.css') }}">
     </head>
-<body class="admin-page admin-reports-page">
+<body class="admin-page admin-reports-page{% if logbook_mode %} admin-logbook-directory-mode{% endif %}">
     {% include 'components/admin_sidebar.html' %}
 
     <main class="admin-main nexora-app-main">
         <div class="admin-report-page-shell">
             <header class="admin-report-page-heading">
                 <div>
-                    <span class="admin-report-eyebrow">Internship Analytics</span>
-                    <h1>Internship Reports</h1>
-                    <p>Choose an Intern Classroom, review the students enrolled in it, then open either the complete report or classroom-scoped Student Insights.</p>
+                    <span class="admin-report-eyebrow">{{ 'OJT Record Management' if logbook_mode else 'Internship Analytics' }}</span>
+                    <h1>{{ 'Student Logbooks' if logbook_mode else 'Internship Reports' }}</h1>
+                    <p>{% if logbook_mode %}Choose an Intern Classroom, then open a student's Daily OJT Logbook for read-only review or Admin record management.{% else %}Choose an Intern Classroom, review the students enrolled in it, then open either the complete report or classroom-scoped Student Insights.{% endif %}</p>
                 </div>
                 <div class="admin-report-heading-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18H6z"></path><path d="M9 7h6M9 11h6M9 15h4"></path></svg></div>
             </header>
@@ -57,7 +58,13 @@
                                                 <tr>
                                                     <td><div class="admin-report-intern-cell"><span class="admin-report-intern-avatar" aria-hidden="true">{{ (student.username or 'I')[0]|upper }}</span><span><strong>{{ student.username }}</strong><small>Student account</small></span></div></td>
                                                     <td>{{ student.email or 'No email' }}</td>
-                                                    <td class="admin-report-action-cell"><button type="button" class="admin-report-open-btn" data-report-view data-student="{{ student.username|e }}" data-classroom="{{ classroom.name|e }}" data-report-url="{{ url_for('admin_reports_overview.overview', student_id=student.id) }}" data-insights-url="{{ url_for('admin_reports_overview.student_insights', class_id=classroom.id, student_id=student.id) }}">View <span aria-hidden="true">{{ nx_icon('arrow-right', 'admin-link-icon') }}</span></button></td>
+                                                    <td class="admin-report-action-cell">
+                                                        {% if logbook_mode %}
+                                                            <a class="admin-report-open-btn" href="{{ url_for('logbook_review.admin_student_logbooks', student_id=student.id) }}">Open Logbook <span aria-hidden="true">{{ nx_icon('arrow-right', 'admin-link-icon') }}</span></a>
+                                                        {% else %}
+                                                            <button type="button" class="admin-report-open-btn" data-report-view data-student="{{ student.username|e }}" data-classroom="{{ classroom.name|e }}" data-report-url="{{ url_for('admin_reports_overview.overview', student_id=student.id) }}" data-insights-url="{{ url_for('admin_reports_overview.student_insights', class_id=classroom.id, student_id=student.id) }}">View <span aria-hidden="true">{{ nx_icon('arrow-right', 'admin-link-icon') }}</span></button>
+                                                        {% endif %}
+                                                    </td>
                                                 </tr>
                                             {% endfor %}
                                         </tbody>
@@ -74,13 +81,14 @@
                     <div class="admin-report-empty-state">
                         <span class="admin-report-empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M7 8h3M14 8h3M7 12h3M14 12h3"></path></svg></span>
                         <h2>No Intern Classrooms yet</h2>
-                        <p>Reports will appear here after an Intern Classroom is created.</p>
+                        <p>{{ 'Student Logbooks will appear here after an Intern Classroom is created and students enroll.' if logbook_mode else 'Reports will appear here after an Intern Classroom is created.' }}</p>
                     </div>
                 </section>
             {% endif %}
         </div>
     </main>
 
+    {% if not logbook_mode %}
     <div id="adminReportChoiceModal" class="admin-report-choice-modal" hidden>
         <div class="admin-report-choice-dialog" role="dialog" aria-modal="true" aria-labelledby="adminReportChoiceTitle">
             <div class="admin-report-choice-header">
@@ -350,5 +358,6 @@
             });
         }());
     </script>
+    {% endif %}
 </body>
 </html>
