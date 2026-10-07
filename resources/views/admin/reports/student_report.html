@@ -1,1321 +1,179 @@
 {% from 'components/nexora_icons.html' import nx_icon %}
 <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detailed Internship Report · {{ student[1] }} - Nexora</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body class="report-page admin-student-report-page">
+    {% include 'components/admin_sidebar.html' %}
+    <main class="admin-main nexora-app-main">
+        <div class="nexora-page admin-report-detailed-page">
+            <section class="admin-report-hero">
+                <div class="admin-report-hero-copy">
+                    <span class="admin-report-eyebrow">Admin Portal / Detailed Internship Report</span>
+                    <h1>{{ student[1] }}</h1>
+                    <p>Read-only internship evidence across attendance, Logbook activity, supervisor feedback, task progress, and ML-assisted decision support.</p>
+                    <div class="admin-report-hero-meta" aria-label="Detailed report summary">
+                        <span>{{ nx_icon('clock') }} {{ total_sessions }} attendance session{% if total_sessions != 1 %}s{% endif %}</span>
+                        <span>{{ nx_icon('logbook') }} {{ total_logs }} Logbook entr{% if total_logs != 1 %}ies{% else %}y{% endif %}</span>
+                        <span>{{ nx_icon('grading') }} {{ total_feedback }} feedback record{% if total_feedback != 1 %}s{% endif %}</span>
+                    </div>
+                </div>
+                <div class="admin-report-hero-actions">
+                    <a href="{{ url_for('admin.admin_reports_list') }}" class="admin-report-back">{{ nx_icon('arrow-left') }}<span>All Reports</span></a>
+                </div>
+            </section>
 
-<html>
+            <section class="admin-report-metric-grid admin-report-detailed-metrics" aria-label="Detailed report metrics">
+                <article class="admin-report-metric-card is-red"><span class="admin-report-metric-icon">{{ nx_icon('clock') }}</span><div><strong>{{ total_sessions }}</strong><span>Attendance Sessions</span></div></article>
+                <article class="admin-report-metric-card is-orange"><span class="admin-report-metric-icon">{{ nx_icon('completion') }}</span><div><strong>{{ '%.1f'|format(total_hours) }}</strong><span>Total Hours Rendered</span></div></article>
+                <article class="admin-report-metric-card is-amber"><span class="admin-report-metric-icon">{{ nx_icon('logbook') }}</span><div><strong>{{ total_logs }}</strong><span>Logbook Entries</span></div></article>
+                <article class="admin-report-metric-card is-rose"><span class="admin-report-metric-icon">{{ nx_icon('tasks') }}</span><div><strong>{{ '%.1f'|format(task_progress) }}%</strong><span>Task Completion</span></div></article>
+            </section>
 
-    <head>
-        <meta charset="UTF-8">
+            <section class="admin-report-panel">
+                <div class="admin-report-panel-head">
+                    <div><span class="admin-report-section-eyebrow">Current Activity</span><h2>Internship Summary</h2><p>Evidence stays separated and is not combined into an automatic OJT grade.</p></div>
+                    <span class="admin-report-status-pill">{{ overall_ml_analysis or 'No ML data' }}</span>
+                </div>
+                <p class="admin-report-summary-copy">{{ attendance_interpretation }} {{ progress_interpretation }}</p>
+            </section>
 
-        <title>
-            Student Report - Nexora
-        </title>
-
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-              rel="stylesheet">
-
-        <link rel="stylesheet"
-              href="{{ url_for('static', filename='css/style.css') }}">
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
-
-    </head>
-
-    <body class="report-page admin-student-report-page">
-
-        {% include 'components/admin_sidebar.html' %}
-
-        <div class="admin-main nexora-app-main">
-            <div class="nexora-page">
-
-        <!-- REPORT HEADER -->
-                <section class="admin-report-hero mb-4">
-                    <div class="admin-report-hero-copy">
-                        <span class="admin-report-eyebrow">Admin Portal</span>
-                        <h1>{{ student[1] }}</h1>
-                        <p>Individual Internship Report</p>
-                        <div class="admin-report-hero-meta" aria-label="Report summary">
-                            <span>{{ nx_icon('clock') }} {{ total_sessions }} attendance session{% if total_sessions != 1 %}s{% endif %}</span>
-                            <span>{{ nx_icon('logbook') }} {{ total_logs }} logbook entr{% if total_logs != 1 %}ies{% else %}y{% endif %}</span>
-                            <span>{{ nx_icon('grading') }} {{ feedback|length }} evaluation{% if feedback|length != 1 %}s{% endif %}</span>
+            <div class="admin-report-two-column admin-report-detailed-grid">
+                <section class="admin-report-panel">
+                    <div class="admin-report-panel-head">
+                        <div><span class="admin-report-section-eyebrow">Attendance</span><h2>OJT Time Records</h2><p>Most recent attendance sessions currently available.</p></div>
+                        <span class="admin-report-status-pill">{{ '%.1f'|format(average_hours) }} avg hrs</span>
+                    </div>
+                    {% if attendance %}
+                        <div class="admin-report-record-list">
+                            {% for session in attendance %}
+                                <article class="admin-report-record-row">
+                                    <div><strong>{{ session[1] }}</strong><span>{{ session[2] }}{% if session[3] %} → {{ session[3] }}{% else %} · Open session{% endif %}</span></div>
+                                    <div class="admin-report-record-value"><strong>{% if session[4] is not none %}{{ '%.1f'|format(session[4]) }} hrs{% else %}—{% endif %}</strong><span>{{ session[5] or 'Recorded' }}</span></div>
+                                </article>
+                            {% endfor %}
                         </div>
-                    </div>
-                    <div class="admin-report-hero-actions">
-                        <a href="{{ url_for('admin.attendance_report') }}" class="admin-report-back">
-                            {{ nx_icon('arrow-left') }}<span>Attendance Report</span>
-                        </a>
-                        <a href="{{ url_for('admin.admin_reports_list') }}" class="admin-report-back">
-                            {{ nx_icon('arrow-left') }}<span>All Reports</span>
-                        </a>
-                    </div>
+                        {% if attendance_total_pages > 1 %}
+                            <nav class="admin-report-pager" aria-label="Attendance pages">
+                                {% if attendance_page > 1 %}<a href="?attendance_page={{ attendance_page - 1 }}&logbook_page={{ logbook_page }}">Previous</a>{% endif %}
+                                <span>Page {{ attendance_page }} of {{ attendance_total_pages }}</span>
+                                {% if attendance_page < attendance_total_pages %}<a href="?attendance_page={{ attendance_page + 1 }}&logbook_page={{ logbook_page }}">Next</a>{% endif %}
+                            </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="admin-report-empty">{{ nx_icon('clock') }}<div><strong>No attendance yet</strong><span>No attendance sessions are recorded for this student.</span></div></div>
+                    {% endif %}
                 </section>
 
-        <!-- REPORT TABS -->
-                <nav class="profile-tabs admin-report-tabs mb-4" role="tablist" aria-label="Student report sections">
-                    <button type="button" class="profile-tab-button{% if active_tab == 'overview' %} active{% endif %}" data-tab="overview" role="tab" aria-selected="{{ 'true' if active_tab == 'overview' else 'false' }}" onclick="openReportTab('overview', this)">
-                        {{ nx_icon('overview') }}<span>Overview</span>
-                    </button>
-                    <button type="button" class="profile-tab-button{% if active_tab == 'attendance' %} active{% endif %}" data-tab="attendance" role="tab" aria-selected="{{ 'true' if active_tab == 'attendance' else 'false' }}" onclick="openReportTab('attendance', this)">
-                        {{ nx_icon('clock') }}<span>Attendance & Logbook</span>
-                    </button>
-                    <button type="button" class="profile-tab-button{% if active_tab == 'evaluation' %} active{% endif %}" data-tab="evaluation" role="tab" aria-selected="{{ 'true' if active_tab == 'evaluation' else 'false' }}" onclick="openReportTab('evaluation', this)">
-                        {{ nx_icon('grading') }}<span>Evaluation</span>
-                    </button>
-                    <button type="button" class="profile-tab-button{% if active_tab == 'progress' %} active{% endif %}" data-tab="progress" role="tab" aria-selected="{{ 'true' if active_tab == 'progress' else 'false' }}" onclick="openReportTab('progress', this)">
-                        {{ nx_icon('completion') }}<span>Progress</span>
-                    </button>
-                    <button type="button" class="profile-tab-button{% if active_tab == 'performance' %} active{% endif %}" data-tab="performance" role="tab" aria-selected="{{ 'true' if active_tab == 'performance' else 'false' }}" onclick="openReportTab('performance', this)">
-                        {{ nx_icon('insights') }}<span>Performance</span>
-                    </button>
-                    <button type="button" class="profile-tab-button{% if active_tab == 'recommendations' %} active{% endif %}" data-tab="recommendations" role="tab" aria-selected="{{ 'true' if active_tab == 'recommendations' else 'false' }}" onclick="openReportTab('recommendations', this)">
-                        {{ nx_icon('recommendation') }}<span>Recommendations</span>
-                    </button>
-                </nav>
-
-        <!-- OVERVIEW TAB -->
-                <div id="overview" class="report-tab{% if active_tab == 'overview' %} active{% endif %} mb-3" role="tabpanel">
-                    <section class="admin-report-metric-grid mb-4" aria-label="Internship report overview">
-                        <article class="admin-report-metric-card is-red">
-                            <span class="admin-report-metric-icon">{{ nx_icon('clock') }}</span>
-                            <div><strong>{{ total_sessions }}</strong><span>Attendance Sessions</span></div>
-                        </article>
-                        <article class="admin-report-metric-card is-orange">
-                            <span class="admin-report-metric-icon">{{ nx_icon('completion') }}</span>
-                            <div><strong>{{ '%.1f'|format(total_hours) }}</strong><span>Total Hours Rendered</span></div>
-                        </article>
-                        <article class="admin-report-metric-card is-amber">
-                            <span class="admin-report-metric-icon">{{ nx_icon('logbook') }}</span>
-                            <div><strong>{{ total_logs }}</strong><span>Logbook Entries</span></div>
-                        </article>
-                        <article class="admin-report-metric-card is-rose">
-                            <span class="admin-report-metric-icon">{{ nx_icon('tasks') }}</span>
-                            <div><strong>{{ '%.1f'|format(task_progress) }}%</strong><span>Task Completion</span></div>
-                        </article>
-                    </section>
-
-                    <section class="admin-report-panel mb-4">
-                        <div class="admin-report-panel-head">
-                            <div>
-                                <span class="admin-report-section-eyebrow">Current Activity</span>
-                                <h2>Internship Summary</h2>
-                            </div>
-                            <span class="admin-report-status-pill">{{ total_tasks }} assigned task{% if total_tasks != 1 %}s{% endif %}</span>
-                        </div>
-                        <p class="admin-report-summary-copy">{{ attendance_interpretation }}</p>
-                    </section>
-
-                    <section class="admin-report-overview-grid">
-                        <article class="admin-report-panel">
-                            <div class="admin-report-panel-head compact">
-                                <div>
-                                    <span class="admin-report-section-eyebrow">Evaluation</span>
-                                    <h2>Supervisor Evidence</h2>
-                                </div>
-                                <span class="admin-report-status-pill">{{ feedback|length }}</span>
-                            </div>
-                            <p>{% if feedback %}Latest manual rating: <strong>{{ feedback[0][2] }}</strong>.{% else %}No supervisor evaluation has been recorded yet.{% endif %}</p>
-                        </article>
-                        <article class="admin-report-panel">
-                            <div class="admin-report-panel-head compact">
-                                <div>
-                                    <span class="admin-report-section-eyebrow">Progress</span>
-                                    <h2>Task Completion</h2>
-                                </div>
-                                <span class="admin-report-status-pill">{{ '%.1f'|format(task_progress) }}%</span>
-                            </div>
-                            <p>{{ progress_interpretation }}</p>
-                        </article>
-                        <article class="admin-report-panel">
-                            <div class="admin-report-panel-head compact">
-                                <div>
-                                    <span class="admin-report-section-eyebrow">Performance</span>
-                                    <h2>Feedback Classification</h2>
-                                </div>
-                                <span class="admin-report-status-pill">{{ overall_ml_analysis or 'No data' }}</span>
-                            </div>
-                            <p>{{ ml_insight }}</p>
-                        </article>
-                    </section>
-                </div>
-
-    <!-- ATTENDANCE & LOGBOOK TAB -->
-
-                <div id="attendance" class="report-tab mb-3">
-
-                <!-- ATTENDANCE INTERPRETATION -->
-
-                    <div class="card shadow-sm mb-4">
-
-                        <div class="card-header bg-info">
-
-                            <h5 class="mb-0">
-                                Attendance Interpretation
-                            </h5>
-
-                        </div>
-
-                        <div class="card-body">
-
-                            <p class="mb-0">
-                                {{ attendance_interpretation }}
-                            </p>
-
-                        </div>
-
+                <section class="admin-report-panel">
+                    <div class="admin-report-panel-head">
+                        <div><span class="admin-report-section-eyebrow">Daily Logbook</span><h2>Recorded OJT Days</h2><p>Recent Logbook days grouped from the student's saved entries.</p></div>
+                        <span class="admin-report-status-pill">{{ total_logs }} entries</span>
                     </div>
-
-                <!-- ATTENDANCE METRICS -->
-
-                    <div class="row g-4 mb-4">
-
-                    <!-- TOTAL SESSIONS -->
-
-                        <div class="col-md-3">
-
-                            <div class="card shadow-sm p-4 h-100">
-
-                                <h2>
-                                    {{ total_sessions }}
-                                </h2>
-
-                                <p class="text-muted mb-0">
-                                    Attendance Sessions
-                                </p>
-
-                            </div>
-
+                    {% if logbook_days %}
+                        <div class="admin-report-record-list">
+                            {% for day in logbook_days %}
+                                <article class="admin-report-record-row">
+                                    <div><strong>{{ day.date }}</strong><span>Daily OJT Logbook</span></div>
+                                    <div class="admin-report-record-value"><strong>{{ day.entries }}</strong><span>entr{% if day.entries != 1 %}ies{% else %}y{% endif %}</span></div>
+                                </article>
+                            {% endfor %}
                         </div>
-
-                    <!-- TOTAL HOURS -->
-
-                        <div class="col-md-3">
-
-                            <div class="card shadow-sm p-4 h-100">
-
-                                <h2>
-                                    {{ "%.1f"|format(total_hours) }}
-                                </h2>
-
-                                <p class="text-muted mb-0">
-                                    Hours Rendered
-                                </p>
-
-                            </div>
-
-                        </div>
-
-                    <!-- AVERAGE HOURS -->
-
-                        <div class="col-md-3">
-
-                            <div class="card shadow-sm p-4 h-100">
-
-                                <h2>
-                                    {{ "%.1f"|format(average_hours) }}
-                                </h2>
-
-                                <p class="text-muted mb-0">
-                                    Avg. Hours / Session
-                                </p>
-
-                            </div>
-
-                        </div>
-
-                    <!-- LOGBOOK ENTRIES -->
-
-                        <div class="col-md-3">
-
-                            <div class="card shadow-sm p-4 h-100">
-
-                                <h2>
-                                    {{ total_logs }}
-                                </h2>
-
-                                <p class="text-muted mb-0">
-                                    Logbook Entries
-                                </p>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                <!-- ATTENDANCE + LOGBOOK -->
-
-                    <div class="row g-4">
-
-                    <!-- ATTENDANCE HISTORY -->
-
-                        <div class="col-lg-8">
-
-                            <div class="card shadow-sm h-100">
-
-                                <div class="card-header bg-warning">
-
-                                    <h5 class="mb-0">
-                                        Attendance History
-                                    </h5>
-
-                                </div>
-
-                                <div class="card-body admin-scroll">
-
-                                    {% if attendance %}
-
-                                        <div class="table-responsive">
-
-                                            <table class="table table-hover align-middle">
-
-                                                <thead>
-
-                                                    <tr>
-
-                                                        <th>
-                                                            Date
-                                                        </th>
-
-                                                        <th>
-                                                            Clock In
-                                                        </th>
-
-                                                        <th>
-                                                            Clock Out
-                                                        </th>
-
-                                                        <th>
-                                                            Hours Rendered
-                                                        </th>
-
-                                                        <th>
-                                                            Status
-                                                        </th>
-
-                                                    </tr>
-
-                                                </thead>
-
-                                                <tbody>
-
-                                                    {% for session in attendance %}
-
-                                                        <tr>
-
-                                                            <td>
-                                                                {{ session[1] }}
-                                                            </td>
-
-                                                            <td>
-                                                                {{ session[2] }}
-                                                            </td>
-
-                                                            <td>
-
-                                                                {% if session[3] %}
-
-                                                                    {{ session[3] }}
-
-                                                                {% else %}
-
-                                                                    <span class="text-muted">
-                                                                        Still Active
-                                                                    </span>
-
-                                                                {% endif %}
-
-                                                            </td>
-
-                                                            <td>
-
-                                                                {% if session[4] is not none %}
-
-                                                                    {{ "%.1f"|format(session[4]) }}
-
-                                                                {% else %}
-
-                                                                    —
-
-                                                                {% endif %}
-
-                                                            </td>
-
-                                                            <td>
-
-                                                                {% if session[5] == 'Closed' %}
-
-                                                                    <span class="badge bg-success">
-                                                                        Completed
-                                                                    </span>
-
-                                                                {% else %}
-
-                                                                    <span class="badge bg-warning">
-                                                                        {{ session[5] }}
-                                                                    </span>
-
-                                                                {% endif %}
-
-                                                            </td>
-
-                                                        </tr>
-
-                                                    {% endfor %}
-
-                                                </tbody>
-
-                                            </table>
-
-                                        </div>
-
-                                    {% else %}
-
-                                        <p class="text-muted mb-0">
-                                            No attendance sessions recorded yet.
-                                        </p>
-
-                                    {% endif %}
-
-                                </div>
-
-                            <!-- Pagination -->
-                                <div class="card-footer mb-3">
-                                    {% if attendance_total_pages > 1 %}
-
-                                        <nav class="mt-3">
-
-                                            <ul class="pagination pagination-sm justify-content-center mb-0">
-
-                                                <li class="page-item {% if attendance_page == 1 %}disabled{% endif %}">
-
-                                                    <a class="page-link"
-                                                       href="?tab=attendance&attendance_page={{ attendance_page - 1 }}&logbook_page={{ logbook_page }}">
-
-                                                        Previous
-
-                                                    </a>
-
-                                                </li>
-
-                                                {% for page in range(1, attendance_total_pages + 1) %}
-
-                                                    <li class="page-item {% if page == attendance_page %}active{% endif %}">
-
-                                                        <a class="page-link"
-                                                           href="?tab=attendance&attendance_page={{ page }}&logbook_page={{ logbook_page }}">
-
-                                                            {{ page }}
-
-                                                        </a>
-
-                                                    </li>
-
-                                                {% endfor %}
-
-                                                <li class="page-item {% if attendance_page == attendance_total_pages %}disabled{% endif %}">
-
-                                                    <a class="page-link"
-                                                       href="?tab=attendance&attendance_page={{ attendance_page + 1 }}&logbook_page={{ logbook_page }}">
-
-                                                        Next
-
-                                                    </a>
-
-                                                </li>
-
-                                            </ul>
-
-                                        </nav>
-
-                                    {% endif %}
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                    <!-- logbook entries by date -->
-
-                        <div class="col-lg-4">
-
-                            <div class="card shadow-sm h-100">
-
-                                <div class="card-header bg-success">
-
-                                    <h5 class="mb-0">
-                                        Internship Logbook
-                                    </h5>
-
-                                </div>
-
-                                <div class="card-body admin-scroll">
-
-                                    {% if logbook_days %}
-
-                                        {% for day in logbook_days %}
-
-                                            <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
-
-                                                <div>
-
-                                                    <strong>
-                                                        {{ day.date }}
-                                                    </strong>
-
-                                                    <br>
-
-                                                    <small class="text-muted">
-
-                                                        {{ day.entries }}
-                                                        {% if day.entries == 1 %}
-                                                            entry
-                                                        {% else %}
-                                                            entries
-                                                        {% endif %}
-
-                                                    </small>
-
-                                                </div>
-
-                                                <a href="{{ url_for('admin.student_logbook', student_id=student[0], date=day.url_date) }}"
-                                                   class="btn btn-sm btn-outline-success">
-
-                                                    View
-
-                                                </a>
-
-                                            </div>
-
-                                        {% endfor %}
-
-                                    {% else %}
-
-                                        <p class="text-muted mb-0">
-                                            No logbook entries recorded yet.
-                                        </p>
-
-                                    {% endif %}
-
-                                </div>
-
-                            <!-- Pagination -->
-                                <div class="card-footer mb-3">
-                                    {% if logbook_total_pages > 1 %}
-
-                                        <nav class="mt-3">
-
-                                            <ul class="pagination pagination-sm justify-content-center mb-0">
-
-                                                <li class="page-item {% if logbook_page == 1 %}disabled{% endif %}">
-
-                                                    <a class="page-link" href="?tab=attendance&logbook_page={{ logbook_page - 1 }}&attendance_page={{ attendance_page }}">
-
-                                                        Previous
-
-                                                    </a>
-
-                                                </li>
-
-                                                {% for page in range(1, logbook_total_pages + 1) %}
-
-                                                    <li class="page-item {% if page == logbook_page %}active{% endif %}">
-
-                                                        <a class="page-link" href="?tab=attendance&logbook_page={{ page }}&attendance_page={{ attendance_page }}">
-
-                                                            {{ page }}
-
-                                                        </a>
-
-                                                    </li>
-
-                                                {% endfor %}
-
-                                                <li class="page-item {% if logbook_page == logbook_total_pages %}disabled{% endif %}">
-
-                                                    <a class="page-link" href="?tab=attendance&logbook_page={{ logbook_page + 1 }}&attendance_page={{ attendance_page }}">
-
-                                                        Next
-
-                                                    </a>
-
-                                                </li>
-
-                                            </ul>
-
-                                        </nav>
-
-                                    {% endif %}
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-        <!-- EVALUATION TAB -->
-
-                <div id="evaluation" class="report-tab mb-2">
-
-                    <div class="row g-4 mb-4">
-
-        <!-- TOTAL EVALUATIONS -->
-
-                        <div class="col-md-4">
-
-                            <div class="card shadow-sm p-4 h-100">
-
-                                <h2>
-                                    {{ feedback|length }}
-                                </h2>
-
-                                <p class="text-muted mb-0">
-                                    Total Evaluations
-                                </p>
-
-                            </div>
-
-                        </div>
-
-        <!-- LATEST EVALUATION -->
-
-                        <div class="col-md-4">
-
-                            <div class="card shadow-sm p-4 h-100">
-
-                                {% if feedback %}
-
-                                    <h2>
-                                        {{ feedback[0][2] }}
-                                    </h2>
-
-                                {% else %}
-
-                                    <h2>
-                                        —
-                                    </h2>
-
-                                {% endif %}
-
-                                <p class="text-muted mb-0">
-                                    Latest Performance Rating
-                                </p>
-
-                            </div>
-
-                        </div>
-
-        <!-- ML ANALYSIS -->
-
-                        <div class="col-md-4">
-
-                            <div class="card shadow-sm p-4 h-100">
-
-                                {% if overall_ml_analysis %}
-
-                                    <h2>
-                                        {{ overall_ml_analysis }}
-                                    </h2>
-
-                                {% else %}
-
-                                    <h2>
-                                        —
-                                    </h2>
-
-                                {% endif %}
-
-                                <p class="text-muted mb-0">
-                                    Overall ML Classification
-                                </p>
-
-                            </div>
-
-                        </div>
-
-        <!-- ML FEEDBACK ANALYSIS -->
-
-                        <div class="col-12">
-
-                            <div class="card shadow-sm mb-4">
-
-                                <div class="card-header bg-primary">
-
-                                    <h5 class="mb-0">
-                                        ML Feedback Analysis
-                                    </h5>
-
-                                </div>
-
-                                <div class="card-body">
-
-                                    {% if ml_distribution %}
-
-                                        <div class="row g-3">
-
-                                            {% for item in ml_distribution %}
-
-                                                <div class="col-md">
-
-                                                    <div class="border rounded p-3 h-100">
-
-                                                        <h5 class="mb-1">
-                                                            {{ item.count }}
-                                                        </h5>
-
-                                                        <p class="text-muted mb-0">
-                                                            {{ item.label }}
-                                                        </p>
-
-                                                    </div>
-
-                                                </div>
-
-                                            {% endfor %}
-
-                                        </div>
-
-                                        <hr class="my-4">
-
-                                        <h6>
-                                            Structured Insight
-                                        </h6>
-
-                                        <p class="mb-0">
-
-                                            {{ ml_insight }}
-
-                                        </p>
-
-                                    {% else %}
-
-                                        <p class="text-muted mb-0">
-
-                                            No supervisor feedback is available
-                                            for ML analysis yet.
-
-                                        </p>
-
-                                    {% endif %}
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-        <!-- ML SENTIMENT -->
-                        <div class="col-12">
-                            <div class="card shadow-sm mb-4">
-                                <div class="card-header bg-success">
-                                    <h5 class="mb-0">Overall Sentiment</h5>
-                                </div>
-                                <div class="card-body">
-                                    {% if sentiment_distribution and total_feedback > 0 %}
-                                        <div class="row g-3">
-                                            {% for item in sentiment_distribution %}
-                                                <div class="col-md-4">
-                                                    <div class="border rounded p-3 h-100 text-center">
-                                                        <h5 class="mb-1">{{ item.count }}</h5>
-                                                        <p class="text-muted mb-0">{{ item.label }}</p>
-                                                    </div>
-                                                </div>
-                                            {% endfor %}
-                                        </div>
-                                    {% else %}
-                                        <p class="text-muted mb-0">No feedback available for ML analysis.</p>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-
-        <!-- ML COMPETENCY -->
-                        <div class="col-12">
-                            <div class="card shadow-sm mb-4">
-                                <div class="card-header nx-extracted-admin-reports-student-report-1">
-                                    <h5 class="mb-0">Competency Summary</h5>
-                                </div>
-                                <div class="card-body">
-                                    {% if competency_distribution and total_feedback > 0 %}
-                                        <div class="row g-3">
-                                            {% for item in competency_distribution %}
-                                                <div class="col-md">
-                                                    <div class="border rounded p-3 h-100 text-center">
-                                                        <h5 class="mb-1">{{ item.count }}</h5>
-                                                        <p class="text-muted mb-0 small">{{ item.label }}</p>
-                                                    </div>
-                                                </div>
-                                            {% endfor %}
-                                        </div>
-                                        <p class="small text-muted mt-3 mb-0">Competency assessment is derived from the performance classification using the current thesis dataset (not a separately trained competency classifier).</p>
-                                    {% else %}
-                                        <p class="text-muted mb-0">No feedback available for ML analysis.</p>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-
-        <!-- RECOMMENDATION SUMMARY -->
-                        <div class="col-12">
-                            <div class="card shadow-sm mb-4">
-                                <div class="card-header bg-warning">
-                                    <h5 class="mb-0">Recommendation Summary</h5>
-                                </div>
-                                <div class="card-body">
-                                    {% if recommendation_summary and total_feedback > 0 %}
-                                        {% for rec in recommendation_summary %}
-                                            <div class="border rounded p-3 mb-2">
-                                                <p class="mb-0">{{ rec }}</p>
-                                            </div>
-                                        {% endfor %}
-                                    {% else %}
-                                        <p class="text-muted mb-0">No feedback available for ML analysis.</p>
-                                    {% endif %}
-                                    {% if total_feedback > 0 %}
-                                        <p class="small text-muted mt-2 mb-0">Recommendations are derived from the performance classification (existing Phase 7 mapping).</p>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-
-        <!-- CONFIDENCE & MODEL COMPARISON -->
-                        <div class="col-12">
-                            <div class="card shadow-sm mb-4">
-                                <div class="card-header bg-dark text-white">
-                                    <h5 class="mb-0">Model Details (NB vs SVM) &amp; Confidence</h5>
-                                </div>
-                                <div class="card-body">
-                                    {% if total_feedback > 0 %}
-                                        <p class="mb-3"><strong>Average Confidence:</strong> {{ "%.3f"|format(average_confidence) }}</p>
-                                        <div class="row g-3 mb-3">
-                                            <div class="col-md-6">
-                                                <h6>Naive Bayes Distribution</h6>
-                                                {% for item in model_comparison.nb_distribution %}
-                                                    <div class="d-flex justify-content-between border-bottom py-1">
-                                                        <span>{{ item.label }}</span><span class="badge bg-primary">{{ item.count }}</span>
-                                                    </div>
-                                                {% endfor %}
-                                            </div>
-                                            <div class="col-md-6">
-                                                <h6>SVM Distribution</h6>
-                                                {% for item in model_comparison.svm_distribution %}
-                                                    <div class="d-flex justify-content-between border-bottom py-1">
-                                                        <span>{{ item.label }}</span><span class="badge bg-secondary">{{ item.count }}</span>
-                                                    </div>
-                                                {% endfor %}
-                                            </div>
-                                        </div>
-                                        {% if model_comparison.agreement_rate is not none %}
-                                            <p class="mb-0 small text-muted">NB/SVM Agreement: {{ "%.1f"|format(model_comparison.agreement_rate*100) }}%</p>
-                                        {% endif %}
-                                    {% else %}
-                                        <p class="text-muted mb-0">No feedback available for ML analysis.</p>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-
-        <!-- EVALUATION HISTORY -->
-
-                        <div class="col-12">
-                            <div class="card shadow-sm mb-4">
-
-                                <div class="card-header bg-info">
-
-                                    <h5 class="mb-0">
-                                        Supervisor Evaluation History
-                                    </h5>
-
-                                </div>
-
-                                <div class="card-body">
-
-                                    {% if feedback %}
-
-                                        {% for fb in feedback %}
-
-                                            <div class="border-bottom pb-3 mb-3">
-
-                                                <div class="d-flex justify-content-between align-items-start gap-3">
-
-                                                    <div>
-                                                        <h6 class="mb-1">
-                                                            {{ fb[2] }} {% if fb[4] and fb[4] != fb[2] %}<span class="badge bg-success ms-2">ML: {{ fb[4] }}</span>{% endif %}
-                                                        </h6>
-                                                        <small class="text-muted">
-                                                            Evaluated by {{ fb[3] }}
-                                                        </small>
-                                                        {% if fb[5] %}
-                                                            <div class="mt-1">
-                                                                <span class="badge {% if fb[5]=='Positive' %}bg-success{% elif fb[5]=='Neutral' %}bg-secondary{% else %}bg-danger{% endif %}">{{ fb[5] }}</span>
-                                                                {% if fb[6] %}<span class="badge bg-info ms-1">{{ fb[6] }}</span>{% endif %}
-                                                                {% if fb[9] is not none %}<span class="badge bg-dark ms-1">Conf {{ "%.2f"|format(fb[9]) }}</span>{% endif %}
-                                                            </div>
-                                                        {% endif %}
-                                                        {% if fb[8] %}<small class="text-muted">NB: {{ fb[4] }} | SVM: {{ fb[8] }}</small>{% endif %}
-                                                        {% if fb[7] %}<p class="small mb-0 mt-1"><em>{{ fb[7] }}</em></p>{% endif %}
-                                                    </div>
-
-                                                    <small class="text-muted">
-
-                                                        {{ fb[1] }}
-
-                                                    </small>
-
-                                                </div>
-
-                                                <p class="mb-0 mt-2">
-
-                                                    {{ fb[0] }}
-
-                                                </p>
-
-                                            </div>
-
-                                        {% endfor %}
-
-                                    {% else %}
-
-                                        <p class="text-muted mb-0">
-
-                                            No supervisor evaluations recorded yet.
-                                        </p>
-                                        <p class="text-muted mb-0">No feedback available for ML analysis.</p>
-
-                                    {% endif %}
-
-                                </div>
-
-                            </div>
-                        </div>
-
-                    </div>
-
-                </div>
-
-    <!-- PROGRESS TAB -->
-
-                <div id="progress" class="report-tab mb-3">
-
-            <!-- TASK SUMMARY -->
-
-                    <div class="row g-4 mb-4">
-
-            <!-- TOTAL TASKS -->
-
-                        <div class="col-md-3">
-
-                            <div class="card shadow-sm p-4 h-100">
-
-                                <h2 class="text-info">
-                                    {{ total_tasks }}
-                                </h2>
-
-                                <p class="text-muted mb-0">
-                                    Tasks Assigned
-                                </p>
-
-                            </div>
-
-                        </div>
-
-                <!-- COMPLETED TASKS -->
-
-                        <div class="col-md-3">
-
-                            <div class="card shadow-sm p-4 h-100">
-
-                                <h2 class="text-primary">
-                                    {{ completed_tasks }}
-                                </h2>
-
-                                <p class="text-muted mb-0">
-                                    Tasks Completed
-                                </p>
-
-                            </div>
-
-                        </div>
-
-                <!-- PENDING TASKS -->
-
-                        <div class="col-md-3">
-
-                            <div class="card shadow-sm p-4 h-100">
-
-                                <h2 class="text-secondary">
-                                    {{ pending_tasks }}
-                                </h2>
-
-                                <p class="text-muted mb-0">
-                                    Pending Tasks
-                                </p>
-
-                            </div>
-
-                        </div>
-
-                <!-- REOPENED TASKS -->
-
-                        <div class="col-md-3">
-
-                            <div class="card shadow-sm p-4 h-100">
-
-                                <h2>
-                                    {{ reopened_tasks }}
-                                </h2>
-
-                                <p class="text-muted mb-0">
-                                    Reopened Tasks
-                                </p>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-            <!-- TASK COMPLETION PROGRESS -->
-
-                    <div class="card shadow-sm mb-4">
-
-                        <div class="card-header bg-info">
-
-                            <h5 class="mb-0">
-                                Task Completion Progress
-                            </h5>
-
-                        </div>
-
-                        <div class="card-body">
-
-                            <div class="d-flex justify-content-between mb-2">
-
-                                <span class="text-muted">
-                                    Completion Rate
-                                </span>
-
-                                <strong>
-                                    {{ "%.1f"|format(task_progress) }}%
-                                </strong>
-
-                            </div>
-
-                            <div class="progress"
-                                 role="progressbar"
-                                 aria-valuenow="{{ task_progress }}"
-                                 aria-valuemin="0"
-                                 aria-valuemax="100">
-
-                                <div class="progress-bar"
-                                     data-nx-progress="{{ task_progress }}">
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-            <!-- ACTIVITY SUMMARY -->
-
-                    <div class="row g-4 mb-4">
-
-                <!-- ATTENDANCE -->
-
-                        <div class="col-md-3">
-
-                            <div class="card shadow-sm p-4 h-100">
-
-                                <h4>
-                                    {{ total_sessions }}
-                                </h4>
-
-                                <p class="text-muted mb-0">
-                                    Attendance Sessions
-                                </p>
-
-                            </div>
-
-                        </div>
-
-                <!-- HOURS -->
-
-                        <div class="col-md-3">
-
-                            <div class="card shadow-sm p-4 h-100">
-
-                                <h4>
-                                    {{ total_hours }}
-                                </h4>
-
-                                <p class="text-muted mb-0">
-                                    Hours Rendered
-                                </p>
-
-                            </div>
-
-                        </div>
-
-                <!-- LOGBOOK -->
-
-                        <div class="col-md-3">
-
-                            <div class="card shadow-sm p-4 h-100">
-
-                                <h4>
-                                    {{ total_logs }}
-                                </h4>
-
-                                <p class="text-muted mb-0">
-                                    Logbook Entries
-                                </p>
-
-                            </div>
-
-                        </div>
-
-                <!-- EVALUATIONS -->
-
-                        <div class="col-md-3">
-
-                            <div class="card shadow-sm p-4 h-100">
-
-                                <h4>
-                                    {{ feedback|length }}
-                                </h4>
-
-                                <p class="text-muted mb-0">
-                                    Evaluations
-                                </p>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-            <!-- TASK STATUS BREAKDOWN -->
-
-                    <div class="card shadow-sm mb-4">
-
-                        <div class="card-header">
-
-                            <h5 class="mb-0">
-                                Task Status Breakdown
-                            </h5>
-
-                        </div>
-
-                        <div class="card-body">
-
-                            {% if tasks %}
-
-                                {% for task in tasks %}
-
-                                    <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
-
-                                        <div>
-
-                                            <strong>
-                                                {{ task[1] }}
-                                            </strong>
-
-                                            <br>
-
-                                            <small class="text-muted">
-
-                                                Assigned:
-                                                {{ task[3] }}
-
-                                            </small>
-
-                                        </div>
-
-                                        {% if task[2] == 'Reviewed' %}
-
-                                            <span class="badge bg-primary">
-                                                Reviewed
-                                            </span>
-
-                                        {% elif task[2] == 'Submitted' %}
-
-                                            <span class="badge bg-success">
-                                                Submitted
-                                            </span>
-
-                                        {% elif task[2] == 'Reopened' %}
-
-                                            <span class="badge bg-info">
-                                                Reopened
-                                            </span>
-
-                                        {% else %}
-
-                                            <span class="badge bg-warning">
-                                                Pending
-                                            </span>
-
-                                        {% endif %}
-
-                                    </div>
-
-                                {% endfor %}
-
-                            {% else %}
-
-                                <p class="text-muted mb-0">
-                                    No tasks recorded yet.
-                                </p>
-
-                            {% endif %}
-
-                        </div>
-
-                    </div>
-
-                <!-- PROGRESS INTERPRETATION -->
-
-                    <div class="card shadow-sm">
-
-                        <div class="card-header bg-info">
-
-                            <h5 class="mb-0">
-                                Progress Interpretation
-                            </h5>
-
-                        </div>
-
-                        <div class="card-body">
-
-                            <p class="mb-0 text-default">
-
-                                {{ progress_interpretation }}
-
-                            </p>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-        <!-- Performance Metrics -->
-                <div id="performance" class="report-tab{% if active_tab == 'performance' %} active{% endif %} mb-3" role="tabpanel">
-                    <section class="admin-report-metric-grid mb-4" aria-label="Performance summary">
-                        <article class="admin-report-metric-card is-red">
-                            <span class="admin-report-metric-icon">{{ nx_icon('insights') }}</span>
-                            <div><strong>{{ overall_ml_analysis or '—' }}</strong><span>Overall Classification</span></div>
-                        </article>
-                        <article class="admin-report-metric-card is-orange">
-                            <span class="admin-report-metric-icon">{{ nx_icon('feedback') }}</span>
-                            <div><strong>{{ total_feedback }}</strong><span>Feedback Records</span></div>
-                        </article>
-                        <article class="admin-report-metric-card is-amber">
-                            <span class="admin-report-metric-icon">{{ nx_icon('target') }}</span>
-                            <div><strong>{{ '%.1f'|format((average_confidence or 0) * 100) }}%</strong><span>Average ML Confidence</span></div>
-                        </article>
-                        <article class="admin-report-metric-card is-rose">
-                            <span class="admin-report-metric-icon">{{ nx_icon('completion') }}</span>
-                            <div><strong>{% if model_comparison.agreement_rate is not none %}{{ '%.1f'|format(model_comparison.agreement_rate * 100) }}%{% else %}—{% endif %}</strong><span>NB / SVM Agreement</span></div>
-                        </article>
-                    </section>
-
-                    <section class="admin-report-panel mb-4">
-                        <div class="admin-report-panel-head">
-                            <div>
-                                <span class="admin-report-section-eyebrow">Feedback Models</span>
-                                <h2>Performance Classification</h2>
-                            </div>
-                        </div>
-                        {% if total_feedback %}
-                            <div class="admin-report-distribution">
-                                {% for item in ml_distribution %}
-                                    <div class="admin-report-distribution-row"><span>{{ item.label }}</span><strong>{{ item.count }}</strong></div>
-                                {% endfor %}
-                            </div>
-                            <p class="admin-report-summary-copy mt-3">{{ ml_insight }}</p>
-                        {% else %}
-                            <div class="admin-report-empty">{{ nx_icon('insights') }}<div><strong>No performance analysis yet</strong><span>Supervisor feedback is required before ML classifications can be summarized.</span></div></div>
+                        {% if logbook_total_pages > 1 %}
+                            <nav class="admin-report-pager" aria-label="Logbook pages">
+                                {% if logbook_page > 1 %}<a href="?attendance_page={{ attendance_page }}&logbook_page={{ logbook_page - 1 }}">Previous</a>{% endif %}
+                                <span>Page {{ logbook_page }} of {{ logbook_total_pages }}</span>
+                                {% if logbook_page < logbook_total_pages %}<a href="?attendance_page={{ attendance_page }}&logbook_page={{ logbook_page + 1 }}">Next</a>{% endif %}
+                            </nav>
                         {% endif %}
-                    </section>
-
-                    <div class="admin-report-two-column">
-                        <section class="admin-report-panel">
-                            <div class="admin-report-panel-head compact"><div><span class="admin-report-section-eyebrow">Sentiment</span><h2>Feedback Sentiment</h2></div></div>
-                            <div class="admin-report-distribution">
-                                {% for item in sentiment_distribution %}
-                                    <div class="admin-report-distribution-row"><span>{{ item.label }}</span><strong>{{ item.count }}</strong></div>
-                                {% endfor %}
-                            </div>
-                        </section>
-                        <section class="admin-report-panel">
-                            <div class="admin-report-panel-head compact"><div><span class="admin-report-section-eyebrow">Competency</span><h2>Competency Signals</h2></div></div>
-                            <div class="admin-report-distribution">
-                                {% for item in competency_distribution %}
-                                    <div class="admin-report-distribution-row"><span>{{ item.label }}</span><strong>{{ item.count }}</strong></div>
-                                {% endfor %}
-                            </div>
-                        </section>
-                    </div>
-                </div>
-
-        <!-- Recommendations -->
-                <div id="recommendations" class="report-tab{% if active_tab == 'recommendations' %} active{% endif %} mb-3" role="tabpanel">
-                    <section class="admin-report-panel">
-                        <div class="admin-report-panel-head">
-                            <div>
-                                <span class="admin-report-section-eyebrow">Decision Support</span>
-                                <h2>Recommendations</h2>
-                                <p>Recommendations already produced from the intern's stored supervisor feedback analysis.</p>
-                            </div>
-                            <span class="admin-report-status-pill">{{ recommendation_summary|length }}</span>
-                        </div>
-                        {% if recommendation_summary %}
-                            <div class="admin-report-recommendations">
-                                {% for recommendation in recommendation_summary %}
-                                    <article class="admin-report-recommendation">
-                                        <span class="admin-report-recommendation-icon">{{ nx_icon('recommendation') }}</span>
-                                        <p>{{ recommendation }}</p>
-                                    </article>
-                                {% endfor %}
-                            </div>
-                        {% else %}
-                            <div class="admin-report-empty">{{ nx_icon('recommendation') }}<div><strong>No recommendations yet</strong><span>Recommendations will appear after supervisor feedback has enough stored analysis to summarize.</span></div></div>
-                        {% endif %}
-                    </section>
-                </div>
-
+                    {% else %}
+                        <div class="admin-report-empty">{{ nx_icon('logbook') }}<div><strong>No Logbook entries yet</strong><span>Daily OJT Logbook evidence will appear after the student records activity.</span></div></div>
+                    {% endif %}
+                </section>
             </div>
+
+            <section class="admin-report-panel">
+                <div class="admin-report-panel-head">
+                    <div><span class="admin-report-section-eyebrow">Supervisor Evidence</span><h2>Feedback &amp; Evaluation History</h2><p>Manual supervisor feedback with stored ML interpretation shown only as decision support.</p></div>
+                    <span class="admin-report-status-pill">{{ total_feedback }} record{% if total_feedback != 1 %}s{% endif %}</span>
+                </div>
+                {% if feedback %}
+                    <div class="admin-report-feedback-compact">
+                        {% for item in feedback[:6] %}
+                            <article>
+                                <div class="admin-report-feedback-compact-head">
+                                    <div><strong>{{ item[2] or 'Evaluation' }}</strong><span>{{ item[3] or 'Supervisor' }} · {{ item[1] }}</span></div>
+                                    <span>{{ item[4] or 'No ML label' }}</span>
+                                </div>
+                                <p>{{ item[0] or 'No written feedback.' }}</p>
+                                <div class="admin-report-feedback-tags">
+                                    {% if item[5] %}<span>Sentiment: {{ item[5] }}</span>{% endif %}
+                                    {% if item[6] %}<span>Competency: {{ item[6] }}</span>{% endif %}
+                                    {% if item[9] is not none %}<span>Confidence: {{ '%.1f'|format((item[9] or 0) * 100) }}%</span>{% endif %}
+                                </div>
+                            </article>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="admin-report-empty">{{ nx_icon('feedback') }}<div><strong>No supervisor feedback yet</strong><span>Feedback evidence will appear after a supervisor records it.</span></div></div>
+                {% endif %}
+            </section>
+
+            <div class="admin-report-two-column admin-report-detailed-grid">
+                <section class="admin-report-panel">
+                    <div class="admin-report-panel-head compact"><div><span class="admin-report-section-eyebrow">ML Signals</span><h2>Performance Classification</h2></div><span class="admin-report-status-pill">{{ '%.1f'|format((average_confidence or 0) * 100) }}% confidence</span></div>
+                    <div class="admin-report-distribution">{% for item in ml_distribution %}<div class="admin-report-distribution-row"><span>{{ item.label }}</span><strong>{{ item.count }}</strong></div>{% endfor %}</div>
+                    <p class="admin-report-detailed-note">{{ ml_insight }}</p>
+                </section>
+
+                <section class="admin-report-panel">
+                    <div class="admin-report-panel-head compact"><div><span class="admin-report-section-eyebrow">Model Agreement</span><h2>NB / SVM Evidence</h2></div><span class="admin-report-status-pill">{% if model_comparison.agreement_rate is not none %}{{ '%.1f'|format(model_comparison.agreement_rate * 100) }}% agreement{% else %}No comparison{% endif %}</span></div>
+                    <div class="admin-report-signal-columns">
+                        <div><strong>Sentiment</strong>{% for item in sentiment_distribution %}<span>{{ item.label }} <b>{{ item.count }}</b></span>{% endfor %}</div>
+                        <div><strong>Competency</strong>{% for item in competency_distribution %}<span>{{ item.label }} <b>{{ item.count }}</b></span>{% endfor %}</div>
+                    </div>
+                </section>
+            </div>
+
+            <section class="admin-report-panel">
+                <div class="admin-report-panel-head">
+                    <div><span class="admin-report-section-eyebrow">Progress</span><h2>Assigned Internship Tasks</h2><p>Task workflow is shown separately from attendance, Logbook, and ML evidence.</p></div>
+                    <span class="admin-report-status-pill">{{ completed_tasks }}/{{ total_tasks }} completed</span>
+                </div>
+                <section class="admin-report-metric-grid admin-report-task-metrics">
+                    <article class="admin-report-metric-card is-red"><span class="admin-report-metric-icon">{{ nx_icon('tasks') }}</span><div><strong>{{ total_tasks }}</strong><span>Assigned</span></div></article>
+                    <article class="admin-report-metric-card is-orange"><span class="admin-report-metric-icon">{{ nx_icon('success') }}</span><div><strong>{{ completed_tasks }}</strong><span>Completed</span></div></article>
+                    <article class="admin-report-metric-card is-amber"><span class="admin-report-metric-icon">{{ nx_icon('clock') }}</span><div><strong>{{ pending_tasks }}</strong><span>Pending</span></div></article>
+                    <article class="admin-report-metric-card is-rose"><span class="admin-report-metric-icon">{{ nx_icon('warning') }}</span><div><strong>{{ reopened_tasks }}</strong><span>Reopened</span></div></article>
+                </section>
+                {% if tasks %}
+                    <div class="admin-report-record-list admin-report-task-list">
+                        {% for task in tasks[:8] %}
+                            <article class="admin-report-record-row"><div><strong>{{ task[1] or 'Internship Task' }}</strong><span>{% if task[3] %}Assigned {{ task[3] }}{% endif %}{% if task[4] %} · Deadline {{ task[4] }}{% endif %}</span></div><div class="admin-report-record-value"><strong>{{ task[2] or 'Pending' }}</strong></div></article>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="admin-report-empty">{{ nx_icon('tasks') }}<div><strong>No internship tasks yet</strong><span>Assigned task progress will appear here when tasks exist.</span></div></div>
+                {% endif %}
+            </section>
+
+            <section class="admin-report-panel">
+                <div class="admin-report-panel-head">
+                    <div><span class="admin-report-section-eyebrow">Decision Support</span><h2>Recommendations</h2><p>Recommendations are derived from stored supervisor feedback analysis and do not replace the Official OJT Evaluation.</p></div>
+                    <span class="admin-report-status-pill">{{ recommendation_summary|length }}</span>
+                </div>
+                {% if recommendation_summary %}
+                    <div class="admin-report-recommendations">{% for recommendation in recommendation_summary %}<article class="admin-report-recommendation"><span class="admin-report-recommendation-icon">{{ nx_icon('recommendation') }}</span><p>{{ recommendation }}</p></article>{% endfor %}</div>
+                {% else %}
+                    <div class="admin-report-empty">{{ nx_icon('recommendation') }}<div><strong>No recommendations yet</strong><span>Recommendations will appear after supervisor feedback has enough stored analysis to summarize.</span></div></div>
+                {% endif %}
+            </section>
         </div>
-
-        <script>
-            function openReportTab(tabName, button) {
-                const selectedTab = document.getElementById(tabName);
-                if (!selectedTab) return;
-
-                document.querySelectorAll('.report-tab').forEach(function (tab) {
-                    tab.classList.toggle('active', tab === selectedTab);
-                });
-
-                document.querySelectorAll('.profile-tab-button').forEach(function (tabButton) {
-                    const isActive = tabButton === button;
-                    tabButton.classList.toggle('active', isActive);
-                    tabButton.setAttribute('aria-selected', isActive ? 'true' : 'false');
-                });
-
-                const url = new URL(window.location.href);
-                url.searchParams.set('tab', tabName);
-                window.history.replaceState({}, '', url);
-            }
-
-            document.addEventListener('DOMContentLoaded', function () {
-                const requestedTab = {{ active_tab|tojson }};
-                const activeButton = document.querySelector('.profile-tab-button[data-tab="' + requestedTab + '"]')
-                    || document.querySelector('.profile-tab-button[data-tab="overview"]');
-                if (activeButton) openReportTab(activeButton.dataset.tab, activeButton);
-            });
-        </script>
-    </body>
+    </main>
+</body>
 </html>

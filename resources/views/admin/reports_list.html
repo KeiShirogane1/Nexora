@@ -175,7 +175,12 @@
                 detailContent.scrollTop = 0;
                 detailContent.classList.toggle('is-insights-view', type === 'insights');
                 detailContent.classList.toggle('is-report-view', type === 'report');
-                detailLoading.textContent = type === 'insights' ? 'Loading Student Insights…' : 'Loading Complete Report…';
+                detailContent.classList.toggle('is-detailed-report-view', type === 'detailed');
+                detailLoading.textContent = type === 'insights'
+                    ? 'Loading Student Insights…'
+                    : type === 'detailed'
+                        ? 'Loading Detailed Report…'
+                        : 'Loading Complete Report…';
                 detailLoading.hidden = false;
 
                 fetch(url, {
@@ -192,7 +197,9 @@
                         var parsed = new DOMParser().parseFromString(htmlText, 'text/html');
                         var fragment = type === 'insights'
                             ? parsed.querySelector('.admin-insights-page')
-                            : parsed.querySelector('.admin-report-page-shell');
+                            : type === 'detailed'
+                                ? parsed.querySelector('.admin-report-detailed-page')
+                                : parsed.querySelector('.admin-report-page-shell');
 
                         if (!fragment) {
                             throw new Error('Expected report markup not found');
@@ -223,7 +230,7 @@
                             });
                         }
 
-                        if (type === 'report') {
+                        if (type === 'report' || type === 'detailed') {
                             detailContent.innerHTML = styleMarkup + '<div class="admin-report-detail-inset">' + fragment.outerHTML + '</div>';
                         } else {
                             detailContent.innerHTML = fragment.outerHTML;
@@ -239,8 +246,8 @@
 
             function openDetail(url, type) {
                 closeChoiceModal();
-                detailKicker.textContent = type === 'insights' ? 'STUDENT INSIGHTS' : 'COMPLETE REPORT';
-                detailTitle.textContent = type === 'insights' ? 'Student Insights' : 'Complete Report';
+                detailKicker.textContent = type === 'insights' ? 'STUDENT INSIGHTS' : type === 'detailed' ? 'DETAILED REPORT' : 'COMPLETE REPORT';
+                detailTitle.textContent = type === 'insights' ? 'Student Insights' : type === 'detailed' ? 'Detailed Report' : 'Complete Report';
                 detailContext.textContent = currentContext;
                 detailModal.hidden = false;
                 detailModal.setAttribute('aria-hidden', 'false');
@@ -258,7 +265,7 @@
                 detailModal.setAttribute('aria-hidden', 'true');
                 document.body.classList.remove('admin-report-detail-modal-open');
                 detailContent.innerHTML = '';
-                detailContent.classList.remove('is-insights-view', 'is-report-view');
+                detailContent.classList.remove('is-insights-view', 'is-report-view', 'is-detailed-report-view');
                 detailLoading.hidden = false;
                 if (lastTrigger) lastTrigger.focus();
             }
@@ -305,9 +312,19 @@
                     return;
                 }
 
-                if (targetUrl.origin === window.location.origin && targetUrl.pathname === '/admin/insights') {
+                if (targetUrl.origin !== window.location.origin) return;
+
+                if (targetUrl.pathname === '/admin/insights') {
                     event.preventDefault();
                     loadDetail(targetUrl.href, 'insights');
+                    return;
+                }
+
+                if (/^\/admin\/reports\/student\/\d+$/.test(targetUrl.pathname)) {
+                    event.preventDefault();
+                    detailKicker.textContent = 'DETAILED REPORT';
+                    detailTitle.textContent = 'Detailed Report';
+                    loadDetail(targetUrl.href, 'detailed');
                 }
             });
 
