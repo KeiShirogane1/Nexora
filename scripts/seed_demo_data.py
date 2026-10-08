@@ -27,6 +27,12 @@ MIDDLE = ["Mae","Luis","Anne","Paolo","Grace","Miguel","Rose","James","Louise","
 LAST = ["Santos","Reyes","Cruz","Garcia","Mendoza","Bautista","Flores","Ramos","Aquino","Navarro","Castillo","Torres","Villanueva","Fernandez","Morales","Herrera","Dela Cruz","Mercado","Salazar","Dominguez"]
 ADDRESSES = ["Pasig City, Metro Manila","Quezon City, Metro Manila","Mandaluyong City, Metro Manila","Taguig City, Metro Manila","Marikina City, Metro Manila"]
 POSITIONS = ["Software Development Intern","Quality Assurance Intern","UI/UX Design Intern","Data Operations Intern","Technical Support Intern"]
+CLASSROOM_PROGRAMS = [
+    "Bachelor of Science in Information Technology",
+    "Bachelor of Science in Computer Science",
+    "Bachelor of Science in Information Systems",
+    "Bachelor of Science in Computer Engineering",
+]
 
 WORK_ITEMS = [
     ("[Demo] Company Orientation Brief","Summarize the company, team, tools, and internship expectations.","2026-09-25 17:00:00"),
@@ -190,7 +196,7 @@ def backfill_student_account(conn,student_id,class_id):
         conn.execute("UPDATE users SET "+", ".join(updates)+" WHERE id=?",tuple(params))
 
 
-def backfill_profile(conn,student_id,class_id,slot):
+def backfill_profile(conn,student_id,class_id,slot,program_name):
     row=conn.execute("SELECT username,email,role FROM users WHERE id=?",(student_id,)).fetchone()
     if not row or str(getv(row,"role",2,"") or "")!="student": return
     username=str(getv(row,"username",0,"") or f"student{student_id}")
@@ -213,7 +219,7 @@ def backfill_profile(conn,student_id,class_id,slot):
         "school_email":email or f"{username}@nexora.demo",
         "phone_number":f"0917{class_id:02d}{slot:05d}"[-11:],
         "home_address":ADDRESSES[idx%len(ADDRESSES)],"grade_year":"4th Year",
-        "major_program":"BS Information Technology",
+        "major_program":program_name,
         "emergency_name":f"{FIRST[idx]} {LAST[(idx+class_id-1)%20]} Guardian",
         "emergency_relationship":"Parent",
         "emergency_phone":f"0928{class_id:02d}{slot:05d}"[-11:],
@@ -245,6 +251,31 @@ def company_for(conn,class_id,class_name):
         company=str(getv(row,"company_name",0,"") or "").strip()
         if company:return company
     return class_name+" Partner Company"
+
+
+def ensure_classroom_program(conn,class_id,program_name):
+    rows=conn.execute(
+        """SELECT u.id
+           FROM classroom_students cs
+           JOIN users u ON u.id=cs.student_id
+           WHERE cs.classroom_id=? AND u.role='student'
+           ORDER BY u.id""",
+        (class_id,),
+    ).fetchall()
+    for row in rows:
+        student_id=int(getv(row,"id",0,0))
+        profile=conn.execute(
+            "SELECT user_id,major_program FROM student_profiles WHERE user_id=? LIMIT 1",
+            (student_id,),
+        ).fetchone()
+        if not profile:
+            continue
+        current=str(getv(profile,"major_program",1,"") or "").strip()
+        if current!=program_name:
+            conn.execute(
+                "UPDATE student_profiles SET major_program=? WHERE user_id=?",
+                (program_name,student_id),
+            )
 
 
 def ensure_assignment_link(conn,student_id,supervisor_id):
@@ -514,10 +545,13 @@ def ensure_evaluation(conn,class_id,student_id,supervisor_id,score_base,slot):
         )
 
 
-def populate_classroom(conn,classroom,password_hash):
+def populate_classroom(conn,classroom,password_hash,class_index):
     class_id=int(getv(classroom,"id",0,0))
     supervisor_id=int(getv(classroom,"supervisor_id",1,0))
     class_name=str(getv(classroom,"name",2,f"Classroom {class_id}") or f"Classroom {class_id}")
+    if class_index<0 or class_index>=len(CLASSROOM_PROGRAMS):
+        raise RuntimeError(f"No program mapping configured for classroom index {class_index}.")
+    program_name=CLASSROOM_PROGRAMS[class_index]
     supervisor_name=str(getv(classroom,"supervisor_username",4,"Supervisor") or "Supervisor")
     supervisor_email=str(getv(classroom,"supervisor_email",5,"") or "")
     company=company_for(conn,class_id,class_name)
@@ -543,13 +577,14 @@ def populate_classroom(conn,classroom,password_hash):
     ).fetchall()
     if not roster: raise RuntimeError(f"No students found in classroom {class_id}")
 
+    ensure_classroom_program(conn,class_id,program_name)
     ensure_posts(conn,class_id,supervisor_id)
     assignment_ids=ensure_work_items(conn,class_id,supervisor_id)
 
     for slot,row in enumerate(roster,start=1):
         student_id=int(getv(row,"id",0,0))
         backfill_student_account(conn,student_id,class_id)
-        backfill_profile(conn,student_id,class_id,slot)
+        backfill_profile(conn,student_id,class_id,slot,program_name)
         ensure_assignment_link(conn,student_id,supervisor_id)
         ensure_internship(conn,student_id,supervisor_id,supervisor_name,supervisor_email,company,slot)
         score_base=base_score(slot)
@@ -603,6 +638,24 @@ def main():
         missing,missing_cols=schema_check(conn)
         if len(classrooms)!=TARGET_CLASSROOMS:
             raise RuntimeError(f"Expected exactly {TARGET_CLASSROOMS} active classrooms; found {len(classrooms)}.")
+        if len(CLASSROOM_PROGRAMS)!=TARGET_CLASSROOMS:
+            raise RuntimeError(
+                f"Expected {TARGET_CLASSROOMS} classroom program mappings; found {len(CLASSROOM_PROGRAMS)}."
+            )
+        duplicate_memberships=conn.execute(
+            """SELECT cs.student_id,COUNT(DISTINCT cs.classroom_id) AS class_count
+               FROM classroom_students cs
+               JOIN users u ON u.id=cs.student_id
+               JOIN classrooms c ON c.id=cs.classroom_id
+               WHERE u.role='student' AND COALESCE(c.archived,0)=0
+               GROUP BY cs.student_id
+               HAVING COUNT(DISTINCT cs.classroom_id)>1
+               LIMIT 1"""
+        ).fetchone()
+        if duplicate_memberships:
+            raise RuntimeError(
+                "A student is enrolled in multiple active classrooms; program reassignment stopped to avoid ambiguity."
+            )
         if missing or missing_cols:
             raise RuntimeError("Existing Nexora feature schema is incomplete. No schema changes were attempted.")
         if not APPLY:
@@ -612,7 +665,10 @@ def main():
             raise RuntimeError("NEXORA_DEMO_PASSWORD must contain at least 12 characters.")
 
         password_hash=hash_password(PASSWORD)
-        summaries=[populate_classroom(conn,classroom,password_hash) for classroom in classrooms]
+        summaries=[
+            populate_classroom(conn,classroom,password_hash,class_index)
+            for class_index,classroom in enumerate(classrooms)
+        ]
         conn.commit()
         print("Seed applied successfully.")
         for class_id,name,roster,populated_count in summaries:
