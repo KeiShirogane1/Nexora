@@ -451,18 +451,30 @@ def ensure_feedback(conn,student_id,supervisor_id,score_base):
     )
 
 
-def ensure_notifications(conn,student_id):
+def ensure_notifications(conn,student_id,class_id):
     items=[
-        ("[Demo] Weekly review available","Your latest internship Work and Daily Performance review is available.","review",0,"/student/report"),
+        ("[Demo] Weekly review available","Your latest internship Work and Daily Performance review is available.","review",0,f"/student/classes/{class_id}/reports"),
         ("[Demo] New Work item assigned","A new internship Work item has been added to your classroom.","task",1,"/student/tasks"),
     ]
     for title,message,kind,is_read,link in items:
-        if not conn.execute("SELECT 1 FROM notifications WHERE user_id=? AND title=? LIMIT 1",(student_id,title)).fetchone():
-            conn.execute(
-                """INSERT INTO notifications (user_id,title,message,notification_type,is_read,link_url,created_at)
-                   VALUES (?,?,?,?,?,?,CURRENT_TIMESTAMP)""",
-                (student_id,title,message,kind,is_read,link),
-            )
+        existing=conn.execute(
+            "SELECT id,link_url FROM notifications WHERE user_id=? AND title=? LIMIT 1",
+            (student_id,title),
+        ).fetchone()
+        if existing:
+            notification_id=int(getv(existing,"id",0,0))
+            current_link=str(getv(existing,"link_url",1,"") or "")
+            if current_link!=link:
+                conn.execute(
+                    "UPDATE notifications SET link_url=? WHERE id=? AND user_id=?",
+                    (link,notification_id,student_id),
+                )
+            continue
+        conn.execute(
+            """INSERT INTO notifications (user_id,title,message,notification_type,is_read,link_url,created_at)
+               VALUES (?,?,?,?,?,?,CURRENT_TIMESTAMP)""",
+            (student_id,title,message,kind,is_read,link),
+        )
 
 
 def ensure_history(conn,student_id,supervisor_id):
@@ -545,7 +557,7 @@ def populate_classroom(conn,classroom,password_hash):
         ensure_tasks(conn,student_id,supervisor_id)
         ensure_attendance_logbook(conn,student_id,class_id,supervisor_id,assignment_ids,score_base)
         ensure_feedback(conn,student_id,supervisor_id,score_base)
-        ensure_notifications(conn,student_id)
+        ensure_notifications(conn,student_id,class_id)
         ensure_history(conn,student_id,supervisor_id)
         ensure_evaluation(conn,class_id,student_id,supervisor_id,score_base,slot)
 
