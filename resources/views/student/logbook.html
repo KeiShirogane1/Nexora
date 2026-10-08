@@ -202,7 +202,7 @@
                     {% if history %}
                         <div class="student-logbook-compact-table-wrap">
                             <table>
-                                <thead><tr><th>Day</th><th>Time In</th><th>Time Out</th><th>Hours</th><th>Status</th><th>Entry</th></tr></thead>
+                                <thead><tr><th>Day</th><th>Time In</th><th>Time Out</th><th>Hours</th><th>Status</th><th class="student-logbook-history-entry-head">Entry</th></tr></thead>
                                 <tbody>
                                     {% for attendance_record in history %}
                                         {% set history_day = total_history - (((page - 1) * 10) + loop.index0) %}
@@ -212,7 +212,7 @@
                                             <td>{{ attendance_record[2] or '—' }}</td>
                                             <td>{% if attendance_record[3] is not none %}{{ '%.2f'|format(attendance_record[3]) }} hrs{% else %}—{% endif %}</td>
                                             <td><span class="student-logbook-history-status{% if attendance_record[4] == 'Open' %} is-open{% endif %}">{{ attendance_record[4] }}</span></td>
-                                            <td><a class="student-logbook-history-link" href="/student/session/{{ attendance_record[0] }}">{{ nx_icon('external') }} View Day</a></td>
+                                            <td class="student-logbook-history-entry-cell"><a class="student-logbook-history-link" href="/student/session/{{ attendance_record[0] }}"><span class="student-logbook-history-link-icon">{{ nx_icon('external') }}</span><span>View Day</span>{{ nx_icon('chevron-right', 'student-logbook-history-link-arrow') }}</a></td>
                                         </tr>
                                     {% endfor %}
                                 </tbody>
