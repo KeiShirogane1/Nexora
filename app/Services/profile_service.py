@@ -2,18 +2,22 @@ from app.Models.db import get_db_connection
 
 
 PROGRAM_ALIASES = {
+    "information technology": "Bachelor of Science in Information Technology",
     "bsit": "Bachelor of Science in Information Technology",
     "bs information technology": "Bachelor of Science in Information Technology",
     "bs in information technology": "Bachelor of Science in Information Technology",
     "bachelor of science in information technology": "Bachelor of Science in Information Technology",
+    "computer science": "Bachelor of Science in Computer Science",
     "bscs": "Bachelor of Science in Computer Science",
     "bs computer science": "Bachelor of Science in Computer Science",
     "bs in computer science": "Bachelor of Science in Computer Science",
     "bachelor of science in computer science": "Bachelor of Science in Computer Science",
+    "information systems": "Bachelor of Science in Information Systems",
     "bsis": "Bachelor of Science in Information Systems",
     "bs information systems": "Bachelor of Science in Information Systems",
     "bs in information systems": "Bachelor of Science in Information Systems",
     "bachelor of science in information systems": "Bachelor of Science in Information Systems",
+    "computer engineering": "Bachelor of Science in Computer Engineering",
     "bscpe": "Bachelor of Science in Computer Engineering",
     "bscpe.": "Bachelor of Science in Computer Engineering",
     "bs computer engineering": "Bachelor of Science in Computer Engineering",

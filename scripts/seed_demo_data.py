@@ -253,6 +253,45 @@ def company_for(conn,class_id,class_name):
     return class_name+" Partner Company"
 
 
+def normalize_legacy_programs(conn):
+    canonical_aliases = {
+        "information technology": "Bachelor of Science in Information Technology",
+        "bsit": "Bachelor of Science in Information Technology",
+        "bs information technology": "Bachelor of Science in Information Technology",
+        "bs in information technology": "Bachelor of Science in Information Technology",
+        "computer science": "Bachelor of Science in Computer Science",
+        "bscs": "Bachelor of Science in Computer Science",
+        "bs computer science": "Bachelor of Science in Computer Science",
+        "bs in computer science": "Bachelor of Science in Computer Science",
+        "information systems": "Bachelor of Science in Information Systems",
+        "bsis": "Bachelor of Science in Information Systems",
+        "bs information systems": "Bachelor of Science in Information Systems",
+        "bs in information systems": "Bachelor of Science in Information Systems",
+        "computer engineering": "Bachelor of Science in Computer Engineering",
+        "bscpe": "Bachelor of Science in Computer Engineering",
+        "bscpe.": "Bachelor of Science in Computer Engineering",
+        "bs computer engineering": "Bachelor of Science in Computer Engineering",
+        "bs in computer engineering": "Bachelor of Science in Computer Engineering",
+    }
+    updated = 0
+    rows = conn.execute(
+        """SELECT user_id,major_program
+           FROM student_profiles
+           WHERE major_program IS NOT NULL AND TRIM(major_program)<>''"""
+    ).fetchall()
+    for row in rows:
+        student_id=int(getv(row,"user_id",0,0))
+        current=str(getv(row,"major_program",1,"") or "").strip()
+        canonical=canonical_aliases.get(current.lower())
+        if canonical and current!=canonical:
+            conn.execute(
+                "UPDATE student_profiles SET major_program=? WHERE user_id=?",
+                (canonical,student_id),
+            )
+            updated += 1
+    return updated
+
+
 def ensure_classroom_program(conn,class_id,program_name):
     rows=conn.execute(
         """SELECT u.id
@@ -665,12 +704,14 @@ def main():
             raise RuntimeError("NEXORA_DEMO_PASSWORD must contain at least 12 characters.")
 
         password_hash=hash_password(PASSWORD)
+        normalized_program_rows=normalize_legacy_programs(conn)
         summaries=[
             populate_classroom(conn,classroom,password_hash,class_index)
             for class_index,classroom in enumerate(classrooms)
         ]
         conn.commit()
         print("Seed applied successfully.")
+        print(f"Canonicalized legacy program rows: {normalized_program_rows}")
         for class_id,name,roster,populated_count in summaries:
             print(f"  - {class_id}: {name!r}, roster={roster}, student accounts populated={populated_count}")
         return 0
