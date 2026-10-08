@@ -6,7 +6,7 @@ from app.Http.Middleware.security import login_required
 from app.Models.db import get_db_connection
 from app.Services.notification_service import (
     delete_notification,
-    delete_notifications_by_date,
+    delete_notifications_by_date_range,
     get_unread_count,
     get_user_notifications,
     mark_all_read,
@@ -151,31 +151,43 @@ def delete_selected_notifications():
 @login_required
 def delete_by_date():
     user_id = session.get("user_id")
-    raw_date = (request.form.get("delete_date") or "").strip()
+    raw_start_date = (request.form.get("start_date") or "").strip()
+    raw_end_date = (request.form.get("end_date") or "").strip()
 
-    if not raw_date:
-        flash("Choose a date before deleting notifications.", "error")
+    if not raw_start_date or not raw_end_date:
+        flash("Choose both a start date and an end date before deleting notifications.", "error")
         return redirect(url_for("notifications.notification_list"))
 
     try:
-        target_date = date.fromisoformat(raw_date)
+        start_date = date.fromisoformat(raw_start_date)
+        end_date = date.fromisoformat(raw_end_date)
     except ValueError:
-        flash("The selected notification date is invalid.", "error")
+        flash("The selected notification date range is invalid.", "error")
         return redirect(url_for("notifications.notification_list"))
 
-    if target_date > date.today():
+    today = date.today()
+    if start_date > today or end_date > today:
         flash("Choose today or an earlier date.", "error")
         return redirect(url_for("notifications.notification_list"))
 
-    deleted_count = delete_notifications_by_date(user_id, target_date)
+    if start_date > end_date:
+        flash("Start date cannot be later than end date.", "error")
+        return redirect(url_for("notifications.notification_list"))
+
+    deleted_count = delete_notifications_by_date_range(user_id, start_date, end_date)
+    formatted_range = (
+        start_date.strftime("%B %d, %Y")
+        if start_date == end_date
+        else f"{start_date.strftime('%B %d, %Y')} through {end_date.strftime('%B %d, %Y')}"
+    )
     if deleted_count:
         flash(
-            f"Permanently deleted {deleted_count} notification{'s' if deleted_count != 1 else ''} from {target_date.strftime('%B %d, %Y')}.",
+            f"Permanently deleted {deleted_count} notification{'s' if deleted_count != 1 else ''} from {formatted_range}.",
             "success",
         )
     else:
         flash(
-            f"No notifications were found for {target_date.strftime('%B %d, %Y')}.",
+            f"No notifications were found from {formatted_range}.",
             "info",
         )
 

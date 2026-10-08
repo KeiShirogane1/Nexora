@@ -140,15 +140,19 @@
             <div class="nx-notifications-manage-copy">
                 <span>Manage Notifications</span>
                 <h2 id="manage-notifications-heading">Delete notifications permanently</h2>
-                <p>Select notifications above, or choose a date. The single delete button removes the selected notifications first; if none are selected, it deletes your notifications from the chosen date.</p>
+                <p>Select notifications above, or choose a start and end date. The delete button removes selected notifications first; if none are selected, it permanently deletes your notifications within the chosen date range.</p>
             </div>
 
             <div class="nx-notifications-delete-controls">
                 <form id="notification-date-delete-form" class="nx-notifications-delete-form" method="post" action="{{ url_for('notifications.delete_by_date') }}" onsubmit="return confirmNotificationDateDelete(this);">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <label class="nx-notifications-date-field">
-                        <span>Choose date</span>
-                        <input id="notificationDeleteDate" type="date" name="delete_date" max="{{ today_iso }}">
+                        <span>Start date</span>
+                        <input id="notificationDeleteStartDate" type="date" name="start_date" max="{{ today_iso }}">
+                    </label>
+                    <label class="nx-notifications-date-field">
+                        <span>End date</span>
+                        <input id="notificationDeleteEndDate" type="date" name="end_date" max="{{ today_iso }}">
                     </label>
                 </form>
                 <button id="deleteNotificationsButton" class="nx-notifications-delete-button" type="button" onclick="deleteNotificationsFromBottom()" disabled>Delete Permanently</button>
@@ -181,12 +185,17 @@ function getSelectedNotificationCount() {
 
 function updateDeleteNotificationsButton() {
     var selectedCount = getSelectedNotificationCount();
-    var dateInput = document.getElementById('notificationDeleteDate');
+    var startInput = document.getElementById('notificationDeleteStartDate');
+    var endInput = document.getElementById('notificationDeleteEndDate');
     var deleteButton = document.getElementById('deleteNotificationsButton');
     if (!deleteButton) return;
 
-    var hasDate = !!(dateInput && dateInput.value);
-    deleteButton.disabled = selectedCount === 0 && !hasDate;
+    var hasRange = !!(
+        startInput && startInput.value &&
+        endInput && endInput.value &&
+        startInput.value <= endInput.value
+    );
+    deleteButton.disabled = selectedCount === 0 && !hasRange;
     deleteButton.textContent = selectedCount
         ? 'Delete Permanently (' + selectedCount + ')'
         : 'Delete Permanently';
@@ -221,10 +230,16 @@ function confirmSelectedNotificationsDelete(form) {
 }
 
 function confirmNotificationDateDelete(form) {
-    var input = form.querySelector('input[name="delete_date"]');
-    if (!input || !input.value) return false;
+    var startInput = form.querySelector('input[name="start_date"]');
+    var endInput = form.querySelector('input[name="end_date"]');
+    if (!startInput || !startInput.value || !endInput || !endInput.value) return false;
+    if (startInput.value > endInput.value) {
+        window.alert('Start date cannot be later than end date.');
+        return false;
+    }
     return window.confirm(
-        'Permanently delete all of your notifications from ' + input.value + '? This action cannot be undone.'
+        'Permanently delete all of your notifications from ' + startInput.value +
+        ' through ' + endInput.value + '? This action cannot be undone.'
     );
 }
 
@@ -236,21 +251,39 @@ function deleteNotificationsFromBottom() {
     }
 
     var dateForm = document.getElementById('notification-date-delete-form');
-    var dateInput = document.getElementById('notificationDeleteDate');
-    if (dateForm && dateInput && dateInput.value) {
+    var startInput = document.getElementById('notificationDeleteStartDate');
+    var endInput = document.getElementById('notificationDeleteEndDate');
+    if (
+        dateForm &&
+        startInput && startInput.value &&
+        endInput && endInput.value &&
+        startInput.value <= endInput.value
+    ) {
         dateForm.requestSubmit();
         return;
     }
 
-    window.alert('Select at least one notification or choose a date first.');
+    window.alert('Select at least one notification or choose a valid start and end date first.');
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-    var dateInput = document.getElementById('notificationDeleteDate');
-    if (dateInput) {
-        dateInput.addEventListener('input', updateDeleteNotificationsButton);
-        dateInput.addEventListener('change', updateDeleteNotificationsButton);
+    var startInput = document.getElementById('notificationDeleteStartDate');
+    var endInput = document.getElementById('notificationDeleteEndDate');
+
+    function syncNotificationDateRange() {
+        if (startInput && endInput) {
+            endInput.min = startInput.value || '';
+        }
+        updateDeleteNotificationsButton();
     }
+
+    [startInput, endInput].forEach(function (input) {
+        if (!input) return;
+        input.addEventListener('input', syncNotificationDateRange);
+        input.addEventListener('change', syncNotificationDateRange);
+    });
+
+    syncNotificationDateRange();
     updateSelectedNotifications();
 });
 </script>

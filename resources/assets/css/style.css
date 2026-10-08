@@ -8302,15 +8302,41 @@ body.nx-notifications-page .nx-notification-history-copy small {
 }
 
 body.nx-notifications-page .nx-notification-history-open {
+    min-height: 34px;
+    padding: 0 11px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border: 1px solid color-mix(in srgb, var(--nx-notify-page-accent) 30%, #dfe7e3);
+    border-radius: 9px;
+    background: color-mix(in srgb, var(--nx-notify-page-accent) 7%, #fff);
     color: var(--nx-notify-page-accent);
     text-decoration: none;
     font-size: .72rem;
     font-weight: 800;
+    line-height: 1;
     white-space: nowrap;
+    transition: background .16s ease, border-color .16s ease, color .16s ease, box-shadow .16s ease, transform .16s ease;
 }
 
 body.nx-notifications-page .nx-notification-history-open:hover {
+    border-color: color-mix(in srgb, var(--nx-notify-page-accent) 52%, #dfe7e3);
+    background: var(--nx-notify-page-soft);
     color: var(--nx-notify-page-accent-dark);
+    box-shadow: 0 5px 12px color-mix(in srgb, var(--nx-notify-page-accent) 10%, transparent);
+    transform: translateY(-1px);
+}
+
+body.nx-notifications-page .nx-notification-history-open:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--nx-notify-page-accent) 28%, transparent);
+    outline-offset: 2px;
+}
+
+body.nx-notifications-page .nx-notification-history-open .nx-notification-open-icon {
+    width: 12px;
+    height: 12px;
+    flex: 0 0 auto;
 }
 
 body.nx-notifications-page .nx-notifications-empty {
@@ -8471,6 +8497,7 @@ body.nx-notifications-page .nx-notifications-delete-controls {
 body.nx-notifications-page .nx-notifications-delete-form {
     display: flex;
     align-items: flex-end;
+    gap: 9px;
 }
 
 body.nx-notifications-page .nx-notifications-date-field {
@@ -8539,7 +8566,7 @@ body.nx-notifications-page .nx-notifications-delete-button:disabled {
     }
 
     body.nx-notifications-page .nx-notifications-date-field {
-        flex: 1;
+        flex: 1 1 0;
     }
 
     body.nx-notifications-page .nx-notifications-date-field input {
@@ -8583,6 +8610,8 @@ body.nx-notifications-page .nx-notifications-delete-button:disabled {
     body.nx-notifications-page .nx-notification-history-open {
         grid-column: 3;
         justify-self: start;
+        min-height: 32px;
+        padding: 0 10px;
     }
 
     body.nx-notifications-page .nx-notifications-pagination {
@@ -8595,7 +8624,8 @@ body.nx-notifications-page .nx-notifications-delete-button:disabled {
         flex-wrap: wrap;
     }
 
-    body.nx-notifications-page .nx-notifications-delete-controls {
+    body.nx-notifications-page .nx-notifications-delete-controls,
+    body.nx-notifications-page .nx-notifications-delete-form {
         align-items: stretch;
         flex-direction: column;
     }

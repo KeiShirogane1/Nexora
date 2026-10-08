@@ -230,13 +230,13 @@ def delete_notification(notification_id, user_id=None):
         conn.close()
 
 
-def delete_notifications_by_date(user_id, target_date):
-    """Permanently delete one user's notifications created on target_date."""
-    if not user_id or target_date is None:
+def delete_notifications_by_date_range(user_id, start_date, end_date):
+    """Permanently delete one user's notifications in an inclusive date range."""
+    if not user_id or start_date is None or end_date is None or start_date > end_date:
         return 0
 
-    day_start = datetime.combine(target_date, datetime.min.time())
-    day_end = day_start + timedelta(days=1)
+    range_start = datetime.combine(start_date, datetime.min.time())
+    range_end = datetime.combine(end_date, datetime.min.time()) + timedelta(days=1)
 
     conn = get_db_connection()
     try:
@@ -246,7 +246,7 @@ def delete_notifications_by_date(user_id, target_date):
             DELETE FROM notifications
             WHERE user_id = ? AND created_at >= ? AND created_at < ?
             """,
-            (user_id, day_start, day_end),
+            (user_id, range_start, range_end),
         )
         conn.commit()
         try:
@@ -258,3 +258,8 @@ def delete_notifications_by_date(user_id, target_date):
         raise
     finally:
         conn.close()
+
+
+def delete_notifications_by_date(user_id, target_date):
+    """Backward-compatible exact-date delete."""
+    return delete_notifications_by_date_range(user_id, target_date, target_date)
