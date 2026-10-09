@@ -491,6 +491,8 @@ def initialize_database():
 
                 school_email TEXT,
 
+                school_name TEXT,
+
                 phone_number TEXT,
 
                 home_address TEXT,
@@ -1245,6 +1247,8 @@ def initialize_database():
                 cursor.execute("ALTER TABLE student_profiles ADD COLUMN emergency_email TEXT")
             if "school_email" not in sp_cols:
                 cursor.execute("ALTER TABLE student_profiles ADD COLUMN school_email TEXT")
+            if "school_name" not in sp_cols:
+                cursor.execute("ALTER TABLE student_profiles ADD COLUMN school_name TEXT")
         except Exception:
             pass
 
@@ -1346,6 +1350,8 @@ def initialize_database():
                     cursor.execute("ALTER TABLE student_profiles ADD COLUMN IF NOT EXISTS emergency_email TEXT")
                 if "school_email" not in pg_sp_cols:
                     cursor.execute("ALTER TABLE student_profiles ADD COLUMN IF NOT EXISTS school_email TEXT")
+                if "school_name" not in pg_sp_cols:
+                    cursor.execute("ALTER TABLE student_profiles ADD COLUMN IF NOT EXISTS school_name TEXT")
             except Exception:
                 pass
             # Phase 6: useful student indexes — repeatable

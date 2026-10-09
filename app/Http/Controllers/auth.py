@@ -190,7 +190,7 @@ def signup():
   except Exception as exc:
    current_app.logger.warning("Could not load admins for signup notification/email: %s",exc)
 
-  flash(f"Account created successfully. Please wait up to {AUTO_APPROVAL_MINUTES} minutes for approval. An administrator may approve you sooner; otherwise Nexora will approve the account automatically. You will receive an email when your account is ready.","success")
+  flash("Account created successfully. Please wait for approval. You will receive an email when your account is ready.","success")
   return redirect(url_for("auth.login"))
 
  return render_template("auth/signup.html",form_data=form_data)

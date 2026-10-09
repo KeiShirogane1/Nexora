@@ -217,6 +217,7 @@ def backfill_profile(conn,student_id,class_id,slot,program_name):
         "first_name":FIRST[idx],"middle_name":MIDDLE[idx],"last_name":LAST[(idx+class_id-1)%20],
         "age":20+(slot%4),"student_id":generated_student_number,
         "school_email":email or f"{username}@nexora.demo",
+        "school_name":"Nexora Demo University",
         "phone_number":f"0917{class_id:02d}{slot:05d}"[-11:],
         "home_address":ADDRESSES[idx%len(ADDRESSES)],"grade_year":"4th Year",
         "major_program":program_name,

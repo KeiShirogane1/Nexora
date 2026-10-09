@@ -439,7 +439,7 @@ def create_class():
         form={},
         responsibilities=["", ""],
         qualifications=["", ""],
-        initial_view="choice",
+        initial_view="internship",
         active_page="classes",
     )
 

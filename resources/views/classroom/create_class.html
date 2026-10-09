@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Classroom - Nexora</title>
+    <title>Create Intern Classroom - Nexora</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/supervisor.css') }}">
@@ -18,7 +18,7 @@
     {% set qualification_items = qualifications if qualifications else ['', ''] %}
     {% set supervisor_display = ((sidebar_profile.first_name ~ ' ' ~ (sidebar_profile.last_name or ''))|trim) if sidebar_profile and sidebar_profile.first_name else (sidebar_profile.username if sidebar_profile else 'Supervisor') %}
 
-    <main class="page-content nexora-app-main create-space-main" data-initial-view="{{ initial_view|default('choice') }}">
+    <main class="page-content nexora-app-main create-space-main" data-initial-view="{{ initial_view|default('internship') }}">
         <div class="create-space-shell">
             <a href="{{ url_for('classroom.supervisor_classes') }}" class="create-space-back">{{ nx_icon('arrow-left', 'nx-inline-icon') }}<span>Back to My Classes</span></a>
 
@@ -123,7 +123,7 @@
                 </div>
             </section>
 
-            <section id="create-space-internship" class="create-space-view"{% if initial_view|default('choice') != 'internship' %} hidden{% endif %} aria-labelledby="create-internship-title">
+            <section id="create-space-internship" class="create-space-view"{% if initial_view|default('internship') != 'internship' %} hidden{% endif %} aria-labelledby="create-internship-title">
             <header class="create-space-header">
                 <span class="create-space-eyebrow">Supervisor Portal</span>
                 <h1>Create Intern Classroom</h1>
@@ -330,7 +330,7 @@
                                 </section>
 
                                 <div class="create-space-footer">
-                                    <button type="button" class="create-space-secondary-button" data-show-view="choice">Back</button>
+                                    <a class="create-space-secondary-button" href="{{ url_for('classroom.supervisor_classes') }}">Cancel</a>
                                     <button type="submit" class="create-space-primary-button">Create Intern Classroom</button>
                                 </div>
                             </div>
@@ -398,7 +398,7 @@
             const validViews = new Set(['choice', 'classroom', 'internship']);
 
             function showCreateSpaceView(name) {
-                const nextView = validViews.has(name) ? name : 'choice';
+                const nextView = validViews.has(name) ? name : 'internship';
                 document.querySelectorAll('.create-space-view').forEach(function (view) {
                     view.hidden = view.id !== 'create-space-' + nextView;
                 });
@@ -421,7 +421,7 @@
                 }
             });
 
-            showCreateSpaceView(main ? main.dataset.initialView : 'choice');
+            showCreateSpaceView(main ? main.dataset.initialView : 'internship');
 
             const dayLabels = {mon:'Mon', tue:'Tue', wed:'Wed', thu:'Thu', fri:'Fri', sat:'Sat', sun:'Sun'};
             const removeIconSvg = {{ nx_icon('close')|tojson }};

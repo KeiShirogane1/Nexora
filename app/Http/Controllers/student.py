@@ -1207,7 +1207,8 @@ def profile_setup():
                 phone_number,
                 home_address,
                 grade_year,
-                major_program
+                major_program,
+                school_name
             FROM student_profiles
             WHERE user_id = ?
             """,
@@ -1228,6 +1229,7 @@ def profile_setup():
             "home_address": "",
             "grade_year": "",
             "major_program": "",
+            "school_name": "",
         }
 
     if request.method == "POST":
@@ -1243,6 +1245,7 @@ def profile_setup():
             "home_address": (request.form.get("home_address") or "").strip(),
             "grade_year": (request.form.get("grade_year") or "").strip(),
             "major_program": (request.form.get("major_program") or "").strip(),
+            "school_name": (request.form.get("school_name") or "").strip(),
         }
 
         first_name = form_data["first_name"]
@@ -1255,6 +1258,7 @@ def profile_setup():
         home_address = form_data["home_address"]
         grade_year = form_data["grade_year"]
         major_program = form_data["major_program"]
+        school_name = form_data["school_name"]
         errors = {}
 
         if not first_name:
@@ -1272,6 +1276,11 @@ def profile_setup():
 
         if not student_id:
             errors["student_id"] = "Student ID is required."
+
+        if not school_name:
+            errors["school_name"] = "School / university is required."
+        elif len(school_name) > 180:
+            errors["school_name"] = "School / university must be 180 characters or fewer."
 
         if not grade_year:
             errors["grade_year"] = "Grade/year is required."
@@ -1312,7 +1321,7 @@ def profile_setup():
             # Determine which step to reopen based on the fields that errored.
             step1_fields = {"first_name", "middle_name", "last_name", "age", "student_id"}
             step2_fields = {"phone_number", "home_address"}
-            step3_fields = {"grade_year", "major_program"}
+            step3_fields = {"school_name", "grade_year", "major_program"}
             if any(f in errors for f in step3_fields):
                 current_step = 3
             elif any(f in errors for f in step2_fields):
@@ -1399,6 +1408,7 @@ def profile_setup():
             home_address = ?,
             grade_year = ?,
             major_program = ?,
+            school_name = ?,
             profile_completed = 1
             WHERE user_id = ?
             """,
@@ -1413,6 +1423,7 @@ def profile_setup():
                 home_address,
                 grade_year,
                 major_program,
+                school_name,
                 session["user_id"],
             ),
         )
@@ -1441,6 +1452,7 @@ def profile_setup():
             "home_address": row[7] or "",
             "grade_year": row[8] or "",
             "major_program": row[9] or "",
+            "school_name": row[10] or "",
         }
     else:
         form_data = _empty_form()

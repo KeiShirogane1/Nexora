@@ -91,6 +91,7 @@ def _student_dict(row):
         "grade_year": _value(row, "grade_year", 9, "") or "",
         "major_program": _value(row, "major_program", 10, "") or "",
         "profile_completed": bool(_value(row, "profile_completed", 11, 0)),
+        "school_name": _value(row, "school_name", 12, "") or "",
     }
 
 
@@ -175,7 +176,8 @@ def get_supervisor_intern_profile(supervisor_id, classroom_id, student_id):
                    COALESCE(sp.phone_number, '') AS phone_number,
                    COALESCE(sp.grade_year, '') AS grade_year,
                    COALESCE(sp.major_program, '') AS major_program,
-                   COALESCE(sp.profile_completed, 0) AS profile_completed
+                   COALESCE(sp.profile_completed, 0) AS profile_completed,
+                   COALESCE(sp.school_name, '') AS school_name
             FROM classroom_students cs
             JOIN users u ON u.id = cs.student_id
             LEFT JOIN student_profiles sp ON sp.user_id = u.id
