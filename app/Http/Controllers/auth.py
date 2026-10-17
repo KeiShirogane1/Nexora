@@ -34,7 +34,7 @@ def login():
  if request.method=="POST":
   username=request.form.get("username","").strip(); password=request.form.get("password",""); user=get_user(username,password)
   if user=="inactive":session["login_error"]="Your account has been deactivated. Please contact the administrator.";session["login_username"]=username;return redirect(url_for("auth.login"))
-if user and user["role"] in ("pending_student","pending_supervisor"):session["login_error"]="Your account is awaiting administrator approval. You will receive an email when it is ready.";session["login_username"]=username;return redirect(url_for("auth.login"))
+  if user and user["role"] in ("pending_student","pending_supervisor"):session["login_error"]="Your account is awaiting administrator approval. You will receive an email when it is ready.";session["login_username"]=username;return redirect(url_for("auth.login"))
   if user and user["role"]=="rejected":session["login_error"]="Your account request was not approved. Please contact the administrator.";session["login_username"]=username;return redirect(url_for("auth.login"))
   if user:
    role=user["role"]; session.clear(); session.permanent=True; session["user_id"]=user["id"];session["role"]=role
