@@ -1489,7 +1489,8 @@ def student_profile():
         emergency_relationship,
         emergency_phone,
         emergency_email,
-        users.email
+        users.email,
+        student_profiles.school_name
 
     FROM student_profiles
 
@@ -1536,7 +1537,8 @@ def student_profile():
         profile[9],
         profile[10],
         profile[11],
-        profile[12]
+        profile[12],
+        profile[15]
 
     ]
 
@@ -1668,6 +1670,8 @@ def edit_profile():
         age = request.form.get("age")
         phone = request.form.get("phone_number")
         student_id = request.form.get("student_id")
+        school_name = (request.form.get("school_name") or "").strip()
+        profile_data["school_name"] = school_name
 
 
         # REQUIRED CHECK
@@ -1694,6 +1698,11 @@ def edit_profile():
 
         if not student_id:
             errors["student_id"] = "Student ID is required."
+
+        if not school_name:
+            errors["school_name"] = "School / university is required."
+        elif len(school_name) > 180:
+            errors["school_name"] = "School / university must be 180 characters or fewer."
 
 
 
@@ -1744,6 +1753,7 @@ def edit_profile():
                 "home_address": request.form.get("home_address"),
                 "grade_year": request.form.get("grade_year"),
                 "major_program": request.form.get("major_program"),
+                "school_name": request.form.get("school_name"),
                 "emergency_name": request.form.get("emergency_name"),
                 "emergency_relationship": request.form.get("emergency_relationship"),
                 "emergency_phone": request.form.get("emergency_phone"),
@@ -1793,7 +1803,8 @@ def edit_profile():
                 emergency_name,
                 emergency_relationship,
                 emergency_phone,
-                emergency_email
+                emergency_email,
+                school_name
 
             FROM student_profiles
 
@@ -1839,6 +1850,7 @@ def edit_profile():
         "emergency_relationship": profile[11],
         "emergency_phone": profile[12],
         "emergency_email": profile[13],
+        "school_name": profile[14],
         "email": user_email
     }
 

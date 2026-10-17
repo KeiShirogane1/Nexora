@@ -3,10 +3,6 @@ from app.Models.db import get_db_connection,using_postgres
 from app.Services.password_security import hash_password,verify_password
 from app.Services.notification_service import create_notification
 from app.Services.email_service import send_account_request_email
-from app.Services.account_approval_service import (
-    AUTO_APPROVAL_MINUTES,
-    maybe_auto_approve_user,
-)
 import os
 import re
 
@@ -38,13 +34,7 @@ def login():
  if request.method=="POST":
   username=request.form.get("username","").strip(); password=request.form.get("password",""); user=get_user(username,password)
   if user=="inactive":session["login_error"]="Your account has been deactivated. Please contact the administrator.";session["login_username"]=username;return redirect(url_for("auth.login"))
-  if user and user["role"] in ("pending_student","pending_supervisor"):
-   try:
-    approved=maybe_auto_approve_user(user["id"])
-    if approved:user=get_user(username,password)
-   except Exception as exc:
-    current_app.logger.warning("Could not check automatic approval during login: %s",exc)
-  if user and user["role"] in ("pending_student","pending_supervisor"):session["login_error"]=f"Your account is awaiting approval. Nexora will approve it automatically within {AUTO_APPROVAL_MINUTES} minutes if an administrator does not act sooner. You will receive an email when it is ready.";session["login_username"]=username;return redirect(url_for("auth.login"))
+if user and user["role"] in ("pending_student","pending_supervisor"):session["login_error"]="Your account is awaiting administrator approval. You will receive an email when it is ready.";session["login_username"]=username;return redirect(url_for("auth.login"))
   if user and user["role"]=="rejected":session["login_error"]="Your account request was not approved. Please contact the administrator.";session["login_username"]=username;return redirect(url_for("auth.login"))
   if user:
    role=user["role"]; session.clear(); session.permanent=True; session["user_id"]=user["id"];session["role"]=role
@@ -166,7 +156,7 @@ def signup():
      create_notification(
       admin_id,
       "New account awaiting approval",
-      f"{username} ({email}) requested a {account_label} account. Automatic approval is scheduled in {AUTO_APPROVAL_MINUTES} minutes.",
+      f"{username} ({email}) requested a {account_label} account and is waiting for administrator review.",
       "system",
       review_path,
      )
@@ -183,8 +173,7 @@ def signup():
        email,
        account_label,
        review_url,
-       auto_minutes=AUTO_APPROVAL_MINUTES,
-      )
+)
      except Exception as exc:
       current_app.logger.warning("Could not email signup approval request to admin %s: %s",admin_id,exc)
   except Exception as exc:

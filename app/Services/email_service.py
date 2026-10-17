@@ -660,7 +660,7 @@ Username: {username}
 Email: {email}
 Account Type: {account_label}
 
-If no administrator action is taken, this account will be approved automatically after {auto_minutes} minutes.
+This account will remain pending until an administrator approves or rejects it.
 
 Review and approve the user:
 {review_url}
@@ -675,20 +675,19 @@ Nexora System
         preheader=f"{username} requested a Nexora {account_label.lower()} account.",
         body_html=f"""
 <p style="margin:0 0 14px;color:#53657d;font-size:15px;line-height:1.7;">
-  A new { _safe(account_label.lower()) } account is waiting for your review. If no Admin action is taken, Nexora will approve the account automatically after <strong style="color:#172033;">{int(auto_minutes)} minutes</strong>.
+  A new { _safe(account_label.lower()) } account is waiting for your review. The account will remain pending until an administrator approves or rejects it.
 </p>
 """,
         details=[
             ("Username", username),
             ("Email", email),
             ("Account Type", account_label),
-            ("Automatic Approval", f"{auto_minutes} minutes"),
         ],
         action_url=review_url,
         action_label="Review & Approve User",
         note_title="Protected Admin action",
         note_body="The review button opens User Management. Admin authentication and CSRF protection are still required before approval.",
-        footer_note="Review pending accounts promptly when manual verification is needed.",
+        footer_note="Pending accounts require an administrator decision before they can sign in.",
     )
 
     send_email(
@@ -708,11 +707,7 @@ def send_account_approved_email(
     account_label = "student" if account_type == "student" else "supervisor"
     login_url = f"{_base_url()}/login" if _base_url() else None
 
-    approval_note = (
-        "Your account was approved automatically after the 5-minute approval window."
-        if automatic
-        else "Your account was approved by a Nexora administrator."
-    )
+    approval_note = "Your account was approved by a Nexora administrator."
 
     next_step = (
         "You can now sign in and complete your Student Profile."

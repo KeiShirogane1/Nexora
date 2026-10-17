@@ -21,7 +21,6 @@ from app.Services.notification_service import (
 from app.Services.account_approval_service import (
     approve_pending_user,
     reject_pending_user,
-    process_due_pending_accounts,
     get_pending_account_view,
 )
 from app.Services.account_appeal_service import open_account_appeal_case,reactivate_account
@@ -516,14 +515,6 @@ def admin_dashboard():
 @admin.route("/admin/users")
 @role_required("admin")
 def admin_users():
-    try:
-        process_due_pending_accounts()
-    except Exception as exc:
-        current_app.logger.warning(
-            "Could not process due account approvals on Admin User Management: %s",
-            exc,
-        )
-
     conn = get_db_connection()
     cursor = conn.cursor()
 

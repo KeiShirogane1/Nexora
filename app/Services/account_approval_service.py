@@ -260,76 +260,13 @@ def reject_pending_user(user_id, expected_pending_role=None):
 
 
 def maybe_auto_approve_user(user_id):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    try:
-        cursor.execute(
-            """
-            SELECT id, role, created_at
-            FROM users
-            WHERE id = ?
-            AND role IN ('pending_student', 'pending_supervisor')
-            """,
-            (user_id,),
-        )
-        user = cursor.fetchone()
-    finally:
-        cursor.close()
-        conn.close()
-
-    if not user:
-        return None
-
-    deadline = _approval_deadline(user["created_at"])
-    if not deadline or deadline > _utc_now_naive():
-        return None
-
-    return approve_pending_user(
-        user["id"],
-        expected_pending_role=user["role"],
-        automatic=True,
-    )
+    """Automatic approval is disabled; administrator action is required."""
+    return None
 
 
 def process_due_pending_accounts(limit=100):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    try:
-        cursor.execute(
-            """
-            SELECT id, role, created_at
-            FROM users
-            WHERE role IN ('pending_student', 'pending_supervisor')
-            AND created_at IS NOT NULL
-            ORDER BY created_at ASC
-            LIMIT ?
-            """,
-            (limit,),
-        )
-        pending_rows = cursor.fetchall()
-    finally:
-        cursor.close()
-        conn.close()
-
-    now = _utc_now_naive()
-    approved = []
-
-    for user in pending_rows:
-        deadline = _approval_deadline(user["created_at"])
-        if not deadline or deadline > now:
-            continue
-
-        result = approve_pending_user(
-            user["id"],
-            expected_pending_role=user["role"],
-            automatic=True,
-        )
-        if result:
-            approved.append(result)
-
-    return approved
+    """Automatic approval is disabled; pending accounts remain pending."""
+    return []
 
 
 def cleanup_legacy_rejected_accounts():
@@ -379,38 +316,6 @@ def cleanup_legacy_rejected_accounts():
 
 
 def start_account_approval_worker(app):
-    enabled = os.environ.get(
-        "NEXORA_AUTO_APPROVAL_ENABLED",
-        "true",
-    ).strip().lower() not in ("0", "false", "no", "off")
-
-    if not enabled:
-        app.logger.info("Nexora automatic account approval worker is disabled.")
-        return
-
-    if app.extensions.get("nexora_account_approval_worker_started"):
-        return
-
-    app.extensions["nexora_account_approval_worker_started"] = True
-
-    def worker():
-        while True:
-            try:
-                process_due_pending_accounts()
-            except Exception as exc:
-                app.logger.warning(
-                    "Automatic account approval check failed: %s",
-                    exc,
-                )
-            time.sleep(WORKER_INTERVAL_SECONDS)
-
-    thread = threading.Thread(
-        target=worker,
-        name="nexora-account-approval",
-        daemon=True,
-    )
-    thread.start()
-    app.logger.info(
-        "Nexora automatic account approval worker started (%s-minute window).",
-        AUTO_APPROVAL_MINUTES,
-    )
+    """Automatic approval is disabled; kept as a compatibility no-op."""
+    app.logger.info("Automatic account approval is disabled; administrator approval is required.")
+    return

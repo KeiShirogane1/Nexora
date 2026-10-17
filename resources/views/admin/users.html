@@ -112,14 +112,13 @@
                             <div>
                                 <span class="approval-management-kicker">ACCOUNT APPROVAL</span>
                                 <h3>Pending Account Requests</h3>
-                                <p>Review new accounts before the 5-minute automatic approval window completes.</p>
+                                <p>Review new Student and Supervisor account requests. Accounts remain pending until an administrator approves or rejects them.</p>
                             </div>
                             <span class="approval-auto-policy">
                                 <svg viewBox="0 0 24 24" aria-hidden="true">
-                                    <circle cx="12" cy="12" r="9"></circle>
-                                    <path d="M12 7v5l3 2"></path>
+                                    <path d="m5 12 4 4L19 6"></path>
                                 </svg>
-                                Auto-approve in 5 minutes
+                                Manual approval only
                             </span>
                         </div>
 
@@ -130,7 +129,6 @@
                                     <article
                                         class="approval-request-card{% if highlight_pending_user_id == user['id'] %} is-highlighted{% endif %}"
                                         data-approval-request
-                                        data-deadline="{{ user['approval_deadline_iso'] }}"
                                         data-user-id="{{ user['id'] }}"
                                     >
                                         <div class="approval-request-identity">
@@ -165,14 +163,11 @@
 
                                         <div class="approval-request-timer">
                                             <div class="approval-timer-top">
-                                                <span>Automatic approval</span>
-                                                <strong data-approval-countdown>05:00</strong>
+                                                <span>Administrator review</span>
+                                                <strong>Required</strong>
                                             </div>
-                                            <div class="approval-timer-track" aria-hidden="true">
-                                                <span data-approval-progress></span>
-                                            </div>
-                                            <small data-approval-note>
-                                                Approves automatically if no Admin action is taken.
+                                            <small>
+                                                This account stays pending until an Admin approves or rejects it.
                                             </small>
                                         </div>
 
@@ -326,66 +321,6 @@
 
         <script>
             (function () {
-                const AUTO_APPROVAL_SECONDS = 300;
-                const cards = Array.from(
-                    document.querySelectorAll("[data-approval-request]")
-                );
-
-                if (!cards.length) return;
-
-                let reloadScheduled = false;
-
-                function formatCountdown(totalSeconds) {
-                    const seconds = Math.max(0, totalSeconds);
-                    const minutes = Math.floor(seconds / 60);
-                    const remainder = seconds % 60;
-                    return String(minutes).padStart(2, "0") + ":" +
-                        String(remainder).padStart(2, "0");
-                }
-
-                function updateCountdowns() {
-                    const now = Date.now();
-
-                    cards.forEach(function (card) {
-                        const deadline = Date.parse(card.dataset.deadline || "");
-                        const countdown = card.querySelector("[data-approval-countdown]");
-                        const progress = card.querySelector("[data-approval-progress]");
-                        const note = card.querySelector("[data-approval-note]");
-
-                        if (!Number.isFinite(deadline)) return;
-
-                        const remaining = Math.max(
-                            0,
-                            Math.ceil((deadline - now) / 1000)
-                        );
-
-                        if (countdown) {
-                            countdown.textContent = remaining > 0
-                                ? formatCountdown(remaining)
-                                : "Approving…";
-                        }
-
-                        if (progress) {
-                            const percent = Math.max(
-                                0,
-                                Math.min(100, (remaining / AUTO_APPROVAL_SECONDS) * 100)
-                            );
-                            progress.style.width = percent + "%";
-                        }
-
-                        if (note && remaining === 0) {
-                            note.textContent = "Approval window complete. Refreshing account status…";
-                        }
-
-                        if (remaining === 0 && !reloadScheduled) {
-                            reloadScheduled = true;
-                            window.setTimeout(function () {
-                                window.location.reload();
-                            }, 1500);
-                        }
-                    });
-                }
-
                 const highlighted = document.querySelector(
                     ".approval-request-card.is-highlighted"
                 );
@@ -397,9 +332,6 @@
                         });
                     }, 250);
                 }
-
-                updateCountdowns();
-                window.setInterval(updateCountdowns, 1000);
             })();
         </script>
     </body>

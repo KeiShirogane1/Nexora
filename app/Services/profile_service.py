@@ -59,6 +59,7 @@ def update_student_profile(student_id, data):
 
             grade_year = ?,
             major_program = ?,
+            school_name = ?,
 
             emergency_name = ?,
             emergency_relationship = ?,
@@ -91,6 +92,7 @@ def update_student_profile(student_id, data):
             data.get("grade_year"),
 
             normalize_program_name(data.get("major_program")),
+            data.get("school_name"),
 
 
             data.get("emergency_name"),
@@ -156,6 +158,9 @@ def get_student_profile_data(form):
 
         "major_program":
             normalize_program_name(form.get("major_program")),
+
+        "school_name":
+            (form.get("school_name") or "").strip(),
 
 
         "emergency_name":

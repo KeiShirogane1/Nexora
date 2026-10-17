@@ -54,10 +54,7 @@ from app.Services.ojt_evaluation_service import ensure_ojt_evaluation_schema
 from app.Services.internship_schedule_service import ensure_internship_schedule_schema,get_student_schedule_state
 from app.Services.notification_service import get_user_notifications,get_recent_notifications,get_unread_count
 from app.Services.supervisor_profile_service import ensure_supervisor_profile_schema
-from app.Services.account_approval_service import (
-    cleanup_legacy_rejected_accounts,
-    start_account_approval_worker,
-)
+from app.Services.account_approval_service import cleanup_legacy_rejected_accounts
 from app.Services.account_appeal_service import (
     ensure_account_appeal_schema,
     get_submitted_appeal_count,
@@ -183,7 +180,7 @@ try:
   app.logger.info("Removed %s legacy rejected account(s).",cleaned_rejected_accounts)
 except Exception as exc:
  app.logger.warning("Could not clean legacy rejected accounts: %s",exc)
-start_account_approval_worker(app)
+
 start_account_appeal_worker(app)
 @app.before_request
 def enforce_single_supervisor_session():
